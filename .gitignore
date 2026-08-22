@@ -1,0 +1,15 @@
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Local experiment state / backups (written to %LOCALAPPDATA% by the tools;
+# these are just in case something lands in the repo)
+state/
+*.csv
+backup-*.json
+*.tmp
+*.log
