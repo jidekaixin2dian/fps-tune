@@ -62,8 +62,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Repor
 
 Decisions are rule-based (avg FPS / 1% low / P99 frame time / stutter count vs baseline):
 keep on measurable gain, **auto-revert otherwise**. No conclusion is formed when samples
-are insufficient or the baseline is unstable (CV > 0.05). Requires Microsoft PresentMon
-for real sampling — install it yourself (`winget install Microsoft.PresentMon`); the tool
+are insufficient or the baseline is unstable (CV > 0.05). Requires the official PresentMon CLI
+for real sampling — install it yourself (`winget install Intel.PresentMon.Console`); the tool
 will never download or run installers for you.
 
 ## Safety
@@ -75,6 +75,23 @@ will never download or run installers for you.
 - No fixed FPS promises — results vary by hardware; controversial items are unchecked by default.
 - No code-signing certificate; SmartScreen may warn about unknown publisher (normal for
   personal open-source projects).
+
+## Real A/B sampling results (firing range)
+
+Test setup: i9-13900HX + GTX 1050 Ti laptop, Windows 11, official PresentMon
+(`winget install Intel.PresentMon.Console`), fixed firing-range scene, 3 samples × 90 s
+per group; baseline CV 1.18% (threshold ≤ 0.05, stable).
+
+| Group | Avg FPS | 1% low | P99 (ms) | Stutters | Verdict |
+|---|---|---|---|---|---|
+| Baseline | 268.29 | 205.24 | 4.88 | 0 | — |
+| group-1 scheduling | 267.57 | 207.19 | 4.83 | 0 | No meaningful gain (avg -0.3%, 1% low +1.0%), auto-reverted |
+| group-2 background | 267.40 | 191.58 | 5.30 | 0 | No meaningful gain (avg -0.3%, 1% low -6.7%), auto-reverted |
+| group-3 power | 265.30 | 196.69 | 5.09 | 0 | No meaningful gain (avg -1.1%, 1% low -4.2%), auto-reverted |
+
+Conclusion: none of the three low-risk candidate groups reached the keep rule
+(avg ≥ 2% or 1% low ≥ 5%) on this machine/scene, so the script auto-reverted all of
+them and system settings were restored to their pre-test state.
 
 ## License
 

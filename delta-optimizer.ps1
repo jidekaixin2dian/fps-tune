@@ -1034,13 +1034,26 @@ function Get-ItemState {
 # 应用（-Apply）
 # ---------------------------------------------------------------------------
 
+function Split-ItemIds {
+    param([string[]]$Requested)
+    $ids = @()
+    if ($null -eq $Requested) { return $ids }
+    foreach ($raw in $Requested) {
+        foreach ($id in ($raw -split ',')) {
+            $trimmed = $id.Trim()
+            if ($trimmed) { $ids += $trimmed }
+        }
+    }
+    return $ids
+}
+
 function Resolve-ItemIds {
     param([string[]]$Requested)
     $all = @{}
     foreach ($it in $OptimizationItems) { $all[$it.id] = $it }
     $result = @()
     if ($Requested) {
-        foreach ($id in $Requested) {
+        foreach ($id in @(Split-ItemIds $Requested)) {
             if ($all.ContainsKey($id)) { $result += $all[$id] }
         }
     } else {
@@ -1169,7 +1182,8 @@ function Invoke-Restore {
     $files = @(Get-BackupFiles)
     if ($files.Count -eq 0) { return @{ tool = $ToolName; version = $ToolVersion; mode = 'restore'; restored = @(); failed = @(); skipped = @(); summary = '没有可还原的备份' } }
 
-    $wantAll = -not $RestoreItems -or $RestoreItems.Count -eq 0
+    $restoreIds = @(Split-ItemIds $RestoreItems)
+    $wantAll = -not $restoreIds -or $restoreIds.Count -eq 0
     $restored = @()
     $failed = @()
     $skipped = @()
@@ -1188,7 +1202,7 @@ function Invoke-Restore {
                 $skipped += @{ backupFile = $f.Name; id = $bit.id; message = '未知项，跳过' }
                 continue
             }
-            if (-not $wantAll -and $bit.id -notin $RestoreItems) { continue }
+            if (-not $wantAll -and $bit.id -notin $restoreIds) { continue }
             try {
                 $ctx = @{ item = $itemDef; backupItem = $bit; gamePath = $null; gameName = $null }
                 & $itemDef.revert $ctx

@@ -6,7 +6,7 @@
 # 再依次测试低风险候选组，用平均帧率 / 1% low / P99 帧时间 / 卡顿次数做规则决策，
 # 有收益保留、无收益自动还原。样本不足、游戏退出、环境变化或基线不稳定时不形成结论。
 #
-# 采样器：优先自动调用 PresentMon（微软原版语法），探测不到或调用失败时，
+# 采样器：优先自动调用官方 PresentMon（v2 语法），探测不到或调用失败时，
 # 可用 -CsvPath 让用户自己用 PresentMon / FrameView 生成 CSV 后手动解析。
 #
 # 用法：
@@ -62,21 +62,22 @@ function Get-IsAdmin {
 
 function Invoke-Native {
     param([string]$Exe, [string[]]$Arguments)
-    $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-    $pinfo.FileName = $Exe
-    $pinfo.Arguments = ($Arguments -join ' ')
-    $pinfo.UseShellExecute = $false
-    $pinfo.RedirectStandardOutput = $true
-    $pinfo.RedirectStandardError = $true
-    $pinfo.CreateNoWindow = $true
+    # Start-Process + 临时文件重定向：比 ProcessStartInfo 重定向管道更稳，
+    # 避免 GUI 子系统程序（如 PresentMon_x64.exe）在 ReadToEnd() 时卡死。
+    $tmpOut = [System.IO.Path]::GetTempFileName()
+    $tmpErr = [System.IO.Path]::GetTempFileName()
     try {
-        $proc = [System.Diagnostics.Process]::Start($pinfo)
-        $out = @($proc.StandardOutput.ReadToEnd() -split "`r?`n" | Where-Object { $_ -ne '' })
-        $err = @($proc.StandardError.ReadToEnd() -split "`r?`n" | Where-Object { $_ -ne '' })
-        $proc.WaitForExit()
+        $argString = ($Arguments | ForEach-Object {
+            if ($_ -match '[\s"]') { '"' + ($_ -replace '"', '`"') + '"' } else { $_ }
+        }) -join ' '
+        $proc = Start-Process -FilePath $Exe -ArgumentList $argString -Wait -PassThru -WindowStyle Hidden -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr
+        $out = @(Get-Content $tmpOut -Encoding UTF8 -ErrorAction SilentlyContinue | Where-Object { $_ -ne '' })
+        $err = @(Get-Content $tmpErr -Encoding UTF8 -ErrorAction SilentlyContinue | Where-Object { $_ -ne '' })
         return @{ code = $proc.ExitCode; output = $out; error = $err }
     } catch {
         return @{ code = -1; output = @(); error = @($_.Exception.Message) }
+    } finally {
+        Remove-Item $tmpOut, $tmpErr -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -143,16 +144,32 @@ function Invoke-PresentMonAuto {
     $game = Get-GameProcess
     if (-not $game) { return $null }
 
-    # 先试微软原版 v1/v2 参数，失败再换
+    # 先试官方 v2 参数（--timed / --session_name / --terminate_after_timed），
+    # 优先用 --output_stdout（由脚本落盘，避免部分版本 --output_file 不落盘的问题），
+    # 再回退到 --output_file 与 v1 参数（--duration）。使用独立 session 名，避免与
+    # NVIDIA FrameView 服务已启动的默认 "PresentMon" 会话冲突。
+    $sessionName = 'DeltaOptimizer'
     $attempts = @(
-        @('--process_name', $GameName, '--duration', "$Seconds", '--output_file', $CsvOut),
+        @('--session_name', $sessionName, '--process_name', $GameName, '--timed', "$Seconds", '--terminate_after_timed', '--no_console_stats', '--output_stdout'),
+        @('--session_name', $sessionName, '--process_id', "$($game.Id)", '--timed', "$Seconds", '--terminate_after_timed', '--no_console_stats', '--output_stdout'),
+        @('--session_name', $sessionName, '--process_name', $GameName, '--timed', "$Seconds", '--terminate_after_timed', '--no_console_stats', '--output_file', $CsvOut),
+        @('--session_name', $sessionName, '--process_id', "$($game.Id)", '--timed', "$Seconds", '--terminate_after_timed', '--no_console_stats', '--output_file', $CsvOut),
         @('--process-name', $GameName, '--duration', "$Seconds", '--output-file', $CsvOut),
         @('--process', "$($game.Id)", '--duration', "$Seconds", '--output_file', $CsvOut)
     )
     foreach ($args in $attempts) {
         if (Test-Path $CsvOut) { Remove-Item $CsvOut -Force }
         $r = Invoke-Native $pm $args
-        if ($r.code -eq 0 -and (Test-Path $CsvOut)) { return $CsvOut }
+        if ($r.code -eq 0) {
+            if ($args -contains '--output_stdout') {
+                if ($r.output.Count -gt 0) {
+                    $r.output | Set-Content -Path $CsvOut -Encoding UTF8
+                    if ((Test-Path $CsvOut) -and ((Get-Item $CsvOut).Length -gt 0)) { return $CsvOut }
+                }
+            } elseif (Test-Path $CsvOut) {
+                return $CsvOut
+            }
+        }
     }
     return $null
 }
@@ -213,11 +230,14 @@ function Collect-Samples {
             $csv = Join-Path $StateDir "sample-$i.csv"
             $auto = Invoke-PresentMonAuto $Seconds $csv
             if (-not $auto) {
-                return @{ ok = $false; error = 'PresentMon 自动采样失败（未找到 PresentMon 或游戏未运行）。请安装微软原版 PresentMon 后用 -CsvPath 手动提供采样 CSV，或用 -Simulate 试跑。' }
+                return @{ ok = $false; error = 'PresentMon 自动采样失败（未找到 PresentMon 或游戏未运行）。请安装官方 PresentMon（winget install Intel.PresentMon.Console）后用 -CsvPath 手动提供采样 CSV，或用 -Simulate 试跑。' }
             }
         }
         $stat = Parse-PresentMonCsv $csv
-        if (-not $stat -or $stat.error) {
+        if ($null -eq $stat) {
+            return @{ ok = $false; error = "第 $i 次采样解析失败: 无法解析 CSV" }
+        }
+        if ($stat.ContainsKey('error')) {
             return @{ ok = $false; error = "第 $i 次采样解析失败: $($stat.error)" }
         }
         $results += $stat
