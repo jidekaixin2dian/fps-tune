@@ -87,6 +87,7 @@ delta-skill/
 ├── friend-test.ps1       # 朋友测试：一键生成测试记录表（Markdown + CSV）
 ├── SKILL.md              # AI Agent 调用说明（流程 + 红线）
 ├── TESTING.md            # 朋友测试指南（完整 A/B 或只有帧率/游戏加加数据）
+├── GUI_PLAN.md           # GUI 阶段合规功能规划
 ├── README.md             # 中文说明
 ├── README.en.md          # English readme
 └── LICENSE               # MIT
@@ -100,7 +101,7 @@ delta-skill/
 - [x] A/B 自动调优（tuning-experiment.ps1）：基线稳定性判定 + 3 候选组 + 规则决策 + 自动还原 + CSV 导出（dry-run 全链路验证通过）
 - [ ] A/B 真实采样（待更多机器 / 朋友数据）
 - [ ] 更多游戏路径检测兜底（WeGame / Steam 变体）
-- [ ] GUI（下一阶段，视反馈而定）
+- [ ] GUI（合规功能规划见 [GUI_PLAN.md](GUI_PLAN.md)）
 
 ## 许可
 

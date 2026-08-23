@@ -27,6 +27,7 @@ no GUI, no telemetry, no auto-updater — one script, plug and play.
 | `friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
 | `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
+| `GUI_PLAN.md` | GUI-phase compliant feature plan (no spoofing, no overlay) |
 
 ## Quick start (CLI)
 
