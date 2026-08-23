@@ -60,7 +60,7 @@ public static class ThemeManager
         {
             if (brush.IsFrozen)
             {
-                brush = brush.Clone();
+                brush = new SolidColorBrush(brush.Color);
                 Application.Current.Resources[key] = brush;
             }
 
