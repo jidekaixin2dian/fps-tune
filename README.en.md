@@ -24,6 +24,7 @@ no GUI, no telemetry, no auto-updater — one script, plug and play.
 |---|---|
 | `delta-optimizer.ps1` | Core engine: detect / apply / restore, 22 optimizations + 3 read-only health checks |
 | `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export |
+| `friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
 | `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
 
@@ -76,27 +77,6 @@ will never download or run installers for you.
 - No fixed FPS promises — results vary by hardware; controversial items are unchecked by default.
 - No code-signing certificate; SmartScreen may warn about unknown publisher (normal for
   personal open-source projects).
-
-## Real A/B sampling results (firing range)
-
-Test setup: i9-13900HX + RTX 5070 Ti Laptop GPU, Windows 11, official PresentMon
-(`winget install Intel.PresentMon.Console`), fixed firing-range scene, 3 samples × 90 s
-per group; baseline CV 1.18% (threshold ≤ 0.05, stable).
-
-| Group | Avg FPS | 1% low | P99 (ms) | Stutters | Verdict |
-|---|---|---|---|---|---|
-| Baseline | 268.29 | 205.24 | 4.88 | 0 | — |
-| group-1 scheduling | 267.57 | 207.19 | 4.83 | 0 | No meaningful gain (avg -0.3%, 1% low +1.0%), auto-reverted |
-| group-2 background | 267.40 | 191.58 | 5.30 | 0 | No meaningful gain (avg -0.3%, 1% low -6.7%), auto-reverted |
-| group-3 power | 265.30 | 196.69 | 5.09 | 0 | No meaningful gain (avg -1.1%, 1% low -4.2%), auto-reverted |
-
-Conclusion: none of the three low-risk candidate groups reached the keep rule
-(avg ≥ 2% or 1% low ≥ 5%) on this machine/scene, so the script auto-reverted all of
-them and system settings were restored to their pre-test state.
-
-> Friends are welcome to test too. Without PresentMon, a simple before/after
-> average FPS / 1% low screenshot from GamePP or the in-game overlay is useful.
-> See [TESTING.md](TESTING.md) for the template.
 
 ## License
 

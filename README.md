@@ -72,6 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 delta-skill/
 ├── delta-optimizer.ps1   # 核心引擎（PowerShell 5.1，单文件，含中文注释）
 ├── tuning-experiment.ps1 # A/B 自动调优实验（基线 + 候选组 + 规则决策 + CSV 导出）
+├── friend-test.ps1       # 朋友测试：一键生成测试记录表（Markdown + CSV）
 ├── SKILL.md              # AI Agent 调用说明（流程 + 红线）
 ├── TESTING.md            # 朋友测试指南（完整 A/B 或只有帧率/游戏加加数据）
 ├── README.md             # 中文说明
@@ -79,31 +80,13 @@ delta-skill/
 └── LICENSE               # MIT
 ```
 
-## A/B 真实采样结果（靶场）
-
-测试条件：i9-13900HX + RTX 5070 Ti Laptop GPU 笔记本，Windows 11，官方 PresentMon（`winget install Intel.PresentMon.Console`），
-固定靶场场景，每组 3 次 × 90 秒采样；基线稳定性 CV 1.18%（阈值 ≤0.05，达标）。
-
-| 组 | 平均 FPS | 1% low | P99 (ms) | 卡顿 | 结论 |
-|---|---|---|---|---|---|
-| 基线 | 268.29 | 205.24 | 4.88 | 0 | — |
-| group-1 调度组 | 267.57 | 207.19 | 4.83 | 0 | 无明显收益（平均 -0.3%，1% low +1.0%），已自动还原 |
-| group-2 后台组 | 267.40 | 191.58 | 5.30 | 0 | 无明显收益（平均 -0.3%，1% low -6.7%），已自动还原 |
-| group-3 电源组 | 265.30 | 196.69 | 5.09 | 0 | 无明显收益（平均 -1.1%，1% low -4.2%），已自动还原 |
-
-结论：三组低风险候选在本机靶场均未达到保留规则（平均 ≥2% 或 1% low ≥5%），
-全部按规则自动还原，系统设置已恢复到采样前状态。该结果仅代表本机/本场景。
-
-> 欢迎邀请朋友参与测试。没有 PresentMon 也可以只回传“游戏加加”或游戏内
-> FPS 面板的平均帧率 / 1% low 截图，记录模板见 [TESTING.md](TESTING.md)。
-
 ## 开发状态
 
 - [x] `-Detect` 冒烟测试通过（真实机器：i9-13900HX + RTX 5070 Ti Laptop GPU 笔记本 + 三角洲行动已安装）
 - [x] 22 项优化 + 3 项体检全部实现
 - [x] `-Apply` / `-Restore` 真实往返测试通过（transparency-off 往返，备份→消费→还原闭环）
 - [x] A/B 自动调优（tuning-experiment.ps1）：基线稳定性判定 + 3 候选组 + 规则决策 + 自动还原 + CSV 导出（dry-run 全链路验证通过）
-- [x] A/B 真实采样（靶场实测：基线 268.29 FPS / CV 1.18%，三组候选均无明显收益并自动还原）
+- [ ] A/B 真实采样（待更多机器 / 朋友数据）
 - [ ] 更多游戏路径检测兜底（WeGame / Steam 变体）
 - [ ] GUI（下一阶段，视反馈而定）
 

@@ -7,6 +7,24 @@
 - 不要替朋友下载/运行安装包；PresentMon 等工具请他们自己装。
 - 游戏内画质、分辨率、DLSS/FSR、场景、路线、时长在“优化前/后”必须保持一致。
 
+## 一键生成测试记录表
+
+朋友只需运行仓库里的 `friend-test.ps1`，按提示填写前后 FPS / 1% low 即可，
+会自动读取 CPU / GPU / 内存 / 系统，并在桌面生成 Markdown + CSV 两个记录文件：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File friend-test.ps1
+```
+
+也可以一次把参数传完，不弹交互提示：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File friend-test.ps1 `
+  -Name "朋友昵称" -Scene "靶场, 2K 全高, DLSS 质量" `
+  -BeforeAvgFps 240 -BeforeP1Low 150 -AfterAvgFps 245 -AfterP1Low 155 `
+  -Notes "体感流畅"
+```
+
 ## 方式 A：完整 A/B 自动采样（有官方 PresentMon 时）
 
 1. 自己安装官方 PresentMon：`winget install Intel.PresentMon.Console`
