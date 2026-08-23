@@ -13,3 +13,8 @@ state/
 backup-*.json
 *.tmp
 *.log
+
+# .NET build output
+bin/
+obj/
+*.user
