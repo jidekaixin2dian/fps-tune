@@ -1,4 +1,4 @@
-# 构建 / 发布 WPF 版
+﻿# Build / publish WPF version
 param(
     [ValidateSet('Build','PublishSingleFile','PublishFolder')]
     [string]$Mode = 'Build'
@@ -7,7 +7,7 @@ param(
 $project = Join-Path $PSScriptRoot 'DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj'
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    Write-Error '未找到 dotnet，请先安装 .NET 8 SDK。'
+    Write-Error 'dotnet not found. Please install .NET 8 SDK first.'
     exit 1
 }
 
