@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -49,6 +49,8 @@ public static class ThemeManager
         Application.Current.Resources["DangerBrush"] = new SolidColorBrush(t.Danger);
         Application.Current.Resources["WarningBrush"] = new SolidColorBrush(t.Warning);
         Application.Current.Resources["OkBrush"] = new SolidColorBrush(t.Ok);
+        Application.Current.Resources["PrimaryColor"] = t.Primary;
+        Application.Current.Resources["AccentColor"] = t.Accent;
     }
 
     private static string ResolveSystemTheme()
