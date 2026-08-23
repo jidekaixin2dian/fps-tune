@@ -44,8 +44,8 @@ public static class SettingsService
 
             var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
-            if (Current.QQLink.Contains("wpa.qq.com") && !string.IsNullOrWhiteSpace(Current.QQ))
-                Current.QQLink = "tencent://message/?uin=" + Uri.EscapeDataString(Current.QQ) + "&Site=qq&Menu=yes";
+            if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
+                Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
         }
         catch
         {
@@ -55,12 +55,12 @@ public static class SettingsService
 
     public static void Save(AppSettings settings)
     {
-        // 自动生成常用联系方式链接
+        // 自动生成常用个人主页链接
         if (string.IsNullOrWhiteSpace(settings.QQLink) && !string.IsNullOrWhiteSpace(settings.QQ))
-            settings.QQLink = "tencent://message/?uin=" + Uri.EscapeDataString(settings.QQ) + "&Site=qq&Menu=yes";
+            settings.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(settings.QQ);
 
-        // 微信没有官方可靠的“直接聊天”URL，不自动生成；点击时会复制微信号。
-        // 如果你有自定义链接/二维码页面，可以在设置里手动填写。
+        // 微信个人微信号没有公开主页，不能自动生成；点击时会复制微信号。
+        // 如果你有自定义个人主页/二维码页面，可以在设置里手动填写。
 
         Current = settings;
         Directory.CreateDirectory(BaseDir);

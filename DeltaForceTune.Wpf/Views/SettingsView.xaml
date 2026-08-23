@@ -19,15 +19,15 @@
                 <TextBlock Text="联系方式" Style="{StaticResource CardTitleStyle}"/>
                 <TextBlock Text="微信" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="WeChatBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,8"/>
-                <TextBlock Text="微信链接（可点击跳转，可选）" Style="{StaticResource MutedTextStyle}"/>
+                <TextBlock Text="微信个人主页/二维码链接（可选）" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="WeChatLinkBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
                 <TextBlock Text="QQ" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="QQBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,8"/>
-                <TextBlock Text="QQ链接（可点击跳转，可选）" Style="{StaticResource MutedTextStyle}"/>
+                <TextBlock Text="QQ个人主页链接（QQ空间，可选）" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="QQLinkBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
                 <TextBlock Text="抖音" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="DouyinBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,8"/>
-                <TextBlock Text="抖音主页分享链接（请用 App 内“分享→复制链接”）" Style="{StaticResource MutedTextStyle}"/>
+                <TextBlock Text="抖音个人主页链接（请用 App 内“分享→复制链接”）" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="DouyinLinkBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
                 <TextBlock Text="邮箱（可选）" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="EmailBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
