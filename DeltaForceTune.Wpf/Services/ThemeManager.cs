@@ -58,6 +58,12 @@ public static class ThemeManager
     {
         if (Application.Current.Resources[key] is SolidColorBrush brush)
         {
+            if (brush.IsFrozen)
+            {
+                brush = brush.Clone();
+                Application.Current.Resources[key] = brush;
+            }
+
             brush.BeginAnimation(
                 SolidColorBrush.ColorProperty,
                 new ColorAnimation(target, TimeSpan.FromMilliseconds(320)));
