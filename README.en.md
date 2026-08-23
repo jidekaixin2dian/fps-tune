@@ -78,7 +78,7 @@ will never download or run installers for you.
 
 ## Real A/B sampling results (firing range)
 
-Test setup: i9-13900HX + GTX 1050 Ti laptop, Windows 11, official PresentMon
+Test setup: i9-13900HX + RTX 5070 Ti Laptop GPU, Windows 11, official PresentMon
 (`winget install Intel.PresentMon.Console`), fixed firing-range scene, 3 samples × 90 s
 per group; baseline CV 1.18% (threshold ≤ 0.05, stable).
 

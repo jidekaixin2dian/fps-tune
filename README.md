@@ -80,7 +80,7 @@ delta-skill/
 
 ## A/B 真实采样结果（靶场）
 
-测试条件：i9-13900HX + GTX 1050 Ti 笔记本，Windows 11，官方 PresentMon（`winget install Intel.PresentMon.Console`），
+测试条件：i9-13900HX + RTX 5070 Ti Laptop GPU 笔记本，Windows 11，官方 PresentMon（`winget install Intel.PresentMon.Console`），
 固定靶场场景，每组 3 次 × 90 秒采样；基线稳定性 CV 1.18%（阈值 ≤0.05，达标）。
 
 | 组 | 平均 FPS | 1% low | P99 (ms) | 卡顿 | 结论 |
@@ -95,7 +95,7 @@ delta-skill/
 
 ## 开发状态
 
-- [x] `-Detect` 冒烟测试通过（真实机器：i9-13900HX + GTX 1050 Ti 笔记本 + 三角洲行动已安装）
+- [x] `-Detect` 冒烟测试通过（真实机器：i9-13900HX + RTX 5070 Ti Laptop GPU 笔记本 + 三角洲行动已安装）
 - [x] 22 项优化 + 3 项体检全部实现
 - [x] `-Apply` / `-Restore` 真实往返测试通过（transparency-off 往返，备份→消费→还原闭环）
 - [x] A/B 自动调优（tuning-experiment.ps1）：基线稳定性判定 + 3 候选组 + 规则决策 + 自动还原 + CSV 导出（dry-run 全链路验证通过）
