@@ -2,6 +2,7 @@
 using System.Text.Json;
 using DeltaForceTune.Wpf.Services;
 using Microsoft.Win32;
+using System.Linq;
 
 namespace DeltaForceTune.Wpf.Core;
 

@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using DeltaForceTune.Wpf.Core;
 using DeltaForceTune.Wpf.Services;
+using System.Linq;
 
 namespace DeltaForceTune.Wpf.Views;
 
