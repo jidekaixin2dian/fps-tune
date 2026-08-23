@@ -45,7 +45,12 @@ public static class OptimizationEngine
     }
 
     public static Task<RunResult> ListRestoreAsync()
-        => PowerShellRunner.RunAsync(ScriptLocator.Resolve("delta-optimizer.ps1"), "-ListRestoreItems", "-Json");
+    {
+        var files = BackupService.ListBackups();
+        var payload = new { backups = files, count = files.Count };
+        var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        return Task.FromResult(new RunResult(0, json, ""));
+    }
 
     private static RunResult ApplyNative(IEnumerable<string> ids)
     {

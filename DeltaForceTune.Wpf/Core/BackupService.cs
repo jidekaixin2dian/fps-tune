@@ -41,6 +41,14 @@ public static class BackupService
         return file;
     }
 
+    public static IReadOnlyList<string> ListBackups()
+    {
+        Directory.CreateDirectory(BackupDir);
+        return Directory.GetFiles(BackupDir, "backup-*.json")
+            .OrderByDescending(File.GetLastWriteTime)
+            .ToList();
+    }
+
     public static string? RestoreLatest()
     {
         Directory.CreateDirectory(BackupDir);

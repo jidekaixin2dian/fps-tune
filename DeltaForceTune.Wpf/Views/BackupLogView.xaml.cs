@@ -3,20 +3,19 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
+using DeltaForceTune.Wpf.Core;
 using DeltaForceTune.Wpf.Services;
 
 namespace DeltaForceTune.Wpf.Views;
 
 public partial class BackupLogView : UserControl
 {
-    private readonly string _enginePath;
     private readonly string _tempDir;
     private readonly string _backupDir;
 
     public BackupLogView()
     {
         InitializeComponent();
-        _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
         _tempDir = Path.Combine(Path.GetTempPath(), "delta-gui-tmp");
         _backupDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -31,7 +30,7 @@ public partial class BackupLogView : UserControl
     private async void ListBackup_Click(object sender, RoutedEventArgs e)
     {
         StatusText.Text = "正在读取可还原项...";
-        await Run("-ListRestoreItems", "-Json");
+        await Run(OptimizationEngine.ListRestoreAsync);
     }
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
@@ -42,15 +41,15 @@ public partial class BackupLogView : UserControl
             return;
 
         StatusText.Text = "正在还原...";
-        await Run("-Restore", "-Json");
+        await Run(OptimizationEngine.RestoreAsync);
     }
 
-    private async Task Run(params string[] args)
+    private async Task Run(Func<Task<RunResult>> action)
     {
         LogBox.Text = "正在执行...";
         try
         {
-            var result = await PowerShellRunner.RunAsync(_enginePath, args);
+            var result = await action();
             LogBox.Text = result.Success
                 ? result.Output
                 : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
