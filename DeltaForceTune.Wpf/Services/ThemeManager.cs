@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
@@ -34,44 +33,29 @@ public static class ThemeManager
         var resolved = mode == "system" ? ResolveSystemTheme() : mode;
         var t = resolved == "light" ? LightPalette : DarkPalette;
 
-        AnimateBrush("AppBackgroundBrush", t.AppBackground);
-        AnimateBrush("SidebarBackgroundBrush", t.Sidebar);
-        AnimateBrush("SurfaceBrush", t.Surface);
-        AnimateBrush("SurfaceAltBrush", t.SurfaceAlt);
-        AnimateBrush("ElevatedBrush", t.Elevated);
-        AnimateBrush("InputBackgroundBrush", t.Input);
-        AnimateBrush("BorderBrush", t.Border);
-        AnimateBrush("BorderHoverBrush", t.BorderHover);
-        AnimateBrush("TextPrimaryBrush", t.TextPrimary);
-        AnimateBrush("TextSecondaryBrush", t.TextSecondary);
-        AnimateBrush("TextMutedBrush", t.TextMuted);
-        AnimateBrush("PrimaryBrush", t.Primary);
-        AnimateBrush("AccentBrush", t.Accent);
-        AnimateBrush("DangerBrush", t.Danger);
-        AnimateBrush("WarningBrush", t.Warning);
-        AnimateBrush("OkBrush", t.Ok);
+        SetBrush("AppBackgroundBrush", t.AppBackground);
+        SetBrush("SidebarBackgroundBrush", t.Sidebar);
+        SetBrush("SurfaceBrush", t.Surface);
+        SetBrush("SurfaceAltBrush", t.SurfaceAlt);
+        SetBrush("ElevatedBrush", t.Elevated);
+        SetBrush("InputBackgroundBrush", t.Input);
+        SetBrush("BorderBrush", t.Border);
+        SetBrush("BorderHoverBrush", t.BorderHover);
+        SetBrush("TextPrimaryBrush", t.TextPrimary);
+        SetBrush("TextSecondaryBrush", t.TextSecondary);
+        SetBrush("TextMutedBrush", t.TextMuted);
+        SetBrush("PrimaryBrush", t.Primary);
+        SetBrush("AccentBrush", t.Accent);
+        SetBrush("DangerBrush", t.Danger);
+        SetBrush("WarningBrush", t.Warning);
+        SetBrush("OkBrush", t.Ok);
         Application.Current.Resources["PrimaryColor"] = t.Primary;
         Application.Current.Resources["AccentColor"] = t.Accent;
     }
 
-    private static void AnimateBrush(string key, Color target)
+    private static void SetBrush(string key, Color target)
     {
-        if (Application.Current.Resources[key] is SolidColorBrush brush)
-        {
-            if (brush.IsFrozen)
-            {
-                brush = new SolidColorBrush(brush.Color);
-                Application.Current.Resources[key] = brush;
-            }
-
-            brush.BeginAnimation(
-                SolidColorBrush.ColorProperty,
-                new ColorAnimation(target, TimeSpan.FromMilliseconds(320)));
-        }
-        else
-        {
-            Application.Current.Resources[key] = new SolidColorBrush(target);
-        }
+        Application.Current.Resources[key] = new SolidColorBrush(target);
     }
 
     private static string ResolveSystemTheme()

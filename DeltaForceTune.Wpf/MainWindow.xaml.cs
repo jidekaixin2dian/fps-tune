@@ -9,6 +9,7 @@ namespace DeltaForceTune.Wpf;
 public partial class MainWindow : Window
 {
     private readonly Dictionary<string, UserControl> _pages;
+    private bool _themeAnimating;
 
     public MainWindow()
     {
@@ -65,7 +66,24 @@ public partial class MainWindow : Window
     {
         if (sender is RadioButton { Tag: string mode })
         {
-            ThemeManager.SetMode(mode);
+            AnimateThemeChange(mode);
         }
+    }
+
+    private void AnimateThemeChange(string mode)
+    {
+        if (_themeAnimating)
+            return;
+
+        _themeAnimating = true;
+        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(110));
+        fadeOut.Completed += (_, _) =>
+        {
+            ThemeManager.SetMode(mode);
+            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200));
+            fadeIn.Completed += (_, _) => _themeAnimating = false;
+            BeginAnimation(OpacityProperty, fadeIn);
+        };
+        BeginAnimation(OpacityProperty, fadeOut);
     }
 }
