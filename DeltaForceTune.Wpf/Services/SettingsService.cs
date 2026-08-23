@@ -32,24 +32,36 @@ public static class SettingsService
 
     public static AppSettings Current { get; private set; } = new();
 
+    private static AppSettings CreateDefault() => new()
+    {
+        WeChat = "jiaxindeyang",
+        QQ = "1335638265",
+        Douyin = "jiaxindeyang",
+        Email = "",
+        WeChatLink = "",
+        QQLink = "https://qm.qq.com/q/jwbacnxrmU",
+        DouyinLink = "https://v.douyin.com/sf-DA6eLcjQ/",
+        ThemeMode = "system"
+    };
+
     public static void Load()
     {
         try
         {
             if (!File.Exists(SettingsFile))
             {
-                Current = new AppSettings();
+                Current = CreateDefault();
                 return;
             }
 
             var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
-            Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            Current = JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
                 Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
         }
         catch
         {
-            Current = new AppSettings();
+            Current = CreateDefault();
         }
     }
 
