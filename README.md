@@ -19,11 +19,23 @@
 
 ## 快速开始（AI Agent）
 
-将下面的指令发送给支持执行 PowerShell 的 Agent：
+项目地址：<https://github.com/jiaxindeyang-a11y/delta-force-tune>
+
+如果 Agent 已经在仓库目录里，直接发：
 
 ```text
-读取 <delta-skill 目录>/SKILL.md 并按其中的流程帮我优化《三角洲行动》的帧率
+读取当前目录下的 SKILL.md，严格按其中的流程帮我优化《三角洲行动》的帧率。
 ```
+
+如果 Agent 还没有本项目，先让它克隆仓库，再读 SKILL.md：
+
+```text
+先执行 git clone https://github.com/jiaxindeyang-a11y/delta-force-tune.git，
+然后读取克隆目录里的 SKILL.md，严格按其中的流程帮我优化《三角洲行动》的帧率。
+```
+
+> 不要只发“帮我优化帧率”：AI 不知道项目在哪，很容易凭空发挥。必须让 Agent
+> 先拿到本项目，再以 SKILL.md 作为唯一操作流程。
 
 ## 快速开始（命令行）
 

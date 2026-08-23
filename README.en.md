@@ -43,11 +43,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 
 ## Quick start (AI agent)
 
-Send an agent that can run PowerShell the instruction:
+Project repository: <https://github.com/jiaxindeyang-a11y/delta-force-tune>
+
+If the agent is already inside the repo:
 
 ```text
-Read SKILL.md in this repo and follow its workflow to tune Delta Force frame rates.
+Read SKILL.md in the current directory and strictly follow its workflow to tune Delta Force frame rates.
 ```
+
+If the agent does not have the project yet, let it clone the repo first:
+
+```text
+Run: git clone https://github.com/jiaxindeyang-a11y/delta-force-tune.git
+Then read SKILL.md in the cloned directory and strictly follow its workflow to tune Delta Force frame rates.
+```
+
+> Do not just say "optimize my FPS": the agent does not know where the project is.
+> Make sure it obtains this repo first and treats SKILL.md as the only operating procedure.
 
 ## A/B auto-tuning
 

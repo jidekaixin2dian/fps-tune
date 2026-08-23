@@ -25,6 +25,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File friend-test.ps1 `
   -Notes "体感流畅"
 ```
 
+**朋友使用 `friend-test.ps1` 的注意事项：**
+
+1. 这个脚本只生成记录表，**不会执行任何优化或还原**。
+2. 顺序不能反：先测“优化前”，再运行 `-Apply`，再测“优化后”；测完“优化后”再决定是否 `-Restore`。
+3. 前后必须保持同一场景、画质、分辨率、DLSS/FSR、路线和时长；游戏保持前台，不要切窗口、不要开其他占资源的程序。
+4. 没有 1% low 数据就留空；有“游戏加加”或游戏内 FPS 面板时，优先记录 1% low 或帧时间图。
+5. 脚本会自动读取 CPU / GPU / 内存 / 系统；如果机器改过显卡型号，请在备注里写明真实型号。
+6. 生成文件默认在桌面；可用 `-OutDir "D:\路径"` 改位置。
+7. 运行 `friend-test.ps1` 不需要管理员权限；但后面的 `-Apply` 优化步骤可能需要管理员 PowerShell。
+8. 不要双击 .ps1 文件；请在 PowerShell 里执行上面命令。
+9. 回传生成的 `.md` 或 `.csv` 文件即可。
+
 ## 方式 A：完整 A/B 自动采样（有官方 PresentMon 时）
 
 1. 自己安装官方 PresentMon：`winget install Intel.PresentMon.Console`
