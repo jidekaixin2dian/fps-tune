@@ -1,0 +1,90 @@
+<UserControl x:Class="DeltaForceTune.Wpf.Views.AbExperimentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <TextBlock Text="A/B 实验"
+                       Style="{StaticResource PageTitleStyle}"
+                       VerticalAlignment="Center"/>
+            <Button x:Name="OpenDirButton"
+                    Content="打开实验目录"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    HorizontalAlignment="Right"
+                    MinWidth="130"
+                    Click="OpenDirButton_Click"/>
+        </Grid>
+
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="1. 基线" Style="{StaticResource SecondaryButtonStyle}" Click="Baseline_Click"/>
+            <Button Grid.Column="2" Content="2. group-1" Style="{StaticResource SecondaryButtonStyle}" Click="Group1_Click"/>
+            <Button Grid.Column="4" Content="3. group-2" Style="{StaticResource SecondaryButtonStyle}" Click="Group2_Click"/>
+            <Button Grid.Column="6" Content="4. group-3" Style="{StaticResource SecondaryButtonStyle}" Click="Group3_Click"/>
+            <Button Grid.Column="8" Content="5. 报告" Style="{StaticResource SecondaryButtonStyle}" Click="Report_Click"/>
+        </Grid>
+
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,14"
+                BorderBrush="{DynamicResource AccentBrush}">
+            <TextBlock x:Name="StatusText"
+                       Text="就绪。点击上方步骤开始采样。"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+        </Border>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="44*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="56*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="采样结果" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBox Grid.Row="1"
+                             x:Name="ResultBox"
+                             Style="{StaticResource MonoTextBoxStyle}"
+                             IsReadOnly="True"
+                             Text="等待采样..."/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="原始输出" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBox Grid.Row="1"
+                             x:Name="RawBox"
+                             Style="{StaticResource MonoTextBoxStyle}"
+                             IsReadOnly="True"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

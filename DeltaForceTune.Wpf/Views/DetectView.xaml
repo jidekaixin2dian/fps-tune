@@ -1,0 +1,107 @@
+<UserControl x:Class="DeltaForceTune.Wpf.Views.DetectView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <TextBlock Text="检测"
+                       Style="{StaticResource PageTitleStyle}"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="RunButton"
+                        Content="运行检测"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        MinWidth="110"
+                        Margin="0,0,10,0"
+                        Click="RunButton_Click"/>
+                <Button x:Name="LoadButton"
+                        Content="加载到优化页"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        MinWidth="130"
+                        Click="LoadButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Cards -->
+        <Grid Grid.Row="1" Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="硬件信息" Style="{StaticResource CardTitleStyle}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="CPU" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CpuText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GPU" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="GpuText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="内存" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="RamText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="系统版本" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="OsText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="笔记本" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="LaptopText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="管理员" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" x:Name="AdminText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="游戏路径 / 只读体检" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="游戏路径" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="GamePathText" Text="--"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,4,0,14"/>
+                    <TextBlock Text="VC++ 运行库" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="Check1Text" Text="--" Foreground="{DynamicResource OkBrush}" Margin="0,4,0,10"/>
+                    <TextBlock Text="内存频率" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="Check2Text" Text="--" Foreground="{DynamicResource OkBrush}" Margin="0,4,0,10"/>
+                    <TextBlock Text="PCIe 链路" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="Check3Text" Text="--" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Output -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="检测输出" Style="{StaticResource CardTitleStyle}"/>
+                <TextBox Grid.Row="1"
+                         x:Name="OutputBox"
+                         Style="{StaticResource MonoTextBoxStyle}"
+                         IsReadOnly="True"
+                         Text="点击“运行检测”开始。"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

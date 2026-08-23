@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DeltaForceTune.Wpf</RootNamespace>
+    <AssemblyName>DeltaForceTune</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\delta-optimizer.ps1" Link="delta-optimizer.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\tuning-experiment.ps1" Link="tuning-experiment.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\friend-test.ps1" Link="friend-test.ps1" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

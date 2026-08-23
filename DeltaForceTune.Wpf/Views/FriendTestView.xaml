@@ -1,0 +1,103 @@
+<UserControl x:Class="DeltaForceTune.Wpf.Views.FriendTestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <TextBlock Text="朋友测试"
+                       Style="{StaticResource PageTitleStyle}"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="GenerateButton"
+                        Content="生成记录表"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        MinWidth="120"
+                        Margin="0,0,10,0"
+                        Click="GenerateButton_Click"/>
+                <Button x:Name="OpenOutputButton"
+                        Content="打开输出目录"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        MinWidth="120"
+                        Click="OpenOutputButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="46*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="54*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="表单" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="昵称" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBox x:Name="NameBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
+
+                    <TextBlock Text="场景 / 画质 / 设置" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBox x:Name="SceneBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="优化前平均 FPS" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBox x:Name="BeforeAvgBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="优化前 1% low" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBox x:Name="BeforeP1Box" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="优化后平均 FPS" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBox x:Name="AfterAvgBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="优化后 1% low" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBox x:Name="AfterP1Box" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="备注" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBox x:Name="NotesBox"
+                             Style="{StaticResource InputTextBoxStyle}"
+                             Height="80"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Markdown 预览" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBox Grid.Row="1"
+                             x:Name="PreviewBox"
+                             Style="{StaticResource MonoTextBoxStyle}"
+                             IsReadOnly="True"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
