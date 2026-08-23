@@ -11,6 +11,11 @@ public static class AppState
 
 public sealed record OptimizationItem(
     string Id,
+    string Name,
     string Description,
-    bool RequiresAdmin = false,
-    bool RequiresReboot = false);
+    string SideEffect,
+    bool RequiresAdmin,
+    bool RequiresReboot,
+    bool Optimized,
+    string Current,
+    bool IsDefault);

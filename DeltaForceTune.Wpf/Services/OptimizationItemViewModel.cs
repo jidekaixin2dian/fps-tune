@@ -8,16 +8,24 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     private bool _isChecked;
 
     public string Id { get; }
+    public string Name { get; }
     public string Description { get; }
+    public string SideEffect { get; }
     public bool RequiresAdmin { get; }
     public bool RequiresReboot { get; }
+    public bool Optimized { get; }
+    public string Current { get; }
 
     public OptimizationItemViewModel(OptimizationItem item)
     {
         Id = item.Id;
+        Name = item.Name;
         Description = item.Description;
+        SideEffect = item.SideEffect;
         RequiresAdmin = item.RequiresAdmin;
         RequiresReboot = item.RequiresReboot;
+        Optimized = item.Optimized;
+        Current = item.Current;
     }
 
     public bool IsChecked

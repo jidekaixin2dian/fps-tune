@@ -1,4 +1,4 @@
-<UserControl x:Class="DeltaForceTune.Wpf.Views.OptimizeView"
+﻿<UserControl x:Class="DeltaForceTune.Wpf.Views.OptimizeView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:svc="clr-namespace:DeltaForceTune.Wpf.Services"
@@ -83,11 +83,17 @@
                                                Foreground="{DynamicResource AccentBrush}"
                                                Margin="8,0,10,0"
                                                VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="2"
-                                               Text="{Binding Description}"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               TextWrapping="Wrap"
-                                               VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Description}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
                                     <TextBlock Grid.Column="3"
                                                Text="管理员"
                                                Foreground="{DynamicResource WarningBrush}"

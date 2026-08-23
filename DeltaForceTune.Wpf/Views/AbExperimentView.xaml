@@ -7,6 +7,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -47,44 +48,62 @@
                        Text="就绪。点击上方步骤开始采样。"
                        FontSize="14"
                        FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       TextWrapping="Wrap"/>
         </Border>
 
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="44*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="56*"/>
-            </Grid.ColumnDefinitions>
-
-            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="采样结果" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBox Grid.Row="1"
-                             x:Name="ResultBox"
-                             Style="{StaticResource MonoTextBoxStyle}"
-                             IsReadOnly="True"
-                             Text="等待采样..."/>
-                </Grid>
+        <UniformGrid Grid.Row="3" Columns="3" Margin="0,0,0,14">
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="平均 FPS" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="AvgFpsText" Text="--" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6,0,0"/>
+                </StackPanel>
             </Border>
-
-            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="原始输出" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBox Grid.Row="1"
-                             x:Name="RawBox"
-                             Style="{StaticResource MonoTextBoxStyle}"
-                             IsReadOnly="True"/>
-                </Grid>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="1% low" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="P1LowText" Text="--" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6,0,0"/>
+                </StackPanel>
             </Border>
-        </Grid>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="P99 (ms)" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="P99Text" Text="--" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="卡顿" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="StutterText" Text="--" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource WarningBrush}" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="CV" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="CvText" Text="--" FontSize="30" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="结论" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="DecisionText" Text="--" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource OkBrush}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="原始输出" Style="{StaticResource CardTitleStyle}"/>
+                <TextBox Grid.Row="1"
+                         x:Name="RawBox"
+                         Style="{StaticResource MonoTextBoxStyle}"
+                         IsReadOnly="True"
+                         Text="等待采样..."/>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

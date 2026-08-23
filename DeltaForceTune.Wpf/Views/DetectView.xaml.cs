@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -69,7 +69,11 @@ public partial class DetectView : UserControl
                 foreach (var item in items)
                 {
                     var id = item?["id"]?.GetValue<string>() ?? "";
-                    var desc = item?["description"]?.GetValue<string>() ?? "";
+                    var name = item?["name"]?.GetValue<string>() ?? "";
+                    var desc = item?["desc"]?.GetValue<string>()
+                        ?? item?["description"]?.GetValue<string>()
+                        ?? "";
+                    var sideEffect = item?["sideEffect"]?.GetValue<string>() ?? "";
                     var admin = item?["requiresAdmin"]?.GetValue<bool>()
                         ?? item?["needsAdmin"]?.GetValue<bool>()
                         ?? item?["admin"]?.GetValue<bool>()
@@ -78,7 +82,10 @@ public partial class DetectView : UserControl
                         ?? item?["needsReboot"]?.GetValue<bool>()
                         ?? item?["reboot"]?.GetValue<bool>()
                         ?? false;
-                    AppState.Items.Add(new OptimizationItem(id, desc, admin, reboot));
+                    var optimized = item?["optimized"]?.GetValue<bool>() ?? false;
+                    var current = item?["current"]?.GetValue<string>() ?? "";
+                    var isDefault = item?["default"]?.GetValue<bool>() ?? false;
+                    AppState.Items.Add(new OptimizationItem(id, name, desc, sideEffect, admin, reboot, optimized, current, isDefault));
                 }
             }
 
@@ -98,9 +105,23 @@ public partial class DetectView : UserControl
                     sb.AppendLine($"[{c?["status"]?.GetValue<string>()}] {c?["name"]?.GetValue<string>()}: {c?["message"]?.GetValue<string>()}");
             }
             sb.AppendLine();
-            sb.AppendLine($"优化项共 {AppState.Items.Count} 项。");
-            sb.AppendLine();
-            sb.AppendLine(result.Output);
+            sb.AppendLine($"== 优化项（{AppState.Items.Count} 项） ==");
+            foreach (var item in AppState.Items)
+            {
+                var status = item.Optimized ? "[已达标]" : "[未应用]";
+                sb.AppendLine($"{status} {item.Id}  {item.Name}");
+                if (!string.IsNullOrWhiteSpace(item.Description))
+                    sb.AppendLine($"      说明：{item.Description}");
+                if (!string.IsNullOrWhiteSpace(item.SideEffect))
+                    sb.AppendLine($"      副作用：{item.SideEffect}");
+                if (!string.IsNullOrWhiteSpace(item.Current))
+                    sb.AppendLine($"      当前：{item.Current}");
+                var req = (item.RequiresAdmin ? "管理员" : "普通用户") +
+                          (item.RequiresReboot ? "，需重启" : "");
+                sb.AppendLine($"      要求：{req}");
+                sb.AppendLine();
+            }
+            sb.AppendLine("详细原始 JSON 不在此显示，可在备份/日志页查看。");
             OutputBox.Text = sb.ToString();
         }
         catch (Exception ex)
