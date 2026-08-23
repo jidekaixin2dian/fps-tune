@@ -11,6 +11,17 @@ public partial class SettingsView : UserControl
         InitializeComponent();
         Loaded += (_, _) => LoadSettings();
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
+        var isAdmin = AdminHelper.IsAdministrator();
+        if (isAdmin)
+        {
+            AdminStatusText.Text = "当前已是管理员";
+            AdminStatusText.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["OkBrush"];
+            AdminRestartButton.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            AdminStatusText.Text = "当前不是管理员，部分优化项可能失败";
+        }
     }
 
     private void LoadSettings()
@@ -56,4 +67,7 @@ public partial class SettingsView : UserControl
 
         MessageBox.Show("设置已保存。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
     }
+
+    private void AdminRestartButton_Click(object sender, RoutedEventArgs e)
+        => AdminHelper.RestartAsAdministrator();
 }

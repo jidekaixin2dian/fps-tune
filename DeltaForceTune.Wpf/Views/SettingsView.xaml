@@ -55,6 +55,20 @@
                            Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                 <TextBlock Text="联系方式仅接受合作/反馈。"
                            Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                    <TextBlock x:Name="AdminStatusText"
+                               Text="当前非管理员"
+                               Foreground="{DynamicResource WarningBrush}"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,14,0"/>
+                    <Button x:Name="AdminRestartButton"
+                            Content="以管理员身份重启"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            MinWidth="150"
+                            Click="AdminRestartButton_Click"/>
+                </StackPanel>
             </StackPanel>
         </Border>
         </Grid>
