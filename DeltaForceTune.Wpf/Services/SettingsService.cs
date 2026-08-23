@@ -53,6 +53,13 @@ public static class SettingsService
 
     public static void Save(AppSettings settings)
     {
+        // 自动生成常用联系方式链接
+        if (string.IsNullOrWhiteSpace(settings.QQLink) && !string.IsNullOrWhiteSpace(settings.QQ))
+            settings.QQLink = "https://wpa.qq.com/msgrd?v=3&uin=" + Uri.EscapeDataString(settings.QQ) + "&site=qq&menu=yes";
+
+        if (string.IsNullOrWhiteSpace(settings.WeChatLink) && !string.IsNullOrWhiteSpace(settings.WeChat))
+            settings.WeChatLink = "weixin://dl/chat?username=" + Uri.EscapeDataString(settings.WeChat);
+
         Current = settings;
         Directory.CreateDirectory(BaseDir);
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });

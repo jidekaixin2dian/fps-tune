@@ -31,11 +31,11 @@
                 <TextBlock Text="邮箱（可选）" Style="{StaticResource MutedTextStyle}"/>
                 <TextBox x:Name="EmailBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,12"/>
                 <TextBlock Text="默认主题" Style="{StaticResource MutedTextStyle}"/>
-                <ComboBox x:Name="ThemeBox" Foreground="{DynamicResource TextPrimaryBrush}" Background="{DynamicResource InputBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" Margin="0,4,0,12">
-                    <ComboBoxItem Content="深色" Tag="dark"/>
-                    <ComboBoxItem Content="亮色" Tag="light"/>
-                    <ComboBoxItem Content="跟随系统" Tag="system"/>
-                </ComboBox>
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,12">
+                    <RadioButton x:Name="ThemeDarkRadio" Content="深色" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}" Margin="0,0,12,0"/>
+                    <RadioButton x:Name="ThemeLightRadio" Content="亮色" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}" Margin="0,0,12,0"/>
+                    <RadioButton x:Name="ThemeSystemRadio" Content="跟随系统" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}"/>
+                </StackPanel>
                 <Button Content="保存设置"
                         Style="{StaticResource PrimaryButtonStyle}"
                         HorizontalAlignment="Left"

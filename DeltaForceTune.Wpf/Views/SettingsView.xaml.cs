@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using DeltaForceTune.Wpf.Services;
 
@@ -23,17 +23,19 @@ public partial class SettingsView : UserControl
         DouyinLinkBox.Text = s.DouyinLink;
         EmailBox.Text = s.Email;
 
-        var index = s.ThemeMode switch
-        {
-            "light" => 1,
-            "system" => 2,
-            _ => 0
-        };
-        ThemeBox.SelectedIndex = index;
+        if (s.ThemeMode == "light")
+            ThemeLightRadio.IsChecked = true;
+        else if (s.ThemeMode == "system")
+            ThemeSystemRadio.IsChecked = true;
+        else
+            ThemeDarkRadio.IsChecked = true;
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
+        var theme = ThemeDarkRadio.IsChecked == true ? "dark"
+            : ThemeLightRadio.IsChecked == true ? "light" : "system";
+
         var settings = new AppSettings
         {
             WeChat = WeChatBox.Text.Trim(),
@@ -43,7 +45,7 @@ public partial class SettingsView : UserControl
             Douyin = DouyinBox.Text.Trim(),
             DouyinLink = DouyinLinkBox.Text.Trim(),
             Email = EmailBox.Text.Trim(),
-            ThemeMode = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "dark"
+            ThemeMode = theme
         };
 
         SettingsService.Save(settings);
