@@ -73,6 +73,7 @@ delta-skill/
 ├── delta-optimizer.ps1   # 核心引擎（PowerShell 5.1，单文件，含中文注释）
 ├── tuning-experiment.ps1 # A/B 自动调优实验（基线 + 候选组 + 规则决策 + CSV 导出）
 ├── SKILL.md              # AI Agent 调用说明（流程 + 红线）
+├── TESTING.md            # 朋友测试指南（完整 A/B 或只有帧率/游戏加加数据）
 ├── README.md             # 中文说明
 ├── README.en.md          # English readme
 └── LICENSE               # MIT
@@ -92,6 +93,9 @@ delta-skill/
 
 结论：三组低风险候选在本机靶场均未达到保留规则（平均 ≥2% 或 1% low ≥5%），
 全部按规则自动还原，系统设置已恢复到采样前状态。该结果仅代表本机/本场景。
+
+> 欢迎邀请朋友参与测试。没有 PresentMon 也可以只回传“游戏加加”或游戏内
+> FPS 面板的平均帧率 / 1% low 截图，记录模板见 [TESTING.md](TESTING.md)。
 
 ## 开发状态
 

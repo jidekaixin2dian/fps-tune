@@ -25,6 +25,7 @@ no GUI, no telemetry, no auto-updater — one script, plug and play.
 | `delta-optimizer.ps1` | Core engine: detect / apply / restore, 22 optimizations + 3 read-only health checks |
 | `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
+| `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
 
 ## Quick start (CLI)
 
@@ -92,6 +93,10 @@ per group; baseline CV 1.18% (threshold ≤ 0.05, stable).
 Conclusion: none of the three low-risk candidate groups reached the keep rule
 (avg ≥ 2% or 1% low ≥ 5%) on this machine/scene, so the script auto-reverted all of
 them and system settings were restored to their pre-test state.
+
+> Friends are welcome to test too. Without PresentMon, a simple before/after
+> average FPS / 1% low screenshot from GamePP or the in-game overlay is useful.
+> See [TESTING.md](TESTING.md) for the template.
 
 ## License
 

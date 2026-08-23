@@ -120,6 +120,7 @@ function Find-PresentMon {
     $c = Get-Command PresentMon -ErrorAction SilentlyContinue
     if ($c) { return $c.Source }
     $candidates = @(
+        (Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Links\presentmon.exe'),
         'C:\Program Files\NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe',
         'C:\Program Files (x86)\NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe'
     )
