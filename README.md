@@ -101,6 +101,7 @@ delta-skill/
 ├── SKILL.md              # AI Agent 调用说明（流程 + 红线）
 ├── TESTING.md            # 朋友测试指南（完整 A/B 或只有帧率/游戏加加数据）
 ├── GUI_PLAN.md           # GUI 阶段合规功能规划
+├── GUI_DESIGN_PROMPT.md   # 给 V4 flash vision 的视觉设计提示词
 ├── README.md             # 中文说明
 ├── README.en.md          # English readme
 └── LICENSE               # MIT

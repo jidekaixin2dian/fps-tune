@@ -29,6 +29,7 @@ no telemetry, no auto-updater; optional functional GUI, but the core is still on
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
 | `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
 | `GUI_PLAN.md` | GUI-phase compliant feature plan (no spoofing, no overlay) |
+| `GUI_DESIGN_PROMPT.md` | Visual design prompt for the V4 flash vision pass |
 
 ## Quick start (CLI)
 

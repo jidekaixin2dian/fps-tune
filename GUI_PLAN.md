@@ -3,7 +3,8 @@
 > 目标：让不熟悉命令行的玩家也能安全地使用 delta-force-tune。
 >
 > **当前状态**：功能版 `delta-gui.ps1` 已实现（检测 / 优化授权 / A/B 实验 /
-> 朋友测试 / 备份日志）。视觉设计后续交给 V4 flash version。
+> 朋友测试 / 备份日志）。视觉设计后续交给 V4 flash version，提示词见
+> [GUI_DESIGN_PROMPT.md](GUI_DESIGN_PROMPT.md)。
 > 原则：GUI 只做“调用脚本 + 展示结果 + 确认授权”，所有系统改动仍由
 > `delta-optimizer.ps1` / `tuning-experiment.ps1` 完成，GUI 不绕过备份与还原机制。
 
