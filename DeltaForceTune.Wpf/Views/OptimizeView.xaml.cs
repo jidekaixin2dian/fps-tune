@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Text.Json.Nodes;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -215,21 +216,64 @@ public partial class OptimizeView : UserControl
 
     private static string FormatResult(RunResult result)
     {
-        if (result.Success)
+        var error = new StringBuilder();
+        if (!result.Success)
         {
-            var sb = new StringBuilder();
-            sb.AppendLine(result.Output);
+            error.AppendLine($"exit={result.ExitCode}");
+            if (!string.IsNullOrWhiteSpace(result.Output))
+                error.AppendLine("--- STDOUT ---").AppendLine(result.Output);
             if (!string.IsNullOrWhiteSpace(result.Error))
-                sb.AppendLine("--- STDERR ---").AppendLine(result.Error);
-            return sb.ToString();
+                error.AppendLine("--- STDERR ---").AppendLine(result.Error);
+            return error.ToString();
         }
 
-        var error = new StringBuilder();
-        error.AppendLine($"exit={result.ExitCode}");
-        if (!string.IsNullOrWhiteSpace(result.Output))
-            error.AppendLine("--- STDOUT ---").AppendLine(result.Output);
+        // 尝试把 Apply 结果解析成逐项清单
+        try
+        {
+            var root = JsonNode.Parse(result.Output);
+            if (root?["results"] is JsonArray results)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("== 应用结果 ==");
+                foreach (var item in results)
+                {
+                    var id = item?["id"]?.GetValue<string>() ?? "";
+                    var name = item?["name"]?.GetValue<string>() ?? "";
+                    var ok = item?["ok"]?.GetValue<bool>() ?? false;
+                    var skipped = item?["skipped"]?.GetValue<bool>() ?? false;
+                    var message = item?["message"]?.GetValue<string>() ?? "";
+                    var tag = skipped ? "[跳过]" : ok ? "[成功]" : "[失败]";
+                    sb.AppendLine($"{tag} {id}  {name}  {message}");
+                }
+
+                var summary = root["summary"]?.GetValue<string>();
+                if (!string.IsNullOrWhiteSpace(summary))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("汇总：" + summary);
+                }
+
+                var backup = root["backupFile"]?.GetValue<string>();
+                if (!string.IsNullOrWhiteSpace(backup))
+                    sb.AppendLine("备份：" + backup);
+
+                if (root["reboot"] is JsonArray reboot && reboot.Count > 0)
+                {
+                    var ids = reboot.Select(r => r?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
+                    sb.AppendLine("需重启：" + string.Join(", ", ids));
+                }
+                return sb.ToString();
+            }
+        }
+        catch
+        {
+            // 非 JSON 或非 Apply 结果，继续走原始输出
+        }
+
+        var raw = new StringBuilder();
+        raw.AppendLine(result.Output);
         if (!string.IsNullOrWhiteSpace(result.Error))
-            error.AppendLine("--- STDERR ---").AppendLine(result.Error);
-        return error.ToString();
+            raw.AppendLine("--- STDERR ---").AppendLine(result.Error);
+        return raw.ToString();
     }
 }

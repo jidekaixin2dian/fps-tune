@@ -24,6 +24,7 @@
     <EmbeddedResource Include="..\friend-test.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.friend-test.ps1" />
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\app-icon.png" />
+    <Resource Include="Assets\wechat-qr.png" />
   </ItemGroup>
 
 </Project>

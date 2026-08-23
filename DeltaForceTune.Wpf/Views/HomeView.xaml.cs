@@ -12,6 +12,7 @@ public partial class HomeView : UserControl
     {
         InitializeComponent();
         Loaded += (_, _) => RefreshContacts();
+        VersionText.Text = "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
     }
 
     public void RefreshContacts()
@@ -46,12 +47,24 @@ public partial class HomeView : UserControl
         };
         if (!string.IsNullOrWhiteSpace(link))
             text.TextDecorations = TextDecorations.Underline;
-        text.MouseLeftButtonUp += (_, _) => OpenContact(value, link);
+        text.MouseLeftButtonUp += (_, _) => OpenContact(label, value, link);
         return text;
     }
 
-    private static void OpenContact(string value, string link)
+    private static void OpenContact(string label, string value, string link)
     {
+        if (label == "微信" && string.IsNullOrWhiteSpace(link))
+        {
+            var owner = Application.Current.Windows
+                .OfType<Window>()
+                .FirstOrDefault(w => w.IsActive);
+            var qr = new WeChatQrWindow();
+            if (owner is not null)
+                qr.Owner = owner;
+            qr.ShowDialog();
+            return;
+        }
+
         if (!string.IsNullOrWhiteSpace(link))
         {
             try

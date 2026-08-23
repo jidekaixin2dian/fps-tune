@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using DeltaForceTune.Wpf.Services;
 using DeltaForceTune.Wpf.Views;
@@ -60,7 +61,16 @@ public partial class MainWindow : Window
 
         PageHost.Opacity = 0;
         PageHost.Content = page;
-        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180))
+
+        var slide = new TranslateTransform(24, 0);
+        PageHost.RenderTransform = slide;
+        var slideAnim = new DoubleAnimation(24, 0, TimeSpan.FromMilliseconds(220))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        slide.BeginAnimation(TranslateTransform.XProperty, slideAnim);
+
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
         {
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
         };

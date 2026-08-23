@@ -57,6 +57,11 @@
                                FontSize="12"
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,8,0,0"/>
+                    <TextBlock x:Name="VersionText"
+                               Text="v1.0.0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               Margin="0,8,0,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Button Content="开始优化"
