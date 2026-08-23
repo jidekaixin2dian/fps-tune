@@ -33,6 +33,15 @@ public partial class HomeView : UserControl
 
         if (!string.IsNullOrWhiteSpace(s.Email))
             ContactPanel.Children.Add(MakeContact("邮箱", s.Email, ""));
+
+        ContactPanel.Children.Add(new TextBlock
+        {
+            Text = "仅接受合作/反馈",
+            Margin = new Thickness(0, 0, 0, 0),
+            FontSize = 11,
+            Opacity = 0.7,
+            Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextMutedBrush"]
+        });
     }
 
     private TextBlock MakeContact(string label, string value, string link)
