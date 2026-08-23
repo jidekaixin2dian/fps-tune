@@ -3,13 +3,13 @@ using System.Text.Json.Nodes;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using DeltaForceTune.Wpf.Core;
 using DeltaForceTune.Wpf.Services;
 
 namespace DeltaForceTune.Wpf.Views;
 
 public partial class OptimizeView : UserControl
 {
-    private readonly string _enginePath;
     private bool _loadedFromState;
 
     private static readonly string[] SafeOnlyIds =
@@ -24,8 +24,6 @@ public partial class OptimizeView : UserControl
     {
         InitializeComponent();
         DataContext = this;
-        _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
-
         PresetFull.Checked += (_, _) => ShowPresetContents();
         PresetBalanced.Checked += (_, _) => ShowPresetContents();
         PresetSafeOnly.Checked += (_, _) => ShowPresetContents();
@@ -173,7 +171,18 @@ public partial class OptimizeView : UserControl
 
         try
         {
-            var result = await PowerShellRunner.RunAsync(_enginePath, args.ToArray());
+            RunResult result;
+            if (PresetCustom.IsChecked == true)
+            {
+                var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
+                result = await OptimizationEngine.ApplyItemsAsync(ids);
+            }
+            else
+            {
+                var preset = PresetFull.IsChecked == true ? "full"
+                    : PresetSafeOnly.IsChecked == true ? "safe-only" : "balanced";
+                result = await OptimizationEngine.ApplyPresetAsync(preset);
+            }
             OutputBox.Text = FormatResult(result);
         }
         catch (Exception ex)
@@ -200,7 +209,7 @@ public partial class OptimizeView : UserControl
 
         try
         {
-            var result = await PowerShellRunner.RunAsync(_enginePath, "-Restore", "-Json");
+            var result = await OptimizationEngine.RestoreAsync();
             OutputBox.Text = FormatResult(result);
         }
         catch (Exception ex)
