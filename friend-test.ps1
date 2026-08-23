@@ -7,7 +7,8 @@ param(
     [double]$BeforeP1Low = 0,
     [double]$AfterAvgFps = 0,
     [double]$AfterP1Low = 0,
-    [string]$Notes = ''
+    [string]$Notes = '',
+    [switch]$NoPrompt
 )
 
 Set-StrictMode -Version 2.0
@@ -22,6 +23,7 @@ $os = (Get-CimInstance Win32_OperatingSystem).Caption
 function Read-Required {
     param([string]$Prompt, [string]$Default)
     if ($Default) { return $Default }
+    if ($NoPrompt) { return '未填写' }
     $v = Read-Host $Prompt
     while (-not $v) {
         $v = Read-Host ($Prompt + '(必填)')
@@ -32,6 +34,7 @@ function Read-Required {
 function Read-OptionalNumber {
     param([string]$Prompt, [double]$Default)
     if ($Default -ne 0) { return $Default }
+    if ($NoPrompt) { return $null }
     $raw = Read-Host ($Prompt + '（没有可留空）')
     if (-not $raw) { return $null }
     $n = 0.0
@@ -48,7 +51,9 @@ $beforeAvg = Read-OptionalNumber '优化前平均 FPS' $BeforeAvgFps
 $beforeP1  = Read-OptionalNumber '优化前 1% low' $BeforeP1Low
 $afterAvg  = Read-OptionalNumber '优化后平均 FPS' $AfterAvgFps
 $afterP1   = Read-OptionalNumber '优化后 1% low' $AfterP1Low
-if (-not $Notes) { $Notes = Read-Host '备注（体感、是否还原等，可留空）' }
+if (-not $Notes) {
+    if ($NoPrompt) { $Notes = '' } else { $Notes = Read-Host '备注（体感、是否还原等，可留空）' }
+}
 
 # 输出目录：优先用 -OutDir，其次桌面，最后当前目录
 if (-not $OutDir) {

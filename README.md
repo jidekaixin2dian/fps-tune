@@ -15,7 +15,7 @@
 
 > 项目背景：市面上的同类工具（如 DeltaForceBooster）采用专有 EULA，禁止修改与再分发。
 > 本项目以**公开的功能清单**为参考，代码与文档完全自写，采用宽松许可证开源，
-> 并刻意做减法：无 GUI、无遥测、无更新器，一个脚本即插即用。
+> 并刻意做减法：无遥测、无更新器；GUI 功能版可选，核心仍是一个脚本即插即用。
 
 ## 快速开始（AI Agent）
 
@@ -50,6 +50,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Apply -
 powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore -Json
 ```
 
+## 快速开始（GUI 功能版）
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File delta-gui.ps1
+```
+
+当前 GUI 已完成功能版：检测、优化授权、A/B 实验、朋友测试、备份/日志。
+视觉设计后续交给 V4 flash version。
+
 ## 命令一览
 
 | 命令 | 说明 |
@@ -83,6 +92,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 ```
 delta-skill/
 ├── delta-optimizer.ps1   # 核心引擎（PowerShell 5.1，单文件，含中文注释）
+├── delta-gui.ps1         # GUI 功能版（WinForms，视觉后续交给 V4 flash version）
 ├── tuning-experiment.ps1 # A/B 自动调优实验（基线 + 候选组 + 规则决策 + CSV 导出）
 ├── friend-test.ps1       # 朋友测试：一键生成测试记录表（Markdown + CSV）
 ├── SKILL.md              # AI Agent 调用说明（流程 + 红线）
@@ -101,7 +111,7 @@ delta-skill/
 - [x] A/B 自动调优（tuning-experiment.ps1）：基线稳定性判定 + 3 候选组 + 规则决策 + 自动还原 + CSV 导出（dry-run 全链路验证通过）
 - [ ] A/B 真实采样（待更多机器 / 朋友数据）
 - [ ] 更多游戏路径检测兜底（WeGame / Steam 变体）
-- [ ] GUI（合规功能规划见 [GUI_PLAN.md](GUI_PLAN.md)）
+- [x] GUI 功能版（`delta-gui.ps1`，视觉待 V4 flash version；规划见 [GUI_PLAN.md](GUI_PLAN.md)）
 
 ## 许可
 

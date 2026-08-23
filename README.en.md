@@ -16,13 +16,14 @@ driven by an AI agent (Claude Code / Codex / WorkBuddy / Doubao, etc.) or plain 
 Existing tools in this space (e.g. DeltaForceBooster) use a proprietary EULA that forbids
 modification and redistribution. This project is written from scratch against the *public
 feature list* only, releases under a permissive license, and deliberately does less:
-no GUI, no telemetry, no auto-updater — one script, plug and play.
+no telemetry, no auto-updater; optional functional GUI, but the core is still one script, plug and play.
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `delta-optimizer.ps1` | Core engine: detect / apply / restore, 22 optimizations + 3 read-only health checks |
+| `delta-gui.ps1` | Functional WinForms GUI (visual pass later); detect / consent-apply / A/B / friend test / backup |
 | `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export |
 | `friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
@@ -40,6 +41,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Apply -
 
 # 3. Restore
 powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore -Json
+```
+
+## Quick start (GUI, functional)
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File delta-gui.ps1
 ```
 
 ## Quick start (AI agent)
