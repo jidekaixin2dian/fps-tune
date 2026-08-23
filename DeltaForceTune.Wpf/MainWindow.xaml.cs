@@ -45,6 +45,8 @@ public partial class MainWindow : Window
         if (sender is RadioButton { Tag: string key } && _pages.TryGetValue(key, out var page))
         {
             SwitchPage(page);
+            if (key == "opt" && page is OptimizeView opt)
+                opt.ReloadFromState();
         }
     }
 

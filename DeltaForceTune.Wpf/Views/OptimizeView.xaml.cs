@@ -48,6 +48,28 @@ public partial class OptimizeView : UserControl
     }
 
 
+    private void ApplyPresetChecks()
+    {
+        foreach (var item in Items)
+            item.IsChecked = false;
+
+        if (PresetFull.IsChecked == true)
+        {
+            foreach (var item in Items)
+                item.IsChecked = true;
+        }
+        else if (PresetSafeOnly.IsChecked == true)
+        {
+            foreach (var item in Items.Where(i => SafeOnlyIds.Contains(i.Id)))
+                item.IsChecked = true;
+        }
+        else
+        {
+            foreach (var item in Items.Where(i => !BalancedExclude.Contains(i.Id)))
+                item.IsChecked = true;
+        }
+    }
+
     private void ShowPresetContents()
     {
         if (AppState.Items.Count == 0)
@@ -57,6 +79,9 @@ public partial class OptimizeView : UserControl
         }
 
         var sb = new StringBuilder();
+        if (PresetCustom.IsChecked != true)
+            ApplyPresetChecks();
+
         if (PresetCustom.IsChecked == true)
         {
             sb.AppendLine("== 自定义模式 ==");
