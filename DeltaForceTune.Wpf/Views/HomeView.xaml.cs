@@ -1,3 +1,4 @@
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,25 +21,55 @@ public partial class HomeView : UserControl
         var qq = string.IsNullOrWhiteSpace(s.QQ) ? "待设置" : s.QQ;
         var douyin = string.IsNullOrWhiteSpace(s.Douyin) ? "待设置" : s.Douyin;
 
+        var qqLink = s.QQLink;
+        if (string.IsNullOrWhiteSpace(qqLink) && !string.IsNullOrWhiteSpace(s.QQ))
+            qqLink = "https://wpa.qq.com/msgrd?v=3&uin=" + Uri.EscapeDataString(s.QQ) + "&site=qq&menu=yes";
+
         ContactPanel.Children.Clear();
-        ContactPanel.Children.Add(MakeContact("微信", wechat));
-        ContactPanel.Children.Add(MakeContact("QQ", qq));
-        ContactPanel.Children.Add(MakeContact("抖音", douyin));
+        ContactPanel.Children.Add(MakeContact("微信", wechat, s.WeChatLink));
+        ContactPanel.Children.Add(MakeContact("QQ", qq, qqLink));
+        ContactPanel.Children.Add(MakeContact("抖音", douyin, s.DouyinLink));
 
         if (!string.IsNullOrWhiteSpace(s.Email))
-            ContactPanel.Children.Add(MakeContact("邮箱", s.Email));
+            ContactPanel.Children.Add(MakeContact("邮箱", s.Email, ""));
     }
 
-    private static TextBlock MakeContact(string label, string value)
+    private TextBlock MakeContact(string label, string value, string link)
     {
         var text = new TextBlock
         {
             Text = $"{label}：{value}",
             Margin = new Thickness(0, 0, 16, 0),
             FontSize = 12,
+            Cursor = Cursors.Hand,
             Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextSecondaryBrush"]
         };
+        if (!string.IsNullOrWhiteSpace(link))
+            text.TextDecorations = TextDecorations.Underline;
+        text.MouseLeftButtonUp += (_, _) => OpenContact(value, link);
         return text;
+    }
+
+    private static void OpenContact(string value, string link)
+    {
+        if (!string.IsNullOrWhiteSpace(link))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(link) { UseShellExecute = true });
+            }
+            catch
+            {
+                MessageBox.Show("无法打开链接。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(value) && value != "待设置")
+        {
+            Clipboard.SetText(value);
+            MessageBox.Show($"已复制：{value}", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void Module_Click(object sender, MouseButtonEventArgs e)

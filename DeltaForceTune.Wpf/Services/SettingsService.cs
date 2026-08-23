@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -10,6 +10,9 @@ public sealed class AppSettings
     public string QQ { get; set; } = "";
     public string Douyin { get; set; } = "";
     public string Email { get; set; } = "";
+    public string WeChatLink { get; set; } = "";
+    public string QQLink { get; set; } = "";
+    public string DouyinLink { get; set; } = "";
     public string ThemeMode { get; set; } = "dark";
 
     public bool HasContact =>

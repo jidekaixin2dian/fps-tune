@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -14,7 +15,7 @@
                    Style="{StaticResource PageTitleStyle}"
                    Margin="0,0,0,18"/>
 
-        <Grid Grid.Row="1" Margin="0,0,0,18">
+        <Grid Grid.Row="1" Margin="0,0,0,14">
             <StackPanel Orientation="Horizontal">
                 <Button Content="列出可还原项"
                         Style="{StaticResource SecondaryButtonStyle}"
@@ -38,7 +39,28 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+        <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,14">
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="备份目录" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="BackupDirText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="GUI 临时目录" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="TempDirText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="4">
+                <StackPanel>
+                    <TextBlock Text="当前状态" Style="{StaticResource MutedTextStyle}"/>
+                    <TextBlock x:Name="StatusText" Text="等待操作" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

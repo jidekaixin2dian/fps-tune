@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using DeltaForceTune.Wpf.Services;
-using System.IO;
 
 namespace DeltaForceTune.Wpf.Views;
 
@@ -10,18 +10,28 @@ public partial class BackupLogView : UserControl
 {
     private readonly string _enginePath;
     private readonly string _tempDir;
+    private readonly string _backupDir;
 
     public BackupLogView()
     {
         InitializeComponent();
         _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
         _tempDir = Path.Combine(Path.GetTempPath(), "delta-gui-tmp");
+        _backupDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "DeltaOptimizer", "backup");
         Directory.CreateDirectory(_tempDir);
+        Directory.CreateDirectory(_backupDir);
+
+        BackupDirText.Text = _backupDir;
+        TempDirText.Text = _tempDir;
     }
 
-
     private async void ListBackup_Click(object sender, RoutedEventArgs e)
-        => await Run("-ListRestoreItems", "-Json");
+    {
+        StatusText.Text = "正在读取可还原项...";
+        await Run("-ListRestoreItems", "-Json");
+    }
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
     {
@@ -30,6 +40,7 @@ public partial class BackupLogView : UserControl
         if (answer != MessageBoxResult.Yes)
             return;
 
+        StatusText.Text = "正在还原...";
         await Run("-Restore", "-Json");
     }
 
@@ -42,20 +53,19 @@ public partial class BackupLogView : UserControl
             LogBox.Text = result.Success
                 ? result.Output
                 : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
+            StatusText.Text = result.Success ? "操作完成" : "操作失败";
         }
         catch (Exception ex)
         {
             LogBox.Text = ex.ToString();
+            StatusText.Text = "执行异常";
         }
     }
 
     private void OpenBackup_Click(object sender, RoutedEventArgs e)
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "DeltaOptimizer", "backup");
-        Directory.CreateDirectory(dir);
-        Process.Start("explorer.exe", dir);
+        Directory.CreateDirectory(_backupDir);
+        Process.Start("explorer.exe", _backupDir);
     }
 
     private void OpenTemp_Click(object sender, RoutedEventArgs e)

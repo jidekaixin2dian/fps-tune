@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using DeltaForceTune.Wpf.Services;
 
@@ -16,8 +16,11 @@ public partial class SettingsView : UserControl
     {
         var s = SettingsService.Current;
         WeChatBox.Text = s.WeChat;
+        WeChatLinkBox.Text = s.WeChatLink;
         QQBox.Text = s.QQ;
+        QQLinkBox.Text = s.QQLink;
         DouyinBox.Text = s.Douyin;
+        DouyinLinkBox.Text = s.DouyinLink;
         EmailBox.Text = s.Email;
 
         var index = s.ThemeMode switch
@@ -34,8 +37,11 @@ public partial class SettingsView : UserControl
         var settings = new AppSettings
         {
             WeChat = WeChatBox.Text.Trim(),
+            WeChatLink = WeChatLinkBox.Text.Trim(),
             QQ = QQBox.Text.Trim(),
+            QQLink = QQLinkBox.Text.Trim(),
             Douyin = DouyinBox.Text.Trim(),
+            DouyinLink = DouyinLinkBox.Text.Trim(),
             Email = EmailBox.Text.Trim(),
             ThemeMode = (ThemeBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "dark"
         };
