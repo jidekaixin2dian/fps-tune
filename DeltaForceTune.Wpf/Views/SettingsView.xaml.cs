@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using DeltaForceTune.Wpf.Services;
 
@@ -57,4 +57,40 @@ public partial class SettingsView : UserControl
 
     private void AdminRestartButton_Click(object sender, RoutedEventArgs e)
         => AdminHelper.RestartAsAdministrator();
+
+    private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        CheckUpdateButton.IsEnabled = false;
+        UpdateStatusText.Text = "正在检查更新...";
+        try
+        {
+            var info = await UpdateService.CheckAsync();
+            if (info is null)
+            {
+                UpdateStatusText.Text = "检查失败或已是最新";
+                return;
+            }
+
+            if (UpdateService.IsNewer(info.Version, UpdateService.CurrentVersion))
+            {
+                UpdateStatusText.Text = $"发现新版本 {info.Version}";
+                var answer = MessageBox.Show(
+                    $"发现新版本 {info.Version}\n\n{info.Notes}\n\n是否打开下载页面？",
+                    "三角洲帧律", MessageBoxButton.YesNo, MessageBoxImage.Information);
+                if (answer == MessageBoxResult.Yes)
+                {
+                    try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(info.Url) { UseShellExecute = true }); }
+                    catch { }
+                }
+            }
+            else
+            {
+                UpdateStatusText.Text = "当前已是最新版本";
+            }
+        }
+        finally
+        {
+            CheckUpdateButton.IsEnabled = true;
+        }
+    }
 }
