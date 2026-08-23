@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -125,4 +126,13 @@ public partial class AbExperimentView : UserControl
 
     private static string? TryGet(JsonNode? node, string key)
         => node?[key]?.ToString();
+
+    private void OpenDirButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "DeltaOptimizer", "experiment");
+        Directory.CreateDirectory(dir);
+        Process.Start("explorer.exe", dir);
+    }
 }
