@@ -52,7 +52,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 
 ## 快速开始（GUI 功能版）
 
+先进入项目目录（或把命令里的路径换成完整路径）：
+
 ```powershell
+cd <项目目录>
 powershell -NoProfile -ExecutionPolicy Bypass -File delta-gui.ps1
 ```
 

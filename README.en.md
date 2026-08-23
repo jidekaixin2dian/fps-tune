@@ -45,7 +45,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 
 ## Quick start (GUI, functional)
 
+Run it from the project directory (or use the full path):
+
 ```powershell
+cd <project-directory>
 powershell -NoProfile -ExecutionPolicy Bypass -File delta-gui.ps1
 ```
 
