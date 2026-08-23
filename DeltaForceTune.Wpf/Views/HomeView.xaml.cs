@@ -22,8 +22,8 @@ public partial class HomeView : UserControl
         var douyin = string.IsNullOrWhiteSpace(s.Douyin) ? "待设置" : s.Douyin;
 
         var qqLink = s.QQLink;
-        if (string.IsNullOrWhiteSpace(qqLink) && !string.IsNullOrWhiteSpace(s.QQ))
-            qqLink = "https://wpa.qq.com/msgrd?v=3&uin=" + Uri.EscapeDataString(s.QQ) + "&site=qq&menu=yes";
+        if ((string.IsNullOrWhiteSpace(qqLink) || qqLink.Contains("wpa.qq.com")) && !string.IsNullOrWhiteSpace(s.QQ))
+            qqLink = "tencent://message/?uin=" + Uri.EscapeDataString(s.QQ) + "&Site=qq&Menu=yes";
 
         ContactPanel.Children.Clear();
         ContactPanel.Children.Add(MakeContact("微信", wechat, s.WeChatLink));

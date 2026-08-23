@@ -408,8 +408,8 @@
 
             <Style TargetType="ScrollBar">
                 <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Width" Value="10"/>
-                <Setter Property="MinWidth" Value="10"/>
+                <Setter Property="Width" Value="6"/>
+                <Setter Property="MinWidth" Value="6"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ScrollBar">
@@ -441,8 +441,8 @@
                 <Style.Triggers>
                     <Trigger Property="Orientation" Value="Horizontal">
                         <Setter Property="Width" Value="Auto"/>
-                        <Setter Property="Height" Value="10"/>
-                        <Setter Property="MinHeight" Value="10"/>
+                        <Setter Property="Height" Value="6"/>
+                        <Setter Property="MinHeight" Value="6"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>

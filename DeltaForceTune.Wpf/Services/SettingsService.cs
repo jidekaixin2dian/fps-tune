@@ -44,6 +44,8 @@ public static class SettingsService
 
             var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+            if (Current.QQLink.Contains("wpa.qq.com") && !string.IsNullOrWhiteSpace(Current.QQ))
+                Current.QQLink = "tencent://message/?uin=" + Uri.EscapeDataString(Current.QQ) + "&Site=qq&Menu=yes";
         }
         catch
         {
@@ -55,10 +57,10 @@ public static class SettingsService
     {
         // 自动生成常用联系方式链接
         if (string.IsNullOrWhiteSpace(settings.QQLink) && !string.IsNullOrWhiteSpace(settings.QQ))
-            settings.QQLink = "https://wpa.qq.com/msgrd?v=3&uin=" + Uri.EscapeDataString(settings.QQ) + "&site=qq&menu=yes";
+            settings.QQLink = "tencent://message/?uin=" + Uri.EscapeDataString(settings.QQ) + "&Site=qq&Menu=yes";
 
-        if (string.IsNullOrWhiteSpace(settings.WeChatLink) && !string.IsNullOrWhiteSpace(settings.WeChat))
-            settings.WeChatLink = "weixin://dl/chat?username=" + Uri.EscapeDataString(settings.WeChat);
+        // 微信没有官方可靠的“直接聊天”URL，不自动生成；点击时会复制微信号。
+        // 如果你有自定义链接/二维码页面，可以在设置里手动填写。
 
         Current = settings;
         Directory.CreateDirectory(BaseDir);
