@@ -1,30 +1,31 @@
 ﻿<Application x:Class="DeltaForceTune.Wpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
 
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#09090B"/>
-            <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#0C0C0E"/>
-            <SolidColorBrush x:Key="SurfaceBrush" Color="#111113"/>
-            <SolidColorBrush x:Key="SurfaceAltBrush" Color="#131316"/>
-            <SolidColorBrush x:Key="ElevatedBrush" Color="#18181B"/>
-            <SolidColorBrush x:Key="InputBackgroundBrush" Color="#0B0B0D"/>
-            <SolidColorBrush x:Key="BorderBrush" Color="#26262A"/>
-            <SolidColorBrush x:Key="BorderHoverBrush" Color="#3F3F46"/>
-            <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F4F4F5"/>
-            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A1A1AA"/>
-            <SolidColorBrush x:Key="TextMutedBrush" Color="#71717A"/>
-            <SolidColorBrush x:Key="PrimaryBrush" Color="#10B981"/>
-            <SolidColorBrush x:Key="AccentBrush" Color="#22D3EE"/>
-            <SolidColorBrush x:Key="DangerBrush" Color="#F87171"/>
-            <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
-            <SolidColorBrush x:Key="OkBrush" Color="#34D399"/>
-            <SolidColorBrush x:Key="GradientStartBrush" Color="#10B981"/>
-            <SolidColorBrush x:Key="GradientEndBrush" Color="#22D3EE"/>
+            <SolidColorBrush po:Freeze="False" x:Key="AppBackgroundBrush" Color="#09090B"/>
+            <SolidColorBrush po:Freeze="False" x:Key="SidebarBackgroundBrush" Color="#0C0C0E"/>
+            <SolidColorBrush po:Freeze="False" x:Key="SurfaceBrush" Color="#111113"/>
+            <SolidColorBrush po:Freeze="False" x:Key="SurfaceAltBrush" Color="#131316"/>
+            <SolidColorBrush po:Freeze="False" x:Key="ElevatedBrush" Color="#18181B"/>
+            <SolidColorBrush po:Freeze="False" x:Key="InputBackgroundBrush" Color="#0B0B0D"/>
+            <SolidColorBrush po:Freeze="False" x:Key="BorderBrush" Color="#26262A"/>
+            <SolidColorBrush po:Freeze="False" x:Key="BorderHoverBrush" Color="#3F3F46"/>
+            <SolidColorBrush po:Freeze="False" x:Key="TextPrimaryBrush" Color="#F4F4F5"/>
+            <SolidColorBrush po:Freeze="False" x:Key="TextSecondaryBrush" Color="#A1A1AA"/>
+            <SolidColorBrush po:Freeze="False" x:Key="TextMutedBrush" Color="#71717A"/>
+            <SolidColorBrush po:Freeze="False" x:Key="PrimaryBrush" Color="#10B981"/>
+            <SolidColorBrush po:Freeze="False" x:Key="AccentBrush" Color="#22D3EE"/>
+            <SolidColorBrush po:Freeze="False" x:Key="DangerBrush" Color="#F87171"/>
+            <SolidColorBrush po:Freeze="False" x:Key="WarningBrush" Color="#FBBF24"/>
+            <SolidColorBrush po:Freeze="False" x:Key="OkBrush" Color="#34D399"/>
+            <SolidColorBrush po:Freeze="False" x:Key="GradientStartBrush" Color="#10B981"/>
+            <SolidColorBrush po:Freeze="False" x:Key="GradientEndBrush" Color="#22D3EE"/>
             <Color x:Key="PrimaryColor">#10B981</Color>
             <Color x:Key="AccentColor">#22D3EE</Color>
 
