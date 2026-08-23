@@ -1,4 +1,4 @@
-<UserControl x:Class="DeltaForceTune.Wpf.Views.BackupLogView"
+﻿<UserControl x:Class="DeltaForceTune.Wpf.Views.BackupLogView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
@@ -35,7 +35,12 @@
                 <Button Content="打开 GUI 临时目录"
                         Style="{StaticResource SecondaryButtonStyle}"
                         MinWidth="140"
+                        Margin="0,0,10,0"
                         Click="OpenTemp_Click"/>
+                <Button Content="导出日志"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        MinWidth="110"
+                        Click="ExportLog_Click"/>
             </StackPanel>
         </Grid>
 

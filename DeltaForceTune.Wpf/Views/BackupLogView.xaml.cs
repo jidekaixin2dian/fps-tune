@@ -1,7 +1,8 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using DeltaForceTune.Wpf.Services;
 
 namespace DeltaForceTune.Wpf.Views;
@@ -72,5 +73,19 @@ public partial class BackupLogView : UserControl
     {
         Directory.CreateDirectory(_tempDir);
         Process.Start("explorer.exe", _tempDir);
+    }
+
+    private void ExportLog_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "日志文件 (*.txt)|*.txt|所有文件 (*.*)|*.*",
+            FileName = "delta-force-tune-log.txt"
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            System.IO.File.WriteAllText(dialog.FileName, LogBox.Text);
+            MessageBox.Show("日志已导出。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }
