@@ -19,7 +19,7 @@ public static class OptimizationEngine
         { "sysmain-off", "wsearch-off", "hibernate-off", "power-tuning" };
 
     public static Task<RunResult> DetectAsync()
-        => PowerShellRunner.RunAsync(ScriptLocator.Resolve("delta-optimizer.ps1"), "-Detect", "-Json");
+        => Task.FromResult(new RunResult(0, DetectionService.BuildDetectJson(AppState.GamePath), ""));
 
     public static Task<RunResult> ApplyPresetAsync(string preset)
     {

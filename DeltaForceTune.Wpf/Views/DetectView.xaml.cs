@@ -1,20 +1,19 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using DeltaForceTune.Wpf.Core;
 using DeltaForceTune.Wpf.Services;
 
 namespace DeltaForceTune.Wpf.Views;
 
 public partial class DetectView : UserControl
 {
-    private readonly string _enginePath;
     private bool _hasSavedState;
 
     public DetectView()
     {
         InitializeComponent();
-        _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
         LoadSavedState();
         Loaded += (_, _) =>
         {
@@ -36,7 +35,7 @@ public partial class DetectView : UserControl
 
         try
         {
-            var result = await PowerShellRunner.RunAsync(_enginePath, "-Detect", "-Json");
+            var result = await OptimizationEngine.DetectAsync();
             if (!result.Success)
             {
                 OutputBox.Text = result.Error + Environment.NewLine + result.Output;
