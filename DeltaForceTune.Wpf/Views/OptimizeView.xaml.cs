@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +11,12 @@ public partial class OptimizeView : UserControl
     private readonly string _enginePath;
     private bool _loadedFromState;
 
+    private static readonly string[] SafeOnlyIds =
+        { "game-mode", "dvr-off", "transparency-off", "fso-off", "gpu-pref" };
+
+    private static readonly string[] BalancedExclude =
+        { "sysmain-off", "wsearch-off", "hibernate-off", "power-tuning" };
+
     public ObservableCollection<OptimizationItemViewModel> Items { get; } = new();
 
     public OptimizeView()
@@ -18,6 +24,12 @@ public partial class OptimizeView : UserControl
         InitializeComponent();
         DataContext = this;
         _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
+
+        PresetFull.Checked += (_, _) => ShowPresetContents();
+        PresetBalanced.Checked += (_, _) => ShowPresetContents();
+        PresetSafeOnly.Checked += (_, _) => ShowPresetContents();
+        PresetCustom.Checked += (_, _) => ShowPresetContents();
+        ItemList.SelectionChanged += (_, _) => ShowSelectedItem();
     }
 
     public void ReloadFromState()
@@ -27,9 +39,79 @@ public partial class OptimizeView : UserControl
             Items.Add(new OptimizationItemViewModel(item));
         _loadedFromState = AppState.Items.Count > 0;
         if (!_loadedFromState)
+        {
             OutputBox.Text = "暂无优化项，请先在检测页运行检测。";
+            return;
+        }
+
+        ShowPresetContents();
     }
 
+
+    private void ShowPresetContents()
+    {
+        if (AppState.Items.Count == 0)
+        {
+            OutputBox.Text = "暂无优化项，请先在检测页运行检测。";
+            return;
+        }
+
+        var sb = new StringBuilder();
+        if (PresetCustom.IsChecked == true)
+        {
+            sb.AppendLine("== 自定义模式 ==");
+            sb.AppendLine("请在左侧列表中勾选需要执行的优化项，然后点击“应用”。");
+            OutputBox.Text = sb.ToString();
+            return;
+        }
+
+        var presetName = PresetFull.IsChecked == true ? "full" : "balanced";
+        List<string> ids;
+        if (PresetFull.IsChecked == true)
+        {
+            presetName = "full";
+            ids = AppState.Items.Select(i => i.Id).ToList();
+        }
+        else if (PresetSafeOnly.IsChecked == true)
+        {
+            presetName = "safe-only";
+            ids = SafeOnlyIds.ToList();
+        }
+        else
+        {
+            presetName = "balanced";
+            ids = AppState.Items
+                .Where(i => !BalancedExclude.Contains(i.Id))
+                .Select(i => i.Id)
+                .ToList();
+        }
+
+        var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
+        sb.AppendLine($"== 预设 {presetName} 包含 {selected.Count} 项 ==");
+        foreach (var item in selected)
+            sb.AppendLine($"{item.Id}  {item.Name}");
+        OutputBox.Text = sb.ToString();
+    }
+
+    private void ShowSelectedItem()
+    {
+        if (ItemList.SelectedItem is not OptimizationItemViewModel vm)
+            return;
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"== {vm.Id}  {vm.Name} ==");
+        if (!string.IsNullOrWhiteSpace(vm.Description))
+            sb.AppendLine($"说明：{vm.Description}");
+        if (!string.IsNullOrWhiteSpace(vm.SideEffect))
+            sb.AppendLine($"副作用：{vm.SideEffect}");
+        if (!string.IsNullOrWhiteSpace(vm.Current))
+            sb.AppendLine($"当前：{vm.Current}");
+        sb.AppendLine($"状态：{vm.StatusText}");
+        var req = (vm.RequiresAdmin ? "管理员" : "普通用户") +
+                  (vm.RequiresReboot ? "，需重启" : "");
+        sb.AppendLine($"要求：{req}");
+        OutputBox.Text = sb.ToString();
+    }
 
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)
     {

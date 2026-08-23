@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace DeltaForceTune.Wpf.Services;
@@ -15,6 +15,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public bool RequiresReboot { get; }
     public bool Optimized { get; }
     public string Current { get; }
+    public string StatusText => Optimized ? "已达标" : "未应用";
 
     public OptimizationItemViewModel(OptimizationItem item)
     {

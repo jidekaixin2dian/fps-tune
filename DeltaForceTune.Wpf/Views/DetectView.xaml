@@ -7,9 +7,9 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
         <Grid Grid.Row="0" Margin="0,0,0,18">
             <TextBlock Text="检测"
                        Style="{StaticResource PageTitleStyle}"
@@ -29,8 +29,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- Cards -->
-        <Grid Grid.Row="1" Margin="0,0,0,18">
+        <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="16"/>
@@ -54,18 +53,18 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="CPU" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CpuText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GPU" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="GpuText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="内存" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="RamText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="系统版本" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
-                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="OsText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="笔记本" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
-                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="LaptopText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="管理员" Style="{StaticResource MutedTextStyle}" Margin="0,6"/>
-                        <TextBlock Grid.Row="5" Grid.Column="1" x:Name="AdminText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,6"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="CPU" Style="{StaticResource MutedTextStyle}" Margin="0,5"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CpuText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="GPU" Style="{StaticResource MutedTextStyle}" Margin="0,5"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="GpuText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="内存" Style="{StaticResource MutedTextStyle}" Margin="0,5"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="RamText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="系统版本" Style="{StaticResource MutedTextStyle}" Margin="0,5"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="OsText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,5"/>
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="笔记本" Style="{StaticResource MutedTextStyle}" Margin="0,5"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="LaptopText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,5"/>
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="管理员" Style="{StaticResource MutedTextStyle}" Margin="0,5"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" x:Name="AdminText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,5"/>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -77,25 +76,82 @@
                     <TextBlock x:Name="GamePathText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
                                TextWrapping="Wrap"
-                               Margin="0,4,0,14"/>
+                               Margin="0,4,0,12"/>
                     <TextBlock Text="VC++ 运行库" Style="{StaticResource MutedTextStyle}"/>
-                    <TextBlock x:Name="Check1Text" Text="--" Foreground="{DynamicResource OkBrush}" Margin="0,4,0,10"/>
+                    <TextBlock x:Name="Check1Text" Text="待检测" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,8"/>
                     <TextBlock Text="内存频率" Style="{StaticResource MutedTextStyle}"/>
-                    <TextBlock x:Name="Check2Text" Text="--" Foreground="{DynamicResource OkBrush}" Margin="0,4,0,10"/>
+                    <TextBlock x:Name="Check2Text" Text="待检测" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,8"/>
                     <TextBlock Text="PCIe 链路" Style="{StaticResource MutedTextStyle}"/>
-                    <TextBlock x:Name="Check3Text" Text="--" Foreground="{DynamicResource WarningBrush}" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="Check3Text" Text="待检测" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                 </StackPanel>
             </Border>
         </Grid>
 
-        <!-- Output -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="检测输出" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Grid.Row="0" Text="优化项概览"
+                           Style="{StaticResource CardTitleStyle}"/>
+                <ListBox x:Name="DetectItemList"
+                         Grid.Row="1"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding Id}"
+                                           FontFamily="Cascadia Mono, Consolas"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           Margin="0,0,10,0"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Name}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Description}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding StatusText}"
+                                           Margin="10,0,0,0"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Optimized}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource OkBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Height="170">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="检测详情" Style="{StaticResource CardTitleStyle}"/>
                 <TextBox Grid.Row="1"
                          x:Name="OutputBox"
                          Style="{StaticResource MonoTextBoxStyle}"
