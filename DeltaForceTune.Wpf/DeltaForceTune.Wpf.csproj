@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -9,6 +9,7 @@
     <RootNamespace>DeltaForceTune.Wpf</RootNamespace>
     <AssemblyName>DeltaForceTune</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +22,7 @@
     <EmbeddedResource Include="..\delta-optimizer.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.delta-optimizer.ps1" />
     <EmbeddedResource Include="..\tuning-experiment.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.tuning-experiment.ps1" />
     <EmbeddedResource Include="..\friend-test.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.friend-test.ps1" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 
 </Project>

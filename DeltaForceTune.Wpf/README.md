@@ -1,4 +1,4 @@
-# DeltaForceTune WPF
+﻿# 三角洲帧律 · DeltaForceTune WPF
 
 最终公开发布版 GUI。
 
