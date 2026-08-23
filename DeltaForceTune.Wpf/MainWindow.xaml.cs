@@ -1,5 +1,6 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using DeltaForceTune.Wpf.Services;
 using DeltaForceTune.Wpf.Views;
 
@@ -31,7 +32,7 @@ public partial class MainWindow : Window
     public void ShowOptimizePage()
     {
         NavOpt.IsChecked = true;
-        PageHost.Content = _pages["opt"];
+        SwitchPage(_pages["opt"]);
         if (_pages["opt"] is OptimizeView opt)
             opt.ReloadFromState();
     }
@@ -42,8 +43,22 @@ public partial class MainWindow : Window
             return;
         if (sender is RadioButton { Tag: string key } && _pages.TryGetValue(key, out var page))
         {
-            PageHost.Content = page;
+            SwitchPage(page);
         }
+    }
+
+    private void SwitchPage(UserControl page)
+    {
+        if (ReferenceEquals(PageHost.Content, page))
+            return;
+
+        PageHost.Opacity = 0;
+        PageHost.Content = page;
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180))
+        {
+            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+        };
+        PageHost.BeginAnimation(OpacityProperty, fade);
     }
 
     private void Theme_Checked(object sender, RoutedEventArgs e)
