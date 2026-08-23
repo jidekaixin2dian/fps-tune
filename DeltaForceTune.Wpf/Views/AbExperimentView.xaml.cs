@@ -12,19 +12,9 @@ public partial class AbExperimentView : UserControl
     public AbExperimentView()
     {
         InitializeComponent();
-        _tuningPath = ResolveScript("tuning-experiment.ps1");
+        _tuningPath = ScriptLocator.Resolve("tuning-experiment.ps1");
     }
 
-    private static string ResolveScript(string name)
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, name),
-            Path.Combine(Environment.CurrentDirectory, name),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", name),
-        };
-        return candidates.FirstOrDefault(File.Exists) ?? Path.Combine(AppContext.BaseDirectory, name);
-    }
 
     private async void Baseline_Click(object sender, RoutedEventArgs e)
         => await Run("基线", "基线采样中（3 次，每次约 90 秒），请保持游戏场景固定...", "-Baseline", "-Json");

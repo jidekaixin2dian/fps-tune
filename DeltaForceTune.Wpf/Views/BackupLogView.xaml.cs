@@ -13,21 +13,11 @@ public partial class BackupLogView : UserControl
     public BackupLogView()
     {
         InitializeComponent();
-        _enginePath = ResolveScript("delta-optimizer.ps1");
+        _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
         _tempDir = Path.Combine(Path.GetTempPath(), "delta-gui-tmp");
         Directory.CreateDirectory(_tempDir);
     }
 
-    private static string ResolveScript(string name)
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, name),
-            Path.Combine(Environment.CurrentDirectory, name),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", name),
-        };
-        return candidates.FirstOrDefault(File.Exists) ?? Path.Combine(AppContext.BaseDirectory, name);
-    }
 
     private async void ListBackup_Click(object sender, RoutedEventArgs e)
         => await Run("-ListRestoreItems", "-Json");

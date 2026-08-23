@@ -17,7 +17,7 @@ public partial class OptimizeView : UserControl
     {
         InitializeComponent();
         DataContext = this;
-        _enginePath = ResolveScript("delta-optimizer.ps1");
+        _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
     }
 
     public void ReloadFromState()
@@ -30,16 +30,6 @@ public partial class OptimizeView : UserControl
             OutputBox.Text = "暂无优化项，请先在检测页运行检测。";
     }
 
-    private static string ResolveScript(string name)
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, name),
-            Path.Combine(Environment.CurrentDirectory, name),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", name),
-        };
-        return candidates.FirstOrDefault(File.Exists) ?? Path.Combine(AppContext.BaseDirectory, name);
-    }
 
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)
     {

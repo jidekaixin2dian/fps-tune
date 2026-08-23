@@ -17,4 +17,10 @@
     <None Include="..\friend-test.ps1" Link="friend-test.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\delta-optimizer.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.delta-optimizer.ps1" />
+    <EmbeddedResource Include="..\tuning-experiment.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.tuning-experiment.ps1" />
+    <EmbeddedResource Include="..\friend-test.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.friend-test.ps1" />
+  </ItemGroup>
+
 </Project>

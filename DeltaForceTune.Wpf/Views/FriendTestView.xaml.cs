@@ -14,21 +14,11 @@ public partial class FriendTestView : UserControl
     public FriendTestView()
     {
         InitializeComponent();
-        _friendScriptPath = ResolveScript("friend-test.ps1");
+        _friendScriptPath = ScriptLocator.Resolve("friend-test.ps1");
         _outputDir = Path.Combine(Path.GetTempPath(), "delta-friend-test-out");
         Directory.CreateDirectory(_outputDir);
     }
 
-    private static string ResolveScript(string name)
-    {
-        var candidates = new[]
-        {
-            Path.Combine(AppContext.BaseDirectory, name),
-            Path.Combine(Environment.CurrentDirectory, name),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", name),
-        };
-        return candidates.FirstOrDefault(File.Exists) ?? Path.Combine(AppContext.BaseDirectory, name);
-    }
 
     private async void GenerateButton_Click(object sender, RoutedEventArgs e)
     {

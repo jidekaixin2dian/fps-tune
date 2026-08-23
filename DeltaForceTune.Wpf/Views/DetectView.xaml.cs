@@ -13,14 +13,7 @@ public partial class DetectView : UserControl
     public DetectView()
     {
         InitializeComponent();
-        _enginePath = Path.Combine(AppContext.BaseDirectory, "delta-optimizer.ps1");
-        // Also support running from source directory during development.
-        if (!File.Exists(_enginePath))
-        {
-            var local = Path.Combine(Environment.CurrentDirectory, "delta-optimizer.ps1");
-            if (File.Exists(local))
-                _enginePath = local;
-        }
+        _enginePath = ScriptLocator.Resolve("delta-optimizer.ps1");
     }
 
     private async void RunButton_Click(object sender, RoutedEventArgs e)
