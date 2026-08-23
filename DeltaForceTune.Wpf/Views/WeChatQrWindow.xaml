@@ -24,7 +24,7 @@
                 BorderThickness="1"
                 CornerRadius="12"
                 Padding="8">
-            <Image Source="/Assets/wechat-qr.png"
+            <Image Source="/Assets/wechat-qr.jpg"
                    Width="260" Height="370"
                    Stretch="Uniform"/>
         </Border>

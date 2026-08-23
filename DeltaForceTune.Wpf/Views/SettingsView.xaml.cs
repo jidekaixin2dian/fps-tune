@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using DeltaForceTune.Wpf.Services;
 
@@ -10,6 +10,7 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
         Loaded += (_, _) => LoadSettings();
+        VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
     }
 
     private void LoadSettings()

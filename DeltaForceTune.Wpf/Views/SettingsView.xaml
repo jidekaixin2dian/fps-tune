@@ -43,6 +43,18 @@
                         MinWidth="120"
                         Margin="0,8,0,0"
                         Click="SaveButton_Click"/>
+
+                <TextBlock Text="关于" Style="{StaticResource CardTitleStyle}" Margin="0,24,0,0"/>
+                <TextBlock x:Name="VersionText" Text="版本：v1.0.0"
+                           Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                <TextBlock Text="三角洲帧律：系统层帧率优化工具。"
+                           Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                <TextBlock Text="只调整 Windows 系统层设置：不修改游戏文件、不注入进程、不与反作弊交互、不关闭引导虚拟化、不做显卡伪装。"
+                           Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                <TextBlock Text="所有改动写入前自动备份，可一键还原。"
+                           Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+                <TextBlock Text="联系方式仅接受合作/反馈。"
+                           Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
             </StackPanel>
         </Border>
         </Grid>
