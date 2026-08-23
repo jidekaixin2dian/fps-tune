@@ -14,17 +14,20 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SettingsService.Load();
 
         _pages = new Dictionary<string, UserControl>
         {
+            ["home"] = new HomeView(),
             ["detect"] = new DetectView(),
             ["opt"] = new OptimizeView(),
             ["ab"] = new AbExperimentView(),
             ["friend"] = new FriendTestView(),
             ["backup"] = new BackupLogView(),
+            ["settings"] = new SettingsView(),
         };
 
-        PageHost.Content = _pages["detect"];
+        PageHost.Content = _pages["home"];
         ThemeManager.Initialize();
         ThemeManager.SetMode("dark");
         ThemeDark.IsChecked = true;
@@ -62,6 +65,26 @@ public partial class MainWindow : Window
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
         };
         PageHost.BeginAnimation(OpacityProperty, fade);
+    }
+
+    public void NavigateTo(string key)
+    {
+        switch (key)
+        {
+            case "home": NavHome.IsChecked = true; break;
+            case "detect": NavDetect.IsChecked = true; break;
+            case "opt": NavOpt.IsChecked = true; break;
+            case "ab": NavAb.IsChecked = true; break;
+            case "friend": NavFriend.IsChecked = true; break;
+            case "backup": NavBackup.IsChecked = true; break;
+            case "settings": NavSettings.IsChecked = true; break;
+        }
+    }
+
+    public void RefreshHomeContacts()
+    {
+        if (_pages["home"] is HomeView home)
+            home.RefreshContacts();
     }
 
     private void Theme_Checked(object sender, RoutedEventArgs e)

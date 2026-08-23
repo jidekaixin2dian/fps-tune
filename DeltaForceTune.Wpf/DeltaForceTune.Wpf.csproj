@@ -23,6 +23,7 @@
     <EmbeddedResource Include="..\tuning-experiment.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.tuning-experiment.ps1" />
     <EmbeddedResource Include="..\friend-test.ps1" LogicalName="DeltaForceTune.Wpf.Scripts.friend-test.ps1" />
     <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\app-icon.png" />
   </ItemGroup>
 
 </Project>

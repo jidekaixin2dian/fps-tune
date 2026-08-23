@@ -50,10 +50,14 @@
                 </StackPanel>
 
                 <StackPanel Margin="18,28,18,0">
+                    <RadioButton x:Name="NavHome" Content="首页"
+                                 Tag="home"
+                                 Style="{StaticResource NavRadioStyle}"
+                                 IsChecked="True"
+                                 Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavDetect" Content="检测"
                                  Tag="detect"
                                  Style="{StaticResource NavRadioStyle}"
-                                 IsChecked="True"
                                  Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavOpt" Content="优化"
                                  Tag="opt"
@@ -69,6 +73,10 @@
                                  Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavBackup" Content="备份 / 日志"
                                  Tag="backup"
+                                 Style="{StaticResource NavRadioStyle}"
+                                 Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavSettings" Content="设置"
+                                 Tag="settings"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked"/>
                 </StackPanel>
