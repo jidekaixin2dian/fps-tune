@@ -36,7 +36,13 @@ public static class OptimizationEngine
         => Task.FromResult(ApplyNative(ids));
 
     public static Task<RunResult> RestoreAsync()
-        => PowerShellRunner.RunAsync(ScriptLocator.Resolve("delta-optimizer.ps1"), "-Restore", "-Json");
+    {
+        var restored = BackupService.RestoreLatest();
+        if (restored is not null)
+            return Task.FromResult(new RunResult(0, $"已从备份还原：{restored}", ""));
+
+        return PowerShellRunner.RunAsync(ScriptLocator.Resolve("delta-optimizer.ps1"), "-Restore", "-Json");
+    }
 
     public static Task<RunResult> ListRestoreAsync()
         => PowerShellRunner.RunAsync(ScriptLocator.Resolve("delta-optimizer.ps1"), "-ListRestoreItems", "-Json");
@@ -44,6 +50,7 @@ public static class OptimizationEngine
     private static RunResult ApplyNative(IEnumerable<string> ids)
     {
         var itemIds = ids.Distinct().ToList();
+        var backupFile = BackupService.Capture(itemIds, AppState.GamePath);
         var results = NativeOptimizationEngine.ApplyAll(itemIds, AppState.GamePath);
 
         var payload = new
@@ -60,7 +67,8 @@ public static class OptimizationEngine
                 skipped = r.Skipped,
                 message = r.Message
             }),
-            summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过"
+            summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过",
+            backupFile = backupFile
         };
 
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
