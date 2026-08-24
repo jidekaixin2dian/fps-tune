@@ -93,6 +93,12 @@
                                                    FontSize="11"
                                                    TextWrapping="Wrap"
                                                    Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding SideEffect, StringFormat=副作用：{0}}"
+                                                   Foreground="{DynamicResource WarningBrush}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0"
+                                                   Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/>
                                     </StackPanel>
                                     <TextBlock Grid.Column="3"
                                                Text="管理员"

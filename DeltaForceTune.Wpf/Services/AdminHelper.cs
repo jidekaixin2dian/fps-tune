@@ -38,8 +38,7 @@ public static class AdminHelper
         }
         catch
         {
-            MessageBox.Show("无法以管理员身份重启，可能已被取消。", "三角洲帧律",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            DialogService.Warning("三角洲帧律", "无法以管理员身份重启，可能已被取消。");
         }
     }
 }

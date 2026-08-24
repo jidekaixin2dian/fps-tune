@@ -28,5 +28,5 @@ Output:
 2. Upload:
    - `dist\installer\DeltaForceTune-Setup-1.0.0.exe`
    - `dist\single-file\DeltaForceTune.exe`
-   - `dist\folder\DeltaForceTune.zip`
+   - `dist\DeltaForceTune-Portable.zip`
 3. Auto-update in the app will use GitHub latest release API.

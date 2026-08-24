@@ -26,9 +26,12 @@ public partial class DetectView : UserControl
     }
 
     private async void RunButton_Click(object sender, RoutedEventArgs e)
-        => await RunDetectionAsync();
+        => _ = await RunDetectionAsync();
 
-    private async Task RunDetectionAsync()
+    public Task<bool> RunOnboardingDetectionAsync()
+        => RunDetectionAsync();
+
+    private async Task<bool> RunDetectionAsync()
     {
         RunButton.IsEnabled = false;
         LoadButton.IsEnabled = false;
@@ -40,23 +43,25 @@ public partial class DetectView : UserControl
             if (!result.Success)
             {
                 OutputBox.Text = result.Error + Environment.NewLine + result.Output;
-                return;
+                return false;
             }
 
             var root = JsonNode.Parse(result.Output)?.AsObject();
             if (root is null)
             {
                 OutputBox.Text = "无法解析检测 JSON。";
-                return;
+                return false;
             }
 
             StateStore.SaveDetect(root);
             ApplyDetectData(root, showDetails: true);
             _hasSavedState = true;
+            return true;
         }
         catch (Exception ex)
         {
             OutputBox.Text = ex.ToString();
+            return false;
         }
         finally
         {
@@ -177,14 +182,14 @@ public partial class DetectView : UserControl
     {
         if (AppState.DetectJson is null)
         {
-            MessageBox.Show("请先在检测页运行一次检测。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            DialogService.Info("提示", "请先在检测页运行一次检测。");
             return;
         }
 
         var window = Window.GetWindow(this);
         if (window is MainWindow main)
             main.ShowOptimizePage();
-        MessageBox.Show($"已加载 {AppState.Items.Count} 个优化项到优化页。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+        DialogService.Info("提示", $"已加载 {AppState.Items.Count} 个优化项到优化页。");
     }
 
     private static void SetCheck(System.Windows.Controls.TextBlock target, JsonNode? node)

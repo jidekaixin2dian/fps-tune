@@ -26,7 +26,7 @@ public partial class FriendTestView : UserControl
     {
         if (string.IsNullOrWhiteSpace(SceneBox.Text))
         {
-            MessageBox.Show("请填写场景/画质/设置。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            DialogService.Info("提示", "请填写场景/画质/设置。");
             return;
         }
 

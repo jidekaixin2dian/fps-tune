@@ -1,14 +1,13 @@
 ﻿namespace DeltaForceTune.Wpf.Core;
 
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using DeltaForceTune.Wpf.Services;
 
 /// <summary>
 /// C# 核心引擎入口。
-/// Apply 已经走 C# 原生实现；Detect / Restore 仍保留 PowerShell 兼容层，
-/// 后续会继续迁移。
+/// Apply / Detect / Restore 均已走 C# 原生实现，不再依赖 PowerShell 作为核心路径。
+/// PowerShell 脚本仍随包保留，供兼容/兜底排查使用。
 /// </summary>
 public static class OptimizationEngine
 {
@@ -19,7 +18,7 @@ public static class OptimizationEngine
         { "sysmain-off", "wsearch-off", "hibernate-off", "power-tuning" };
 
     public static Task<RunResult> DetectAsync()
-        => Task.FromResult(new RunResult(0, DetectionService.BuildDetectJson(AppState.GamePath), ""));
+        => Task.Run(() => new RunResult(0, DetectionService.BuildDetectJson(AppState.GamePath), ""));
 
     public static Task<RunResult> ApplyPresetAsync(string preset)
     {
@@ -38,17 +37,17 @@ public static class OptimizationEngine
     public static Task<RunResult> RestoreAsync()
     {
         var restored = BackupService.RestoreLatest();
-        if (restored is not null)
-            return Task.FromResult(new RunResult(0, $"已从备份还原：{restored}", ""));
+        if (restored is null)
+            return Task.FromResult(new RunResult(0, "没有找到可还原的备份。", ""));
 
-        return PowerShellRunner.RunAsync(ScriptLocator.Resolve("delta-optimizer.ps1"), "-Restore", "-Json");
+        return Task.FromResult(new RunResult(0, $"已从备份还原：{restored}", ""));
     }
 
     public static Task<RunResult> ListRestoreAsync()
     {
         var files = BackupService.ListBackups();
         var payload = new { backups = files, count = files.Count };
-        var json = System.Text.Json.JsonSerializer.Serialize(payload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
         return Task.FromResult(new RunResult(0, json, ""));
     }
 
@@ -57,6 +56,13 @@ public static class OptimizationEngine
         var itemIds = ids.Distinct().ToList();
         var backupFile = BackupService.Capture(itemIds, AppState.GamePath);
         var results = NativeOptimizationEngine.ApplyAll(itemIds, AppState.GamePath);
+
+        var rebootIds = results
+            .Where(r => r.Ok && r.Changed)
+            .Select(r => ItemCatalog.All.FirstOrDefault(x => x.Id == r.Id))
+            .Where(def => def?.Reboot == true)
+            .Select(def => def!.Id)
+            .ToArray();
 
         var payload = new
         {
@@ -73,7 +79,8 @@ public static class OptimizationEngine
                 message = r.Message
             }),
             summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过",
-            backupFile = backupFile
+            backupFile = backupFile,
+            reboot = rebootIds
         };
 
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });

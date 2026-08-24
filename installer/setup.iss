@@ -26,11 +26,8 @@ Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.i
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务:"; Flags: unchecked
 
 [Files]
-Source: "..\dist\single-file\DeltaForceTune.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\dist\single-file\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\dist\single-file\*.json"; DestDir: "{app}"; Flags: ignoreversion
-; If using green folder mode, include all files from dist\folder instead.
-; Source: "..\dist\folder\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; WPF 自包含单文件发布会同时生成原生依赖与 PS 兼容脚本，必须一起打包。
+Source: "..\dist\single-file\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

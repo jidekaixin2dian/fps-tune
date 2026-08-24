@@ -19,7 +19,7 @@ public partial class BackupLogView : UserControl
         _tempDir = Path.Combine(Path.GetTempPath(), "delta-gui-tmp");
         _backupDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "DeltaOptimizer", "backup");
+            "DeltaForceTune", "backup");
         Directory.CreateDirectory(_tempDir);
         Directory.CreateDirectory(_backupDir);
 
@@ -35,9 +35,7 @@ public partial class BackupLogView : UserControl
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
     {
-        var answer = MessageBox.Show("确定要还原全部已备份的项目吗？", "还原确认",
-            MessageBoxButton.YesNo, MessageBoxImage.Warning);
-        if (answer != MessageBoxResult.Yes)
+        if (!DialogService.Confirm("还原确认", "确定要还原全部已备份的项目吗？", danger: true))
             return;
 
         StatusText.Text = "正在还原...";
@@ -84,7 +82,7 @@ public partial class BackupLogView : UserControl
         if (dialog.ShowDialog() == true)
         {
             System.IO.File.WriteAllText(dialog.FileName, LogBox.Text);
-            MessageBox.Show("日志已导出。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
+            DialogService.Info("三角洲帧律", "日志已导出。");
         }
     }
 }

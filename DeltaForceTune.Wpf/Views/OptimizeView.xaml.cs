@@ -142,7 +142,7 @@ public partial class OptimizeView : UserControl
     {
         if (ConsentCheck.IsChecked != true)
         {
-            MessageBox.Show("请先勾选同意说明，再执行应用。", "未确认", MessageBoxButton.OK, MessageBoxImage.Warning);
+            DialogService.Warning("未确认", "请先勾选同意说明，再执行应用。");
             return;
         }
 
@@ -156,7 +156,7 @@ public partial class OptimizeView : UserControl
             var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
             if (ids.Count == 0)
             {
-                MessageBox.Show("请勾选至少一个优化项。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                DialogService.Info("提示", "请勾选至少一个优化项。");
                 return;
             }
             args.AddRange(new[] { "-Apply", "-Items", string.Join(",", ids), "-Force", "-Json" });
@@ -199,9 +199,7 @@ public partial class OptimizeView : UserControl
 
     private async void RestoreButton_Click(object sender, RoutedEventArgs e)
     {
-        var answer = MessageBox.Show("确定要还原全部已备份的项目吗？", "还原确认",
-            MessageBoxButton.YesNo, MessageBoxImage.Warning);
-        if (answer != MessageBoxResult.Yes)
+        if (!DialogService.Confirm("还原确认", "确定要还原全部已备份的项目吗？", danger: true))
             return;
 
         RestoreButton.IsEnabled = false;

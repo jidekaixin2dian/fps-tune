@@ -11,6 +11,22 @@ public static class StateStore
         "DeltaForceTune");
 
     private static string DetectFile => Path.Combine(BaseDir, "last-detect.json");
+    private static string OnboardingFile => Path.Combine(BaseDir, "onboarding.done");
+
+    public static bool HasSeenOnboarding => File.Exists(OnboardingFile);
+
+    public static void MarkOnboardingSeen()
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            File.WriteAllText(OnboardingFile, DateTime.Now.ToString("O"), new UTF8Encoding(false));
+        }
+        catch
+        {
+            // 忽略状态写入失败，下次启动仍会展示一次新手引导。
+        }
+    }
 
     public static void SaveDetect(JsonNode root)
     {

@@ -1,11 +1,26 @@
 # Build installer with Inno Setup
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
-$iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
-if (-not (Test-Path $iscc)) {
+$singleExe = Join-Path $root 'dist\single-file\DeltaForceTune.exe'
+
+$isccCandidates = @(
+    'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
+    'C:\Program Files\Inno Setup 6\ISCC.exe',
+    (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe')
+)
+$iscc = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+if (-not (Test-Path $singleExe)) {
+    Write-Error "Single-file EXE not found: $singleExe. Run .\publish-release.ps1 first."
+    exit 1
+}
+
+if (-not $iscc) {
     Write-Error 'Inno Setup 6 not found. Install from https://jrsoftware.org/isdl.php'
     exit 1
 }
+
+Write-Host "Using Inno Setup: $iscc"
 & $iscc (Join-Path $root 'installer\setup.iss')
 if ($LASTEXITCODE -ne 0) { exit 1 }
 Write-Host 'Installer built successfully.'

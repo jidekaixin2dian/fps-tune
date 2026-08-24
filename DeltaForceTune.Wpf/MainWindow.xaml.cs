@@ -42,6 +42,25 @@ public partial class MainWindow : Window
             opt.ReloadFromState();
     }
 
+    public async Task RunOnboardingAsync()
+    {
+        // 第一步：先去检测页完成一次检测。
+        NavigateTo("detect");
+        if (_pages["detect"] is DetectView detect)
+        {
+            var ok = await detect.RunOnboardingDetectionAsync();
+            if (!ok)
+            {
+                DialogService.Warning("检测并优化", "检测未完成。请检查检测页的报错信息后重试。");
+                return;
+            }
+        }
+
+        // 第二步：检测完成后引导用户进入优化页。
+        ShowOptimizePage();
+        DialogService.Info("检测并优化", "检测已完成。请选择左侧预设或勾选需要的优化项，确认后点击“应用”。");
+    }
+
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
         if (_pages is null)

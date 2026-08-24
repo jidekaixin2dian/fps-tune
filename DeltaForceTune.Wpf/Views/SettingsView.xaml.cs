@@ -52,7 +52,7 @@ public partial class SettingsView : UserControl
         settings.ThemeMode = theme;
         SettingsService.Save(settings);
 
-        MessageBox.Show("设置已保存。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
+        DialogService.Info("三角洲帧律", "设置已保存。");
     }
 
     private void AdminRestartButton_Click(object sender, RoutedEventArgs e)
@@ -74,10 +74,11 @@ public partial class SettingsView : UserControl
             if (UpdateService.IsNewer(info.Version, UpdateService.CurrentVersion))
             {
                 UpdateStatusText.Text = $"发现新版本 {info.Version}";
-                var answer = MessageBox.Show(
+                var open = DialogService.Confirm(
+                    "三角洲帧律",
                     $"发现新版本 {info.Version}\n\n{info.Notes}\n\n是否打开下载页面？",
-                    "三角洲帧律", MessageBoxButton.YesNo, MessageBoxImage.Information);
-                if (answer == MessageBoxResult.Yes)
+                    confirmText: "打开");
+                if (open)
                 {
                     try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(info.Url) { UseShellExecute = true }); }
                     catch { }

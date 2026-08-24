@@ -16,6 +16,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public bool Optimized { get; }
     public string Current { get; }
     public string StatusText => Optimized ? "已达标" : "未应用";
+    public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
     public OptimizationItemViewModel(OptimizationItem item)
     {

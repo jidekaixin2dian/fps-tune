@@ -16,6 +16,6 @@ public partial class WeChatQrWindow : Window
     private void CopyWeChat_Click(object sender, RoutedEventArgs e)
     {
         Clipboard.SetText(SettingsService.Current.WeChat);
-        MessageBox.Show("微信号已复制。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
+        DialogService.Info("三角洲帧律", "微信号已复制。");
     }
 }

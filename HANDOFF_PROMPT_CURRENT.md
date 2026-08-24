@@ -9,8 +9,8 @@
 - 当前技术栈：
   - WPF + .NET 8
   - 封面/UI 已初步现代化
-  - 核心功能正在从 PowerShell 迁移到 C#
-  - 保留 PowerShell 引擎作为兼容/兜底
+  - 核心功能已基本迁移到 C#（应用/检测/备份/还原不再回退 PowerShell）
+  - 保留 PowerShell 引擎仅用于 A/B 实验、朋友测试和兼容排查
 - 最终目标：成为可公开发布、安装包化、可自动更新、功能完整的桌面软件。
 
 ## 本地路径
@@ -20,6 +20,10 @@
 - 安装包脚本：`installer\setup.iss`
 - 发布脚本：`publish-release.ps1`、`build-installer.ps1`
 - 同步目录：`C:\Users\Aether\.dsh\wsl-output\`
+
+## 当前版本
+
+- 1.0.0（上线前仍以 1.0.0 为准）
 
 ## 当前已完成
 
@@ -31,32 +35,37 @@
 - 设置页：默认主题、关于、合规说明、管理员状态、检查更新，不展示个人联系方式编辑
 - 线性可拖动滚动条
 - 功能卡片 hover 动效，页面滑动动画
+- 自定义 AppDialogWindow 替代系统 MessageBox（还原确认/提示/更新确认等）
+- 检测/优化列表显示副作用（无副作用自动隐藏）
+- C# 游戏路径自动查找（进程/卸载注册表/常见目录）
 - C# 核心：
   - 22 项优化项定义
-  - NativeOptimizationEngine（注册表/电源/服务/休眠/BCD/GPU 等）
-  - BackupService（备份/还原）
-  - DetectionService（检测）
-  - HardwareInfoService（硬件信息）
+  - NativeOptimizationEngine：全部 22 项 C# 原生应用，覆盖注册表/电源/服务/休眠/BCD/GPU/Layers/DirectX
+  - BackupService：支持注册表、服务启动类型、电源计划、休眠、BCD、动态 GPU 键等完整备份/还原
+  - DetectionService：22 项检测均走 C#（含电源隐藏项、服务、休眠、BCD、GPU 状态）
+  - HardwareInfoService（硬件信息：CPU/GPU/内存/内存频率/PCIe/笔记本/管理员）
   - OptimizationEngine 统一入口
-- 检测/优化应用/备份/还原/备份列表已经主要走 C# 引擎
+- 检测/优化应用/备份/还原/备份列表已全部走 C# 引擎
+- 还原不再回退 PowerShell
 - 自动更新：GitHub Releases 检查
-- 安装包：Inno Setup 脚本
+- 安装包：Inno Setup 脚本（单文件 EXE）
+- 发布脚本：publish-release.ps1 增加绿色版 Portable zip；build-installer.ps1 增加产物检查
 - 发布指南：RELEASE.md
 
 ## 尚未完成 / 必须继续
 
-1. C# 引擎补完：
-   - 复杂项完整移植（power-tuning、sysmain-off、wsearch-off、hibernate-off、gpu-pstate-lock 等完整还原逻辑）
-   - 还原不再回退 PowerShell
-   - A/B 实验核心也可以考虑 C# 化
+1. 待用户实测/验收 C# 引擎：
+   - 在真实 Windows 上跑一次 Detect / Apply / Restore 往返
+   - 重点验证 power-tuning、sysmain-off、wsearch-off、hibernate-off、gpu-pstate-lock 的还原
 2. 安装包实际构建验证：
    - 需要安装 Inno Setup 6
    - 将 `dist\single-file\DeltaForceTune.exe` 打入安装包
 3. 自动更新端到端验证：
    - 创建 GitHub Release
-   - 上传安装包/单文件 EXE
+   - 上传安装包/单文件 EXE/Portable zip
    - 确认 UpdateService 能读取最新版本
 4. UI 进一步现代化：
+   - 自定义弹窗、副作用展示已加入；后续视觉微调可继续交给 vision 版本
    - 继续优化视觉，但不得破坏功能
 5. 用户视角完整自检：
    - 所有页面无大面积留白

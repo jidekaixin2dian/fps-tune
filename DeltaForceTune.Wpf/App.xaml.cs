@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using DeltaForceTune.Wpf.Services;
 using System.Windows.Threading;
 
 namespace DeltaForceTune.Wpf;
@@ -17,11 +18,9 @@ public partial class App : Application
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         LogException(e.Exception);
-        MessageBox.Show(
-            "程序发生错误：\n\n" + e.Exception.Message + "\n\n详细信息已写入日志。",
+        DialogService.Warning(
             "三角洲帧律",
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
+            "程序发生错误：\n\n" + e.Exception.Message + "\n\n详细信息已写入日志。");
         e.Handled = true;
     }
 

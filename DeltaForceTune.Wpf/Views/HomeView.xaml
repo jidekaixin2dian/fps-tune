@@ -18,7 +18,7 @@
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center">
-                <TextBlock Text="微信：待设置"
+                <TextBlock Text="微信：请点击查看二维码"
                            Style="{StaticResource MutedTextStyle}"
                            Margin="0,0,16,0"/>
                 <TextBlock Text="QQ：待设置"
@@ -70,7 +70,8 @@
                                TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="开始优化"
+                    <Button x:Name="StartOptimizeButton"
+                            Content="检测并优化"
                             Style="{StaticResource PrimaryButtonStyle}"
                             MinWidth="140"
                             Click="StartOptimize_Click"/>

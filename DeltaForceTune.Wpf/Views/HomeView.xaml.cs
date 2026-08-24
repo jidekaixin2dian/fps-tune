@@ -17,12 +17,16 @@ public partial class HomeView : UserControl
         VersionText.Text = "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         var hw = Core.HardwareInfoService.Get();
         HardwareSummaryText.Text = $"{hw.Cpu}  |  {hw.Gpu}  |  {hw.RamGB:0.#} GB";
+
+        // 新手引导入口只在首次打开时显示。
+        if (StateStore.HasSeenOnboarding)
+            StartOptimizeButton.Visibility = Visibility.Collapsed;
     }
 
     public void RefreshContacts()
     {
         var s = SettingsService.Current;
-        var wechat = string.IsNullOrWhiteSpace(s.WeChat) ? "待设置" : s.WeChat;
+        var wechat = "请点击查看二维码";
         var qq = string.IsNullOrWhiteSpace(s.QQ) ? "待设置" : s.QQ;
         var douyin = string.IsNullOrWhiteSpace(s.Douyin) ? "待设置" : s.Douyin;
 
@@ -31,7 +35,7 @@ public partial class HomeView : UserControl
             qqLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(s.QQ);
 
         ContactPanel.Children.Clear();
-        ContactPanel.Children.Add(MakeContact("微信", wechat, s.WeChatLink));
+        ContactPanel.Children.Add(MakeContact("微信", wechat, ""));
         ContactPanel.Children.Add(MakeContact("QQ", qq, qqLink));
         ContactPanel.Children.Add(MakeContact("抖音", douyin, s.DouyinLink));
 
@@ -86,7 +90,7 @@ public partial class HomeView : UserControl
             }
             catch
             {
-                MessageBox.Show("无法打开链接。", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogService.Warning("三角洲帧律", "无法打开链接。");
             }
             return;
         }
@@ -94,7 +98,7 @@ public partial class HomeView : UserControl
         if (!string.IsNullOrWhiteSpace(value) && value != "待设置")
         {
             Clipboard.SetText(value);
-            MessageBox.Show($"已复制：{value}", "三角洲帧律", MessageBoxButton.OK, MessageBoxImage.Information);
+            DialogService.Info("三角洲帧律", $"已复制：{value}");
         }
     }
 
@@ -109,7 +113,10 @@ public partial class HomeView : UserControl
 
     private void StartOptimize_Click(object sender, RoutedEventArgs e)
     {
+        StateStore.MarkOnboardingSeen();
+        StartOptimizeButton.Visibility = Visibility.Collapsed;
+
         if (Window.GetWindow(this) is MainWindow main)
-            main.NavigateTo("opt");
+            _ = main.RunOnboardingAsync();
     }
 }

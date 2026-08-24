@@ -1,16 +1,24 @@
-﻿using System.IO;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using DeltaForceTune.Wpf.Services;
 using Microsoft.Win32;
-using System.Linq;
 
 namespace DeltaForceTune.Wpf.Core;
 
 public static class DetectionService
 {
+    private const string UltimatePowerGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
+
     public static string BuildDetectJson(string? gamePath = null)
     {
         var hw = HardwareInfoService.Get();
+
+        if (string.IsNullOrWhiteSpace(gamePath))
+            gamePath = GamePathService.Find();
+        if (!string.IsNullOrWhiteSpace(gamePath))
+            AppState.GamePath = gamePath;
 
         var items = ItemCatalog.All.Select(def =>
         {
@@ -67,12 +75,35 @@ public static class DetectionService
 
     private static IReadOnlyList<object> BuildChecks()
     {
-        return new List<object>
+        var checks = new List<object>();
+
+        // VC++ v14 运行库（x64 / x86 相互独立）
+        var missing = new List<string>();
+        foreach (var arch in new[] { "x64", "x86" })
         {
-            new { name = "VC++ v14 运行库", status = "attention", message = "建议安装官方 VC++ v14 运行库（可在微软官网下载）" },
-            new { name = "内存频率", status = "ok", message = "由检测脚本完成；当前 C# 版本仅显示状态占位" },
-            new { name = "PCIe 链路", status = "ok", message = "由检测脚本完成；当前 C# 版本仅显示状态占位" }
-        };
+            var installed = RegistryHelper.ReadValue(
+                RegistryHive.LocalMachine,
+                $@"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\{arch}",
+                "Installed");
+            if (installed?.ToString() != "1")
+                missing.Add(arch);
+        }
+
+        checks.Add(missing.Count == 0
+            ? new { name = "VC++ v14 运行库", status = "ok", message = "x64 与 x86 均已安装。" }
+            : new { name = "VC++ v14 运行库", status = "attention", message = "缺失架构: " + string.Join(", ", missing) + "。请从微软官方下载对应架构的 vc_redist 覆盖安装。" });
+
+        var memory = HardwareInfoService.GetMemoryFrequencyText();
+        checks.Add(memory == "未知"
+            ? new { name = "内存频率", status = "attention", message = "未识别到内存频率，可在任务管理器 / CPU-Z 查看" }
+            : new { name = "内存频率", status = "ok", message = memory });
+
+        var pcie = HardwareInfoService.GetPcieLinkText();
+        checks.Add(pcie.StartsWith("未知", StringComparison.Ordinal)
+            ? new { name = "PCIe 链路", status = "attention", message = "未识别到 PCIe 链路，可安装 GPU-Z 查看" }
+            : new { name = "PCIe 链路", status = "ok", message = pcie });
+
+        return checks;
     }
 
     private static (bool Optimized, string Current) GetItemState(OptimizationItemDefinition item, string? gamePath)
@@ -94,12 +125,146 @@ public static class DetectionService
             _ => default
         };
 
-        if (target == default)
-            return (false, "需要运行时检测");
+        if (target != default)
+        {
+            var value = RegistryHelper.ReadValue(target.Item1, target.Item2, target.Item3);
+            var text = value?.ToString();
+            return (text == target.Item4, text ?? "未设置");
+        }
 
-        var value = RegistryHelper.ReadValue(target.Item1, target.Item2, target.Item3);
-        var text = value?.ToString();
-        var optimized = text == target.Item4;
-        return (optimized, text ?? "未设置");
+        return item.Id switch
+        {
+            "power-ultimate" => GetPowerUltimateState(),
+            "power-tuning" => GetPowerTuningState(),
+            "sysmain-off" => GetServiceState("SysMain"),
+            "wsearch-off" => GetServiceState("WSearch"),
+            "hibernate-off" => GetHibernateState(),
+            "dyntick-off" => GetDynamicTickState(),
+            "fso-off" => GetFsoState(gamePath),
+            "gpu-pref" => GetGpuPrefState(gamePath),
+            "game-priority" => GetGamePriorityState(gamePath),
+            "gpu-pstate-lock" => GetGpuPstateLockState(),
+            _ => (false, "需要运行时检测")
+        };
+    }
+
+    private static (bool Optimized, string Current) GetPowerUltimateState()
+    {
+        var active = NativeSystem.GetActivePowerSchemeGuid();
+        if (active is null)
+            return (false, "无法读取电源计划");
+        return (string.Equals(active, UltimatePowerGuid, StringComparison.OrdinalIgnoreCase), "当前方案 " + active);
+    }
+
+    private static (bool Optimized, string Current) GetPowerTuningState()
+    {
+        var usb = GetPowerSettingIndex(
+            "2a737441-1930-4402-8d77-b2bebba308a3",
+            "48e6b7a6-50f5-4782-a5d4-53bb8f07e226");
+        var boost = GetPowerSettingIndex(
+            "be337238-0d82-4146-a960-4f3749d470c7",
+            "45bcc044-d885-43e2-8605-ee0ec6e96b59");
+        var idle = GetPowerSettingIndex(
+            "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d",
+            "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3");
+
+        if (usb is null || boost is null || idle is null)
+            return (false, "无法读取全部电源隐藏项");
+
+        var optimized = usb == 0 && boost == 2 && idle == 0;
+        return (optimized, $"USB3={usb}, 提升={boost}, 空闲={idle}");
+    }
+
+    private static int? GetPowerSettingIndex(string subgroup, string setting)
+    {
+        var r = NativeSystem.Run("powercfg.exe", "/query", "SCHEME_CURRENT", subgroup, setting);
+        if (!r.Success)
+            return null;
+
+        var lines = r.Output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            if (!line.Contains("AC", StringComparison.OrdinalIgnoreCase) &&
+                !line.Contains("交流", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var match = Regex.Match(line, @"0[xX][0-9a-fA-F]+");
+            if (match.Success && int.TryParse(match.Value[2..], System.Globalization.NumberStyles.HexNumber, null, out var value))
+                return value;
+        }
+
+        return null;
+    }
+
+    private static (bool Optimized, string Current) GetServiceState(string serviceName)
+    {
+        var start = NativeSystem.GetServiceStartValue(serviceName);
+        if (start is null)
+            return (false, "服务不存在或无法读取");
+
+        var text = start switch
+        {
+            0 => "系统启动",
+            1 => "系统",
+            2 => "自动",
+            3 => "手动",
+            4 => "已禁用",
+            _ => $"未知({start})"
+        };
+        return (start == 4, text);
+    }
+
+    private static (bool Optimized, string Current) GetHibernateState()
+    {
+        var on = NativeSystem.IsHibernateEnabled();
+        return (!on, on ? "开启" : "关闭");
+    }
+
+    private static (bool Optimized, string Current) GetDynamicTickState()
+    {
+        var enabled = NativeSystem.IsDynamicTickEnabled();
+        return (enabled, enabled ? "已禁用" : "未禁用");
+    }
+
+    private static (bool Optimized, string Current) GetFsoState(string? gamePath)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath))
+            return (false, "缺少游戏路径");
+
+        const string flag = "DISABLEDXMAXIMIZEDWINDOWEDMODE";
+        const string path = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
+        var value = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, gamePath)?.ToString() ?? "";
+        return (value.Contains(flag, StringComparison.OrdinalIgnoreCase), string.IsNullOrWhiteSpace(value) ? "未设置" : value);
+    }
+
+    private static (bool Optimized, string Current) GetGpuPrefState(string? gamePath)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath))
+            return (false, "缺少游戏路径");
+
+        const string path = @"Software\Microsoft\DirectX\UserGpuPreferences";
+        var value = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, gamePath)?.ToString() ?? "";
+        return (value.Contains("GpuPreference=2", StringComparison.OrdinalIgnoreCase), string.IsNullOrWhiteSpace(value) ? "未设置" : value);
+    }
+
+    private static (bool Optimized, string Current) GetGamePriorityState(string? gamePath)
+    {
+        if (string.IsNullOrWhiteSpace(gamePath))
+            return (false, "缺少游戏路径");
+
+        var gameName = Path.GetFileName(gamePath);
+        var path = $@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{gameName}\PerfOptions";
+        var value = RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, "CpuPriorityClass");
+        return (value?.ToString() == "3", value?.ToString() ?? "未设置");
+    }
+
+    private static (bool Optimized, string Current) GetGpuPstateLockState()
+    {
+        var path = NativeSystem.GetMainGpuDriverKeyPath();
+        if (path is null)
+            return (false, "未找到 GPU 驱动项");
+
+        var value = RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, "DisableDynamicPstate");
+        return (value?.ToString() == "1", value?.ToString() ?? "未设置");
     }
 }
