@@ -56,22 +56,22 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE713;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Ellipse Canvas.Left="5" Canvas.Top="5" Width="14" Height="14"
+                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
+                                <Ellipse Canvas.Left="9" Canvas.Top="9" Width="6" Height="6"
+                                         Fill="{DynamicResource AccentBrush}"/>
+                                <Line X1="12" Y1="2" X2="12" Y2="5" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="12" Y1="19" X2="12" Y2="22" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="2" Y1="12" X2="5" Y2="12" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="19" Y1="12" X2="22" Y2="12" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="4.9" Y1="4.9" X2="7.1" Y2="7.1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="16.9" Y1="16.9" X2="19.1" Y2="19.1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="4.9" Y1="19.1" X2="7.1" Y2="16.9" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="16.9" Y1="7.1" X2="19.1" Y2="4.9" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="设置"
                                        Margin="10,0,0,0"
@@ -107,22 +107,13 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE80F;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="首页"
                                        Margin="10,0,0,0"
@@ -151,22 +142,15 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE721;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Ellipse Canvas.Left="3.5" Canvas.Top="3.5" Width="13" Height="13"
+                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
+                                <Line X1="14.5" Y1="14.5" X2="20" Y2="20"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="检测"
                                        Margin="10,0,0,0"
@@ -195,22 +179,13 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE945;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M13 2 L5.5 14 H11.5 L9.5 22 L18.5 10 H12.5 Z"
+                                      Fill="{DynamicResource AccentBrush}"
+                                      StrokeLineJoin="Round"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="优化"
                                        Margin="10,0,0,0"
@@ -239,22 +214,13 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE9D2;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Rectangle Canvas.Left="4" Canvas.Top="13" Width="3.5" Height="8" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
+                                <Rectangle Canvas.Left="10.25" Canvas.Top="9" Width="3.5" Height="12" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
+                                <Rectangle Canvas.Left="16.5" Canvas.Top="5" Width="3.5" Height="16" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="A/B 实验"
                                        Margin="10,0,0,0"
@@ -283,22 +249,20 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE716;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Ellipse Canvas.Left="5" Canvas.Top="4" Width="6" Height="6"
+                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
+                                <Path Data="M2.5 20 C2.5 15.5 4.5 13.5 8 13.5 C11.5 13.5 13.5 15.5 13.5 20"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                <Ellipse Canvas.Left="15" Canvas.Top="7" Width="5.5" Height="5.5"
+                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
+                                <Path Data="M14.5 15 C17 15 19.5 16.5 19.5 20"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="朋友测试"
                                        Margin="10,0,0,0"
@@ -327,22 +291,20 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Text="&#xE8B7;"
-                                           FontFamily="Segoe MDL2 Assets"
-                                           FontSize="15"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M5 3 H14 L18 7 V21 H5 Z"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeLineJoin="Round"/>
+                                <Path Data="M14 3 V7 H18"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeLineJoin="Round"/>
+                                <Line X1="8.5" Y1="12" X2="15.5" Y2="12"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                                <Line X1="8.5" Y1="16" X2="15.5" Y2="16"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
+                            </Canvas>
+                        </Viewbox>
                             </Border>
                             <TextBlock Text="备份 / 日志"
                                        Margin="10,0,0,0"
