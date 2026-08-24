@@ -1,7 +1,8 @@
 # delta-force-tune
 
-Windows **system-layer** frame-rate tuning for *Delta Force* (三角洲行动), designed to be
-driven by an AI agent (Claude Code / Codex / WorkBuddy / Doubao, etc.) or plain CLI.
+Windows **system-layer** frame-rate tuning for Windows games, including *Delta Force*, *Valorant*,
+*CS2*, *APEX* and most PC titles. Built with C# WPF + .NET 8, with PowerShell scripts retained
+for compatibility/fallback.
 
 - ✅ **System layer only, fully reversible** — touches Windows settings (registry, power
   plans, services, boot config). Every write is backed up first; one-command restore.

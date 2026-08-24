@@ -1,9 +1,10 @@
 # 三角洲行动 · 系统层帧率优化（delta-force-tune）
 
-面向《三角洲行动》玩家的 **Windows 系统层**帧率优化技能：一个原创的 PowerShell 引擎
-（`delta-optimizer.ps1`）+ 一份通用 Agent 技能说明（`SKILL.md`），任何能执行 PowerShell
-的 AI 助手（Claude Code / Codex / WorkBuddy / 豆包等）都可以按流程调用：
-**检测 → 解释 → 确认 → 执行 → 汇报**。
+面向 Windows 玩家的 **系统层**帧率优化工具（三角洲帧律），核心采用 C# WPF + .NET 8，
+同时保留 PowerShell 脚本作为兼容/兜底。它只调整 Windows 系统设置，因此不仅适用于《三角洲行动》，
+也适用于《无畏契约》《CS2》《APEX》等绝大多数 Windows 游戏。
+
+能力闭环：**检测 → 解释 → 确认 → 执行 → 还原**。
 
 - ✅ **系统层，可还原**：只改 Windows 设置（注册表 / 电源计划 / 服务 / 启动配置），
   每次写入前自动备份原值，支持一键还原。
