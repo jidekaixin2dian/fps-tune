@@ -52,15 +52,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 
 ## 快速开始（GUI 功能版）
 
-先进入项目目录（或把命令里的路径换成完整路径）：
+- 推荐下载安装包：<https://github.com/jiaxindeyang-a11y/delta-force-tune/releases>
+- 便携版：解压 `DeltaForceTune-Portable.zip` 后运行 `DeltaForceTune.exe`
+
+或本地构建：
 
 ```powershell
 cd <项目目录>
-powershell -NoProfile -ExecutionPolicy Bypass -File delta-gui.ps1
+.uild-wpf.ps1 -Mode Build
+.\DeltaForceTune.Wpfin\Release
+et8.0-windows\DeltaForceTune.exe
 ```
 
-当前 GUI 已完成功能版：检测、优化授权、A/B 实验、朋友测试、备份/日志。
-视觉设计后续交给 V4 flash version。
+当前 WPF GUI 已完成：检测、优化、A/B 实验、朋友测试、备份/日志、设置、
+深色/亮色/跟随系统主题、现代化自定义弹窗、首次启动“检测并优化”引导。
 
 ## 命令一览
 

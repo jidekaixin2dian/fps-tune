@@ -52,29 +52,19 @@
 - 发布脚本：publish-release.ps1 增加绿色版 Portable zip；build-installer.ps1 增加产物检查
 - 发布指南：RELEASE.md
 
-## 尚未完成 / 必须继续
+## 当前状态（截至本版本）
 
-1. 待用户实测/验收 C# 引擎：
-   - 在真实 Windows 上跑一次 Detect / Apply / Restore 往返
-   - 重点验证 power-tuning、sysmain-off、wsearch-off、hibernate-off、gpu-pstate-lock 的还原
-2. 安装包实际构建验证：
-   - 需要安装 Inno Setup 6
-   - 将 `dist\single-file\DeltaForceTune.exe` 打入安装包
-3. 自动更新端到端验证：
-   - 创建 GitHub Release
-   - 上传安装包/单文件 EXE/Portable zip
-   - 确认 UpdateService 能读取最新版本
-4. UI 进一步现代化：
-   - 自定义弹窗、副作用展示已加入；后续视觉微调可继续交给 vision 版本
-   - 继续优化视觉，但不得破坏功能
-5. 用户视角完整自检：
-   - 所有页面无大面积留白
-   - 深色/亮色下无不可读内容
-   - 滚动条可用
-   - 设置页不暴露开发者联系方式编辑
-6. 最终提交 GitHub：
-   - 所有任务完成且成熟后才 `git push origin main`
-   - 同时发布 GitHub Release
+1. C# 引擎：已完成 Detect / Apply / Restore 全部 C# 化，还原不回退 PowerShell。
+2. 安装包：Inno Setup 6 已安装，`DeltaForceTune-Setup-1.0.0.exe` 已构建成功。
+3. GitHub Release：`v1.0.0` 已创建，包含安装包、Portable zip、SingleFile zip；UpdateService 已验证可读取最新版本。
+4. UI：自定义弹窗、副作用展示、首次启动“检测并优化”引导已完成。
+5. 提交推送：`main` 已推送到 GitHub，提交 `baad68e`。
+
+## 仍需用户验收
+
+- 安装 `DeltaForceTune-Setup-1.0.0.exe` 并完成一次 Detect / Apply / Restore 真实往返。
+- 检查深色/亮色主题、滚动条、设置页无开发者联系方式编辑。
+- 验收后无需再改即可作为 v1.0.0 公开发布。
 
 ## 用户红线 / 要求
 
@@ -112,6 +102,6 @@ cd C:\Users\Aether\Documents\dsh\work\delta-skill
 
 ## Git 状态
 
-- 项目已有大量本地提交。
-- 远程尚未推送最新大版本。
-- 最终成熟后再统一提交 GitHub。
+- `main` 已推送 GitHub，提交 `baad68e`。
+- `v1.0.0` Release 已创建并包含安装包/Portable zip/SingleFile zip。
+- 后续改动请继续在 `main` 上提交并推送。

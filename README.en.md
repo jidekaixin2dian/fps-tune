@@ -46,11 +46,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 
 ## Quick start (GUI, functional)
 
-Run it from the project directory (or use the full path):
+- Recommended installer: <https://github.com/jiaxindeyang-a11y/delta-force-tune/releases>
+- Portable: unzip `DeltaForceTune-Portable.zip` and run `DeltaForceTune.exe`
+
+Or build locally:
 
 ```powershell
 cd <project-directory>
-powershell -NoProfile -ExecutionPolicy Bypass -File delta-gui.ps1
+.uild-wpf.ps1 -Mode Build
+.\DeltaForceTune.Wpfin\Release
+et8.0-windows\DeltaForceTune.exe
 ```
 
 ## Quick start (AI agent)
