@@ -51,8 +51,9 @@ public partial class SettingsView : UserControl
         var settings = SettingsService.Current;
         settings.ThemeMode = theme;
         SettingsService.Save(settings);
+        ThemeManager.SetMode(theme);
 
-        DialogService.Info("三角洲帧律", "设置已保存。");
+        DialogService.Info("三角洲帧律", "设置已保存，主题已立即生效。");
     }
 
     private void AdminRestartButton_Click(object sender, RoutedEventArgs e)
