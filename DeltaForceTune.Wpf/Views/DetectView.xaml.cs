@@ -192,6 +192,19 @@ public partial class DetectView : UserControl
         DialogService.Info("提示", $"已加载 {AppState.Items.Count} 个优化项到优化页。");
     }
 
+    private void CopyGamePath_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(AppState.GamePath))
+        {
+            Clipboard.SetText(AppState.GamePath);
+            DialogService.Info("游戏路径", "已将游戏路径复制到剪贴板。");
+        }
+        else
+        {
+            DialogService.Info("游戏路径", "当前没有可复制的游戏路径，请先运行检测。");
+        }
+    }
+
     private void CopyDetail_Click(object sender, RoutedEventArgs e)
     {
         if (!string.IsNullOrWhiteSpace(OutputBox.Text))

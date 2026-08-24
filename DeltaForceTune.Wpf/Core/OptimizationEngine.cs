@@ -28,20 +28,21 @@ public static class OptimizationEngine
             "safe-only" => SafeOnlyIds,
             _ => ItemCatalog.All.Where(x => !BalancedExclude.Contains(x.Id)).Select(x => x.Id)
         };
-        return Task.FromResult(ApplyNative(ids));
+        return Task.Run(() => ApplyNative(ids));
     }
 
     public static Task<RunResult> ApplyItemsAsync(IEnumerable<string> ids)
-        => Task.FromResult(ApplyNative(ids));
+        => Task.Run(() => ApplyNative(ids));
 
     public static Task<RunResult> RestoreAsync()
-    {
-        var restored = BackupService.RestoreLatest();
-        if (restored is null)
-            return Task.FromResult(new RunResult(0, "没有找到可还原的备份。", ""));
+        => Task.Run(() =>
+        {
+            var restored = BackupService.RestoreLatest();
+            if (restored is null)
+                return new RunResult(0, "没有找到可还原的备份。", "");
 
-        return Task.FromResult(new RunResult(0, $"已从备份还原：{restored}", ""));
-    }
+            return new RunResult(0, $"已从备份还原：{restored}", "");
+        });
 
     public static Task<RunResult> ListRestoreAsync()
     {

@@ -72,7 +72,16 @@
             <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="游戏路径 / 只读体检" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock Text="游戏路径" Style="{StaticResource MutedTextStyle}"/>
+                    <Grid>
+                        <TextBlock Text="游戏路径" Style="{StaticResource MutedTextStyle}"/>
+                        <Button Content="复制"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Height="24"
+                                MinWidth="52"
+                                HorizontalAlignment="Right"
+                                Padding="8,0"
+                                Click="CopyGamePath_Click"/>
+                    </Grid>
                     <TextBlock x:Name="GamePathText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
                                TextWrapping="Wrap"

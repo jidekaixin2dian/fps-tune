@@ -39,11 +39,45 @@
                                  Tag="settings"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="设置" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE713;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="设置"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
                     <TextBlock Text="v1.0.0"
                                Margin="14,10,0,0"
                                FontSize="11"
@@ -56,56 +90,265 @@
                                  Style="{StaticResource NavRadioStyle}"
                                  IsChecked="True"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="首页" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE80F;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="首页"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <RadioButton x:Name="NavDetect"
                                  Tag="detect"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="检测" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE721;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="检测"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <RadioButton x:Name="NavOpt"
                                  Tag="opt"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="优化" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE945;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="优化"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <RadioButton x:Name="NavAb"
                                  Tag="ab"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="A/B 实验" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE9D2;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="A/B 实验"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <RadioButton x:Name="NavFriend"
                                  Tag="friend"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="朋友测试" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE716;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="朋友测试"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <RadioButton x:Name="NavBackup"
                                  Tag="backup"
                                  Style="{StaticResource NavRadioStyle}"
                                  Checked="Nav_Checked">
-<StackPanel Orientation="Horizontal">
-<TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-<TextBlock Text="备份 / 日志" Margin="10,0,0,0" VerticalAlignment="Center"/>
-</StackPanel>
-</RadioButton>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="&#xE8B7;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="15"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="备份 / 日志"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
                 </StackPanel>
             </DockPanel>
         </Border>
