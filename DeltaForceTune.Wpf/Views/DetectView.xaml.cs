@@ -192,6 +192,15 @@ public partial class DetectView : UserControl
         DialogService.Info("提示", $"已加载 {AppState.Items.Count} 个优化项到优化页。");
     }
 
+    private void CopyDetail_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(OutputBox.Text))
+        {
+            Clipboard.SetText(OutputBox.Text);
+            DialogService.Info("检测详情", "已将检测详情复制到剪贴板。");
+        }
+    }
+
     private static void SetCheck(System.Windows.Controls.TextBlock target, JsonNode? node)
     {
         if (node is null)

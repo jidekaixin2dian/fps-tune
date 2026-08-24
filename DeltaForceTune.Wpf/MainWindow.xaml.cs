@@ -10,8 +10,7 @@ namespace DeltaForceTune.Wpf;
 public partial class MainWindow : Window
 {
     private readonly Dictionary<string, UserControl> _pages;
-    private bool _themeAnimating;
-
+    
     public MainWindow()
     {
         InitializeComponent();
@@ -29,9 +28,12 @@ public partial class MainWindow : Window
         };
 
         PageHost.Content = _pages["home"];
+
+        var theme = SettingsService.Current.ThemeMode;
+        if (string.IsNullOrWhiteSpace(theme))
+            theme = "dark";
         ThemeManager.Initialize();
-        ThemeManager.SetMode("dark");
-        ThemeDark.IsChecked = true;
+        ThemeManager.SetMode(theme);
     }
 
     public void ShowOptimizePage()
@@ -114,30 +116,5 @@ public partial class MainWindow : Window
     {
         if (_pages["home"] is HomeView home)
             home.RefreshContacts();
-    }
-
-    private void Theme_Checked(object sender, RoutedEventArgs e)
-    {
-        if (sender is RadioButton { Tag: string mode })
-        {
-            AnimateThemeChange(mode);
-        }
-    }
-
-    private void AnimateThemeChange(string mode)
-    {
-        if (_themeAnimating)
-            return;
-
-        _themeAnimating = true;
-        var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(110));
-        fadeOut.Completed += (_, _) =>
-        {
-            ThemeManager.SetMode(mode);
-            var fadeIn = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200));
-            fadeIn.Completed += (_, _) => _themeAnimating = false;
-            BeginAnimation(OpacityProperty, fadeIn);
-        };
-        BeginAnimation(OpacityProperty, fadeOut);
     }
 }

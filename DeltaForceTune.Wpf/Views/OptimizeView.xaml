@@ -100,20 +100,32 @@
                                                    Margin="0,2,0,0"
                                                    Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/>
                                     </StackPanel>
-                                    <TextBlock Grid.Column="3"
-                                               Text="管理员"
-                                               Foreground="{DynamicResource WarningBrush}"
-                                               FontSize="10"
-                                               Margin="8,0"
-                                               VerticalAlignment="Center"
-                                               Visibility="{Binding RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
-                                    <TextBlock Grid.Column="4"
-                                               Text="需重启"
-                                               Foreground="{DynamicResource AccentBrush}"
-                                               FontSize="10"
-                                               Margin="8,0,0,0"
-                                               VerticalAlignment="Center"
-                                               Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}"/>
+                                    <Border Grid.Column="3"
+                                            Margin="8,0"
+                                            CornerRadius="6"
+                                            Padding="6,2"
+                                            Background="{DynamicResource ElevatedBrush}"
+                                            BorderBrush="{DynamicResource WarningBrush}"
+                                            BorderThickness="0.8"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding RequiresAdmin, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="管理员"
+                                                   Foreground="{DynamicResource WarningBrush}"
+                                                   FontSize="10"/>
+                                    </Border>
+                                    <Border Grid.Column="4"
+                                            Margin="8,0,0,0"
+                                            CornerRadius="6"
+                                            Padding="6,2"
+                                            Background="{DynamicResource ElevatedBrush}"
+                                            BorderBrush="{DynamicResource AccentBrush}"
+                                            BorderThickness="0.8"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="需重启"
+                                                   Foreground="{DynamicResource AccentBrush}"
+                                                   FontSize="10"/>
+                                    </Border>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

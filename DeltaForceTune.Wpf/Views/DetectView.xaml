@@ -129,21 +129,27 @@
                                                Margin="0,2,0,0"
                                                Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>
-                                <TextBlock Grid.Column="2"
-                                           Text="{Binding StatusText}"
-                                           Margin="10,0,0,0"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Optimized}" Value="True">
-                                                    <Setter Property="Foreground" Value="{DynamicResource OkBrush}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Border Grid.Column="2"
+                                        Margin="10,0,0,0"
+                                        CornerRadius="8"
+                                        Padding="8,3"
+                                        Background="{DynamicResource ElevatedBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding StatusText}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Optimized}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource OkBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -157,7 +163,15 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="检测详情" Style="{StaticResource CardTitleStyle}"/>
+                <Grid Grid.Row="0">
+                    <TextBlock Text="检测详情" Style="{StaticResource CardTitleStyle}"/>
+                    <Button Content="复制全部"
+                            Style="{StaticResource GhostButtonStyle}"
+                            HorizontalAlignment="Right"
+                            MinWidth="72"
+                            Height="28"
+                            Click="CopyDetail_Click"/>
+                </Grid>
                 <TextBox Grid.Row="1"
                          x:Name="OutputBox"
                          Style="{StaticResource MonoTextBoxStyle}"

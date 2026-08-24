@@ -94,6 +94,9 @@
                                         Visibility="Collapsed"/>
                             </Grid>
                             <ControlTemplate.Triggers>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="Root" Property="Background" Value="{DynamicResource ElevatedBrush}"/>
                                     <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
@@ -156,6 +159,9 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="Root" Property="Opacity" Value="0.8"/>
                                 </Trigger>
