@@ -21,7 +21,7 @@ if (-not $iscc) {
 }
 
 $csproj = Join-Path $root 'DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj'
-[xml]$projXml = Get-Content $csproj
+[xml]$projXml = Get-Content $csproj -Raw -Encoding UTF8
 $version = ($projXml.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
 if (-not $version) { $version = '1.0.0' }
 Write-Host "App version: $version"
