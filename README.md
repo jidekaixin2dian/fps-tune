@@ -10,13 +10,17 @@
   每次写入前自动备份原值，支持一键还原。
 - ✅ **不碰游戏**：不修改游戏目录文件、不注入进程、不与反作弊交互、不关引导虚拟化、
   不做显卡伪装。
-- ✅ **纯 PowerShell 5.1**：Windows 10/11 自带，零依赖、零安装。
-- ✅ **JSON 输出**：`-Json` 模式输出结构化结果，Agent 友好。
+- ✅ **C# WPF + .NET 8**：现代桌面界面；同时保留 PowerShell 兼容脚本供 CLI/Agent 使用。
+- ✅ **自动备份可还原**：每次改动前自动备份，支持一键还原。
 - ✅ **MIT 开源**：代码完全原创（Clean-room），可自由使用、修改、商用。
+
+![build](https://github.com/jiaxindeyang-a11y/delta-force-tune/actions/workflows/build.yml/badge.svg)
+![release](https://img.shields.io/github/v/release/jiaxindeyang-a11y/delta-force-tune)
+![license](https://img.shields.io/github/license/jiaxindeyang-a11y/delta-force-tune)
 
 > 项目背景：市面上的同类工具（如 DeltaForceBooster）采用专有 EULA，禁止修改与再分发。
 > 本项目以**公开的功能清单**为参考，代码与文档完全自写，采用宽松许可证开源，
-> 并刻意做减法：无遥测、无更新器；GUI 功能版可选，核心仍是一个脚本即插即用。
+> 无遥测；所有系统改动前自动备份，可一键还原。
 
 ## 快速开始（AI Agent）
 

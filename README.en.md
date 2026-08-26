@@ -8,9 +8,13 @@ for compatibility/fallback.
   plans, services, boot config). Every write is backed up first; one-command restore.
 - ✅ **Never touches the game** — no game-file edits, no process injection, no anti-cheat
   interaction, no virtualization toggling, no GPU model spoofing.
-- ✅ **Pure PowerShell 5.1** — ships with Windows 10/11, zero dependencies, no install.
-- ✅ **JSON output** — structured results for agents and scripts.
+- ✅ **C# WPF + .NET 8** — modern desktop UI, with PowerShell scripts retained for CLI/Agent compatibility.
+- ✅ **Automatic backup & restore** — every write is backed up first; one-command restore.
 - ✅ **MIT licensed, clean-room implementation.**
+
+![build](https://github.com/jiaxindeyang-a11y/delta-force-tune/actions/workflows/build.yml/badge.svg)
+![release](https://img.shields.io/github/v/release/jiaxindeyang-a11y/delta-force-tune)
+![license](https://img.shields.io/github/license/jiaxindeyang-a11y/delta-force-tune)
 
 ## Why this project exists
 
