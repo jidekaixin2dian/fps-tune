@@ -1,4 +1,4 @@
-name: smoke
+﻿name: smoke
 
 on:
   push:
@@ -13,12 +13,12 @@ jobs:
       - name: Core detect (read-only)
         shell: powershell
         run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Detect -Json
+          powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Detect -Json
 
       - name: A/B simulated full chain
         shell: powershell
         run: |
-          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP 'DeltaOptimizerSmoke'
+          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP 'FpsTuneSmoke'
           New-Item -ItemType Directory -Path $env:LOCALAPPDATA -Force | Out-Null
           powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate -Baseline -Json
           powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate -Test -Group group-1 -Json

@@ -1,21 +1,21 @@
-; delta-force-tune Inno Setup installer
-#define MyAppName "三角洲帧律"
+﻿; fps-tune Inno Setup installer
+#define MyAppName "FPS 帧律"
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.0"
+  #error 请通过 build-installer.ps1 构建，由其注入 /DMyAppVersion（版本唯一来源：Directory.Build.props）
 #endif
-#define MyAppPublisher "三角洲帧律"
-#define MyAppExeName "DeltaForceTune.exe"
+#define MyAppPublisher "FPS 帧律"
+#define MyAppExeName "FpsTune.exe"
 
 [Setup]
 AppId={{8D6E7F3A-4C5B-4D1E-9A2B-7C0F6E1D8B4A}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\DeltaForceTune
+DefaultDirName={autopf}\FpsTune
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=..\dist\installer
-OutputBaseFilename=DeltaForceTune-Setup-{#MyAppVersion}
+OutputBaseFilename=FpsTune-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

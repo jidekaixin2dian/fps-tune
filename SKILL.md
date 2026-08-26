@@ -1,5 +1,5 @@
----
-name: delta-force-tune
+﻿---
+name: fps-tune
 description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检测电脑硬件、游戏安装位置与当前系统设置，经用户逐项确认后批量应用可还原的 Windows 层优化（电源计划、HAGS、游戏模式、关闭后台录制、MMCSS、网络限流等），并为对应显卡厂商给出驱动内手动设置清单。所有改动写入前自动备份，支持一键还原。当用户提到"三角洲行动 卡顿 / 掉帧 / 帧数低 / 画面优化 / 帧率优化 / 优化设置"时使用。
 ---
 
@@ -7,7 +7,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 
 本技能与具体 AI 工具无关：任何能在用户 Windows 电脑上执行 PowerShell 的助手
 （Claude Code、Codex、WorkBuddy、豆包等）按下面的流程操作即可。核心逻辑全部在
-`delta-optimizer.ps1` 里，你只负责：**检测 → 向用户解释 → 征得确认 → 执行 → 汇报**。
+`fps-tune.ps1` 里，你只负责：**检测 → 向用户解释 → 征得确认 → 执行 → 汇报**。
 所有系统改动都由确定性脚本完成并自动备份，你的角色是"理解意图、解释取舍、把关确认"，
 而不是替脚本决定改什么。
 
@@ -15,7 +15,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 
 - Windows 10 / 11，自带 Windows PowerShell 5.1 即可，无需安装任何东西。
 - 部分项（电源计划、HAGS、系统服务等）需要**管理员权限**的 PowerShell。
-- 脚本位置：`<root>\delta-optimizer.ps1`（下文 `<root>` 指脚本所在目录）。
+- 脚本位置：`<root>\fps-tune.ps1`（下文 `<root>` 指脚本所在目录）。
 - 所有命令用 `-ExecutionPolicy Bypass`（下载的脚本带网络标记，默认策略会拒绝）。
 - 不要在未安装脚本的机器上凭空执行；用户没有脚本时，把脚本交给用户/放到本机目录后再继续。
 
@@ -24,7 +24,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 ### 第 1 步：检测（只读，安全）
 
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1" -Detect -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\fps-tune.ps1" -Detect -Json
 ```
 
 返回 JSON：
@@ -61,7 +61,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1"
 ### 第 3 步：应用（必须已获用户同意）
 
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1" -Apply -Preset balanced -Force -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\fps-tune.ps1" -Apply -Preset balanced -Force -Json
 ```
 
 - 默认套用预设：`-Preset balanced`（副作用小）通常最合适；`full` 含全部
@@ -72,7 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1"
   这是防呆设计，不是免责声明——你仍然必须真的先征得用户同意。
 - 结果里每项带 `ok` / `changed` / `skipped`，末尾有 `summary`（x 成功、y 失败、z 跳过）。
   `reboot` 数组列出需要重启才完全生效的项，汇报时按它提醒用户重启，别自己猜。
-- 每次 Apply 会先把所有原值写入 `%LocalAppData%\DeltaOptimizer\backup\backup-<时间戳>.json`，
+- 每次 Apply 会先把所有原值写入 `%LocalAppData%\FpsTune\backup\backup-<时间戳>.json`，
   结果里有 `backupFile` 路径；转述给用户，告诉他还原就靠这份备份。
 
 ### 第 4 步：显卡驱动内设置（手动，念给用户听）
@@ -114,13 +114,13 @@ Agent 的职责与红线：
 
 ```
 # 查看可精确还原的项
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1" -ListRestoreItems -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\fps-tune.ps1" -ListRestoreItems -Json
 
 # 还原全部
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1" -Restore -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\fps-tune.ps1" -Restore -Json
 
 # 只还原某些项
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\delta-optimizer.ps1" -Restore -Items hags,dvr-off -Json
+powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\fps-tune.ps1" -Restore -Items hags,dvr-off -Json
 ```
 
 - 还原按备份记录逐项恢复原值（包括"原本不存在"的值会删除而不是写默认值）。

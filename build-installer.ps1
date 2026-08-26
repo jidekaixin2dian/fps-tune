@@ -1,7 +1,13 @@
-# Build installer with Inno Setup
+﻿# Build installer with Inno Setup
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
-$singleExe = Join-Path $root 'dist\single-file\DeltaForceTune.exe'
+$singleExe = Join-Path $root 'dist\single-file\FpsTune.exe'
+
+$propsPath = Join-Path $root 'Directory.Build.props'
+[xml]$propsXml = Get-Content $propsPath -Raw -Encoding UTF8
+$version = $null
+foreach ($pg in @($propsXml.Project.PropertyGroup)) { if ($pg.Version) { $version = [string]$pg.Version; break } }
+if (-not $version) { Write-Error 'Directory.Build.props 缺少 <Version>'; exit 1 }
 
 $isccCandidates = @(
     'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
@@ -20,10 +26,7 @@ if (-not $iscc) {
     exit 1
 }
 
-$csproj = Join-Path $root 'DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj'
 [xml]$projXml = Get-Content $csproj -Raw -Encoding UTF8
-$version = ($projXml.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
-if (-not $version) { $version = '1.0.0' }
 Write-Host "App version: $version"
 Write-Host "Using Inno Setup: $iscc"
 & $iscc "/DMyAppVersion=$version" (Join-Path $root 'installer\setup.iss')

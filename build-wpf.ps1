@@ -4,7 +4,7 @@ param(
     [string]$Mode = 'Build'
 )
 
-$project = Join-Path $PSScriptRoot 'DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj'
+$project = Join-Path $PSScriptRoot 'FpsTune.Wpf\FpsTune.Wpf.csproj'
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     Write-Error 'dotnet not found. Please install .NET 8 SDK first.'

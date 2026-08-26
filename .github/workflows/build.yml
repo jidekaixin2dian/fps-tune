@@ -1,4 +1,4 @@
-name: build
+﻿name: build
 
 on:
   push:
@@ -17,19 +17,19 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj
+        run: dotnet restore FpsTune.Wpf\FpsTune.Wpf.csproj
 
       - name: Build
-        run: dotnet build DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj -c Release --no-restore
+        run: dotnet build FpsTune.Wpf\FpsTune.Wpf.csproj -c Release --no-restore
 
       - name: Test
-        run: dotnet test DeltaForceTune.Wpf.Tests/DeltaForceTune.Wpf.Tests.csproj -c Release
+        run: dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 
       - name: Publish single-file
-        run: dotnet publish DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:OutDir=publish-tmp -o dist/ci
+        run: dotnet publish FpsTune.Wpf\FpsTune.Wpf.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:OutDir=publish-tmp -o dist/ci
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DeltaForceTune-windows-x64
+          name: FpsTune-windows-x64
           path: dist/ci

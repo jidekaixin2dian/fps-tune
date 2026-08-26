@@ -1,0 +1,244 @@
+{
+  "_comment": "优化项与预设的唯一数据源。C# GUI 与 PowerShell CLI 都从这里加载；修改时只改本文件。",
+  "items": [
+    {
+      "id": "power-ultimate",
+      "name": "电源计划 → 卓越性能",
+      "sideEffect": "功耗与发热略升；笔记本续航变短。",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "power",
+      "description": "切换到\"卓越性能\"电源计划（系统无可用方案时自动创建一份），让 CPU 更积极跑满频率。"
+    },
+    {
+      "id": "power-tuning",
+      "name": "电源计划隐藏项调优",
+      "sideEffect": "功耗略升；不支持的 CPU 平台自动跳过，不报错。",
+      "admin": true,
+      "default": true,
+      "reboot": true,
+      "kind": "power",
+      "description": "解除隐藏并调整几项影响性能的电源参数：关闭 USB3 链路省电、允许处理器更高性能提升、关闭空闲降频等待。"
+    },
+    {
+      "id": "hags",
+      "name": "开启硬件加速 GPU 计划（HAGS）",
+      "sideEffect": "个别老驱动下可能蓝屏，属已知兼容性风险；出现异常可随时还原。",
+      "admin": true,
+      "default": true,
+      "reboot": true,
+      "kind": "registry",
+      "description": "HwSchMode=2，让 GPU 调度走硬件队列，降低部分场景的输入延迟与掉帧。"
+    },
+    {
+      "id": "game-mode",
+      "name": "开启 Windows 游戏模式",
+      "sideEffect": "",
+      "admin": false,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "允许系统在游戏运行时优先分配 CPU/GPU 资源。"
+    },
+    {
+      "id": "dvr-off",
+      "name": "关闭 Xbox 后台录制",
+      "sideEffect": "Win+G 录制/截图功能不可用。",
+      "admin": false,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "关掉 Game Bar 后台录制（DVR），减少游戏时的后台编码负载。"
+    },
+    {
+      "id": "prio-separation",
+      "name": "前台进程调度权重提升",
+      "sideEffect": "个别软件在后台时响应变慢。",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "Win32PrioritySeparation=0x28（短/变长量子、前台提升 2），让前台游戏进程获得更高调度优先级。"
+    },
+    {
+      "id": "wer-off",
+      "name": "关闭 Windows 错误报告",
+      "sideEffect": "程序崩溃时不再有系统级提示窗口。",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "关闭 WER 弹窗与后台转储，减少崩溃时的磁盘/CPU 开销。"
+    },
+    {
+      "id": "transparency-off",
+      "name": "关闭窗口透明特效",
+      "sideEffect": "桌面观感变朴素。",
+      "admin": false,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "关闭任务栏/窗口亚克力透明，省一点 GPU 开销。"
+    },
+    {
+      "id": "fso-off",
+      "name": "禁用游戏全屏优化",
+      "sideEffect": "Alt+Tab 切换可能略慢；需要先找到游戏主程序路径，找不到则跳过。",
+      "admin": false,
+      "default": true,
+      "reboot": false,
+      "kind": "layers",
+      "description": "为游戏主程序在 AppCompat 层加 DISABLEDXMAXIMIZEDWINDOWEDMODE，绕过全屏优化合成层。"
+    },
+    {
+      "id": "gpu-pref",
+      "name": "游戏强制使用高性能 GPU",
+      "sideEffect": "",
+      "admin": false,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "在 DirectX UserGpuPreferences 中把游戏指定到高性能 GPU（双显卡笔记本关键）。"
+    },
+    {
+      "id": "mpo-off",
+      "name": "禁用 MPO 多平面叠加",
+      "sideEffect": "个别 HDR/多屏场景显示行为可能不同。",
+      "admin": true,
+      "default": true,
+      "reboot": true,
+      "kind": "registry",
+      "description": "DWM OverlayTestMode=5，规避已知的 MPO 闪烁/掉帧问题。"
+    },
+    {
+      "id": "net-throttling-off",
+      "name": "解除多媒体网络限流",
+      "sideEffect": "",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "NetworkThrottlingIndex=0xffffffff，去掉 Windows 对多媒体流量的节流，降低网络延迟抖动。"
+    },
+    {
+      "id": "sys-responsiveness",
+      "name": "系统后台响应保留设为最低",
+      "sideEffect": "后台任务（解压、杀毒扫描）响应略慢。",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "SystemResponsiveness=10（MMCSS 文档允许的最低值），把更多 CPU 留给前台游戏。"
+    },
+    {
+      "id": "mmcss-games",
+      "name": "MMCSS 游戏任务档位拉满",
+      "sideEffect": "",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "把多媒体类\"游戏\"任务的 GPU/CPU 调度权重设为最高档（收益微弱但零副作用）。"
+    },
+    {
+      "id": "sysmain-off",
+      "name": "禁用 SysMain（预取）服务",
+      "sideEffect": "系统启动后程序冷启动略慢；默认不勾选。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "service",
+      "description": "把 SysMain 服务启动类型设为禁用（Start=4）。SSD 时代预取收益有限，省一点后台 IO。"
+    },
+    {
+      "id": "wsearch-off",
+      "name": "禁用 Windows Search 索引",
+      "sideEffect": "开始菜单/资源管理器搜索明显变慢；默认不勾选。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "service",
+      "description": "把 Windows Search 服务设为禁用（Start=4），减少索引后台占用。"
+    },
+    {
+      "id": "hibernate-off",
+      "name": "关闭休眠与快速启动",
+      "sideEffect": "合盖只剩睡眠（无休眠）；开机冷启动略慢；笔记本默认不勾选。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "hibernate",
+      "description": "powercfg /h off，删除休眠文件，加快启动并腾出磁盘；快速启动随之失效。"
+    },
+    {
+      "id": "game-priority",
+      "name": "游戏进程 CPU 优先级提到高",
+      "sideEffect": "对指定进程生效；多开/直播同机时可能影响其他程序。",
+      "admin": true,
+      "default": true,
+      "reboot": false,
+      "kind": "registry",
+      "description": "通过 IFEO PerfOptions 让游戏进程启动即以高优先级运行（CpuPriorityClass=3）。"
+    },
+    {
+      "id": "paging-exec",
+      "name": "内核代码常驻内存",
+      "sideEffect": "多占少量常驻内存（通常几十 MB，可忽略）。",
+      "admin": true,
+      "default": true,
+      "reboot": true,
+      "kind": "registry",
+      "description": "DisablePagingExecutive=1，不让内核与驱动代码分页到磁盘，减少关键路径的磁盘等待。"
+    },
+    {
+      "id": "mem-compress-off",
+      "name": "关闭内存压缩",
+      "sideEffect": "内存占用上升；仅供手动对比，默认不勾选。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry",
+      "description": "EnableCompression=0，关闭内存压缩与页面合并（压缩省内存但耗 CPU；内存充足时关掉可能更稳）。"
+    },
+    {
+      "id": "gpu-pstate-lock",
+      "name": "禁止显卡动态降频",
+      "sideEffect": "待机功耗与发热升高；默认不勾选。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry",
+      "description": "在主显卡驱动键写入 DisableDynamicPstate=1，锁住 GPU 频率避免波动掉帧。"
+    },
+    {
+      "id": "dyntick-off",
+      "name": "禁用动态计时器",
+      "sideEffect": "待机功耗略升；默认不勾选。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "bcdedit",
+      "description": "bcdedit disabledynamictick yes，让系统以固定高频率计时，减少延迟抖动。"
+    }
+  ],
+  "presets": {
+    "balanced": {
+      "exclude": [
+        "sysmain-off",
+        "wsearch-off",
+        "hibernate-off",
+        "power-tuning"
+      ]
+    },
+    "safe-only": {
+      "include": [
+        "game-mode",
+        "dvr-off",
+        "transparency-off",
+        "fso-off",
+        "gpu-pref"
+      ]
+    }
+  }
+}

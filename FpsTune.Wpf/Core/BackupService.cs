@@ -1,0 +1,454 @@
+﻿using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Win32;
+
+namespace FpsTune.Wpf.Core;
+
+public sealed class BackupRecord
+{
+    public string Id { get; set; } = "";
+    public string Kind { get; set; } = "registry";
+    public string Hive { get; set; } = "";
+    public string Path { get; set; } = "";
+    public string Name { get; set; } = "";
+    public object? OldValue { get; set; }
+    public string ValueKind { get; set; } = "DWord";
+
+    // 第二个关联注册表值（如 game-mode 的 AllowAutoGameMode、dvr-off 的 AllowGameDVR 策略），
+    // 用于无损还原；旧版本备份没有该字段（null）时还原保持不动。
+    // power-tuning 三项隐藏电源设置的原始 AC 值；null 表示当时读取失败，还原时回退常见默认值。
+    public int? OldUsbValue { get; set; }
+    public int? OldBoostValue { get; set; }
+    public int? OldIdleValue { get; set; }
+
+    public string? SecondaryHive { get; set; }
+    public string? SecondaryPath { get; set; }
+    public string? SecondaryName { get; set; }
+    public bool? SecondaryExisted { get; set; }
+    public object? SecondaryValue { get; set; }
+    public bool Existed { get; set; }
+    public string? ServiceName { get; set; }
+    public int? OldStartValue { get; set; }
+    public string? OldStartMode { get; set; }
+    public string? OldActiveGuid { get; set; }
+    public string? OldState { get; set; }
+}
+
+public static class BackupService
+{
+    // 测试可注入；生产代码保持默认目录
+    internal static string? BackupDirOverride { get; set; }
+
+    private static string BackupDir =>
+        BackupDirOverride ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "FpsTune", "backup");
+
+    public static string Capture(IEnumerable<string> ids, string? gamePath)
+    {
+        var records = new List<BackupRecord>();
+        foreach (var id in ids.Distinct())
+            records.AddRange(CreateBackupRecords(id, gamePath));
+
+        Directory.CreateDirectory(BackupDir);
+        var ts = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var file = Path.Combine(BackupDir, $"backup-{ts}.json");
+        File.WriteAllText(file, JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true }));
+        return file;
+    }
+
+    public static IReadOnlyList<string> ListBackups()
+    {
+        Directory.CreateDirectory(BackupDir);
+        return Directory.GetFiles(BackupDir, "backup-*.json")
+            .OrderByDescending(File.GetLastWriteTime)
+            .ToList();
+    }
+
+    public sealed class RestoreAllResult
+    {
+        public List<(string File, string Id)> Restored { get; } = new();
+        public List<string> Failures { get; } = new();
+    }
+
+    /// <summary>遍历全部备份文件逐项还原；失败的项会如实报告，不会静默吞掉。</summary>
+    public static RestoreAllResult RestoreAll()
+    {
+        Directory.CreateDirectory(BackupDir);
+        var files = Directory.GetFiles(BackupDir, "backup-*.json")
+            .OrderByDescending(File.GetLastWriteTime)
+            .ToList();
+
+        var result = new RestoreAllResult();
+        var consumed = new List<string>();
+
+        foreach (var file in files)
+        {
+            List<BackupRecord>? records;
+            try
+            {
+                records = JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(file));
+            }
+            catch (Exception ex)
+            {
+                result.Failures.Add($"{Path.GetFileName(file)}: 备份文件无法解析（{ex.Message}）");
+                continue;
+            }
+
+            if (records is null)
+            {
+                result.Failures.Add($"{Path.GetFileName(file)}: 备份内容为空");
+                continue;
+            }
+
+            var anyRestored = false;
+            foreach (var record in records)
+            {
+                try
+                {
+                    RestoreOne(record);
+                    result.Restored.Add((file, record.Id));
+                    anyRestored = true;
+                }
+                catch (Exception ex)
+                {
+                    // 不再静默吞掉：失败项进入报告。
+                    result.Failures.Add($"{Path.GetFileName(file)} / {record.Id}: {ex.Message}");
+                }
+            }
+
+            if (anyRestored)
+                consumed.Add(file);
+        }
+
+        // 消费备份：重命名为 .restored（保留供审计），与 PowerShell 引擎保持一致。
+        foreach (var file in consumed)
+        {
+            try
+            {
+                var renamed = file + ".restored";
+                if (File.Exists(renamed))
+                    File.Delete(renamed);
+                File.Move(file, renamed);
+            }
+            catch
+            {
+                // 重命名失败不影响还原结果本身。
+            }
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyList<BackupRecord> CreateBackupRecords(string id, string? gamePath)
+    {
+        switch (id)
+        {
+            case "power-ultimate":
+                return new[] { new BackupRecord { Id = id, Kind = "power-plan", OldActiveGuid = NativeSystem.GetActivePowerSchemeGuid() } };
+            case "power-tuning":
+                return new[]
+                {
+                    new BackupRecord
+                    {
+                        Id = id,
+                        Kind = "power-tuning",
+                        OldUsbValue = GetPowerAcIndex(
+                            "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226"),
+                        OldBoostValue = GetPowerAcIndex(
+                            "be337238-0d82-4146-a960-4f3749d470c7", "45bcc044-d885-43e2-8605-ee0ec6e96b59"),
+                        OldIdleValue = GetPowerAcIndex(
+                            "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d", "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3")
+                    }
+                };
+            case "sysmain-off":
+            case "wsearch-off":
+            {
+                var serviceName = id == "sysmain-off" ? "SysMain" : "WSearch";
+                return new[]
+                {
+                    new BackupRecord
+                    {
+                        Id = id,
+                        Kind = "service",
+                        ServiceName = serviceName,
+                        OldStartValue = NativeSystem.GetServiceStartValue(serviceName),
+                        OldStartMode = NativeSystem.GetServiceStartMode(serviceName)
+                    }
+                };
+            }
+            case "hibernate-off":
+                return new[] { new BackupRecord { Id = id, Kind = "hibernate", OldState = NativeSystem.IsHibernateEnabled() ? "on" : "off" } };
+            case "dyntick-off":
+                return new[] { new BackupRecord { Id = id, Kind = "bcdedit", OldState = NativeSystem.IsDynamicTickEnabled() ? "on" : "off" } };
+            case "gpu-pstate-lock":
+            {
+                var gpuPath = NativeSystem.GetMainGpuDriverKeyPath();
+                if (gpuPath is null)
+                    return Array.Empty<BackupRecord>();
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, gpuPath, "DisableDynamicPstate", RegistryValueKind.DWord) };
+            }
+            case "fso-off":
+            {
+                if (string.IsNullOrWhiteSpace(gamePath))
+                    return Array.Empty<BackupRecord>();
+                return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser,
+                    @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", gamePath, RegistryValueKind.String) };
+            }
+            case "gpu-pref":
+            {
+                if (string.IsNullOrWhiteSpace(gamePath))
+                    return Array.Empty<BackupRecord>();
+                return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser,
+                    @"Software\Microsoft\DirectX\UserGpuPreferences", gamePath, RegistryValueKind.String) };
+            }
+            case "game-priority":
+            {
+                if (string.IsNullOrWhiteSpace(gamePath))
+                    return Array.Empty<BackupRecord>();
+                var gameName = Path.GetFileName(gamePath);
+                var perfPath = $@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{gameName}\PerfOptions";
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, perfPath, "CpuPriorityClass", RegistryValueKind.DWord) };
+            }
+            case "game-mode":
+            {
+                // 主值 + AllowAutoGameMode 一起备份，还原时按原值恢复。
+                var record = CreateRegistryBackup(id, RegistryHive.CurrentUser,
+                    @"Software\Microsoft\GameBar", "AutoGameModeEnabled", RegistryValueKind.DWord);
+                FillSecondary(record, RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode");
+                return new[] { record };
+            }
+            case "dvr-off":
+            {
+                // 主值 + AllowGameDVR 策略一起备份，还原时按原值恢复（不再无条件删除策略）。
+                var record = CreateRegistryBackup(id, RegistryHive.CurrentUser,
+                    @"System\GameConfigStore", "GameDVR_Enabled", RegistryValueKind.DWord);
+                FillSecondary(record, RegistryHive.LocalMachine,
+                    @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR");
+                return new[] { record };
+            }
+            case "mmcss-games":
+            {
+                // 四个值逐条备份，还原时逐条按原值恢复。
+                const string basePath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games";
+                return new[]
+                {
+                    CreateRegistryBackup(id, RegistryHive.LocalMachine, basePath, "GPU Priority", RegistryValueKind.DWord),
+                    CreateRegistryBackup(id, RegistryHive.LocalMachine, basePath, "Priority", RegistryValueKind.DWord),
+                    CreateRegistryBackup(id, RegistryHive.LocalMachine, basePath, "Scheduling Category", RegistryValueKind.String),
+                    CreateRegistryBackup(id, RegistryHive.LocalMachine, basePath, "SFIO Priority", RegistryValueKind.String),
+                };
+            }
+            default:
+            {
+                var spec = GetRegistrySpec(id);
+                if (spec is null)
+                    return Array.Empty<BackupRecord>();
+                var (hive, path, name, kind) = spec.Value;
+                return new[] { CreateRegistryBackup(id, hive, path, name, kind) };
+            }
+        }
+    }
+
+    // 记录第二个关联注册表值的原值（存在与否 + 值）。
+    private static void FillSecondary(BackupRecord record, RegistryHive hive, string path, string name)
+    {
+        var exists = RegistryHelper.ValueExists(hive, path, name);
+        record.SecondaryHive = hive.ToString();
+        record.SecondaryPath = path;
+        record.SecondaryName = name;
+        record.SecondaryExisted = exists;
+        record.SecondaryValue = exists ? RegistryHelper.ReadValue(hive, path, name) : null;
+    }
+
+    private static BackupRecord CreateRegistryBackup(
+        string id, RegistryHive hive, string path, string name, RegistryValueKind kind)
+    {
+        var exists = RegistryHelper.ValueExists(hive, path, name);
+        var old = exists ? RegistryHelper.ReadValue(hive, path, name) : null;
+        return new BackupRecord
+        {
+            Id = id,
+            Kind = "registry",
+            Hive = hive.ToString(),
+            Path = path,
+            Name = name,
+            OldValue = old,
+            ValueKind = kind.ToString(),
+            Existed = exists
+        };
+    }
+
+    private static void RestoreOne(BackupRecord r)
+    {
+        switch (r.Kind)
+        {
+            case "registry":
+                RestoreRegistry(r);
+                break;
+            case "service":
+                RestoreService(r);
+                break;
+            case "power-plan":
+                RestorePowerPlan(r);
+                break;
+            case "power-tuning":
+                RestorePowerTuning(r);
+                break;
+            case "hibernate":
+                RestoreHibernate(r);
+                break;
+            case "bcdedit":
+                RestoreBcdedit(r);
+                break;
+        }
+    }
+
+    private static void RestoreRegistry(BackupRecord r)
+    {
+        var hive = Enum.Parse<RegistryHive>(r.Hive);
+        var kind = Enum.Parse<RegistryValueKind>(r.ValueKind);
+        if (r.Existed && r.OldValue is not null)
+            RegistryHelper.SetValue(hive, r.Path, r.Name, ConvertValue(r.OldValue, kind), kind);
+        else
+            RegistryHelper.DeleteValue(hive, r.Path, r.Name);
+
+        // 第二个关联值（AllowAutoGameMode / AllowGameDVR 策略）按原值恢复；
+        // 旧版本备份没有 SecondaryExisted 字段时保持不动，避免覆盖或误删用户原有设置。
+        if (r.SecondaryExisted.HasValue && !string.IsNullOrEmpty(r.SecondaryHive))
+        {
+            var secHive = Enum.Parse<RegistryHive>(r.SecondaryHive);
+            if (r.SecondaryExisted.Value)
+                RegistryHelper.SetValue(secHive, r.SecondaryPath!, r.SecondaryName!,
+                    ConvertValue(r.SecondaryValue ?? 0, RegistryValueKind.DWord), RegistryValueKind.DWord);
+            else
+                RegistryHelper.DeleteValue(secHive, r.SecondaryPath!, r.SecondaryName!);
+        }
+    }
+
+    private static void RestoreService(BackupRecord r)
+    {
+        if (string.IsNullOrWhiteSpace(r.ServiceName))
+            return;
+
+        var mode = r.OldStartMode;
+        if (string.IsNullOrWhiteSpace(mode))
+        {
+            mode = r.OldStartValue switch
+            {
+                0 => "boot",
+                1 => "system",
+                2 => "auto",
+                3 => "demand",
+                4 => "disabled",
+                _ => "demand"
+            };
+        }
+
+        // sc.exe 的参数中间必须保留空格，例如 "start= demand"。
+        NativeSystem.Run("sc.exe", "config", r.ServiceName, "start=", mode);
+    }
+
+    private static void RestorePowerPlan(BackupRecord r)
+    {
+        if (string.IsNullOrWhiteSpace(r.OldActiveGuid))
+            return;
+
+        NativeSystem.Run("powercfg.exe", "-setactive", r.OldActiveGuid);
+    }
+
+    private static void RestorePowerTuning(BackupRecord r)
+    {
+        // 优先还原备份的原值；旧版本备份没有数据时回退到常见默认值。
+        SetAcValue("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", r.OldUsbValue ?? 1);
+        SetAcValue("be337238-0d82-4146-a960-4f3749d470c7", "45bcc044-d885-43e2-8605-ee0ec6e96b59", r.OldBoostValue ?? 0);
+        SetAcValue("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d", "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3", r.OldIdleValue ?? 1);
+        NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT");
+    }
+
+    private static void SetAcValue(string subgroup, string setting, int value)
+        => NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value.ToString());
+
+    // 查询某电源设置的当前 AC 值（失败返回 null），用于 power-tuning 无损备份。
+    private static int? GetPowerAcIndex(string subgroup, string setting)
+    {
+        var r = NativeSystem.Run("powercfg.exe", "/query", "SCHEME_CURRENT", subgroup, setting);
+        if (!r.Success)
+            return null;
+
+        foreach (var line in r.Output.Split('\n'))
+        {
+            if (!line.Contains("AC", StringComparison.OrdinalIgnoreCase) &&
+                !line.Contains("交流", StringComparison.Ordinal))
+                continue;
+
+            var m = Regex.Match(line, @"0x([0-9a-fA-F]+)");
+            if (m.Success && int.TryParse(m.Groups[1].Value,
+                    System.Globalization.NumberStyles.HexNumber, null, out var value))
+                return value;
+        }
+
+        return null;
+    }
+
+    private static void RestoreHibernate(BackupRecord r)
+    {
+        if (r.OldState == "on")
+            NativeSystem.Run("powercfg.exe", "/h", "on");
+    }
+
+    private static void RestoreBcdedit(BackupRecord r)
+    {
+        if (r.OldState == "on")
+            NativeSystem.Run("bcdedit.exe", "/set", "{current}", "disabledynamictick", "no");
+    }
+
+    internal static object ConvertValue(object value, RegistryValueKind kind)
+    {
+        if (value is JsonElement element)
+        {
+            if (kind == RegistryValueKind.DWord)
+            {
+                if (element.TryGetInt32(out var intValue))
+                    return intValue;
+                if (element.TryGetInt64(out var longValue))
+                    return (int)longValue;
+                if (element.TryGetUInt64(out var ulongValue))
+                    return unchecked((int)ulongValue);
+            }
+            if (kind == RegistryValueKind.QWord)
+            {
+                if (element.TryGetInt64(out var longValue))
+                    return longValue;
+                if (element.TryGetUInt64(out var ulongValue))
+                    return unchecked((long)ulongValue);
+            }
+            return element.GetString() ?? "";
+        }
+
+        if (kind == RegistryValueKind.DWord)
+            return Convert.ToInt32(value);
+        if (kind == RegistryValueKind.QWord)
+            return Convert.ToInt64(value);
+        return value.ToString() ?? "";
+    }
+
+    private static (RegistryHive, string, string, RegistryValueKind)? GetRegistrySpec(string id)
+    {
+        return id switch
+        {
+            "hags" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", RegistryValueKind.DWord),
+            "prio-separation" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", RegistryValueKind.DWord),
+            "wer-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Windows Error Reporting", "Disabled", RegistryValueKind.DWord),
+            "transparency-off" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", RegistryValueKind.DWord),
+            "mpo-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Dwm", "OverlayTestMode", RegistryValueKind.DWord),
+            "net-throttling-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", RegistryValueKind.DWord),
+            "sys-responsiveness" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", RegistryValueKind.DWord),
+            "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", RegistryValueKind.DWord),
+            "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", RegistryValueKind.DWord),
+            _ => null
+        };
+    }
+}

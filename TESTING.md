@@ -1,9 +1,9 @@
-# 朋友测试指南（简易数据也欢迎）
+﻿# 朋友测试指南（简易数据也欢迎）
 
 ## 测试前必读
 
 - 只做系统层优化，不碰游戏文件、不注入、不关虚拟化、不做显卡伪装。
-- 所有改动写前备份，可还原：`powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore -Json`
+- 所有改动写前备份，可还原：`powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Restore -Json`
 - 不要替朋友下载/运行安装包；PresentMon 等工具请他们自己装。
 - 游戏内画质、分辨率、DLSS/FSR、场景、路线、时长在“优化前/后”必须保持一致。
 
@@ -50,8 +50,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File friend-test.ps1 `
    powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Report -Json
    ```
 
-3. 把 `%LocalAppData%\DeltaOptimizer\experiment\experiment-summary.csv` 和
-   `%LocalAppData%\DeltaOptimizer\experiment\state.json` 发回来即可。
+3. 把 `%LocalAppData%\FpsTune\experiment\experiment-summary.csv` 和
+   `%LocalAppData%\FpsTune\experiment\state.json` 发回来即可。
 
 ## 方式 B：只有帧率 / 游戏加加数据（没有 PresentMon 也可以）
 
@@ -60,14 +60,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File friend-test.ps1 `
 3. 运行优化（先让朋友确认副作用）：
 
    ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Apply -Preset balanced -Force -Json
+   powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Apply -Preset balanced -Force -Json
    ```
 
 4. 再测“优化后”：同场景同设置再录一次，截图。
 5. 如果要还原：
 
    ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore -Json
+   powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Restore -Json
    ```
 
 ## 回传数据模板

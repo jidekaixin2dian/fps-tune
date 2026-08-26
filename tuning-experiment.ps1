@@ -37,10 +37,10 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
-$ToolName    = 'delta-optimizer'
+$ToolName    = 'fps-tune'
 $ToolVersion = '0.2.0'
-$EnginePath  = Join-Path $PSScriptRoot 'delta-optimizer.ps1'
-$StateDir    = Join-Path $env:LOCALAPPDATA 'DeltaOptimizer\experiment'
+$EnginePath  = Join-Path $PSScriptRoot 'fps-tune.ps1'
+$StateDir    = Join-Path $env:LOCALAPPDATA 'FpsTune\experiment'
 $StateFile   = Join-Path $StateDir 'state.json'
 
 # 候选组定义
@@ -149,7 +149,7 @@ function Invoke-PresentMonAuto {
     # 优先用 --output_stdout（由脚本落盘，避免部分版本 --output_file 不落盘的问题），
     # 再回退到 --output_file 与 v1 参数（--duration）。使用独立 session 名，避免与
     # NVIDIA FrameView 服务已启动的默认 "PresentMon" 会话冲突。
-    $sessionName = 'DeltaOptimizer'
+    $sessionName = 'FpsTune'
     $attempts = @(
         @('--session_name', $sessionName, '--process_name', $GameName, '--timed', "$Seconds", '--terminate_after_timed', '--no_console_stats', '--output_stdout'),
         @('--session_name', $sessionName, '--process_id', "$($game.Id)", '--timed', "$Seconds", '--terminate_after_timed', '--no_console_stats', '--output_stdout'),

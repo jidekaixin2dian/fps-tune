@@ -23,4 +23,4 @@ obj/
 dist/
 
 # 本地 AI 交接文档，不入库
-HANDOFF_PROMPT.md
+HANDOFF_PROMPT*.md

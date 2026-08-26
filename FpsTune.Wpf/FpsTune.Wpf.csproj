@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>FpsTune.Wpf</RootNamespace>
+    <AssemblyName>FpsTune</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WMI 查询（内存频率体检），避免再启动 powershell.exe 子进程 -->
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FpsTune.Wpf.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\fps-tune.ps1" Link="fps-tune.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\tuning-experiment.ps1" Link="tuning-experiment.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\tools\friend-test.ps1" Link="friend-test.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\catalog\catalog.json" Link="catalog.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Directory.Build.props" Link="Directory.Build.props" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\fps-tune.ps1" LogicalName="FpsTune.Wpf.Scripts.fps-tune.ps1" />
+    <EmbeddedResource Include="..\tuning-experiment.ps1" LogicalName="FpsTune.Wpf.Scripts.tuning-experiment.ps1" />
+    <EmbeddedResource Include="..\tools\friend-test.ps1" LogicalName="FpsTune.Wpf.Scripts.friend-test.ps1" />
+    <EmbeddedResource Include="..\catalog\catalog.json" LogicalName="FpsTune.Wpf.Catalog.catalog.json" />
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\app-icon.png" />
+    <Resource Include="Assets\wechat-qr.jpg" />
+  </ItemGroup>
+
+</Project>

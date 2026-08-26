@@ -1,8 +1,8 @@
-# Build final release: single-file EXE + green folder + portable zip
+﻿# Build final release: single-file EXE + green folder + portable zip
 $ErrorActionPreference = 'Stop'
 
 $root = $PSScriptRoot
-$proj = Join-Path $root 'DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj'
+$proj = Join-Path $root 'FpsTune.Wpf\FpsTune.Wpf.csproj'
 $dist = Join-Path $root 'dist'
 $publishTmp = Join-Path $dist 'publish-tmp'
 
@@ -25,14 +25,14 @@ Write-Host 'Publishing green folder...'
 dotnet publish $proj -c Release -r win-x64 --self-contained false /p:OutDir=$folderBld -o (Join-Path $dist 'folder') | Out-Host
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
-$singleExe = Join-Path $dist 'single-file\DeltaForceTune.exe'
+$singleExe = Join-Path $dist 'single-file\FpsTune.exe'
 if (-not (Test-Path $singleExe)) {
     Write-Error "Single-file publish did not produce expected file: $singleExe"
     exit 1
 }
 
 Write-Host 'Creating portable zip...'
-$zip = Join-Path $dist 'DeltaForceTune-Portable.zip'
+$zip = Join-Path $dist 'FpsTune-Portable.zip'
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $dist 'folder\*') -DestinationPath $zip -CompressionLevel Optimal
 
