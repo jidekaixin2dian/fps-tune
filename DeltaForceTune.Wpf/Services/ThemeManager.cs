@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace DeltaForceTune.Wpf.Services;
@@ -9,17 +8,25 @@ public static class ThemeManager
 {
     public static string CurrentMode { get; private set; } = "dark";
 
-    private static DispatcherTimer? _timer;
+    private static bool _hooked;
 
     public static void Initialize()
     {
-        _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _timer.Tick += (_, _) =>
+        if (_hooked)
+            return;
+        _hooked = true;
+
+        // 监听系统主题变更事件（代替轮询注册表）；事件在后台线程触发，需回到 UI 线程。
+        SystemEvents.UserPreferenceChanged += (_, e) =>
         {
-            if (CurrentMode == "system")
-                Apply("system");
+            if (e.Category != UserPreferenceCategory.General || CurrentMode != "system")
+                return;
+
+            var app = Application.Current;
+            if (app is null)
+                return;
+            app.Dispatcher.Invoke(() => Apply("system"));
         };
-        _timer.Start();
     }
 
     public static void SetMode(string mode)

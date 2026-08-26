@@ -17,6 +17,20 @@ public static class PowerShellRunner
         var tempDir = Path.Combine(Path.GetTempPath(), "delta-tune-wpf-tmp");
         Directory.CreateDirectory(tempDir);
 
+        // 顺手清理历史残留（超过 1 天的旧临时文件）。
+        try
+        {
+            foreach (var stale in Directory.EnumerateFiles(tempDir))
+            {
+                if (File.GetLastWriteTime(stale) < DateTime.UtcNow - TimeSpan.FromDays(1))
+                    File.Delete(stale);
+            }
+        }
+        catch
+        {
+            // 清理失败不影响主流程。
+        }
+
         var name = $"{Path.GetFileNameWithoutExtension(scriptPath)}_{Guid.NewGuid():N}";
         var wrapper = Path.Combine(tempDir, name + ".ps1");
         var stdout = Path.Combine(tempDir, name + ".out.txt");
@@ -53,16 +67,25 @@ public static class PowerShellRunner
         var output = await outputTask;
         var error = await errorTask;
 
-        // Also keep raw files for manual debugging.
-        if (!string.IsNullOrEmpty(output))
-            File.WriteAllText(stdout, output, new UTF8Encoding(true));
-        if (!string.IsNullOrEmpty(error))
-            File.WriteAllText(stderr, error, new UTF8Encoding(true));
+        var exitCode = process.ExitCode;
 
-        return new RunResult(process.ExitCode, output, error);
+        // 成功时清理全部临时文件；失败时保留输出文件便于排查。
+        if (exitCode != 0)
+        {
+            if (!string.IsNullOrEmpty(output))
+                File.WriteAllText(stdout, output, new UTF8Encoding(true));
+            if (!string.IsNullOrEmpty(error))
+                File.WriteAllText(stderr, error, new UTF8Encoding(true));
+        }
+        else
+        {
+            try { File.Delete(wrapper); } catch { }
+        }
+
+        return new RunResult(exitCode, output, error);
     }
 
-    private static string Quote(string value)
+    internal static string Quote(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return "''";

@@ -35,7 +35,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $ToolName    = 'delta-optimizer'
-$ToolVersion = '0.1.0'
+$ToolVersion = '1.0.0'
 $BackupRoot  = Join-Path $env:LOCALAPPDATA 'DeltaOptimizer\backup'
 
 # ---------------------------------------------------------------------------

@@ -22,16 +22,17 @@ public static class OptimizationEngine
     public static Task<RunResult> DetectAsync()
         => Task.Run(() => new RunResult(0, DetectionService.BuildDetectJson(AppState.GamePath), ""));
 
-    public static Task<RunResult> ApplyPresetAsync(string preset)
-    {
-        IEnumerable<string> ids = preset switch
+    /// <summary>预设 -> 优化项 id 列表。未知预设回退到 balanced。</summary>
+    internal static IReadOnlyList<string> GetPresetIds(string preset)
+        => preset switch
         {
-            "full" => ItemCatalog.All.Select(x => x.Id),
-            "safe-only" => SafeOnlyIds,
-            _ => ItemCatalog.All.Where(x => !BalancedExclude.Contains(x.Id)).Select(x => x.Id)
+            "full" => ItemCatalog.All.Select(x => x.Id).ToList(),
+            "safe-only" => SafeOnlyIds.ToList(),
+            _ => ItemCatalog.All.Where(x => !BalancedExclude.Contains(x.Id)).Select(x => x.Id).ToList()
         };
-        return Task.Run(() => ApplyNative(ids));
-    }
+
+    public static Task<RunResult> ApplyPresetAsync(string preset)
+        => Task.Run(() => ApplyNative(GetPresetIds(preset)));
 
     public static Task<RunResult> ApplyItemsAsync(IEnumerable<string> ids)
         => Task.Run(() => ApplyNative(ids));
@@ -80,7 +81,7 @@ public static class OptimizationEngine
         var payload = new
         {
             tool = "delta-force-tune",
-            version = "1.0.0",
+            version = UpdateService.CurrentVersion,
             mode = "apply",
             results = results.Select(r => new
             {

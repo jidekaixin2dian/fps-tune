@@ -9,6 +9,8 @@ public sealed record HardwareInfo(string Cpu, string Gpu, double RamGB, string O
 
 public static class HardwareInfoService
 {
+    private static HardwareInfo? _cached;
+
     [StructLayout(LayoutKind.Sequential)]
     private struct MEMORYSTATUSEX
     {
@@ -42,36 +44,54 @@ public static class HardwareInfoService
 
     public static HardwareInfo Get()
     {
+        if (_cached is not null)
+            return _cached;
+
         var cpu = GetCpuName();
         var gpu = GetGpuName();
         var ram = GetRamGB();
         var os = GetOsName();
-        return new HardwareInfo(cpu, gpu, ram, os, IsLaptop(), AdminHelper.IsAdministrator());
+        _cached = new HardwareInfo(cpu, gpu, ram, os, IsLaptop(), AdminHelper.IsAdministrator());
+        return _cached;
     }
 
-    public static string GetMemoryFrequencyText()
+    /// <summary>
+    /// 内存频率体检：直接走 WMI 查询（不再启动 powershell.exe 子进程），
+    /// 并对比标称频率(Speed)与实际运行频率(ConfiguredClockSpeed)，恢复 XMP 未开启的提示能力。
+    /// </summary>
+    public static (string Status, string Message) GetMemoryCheck()
     {
+        const string fallback = "未识别到内存频率，可在任务管理器 / CPU-Z 查看";
         try
         {
-            var r = NativeSystem.Run(
-                "powershell.exe",
-                "-NoProfile",
-                "-NonInteractive",
-                "-Command",
-                "(Get-CimInstance Win32_PhysicalMemory | Measure-Object Speed -Average).Average");
+            var speeds = new List<int>();
+            var configured = new List<int>();
+            var searcher = new System.Management.ManagementObjectSearcher(
+                "SELECT Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
+            foreach (var mo in searcher.Get())
+            {
+                if (int.TryParse(mo["Speed"]?.ToString(), out var s) && s > 0)
+                    speeds.Add(s);
+                if (int.TryParse(mo["ConfiguredClockSpeed"]?.ToString(), out var c) && c > 0)
+                    configured.Add(c);
+            }
 
-            if (!r.Success)
-                return "未知";
+            if (speeds.Count == 0)
+                return ("attention", fallback);
 
-            var text = r.Output.Trim();
-            if (double.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var speed) && speed > 0)
-                return $"{speed:0} MHz";
+            var nominal = string.Join("/", speeds.Distinct().OrderBy(x => x));
+            if (configured.Count == 0)
+                return ("ok", $"标称 {nominal} MHz（未读取到实际运行频率）");
 
-            return "未知";
+            var running = string.Join("/", configured.Distinct().OrderBy(x => x));
+            if (!speeds.Distinct().OrderBy(x => x).SequenceEqual(configured.Distinct().OrderBy(x => x)))
+                return ("attention",
+                    $"当前运行 {running} MHz 与内存标称 {nominal} MHz 不一致，可进 BIOS 检查 XMP / A-XMP / EXPO / DOCP 是否开启。");
+            return ("ok", $"当前 {running} MHz 与 BIOS 配置一致，无需进 BIOS 调整。");
         }
         catch
         {
-            return "未知";
+            return ("attention", fallback);
         }
     }
 

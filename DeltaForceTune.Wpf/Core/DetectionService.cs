@@ -40,7 +40,7 @@ public static class DetectionService
         var payload = new
         {
             tool = "delta-force-tune",
-            version = "1.0.0",
+            version = UpdateService.CurrentVersion,
             mode = "detect",
             admin = hw.IsAdmin,
             hardware = new
@@ -93,10 +93,8 @@ public static class DetectionService
             ? new { name = "VC++ v14 运行库", status = "ok", message = "x64 与 x86 均已安装。" }
             : new { name = "VC++ v14 运行库", status = "attention", message = "缺失架构: " + string.Join(", ", missing) + "。请从微软官方下载对应架构的 vc_redist 覆盖安装。" });
 
-        var memory = HardwareInfoService.GetMemoryFrequencyText();
-        checks.Add(memory == "未知"
-            ? new { name = "内存频率", status = "attention", message = "未识别到内存频率，可在任务管理器 / CPU-Z 查看" }
-            : new { name = "内存频率", status = "ok", message = memory });
+        var memory = HardwareInfoService.GetMemoryCheck();
+        checks.Add(new { name = "内存频率", status = memory.Status, message = memory.Message });
 
         var pcie = HardwareInfoService.GetPcieLinkText();
         checks.Add(pcie.StartsWith("未知", StringComparison.Ordinal)

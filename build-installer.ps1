@@ -20,7 +20,12 @@ if (-not $iscc) {
     exit 1
 }
 
+$csproj = Join-Path $root 'DeltaForceTune.Wpf\DeltaForceTune.Wpf.csproj'
+[xml]$projXml = Get-Content $csproj
+$version = ($projXml.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+if (-not $version) { $version = '1.0.0' }
+Write-Host "App version: $version"
 Write-Host "Using Inno Setup: $iscc"
-& $iscc (Join-Path $root 'installer\setup.iss')
+& $iscc "/DMyAppVersion=$version" (Join-Path $root 'installer\setup.iss')
 if ($LASTEXITCODE -ne 0) { exit 1 }
 Write-Host 'Installer built successfully.'

@@ -1,6 +1,8 @@
 ; delta-force-tune Inno Setup installer
 #define MyAppName "三角洲帧律"
-#define MyAppVersion "1.0.0"
+#ifndef MyAppVersion
+  #define MyAppVersion "1.0.0"
+#endif
 #define MyAppPublisher "三角洲帧律"
 #define MyAppExeName "DeltaForceTune.exe"
 

@@ -401,7 +401,7 @@ public static class BackupService
             NativeSystem.Run("bcdedit.exe", "/set", "{current}", "disabledynamictick", "no");
     }
 
-    private static object ConvertValue(object value, RegistryValueKind kind)
+    internal static object ConvertValue(object value, RegistryValueKind kind)
     {
         if (value is JsonElement element)
         {
