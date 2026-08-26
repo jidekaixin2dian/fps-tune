@@ -64,9 +64,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File delta-optimizer.ps1 -Restore
 
 ```powershell
 cd <项目目录>
-.uild-wpf.ps1 -Mode Build
-.\DeltaForceTune.Wpfin\Release
-et8.0-windows\DeltaForceTune.exe
+.\build-wpf.ps1 -Mode Build
+.\DeltaForceTune.Wpf\bin\Release\net8.0-windows\DeltaForceTune.exe
 ```
 
 当前 WPF GUI 已完成：检测、优化、A/B 实验、朋友测试、备份/日志、设置、
@@ -86,7 +85,7 @@ et8.0-windows\DeltaForceTune.exe
 
 | 预设 | 内容 | 适用 |
 |---|---|---|
-| `balanced` | 14 项，副作用小，不含服务禁用/休眠 | 默认推荐 |
+| `balanced` | 18 项，副作用小，不含服务禁用/休眠 | 默认推荐 |
 | `full` | 全部 22 项（含 sysmain-off / wsearch-off / hibernate-off 等） | 追求极致 |
 | `safe-only` | 5 项纯当前用户设置，通常无需管理员 | 保守 |
 
@@ -95,6 +94,8 @@ et8.0-windows\DeltaForceTune.exe
 - 所有可还原改动写入前先备份到 `%LocalAppData%\DeltaOptimizer\backup\backup-<时间戳>.json`，
   还原是逐项按原值恢复（包括删除"原本不存在"的值）。
 - 需要管理员权限的项，在非管理员会话下会明确报错，不会静默失败。
+  GUI 在应用前检测到需要管理员的选项时，会主动提供以管理员身份重启。
+- 还原失败不会被静默跳过：GUI 与命令行都会逐项报告还原成败。
 - 效果因硬件/驱动/系统版本而异，**不承诺固定帧数**；争议项默认不勾选。
 - 本工具不包含：显卡型号伪装、游戏文件修改、进程注入、虚拟化关闭、反作弊交互。
   这些是反作弊红线，做它们与自毁无异。
@@ -103,18 +104,19 @@ et8.0-windows\DeltaForceTune.exe
 ## 目录
 
 ```
-delta-skill/
-├── delta-optimizer.ps1   # 核心引擎（PowerShell 5.1，单文件，含中文注释）
-├── delta-gui.ps1         # GUI 功能版（WinForms，视觉后续交给 V4 flash version）
-├── tuning-experiment.ps1 # A/B 自动调优实验（基线 + 候选组 + 规则决策 + CSV 导出）
-├── friend-test.ps1       # 朋友测试：一键生成测试记录表（Markdown + CSV）
-├── SKILL.md              # AI Agent 调用说明（流程 + 红线）
-├── TESTING.md            # 朋友测试指南（完整 A/B 或只有帧率/游戏加加数据）
-├── GUI_PLAN.md           # GUI 阶段合规功能规划
-├── GUI_DESIGN_PROMPT.md   # 给 V4 flash vision 的视觉设计提示词
-├── README.md             # 中文说明
-├── README.en.md          # English readme
-└── LICENSE               # MIT
+delta-force-tune/
+├── DeltaForceTune.Wpf/     # 主 GUI 程序（C# WPF + .NET 8，视觉版已完成）
+├── installer/              # Inno Setup 安装包脚本
+├── .github/workflows/      # CI：构建 + 冒烟测试
+├── delta-optimizer.ps1     # 核心引擎（PowerShell 5.1，单文件，含中文注释）
+├── delta-gui.ps1           # 旧版 WinForms GUI（兼容保留）
+├── tuning-experiment.ps1   # A/B 自动调优实验（基线 + 候选组 + 规则决策 + CSV 导出）
+├── friend-test.ps1         # 朋友测试：一键生成测试记录表（Markdown + CSV）
+├── SKILL.md                # AI Agent 调用说明（流程 + 红线）
+├── TESTING.md              # 朋友测试指南（完整 A/B 或只有帧率/游戏加加数据）
+├── GUI_PLAN.md 等          # 开发过程文档（GUI 视觉已落地，留作历史参考）
+├── README.md / README.en.md
+└── LICENSE                 # MIT
 ```
 
 ## 开发状态
@@ -125,7 +127,9 @@ delta-skill/
 - [x] A/B 自动调优（tuning-experiment.ps1）：基线稳定性判定 + 3 候选组 + 规则决策 + 自动还原 + CSV 导出（dry-run 全链路验证通过）
 - [ ] A/B 真实采样（待更多机器 / 朋友数据）
 - [ ] 更多游戏路径检测兜底（WeGame / Steam 变体）
-- [x] GUI 功能版（`delta-gui.ps1`，视觉待 V4 flash version；规划见 [GUI_PLAN.md](GUI_PLAN.md)）
+- [x] WPF GUI 视觉版完成（`DeltaForceTune.Wpf`）：检测、优化、A/B 实验、朋友测试、备份/日志、设置；
+      深色/亮色/跟随系统主题、现代化自定义弹窗、首次启动引导；应用前自动检查管理员权限并引导提权
+- [x] 无损还原：关联注册表值与电源隐藏项均按原值恢复，还原逐项报告成败
 
 ## 许可
 

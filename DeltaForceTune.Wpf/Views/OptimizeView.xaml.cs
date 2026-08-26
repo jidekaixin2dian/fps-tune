@@ -138,11 +138,39 @@ public partial class OptimizeView : UserControl
         OutputBox.Text = sb.ToString();
     }
 
+    private IEnumerable<string> CollectSelectedIds()
+    {
+        if (PresetFull.IsChecked == true)
+            return AppState.Items.Select(i => i.Id);
+        if (PresetSafeOnly.IsChecked == true)
+            return SafeOnlyIds;
+        if (PresetCustom.IsChecked == true)
+            return Items.Where(i => i.IsChecked).Select(i => i.Id);
+        return AppState.Items.Select(i => i.Id).Where(id => !BalancedExclude.Contains(id));
+    }
+
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)
     {
         if (ConsentCheck.IsChecked != true)
         {
             DialogService.Warning("未确认", "请先勾选同意说明，再执行应用。");
+            return;
+        }
+
+        // 所选项包含需要管理员的项而当前非管理员时，先提供提权重启，避免一批项直接失败。
+        var selectedIds = CollectSelectedIds().ToList();
+        if (selectedIds.Count > 0
+            && AppState.Items.Any(i => selectedIds.Contains(i.Id) && i.RequiresAdmin)
+            && !AdminHelper.IsAdministrator())
+        {
+            var elevate = DialogService.Confirm(
+                "需要管理员权限",
+                "所选优化项中包含需要管理员权限的项目，而当前程序不是以管理员身份运行的。\n\n" +
+                "要以管理员身份重启并继续应用吗？\n\n" +
+                "如果只想修改无需管理员的项目，可以切换到 safe-only 预设。",
+                danger: false);
+            if (elevate)
+                AdminHelper.RestartAsAdministrator();
             return;
         }
 
@@ -199,7 +227,15 @@ public partial class OptimizeView : UserControl
 
     private async void RestoreButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!DialogService.Confirm("还原确认", "确定要还原全部已备份的项目吗？", danger: true))
+        var backupCount = BackupService.ListBackups().Count;
+        if (backupCount == 0)
+        {
+            DialogService.Info("还原确认", "当前没有可还原的备份。");
+            return;
+        }
+        if (!DialogService.Confirm("还原确认",
+                $"共找到 {backupCount} 个备份文件，将把它们记录的全部系统改动逐项恢复为原值。\n\n确定继续吗？",
+                danger: true))
             return;
 
         RestoreButton.IsEnabled = false;

@@ -119,7 +119,6 @@ public static class DetectionService
             "mpo-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Dwm", "OverlayTestMode", "5"),
             "net-throttling-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", "-1"),
             "sys-responsiveness" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", "10"),
-            "mmcss-games" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games", "GPU Priority", "8"),
             "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", "1"),
             "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", "0"),
             _ => default
@@ -143,6 +142,7 @@ public static class DetectionService
             "fso-off" => GetFsoState(gamePath),
             "gpu-pref" => GetGpuPrefState(gamePath),
             "game-priority" => GetGamePriorityState(gamePath),
+            "mmcss-games" => GetMmcssState(),
             "gpu-pstate-lock" => GetGpuPstateLockState(),
             _ => (false, "需要运行时检测")
         };
@@ -235,6 +235,20 @@ public static class DetectionService
         const string path = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
         var value = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, gamePath)?.ToString() ?? "";
         return (value.Contains(flag, StringComparison.OrdinalIgnoreCase), string.IsNullOrWhiteSpace(value) ? "未设置" : value);
+    }
+
+    private static (bool Optimized, string Current) GetMmcssState()
+    {
+        const string basePath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games";
+        var gpu = RegistryHelper.ReadValue(RegistryHive.LocalMachine, basePath, "GPU Priority")?.ToString();
+        var priority = RegistryHelper.ReadValue(RegistryHive.LocalMachine, basePath, "Priority")?.ToString();
+        var sched = RegistryHelper.ReadValue(RegistryHive.LocalMachine, basePath, "Scheduling Category")?.ToString();
+        var sfio = RegistryHelper.ReadValue(RegistryHive.LocalMachine, basePath, "SFIO Priority")?.ToString();
+
+        var optimized = gpu == "8" && priority == "6"
+                        && string.Equals(sched, "High", StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(sfio, "High", StringComparison.OrdinalIgnoreCase);
+        return (optimized, $"GPU={gpu ?? "未设置"}, Priority={priority ?? "未设置"}, Scheduling={sched ?? "未设置"}, SFIO={sfio ?? "未设置"}");
     }
 
     private static (bool Optimized, string Current) GetGpuPrefState(string? gamePath)

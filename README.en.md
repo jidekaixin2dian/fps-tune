@@ -28,12 +28,13 @@ no telemetry, no auto-updater; optional functional GUI, but the core is still on
 | File | Purpose |
 |---|---|
 | `delta-optimizer.ps1` | Core engine: detect / apply / restore, 22 optimizations + 3 read-only health checks |
-| `delta-gui.ps1` | Functional WinForms GUI (visual pass later); detect / consent-apply / A/B / friend test / backup |
+| `DeltaForceTune.Wpf/` | Current WPF GUI (.NET 8, visual pass completed): detect / optimize / A-B / friend test / backup / settings |
+| `delta-gui.ps1` | Legacy WinForms GUI (kept for compatibility) |
 | `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export |
 | `friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
 | `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
-| `GUI_PLAN.md` | GUI-phase compliant feature plan (no spoofing, no overlay) |
+| `GUI_PLAN.md` | Historical planning docs (the WPF GUI visual version is done) |
 | `GUI_DESIGN_PROMPT.md` | Visual design prompt for the V4 flash vision pass |
 
 ## Quick start (CLI)
@@ -58,9 +59,8 @@ Or build locally:
 
 ```powershell
 cd <project-directory>
-.uild-wpf.ps1 -Mode Build
-.\DeltaForceTune.Wpfin\Release
-et8.0-windows\DeltaForceTune.exe
+.\build-wpf.ps1 -Mode Build
+.\DeltaForceTune.Wpf\bin\Release\net8.0-windows\DeltaForceTune.exe
 ```
 
 ## Quick start (AI agent)
@@ -114,4 +114,4 @@ will never download or run installers for you.
 
 ## License
 
-MIT. Written from scratch; no derivative relationship to any existing tool's code or docs.
+MIT. Written from scratch; no derivative relationship to any existing tool's code or docs..\DeltaForceTune.Wpf\bin\Release\net8.0-windows\DeltaForceTune.exe

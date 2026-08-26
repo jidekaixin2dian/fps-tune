@@ -66,7 +66,7 @@ public static class NativeOptimizationEngine
             case "sys-responsiveness":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", 10, RegistryValueKind.DWord, "已降低后台响应保留");
             case "mmcss-games":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games", "GPU Priority", 8, RegistryValueKind.DWord, "MMCSS 游戏档位已拉满");
+                return ApplyMmcssGames();
             case "paging-exec":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", 1, RegistryValueKind.DWord, "已开启内核常驻内存");
             case "mem-compress-off":
@@ -114,6 +114,35 @@ public static class NativeOptimizationEngine
         }
 
         return (true, changed, false, changed ? "已关闭 Xbox 后台录制" : "Xbox 后台录制本就关闭");
+    }
+
+    // MMCSS 游戏档位：与 PowerShell 引擎一致，写入全部四个值。
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyMmcssGames()
+    {
+        const string basePath = @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games";
+        var targets = new (string Name, object Value, RegistryValueKind Kind)[]
+        {
+            ("GPU Priority", 8, RegistryValueKind.DWord),
+            ("Priority", 6, RegistryValueKind.DWord),
+            ("Scheduling Category", "High", RegistryValueKind.String),
+            ("SFIO Priority", "High", RegistryValueKind.String),
+        };
+
+        var changed = false;
+        foreach (var t in targets)
+        {
+            var current = RegistryHelper.ReadValue(RegistryHive.LocalMachine, basePath, t.Name);
+            var matches = t.Kind == RegistryValueKind.DWord
+                ? current is not null && Convert.ToInt64(current) == Convert.ToInt64(t.Value)
+                : string.Equals(current?.ToString(), (string)t.Value, StringComparison.OrdinalIgnoreCase);
+            if (matches)
+                continue;
+
+            RegistryHelper.SetValue(RegistryHive.LocalMachine, basePath, t.Name, t.Value, t.Kind);
+            changed = true;
+        }
+
+        return (true, changed, false, changed ? "MMCSS 游戏档位已拉满" : "本就达标，未改动");
     }
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyFsoOff(string? gamePath)

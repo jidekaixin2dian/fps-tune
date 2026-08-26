@@ -122,6 +122,20 @@ function Invoke-Native {
     } catch {
         return @{ code = -1; output = @(); error = @($_.Exception.Message) }
     }
+
+# 查询某电源设置的当前 AC 值（失败返回 $null），用于 power-tuning 无损备份。
+function Get-PowerAcIndex {
+    param([string]$Subgroup, [string]$Setting)
+    $r = Invoke-Native 'powercfg.exe' @('/query', 'SCHEME_CURRENT', $Subgroup, $Setting)
+    if ($r.code -ne 0) { return $null }
+    foreach ($line in $r.output) {
+        if ($line -notmatch 'AC' -and $line -notmatch '交流') { continue }
+        if ($line -match '0x([0-9a-fA-F]+)') {
+            try { return [int][Convert]::ToInt64($matches[1], 16) } catch { return $null }
+        }
+    }
+    return $null
+}
 }
 
 # 原子写文件：先写 .tmp 再改名
@@ -305,25 +319,55 @@ $OptimizationItems = @(
         kind = 'power'
         apply = {
             param($ctx)
-            # 1) USB3 链路省电关闭（解除隐藏 + 设 0）
-            Invoke-Native 'powercfg.exe' @('-attributes', '2a737441-1930-4402-8d77-b2bebba308a3', '48e6b7a6-50f5-4782-a5d4-53bb8f07e226', '-ATTRIB_HIDE') | Out-Null
-            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', '2a737441-1930-4402-8d77-b2bebba308a3', '48e6b7a6-50f5-4782-a5d4-53bb8f07e226', '0') | Out-Null
-            # 2) 处理器性能提升模式 → Aggressive（解除隐藏 + 设 2）
-            Invoke-Native 'powercfg.exe' @('-attributes', 'be337238-0d82-4146-a960-4f3749d470c7', '45bcc044-d885-43e2-8605-ee0ec6e96b59', '-ATTRIB_HIDE') | Out-Null
-            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', 'be337238-0d82-4146-a960-4f3749d470c7', '45bcc044-d885-43e2-8605-ee0ec6e96b59', '2') | Out-Null
-            # 3) 处理器空闲降频允许（解锁隐藏项并关闭空闲降频等待）
-            Invoke-Native 'powercfg.exe' @('-attributes', 'bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d', '4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3', '-ATTRIB_HIDE') | Out-Null
-            $set = Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', 'bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d', '4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3', '0')
+            $specs = @(
+                @{ key = 'usb';   sub = '2a737441-1930-4402-8d77-b2bebba308a3'; setting = '48e6b7a6-50f5-4782-a5d4-53bb8f07e226' },
+                @{ key = 'boost'; sub = 'be337238-0d82-4146-a960-4f3749d470c7'; setting = '45bcc044-d885-43e2-8605-ee0ec6e96b59' },
+                @{ key = 'idle';  sub = 'bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d'; setting = '4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3' }
+            )
+            # 先备份三项的当前 AC 值（无损还原）；读取失败的项记为 null，还原时回退到常见默认值。
+            $oldValues = @{}
+            foreach ($s in $specs) { $oldValues[$s.key] = Get-PowerAcIndex $s.sub $s.setting }
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'power-tuning'; oldValues = $oldValues }
+
+            foreach ($s in $specs) {
+                Invoke-Native 'powercfg.exe' @('-attributes', $s.sub, $s.setting, '-ATTRIB_HIDE') | Out-Null
+            }
+            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', $specs[0].sub, $specs[0].setting, '0') | Out-Null
+            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', $specs[1].sub, $specs[1].setting, '2') | Out-Null
+            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', $specs[2].sub, $specs[2].setting, '0')
             $apply = Invoke-Native 'powercfg.exe' @('-setactive', 'SCHEME_CURRENT')
             if ($apply.code -ne 0) { throw '应用电源隐藏项失败: ' + (($apply.error -join '; ')) }
             return $true
         }
         revert = {
             param($ctx)
-            # 还原动作：把上述三项恢复为系统默认（AC 默认值）
-            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', '2a737441-1930-4402-8d77-b2bebba308a3', '48e6b7a6-50f5-4782-a5d4-53bb8f07e226', '1') | Out-Null
-            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', 'be337238-0d82-4146-a960-4f3749d470c7', '45bcc044-d885-43e2-8605-ee0ec6e96b59', '0') | Out-Null
-            Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', 'bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d', '4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3', '1') | Out-Null
+            $b = $ctx.backupItem
+            $defaults = @{
+                usb   = @{ sub = '2a737441-1930-4402-8d77-b2bebba308a3'; setting = '48e6b7a6-50f5-4782-a5d4-53bb8f07e226'; value = 1 }
+                boost = @{ sub = 'be337238-0d82-4146-a960-4f3749d470c7'; setting = '45bcc044-d885-43e2-8605-ee0ec6e96b59'; value = 0 }
+                idle  = @{ sub = 'bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d'; setting = '4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3'; value = 1 }
+            }
+            # 优先还原备份的原值；旧版本备份没有该数据时回退到系统常见默认值。
+            $old = $null
+            if ($b -is [hashtable]) { $old = $b['oldValues'] }
+            else {
+                $prop = $b.PSObject.Properties['oldValues']
+                if ($prop) { $old = $prop.Value }
+            }
+            foreach ($key in @('usb', 'boost', 'idle')) {
+                $d = $defaults[$key]
+                $value = $d.value
+                $recorded = $null
+                if ($null -ne $old) {
+                    if ($old -is [hashtable]) { $recorded = $old[$key] }
+                    else {
+                        $p = $old.PSObject.Properties[$key]
+                        if ($p) { $recorded = $p.Value }
+                    }
+                }
+                if ($null -ne $recorded) { $value = [int]$recorded }
+                Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', $d.sub, $d.setting, [string]$value) | Out-Null
+            }
             Invoke-Native 'powercfg.exe' @('-setactive', 'SCHEME_CURRENT') | Out-Null
         }
     }
@@ -356,19 +400,37 @@ $OptimizationItems = @(
         kind = 'registry'
         apply = {
             param($ctx)
-            $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'Software\Microsoft\GameBar' 'AutoGameModeEnabled'
+            $base = 'Software\Microsoft\GameBar'
+            $b = New-ItemRegistryBackup $ctx.item 'HKCU' $base 'AutoGameModeEnabled'
+            $allow = Read-RegValue 'HKCU' $base 'AllowAutoGameMode'
+            # 同时备份 AllowAutoGameMode，还原时按原值恢复（无损还原）。
+            $b.allowExists = $allow.exists
+            $b.allowValue = $allow.value
             $ctx.backupItem = $b
-            $r = Read-RegValue 'HKCU' 'Software\Microsoft\GameBar' 'AutoGameModeEnabled'
-            if ($r.exists -and $r.value -eq 1) { return $false }
-            Set-RegValue 'HKCU' 'Software\Microsoft\GameBar' 'AutoGameModeEnabled' 1 'DWord'
-            Set-RegValue 'HKCU' 'Software\Microsoft\GameBar' 'AllowAutoGameMode' 1 'DWord'
-            return $true
+            $changed = $false
+            if (-not ($b.oldExists -and $b.oldValue -eq 1)) {
+                Set-RegValue 'HKCU' $base 'AutoGameModeEnabled' 1 'DWord'
+                $changed = $true
+            }
+            if (-not ($allow.exists -and $allow.value -eq 1)) {
+                Set-RegValue 'HKCU' $base 'AllowAutoGameMode' 1 'DWord'
+                $changed = $true
+            }
+            return $changed
         }
         revert = {
             param($ctx)
-            Set-RegValue 'HKCU' 'Software\Microsoft\GameBar' 'AllowAutoGameMode' 1 'DWord'
-            if ($ctx.backupItem.oldExists) { Set-RegValue 'HKCU' $ctx.backupItem.path $ctx.backupItem.name $ctx.backupItem.oldValue $ctx.backupItem.oldKind }
-            else { Remove-RegValue 'HKCU' $ctx.backupItem.path $ctx.backupItem.name }
+            $b = $ctx.backupItem
+            $base = 'Software\Microsoft\GameBar'
+            if ($b.oldExists) { Set-RegValue 'HKCU' $b.path $b.name $b.oldValue $b.oldKind }
+            else { Remove-RegValue 'HKCU' $b.path $b.name }
+            # AllowAutoGameMode 按原值恢复；旧版本备份没有该字段时保持不动，避免覆盖用户原有设置。
+            $hasAllow = $b.PSObject.Properties['allowExists']
+            if ($hasAllow -and $b.allowExists) {
+                Set-RegValue 'HKCU' $base 'AllowAutoGameMode' $b.allowValue 'DWord'
+            } elseif ($hasAllow) {
+                Remove-RegValue 'HKCU' $base 'AllowAutoGameMode'
+            }
         }
     }
     @{
@@ -380,14 +442,16 @@ $OptimizationItems = @(
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'System\GameConfigStore' 'GameDVR_Enabled'
+            $p = Read-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\GameDVR' 'AllowGameDVR'
+            # 同时备份 AllowGameDVR 策略原值，还原时按原值恢复（无损还原）。
+            $b.policyExists = $p.exists
+            $b.policyValue = $p.value
             $ctx.backupItem = $b
-            $r = Read-RegValue 'HKCU' 'System\GameConfigStore' 'GameDVR_Enabled'
             $changed = $false
-            if (-not ($r.exists -and $r.value -eq 0)) {
+            if (-not ($b.oldExists -and $b.oldValue -eq 0)) {
                 Set-RegValue 'HKCU' 'System\GameConfigStore' 'GameDVR_Enabled' 0 'DWord'
                 $changed = $true
             }
-            $p = Read-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\GameDVR' 'AllowGameDVR'
             if (-not ($p.exists -and $p.value -eq 0)) {
                 Set-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\GameDVR' 'AllowGameDVR' 0 'DWord'
                 $changed = $true
@@ -396,9 +460,16 @@ $OptimizationItems = @(
         }
         revert = {
             param($ctx)
-            if ($ctx.backupItem.oldExists) { Set-RegValue 'HKCU' $ctx.backupItem.path $ctx.backupItem.name $ctx.backupItem.oldValue $ctx.backupItem.oldKind }
-            else { Remove-RegValue 'HKCU' $ctx.backupItem.path $ctx.backupItem.name }
-            Remove-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\GameDVR' 'AllowGameDVR'
+            $b = $ctx.backupItem
+            if ($b.oldExists) { Set-RegValue 'HKCU' $b.path $b.name $b.oldValue $b.oldKind }
+            else { Remove-RegValue 'HKCU' $b.path $b.name }
+            # AllowGameDVR 策略按原值恢复；旧版本备份没有该字段时保持不动，避免误删用户/企业原有策略。
+            $hasPolicy = $b.PSObject.Properties['policyExists']
+            if ($hasPolicy -and $b.policyExists) {
+                Set-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\GameDVR' 'AllowGameDVR' $b.policyValue 'DWord'
+            } elseif ($hasPolicy) {
+                Remove-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\GameDVR' 'AllowGameDVR'
+            }
         }
     }
     @{
@@ -598,30 +669,48 @@ $OptimizationItems = @(
         apply = {
             param($ctx)
             $base = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
-            $b1 = New-ItemRegistryBackup $ctx.item "$base" 'GPU Priority'
-            $ctx.backupItem = @{
-                id = $ctx.item.id; kind = 'registry'; hive = 'HKLM'; path = $base;
-                name = 'GPU Priority'; oldExists = $b1.oldExists; oldValue = $b1.oldValue; oldKind = $b1.oldKind
+            $targets = @(
+                @('GPU Priority', 8, 'DWord'),
+                @('Priority', 6, 'DWord'),
+                @('Scheduling Category', 'High', 'String'),
+                @('SFIO Priority', 'High', 'String')
+            )
+            # 四个值的原值全部入备份，逐个按原值恢复（无损还原）。
+            $backs = @()
+            foreach ($t in $targets) {
+                $r = Read-RegValue 'HKLM' $base $t[0]
+                $backs += @{ name = $t[0]; exists = $r.exists; value = $r.value; kind = $t[2] }
             }
-            $r1 = Read-RegValue 'HKLM' $base 'GPU Priority'
-            $r2 = Read-RegValue 'HKLM' $base 'Priority'
-            $r3 = Read-RegValue 'HKLM' $base 'Scheduling Category'
-            $r4 = Read-RegValue 'HKLM' $base 'SFIO Priority'
-            if ($r1.exists -and $r1.value -eq 8 -and $r2.exists -and $r2.value -eq 6 -and
-                $r3.exists -and $r3.value -eq 'High' -and $r4.exists -and $r4.value -eq 'High') { return $false }
-            Set-RegValue 'HKLM' $base 'GPU Priority' 8 'DWord'
-            Set-RegValue 'HKLM' $base 'Priority' 6 'DWord'
-            Set-RegValue 'HKLM' $base 'Scheduling Category' 'High' 'String'
-            Set-RegValue 'HKLM' $base 'SFIO Priority' 'High' 'String'
-            return $true
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'mmcss'; base = $base; values = $backs }
+            $changed = $false
+            foreach ($t in $targets) {
+                $r = Read-RegValue 'HKLM' $base $t[0]
+                if (-not ($r.exists -and $r.value -eq $t[1])) {
+                    Set-RegValue 'HKLM' $base $t[0] $t[1] $t[2]
+                    $changed = $true
+                }
+            }
+            return $changed
         }
         revert = {
             param($ctx)
+            $b = $ctx.backupItem
             $base = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
-            Remove-RegValue 'HKLM' $base 'GPU Priority'
-            Remove-RegValue 'HKLM' $base 'Priority'
-            Remove-RegValue 'HKLM' $base 'Scheduling Category'
-            Remove-RegValue 'HKLM' $base 'SFIO Priority'
+            $vals = $null
+            if ($b -is [hashtable]) { $vals = $b['values'] }
+            else {
+                $prop = $b.PSObject.Properties['values']
+                if ($prop) { $vals = $prop.Value }
+            }
+            if (-not $vals) {
+                # 旧版本备份只记录了 GPU Priority 且会删除全部四个值（有损）；
+                # 这里保守跳过，不覆盖用户可能存在的自定义值。重新 Apply 后再 Restore 即可走新逻辑。
+                return
+            }
+            foreach ($v in $vals) {
+                if ($v.exists) { Set-RegValue 'HKLM' $base $v.name $v.value $v.kind }
+                else { Remove-RegValue 'HKLM' $base $v.name }
+            }
         }
     }
     @{

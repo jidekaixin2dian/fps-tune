@@ -1,6 +1,8 @@
 ﻿namespace DeltaForceTune.Wpf.Core;
 
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using DeltaForceTune.Wpf.Services;
 
@@ -37,11 +39,21 @@ public static class OptimizationEngine
     public static Task<RunResult> RestoreAsync()
         => Task.Run(() =>
         {
-            var restored = BackupService.RestoreLatest();
-            if (restored is null)
+            var result = BackupService.RestoreAll();
+            if (result.Restored.Count == 0 && result.Failures.Count == 0)
                 return new RunResult(0, "没有找到可还原的备份。", "");
 
-            return new RunResult(0, $"已从备份还原：{restored}", "");
+            var sb = new StringBuilder();
+            sb.AppendLine("== 还原结果 ==");
+            foreach (var (file, id) in result.Restored)
+                sb.AppendLine($"[已还原] {Path.GetFileName(file)}  {id}");
+            foreach (var failure in result.Failures)
+                sb.AppendLine("[失败] " + failure);
+            sb.AppendLine();
+            sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败。");
+            if (result.Restored.Count > 0)
+                sb.Append("已处理的备份文件已重命名为 .restored（保留供审计）。");
+            return new RunResult(0, sb.ToString(), "");
         });
 
     public static Task<RunResult> ListRestoreAsync()
