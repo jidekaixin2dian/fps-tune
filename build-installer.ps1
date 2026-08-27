@@ -26,7 +26,6 @@ if (-not $iscc) {
     exit 1
 }
 
-[xml]$projXml = Get-Content $csproj -Raw -Encoding UTF8
 Write-Host "App version: $version"
 Write-Host "Using Inno Setup: $iscc"
 & $iscc "/DMyAppVersion=$version" (Join-Path $root 'installer\setup.iss')
