@@ -50,10 +50,10 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
-    public void Catalog_has_29_unique_items()
+    public void Catalog_has_33_unique_items()
     {
         var (ids, _) = LoadCatalog();
-        Assert.Equal(29, ids.Count);
+        Assert.Equal(33, ids.Count);
     }
 
     [Fact]

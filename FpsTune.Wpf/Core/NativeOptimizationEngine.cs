@@ -143,6 +143,14 @@ public static class NativeOptimizationEngine
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", 1, RegistryValueKind.DWord, "已禁用 USB 选择性暂停");
             case "net-nagle-off":
                 return ApplyNagleOff();
+            case "visual-fx-perf":
+                return RegistrySetIfDifferent(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", 2, RegistryValueKind.DWord, "视觉效果已切换为最佳性能");
+            case "delivery-opt-off":
+                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization", "DODownloadMode", 0, RegistryValueKind.DWord, "已关闭传递优化 P2P 上传");
+            case "bg-apps-off":
+                return RegistrySetIfDifferent(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications", "GlobalUserDisabled", 1, RegistryValueKind.DWord, "已关闭桌面应用后台运行");
+            case "telemetry-off":
+                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Data Collection", "AllowTelemetry", 0, RegistryValueKind.DWord, "诊断遥测已设为最低");
             case "prio-separation":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", 0x28, RegistryValueKind.DWord, "已提升前台进程调度权重");
             case "wer-off":

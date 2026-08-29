@@ -26,6 +26,15 @@
             <SolidColorBrush po:Freeze="False" x:Key="OkBrush" Color="#34D399"/>
             <SolidColorBrush po:Freeze="False" x:Key="GradientStartBrush" Color="#45B0FE"/>
             <SolidColorBrush po:Freeze="False" x:Key="GradientEndBrush" Color="#7A70FF"/>
+            <LinearGradientBrush po:Freeze="False" x:Key="AppBackdropBrush" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#121A29" Offset="0"/>
+                <GradientStop Color="#0A0D12" Offset="0.6"/>
+                <GradientStop Color="#0A0D12" Offset="1"/>
+            </LinearGradientBrush>
+            <RadialGradientBrush po:Freeze="False" x:Key="AuroraGlowBrush">
+                <GradientStop Color="#304DA3FF" Offset="0"/>
+                <GradientStop Color="#004DA3FF" Offset="1"/>
+            </RadialGradientBrush>
             <Color x:Key="PrimaryColor">#45B0FE</Color>
             <Color x:Key="AccentColor">#7A70FF</Color>
 

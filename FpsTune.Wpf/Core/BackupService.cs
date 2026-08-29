@@ -247,6 +247,14 @@ public static class BackupService
                 return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", RegistryValueKind.String) };
             case "usb-power-save-off":
                 return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", RegistryValueKind.DWord) };
+            case "visual-fx-perf":
+                return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", RegistryValueKind.DWord) };
+            case "delivery-opt-off":
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization", "DODownloadMode", RegistryValueKind.DWord) };
+            case "bg-apps-off":
+                return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications", "GlobalUserDisabled", RegistryValueKind.DWord) };
+            case "telemetry-off":
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Data Collection", "AllowTelemetry", RegistryValueKind.DWord) };
             case "net-nagle-off":
             {
                 var records = new List<BackupRecord>();

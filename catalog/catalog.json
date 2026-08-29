@@ -319,6 +319,50 @@
       "reboot": false,
       "kind": "registry",
       "group": "系统与调度"
+    },
+    {
+      "id": "visual-fx-perf",
+      "name": "视觉效果最佳性能",
+      "group": "图形显示",
+      "description": "将 Windows 视觉效果方案切换为\"调整为最佳性能\"，关闭动画与花哨特效，桌面合成开销降到最低。",
+      "sideEffect": "窗口动画、阴影等观感变朴素；可在系统\"性能选项\"调回。",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
+    },
+    {
+      "id": "delivery-opt-off",
+      "name": "关闭传递优化 P2P 上传",
+      "group": "网络",
+      "description": "禁止 Windows 更新等组件把已下载内容 P2P 上传给局域网/互联网其他设备，释放上行带宽降低游戏延迟抖动。",
+      "sideEffect": "系统自身下载不再为其他设备加速。",
+      "admin": true,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
+    },
+    {
+      "id": "bg-apps-off",
+      "name": "关闭桌面应用后台运行",
+      "group": "系统与调度",
+      "description": "禁止应用在后台运行，减少后台 CPU/网络占用与电量消耗，前台游戏资源更集中。",
+      "sideEffect": "应用的通知/后台同步可能不即时。",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
+    },
+    {
+      "id": "telemetry-off",
+      "name": "关闭诊断遥测",
+      "group": "系统与调度",
+      "description": "将诊断数据收集设为最低档，减少后台遥测上报带来的零星磁盘/网络活动。",
+      "sideEffect": "部分反馈功能不可用。",
+      "admin": true,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
     }
   ],
   "presets": {

@@ -10,6 +10,7 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         Background="Transparent"
+        AllowsTransparency="True"
         FontFamily="Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
@@ -24,7 +25,7 @@
                             UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
     <Border x:Name="ChromeRoot"
-            Background="{DynamicResource AppBackgroundBrush}"
+            Background="{DynamicResource AppBackdropBrush}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1"
             CornerRadius="10">
@@ -44,6 +45,13 @@
                 <RowDefinition Height="44"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
+
+            <!-- 顶部柔光辉光层：给素底加氛围，不参与命中 -->
+            <Ellipse Width="1200" Height="520"
+                     HorizontalAlignment="Center" VerticalAlignment="Top"
+                     Margin="0,-300,0,0"
+                     Fill="{DynamicResource AuroraGlowBrush}"
+                     IsHitTestVisible="False"/>
             <!-- 标题栏 -->
             <Grid Grid.Row="0" Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">

@@ -1118,6 +1118,78 @@ $OptimizationItems = @(
             }
         }
     }
+    @{
+        id = 'visual-fx-perf'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects' 'VisualFXSetting'
+            if ($b.oldExists -and "$($b.oldValue)" -eq '2') { $ctx.backupItem = $b; return $false }
+            Set-RegValue 'HKCU' 'Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects' 'VisualFXSetting' 2 'DWord'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) { Set-RegValue $b.hive $b.path $b.name ([int]$b.oldValue) 'DWord' }
+            else { Remove-RegValue $b.hive $b.path $b.name }
+        }
+    }
+    @{
+        id = 'delivery-opt-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' 'DODownloadMode'
+            if ($b.oldExists -and "$($b.oldValue)" -eq '0') { $ctx.backupItem = $b; return $false }
+            Set-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization' 'DODownloadMode' 0 'DWord'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) { Set-RegValue $b.hive $b.path $b.name ([int]$b.oldValue) 'DWord' }
+            else { Remove-RegValue $b.hive $b.path $b.name }
+        }
+    }
+    @{
+        id = 'bg-apps-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications' 'GlobalUserDisabled'
+            if ($b.oldExists -and "$($b.oldValue)" -eq '1') { $ctx.backupItem = $b; return $false }
+            Set-RegValue 'HKCU' 'Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications' 'GlobalUserDisabled' 1 'DWord'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) { Set-RegValue $b.hive $b.path $b.name ([int]$b.oldValue) 'DWord' }
+            else { Remove-RegValue $b.hive $b.path $b.name }
+        }
+    }
+    @{
+        id = 'telemetry-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\Data Collection' 'AllowTelemetry'
+            if ($b.oldExists -and "$($b.oldValue)" -eq '0') { $ctx.backupItem = $b; return $false }
+            Set-RegValue 'HKLM' 'SOFTWARE\Policies\Microsoft\Windows\Data Collection' 'AllowTelemetry' 0 'DWord'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) { Set-RegValue $b.hive $b.path $b.name ([int]$b.oldValue) 'DWord' }
+            else { Remove-RegValue $b.hive $b.path $b.name }
+        }
+    }
 )
 
 # 以 catalog 补齐元信息；实现表必须与 catalog 一一对应，否则直接报错。

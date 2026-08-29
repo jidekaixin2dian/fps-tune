@@ -139,9 +139,14 @@
                         <GroupStyle>
                             <GroupStyle.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Name}"
-                                               Style="{StaticResource SectionLabelStyle}"
-                                               Margin="0,10,0,4"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,4">
+                                        <Border Width="3" Height="13" CornerRadius="2"
+                                                Background="{DynamicResource AccentBrush}"
+                                                VerticalAlignment="Center" Margin="0,0,7,0"/>
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </StackPanel>
                                 </DataTemplate>
                             </GroupStyle.HeaderTemplate>
                         </GroupStyle>
@@ -226,11 +231,17 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" Text="执行结果" Style="{StaticResource CardTitleStyle}"/>
-                <TextBox Grid.Row="1"
+                <FlowDocumentScrollViewer Grid.Row="1"
                          x:Name="OutputBox"
-                         Style="{StaticResource MonoTextBoxStyle}"
-                         IsReadOnly="True"
-                         Text="选择预设后点击“应用”。"/>
+                         VerticalScrollBarVisibility="Auto"
+                         Background="Transparent">
+                    <FlowDocument x:Name="OutputDoc" PagePadding="0" Background="Transparent"
+                                  FontFamily="Microsoft YaHei UI" FontSize="12">
+                        <Paragraph Foreground="{DynamicResource TextSecondaryBrush}">
+                            选择预设后点击“应用”。
+                        </Paragraph>
+                    </FlowDocument>
+                </FlowDocumentScrollViewer>
             </Grid>
         </Border>
     </Grid>

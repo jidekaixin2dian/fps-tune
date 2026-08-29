@@ -6,6 +6,8 @@ using System.Text.Json.Nodes;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using System.Linq;
@@ -113,7 +115,7 @@ public partial class OptimizeView : UserControl
         ItemsView.Refresh();
         if (!_loadedFromState)
         {
-            OutputBox.Text = "暂无优化项，请先在检测页运行检测。";
+            SetPlain("暂无优化项，请先在检测页运行检测。");
             return;
         }
 
@@ -147,19 +149,16 @@ public partial class OptimizeView : UserControl
     {
         if (AppState.Items.Count == 0)
         {
-            OutputBox.Text = "暂无优化项，请先在检测页运行检测。";
+            SetPlain("暂无优化项，请先在检测页运行检测。");
             return;
         }
 
-        var sb = new StringBuilder();
         if (PresetCustom.IsChecked != true)
             ApplyPresetChecks();
 
         if (PresetCustom.IsChecked == true)
         {
-            sb.AppendLine("== 自定义模式 ==");
-            sb.AppendLine("请在左侧列表中勾选需要执行的优化项，然后点击“应用”。");
-            OutputBox.Text = sb.ToString();
+            SetPlain("自定义模式：请在左侧列表中勾选需要执行的优化项，然后点击“应用”。");
             return;
         }
 
@@ -185,10 +184,7 @@ public partial class OptimizeView : UserControl
         }
 
         var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
-        sb.AppendLine($"== 预设 {presetName} 包含 {selected.Count} 项 ==");
-        foreach (var item in selected)
-            sb.AppendLine($"{item.Id}  {item.Name}");
-        OutputBox.Text = sb.ToString();
+        SetItemListDoc("预设", $"{presetName} · {selected.Count} 项", selected);
     }
 
     private void ShowSelectedItem()
@@ -196,19 +192,7 @@ public partial class OptimizeView : UserControl
         if (ItemList.SelectedItem is not OptimizationItemViewModel vm)
             return;
 
-        var sb = new StringBuilder();
-        sb.AppendLine($"== {vm.Id}  {vm.Name} ==");
-        if (!string.IsNullOrWhiteSpace(vm.Description))
-            sb.AppendLine($"说明：{vm.Description}");
-        if (!string.IsNullOrWhiteSpace(vm.SideEffect))
-            sb.AppendLine($"副作用：{vm.SideEffect}");
-        if (!string.IsNullOrWhiteSpace(vm.Current))
-            sb.AppendLine($"当前：{vm.Current}");
-        sb.AppendLine($"状态：{vm.StatusText}");
-        var req = (vm.RequiresAdmin ? "管理员" : "普通用户") +
-                  (vm.RequiresReboot ? "，需重启" : "");
-        sb.AppendLine($"要求：{req}");
-        OutputBox.Text = sb.ToString();
+        SetItemDetail(vm);
     }
 
     private IEnumerable<string> CollectSelectedIds()
@@ -269,7 +253,7 @@ public partial class OptimizeView : UserControl
 
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
-        OutputBox.Text = "正在应用...";
+        SetPlain("正在应用...", "AccentBrush");
 
         try
         {
@@ -285,11 +269,11 @@ public partial class OptimizeView : UserControl
                     : PresetSafeOnly.IsChecked == true ? "safe-only" : "balanced";
                 result = await OptimizationEngine.ApplyPresetAsync(preset);
             }
-            OutputBox.Text = FormatResult(result);
+            SetApplyResult(result);
         }
         catch (Exception ex)
         {
-            OutputBox.Text = ex.ToString();
+            SetRawMonospace(ex.ToString());
         }
         finally
         {
@@ -313,16 +297,16 @@ public partial class OptimizeView : UserControl
 
         RestoreButton.IsEnabled = false;
         ApplyButton.IsEnabled = false;
-        OutputBox.Text = "正在还原...";
+        SetPlain("正在还原...", "AccentBrush");
 
         try
         {
             var result = await OptimizationEngine.RestoreAsync();
-            OutputBox.Text = FormatResult(result);
+            SetApplyResult(result);
         }
         catch (Exception ex)
         {
-            OutputBox.Text = ex.ToString();
+            SetRawMonospace(ex.ToString());
         }
         finally
         {
@@ -331,69 +315,202 @@ public partial class OptimizeView : UserControl
         }
     }
 
-    private static string FormatResult(RunResult result)
+
+
+    // ---------- 执行结果富文本 ----------
+
+    private void ResetDoc()
     {
-        var error = new StringBuilder();
-        if (!result.Success)
+        OutputDoc.Blocks.Clear();
+        OutputDoc.Background = System.Windows.Media.Brushes.Transparent;
+    }
+
+    private static Paragraph NewPara(double bottom = 5)
+        => new Paragraph { Margin = new Thickness(0, 0, 0, bottom) };
+
+    private static Run R(string text, string brushKey, bool bold = false, double? size = null, bool mono = false)
+    {
+        var r = new Run(text);
+        if (Application.Current.Resources[brushKey] is Brush b)
+            r.Foreground = b;
+        if (bold)
+            r.FontWeight = FontWeights.SemiBold;
+        if (size is not null)
+            r.FontSize = size.Value;
+        if (mono)
+            r.FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono, Consolas");
+        return r;
+    }
+
+    private void SetPlain(string text, string brushKey = "TextSecondaryBrush", bool mono = false)
+    {
+        ResetDoc();
+        var para = NewPara(0);
+        var lines = text.Replace("\r\n", "\n").Split('\n');
+        for (var i = 0; i < lines.Length; i++)
         {
-            error.AppendLine($"exit={result.ExitCode}");
-            if (!string.IsNullOrWhiteSpace(result.Output))
-                error.AppendLine("--- STDOUT ---").AppendLine(result.Output);
-            if (!string.IsNullOrWhiteSpace(result.Error))
-                error.AppendLine("--- STDERR ---").AppendLine(result.Error);
-            return error.ToString();
+            if (i > 0)
+                para.Inlines.Add(new LineBreak());
+            para.Inlines.Add(R(lines[i], brushKey, mono: mono));
+        }
+        OutputDoc.Blocks.Add(para);
+    }
+
+    /// <summary>预设/方案清单：分组小标题 + 等宽 id + 名称。</summary>
+    private void SetItemListDoc(string title, string accentLabel, System.Collections.Generic.IEnumerable<OptimizationItem> items)
+    {
+        ResetDoc();
+        var head = NewPara(8);
+        head.Inlines.Add(R(title + " ", "TextSecondaryBrush"));
+        head.Inlines.Add(R(accentLabel, "AccentBrush", bold: true, size: 15));
+        OutputDoc.Blocks.Add(head);
+
+        string? lastGroup = null;
+        foreach (var item in items)
+        {
+            if (item.Group != lastGroup)
+            {
+                lastGroup = item.Group;
+                var gp = NewPara(3);
+                gp.Inlines.Add(R("— " + item.Group + " —", "TextMutedBrush", size: 11));
+                OutputDoc.Blocks.Add(gp);
+            }
+            var line = NewPara(3);
+            line.Inlines.Add(R(item.Id, "AccentBrush", mono: true));
+            line.Inlines.Add(R("   " + item.Name, "TextPrimaryBrush"));
+            OutputDoc.Blocks.Add(line);
+        }
+    }
+
+    private void SetItemDetail(OptimizationItemViewModel vm)
+    {
+        ResetDoc();
+        var head = NewPara(8);
+        head.Inlines.Add(R(vm.Id, "AccentBrush", mono: true, size: 13));
+        head.Inlines.Add(R("   " + vm.Name, "TextPrimaryBrush", bold: true, size: 14));
+        OutputDoc.Blocks.Add(head);
+
+        void Line(string label, string value, string valueBrush = "TextSecondaryBrush")
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+            var p = NewPara(3);
+            p.Inlines.Add(R(label + "  ", "TextMutedBrush"));
+            p.Inlines.Add(R(value, valueBrush));
+            OutputDoc.Blocks.Add(p);
         }
 
-        // 尝试把 Apply 结果解析成逐项清单
+        if (!string.IsNullOrWhiteSpace(vm.Description))
+            Line("说明", vm.Description);
+        if (!string.IsNullOrWhiteSpace(vm.SideEffect))
+            Line("副作用", vm.SideEffect, "WarningBrush");
+        if (!string.IsNullOrWhiteSpace(vm.Current))
+            Line("当前", vm.Current);
+        Line("状态", vm.StatusText, vm.Optimized ? "OkBrush" : "TextSecondaryBrush");
+        var req = (vm.RequiresAdmin ? "管理员" : "普通用户") + (vm.RequiresReboot ? "，需重启" : "");
+        Line("要求", req);
+    }
+
+    private void SetApplyResult(RunResult result)
+    {
+        if (!result.Success)
+        {
+            ResetDoc();
+            var head = NewPara(6);
+            head.Inlines.Add(R("执行失败 ", "DangerBrush", bold: true, size: 14));
+            head.Inlines.Add(R($"exit={result.ExitCode}", "TextMutedBrush", mono: true));
+            OutputDoc.Blocks.Add(head);
+            SetRawMonospace(string.Concat(
+                string.IsNullOrWhiteSpace(result.Output) ? "" : result.Output + "\n",
+                string.IsNullOrWhiteSpace(result.Error) ? "" : result.Error));
+            return;
+        }
+
         try
         {
-            var root = JsonNode.Parse(result.Output);
-            if (root?["results"] is JsonArray results)
+            var root = System.Text.Json.Nodes.JsonNode.Parse(result.Output);
+            if (root?["results"] is not System.Text.Json.Nodes.JsonArray results)
+                throw new InvalidOperationException("非结构化结果");
+
+            ResetDoc();
+            var head = NewPara(8);
+            head.Inlines.Add(R("应用完成", "AccentBrush", bold: true, size: 15));
+            OutputDoc.Blocks.Add(head);
+
+            string? lastGroup = null;
+            foreach (var item in results)
             {
-                var sb = new StringBuilder();
-                sb.AppendLine("== 应用结果 ==");
-                foreach (var item in results)
+                var id = item?["id"]?.GetValue<string>() ?? "";
+                var name = item?["name"]?.GetValue<string>() ?? "";
+                var ok = item?["ok"]?.GetValue<bool>() ?? false;
+                var skipped = item?["skipped"]?.GetValue<bool>() ?? false;
+                var message = item?["message"]?.GetValue<string>() ?? "";
+
+                var meta = ItemCatalog.All.FirstOrDefault(x => x.Id == id);
+                if (meta?.Group != lastGroup)
                 {
-                    var id = item?["id"]?.GetValue<string>() ?? "";
-                    var name = item?["name"]?.GetValue<string>() ?? "";
-                    var ok = item?["ok"]?.GetValue<bool>() ?? false;
-                    var skipped = item?["skipped"]?.GetValue<bool>() ?? false;
-                    var message = item?["message"]?.GetValue<string>() ?? "";
-                    var tag = skipped ? "[跳过]" : ok ? "[成功]" : "[失败]";
-                    sb.AppendLine($"{tag} {id}  {name}  {message}");
+                    lastGroup = meta?.Group;
+                    var gp = NewPara(3);
+                    gp.Inlines.Add(R("— " + (lastGroup ?? "其他") + " —", "TextMutedBrush", size: 11));
+                    OutputDoc.Blocks.Add(gp);
                 }
 
-                var summary = root["summary"]?.GetValue<string>();
-                if (!string.IsNullOrWhiteSpace(summary))
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("汇总：" + summary);
-                }
+                var line = NewPara(3);
+                line.Inlines.Add(R(skipped ? "跳过 " : ok ? "成功 " : "失败 ",
+                    skipped ? "TextMutedBrush" : ok ? "OkBrush" : "DangerBrush", bold: true));
+                line.Inlines.Add(R(id, "AccentBrush", mono: true));
+                line.Inlines.Add(R("  " + name, "TextPrimaryBrush"));
+                if (!string.IsNullOrWhiteSpace(message))
+                    line.Inlines.Add(R("   " + message, "TextMutedBrush"));
+                OutputDoc.Blocks.Add(line);
+            }
 
-                var backup = root["backupFile"]?.GetValue<string>();
-                if (!string.IsNullOrWhiteSpace(backup))
-                    sb.AppendLine("备份：" + backup);
+            var summary = root["summary"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(summary))
+            {
+                var sp = NewPara(4);
+                sp.Inlines.Add(R("汇总  ", "TextMutedBrush"));
+                sp.Inlines.Add(R(summary, "TextSecondaryBrush"));
+                OutputDoc.Blocks.Add(sp);
+            }
 
-                if (root["reboot"] is JsonArray reboot && reboot.Count > 0)
-                {
-                    var ids = reboot.Select(r => r?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
-                    sb.AppendLine("需重启：" + string.Join(", ", ids));
-                }
-                return sb.ToString();
+            var backup = root["backupFile"]?.GetValue<string>();
+            if (!string.IsNullOrWhiteSpace(backup))
+            {
+                var bp = NewPara(4);
+                bp.Inlines.Add(R("备份  ", "TextMutedBrush"));
+                bp.Inlines.Add(R(backup, "TextSecondaryBrush", mono: true, size: 11));
+                OutputDoc.Blocks.Add(bp);
+            }
+
+            if (root["reboot"] is System.Text.Json.Nodes.JsonArray reboot && reboot.Count > 0)
+            {
+                var ids = reboot.Select(r2 => r2?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
+                var rp = NewPara(0);
+                rp.Inlines.Add(R("需重启  ", "WarningBrush", bold: true));
+                rp.Inlines.Add(R(string.Join("、", ids), "WarningBrush"));
+                OutputDoc.Blocks.Add(rp);
             }
         }
         catch
         {
-            // 非 JSON 或非 Apply 结果，继续走原始输出
+            ResetDoc();
+            SetRawMonospace(result.Output + "\n" + result.Error);
         }
-
-        var raw = new StringBuilder();
-        raw.AppendLine(result.Output);
-        if (!string.IsNullOrWhiteSpace(result.Error))
-            raw.AppendLine("--- STDERR ---").AppendLine(result.Error);
-        return raw.ToString();
     }
 
+    private void SetRawMonospace(string text)
+    {
+        var para = NewPara(0);
+        var lines = (text ?? "").Replace("\r\n", "\n").Split('\n');
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (i > 0)
+                para.Inlines.Add(new LineBreak());
+            para.Inlines.Add(R(lines[i], "TextSecondaryBrush", mono: true, size: 11));
+        }
+        OutputDoc.Blocks.Add(para);
+    }
 
     // ---------- 配置方案 ----------
 
@@ -414,11 +531,8 @@ public partial class OptimizeView : UserControl
         foreach (var vm in Items)
             vm.IsChecked = idSet.Contains(vm.Id);
 
-        var sb = new StringBuilder();
-        sb.AppendLine($"== 方案已载入（{idSet.Count} 项） ==");
-        foreach (var vm in Items.Where(v => v.IsChecked))
-            sb.AppendLine($"{vm.Id}  {vm.Name}");
-        OutputBox.Text = sb.ToString();
+        var selected = AppState.Items.Where(i => idSet.Contains(i.Id)).ToList();
+        SetItemListDoc("方案已载入", $"{idSet.Count} 项", selected);
     }
 
     private void ProfileSave_Click(object sender, RoutedEventArgs e)

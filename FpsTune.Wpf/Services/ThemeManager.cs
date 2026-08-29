@@ -58,6 +58,67 @@ public static class ThemeManager
         SetBrush("OkBrush", t.Ok);
         Application.Current.Resources["PrimaryColor"] = t.Primary;
         Application.Current.Resources["AccentColor"] = t.Accent;
+        ApplyBackdrop(resolved);
+    }
+
+    // 页面底色: 顶部带一点蓝调的垂直渐变, 加顶部柔光, 让"素底"有层次
+    private static void ApplyBackdrop(string resolved)
+    {
+        var app = Application.Current;
+        if (app is null)
+            return;
+
+        LinearGradientBrush backdrop;
+        RadialGradientBrush glow;
+        if (resolved == "light")
+        {
+            backdrop = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(0, 1),
+                GradientStops =
+                {
+                    new GradientStop(Parse("#F7FAFF"), 0),
+                    new GradientStop(Parse("#EFF2F7"), 0.6),
+                    new GradientStop(Parse("#EFF2F7"), 1)
+                }
+            };
+            glow = new RadialGradientBrush
+            {
+                GradientStops =
+                {
+                    new GradientStop(Color.FromArgb(0x22, 0x4F, 0x46, 0xE5), 0),
+                    new GradientStop(Color.FromArgb(0x00, 0x4F, 0x46, 0xE5), 1)
+                }
+            };
+        }
+        else
+        {
+            backdrop = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(0, 1),
+                GradientStops =
+                {
+                    new GradientStop(Parse("#121A29"), 0),
+                    new GradientStop(Parse("#0A0D12"), 0.6),
+                    new GradientStop(Parse("#0A0D12"), 1)
+                }
+            };
+            glow = new RadialGradientBrush
+            {
+                GradientStops =
+                {
+                    new GradientStop(Color.FromArgb(0x30, 0x4D, 0xA3, 0xFF), 0),
+                    new GradientStop(Color.FromArgb(0x00, 0x4D, 0xA3, 0xFF), 1)
+                }
+            };
+        }
+
+        backdrop.Freeze();
+        glow.Freeze();
+        app.Resources["AppBackdropBrush"] = backdrop;
+        app.Resources["AuroraGlowBrush"] = glow;
     }
 
     private static void SetBrush(string key, Color target)
