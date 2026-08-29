@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Shell;
 using System.Windows.Controls;
@@ -11,25 +11,29 @@ namespace FpsTune.Wpf;
 
 public partial class MainWindow : Window
 {
-    private readonly Dictionary<string, UserControl> _pages;
-    
+    // 页面按需创建、创建后缓存：启动只构建首页，显著降低冷启动时间与常驻内存。
+    private readonly Dictionary<string, Func<UserControl>> _pageFactories;
+    private readonly Dictionary<string, UserControl> _pageCache = new();
+    private readonly TranslateTransform _pageSlide = new(24, 0);
+
     public MainWindow()
     {
         InitializeComponent();
         SettingsService.Load();
 
-        _pages = new Dictionary<string, UserControl>
+        _pageFactories = new Dictionary<string, Func<UserControl>>
         {
-            ["home"] = new HomeView(),
-            ["detect"] = new DetectView(),
-            ["opt"] = new OptimizeView(),
-            ["ab"] = new AbExperimentView(),
-            ["friend"] = new FriendTestView(),
-            ["backup"] = new BackupLogView(),
-            ["settings"] = new SettingsView(),
+            ["home"] = () => new HomeView(),
+            ["detect"] = () => new DetectView(),
+            ["opt"] = () => new OptimizeView(),
+            ["ab"] = () => new AbExperimentView(),
+            ["friend"] = () => new FriendTestView(),
+            ["backup"] = () => new BackupLogView(),
+            ["settings"] = () => new SettingsView(),
         };
 
-        PageHost.Content = _pages["home"];
+        PageHost.RenderTransform = _pageSlide;
+        PageHost.Content = GetPage("home");
 
         // 版本号唯一来源：程序集（编译自 Directory.Build.props）
         var ver = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -43,11 +47,20 @@ public partial class MainWindow : Window
         ThemeManager.SetMode(theme);
     }
 
+    private UserControl GetPage(string key)
+    {
+        if (!_pageCache.TryGetValue(key, out var page))
+        {
+            page = _pageFactories[key]();
+            _pageCache[key] = page;
+        }
+        return page;
+    }
+
     public void ShowOptimizePage()
     {
-        NavOpt.IsChecked = true;
-        SwitchPage(_pages["opt"]);
-        if (_pages["opt"] is OptimizeView opt)
+        NavigateTo("opt");
+        if (GetPage("opt") is OptimizeView opt)
             opt.ReloadFromState();
     }
 
@@ -55,7 +68,7 @@ public partial class MainWindow : Window
     {
         // 第一步：先去检测页完成一次检测。
         NavigateTo("detect");
-        if (_pages["detect"] is DetectView detect)
+        if (GetPage("detect") is DetectView detect)
         {
             var ok = await detect.RunOnboardingDetectionAsync();
             if (!ok)
@@ -72,12 +85,20 @@ public partial class MainWindow : Window
 
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
-        if (_pages is null)
+        if (_pageFactories is null)
             return;
-        if (sender is RadioButton { Tag: string key } && _pages.TryGetValue(key, out var page))
+        if (sender is RadioButton { Tag: string key } && _pageFactories.ContainsKey(key))
         {
-            SwitchPage(page);
-            if (key == "opt" && page is OptimizeView opt)
+            // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
+            // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
+            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavAb, NavFriend, NavBackup, NavSettings })
+            {
+                if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
+                    radio.IsChecked = false;
+            }
+
+            SwitchPage(GetPage(key));
+            if (key == "opt" && GetPage("opt") is OptimizeView opt)
                 opt.ReloadFromState();
         }
     }
@@ -90,13 +111,11 @@ public partial class MainWindow : Window
         PageHost.Opacity = 0;
         PageHost.Content = page;
 
-        var slide = new TranslateTransform(24, 0);
-        PageHost.RenderTransform = slide;
         var slideAnim = new DoubleAnimation(24, 0, TimeSpan.FromMilliseconds(220))
         {
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
         };
-        slide.BeginAnimation(TranslateTransform.XProperty, slideAnim);
+        _pageSlide.BeginAnimation(TranslateTransform.XProperty, slideAnim);
 
         var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
         {
@@ -140,7 +159,7 @@ public partial class MainWindow : Window
 
     public void RefreshHomeContacts()
     {
-        if (_pages["home"] is HomeView home)
+        if (GetPage("home") is HomeView home)
             home.RefreshContacts();
     }
 }
