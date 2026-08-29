@@ -15,6 +15,8 @@ public partial class HomeView : UserControl
         InitializeComponent();
         Loaded += (_, _) => RefreshContacts();
         VersionText.Text = "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
+        // 优化项数量随 catalog 增长，首页文案不写死
+        OptCardSummary.Text = $"预设与逐项开关、{ItemCatalog.All.Count} 项系统层优化、一键还原";
         var hw = Core.HardwareInfoService.Get();
         HardwareSummaryText.Text = $"{hw.Cpu}  |  {hw.Gpu}  |  {hw.RamGB:0.#} GB";
 
