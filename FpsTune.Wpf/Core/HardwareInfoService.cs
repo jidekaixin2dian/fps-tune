@@ -167,8 +167,10 @@ public static class HardwareInfoService
                     if (!Regex.IsMatch(sub, @"^00\d\d$"))
                         continue;
                     using var sk = key.OpenSubKey(sub);
-                    var desc = sk?.GetValue("DriverDesc")?.ToString();
-                    var matchId = sk?.GetValue("MatchingDeviceId")?.ToString();
+                    if (sk is null)
+                        continue;
+                    var desc = sk.GetValue("DriverDesc")?.ToString();
+                    var matchId = sk.GetValue("MatchingDeviceId")?.ToString();
                     if (string.IsNullOrWhiteSpace(desc) || string.IsNullOrWhiteSpace(matchId))
                         continue;
                     var mem = sk.GetValue("HardwareInformation.qwMemorySize");

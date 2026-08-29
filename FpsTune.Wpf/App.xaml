@@ -72,6 +72,9 @@
                 <Setter Property="Height" Value="42"/>
                 <Setter Property="Margin" Value="0,2"/>
                 <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <!-- 导航钮不参与键盘焦点：点击后不再驻留焦点高亮，重复点击视觉稳定 -->
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
@@ -94,9 +97,6 @@
                                         Visibility="Collapsed"/>
                             </Grid>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="Root" Property="Background" Value="{DynamicResource ElevatedBrush}"/>
                                     <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
