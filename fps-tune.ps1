@@ -183,8 +183,10 @@ function Get-HardwareInfo {
     $os = (Get-CimInstance Win32_OperatingSystem).Caption + ' (Build ' + (Get-CimInstance Win32_OperatingSystem).BuildNumber + ')'
     $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name
     $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 0)
-    $gpu = (Get-CimInstance Win32_VideoController | Where-Object { $_.Name } | Select-Object -First 1).Name
-    $gpuFull = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name } | ForEach-Object { $_.Name }) -join ' | '
+    $gpus = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name -and $_.Name -notmatch 'Basic Render|Hyper-V|Virtual|RemoteFX' })
+    if ($gpus.Count -eq 0) { $gpus = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name }) }
+    $gpu = $gpus[0].Name
+    $gpuFull = @($gpus | ForEach-Object { $_.Name }) -join ' | '
     $vendor = 'unknown'
     if ($gpu -match 'NVIDIA') { $vendor = 'nvidia' }
     elseif ($gpu -match 'AMD|Radeon') { $vendor = 'amd' }
@@ -904,6 +906,54 @@ $OptimizationItems = @(
             if ($ctx.backupItem.oldState -eq 'on') {
                 $r = Invoke-Native 'bcdedit.exe' @('/set', '{current}', 'disabledynamictick', 'no')
                 if ($r.code -ne 0) { throw '还原 disabledynamictick 失败: ' + (($r.error -join '; ')) }
+            }
+        }
+    }
+    @{
+        id = 'mouse-accel-off'
+        apply = {
+            param($ctx)
+            $path = 'HKCU:\Control Panel\Mouse'
+            $names = @('MouseSpeed', 'MouseThreshold1', 'MouseThreshold2')
+            $ip = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue
+            $old = @{}
+            $changed = $false
+            foreach ($n in $names) {
+                $prop = $null
+                if ($ip) {
+                    $pp = $ip.PSObject.Properties[$n]
+                    if ($pp) { $prop = [string]$pp.Value }
+                }
+                $old[$n] = $prop
+                if ($prop -eq '0') { continue }
+                Set-ItemProperty -Path $path -Name $n -Value '0' -Type String
+                $changed = $true
+            }
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'mouse-accel'; oldValues = $old }
+            return $changed
+        }
+        revert = {
+            param($ctx)
+            $path = 'HKCU:\Control Panel\Mouse'
+            $defaults = @{ MouseSpeed = '1'; MouseThreshold1 = '6'; MouseThreshold2 = '10' }
+            $old = $null
+            if ($ctx.backupItem -is [hashtable]) { $old = $ctx.backupItem['oldValues'] }
+            else {
+                $pp = $ctx.backupItem.PSObject.Properties['oldValues']
+                if ($pp) { $old = $pp.Value }
+            }
+            foreach ($n in @('MouseSpeed', 'MouseThreshold1', 'MouseThreshold2')) {
+                $value = $defaults[$n]
+                if ($null -ne $old) {
+                    $recorded = $null
+                    if ($old -is [hashtable]) { $recorded = $old[$n] }
+                    else {
+                        $p2 = $old.PSObject.Properties[$n]
+                        if ($p2) { $recorded = $p2.Value }
+                    }
+                    if ($null -ne $recorded -and "$recorded" -ne '') { $value = [string]$recorded }
+                }
+                Set-ItemProperty -Path $path -Name $n -Value $value -Type String
             }
         }
     }

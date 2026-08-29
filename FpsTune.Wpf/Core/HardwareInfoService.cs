@@ -138,8 +138,43 @@ public static class HardwareInfoService
         }
     }
 
+    private static bool IsVirtualOrBasicGpu(string name)
+    {
+        foreach (var kw in new[] { "Basic Render", "Hyper-V", "Virtual", "RemoteFX", "Indirect" })
+            if (name.Contains(kw, StringComparison.OrdinalIgnoreCase))
+                return true;
+        return false;
+    }
+
     private static string GetGpuName()
     {
+        // WMI 优先：过滤虚拟/基础渲染适配器；多卡时优先 PCI 物理卡，再按 AdapterRAM 取主卡
+        try
+        {
+            var cands = new List<(string Name, ulong Ram, bool Pci)>();
+            using var searcher = new System.Management.ManagementObjectSearcher(
+                "SELECT Name, AdapterRAM, PNPDeviceID FROM Win32_VideoController");
+            foreach (var mo in searcher.Get())
+            {
+                var name = (mo["Name"]?.ToString() ?? "").Trim();
+                if (name.Length == 0 || IsVirtualOrBasicGpu(name))
+                    continue;
+                ulong.TryParse(mo["AdapterRAM"]?.ToString(), out var ram);
+                var pnp = mo["PNPDeviceID"]?.ToString() ?? "";
+                cands.Add((name, ram, pnp.StartsWith("PCI", StringComparison.OrdinalIgnoreCase)));
+            }
+            if (cands.Count > 0)
+            {
+                var ordered = cands.OrderByDescending(c => c.Pci).ThenByDescending(c => c.Ram).ToList();
+                var main = ordered[0].Name;
+                return ordered.Count > 1 ? $"{main} (+{ordered.Count - 1})" : main;
+            }
+        }
+        catch
+        {
+        }
+
+        // 注册表兜底：显示类驱动子键（同样过滤噪声）
         try
         {
             const string classPath = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
@@ -147,17 +182,14 @@ public static class HardwareInfoService
             using var key = baseKey.OpenSubKey(classPath);
             if (key is null)
                 return "未知 GPU";
-
-            var names = new List<string>();
             foreach (var sub in key.GetSubKeyNames())
             {
                 using var subKey = key.OpenSubKey(sub);
-                var desc = subKey?.GetValue("DriverDesc")?.ToString();
-                if (!string.IsNullOrWhiteSpace(desc))
-                    names.Add(desc.Trim());
+                var desc = subKey?.GetValue("DriverDesc")?.ToString()?.Trim();
+                if (!string.IsNullOrWhiteSpace(desc) && !IsVirtualOrBasicGpu(desc))
+                    return desc;
             }
-
-            return names.Count > 0 ? string.Join(" | ", names) : "未知 GPU";
+            return "未知 GPU";
         }
         catch
         {

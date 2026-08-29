@@ -11,6 +11,10 @@
         ResizeMode="CanResize"
         Background="Transparent"
         FontFamily="Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="44"

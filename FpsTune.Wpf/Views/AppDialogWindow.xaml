@@ -6,6 +6,8 @@
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True"
         ShowInTaskbar="False"
         WindowStyle="None"
         AllowsTransparency="True"

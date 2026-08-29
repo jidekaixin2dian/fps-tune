@@ -37,6 +37,23 @@ public static class NativeOptimizationEngine
         return results;
     }
 
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyMouseAccelOff()
+    {
+        const string path = @"Control Panel\Mouse";
+        var changed = false;
+        foreach (var name in new[] { "MouseSpeed", "MouseThreshold1", "MouseThreshold2" })
+        {
+            var cur = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, name)?.ToString();
+            if (cur == "0")
+                continue;
+            RegistryHelper.SetValue(RegistryHive.CurrentUser, path, name, "0", RegistryValueKind.String);
+            changed = true;
+        }
+        return changed
+            ? (true, true, false, "已关闭鼠标加速（注销/重启后完全生效）")
+            : (true, false, false, "鼠标加速本已关闭");
+    }
+
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyOne(
         OptimizationItemDefinition item, string? gamePath)
     {
@@ -53,6 +70,8 @@ public static class NativeOptimizationEngine
                 return (true, true, false, "已开启游戏模式");
             case "dvr-off":
                 return ApplyDvrOff();
+            case "mouse-accel-off":
+                return ApplyMouseAccelOff();
             case "prio-separation":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", 0x28, RegistryValueKind.DWord, "已提升前台进程调度权重");
             case "wer-off":

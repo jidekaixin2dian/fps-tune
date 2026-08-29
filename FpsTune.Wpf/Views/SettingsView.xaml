@@ -23,6 +23,13 @@
                         <RadioButton x:Name="ThemeLightRadio" Content="亮色" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}" Margin="0,0,12,0"/>
                         <RadioButton x:Name="ThemeSystemRadio" Content="跟随系统" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}"/>
                     </StackPanel>
+                    <TextBlock Text="开机自动启动" Style="{StaticResource MutedTextStyle}" Margin="0,14,0,0"/>
+                    <CheckBox x:Name="AutostartCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="登录 Windows 后自动运行 FPS 帧律（当前用户）"
+                              Margin="0,6,0,0"
+                              Checked="AutostartCheck_Changed" Unchecked="AutostartCheck_Changed"/>
+
                     <Button Content="保存设置"
                             Style="{StaticResource PrimaryButtonStyle}"
                             HorizontalAlignment="Left"

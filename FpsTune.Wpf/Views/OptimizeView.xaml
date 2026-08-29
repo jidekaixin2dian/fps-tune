@@ -33,14 +33,15 @@
             <StackPanel>
                 <TextBlock Text="预设选择" Style="{StaticResource CardTitleStyle}"/>
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="PresetFull" Content="full" GroupName="preset" Margin="0,0,24,0"/>
-                    <RadioButton x:Name="PresetBalanced" Content="balanced" GroupName="preset" IsChecked="True" Margin="0,0,24,0"/>
-                    <RadioButton x:Name="PresetSafeOnly" Content="safe-only" GroupName="preset" Margin="0,0,24,0"/>
-                    <RadioButton x:Name="PresetCustom" Content="自定义勾选" GroupName="preset"/>
+                    <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+                    <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Style="{StaticResource PillRadioStyle}"/>
+                    <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+                    <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
                 </StackPanel>
                 <CheckBox x:Name="ConsentCheck"
+                          Style="{StaticResource ToggleSwitchStyle}"
                           Content="我已阅读并同意执行上述优化项（写前自动备份，可还原）"
-                          Margin="0,14,0,0"/>
+                          Margin="0,16,0,0"/>
             </StackPanel>
         </Border>
 
@@ -62,28 +63,27 @@
                              Grid.Row="1"
                              Background="Transparent"
                              BorderThickness="0"
+                             ItemContainerStyle="{StaticResource CardListItemStyle}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              ItemsSource="{Binding Items, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,4">
+                                <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <CheckBox Grid.Column="0"
-                                              IsChecked="{Binding IsChecked}"
-                                              VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1"
+                                    <TextBlock Grid.Column="0"
                                                Text="{Binding Id}"
                                                FontFamily="Cascadia Mono, Consolas"
+                                               FontSize="11"
                                                Foreground="{DynamicResource AccentBrush}"
-                                               Margin="8,0,10,0"
+                                               Margin="0,0,12,0"
                                                VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                                    FontWeight="SemiBold"
@@ -100,7 +100,7 @@
                                                    Margin="0,2,0,0"
                                                    Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/>
                                     </StackPanel>
-                                    <Border Grid.Column="3"
+                                    <Border Grid.Column="2"
                                             Margin="8,0"
                                             CornerRadius="6"
                                             Padding="6,2"
@@ -113,7 +113,7 @@
                                                    Foreground="{DynamicResource WarningBrush}"
                                                    FontSize="10"/>
                                     </Border>
-                                    <Border Grid.Column="4"
+                                    <Border Grid.Column="3"
                                             Margin="8,0,0,0"
                                             CornerRadius="6"
                                             Padding="6,2"
@@ -126,6 +126,11 @@
                                                    Foreground="{DynamicResource AccentBrush}"
                                                    FontSize="10"/>
                                     </Border>
+                                    <CheckBox Grid.Column="4"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              IsChecked="{Binding IsChecked}"
+                                              VerticalAlignment="Center"
+                                              Margin="14,0,0,0"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

@@ -220,6 +220,16 @@
       "reboot": true,
       "kind": "bcdedit",
       "description": "bcdedit disabledynamictick yes，让系统以固定高频率计时，减少延迟抖动。"
+    },
+    {
+      "id": "mouse-accel-off",
+      "name": "关闭鼠标加速",
+      "description": "关闭 Windows 指针精度增强（MouseSpeed=0），鼠标 1:1 原始移动，定位更稳。注销或重启后完全生效。",
+      "sideEffect": "桌面鼠标手感会变\"跟手\"；不习惯可在系统设置改回。",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
     }
   ],
   "presets": {

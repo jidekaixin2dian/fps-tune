@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -10,6 +12,7 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
         Loaded += (_, _) => LoadSettings();
+        AutostartCheck.IsChecked = ReadAutostart();
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         RefreshAdminStatus();
     }
@@ -17,6 +20,7 @@ public partial class SettingsView : UserControl
     private void LoadSettings()
     {
         var s = SettingsService.Current;
+        _suppressAutostart = true;
 
         if (s.ThemeMode == "light")
             ThemeLightRadio.IsChecked = true;
@@ -26,6 +30,50 @@ public partial class SettingsView : UserControl
             ThemeDarkRadio.IsChecked = true;
 
         RefreshAdminStatus();
+    }
+
+
+    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string RunValueName = "FpsTune";
+    private bool _suppressAutostart;
+
+    private static bool ReadAutostart()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath);
+            var val = key?.GetValue(RunValueName) as string;
+            return !string.IsNullOrWhiteSpace(val);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void AutostartCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressAutostart || AutostartCheck.IsChecked is null)
+            return;
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath);
+            if (AutostartCheck.IsChecked == true)
+            {
+                var exe = Environment.ProcessPath;
+                if (string.IsNullOrWhiteSpace(exe))
+                    throw new InvalidOperationException("无法定位当前程序路径");
+                key.SetValue(RunValueName, '"' + exe + '"', RegistryValueKind.String);
+            }
+            else
+            {
+                key.DeleteValue(RunValueName, throwOnMissingValue: false);
+            }
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning("开机自启", "设置失败：" + ex.Message);
+        }
     }
 
     private void RefreshAdminStatus()

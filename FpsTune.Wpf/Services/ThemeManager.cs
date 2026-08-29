@@ -131,11 +131,11 @@ public static class ThemeManager
     // 深空蓝灰底 · 靛青强调；文字三级灰阶
     private static readonly Palette DarkPalette = new(
         "#0A0D12", "#0D1016", "#12161E", "#161B24", "#1C222D", "#10141C",
-        "#232B38", "#364356", "#EDF1F7", "#9AA6B8", "#6B788C",
+        "#232B38", "#364356", "#EDF1F7", "#A6B1C2", "#7E8BA0",
         "#4DA3FF", "#818CF8", "#F87171", "#F2B75C", "#34D399");
 
     private static readonly Palette LightPalette = new(
         "#EFF2F7", "#FBFCFE", "#FFFFFF", "#F4F6FA", "#FFFFFF", "#F7F9FC",
-        "#E3E8F0", "#CBD4E1", "#1A2233", "#495468", "#8391A6",
+        "#E3E8F0", "#CBD4E1", "#1A2233", "#3E4A61", "#5D6B85",
         "#2563EB", "#4F46E5", "#DC2626", "#B45309", "#059669");
 }

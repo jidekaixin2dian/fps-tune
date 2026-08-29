@@ -229,6 +229,14 @@ public static class BackupService
                     @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR");
                 return new[] { record };
             }
+            case "mouse-accel-off":
+                // 三个 REG_SZ 值逐条备份，还原按原值恢复（缺失则回退系统默认）
+                return new[]
+                {
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseSpeed", RegistryValueKind.String),
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseThreshold1", RegistryValueKind.String),
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseThreshold2", RegistryValueKind.String),
+                };
             case "mmcss-games":
             {
                 // 四个值逐条备份，还原时逐条按原值恢复。
