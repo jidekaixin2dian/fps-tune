@@ -1,4 +1,4 @@
-# FPS 帧律 · fps-tune
+﻿# FPS 帧律 · fps-tune
 
 面向 Windows 玩家的**系统层**帧率优化工具，核心采用 C# WPF + .NET 8，
 同时保留 PowerShell 脚本作为 CLI / AI Agent 入口。
@@ -12,7 +12,7 @@
 - **系统层，可还原**：只改 Windows 设置，每次写入前自动备份原值（含"原本不存在"状态），支持一键还原。
 - **不碰游戏**：不修改游戏目录文件、不注入进程、不与反作弊交互、不关引导虚拟化、不做显卡伪装。
 - **全游戏自动定位**：内置主流 FPS 的进程与卸载表检测；也可用 `-GamePath` 手动指定任意游戏 EXE。
-- **单一数据源**：22 个优化项与 3 个预设统一定义在 `catalog/catalog.json`，
+- **单一数据源**：29 个优化项与 3 个预设统一定义在 `catalog/catalog.json`，
   C# GUI 与 PowerShell 引擎运行时加载同一份文件，任一侧漂移会启动即报错。
 - **版本单源化**：程序集版本 / 安装器版本 / CLI 自报版本全部来自 `Directory.Build.props` 的 `<Version>`。
 - **MIT 开源**：代码完全原创（Clean-room），无遥测。

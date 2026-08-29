@@ -230,6 +230,66 @@
       "default": false,
       "reboot": false,
       "kind": "registry"
+    },
+    {
+      "id": "keyboard-latency",
+      "name": "键盘缓冲区扩容",
+      "description": "键盘类设备驱动缓冲从 20 提升到 50，高键盘负载(连打/宏)下降低输入延迟与丢键。重启生效。",
+      "sideEffect": "内存占用几乎不变；个别老外设驱动理论兼容面变窄，可还原。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry"
+    },
+    {
+      "id": "keyboard-repeat",
+      "name": "键盘重复提速",
+      "description": "按键重复延迟调到最短(KeyboardDelay=0)、重复速率保持最高，长按退格/移动更跟手。",
+      "sideEffect": "打字手感变化；不习惯可在\"控制面板-键盘\"调回。",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
+    },
+    {
+      "id": "sticky-keys-off",
+      "name": "关闭粘滞键/切换键弹窗",
+      "description": "关闭粘滞键与切换键，游戏中连按 5 次 Shift 或 Win 不再弹窗打断。",
+      "sideEffect": "需要辅助功能的用户请勿开启本项。",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
+    },
+    {
+      "id": "menu-delay-off",
+      "name": "菜单弹出零延迟",
+      "description": "右键/下拉菜单显示延迟从 400ms 归零，系统操作更干脆。",
+      "sideEffect": "几乎无负面影响。",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry"
+    },
+    {
+      "id": "usb-power-save-off",
+      "name": "禁用 USB 选择性暂停",
+      "description": "全局禁用 USB 选择性暂停，杜绝鼠标键盘被系统休眠导致的首发延迟/掉帧。",
+      "sideEffect": "整机 USB 功耗略增；笔记本电池续航变短。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry"
+    },
+    {
+      "id": "net-nagle-off",
+      "name": "关闭 Nagle 算法(TcpAckFrequency)",
+      "description": "对所有网卡接口启用 TCP_NODELAY 并将 ACK 频率设为 1，降低在线游戏网络往返延迟。",
+      "sideEffect": "小包发送频率上升，上传带宽占用略增；对下载速度无影响。",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry"
     }
   ],
   "presets": {

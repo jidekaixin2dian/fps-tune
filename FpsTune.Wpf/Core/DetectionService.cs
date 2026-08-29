@@ -16,7 +16,8 @@ public static class DetectionService
         var hw = HardwareInfoService.Get();
 
         if (string.IsNullOrWhiteSpace(gamePath))
-            gamePath = GamePathService.Find();
+            // 设置页手动指定的路径优先于自动检测
+            gamePath = StateStore.LoadGamePath() ?? GamePathService.Find();
         if (!string.IsNullOrWhiteSpace(gamePath))
             AppState.GamePath = gamePath;
 

@@ -65,7 +65,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\fps-tune.ps1" -Apply
 ```
 
 - 默认套用预设：`-Preset balanced`（副作用小）通常最合适；`full` 含全部
-  22 项；`safe-only` 只改当前用户设置、通常不需要管理员。
+  29 项；`safe-only` 只改当前用户设置、通常不需要管理员。
 - 也可以逐项：`-Apply -Items power-ultimate,hags,dvr-off -Force -Json`。
 - 预设/清单念给用户听，让用户选，不要替用户决定勾哪些。
 - **`-Force` 是"已获得用户同意"的开关**：没有 `-Force` 脚本会拒绝执行（exit 3）。

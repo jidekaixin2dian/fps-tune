@@ -3,78 +3,129 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <StackPanel Margin="28,24,28,28">
 
-            <TextBlock Grid.Row="0" Text="设置"
-                       Style="{StaticResource PageTitleStyle}"
-                       Margin="0,0,0,20"/>
+            <!-- 页头 -->
+            <TextBlock Text="设置" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="个性化 · 游戏 · 维护，改动即时生效"
+                       Style="{StaticResource MutedTextStyle}"
+                       Margin="0,4,0,18"/>
 
-            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,20">
+            <!-- 常规 -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>
                     <TextBlock Text="常规" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock Text="默认启动主题" Style="{StaticResource MutedTextStyle}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,6,0,12">
-                        <RadioButton x:Name="ThemeDarkRadio" Content="深色" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}" Margin="0,0,12,0"/>
-                        <RadioButton x:Name="ThemeLightRadio" Content="亮色" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}" Margin="0,0,12,0"/>
-                        <RadioButton x:Name="ThemeSystemRadio" Content="跟随系统" GroupName="defaultTheme" Style="{StaticResource ThemeRadioStyle}"/>
+
+                    <TextBlock Text="主题外观" Style="{StaticResource MutedTextStyle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                        <RadioButton x:Name="ThemeDarkRadio" Content="深色" GroupName="defaultTheme" Style="{StaticResource PillRadioStyle}"/>
+                        <RadioButton x:Name="ThemeLightRadio" Content="亮色" GroupName="defaultTheme" Style="{StaticResource PillRadioStyle}"/>
+                        <RadioButton x:Name="ThemeSystemRadio" Content="跟随系统" GroupName="defaultTheme" Style="{StaticResource PillRadioStyle}"/>
                     </StackPanel>
-                    <TextBlock Text="开机自动启动" Style="{StaticResource MutedTextStyle}" Margin="0,14,0,0"/>
+
+                    <TextBlock Text="启动" Style="{StaticResource MutedTextStyle}" Margin="0,16,0,0"/>
                     <CheckBox x:Name="AutostartCheck"
                               Style="{StaticResource ToggleSwitchStyle}"
                               Content="登录 Windows 后自动运行 FPS 帧律（当前用户）"
-                              Margin="0,6,0,0"
-                              Checked="AutostartCheck_Changed" Unchecked="AutostartCheck_Changed"/>
+                              Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
 
-                    <Button Content="保存设置"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            HorizontalAlignment="Left"
-                            MinWidth="120"
-                            Margin="0,4,0,0"
-                            Click="SaveButton_Click"/>
+            <!-- 游戏 -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="游戏" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="手动指定游戏 EXE，用于全屏优化 / GPU 偏好 / 进程优先级三类优化；留空则自动检测主流 FPS。"
+                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="GamePathBox"
+                                 Style="{StaticResource InputTextBoxStyle}"
+                                 VerticalContentAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                            <Button Content="浏览..."
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="76" Margin="0,0,8,0"
+                                    Click="BrowseGame_Click"/>
+                            <Button Content="清除"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="64"
+                                    Click="ClearGame_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock x:Name="GamePathHint"
+                               Text="未指定"
+                               Style="{StaticResource MutedTextStyle}"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
 
-                    <TextBlock Text="关于" Style="{StaticResource CardTitleStyle}" Margin="0,24,0,0"/>
-                    <TextBlock x:Name="VersionText" Text="版本：v1.0.0"
-                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                    <TextBlock Text="FPS 帧律：系统层帧率优化工具。"
-                               Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-                    <TextBlock Text="只调整 Windows 系统层设置：不修改游戏文件、不注入进程、不与反作弊交互、不关闭引导虚拟化、不做显卡伪装。"
-                               Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-                    <TextBlock Text="所有改动写入前自动备份，可一键还原。"
-                               Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                    <TextBlock Text="联系方式仅接受合作/反馈。"
-                               Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
-                        <Button x:Name="CheckUpdateButton"
-                                Content="检查更新"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                MinWidth="110"
-                                Margin="0,0,10,0"
-                                Click="CheckUpdateButton_Click"/>
-                        <TextBlock x:Name="UpdateStatusText"
-                                   Text="未检查"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,14,0"/>
+            <!-- 高级 -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="高级与维护" Style="{StaticResource CardTitleStyle}"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock x:Name="AdminStatusText"
                                    Text="当前非管理员"
                                    Foreground="{DynamicResource WarningBrush}"
                                    FontWeight="SemiBold"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,14,0"/>
+                                   VerticalAlignment="Center"/>
                         <Button x:Name="AdminRestartButton"
                                 Content="以管理员身份重启"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                MinWidth="150"
+                                MinWidth="150" Margin="14,0,0,0"
                                 Click="AdminRestartButton_Click"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Content="打开数据目录"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="120" Margin="0,0,10,0"
+                                Click="OpenData_Click"/>
+                        <Button Content="打开日志目录"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="120" Margin="0,0,10,0"
+                                Click="OpenLogs_Click"/>
+                        <Button Content="打开备份目录"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="120"
+                                Click="OpenBackups_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
-        </Grid>
+
+            <!-- 关于 -->
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="关于" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="VersionText" Text="版本：v1.0.0"
+                               Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                    <TextBlock Text="FPS 帧律：面向 Windows 的系统层帧率优化工具，全 FPS 游戏通用。"
+                               Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <TextBlock Text="只调整 Windows 系统层设置：不修改游戏文件、不注入进程、不与反作弊交互、不关闭引导虚拟化、不做显卡伪装；所有改动写入前自动备份，可一键还原。"
+                               Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button x:Name="CheckUpdateButton"
+                                Content="检查更新"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="110" Margin="0,0,10,0"
+                                Click="CheckUpdateButton_Click"/>
+                        <Button Content="GitHub 主页"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="110" Margin="0,0,14,0"
+                                Click="OpenGitHub_Click"/>
+                        <TextBlock x:Name="UpdateStatusText"
+                                   Text="未检查"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="联系方式仅接受合作/反馈。"
+                               Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
     </ScrollViewer>
 </UserControl>

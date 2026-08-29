@@ -2,70 +2,83 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
-    <Grid Margin="24">
+    <Grid Margin="28,24,28,24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="备份 / 日志"
-                   Style="{StaticResource PageTitleStyle}"
-                   Margin="0,0,0,18"/>
-
-        <Grid Grid.Row="1" Margin="0,0,0,14">
-            <StackPanel Orientation="Horizontal">
+        <!-- 页头 -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="备份 / 日志" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="每一次系统改动的原值都在这里，随时逐项还原"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Button Content="列出可还原项"
                         Style="{StaticResource SecondaryButtonStyle}"
-                        MinWidth="130"
-                        Margin="0,0,10,0"
+                        MinWidth="126" Margin="0,0,8,0"
                         Click="ListBackup_Click"/>
                 <Button Content="还原全部"
                         Style="{StaticResource DangerButtonStyle}"
-                        MinWidth="110"
-                        Margin="0,0,10,0"
+                        MinWidth="106" Margin="0,0,8,0"
                         Click="RestoreAll_Click"/>
-                <Button Content="打开备份目录"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        MinWidth="120"
-                        Margin="0,0,10,0"
-                        Click="OpenBackup_Click"/>
-                <Button Content="打开 GUI 临时目录"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        MinWidth="140"
-                        Margin="0,0,10,0"
-                        Click="OpenTemp_Click"/>
                 <Button Content="导出日志"
                         Style="{StaticResource PrimaryButtonStyle}"
-                        MinWidth="110"
+                        MinWidth="106"
                         Click="ExportLog_Click"/>
             </StackPanel>
         </Grid>
 
-        <UniformGrid Grid.Row="2" Columns="3" Margin="0,0,0,14">
-            <Border Style="{StaticResource CardStyle}" Margin="4">
+        <!-- 目录信息 -->
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="备份目录" Style="{StaticResource MutedTextStyle}"/>
-                    <TextBlock x:Name="BackupDirText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <TextBlock Text="备份目录" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock x:Name="BackupDirText" Text="--"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <Button Content="打开"
+                            Style="{StaticResource GhostButtonStyle}"
+                            MinWidth="60" Height="26" Padding="8,0"
+                            HorizontalAlignment="Left" Margin="0,8,0,0"
+                            Click="OpenBackup_Click"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="4">
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="GUI 临时目录" Style="{StaticResource MutedTextStyle}"/>
-                    <TextBlock x:Name="TempDirText" Text="--" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <TextBlock Text="GUI 临时目录" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock x:Name="TempDirText" Text="--"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <Button Content="打开"
+                            Style="{StaticResource GhostButtonStyle}"
+                            MinWidth="60" Height="26" Padding="8,0"
+                            HorizontalAlignment="Left" Margin="0,8,0,0"
+                            Click="OpenTemp_Click"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="4">
+            <Border Grid.Column="4" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="当前状态" Style="{StaticResource MutedTextStyle}"/>
-                    <TextBlock x:Name="StatusText" Text="等待操作" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="16" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                    <TextBlock Text="当前状态" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock x:Name="StatusText" Text="等待操作"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
-        </UniformGrid>
+        </Grid>
 
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}">
+        <!-- 日志 -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

@@ -37,6 +37,62 @@ public static class NativeOptimizationEngine
         return results;
     }
 
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyHkcuStringTweaks(
+        string path, (string Name, string Value)[] specs, Func<bool, string?> message)
+    {
+        var changed = false;
+        foreach (var (name, value) in specs)
+        {
+            var cur = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, name)?.ToString();
+            if (cur == value)
+                continue;
+            RegistryHelper.SetValue(RegistryHive.CurrentUser, path, name, value, RegistryValueKind.String);
+            changed = true;
+        }
+        var msg = message(changed);
+        return msg is null
+            ? (true, changed, false, "")
+            : (true, changed, false, msg);
+    }
+
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyStickyKeys()
+    {
+        var r = ApplyHkcuStringTweaks(@"Control Panel\Accessibility\StickyKeys",
+            new[] { ("Flags", "510") }, _ => null);
+        var r2 = ApplyHkcuStringTweaks(@"Control Panel\Accessibility\ToggleKeys",
+            new[] { ("Flags", "58") }, _ => null);
+        var changed = r.Changed || r2.Changed;
+        return (true, changed, false, changed ? "粘滞键/切换键弹窗已关闭" : "粘滞键/切换键本已关闭");
+    }
+
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyNagleOff()
+    {
+        const string baseKey = @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces";
+        using var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+        using var interfaces = root.OpenSubKey(baseKey);
+        if (interfaces is null)
+            return (true, false, false, "未找到网络接口配置");
+
+        var touched = 0;
+        var changed = false;
+        foreach (var sub in interfaces.GetSubKeyNames())
+        {
+            touched++;
+            using var key = interfaces.OpenSubKey(sub, writable: true) ?? interfaces.CreateSubKey(sub, writable: true);
+            if (key is null)
+                continue;
+            foreach (var name in new[] { "TcpAckFrequency", "TCPNoDelay" })
+            {
+                var cur = key.GetValue(name);
+                if (cur is int i && i == 1)
+                    continue;
+                key.SetValue(name, 1, RegistryValueKind.DWord);
+                changed = true;
+            }
+        }
+        return (true, changed, false, $"已对 {touched} 个网络接口关闭 Nagle(重启后完全生效)");
+    }
+
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyMouseAccelOff()
     {
         const string path = @"Control Panel\Mouse";
@@ -72,6 +128,21 @@ public static class NativeOptimizationEngine
                 return ApplyDvrOff();
             case "mouse-accel-off":
                 return ApplyMouseAccelOff();
+            case "keyboard-latency":
+                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", 50, RegistryValueKind.DWord, "键盘缓冲区已扩容到 50");
+            case "keyboard-repeat":
+                return ApplyHkcuStringTweaks(@"Control Panel\Keyboard",
+                    new[] { ("KeyboardDelay", "0"), ("KeyboardSpeed", "31") },
+                    changed => changed ? "键盘重复已提速" : "键盘重复本已最快");
+            case "sticky-keys-off":
+                return ApplyStickyKeys();
+            case "menu-delay-off":
+                return ApplyHkcuStringTweaks(@"Control Panel\Desktop", new[] { ("MenuShowDelay", "0") },
+                    changed => changed ? "菜单延迟已归零" : "菜单延迟本已为 0");
+            case "usb-power-save-off":
+                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", 1, RegistryValueKind.DWord, "已禁用 USB 选择性暂停");
+            case "net-nagle-off":
+                return ApplyNagleOff();
             case "prio-separation":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", 0x28, RegistryValueKind.DWord, "已提升前台进程调度权重");
             case "wer-off":

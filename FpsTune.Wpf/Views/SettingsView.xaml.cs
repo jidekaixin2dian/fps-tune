@@ -1,4 +1,5 @@
-﻿using System.IO;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -8,10 +9,22 @@ namespace FpsTune.Wpf.Views;
 
 public partial class SettingsView : UserControl
 {
+    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string RunValueName = "FpsTune";
+    private bool _suppressUiEvents;
+
     public SettingsView()
     {
         InitializeComponent();
         Loaded += (_, _) => LoadSettings();
+
+        ThemeDarkRadio.Checked += (_, _) => ApplyThemeMode("dark");
+        ThemeLightRadio.Checked += (_, _) => ApplyThemeMode("light");
+        ThemeSystemRadio.Checked += (_, _) => ApplyThemeMode("system");
+        AutostartCheck.Checked += AutostartCheck_Changed;
+        AutostartCheck.Unchecked += AutostartCheck_Changed;
+        GamePathBox.LostFocus += (_, _) => SaveGamePathFromBox();
+
         AutostartCheck.IsChecked = ReadAutostart();
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         RefreshAdminStatus();
@@ -20,7 +33,7 @@ public partial class SettingsView : UserControl
     private void LoadSettings()
     {
         var s = SettingsService.Current;
-        _suppressAutostart = true;
+        _suppressUiEvents = true;
 
         if (s.ThemeMode == "light")
             ThemeLightRadio.IsChecked = true;
@@ -29,13 +42,81 @@ public partial class SettingsView : UserControl
         else
             ThemeDarkRadio.IsChecked = true;
 
+        var saved = StateStore.LoadGamePath();
+        GamePathBox.Text = saved ?? "";
+        RefreshGamePathHint();
+
+        AutostartCheck.IsChecked = ReadAutostart();
+        _suppressUiEvents = false;
         RefreshAdminStatus();
     }
 
+    private void ApplyThemeMode(string mode)
+    {
+        if (_suppressUiEvents)
+            return;
+        var settings = SettingsService.Current;
+        if (settings.ThemeMode == mode)
+            return;
+        settings.ThemeMode = mode;
+        SettingsService.Save(settings);
+        ThemeManager.SetMode(mode);
+    }
 
-    private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string RunValueName = "FpsTune";
-    private bool _suppressAutostart;
+    // ---------- 游戏路径 ----------
+
+    private void SaveGamePathFromBox()
+    {
+        if (_suppressUiEvents)
+            return;
+        var text = GamePathBox.Text.Trim();
+        if (text.Length > 0 && (!File.Exists(text) || !text.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)))
+        {
+            GamePathHint.Text = "路径无效或不是 .exe，未保存";
+            GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["WarningBrush"];
+            return;
+        }
+        StateStore.SaveGamePath(text.Length > 0 ? text : null);
+        AppState.GamePath = text.Length > 0 ? text : AppState.GamePath;
+        RefreshGamePathHint();
+    }
+
+    private void RefreshGamePathHint()
+    {
+        var saved = StateStore.LoadGamePath();
+        if (saved is null)
+        {
+            GamePathHint.Text = "未指定，使用自动检测";
+            GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextMutedBrush"];
+        }
+        else
+        {
+            GamePathHint.Text = File.Exists(saved) ? "已指定（点击空白处保存修改）" : "已指定，但文件不存在";
+            GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["OkBrush"];
+        }
+    }
+
+    private void BrowseGame_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
+        {
+            Title = "选择游戏 EXE",
+            Filter = "可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*"
+        };
+        if (dlg.ShowDialog() != true)
+            return;
+        GamePathBox.Text = dlg.FileName;
+        SaveGamePathFromBox();
+    }
+
+    private void ClearGame_Click(object sender, RoutedEventArgs e)
+    {
+        GamePathBox.Text = "";
+        StateStore.SaveGamePath(null);
+        RefreshGamePathHint();
+    }
+
+    // ---------- 开机自启 ----------
 
     private static bool ReadAutostart()
     {
@@ -53,7 +134,7 @@ public partial class SettingsView : UserControl
 
     private void AutostartCheck_Changed(object sender, RoutedEventArgs e)
     {
-        if (_suppressAutostart || AutostartCheck.IsChecked is null)
+        if (_suppressUiEvents || AutostartCheck.IsChecked is null)
             return;
         try
         {
@@ -76,6 +157,8 @@ public partial class SettingsView : UserControl
         }
     }
 
+    // ---------- 高级与维护 ----------
+
     private void RefreshAdminStatus()
     {
         var isAdmin = AdminHelper.IsAdministrator();
@@ -91,21 +174,54 @@ public partial class SettingsView : UserControl
         }
     }
 
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
-    {
-        var theme = ThemeDarkRadio.IsChecked == true ? "dark"
-            : ThemeLightRadio.IsChecked == true ? "light" : "system";
-
-        var settings = SettingsService.Current;
-        settings.ThemeMode = theme;
-        SettingsService.Save(settings);
-        ThemeManager.SetMode(theme);
-
-        DialogService.Info("FPS 帧律", "设置已保存，主题已立即生效。");
-    }
-
     private void AdminRestartButton_Click(object sender, RoutedEventArgs e)
         => AdminHelper.RestartAsAdministrator();
+
+    private static void OpenInExplorer(string path)
+    {
+        try
+        {
+            Directory.CreateDirectory(path);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning("打开目录", "打开失败：" + ex.Message);
+        }
+    }
+
+    private void OpenData_Click(object sender, RoutedEventArgs e)
+    {
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
+        OpenInExplorer(dir);
+    }
+
+    private void OpenLogs_Click(object sender, RoutedEventArgs e)
+    {
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "logs");
+        OpenInExplorer(dir);
+    }
+
+    private void OpenBackups_Click(object sender, RoutedEventArgs e)
+    {
+        // 与 BackupService.BackupDir 保持一致的默认位置
+        var dir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "backup");
+        OpenInExplorer(dir);
+    }
+
+    private void OpenGitHub_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/jiaxindeyang-a11y/fps-tune") { UseShellExecute = true });
+        }
+        catch
+        {
+        }
+    }
 
     private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
     {
@@ -129,7 +245,7 @@ public partial class SettingsView : UserControl
                     confirmText: "打开");
                 if (open)
                 {
-                    try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(info.Url) { UseShellExecute = true }); }
+                    try { Process.Start(new ProcessStartInfo(info.Url) { UseShellExecute = true }); }
                     catch { }
                 }
             }

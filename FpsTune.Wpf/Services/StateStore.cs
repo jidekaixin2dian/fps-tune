@@ -48,4 +48,39 @@ public static class StateStore
             return null;
         }
     }
+
+    private static string GamePathFile => Path.Combine(BaseDir, "game-path.txt");
+
+    /// <summary>保存用户在设置里手动指定的游戏 EXE 路径（优先于自动检测）。</summary>
+    public static void SaveGamePath(string? path)
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                if (File.Exists(GamePathFile)) File.Delete(GamePathFile);
+                return;
+            }
+            File.WriteAllText(GamePathFile, path.Trim(), new UTF8Encoding(false));
+        }
+        catch
+        {
+        }
+    }
+
+    public static string? LoadGamePath()
+    {
+        try
+        {
+            if (!File.Exists(GamePathFile))
+                return null;
+            var text = File.ReadAllText(GamePathFile, Encoding.UTF8).Trim();
+            return text.Length > 0 ? text : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

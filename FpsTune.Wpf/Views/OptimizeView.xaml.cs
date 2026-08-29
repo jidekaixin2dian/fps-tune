@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text.Json.Nodes;
 using System.Text;
 using System.Windows;
@@ -20,17 +21,66 @@ public partial class OptimizeView : UserControl
         { "sysmain-off", "wsearch-off", "hibernate-off", "power-tuning" };
 
     public ObservableCollection<OptimizationItemViewModel> Items { get; } = new();
+    public ICollectionView ItemsView { get; private set; } = null!;
 
     public OptimizeView()
     {
         InitializeComponent();
         DataContext = this;
-        PresetFull.Checked += (_, _) => ShowPresetContents();
-        PresetBalanced.Checked += (_, _) => ShowPresetContents();
-        PresetSafeOnly.Checked += (_, _) => ShowPresetContents();
-        PresetCustom.Checked += (_, _) => ShowPresetContents();
+        PresetFull.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
+        PresetBalanced.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
+        PresetSafeOnly.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
+        PresetCustom.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
         ItemList.SelectionChanged += (_, _) => ShowSelectedItem();
+        ItemsView = System.Windows.Data.CollectionViewSource.GetDefaultView(Items);
+        ItemsView.Filter = FilterItem;
     }
+
+    private string _searchText = "";
+    private bool FilterItem(object obj)
+    {
+        if (obj is not OptimizationItemViewModel vm)
+            return false;
+        if (_searchText.Length == 0)
+            return true;
+        return vm.Id.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+            || vm.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+            || vm.Description.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        _searchText = SearchBox.Text.Trim();
+        ItemsView.Refresh();
+        ItemListTitle.Text = _searchText.Length == 0
+            ? "优化项"
+            : $"优化项（匹配 {Items.Count}/{Items.Count} 中的可见项）";
+    }
+
+    private void SelectAllVisible_Click(object sender, RoutedEventArgs e)
+    {
+        SetCustomMode();
+        foreach (var vm in Items)
+            if (ItemsView.Contains(vm))
+                vm.IsChecked = true;
+    }
+
+    private void ClearAll_Click(object sender, RoutedEventArgs e)
+    {
+        SetCustomMode();
+        foreach (var vm in Items)
+            if (ItemsView.Contains(vm))
+                vm.IsChecked = false;
+    }
+
+    private void SetCustomMode()
+    {
+        _suppressPresetAutoCheck = true;
+        PresetCustom.IsChecked = true;
+        _suppressPresetAutoCheck = false;
+        ShowPresetContents();
+    }
+    private bool _suppressPresetAutoCheck;
 
     public void ReloadFromState()
     {
@@ -38,6 +88,7 @@ public partial class OptimizeView : UserControl
         foreach (var item in AppState.Items)
             Items.Add(new OptimizationItemViewModel(item));
         _loadedFromState = AppState.Items.Count > 0;
+        ItemsView.Refresh();
         if (!_loadedFromState)
         {
             OutputBox.Text = "暂无优化项，请先在检测页运行检测。";

@@ -38,8 +38,61 @@ try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 $ErrorActionPreference = 'Stop'
 
 $ToolName    = 'delta-optimizer'
-$ToolVersion = '1.0.0'
 $BackupRoot  = Join-Path $env:LOCALAPPDATA 'DeltaOptimizer\backup'
+
+# ---------------------------------------------------------------------------
+# 单一数据源
+#   优化项声明与预设 -> catalog/catalog.json（CLI / WPF GUI / 文档三方共用）。
+#   本文件的条目表只保留 id + apply/revert 实现块，运行时从 catalog 注入元信息；
+#   任一侧多出或缺少某个 id 都会直接报错，防止 GUI 与 CLI 静默漂移。
+#   版本号唯一来源为仓库根 Directory.Build.props 的 <Version>。
+# ---------------------------------------------------------------------------
+$script:CatalogCache = $null
+$script:ToolVersionResolved = $null
+
+function Get-RepoFile {
+    param([string]$Relative)
+    $dir = $PSScriptRoot
+    for ($i = 0; $i -lt 6 -and $dir; $i++) {
+        $candidate = Join-Path $dir $Relative
+        if (Test-Path $candidate) { return $candidate }
+        $parent = Split-Path $dir -Parent
+        if ($parent -eq $dir) { break }
+        $dir = $parent
+    }
+    return $null
+}
+
+function Get-Catalog {
+    if ($script:CatalogCache) { return $script:CatalogCache }
+    $path = Get-RepoFile 'catalog/catalog.json'
+    if (-not $path) { throw '未找到 catalog/catalog.json（须与脚本同仓库分发）' }
+    try {
+        $json = Get-Content $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch { throw "catalog.json 解析失败: $($_.Exception.Message)" }
+    $script:CatalogCache = $json
+    return $json
+}
+
+function Get-ToolVersion {
+    if ($script:ToolVersionResolved) { return $script:ToolVersionResolved }
+    $v = 'dev'
+    $propsPath = Get-RepoFile 'Directory.Build.props'
+    if (-not $propsPath) {
+        $fallback = Join-Path $PSScriptRoot 'Directory.Build.props'
+        if (Test-Path $fallback) { $propsPath = $fallback }
+    }
+    if ($propsPath) {
+        try {
+            [xml]$xml = Get-Content $propsPath -Raw -Encoding UTF8
+            foreach ($pg in @($xml.Project.PropertyGroup)) {
+                if ($pg.Version) { $v = [string]$pg.Version; break }
+            }
+        } catch { }
+    }
+    $script:ToolVersionResolved = $v
+    return $v
+}
 
 # ---------------------------------------------------------------------------
 # 辅助函数
@@ -153,8 +206,8 @@ function Write-AtomicJson {
 }
 
 function Get-RebootItems {
-    # 需要重启才能完全生效的项（保守口径，宁多勿漏）
-    return @('hags', 'mpo-off', 'sysmain-off', 'wsearch-off', 'hibernate-off', 'power-tuning', 'paging-exec', 'mem-compress-off', 'dyntick-off')
+    # 由 catalog 的 reboot 标志驱动（原手写列表已收敛进单一数据源）
+    return @($OptimizationItems | Where-Object { $_.reboot } | ForEach-Object { $_.id })
 }
 
 # 定位主显卡的驱动注册表键（Class\{4d36e968-...}\00xx），按 DriverDesc 匹配主 GPU
@@ -286,11 +339,7 @@ function New-ItemLayersBackup {
 
 $OptimizationItems = @(
     @{
-        id = 'power-ultimate'; name = '电源计划 → 卓越性能'
-        desc = '切换到"卓越性能"电源计划（系统无可用方案时自动创建一份），让 CPU 更积极跑满频率。'
-        sideEffect = '功耗与发热略升；笔记本续航变短。'
-        admin = $true; default = $true; reboot = $false
-        kind = 'power'
+        id = 'power-ultimate'
         apply = {
             param($ctx)
             $oldGuid = $null
@@ -323,11 +372,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'power-tuning'; name = '电源计划隐藏项调优'
-        desc = '解除隐藏并调整几项影响性能的电源参数：关闭 USB3 链路省电、允许处理器更高性能提升、关闭空闲降频等待。'
-        sideEffect = '功耗略升；不支持的 CPU 平台自动跳过，不报错。'
-        admin = $true; default = $true; reboot = $true
-        kind = 'power'
+        id = 'power-tuning'
         apply = {
             param($ctx)
             $specs = @(
@@ -383,11 +428,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'hags'; name = '开启硬件加速 GPU 计划（HAGS）'
-        desc = 'HwSchMode=2，让 GPU 调度走硬件队列，降低部分场景的输入延迟与掉帧。'
-        sideEffect = '个别老驱动下可能蓝屏，属已知兼容性风险；出现异常可随时还原。'
-        admin = $true; default = $true; reboot = $true
-        kind = 'registry'
+        id = 'hags'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SYSTEM\CurrentControlSet\Control\GraphicsDrivers' 'HwSchMode'
@@ -404,11 +445,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'game-mode'; name = '开启 Windows 游戏模式'
-        desc = '允许系统在游戏运行时优先分配 CPU/GPU 资源。'
-        sideEffect = ''
-        admin = $false; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'game-mode'
         apply = {
             param($ctx)
             $base = 'Software\Microsoft\GameBar'
@@ -445,11 +482,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'dvr-off'; name = '关闭 Xbox 后台录制'
-        desc = '关掉 Game Bar 后台录制（DVR），减少游戏时的后台编码负载。'
-        sideEffect = 'Win+G 录制/截图功能不可用。'
-        admin = $false; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'dvr-off'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'System\GameConfigStore' 'GameDVR_Enabled'
@@ -484,11 +517,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'prio-separation'; name = '前台进程调度权重提升'
-        desc = 'Win32PrioritySeparation=0x28（短/变长量子、前台提升 2），让前台游戏进程获得更高调度优先级。'
-        sideEffect = '个别软件在后台时响应变慢。'
-        admin = $true; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'prio-separation'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SYSTEM\CurrentControlSet\Control\PriorityControl' 'Win32PrioritySeparation'
@@ -505,11 +534,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'wer-off'; name = '关闭 Windows 错误报告'
-        desc = '关闭 WER 弹窗与后台转储，减少崩溃时的磁盘/CPU 开销。'
-        sideEffect = '程序崩溃时不再有系统级提示窗口。'
-        admin = $true; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'wer-off'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SOFTWARE\Microsoft\Windows\Windows Error Reporting' 'Disabled'
@@ -526,11 +551,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'transparency-off'; name = '关闭窗口透明特效'
-        desc = '关闭任务栏/窗口亚克力透明，省一点 GPU 开销。'
-        sideEffect = '桌面观感变朴素。'
-        admin = $false; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'transparency-off'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' 'EnableTransparency'
@@ -547,11 +568,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'fso-off'; name = '禁用游戏全屏优化'
-        desc = '为游戏主程序在 AppCompat 层加 DISABLEDXMAXIMIZEDWINDOWEDMODE，绕过全屏优化合成层。'
-        sideEffect = 'Alt+Tab 切换可能略慢；需要先找到游戏主程序路径，找不到则跳过。'
-        admin = $false; default = $true; reboot = $false
-        kind = 'layers'
+        id = 'fso-off'
         apply = {
             param($ctx)
             $exe = $ctx.gamePath
@@ -580,11 +597,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'gpu-pref'; name = '游戏强制使用高性能 GPU'
-        desc = '在 DirectX UserGpuPreferences 中把游戏指定到高性能 GPU（双显卡笔记本关键）。'
-        sideEffect = ''
-        admin = $false; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'gpu-pref'
         apply = {
             param($ctx)
             $exe = $ctx.gamePath
@@ -609,11 +622,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'mpo-off'; name = '禁用 MPO 多平面叠加'
-        desc = 'DWM OverlayTestMode=5，规避已知的 MPO 闪烁/掉帧问题。'
-        sideEffect = '个别 HDR/多屏场景显示行为可能不同。'
-        admin = $true; default = $true; reboot = $true
-        kind = 'registry'
+        id = 'mpo-off'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SOFTWARE\Microsoft\Windows\Dwm' 'OverlayTestMode'
@@ -630,11 +639,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'net-throttling-off'; name = '解除多媒体网络限流'
-        desc = 'NetworkThrottlingIndex=0xffffffff，去掉 Windows 对多媒体流量的节流，降低网络延迟抖动。'
-        sideEffect = ''
-        admin = $true; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'net-throttling-off'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile' 'NetworkThrottlingIndex'
@@ -651,11 +656,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'sys-responsiveness'; name = '系统后台响应保留设为最低'
-        desc = 'SystemResponsiveness=10（MMCSS 文档允许的最低值），把更多 CPU 留给前台游戏。'
-        sideEffect = '后台任务（解压、杀毒扫描）响应略慢。'
-        admin = $true; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'sys-responsiveness'
         apply = {
             param($ctx)
             $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile' 'SystemResponsiveness'
@@ -672,11 +673,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'mmcss-games'; name = 'MMCSS 游戏任务档位拉满'
-        desc = '把多媒体类"游戏"任务的 GPU/CPU 调度权重设为最高档（收益微弱但零副作用）。'
-        sideEffect = ''
-        admin = $true; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'mmcss-games'
         apply = {
             param($ctx)
             $base = 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games'
@@ -725,11 +722,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'sysmain-off'; name = '禁用 SysMain（预取）服务'
-        desc = '把 SysMain 服务启动类型设为禁用（Start=4）。SSD 时代预取收益有限，省一点后台 IO。'
-        sideEffect = '系统启动后程序冷启动略慢；默认不勾选。'
-        admin = $true; default = $false; reboot = $true
-        kind = 'service'
+        id = 'sysmain-off'
         apply = {
             param($ctx)
             $svc = Get-Service -Name 'SysMain' -ErrorAction SilentlyContinue
@@ -748,11 +741,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'wsearch-off'; name = '禁用 Windows Search 索引'
-        desc = '把 Windows Search 服务设为禁用（Start=4），减少索引后台占用。'
-        sideEffect = '开始菜单/资源管理器搜索明显变慢；默认不勾选。'
-        admin = $true; default = $false; reboot = $true
-        kind = 'service'
+        id = 'wsearch-off'
         apply = {
             param($ctx)
             $svc = Get-Service -Name 'WSearch' -ErrorAction SilentlyContinue
@@ -771,11 +760,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'hibernate-off'; name = '关闭休眠与快速启动'
-        desc = 'powercfg /h off，删除休眠文件，加快启动并腾出磁盘；快速启动随之失效。'
-        sideEffect = '合盖只剩睡眠（无休眠）；开机冷启动略慢；笔记本默认不勾选。'
-        admin = $true; default = $false; reboot = $true
-        kind = 'hibernate'
+        id = 'hibernate-off'
         apply = {
             param($ctx)
             $ctx.backupItem = @{ id = $ctx.item.id; kind = 'hibernate'; oldState = if (Test-Path "$env:SystemDrive\hiberfil.sys") { 'on' } else { 'off' } }
@@ -793,11 +778,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'game-priority'; name = '游戏进程 CPU 优先级提到高'
-        desc = '通过 IFEO PerfOptions 让游戏进程启动即以高优先级运行（CpuPriorityClass=3）。'
-        sideEffect = '对指定进程生效；多开/直播同机时可能影响其他程序。'
-        admin = $true; default = $true; reboot = $false
-        kind = 'registry'
+        id = 'game-priority'
         apply = {
             param($ctx)
             $exeName = $ctx.gameName
@@ -820,11 +801,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'paging-exec'; name = '内核代码常驻内存'
-        desc = 'DisablePagingExecutive=1，不让内核与驱动代码分页到磁盘，减少关键路径的磁盘等待。'
-        sideEffect = '多占少量常驻内存（通常几十 MB，可忽略）。'
-        admin = $true; default = $true; reboot = $true
-        kind = 'registry'
+        id = 'paging-exec'
         apply = {
             param($ctx)
             $path = 'SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management'
@@ -842,11 +819,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'mem-compress-off'; name = '关闭内存压缩'
-        desc = 'EnableCompression=0，关闭内存压缩与页面合并（压缩省内存但耗 CPU；内存充足时关掉可能更稳）。'
-        sideEffect = '内存占用上升；仅供手动对比，默认不勾选。'
-        admin = $true; default = $false; reboot = $true
-        kind = 'registry'
+        id = 'mem-compress-off'
         apply = {
             param($ctx)
             $path = 'SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management'
@@ -864,11 +837,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'gpu-pstate-lock'; name = '禁止显卡动态降频'
-        desc = '在主显卡驱动键写入 DisableDynamicPstate=1，锁住 GPU 频率避免波动掉帧。'
-        sideEffect = '待机功耗与发热升高；默认不勾选。'
-        admin = $true; default = $false; reboot = $false
-        kind = 'registry'
+        id = 'gpu-pstate-lock'
         apply = {
             param($ctx)
             $path = Get-MainGpuDriverKey
@@ -887,11 +856,7 @@ $OptimizationItems = @(
         }
     }
     @{
-        id = 'dyntick-off'; name = '禁用动态计时器'
-        desc = 'bcdedit disabledynamictick yes，让系统以固定高频率计时，减少延迟抖动。'
-        sideEffect = '待机功耗略升；默认不勾选。'
-        admin = $true; default = $false; reboot = $true
-        kind = 'bcdedit'
+        id = 'dyntick-off'
         apply = {
             param($ctx)
             $q = Invoke-Native 'bcdedit.exe' @('/enum', '{current}')
@@ -957,7 +922,234 @@ $OptimizationItems = @(
             }
         }
     }
+    @{
+        id = 'keyboard-latency'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $spec = @('HKLM', 'SYSTEM\CurrentControlSet\Services\kbdclass\Parameters', 'KeyboardDataQueueSize', 50)
+            $b = New-ItemRegistryBackup $ctx.item $spec[0] $spec[1] $spec[2]
+            if ($b.oldExists -and "$($b.oldValue)" -eq '50') { $ctx.backupItem = $b; return $false }
+            Set-RegValue $spec[0] $spec[1] $spec[2] $spec[3] 'DWord'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) {
+                Set-RegValue $b.hive $b.path $b.name ([int]$b.oldValue) 'DWord'
+            } else {
+                Remove-RegValue $b.hive $b.path $b.name
+            }
+        }
+    }
+    @{
+        id = 'keyboard-repeat'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $path = 'HKCU:\Control Panel\Keyboard'
+            $targets = @{ KeyboardDelay = '0'; KeyboardSpeed = '31' }
+            $ip = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue
+            $old = @{}; $changed = $false
+            foreach ($n in $targets.Keys) {
+                $prop = $null
+                if ($ip) { $pp = $ip.PSObject.Properties[$n]; if ($pp) { $prop = [string]$pp.Value } }
+                $old[$n] = $prop
+                if ($prop -eq $targets[$n]) { continue }
+                Set-ItemProperty -Path $path -Name $n -Value $targets[$n] -Type String
+                $changed = $true
+            }
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'multi-sz'; oldValues = $old }
+            return $changed
+        }
+        revert = {
+            param($ctx)
+            Restore-MultiSzValues 'HKCU:\Control Panel\Keyboard' @{ KeyboardDelay = '1'; KeyboardSpeed = '31' } $ctx.backupItem
+        }
+    }
+    @{
+        id = 'sticky-keys-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $specs = @(
+                @{ path = 'HKCU:\Control Panel\Accessibility\StickyKeys'; name = 'Flags'; target = '510' },
+                @{ path = 'HKCU:\Control Panel\Accessibility\ToggleKeys'; name = 'Flags'; target = '58' }
+            )
+            $old = @{}; $changed = $false
+            foreach ($sp in $specs) {
+                $ip = Get-ItemProperty -Path $sp.path -ErrorAction SilentlyContinue
+                $prop = $null
+                if ($ip) { $pp = $ip.PSObject.Properties[$sp.name]; if ($pp) { $prop = [string]$pp.Value } }
+                $old[$sp.path + '\' + $sp.name] = $prop
+                if ($prop -eq $sp.target) { continue }
+                Set-ItemProperty -Path $sp.path -Name $sp.name -Value $sp.target -Type String
+                $changed = $true
+            }
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'multi-sz'; oldValues = $old }
+            return $changed
+        }
+        revert = {
+            param($ctx)
+            Restore-MultiSzValuesMultiPath $ctx.backupItem
+        }
+    }
+    @{
+        id = 'menu-delay-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $path = 'HKCU:\Control Panel\Desktop'
+            $b = New-ItemRegistryBackup $ctx.item 'HKCU' 'Control Panel\Desktop' 'MenuShowDelay'
+            if ($b.oldExists -and "$($b.oldValue)" -eq '0') { $ctx.backupItem = $b; return $false }
+            Set-RegValue 'HKCU' 'Control Panel\Desktop' 'MenuShowDelay' '0' 'String'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) {
+                Set-RegValue 'HKCU' 'Control Panel\Desktop' 'MenuShowDelay' ([string]$b.oldValue) 'String'
+            } else {
+                Set-RegValue 'HKCU' 'Control Panel\Desktop' 'MenuShowDelay' '400' 'String'
+            }
+        }
+    }
+    @{
+        id = 'usb-power-save-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $b = New-ItemRegistryBackup $ctx.item 'HKLM' 'SYSTEM\CurrentControlSet\Services\USB' 'DisableSelectiveSuspend'
+            if ($b.oldExists -and "$($b.oldValue)" -eq '1') { $ctx.backupItem = $b; return $false }
+            Set-RegValue 'HKLM' 'SYSTEM\CurrentControlSet\Services\USB' 'DisableSelectiveSuspend' 1 'DWord'
+            $ctx.backupItem = $b
+            return $true
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            if ($b.oldExists -and $null -ne $b.oldValue) {
+                Set-RegValue $b.hive $b.path $b.name ([int]$b.oldValue) 'DWord'
+            } else {
+                Remove-RegValue $b.hive $b.path $b.name
+            }
+        }
+    }
+    @{
+        id = 'net-nagle-off'
+        kind = 'registry'
+        apply = {
+            param($ctx)
+            $base = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces'
+            $keys = @(Get-ChildItem -Path $base -ErrorAction SilentlyContinue)
+            $old = @{}; $changed = $false
+            foreach ($k in $keys) {
+                $ip = Get-ItemProperty -Path $k.PSPath -ErrorAction SilentlyContinue
+                foreach ($n in @('TcpAckFrequency', 'TCPNoDelay')) {
+                    $prop = $null
+                    if ($ip) { $pp = $ip.PSObject.Properties[$n]; if ($pp) { $prop = [string][int]$pp.Value } }
+                    $old[$k.PSPath + '|' + $n] = $prop
+                    if ($prop -eq '1') { continue }
+                    Set-ItemProperty -Path $k.PSPath -Name $n -Value 1 -Type DWord
+                    $changed = $true
+                }
+            }
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'nagle'; oldValues = $old }
+            return $changed
+        }
+        revert = {
+            param($ctx)
+            $b = $ctx.backupItem
+            $old = $null
+            if ($b -is [hashtable]) { $old = $b['oldValues'] }
+            else { $pp = $b.PSObject.Properties['oldValues']; if ($pp) { $old = $pp.Value } }
+            if (-not $old) { return }
+            foreach ($key in @($old.Keys)) {
+                $pspath, $name = $key -split '\|', 2
+                $recorded = $old[$key]
+                if ($null -ne $recorded) {
+                    Set-ItemProperty -Path $pspath -Name $name -Value ([int]$recorded) -Type DWord
+                } else {
+                    Remove-ItemProperty -Path $pspath -Name $name -ErrorAction SilentlyContinue
+                }
+            }
+        }
+    }
 )
+
+# 以 catalog 补齐元信息；实现表必须与 catalog 一一对应，否则直接报错。
+foreach ($item in $OptimizationItems) {
+    $meta = (Get-Catalog).items | Where-Object { $_.id -eq $item.id }
+    if (-not $meta) { throw "脚本中的优化项在 catalog 中不存在: $($item.id)" }
+    $item.name       = $meta.name
+    $item.description = $meta.description
+    $item.sideEffect = $meta.sideEffect
+    $item.admin      = [bool]$meta.admin
+    $item.default    = [bool]$meta.default
+    $item.reboot     = [bool]$meta.reboot
+    $item.kind       = $meta.kind
+}
+foreach ($cid in ((Get-Catalog).items | ForEach-Object { $_.id })) {
+    if (-not ($OptimizationItems | Where-Object { $_.id -eq $cid })) {
+        throw "catalog 中存在但脚本未实现的优化项: $cid"
+    }
+}
+# 兼容旧字段名
+foreach ($item in $OptimizationItems) { $item.desc = $item.description }
+
+
+function Restore-MultiSzValues {
+    param([string]$Path, [hashtable]$Defaults, $BackupItem)
+    $old = $null
+    if ($BackupItem -is [hashtable]) { $old = $BackupItem['oldValues'] }
+    else { $pp = $BackupItem.PSObject.Properties['oldValues']; if ($pp) { $old = $pp.Value } }
+    foreach ($n in $Defaults.Keys) {
+        $value = $Defaults[$n]
+        $recorded = $null
+        if ($null -ne $old) {
+            if ($old -is [hashtable]) { $recorded = $old[$n] }
+            else { $pp = $old.PSObject.Properties[$n]; if ($pp) { $recorded = $pp.Value } }
+        }
+        if ($null -ne $recorded -and "$recorded" -ne '') { $value = [string]$recorded }
+        Set-ItemProperty -Path $Path -Name $n -Value $value -Type String
+    }
+}
+
+function Restore-MultiSzValuesMultiPath {
+    param($BackupItem)
+    $old = $null
+    if ($BackupItem -is [hashtable]) { $old = $BackupItem['oldValues'] }
+    else { $pp = $BackupItem.PSObject.Properties['oldValues']; if ($pp) { $old = $pp.Value } }
+    if (-not $old) { return }
+    foreach ($key in @($old.Keys)) {
+        $idx = $key.LastIndexOf('\')
+        $path = $key.Substring(0, $idx)
+        $name = $key.Substring($idx + 1)
+        $recorded = $old[$key]
+        if ($null -ne $recorded -and "$recorded" -ne '') {
+            Set-ItemProperty -Path $path -Name $name -Value ([string]$recorded) -Type String
+        }
+    }
+}
+
+function Resolve-PresetIds {
+    # full = 全部；其余按 catalog.presets 的 include/exclude。未知预设直接抛错。
+    param([string]$Name)
+    if (-not $Name -or $Name -eq 'full') {
+        return @((Get-Catalog).items | ForEach-Object { $_.id })
+    }
+    $prop = (Get-Catalog).presets.PSObject.Properties[$Name]
+    if (-not $prop) { throw "未知预设: $Name（可选 full / balanced / safe-only）" }
+    $def = $prop.Value
+    if ($def.PSObject.Properties['include']) { return @($def.include) }
+    $exclude = @()
+    if ($def.PSObject.Properties['exclude']) { $exclude = @($def.exclude) }
+    return @(((Get-Catalog).items | ForEach-Object { $_.id }) | Where-Object { $_ -notin $exclude })
+}
 
 # ---------------------------------------------------------------------------
 # 只读体检项
@@ -1086,13 +1278,13 @@ function Invoke-Detect {
     }
 
     $presets = @{
-        full = @($OptimizationItems | Where-Object { $_.default -or $true } | ForEach-Object { $_.id })
-        balanced = @($OptimizationItems | Where-Object { $_.id -notin @('sysmain-off', 'wsearch-off', 'hibernate-off', 'power-tuning') } | ForEach-Object { $_.id })
-        'safe-only' = @('game-mode', 'dvr-off', 'transparency-off', 'fso-off', 'gpu-pref')
+        full = Resolve-PresetIds 'full'
+        balanced = Resolve-PresetIds 'balanced'
+        'safe-only' = Resolve-PresetIds 'safe-only'
     }
 
     return @{
-        tool = $ToolName; version = $ToolVersion; mode = 'detect';
+        tool = $ToolName; version = (Get-ToolVersion); mode = 'detect';
         admin = $admin;
         hardware = $hw;
         gamePath = $gamePath;
@@ -1217,12 +1409,8 @@ function Invoke-Apply {
     # 解析要执行的项
     $toApply = $null
     if ($PresetName) {
-        switch ($PresetName) {
-            'full' { $toApply = @($OptimizationItems) }
-            'balanced' { $toApply = @($OptimizationItems | Where-Object { $_.id -notin @('sysmain-off', 'wsearch-off', 'hibernate-off', 'power-tuning') }) }
-            'safe-only' { $toApply = @($OptimizationItems | Where-Object { $_.id -in @('game-mode', 'dvr-off', 'transparency-off', 'fso-off', 'gpu-pref') }) }
-            default { throw "未知预设: $PresetName（可选 full / balanced / safe-only）" }
-        }
+        $presetIds = Resolve-PresetIds $PresetName
+        $toApply = @($OptimizationItems | Where-Object { $presetIds -contains $_.id })
     } else {
         $toApply = @(Resolve-ItemIds $RequestedItems)
     }
@@ -1277,7 +1465,7 @@ function Invoke-Apply {
         $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
         $backupFile = Join-Path $BackupRoot "backup-$ts.json"
         $backupDoc = @{
-            schema = 'v1'; tool = $ToolName; version = $ToolVersion;
+            schema = 'v1'; tool = $ToolName; version = (Get-ToolVersion);
             createdAt = (Get-Date).ToString('o'); preset = $PresetName;
             items = $backupItems; results = $results
         }
@@ -1289,7 +1477,7 @@ function Invoke-Apply {
     $skipCount = @($results | Where-Object { $_.skipped }).Count
 
     return @{
-        tool = $ToolName; version = $ToolVersion; mode = 'apply';
+        tool = $ToolName; version = (Get-ToolVersion); mode = 'apply';
         admin = $admin; gamePath = $resolvedGame;
         results = $results;
         backupFile = $backupFile;
@@ -1322,13 +1510,13 @@ function Invoke-ListRestore {
             }
         } catch { }
     }
-    return @{ tool = $ToolName; version = $ToolVersion; mode = 'list-restore'; restoreItems = $restoreItems; backupCount = $files.Count }
+    return @{ tool = $ToolName; version = (Get-ToolVersion); mode = 'list-restore'; restoreItems = $restoreItems; backupCount = $files.Count }
 }
 
 function Invoke-Restore {
     param([string[]]$RestoreItems)
     $files = @(Get-BackupFiles)
-    if ($files.Count -eq 0) { return @{ tool = $ToolName; version = $ToolVersion; mode = 'restore'; restored = @(); failed = @(); skipped = @(); summary = '没有可还原的备份' } }
+    if ($files.Count -eq 0) { return @{ tool = $ToolName; version = (Get-ToolVersion); mode = 'restore'; restored = @(); failed = @(); skipped = @(); summary = '没有可还原的备份' } }
 
     $restoreIds = @(Split-ItemIds $RestoreItems)
     $wantAll = -not $restoreIds -or $restoreIds.Count -eq 0
@@ -1370,7 +1558,7 @@ function Invoke-Restore {
     }
 
     return @{
-        tool = $ToolName; version = $ToolVersion; mode = 'restore';
+        tool = $ToolName; version = (Get-ToolVersion); mode = 'restore';
         restored = $restored; failed = $failed; skipped = $skipped;
         summary = "$($restored.Count) 项已还原、$($failed.Count) 项失败、$($skipped.Count) 项跳过"
     }
@@ -1434,7 +1622,7 @@ try {
     }
 } catch {
     if ($Json) {
-        @{ tool = $ToolName; version = $ToolVersion; mode = 'error'; error = $_.Exception.Message; stack = $_.ScriptStackTrace; line = $_.InvocationInfo.ScriptLineNumber } | ConvertTo-Json -Depth 6
+        @{ tool = $ToolName; version = (Get-ToolVersion); mode = 'error'; error = $_.Exception.Message; stack = $_.ScriptStackTrace; line = $_.InvocationInfo.ScriptLineNumber } | ConvertTo-Json -Depth 6
     } else {
         Write-Error $_.Exception.Message
     }

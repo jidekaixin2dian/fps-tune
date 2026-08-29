@@ -229,6 +229,40 @@ public static class BackupService
                     @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR");
                 return new[] { record };
             }
+            case "keyboard-latency":
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", RegistryValueKind.DWord) };
+            case "keyboard-repeat":
+                return new[]
+                {
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Keyboard", "KeyboardDelay", RegistryValueKind.String),
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Keyboard", "KeyboardSpeed", RegistryValueKind.String),
+                };
+            case "sticky-keys-off":
+                return new[]
+                {
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Accessibility\StickyKeys", "Flags", RegistryValueKind.String),
+                    CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Accessibility\ToggleKeys", "Flags", RegistryValueKind.String),
+                };
+            case "menu-delay-off":
+                return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", RegistryValueKind.String) };
+            case "usb-power-save-off":
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", RegistryValueKind.DWord) };
+            case "net-nagle-off":
+            {
+                var records = new List<BackupRecord>();
+                using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+                using var interfaces = baseKey.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces");
+                if (interfaces is null)
+                    return records;
+                foreach (var sub in interfaces.GetSubKeyNames())
+                {
+                    var path = @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\" + sub;
+                    var record = CreateRegistryBackup(id, RegistryHive.LocalMachine, path, "TcpAckFrequency", RegistryValueKind.DWord);
+                    FillSecondary(record, RegistryHive.LocalMachine, path, "TCPNoDelay");
+                    records.Add(record);
+                }
+                return records;
+            }
             case "mouse-accel-off":
                 // 三个 REG_SZ 值逐条备份，还原按原值恢复（缺失则回退系统默认）
                 return new[]

@@ -154,7 +154,10 @@
                                Foreground="{DynamicResource TextMutedBrush}"/>
                 </StackPanel>
 
-                <StackPanel Margin="18,28,18,0">
+                <StackPanel Margin="18,20,18,0">
+                    <TextBlock Text="工作区"
+                                   Style="{StaticResource SectionLabelStyle}"
+                                   Margin="4,18,0,8"/>
                     <RadioButton x:Name="NavHome"
                                  Tag="home"
                                  Style="{StaticResource NavRadioStyle}"
@@ -263,6 +266,9 @@
                         </StackPanel>
                     </RadioButton>
 
+                    <TextBlock Text="实验与数据"
+                                   Style="{StaticResource SectionLabelStyle}"
+                                   Margin="4,18,0,8"/>
                     <RadioButton x:Name="NavAb"
                                  Tag="ab"
                                  Style="{StaticResource NavRadioStyle}"
