@@ -38,7 +38,7 @@ try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch { }
 $ErrorActionPreference = 'Stop'
 
 $ToolName    = 'delta-optimizer'
-$BackupRoot  = Join-Path $env:LOCALAPPDATA 'DeltaOptimizer\backup'
+$BackupRoot  = Join-Path $env:LOCALAPPDATA 'FpsTune\backup'
 
 # ---------------------------------------------------------------------------
 # 单一数据源
@@ -238,8 +238,46 @@ function Get-HardwareInfo {
     $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB, 0)
     $gpus = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name -and $_.Name -notmatch 'Basic Render|Hyper-V|Virtual|RemoteFX' })
     if ($gpus.Count -eq 0) { $gpus = @(Get-CimInstance Win32_VideoController | Where-Object { $_.Name }) }
-    $gpu = $gpus[0].Name
-    $gpuFull = @($gpus | ForEach-Object { $_.Name }) -join ' | '
+
+    # WMI 的 Name 可能是陈旧的友好名（新显卡 + 旧驱动时常见），注册表 Class 键的
+    # DriverDesc 才是当前驱动写入的准确名称；用 MatchingDeviceId <-> PNPDeviceID 对齐。
+    $classBase = 'SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}'
+    $regMap = @{}
+    try {
+        $root = [Microsoft.Win32.Registry]::LocalMachine
+        $ck = $root.OpenSubKey($classBase)
+        if ($ck) {
+            foreach ($sub in @($ck.GetSubKeyNames() | Where-Object { $_ -match '^00\d\d$' })) {
+                $sk = $ck.OpenSubKey($sub)
+                if (-not $sk) { continue }
+                $desc = [string]$sk.GetValue('DriverDesc')
+                $matchId = ([string]$sk.GetValue('MatchingDeviceId')).ToLowerInvariant()
+                $mem = $sk.GetValue('HardwareInformation.qwMemorySize')
+                if ($desc -and $matchId) { $regMap[$matchId] = @{ desc = $desc; mem = $mem } }
+                $sk.Close()
+            }
+            $ck.Close()
+        }
+    } catch { }
+
+    $names = @()
+    foreach ($g in $gpus) {
+        $name = [string]$g.Name
+        # MatchingDeviceId 不含 REV 与实例号，先把 WMI 的 PNP ID 截齐再比对
+        $pnp = ([string]$g.PNPDeviceID).ToLowerInvariant()
+        $revIdx = $pnp.IndexOf('&rev_')
+        if ($revIdx -gt 0) { $pnp = $pnp.Substring(0, $revIdx) }
+        if ($regMap.ContainsKey($pnp)) {
+            $name = [string]$regMap[$pnp].desc
+            $mem = $regMap[$pnp].mem
+            if (($mem -is [long] -or $mem -is [int]) -and $mem -gt 0) {
+                $name = "$name · $([math]::Round($mem / 1GB)) GB"
+            }
+        }
+        $names += $name
+    }
+    $gpu = $names[0]
+    $gpuFull = $names -join ' | '
     $vendor = 'unknown'
     if ($gpu -match 'NVIDIA') { $vendor = 'nvidia' }
     elseif ($gpu -match 'AMD|Radeon') { $vendor = 'amd' }

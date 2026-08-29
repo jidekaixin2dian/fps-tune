@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using FpsTune.Wpf.Services;
@@ -146,27 +147,73 @@ public static class HardwareInfoService
         return false;
     }
 
+    /// <summary>
+    /// WMI 的 Name 可能是陈旧友好名（新显卡配旧驱动时常见），注册表 Class 键的
+    /// DriverDesc 才是当前驱动写入的准确名称；用 MatchingDeviceId 对齐后以注册表为准。
+    /// </summary>
     private static string GetGpuName()
     {
-        // WMI 优先：过滤虚拟/基础渲染适配器；多卡时优先 PCI 物理卡，再按 AdapterRAM 取主卡
+        // Class 驱动键: MatchingDeviceId -> (准确名称, 显存)
+        var regMap = new Dictionary<string, (string Desc, long Mem)>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            var cands = new List<(string Name, ulong Ram, bool Pci)>();
+            const string classPath = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+            using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+            using var key = baseKey.OpenSubKey(classPath);
+            if (key is not null)
+            {
+                foreach (var sub in key.GetSubKeyNames())
+                {
+                    if (!Regex.IsMatch(sub, @"^00\d\d$"))
+                        continue;
+                    using var sk = key.OpenSubKey(sub);
+                    var desc = sk?.GetValue("DriverDesc")?.ToString();
+                    var matchId = sk?.GetValue("MatchingDeviceId")?.ToString();
+                    if (string.IsNullOrWhiteSpace(desc) || string.IsNullOrWhiteSpace(matchId))
+                        continue;
+                    var mem = sk.GetValue("HardwareInformation.qwMemorySize");
+                    long bytes = mem switch
+                    {
+                        long l when l > 0 => l,
+                        int i when i > 0 => i,
+                        _ => 0
+                    };
+                    regMap[matchId] = (desc.Trim(), bytes);
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        // WMI 提供在线设备列表（PNPDeviceID 对齐注册表），过滤虚拟适配器
+        try
+        {
+            var cands = new List<(string Name, bool Pci, string Pnp)>();
             using var searcher = new System.Management.ManagementObjectSearcher(
-                "SELECT Name, AdapterRAM, PNPDeviceID FROM Win32_VideoController");
+                "SELECT Name, PNPDeviceID FROM Win32_VideoController");
             foreach (var mo in searcher.Get())
             {
                 var name = (mo["Name"]?.ToString() ?? "").Trim();
                 if (name.Length == 0 || IsVirtualOrBasicGpu(name))
                     continue;
-                ulong.TryParse(mo["AdapterRAM"]?.ToString(), out var ram);
-                var pnp = mo["PNPDeviceID"]?.ToString() ?? "";
-                cands.Add((name, ram, pnp.StartsWith("PCI", StringComparison.OrdinalIgnoreCase)));
+                var pnp = (mo["PNPDeviceID"]?.ToString() ?? "").Trim();
+                // MatchingDeviceId 不含 REV 与实例号，先把 WMI 的 PNP ID 截齐再比对
+                var revIdx = pnp.IndexOf("&rev_", StringComparison.OrdinalIgnoreCase);
+                if (revIdx > 0)
+                    pnp = pnp.Substring(0, revIdx);
+                if (regMap.TryGetValue(pnp, out var hit))
+                    name = hit.Desc;
+                if (IsVirtualOrBasicGpu(name))
+                    continue;
+                cands.Add((name, pnp.StartsWith("PCI", StringComparison.OrdinalIgnoreCase), pnp));
             }
             if (cands.Count > 0)
             {
-                var ordered = cands.OrderByDescending(c => c.Pci).ThenByDescending(c => c.Ram).ToList();
+                var ordered = cands.OrderByDescending(c => c.Pci).ToList();
                 var main = ordered[0].Name;
+                if (regMap.TryGetValue(ordered[0].Pnp, out var hit) && hit.Mem > 0)
+                    main += $" · {Math.Round(hit.Mem / 1024.0 / 1024.0 / 1024.0)} GB";
                 return ordered.Count > 1 ? $"{main} (+{ordered.Count - 1})" : main;
             }
         }
@@ -174,27 +221,19 @@ public static class HardwareInfoService
         {
         }
 
-        // 注册表兜底：显示类驱动子键（同样过滤噪声）
+        // 注册表兜底
         try
         {
-            const string classPath = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
-            using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
-            using var key = baseKey.OpenSubKey(classPath);
-            if (key is null)
-                return "未知 GPU";
-            foreach (var sub in key.GetSubKeyNames())
+            foreach (var hit in regMap.Values)
             {
-                using var subKey = key.OpenSubKey(sub);
-                var desc = subKey?.GetValue("DriverDesc")?.ToString()?.Trim();
-                if (!string.IsNullOrWhiteSpace(desc) && !IsVirtualOrBasicGpu(desc))
-                    return desc;
+                if (!IsVirtualOrBasicGpu(hit.Desc))
+                    return hit.Mem > 0 ? $"{hit.Desc} · {Math.Round(hit.Mem / 1024.0 / 1024.0 / 1024.0)} GB" : hit.Desc;
             }
-            return "未知 GPU";
         }
         catch
         {
-            return "未知 GPU";
         }
+        return "未知 GPU";
     }
 
     private static double GetRamGB()

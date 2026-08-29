@@ -52,9 +52,15 @@ public partial class OptimizeView : UserControl
     {
         _searchText = SearchBox.Text.Trim();
         ItemsView.Refresh();
-        ItemListTitle.Text = _searchText.Length == 0
-            ? "优化项"
-            : $"优化项（匹配 {Items.Count}/{Items.Count} 中的可见项）";
+        if (_searchText.Length == 0)
+        {
+            ItemListTitle.Text = "优化项";
+        }
+        else
+        {
+            var visible = Items.Cast<OptimizationItemViewModel>().Count(ItemsView.Contains);
+            ItemListTitle.Text = $"优化项（{visible}/{Items.Count}）";
+        }
     }
 
     private void SelectAllVisible_Click(object sender, RoutedEventArgs e)

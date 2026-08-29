@@ -29,7 +29,7 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 
 [Files]
 ; WPF 自包含单文件发布会同时生成原生依赖与 PS 兼容脚本，必须一起打包。
-Source: "..\dist\single-file\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\single-file\*"; Excludes: "*.pdb,Directory.Build.props"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
