@@ -1,9 +1,11 @@
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Interop;
 using FpsTune.Wpf.Services;
 using FpsTune.Wpf.Views;
 
@@ -15,6 +17,26 @@ public partial class MainWindow : Window
     private readonly Dictionary<string, Func<UserControl>> _pageFactories;
     private readonly Dictionary<string, UserControl> _pageCache = new();
     private readonly TranslateTransform _pageSlide = new(24, 0);
+
+    // 全局热键 Ctrl+Alt+F
+    private const int WM_HOTKEY = 0x0312;
+    private const int HOTKEY_ID = 0x1F01;
+    private const uint MOD_ALT = 0x1, MOD_CONTROL = 0x2;
+    private const uint VK_F = 0x46;
+
+    // Windows 11 会按系统圆角(约 8px)裁剪窗口并绘制系统阴影，与自绘 10px 圆角
+    // 叠加后四角出现白色缺口与断线；显式关闭系统圆角，形状完全交给 WPF 透明合成。
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWCP_DONOTROUND = 1;
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(nint hwnd, int attr, ref int value, int size);
+
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(nint hwnd, int id, uint modifiers, uint vk);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(nint hwnd, int id);
 
     public MainWindow()
     {
@@ -45,6 +67,88 @@ public partial class MainWindow : Window
             theme = "dark";
         ThemeManager.Initialize();
         ThemeManager.SetMode(theme);
+
+        StateChanged += OnStateChanged;
+        ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
+        Closed += (_, _) =>
+        {
+            TrayService.Dispose();
+            if (_hwndSource is not null)
+                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
+        };
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        _hwndSource = (HwndSource?)HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+        _hwndSource?.AddHook(WndProc);
+
+        // 关闭 DWM 系统圆角（Win11）：防止系统按 8px 裁剪 10px 自绘圆角造成白角断线。
+        var pref = DWMWCP_DONOTROUND;
+        DwmSetWindowAttribute(_hwndSource!.Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref pref, sizeof(int));
+
+        ApplyHotkeyRegistration();
+    }
+
+    private HwndSource? _hwndSource;
+
+    private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    {
+        if (msg == WM_HOTKEY && wParam == HOTKEY_ID)
+        {
+            RestoreFromTray();
+            handled = true;
+        }
+        return nint.Zero;
+    }
+
+    /// <summary>按设置注册/注销全局热键（设置页开关时调用）。</summary>
+    public void ApplyHotkeyRegistration()
+    {
+        if (_hwndSource is null)
+            return;
+        UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
+        if (SettingsService.Current.HotkeyEnabled)
+            RegisterHotKey(_hwndSource.Handle, HOTKEY_ID, MOD_CONTROL | MOD_ALT, VK_F);
+    }
+
+    // ---------- 托盘常驻 ----------
+
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        UpdateRootClip();
+        if (WindowState == WindowState.Minimized && SettingsService.Current.MinimizeToTray)
+        {
+            // 先让最小化动画落定再隐藏窗口，托盘图标接管入口。
+            Dispatcher.BeginInvoke(() =>
+            {
+                Hide();
+                TrayService.ShowMinimizedHint();
+            }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+    }
+
+    /// <summary>从托盘/热键恢复主窗口。</summary>
+    public void RestoreFromTray()
+    {
+        Show();
+        if (WindowState == WindowState.Minimized)
+            WindowState = WindowState.Normal;
+        Activate();
+        Focus();
+    }
+
+    // ---------- 圆角裁剪 ----------
+
+    /// <summary>
+    /// 把窗口内容裁剪到自绘圆角内：标题栏/侧栏的不透明背景否则会溢出到
+    /// 圆角外的方角区域，盖掉边框线并形成白色方角。
+    /// </summary>
+    private void UpdateRootClip()
+    {
+        var radius = WindowState == WindowState.Maximized ? 0 : 10;
+        ChromeGrid.Clip = new RectangleGeometry(
+            new Rect(0, 0, ChromeGrid.ActualWidth, ChromeGrid.ActualHeight), radius, radius);
     }
 
     private UserControl GetPage(string key)

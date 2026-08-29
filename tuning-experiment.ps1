@@ -111,6 +111,15 @@ function Read-State {
     return $null
 }
 
+# 追加一条实验记录到 history.jsonl（GUI 历史趋势图的数据源）。
+# 只追加不改写：重新采集基线不会抹掉旧一轮的曲线。
+function Append-History {
+    param($Entry)
+    if (-not (Test-Path $StateDir)) { New-Item -ItemType Directory -Path $StateDir -Force | Out-Null }
+    $line = $Entry | ConvertTo-Json -Depth 8 -Compress
+    Add-Content -Path (Join-Path $StateDir 'history.jsonl') -Value $line -Encoding UTF8
+}
+
 # ---------------------------------------------------------------------------
 # PresentMon 探测与采样
 # ---------------------------------------------------------------------------
@@ -349,6 +358,7 @@ function Invoke-Baseline {
         groups = if ($state -and $state.groups) { @($state.groups) } else { @() }
     }
     Write-AtomicJson $StateFile $newState
+    Append-History @{ time = (Get-Date).ToString('o'); kind = 'baseline'; id = 'baseline'; name = '基线'; summary = $summary }
 
     $msg = "基线采集完成：平均帧率 $($summary.avgFps) FPS、1% low $($summary.p1Low)、P99 $($summary.p99Ms) ms、卡顿 $($summary.stutters) 次"
     if ($summary.stable) { $msg += '；稳定性达标（CV ' + $summary.cv + '），可以开始测试候选组。' }
@@ -437,6 +447,10 @@ function Invoke-TestGroup {
     }
     $newState = @{ schema = 'v1'; updatedAt = (Get-Date).ToString('o'); baseline = $state.baseline; groups = $groups }
     Write-AtomicJson $StateFile $newState
+    Append-History @{
+        time = (Get-Date).ToString('o'); kind = 'test'; id = $group.id; name = $group.name;
+        summary = $summary; keep = $kept; reverted = $reverted; reason = $decision.reason
+    }
 
     $verdict = if ($kept) { '保留' } else { '已还原' }
     return @{

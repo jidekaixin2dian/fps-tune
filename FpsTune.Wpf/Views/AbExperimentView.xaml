@@ -8,6 +8,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -95,8 +96,42 @@
             </Border>
         </UniformGrid>
 
+        <!-- 历史趋势 -->
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="210"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="历史趋势" Style="{StaticResource CardTitleStyle}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Border Width="16" Height="3" CornerRadius="1.5"
+                                Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="平均 FPS" FontSize="11" Margin="6,0,14,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <Border Width="16" Height="3" CornerRadius="1.5"
+                                Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="1% LOW" FontSize="11" Margin="6,0,14,0"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <Button Content="刷新" Style="{StaticResource GhostButtonStyle}"
+                                MinWidth="64" Click="RefreshHistory_Click"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Canvas x:Name="HistoryCanvas"/>
+                    <TextBlock x:Name="HistoryEmptyText"
+                               Text="暂无历史数据。完成一次基线采样或候选组测试后，这里会画出均值与 1% low 的对比曲线。"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextMutedBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </Border>
+
         <!-- 原始输出 -->
-        <Border Grid.Row="4" Style="{StaticResource CardStyle}">
+        <Border Grid.Row="5" Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

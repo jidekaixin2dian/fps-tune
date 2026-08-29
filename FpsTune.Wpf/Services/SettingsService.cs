@@ -15,6 +15,11 @@ public sealed class AppSettings
     public string DouyinLink { get; set; } = "";
     public string ThemeMode { get; set; } = "dark";
 
+    // 托盘常驻（v1.2）：最小化到托盘 / 全局热键呼出 / 完成通知，默认全开
+    public bool MinimizeToTray { get; set; } = true;
+    public bool HotkeyEnabled { get; set; } = true;
+    public bool NotifyOnComplete { get; set; } = true;
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||

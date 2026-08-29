@@ -48,6 +48,8 @@ public static class ThemeManager
         SetBrush("InputBackgroundBrush", t.Input);
         SetBrush("BorderBrush", t.Border);
         SetBrush("BorderHoverBrush", t.BorderHover);
+        // 窗口外框专用: 比卡片边框深一档, 保证圆角描边在两种主题下都清晰可辨
+        SetBrush("WindowBorderBrush", t.WindowBorder);
         SetBrush("TextPrimaryBrush", t.TextPrimary);
         SetBrush("TextSecondaryBrush", t.TextSecondary);
         SetBrush("TextMutedBrush", t.TextMuted);
@@ -72,22 +74,24 @@ public static class ThemeManager
         RadialGradientBrush glow;
         if (resolved == "light")
         {
+            // 浅色主题的蓝调要足够可感知：上一版 #F7FAFF→#EFF2F7 与白底几乎无差别，
+            // 用户看不出氛围层的存在；这里加深一档但仍保证正文对比度。
             backdrop = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
                 EndPoint = new Point(0, 1),
                 GradientStops =
                 {
-                    new GradientStop(Parse("#F7FAFF"), 0),
-                    new GradientStop(Parse("#EFF2F7"), 0.6),
-                    new GradientStop(Parse("#EFF2F7"), 1)
+                    new GradientStop(Parse("#E8F0FE"), 0),
+                    new GradientStop(Parse("#E4E9F4"), 0.55),
+                    new GradientStop(Parse("#ECEFF5"), 1)
                 }
             };
             glow = new RadialGradientBrush
             {
                 GradientStops =
                 {
-                    new GradientStop(Color.FromArgb(0x22, 0x4F, 0x46, 0xE5), 0),
+                    new GradientStop(Color.FromArgb(0x3C, 0x4F, 0x46, 0xE5), 0),
                     new GradientStop(Color.FromArgb(0x00, 0x4F, 0x46, 0xE5), 1)
                 }
             };
@@ -155,6 +159,7 @@ public static class ThemeManager
         public Color Input { get; }
         public Color Border { get; }
         public Color BorderHover { get; }
+        public Color WindowBorder { get; }
         public Color TextPrimary { get; }
         public Color TextSecondary { get; }
         public Color TextMuted { get; }
@@ -166,7 +171,7 @@ public static class ThemeManager
 
         public Palette(
             string appBackground, string sidebar, string surface, string surfaceAlt,
-            string elevated, string input, string border, string borderHover,
+            string elevated, string input, string border, string borderHover, string windowBorder,
             string textPrimary, string textSecondary, string textMuted,
             string primary, string accent, string danger, string warning, string ok)
         {
@@ -178,6 +183,7 @@ public static class ThemeManager
             Input = Parse(input);
             Border = Parse(border);
             BorderHover = Parse(borderHover);
+            WindowBorder = Parse(windowBorder);
             TextPrimary = Parse(textPrimary);
             TextSecondary = Parse(textSecondary);
             TextMuted = Parse(textMuted);
@@ -192,11 +198,11 @@ public static class ThemeManager
     // 深空蓝灰底 · 靛青强调；文字三级灰阶
     private static readonly Palette DarkPalette = new(
         "#0A0D12", "#0D1016", "#12161E", "#161B24", "#1C222D", "#10141C",
-        "#232B38", "#364356", "#EDF1F7", "#A6B1C2", "#7E8BA0",
+        "#232B38", "#364356", "#3A4759", "#EDF1F7", "#A6B1C2", "#7E8BA0",
         "#4DA3FF", "#818CF8", "#F87171", "#F2B75C", "#34D399");
 
     private static readonly Palette LightPalette = new(
         "#EFF2F7", "#FBFCFE", "#FFFFFF", "#F4F6FA", "#FFFFFF", "#F7F9FC",
-        "#E3E8F0", "#CBD4E1", "#1A2233", "#3E4A61", "#5D6B85",
+        "#E3E8F0", "#CBD4E1", "#AAB6C9", "#1A2233", "#3E4A61", "#5D6B85",
         "#2563EB", "#4F46E5", "#DC2626", "#B45309", "#059669");
 }

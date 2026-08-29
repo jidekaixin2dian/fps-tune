@@ -28,6 +28,20 @@
                               Style="{StaticResource ToggleSwitchStyle}"
                               Content="登录 Windows 后自动运行 FPS 帧律（当前用户）"
                               Margin="0,8,0,0"/>
+
+                    <TextBlock Text="托盘与通知" Style="{StaticResource MutedTextStyle}" Margin="0,16,0,0"/>
+                    <CheckBox x:Name="TrayCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="最小化到系统托盘（不占任务栏，托盘图标双击呼出）"
+                              Margin="0,8,0,0"/>
+                    <CheckBox x:Name="HotkeyCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="全局热键 Ctrl + Alt + F 呼出主窗口"
+                              Margin="0,8,0,0"/>
+                    <CheckBox x:Name="NotifyCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="优化 / 实验完成时弹出托盘通知"
+                              Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 

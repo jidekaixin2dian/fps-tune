@@ -7,6 +7,7 @@
         MinWidth="1080" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         Title="FPS 帧律"
+        SourceInitialized="OnSourceInitialized"
         WindowStyle="None"
         ResizeMode="CanResize"
         Background="Transparent"
@@ -26,7 +27,7 @@
     </shell:WindowChrome.WindowChrome>
     <Border x:Name="ChromeRoot"
             Background="{DynamicResource AppBackdropBrush}"
-            BorderBrush="{DynamicResource BorderBrush}"
+            BorderBrush="{DynamicResource WindowBorderBrush}"
             BorderThickness="1"
             CornerRadius="10">
         <Border.Style>
@@ -40,7 +41,7 @@
                 </Style.Triggers>
             </Style>
         </Border.Style>
-        <Grid>
+        <Grid x:Name="ChromeGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="44"/>
                 <RowDefinition Height="*"/>

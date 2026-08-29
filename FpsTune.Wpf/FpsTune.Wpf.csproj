@@ -4,6 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- 仅借用 WinForms 的 NotifyIcon 实现托盘常驻，界面本体仍是 WPF。
+         WinForms/System.Drawing 不进全局 using，避免与 WPF 同名类型冲突。 -->
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>FpsTune.Wpf</RootNamespace>
@@ -11,6 +14,11 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- WMI 查询（内存频率体检），避免再启动 powershell.exe 子进程 -->

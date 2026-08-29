@@ -491,6 +491,11 @@ public partial class OptimizeView : UserControl
                 rp.Inlines.Add(R(string.Join("、", ids), "WarningBrush"));
                 OutputDoc.Blocks.Add(rp);
             }
+
+            // 最小化在托盘时也第一时间知道执行结果
+            TrayService.NotifyComplete(
+                "FPS 帧律 · 执行完成",
+                string.IsNullOrWhiteSpace(summary) ? "系统优化执行完成，改动已自动备份，可随时还原。" : summary);
         }
         catch
         {

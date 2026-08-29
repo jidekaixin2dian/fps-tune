@@ -19,20 +19,23 @@ public static class LegacyMigrations
 
         var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        TryMoveDir(
-            Path.Combine(root, "FpsTune"),
-            Path.Combine(root, "FpsTune"));
-        TryMoveDir(
-            Path.Combine(root, "FpsTune"),
-            Path.Combine(root, "FpsTune"));
+        // v1.0.2 ~ v1.1.5 的严重缺陷：from/to 被写成同一个 FpsTune 路径，
+        // 迁移末尾的 Delete(from) 等于每次启动清空整个数据目录
+        // （备份记录、设置、实验数据全部丢失，跨会话还原失效）。
+        // 现在只迁移真正的旧品牌目录，且永不删除来源目录本身。
+        TryMoveDir(Path.Combine(root, "DeltaForceTune"), Path.Combine(root, "FpsTune"));
     }
 
-    private static void TryMoveDir(string from, string to)
+    internal static void TryMoveDir(string from, string to)
     {
         try
         {
             if (!Directory.Exists(from))
                 return;
+            // 同源同目标等于自毁，直接拒绝（历史缺陷的防线）。
+            if (string.Equals(Path.GetFullPath(from), Path.GetFullPath(to), StringComparison.OrdinalIgnoreCase))
+                return;
+
             foreach (var sub in Directory.GetDirectories(from))
             {
                 var name = Path.GetFileName(sub);
@@ -49,7 +52,10 @@ public static class LegacyMigrations
                     continue;
                 File.Move(file, target);
             }
-            Directory.Delete(from, recursive: true);
+            // 只有搬空了才移除空壳；有残留（同名冲突未搬运）时保留来源，
+            // 宁可留下旧目录也绝不递归删除里面还有数据的地方。
+            if (Directory.GetFileSystemEntries(from).Length == 0)
+                Directory.Delete(from, recursive: false);
         }
         catch
         {

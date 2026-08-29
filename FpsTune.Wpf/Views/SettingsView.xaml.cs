@@ -24,6 +24,12 @@ public partial class SettingsView : UserControl
         AutostartCheck.Checked += AutostartCheck_Changed;
         AutostartCheck.Unchecked += AutostartCheck_Changed;
         GamePathBox.LostFocus += (_, _) => SaveGamePathFromBox();
+        TrayCheck.Checked += TraySetting_Changed;
+        TrayCheck.Unchecked += TraySetting_Changed;
+        HotkeyCheck.Checked += HotkeySetting_Changed;
+        HotkeyCheck.Unchecked += HotkeySetting_Changed;
+        NotifyCheck.Checked += NotifySetting_Changed;
+        NotifyCheck.Unchecked += NotifySetting_Changed;
 
         AutostartCheck.IsChecked = ReadAutostart();
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -46,6 +52,9 @@ public partial class SettingsView : UserControl
         GamePathBox.Text = saved ?? "";
         RefreshGamePathHint();
 
+        TrayCheck.IsChecked = s.MinimizeToTray;
+        HotkeyCheck.IsChecked = s.HotkeyEnabled;
+        NotifyCheck.IsChecked = s.NotifyOnComplete;
         AutostartCheck.IsChecked = ReadAutostart();
         _suppressUiEvents = false;
         RefreshAdminStatus();
@@ -155,6 +164,37 @@ public partial class SettingsView : UserControl
         {
             DialogService.Warning("开机自启", "设置失败：" + ex.Message);
         }
+    }
+
+    // ---------- 托盘与通知 ----------
+
+    private void TraySetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents)
+            return;
+        var s = SettingsService.Current;
+        s.MinimizeToTray = TrayCheck.IsChecked == true;
+        SettingsService.Save(s);
+        TrayService.ApplySettings();
+    }
+
+    private void HotkeySetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents)
+            return;
+        var s = SettingsService.Current;
+        s.HotkeyEnabled = HotkeyCheck.IsChecked == true;
+        SettingsService.Save(s);
+        (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
+    }
+
+    private void NotifySetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents)
+            return;
+        var s = SettingsService.Current;
+        s.NotifyOnComplete = NotifyCheck.IsChecked == true;
+        SettingsService.Save(s);
     }
 
     // ---------- 高级与维护 ----------

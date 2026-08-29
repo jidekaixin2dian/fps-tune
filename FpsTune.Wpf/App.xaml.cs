@@ -14,10 +14,14 @@ public partial class App : Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         LegacyMigrations.EnsureRun();
         PreferDiscreteGpuForSelf();
-        LegacyMigrations.EnsureRun();
-        PreferDiscreteGpuForSelf();
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         base.OnStartup(e);
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        TrayService.Dispose();
+        base.OnExit(e);
     }
 
 
