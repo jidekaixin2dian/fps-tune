@@ -15,6 +15,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public bool RequiresReboot { get; }
     public bool Optimized { get; }
     public string Current { get; }
+    public string Group { get; }
     public string StatusText => Optimized ? "已达标" : "未应用";
     public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
@@ -28,6 +29,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
         RequiresReboot = item.RequiresReboot;
         Optimized = item.Optimized;
         Current = item.Current;
+        Group = item.Group;
     }
 
     public bool IsChecked

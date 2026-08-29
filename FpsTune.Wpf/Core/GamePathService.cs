@@ -11,6 +11,7 @@ public static class GamePathService
     {
         "cs2", "valve_w64", "VALORANT-Win64-Shipping", "Apex", "r5apex_dx12",
         "TslGame", "cod", "cod22-cod", "Overwatch", "TheFinals",
+        "RainbowSix", "EscapeFromTarkov", "destiny2", "BF2042",
         "DeltaForceClient-Win64-Shipping", "DeltaForceClient", "DeltaForce"
     };
 
@@ -18,6 +19,7 @@ public static class GamePathService
     {
         "cs2.exe", "VALORANT-Win64-Shipping.exe", "r5apex_dx12.exe",
         "TslGame.exe", "Overwatch.exe", "cod.exe", "TheFinals.exe",
+        "RainbowSix.exe", "EscapeFromTarkov.exe", "destiny2.exe", "BF2042.exe",
         "DeltaForceClient-Win64-Shipping.exe", "DeltaForceClient.exe"
     };
 
@@ -161,7 +163,15 @@ public static class GamePathService
                text.Contains("使命召唤", StringComparison.Ordinal) ||
                text.Contains("Overwatch", StringComparison.OrdinalIgnoreCase) ||
                text.Contains("守望先锋", StringComparison.Ordinal) ||
-               text.Contains("THE FINALS", StringComparison.OrdinalIgnoreCase);
+               text.Contains("THE FINALS", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("彩虹六号", StringComparison.Ordinal) ||
+               text.Contains("Rainbow Six", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("逃离塔科夫", StringComparison.Ordinal) ||
+               text.Contains("Escape from Tarkov", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("命运2", StringComparison.Ordinal) ||
+               text.Contains("Destiny 2", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("战地", StringComparison.Ordinal) ||
+               text.Contains("Battlefield", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? SearchForExe(string root, int maxDepth)

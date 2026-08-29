@@ -130,7 +130,8 @@ public partial class DetectView : UserControl
                 var optimized = item?["optimized"]?.GetValue<bool>() ?? false;
                 var current = item?["current"]?.GetValue<string>() ?? "";
                 var isDefault = item?["default"]?.GetValue<bool>() ?? false;
-                AppState.Items.Add(new OptimizationItem(id, name, desc, sideEffect, admin, reboot, optimized, current, isDefault));
+                var group = item?["group"]?.GetValue<string>() ?? "";
+                AppState.Items.Add(new OptimizationItem(id, name, desc, sideEffect, admin, reboot, optimized, current, isDefault, group));
             }
         }
 

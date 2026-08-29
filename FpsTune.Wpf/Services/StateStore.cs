@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace FpsTune.Wpf.Services;
@@ -81,6 +82,48 @@ public static class StateStore
         catch
         {
             return null;
+        }
+    }
+}
+
+
+public sealed record OptProfile(string Name, IReadOnlyList<string> Ids);
+
+/// <summary>优化页"配置方案"的本地持久化（%LOCALAPPDATA%\FpsTune\profiles.json）。</summary>
+public static class ProfileStore
+{
+    private static string BaseDir => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
+
+    private static string ProfilesFile => Path.Combine(BaseDir, "profiles.json");
+
+    private static readonly JsonSerializerOptions JsonOpts = new() { WriteIndented = true };
+
+    public static List<OptProfile> Load()
+    {
+        try
+        {
+            if (!File.Exists(ProfilesFile))
+                return new List<OptProfile>();
+            return JsonSerializer.Deserialize<List<OptProfile>>(File.ReadAllText(ProfilesFile, Encoding.UTF8))
+                   ?? new List<OptProfile>();
+        }
+        catch
+        {
+            return new List<OptProfile>();
+        }
+    }
+
+    public static void Save(List<OptProfile> profiles)
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            File.WriteAllText(ProfilesFile, JsonSerializer.Serialize(profiles, JsonOpts), new UTF8Encoding(false));
+        }
+        catch
+        {
+            // 持久化失败不致命，下次保存再试。
         }
     }
 }

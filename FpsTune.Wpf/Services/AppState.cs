@@ -18,4 +18,5 @@ public sealed record OptimizationItem(
     bool RequiresReboot,
     bool Optimized,
     string Current,
-    bool IsDefault);
+    bool IsDefault,
+    string Group);

@@ -104,6 +104,19 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
+    public void Every_item_has_a_known_group()
+    {
+        var known = new HashSet<string> { "键鼠", "图形显示", "网络", "电源", "系统与调度" };
+        var json = File.ReadAllText(RepoFile("catalog", "catalog.json"));
+        using var doc = JsonDocument.Parse(json);
+        foreach (var it in doc.RootElement.GetProperty("items").EnumerateArray())
+        {
+            var g = it.GetProperty("group").GetString() ?? "";
+            Assert.Contains(g, known);
+        }
+    }
+
+    [Fact]
     public void Reboot_items_match_conservative_snapshot()
     {
         // gpu-pstate-lock 曾在 CLI 漏标需重启；此快照锁定保守口径

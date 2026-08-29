@@ -33,7 +33,8 @@
         </Grid>
 
         <!-- 预设与确认 -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+        <StackPanel Grid.Row="1" Margin="0,0,0,14">
+        <Border Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -56,6 +57,29 @@
                           VerticalAlignment="Center"/>
             </Grid>
         </Border>
+
+        <Border Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <TextBlock Text="配置方案" Style="{StaticResource CardTitleStyle}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="ProfileNameBox"
+                             Style="{StaticResource InputTextBoxStyle}"
+                             Width="220" Height="30"
+                             VerticalContentAlignment="Center"
+                             FontSize="12"/>
+                    <Button Content="保存" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="8,0,0,0" Click="ProfileSave_Click"/>
+                    <Button Content="载入" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileLoad_Click"/>
+                    <Button Content="删除" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileDelete_Click"/>
+                    <Button Content="导出" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileExport_Click"/>
+                    <Button Content="导入" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileImport_Click"/>
+                </StackPanel>
+                <TextBlock x:Name="ProfileHint"
+                           Text="输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+
+        </StackPanel>
 
         <!-- 优化项列表 -->
         <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
@@ -88,6 +112,22 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- 分类过滤 -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,10">
+                    <RadioButton Content="全部" GroupName="grpfilter" IsChecked="True" Tag=""
+                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                    <RadioButton Content="键鼠" GroupName="grpfilter" Tag="键鼠"
+                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                    <RadioButton Content="图形显示" GroupName="grpfilter" Tag="图形显示"
+                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                    <RadioButton Content="网络" GroupName="grpfilter" Tag="网络"
+                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                    <RadioButton Content="电源" GroupName="grpfilter" Tag="电源"
+                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                    <RadioButton Content="系统与调度" GroupName="grpfilter" Tag="系统与调度"
+                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                </StackPanel>
+
                 <ListBox x:Name="ItemList"
                          Grid.Row="2"
                          Background="Transparent"
@@ -95,6 +135,17 @@
                          ItemContainerStyle="{StaticResource CardListItemStyle}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ItemsSource="{Binding ItemsView, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <ListBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"
+                                               Style="{StaticResource SectionLabelStyle}"
+                                               Margin="0,10,0,4"/>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListBox.GroupStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid>

@@ -297,7 +297,8 @@ function Get-HardwareInfo {
 function Find-GamePath {
     # 1) 正在运行的游戏进程（覆盖主流 FPS）
     $procNames = @('cs2', 'VALORANT-Win64-Shipping', 'r5apex_dx12', 'TslGame',
-                   'Overwatch', 'cod', 'TheFinals',
+                   'Overwatch', 'cod', 'TheFinals', 'RainbowSix', 'EscapeFromTarkov',
+                   'destiny2', 'BF2042',
                    'DeltaForceClient-Win64-Shipping', 'DeltaForceClient', 'DeltaForce')
     try {
         foreach ($name in $procNames) {
@@ -317,10 +318,10 @@ function Find-GamePath {
             $apps = Get-ItemProperty $root -ErrorAction SilentlyContinue
             foreach ($a in $apps) {
                 $dn = $a.DisplayName
-                if ($dn -and ($dn -match '三角洲|Delta Force|DeltaForce|Counter-Strike|CS2|CS 2|VALORANT|Apex Legends|PUBG|绝地求生|Call of Duty|使命召唤|Overwatch|守望先锋|THE FINALS')) {
+                if ($dn -and ($dn -match '三角洲|Delta Force|DeltaForce|Counter-Strike|CS2|CS 2|VALORANT|Apex Legends|PUBG|绝地求生|Call of Duty|使命召唤|Overwatch|守望先锋|THE FINALS|彩虹六号|Rainbow Six|逃离塔科夫|Escape from Tarkov|命运2|Destiny 2|战地|Battlefield')) {
                     $loc = $a.InstallLocation
                     if ($loc -and (Test-Path $loc)) {
-                        $exeNames = @('DeltaForceClient-Win64-Shipping.exe','cs2.exe','VALORANT-Win64-Shipping.exe','r5apex_dx12.exe','TslGame.exe','Overwatch.exe','cod.exe','TheFinals.exe')
+                        $exeNames = @('DeltaForceClient-Win64-Shipping.exe','cs2.exe','VALORANT-Win64-Shipping.exe','r5apex_dx12.exe','TslGame.exe','Overwatch.exe','cod.exe','TheFinals.exe','RainbowSix.exe','EscapeFromTarkov.exe','destiny2.exe','BF2042.exe')
                         $exe = Get-ChildItem $loc -Recurse -Include $exeNames -File -ErrorAction SilentlyContinue -Depth 4 |
                                Select-Object -First 1
                         if ($exe) { return $exe.FullName }
@@ -1130,6 +1131,7 @@ foreach ($item in $OptimizationItems) {
     $item.default    = [bool]$meta.default
     $item.reboot     = [bool]$meta.reboot
     $item.kind       = $meta.kind
+    $item.group      = $meta.group
 }
 foreach ($cid in ((Get-Catalog).items | ForEach-Object { $_.id })) {
     if (-not ($OptimizationItems | Where-Object { $_.id -eq $cid })) {
@@ -1311,7 +1313,7 @@ function Invoke-Detect {
         $items += @{
             id = $it.id; name = $it.name; desc = $it.desc; sideEffect = $it.sideEffect;
             admin = $it.admin; default = $it.default; reboot = $it.reboot;
-            optimized = $state.optimized; current = $state.current
+            optimized = $state.optimized; current = $state.current; group = $it.group
         }
     }
 

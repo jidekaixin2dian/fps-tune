@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text;
 using System.Windows;
@@ -34,18 +36,32 @@ public partial class OptimizeView : UserControl
         ItemList.SelectionChanged += (_, _) => ShowSelectedItem();
         ItemsView = System.Windows.Data.CollectionViewSource.GetDefaultView(Items);
         ItemsView.Filter = FilterItem;
+        ItemsView.GroupDescriptions.Add(
+            new System.Windows.Data.PropertyGroupDescription(nameof(OptimizationItemViewModel.Group)));
     }
 
     private string _searchText = "";
+    private string _groupFilter = "";
     private bool FilterItem(object obj)
     {
         if (obj is not OptimizationItemViewModel vm)
+            return false;
+        if (_groupFilter.Length > 0 && vm.Group != _groupFilter)
             return false;
         if (_searchText.Length == 0)
             return true;
         return vm.Id.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
             || vm.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
             || vm.Description.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void GroupChip_Checked(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.RadioButton rb && rb.Tag is string g)
+        {
+            _groupFilter = g;
+            ItemsView.Refresh();
+        }
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -377,4 +393,139 @@ public partial class OptimizeView : UserControl
             raw.AppendLine("--- STDERR ---").AppendLine(result.Error);
         return raw.ToString();
     }
-}
+
+
+    // ---------- 配置方案 ----------
+
+    private string CurrentProfileName => ProfileNameBox.Text.Trim();
+
+    private void SetProfileHint(string text)
+    {
+        ProfileHint.Text = text;
+    }
+
+    private void ApplyProfileIds(IEnumerable<string> ids)
+    {
+        _suppressPresetAutoCheck = true;
+        PresetCustom.IsChecked = true;
+        _suppressPresetAutoCheck = false;
+
+        var idSet = ids.ToHashSet();
+        foreach (var vm in Items)
+            vm.IsChecked = idSet.Contains(vm.Id);
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"== 方案已载入（{idSet.Count} 项） ==");
+        foreach (var vm in Items.Where(v => v.IsChecked))
+            sb.AppendLine($"{vm.Id}  {vm.Name}");
+        OutputBox.Text = sb.ToString();
+    }
+
+    private void ProfileSave_Click(object sender, RoutedEventArgs e)
+    {
+        var name = CurrentProfileName;
+        if (name.Length == 0)
+        {
+            DialogService.Warning("配置方案", "请先在输入框填写方案名称。");
+            return;
+        }
+        var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
+        if (ids.Count == 0)
+        {
+            DialogService.Warning("配置方案", "当前没有勾选任何优化项。");
+            return;
+        }
+
+        var profiles = ProfileStore.Load();
+        var existing = profiles.FirstOrDefault(p => p.Name == name);
+        if (existing is not null
+            && !DialogService.Confirm("配置方案", $"方案「{name}」已存在，覆盖？", danger: true))
+            return;
+        profiles.RemoveAll(p => p.Name == name);
+        profiles.Add(new OptProfile(name, ids));
+        ProfileStore.Save(profiles);
+        SetProfileHint($"已保存「{name}」（{ids.Count} 项）");
+    }
+
+    private void ProfileLoad_Click(object sender, RoutedEventArgs e)
+    {
+        var name = CurrentProfileName;
+        var profiles = ProfileStore.Load();
+        var hit = profiles.FirstOrDefault(p => p.Name == name);
+        if (hit is null)
+        {
+            var names = profiles.Count == 0 ? "（尚无已保存方案）" : string.Join("、", profiles.Select(p => p.Name));
+            DialogService.Warning("配置方案", $"未找到方案「{name}」。已有：{names}");
+            return;
+        }
+        ApplyProfileIds(hit.Ids);
+        SetProfileHint($"已载入「{name}」（{hit.Ids.Count} 项）");
+    }
+
+    private void ProfileDelete_Click(object sender, RoutedEventArgs e)
+    {
+        var name = CurrentProfileName;
+        var profiles = ProfileStore.Load();
+        if (profiles.All(p => p.Name != name))
+        {
+            DialogService.Warning("配置方案", $"未找到方案「{name}」。");
+            return;
+        }
+        if (!DialogService.Confirm("配置方案", $"删除方案「{name}」？", danger: true))
+            return;
+        profiles.RemoveAll(p => p.Name == name);
+        ProfileStore.Save(profiles);
+        SetProfileHint($"已删除「{name}」");
+    }
+
+    private void ProfileExport_Click(object sender, RoutedEventArgs e)
+    {
+        var name = CurrentProfileName;
+        var hit = ProfileStore.Load().FirstOrDefault(p => p.Name == name);
+        if (hit is null)
+        {
+            DialogService.Warning("配置方案", $"未找到方案「{name}」，无法导出。");
+            return;
+        }
+        var dlg = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "导出配置方案",
+            Filter = "FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json",
+            FileName = name + ".fpsprofile.json"
+        };
+        if (dlg.ShowDialog() != true)
+            return;
+        System.IO.File.WriteAllText(dlg.FileName,
+            System.Text.Json.JsonSerializer.Serialize(hit, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }),
+            Encoding.UTF8);
+        SetProfileHint($"已导出到 {dlg.FileName}");
+    }
+
+    private void ProfileImport_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "导入配置方案",
+            Filter = "FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json|所有文件 (*.*)|*.*"
+        };
+        if (dlg.ShowDialog() != true)
+            return;
+        try
+        {
+            var hit = System.Text.Json.JsonSerializer.Deserialize<OptProfile>(
+                System.IO.File.ReadAllText(dlg.FileName, Encoding.UTF8));
+            if (hit is null || string.IsNullOrWhiteSpace(hit.Name))
+                throw new InvalidOperationException("文件内容不是有效的配置方案");
+            var profiles = ProfileStore.Load();
+            profiles.RemoveAll(p => p.Name == hit.Name);
+            profiles.Add(hit);
+            ProfileStore.Save(profiles);
+            ProfileNameBox.Text = hit.Name;
+            ApplyProfileIds(hit.Ids);
+            SetProfileHint($"已导入「{hit.Name}」（{hit.Ids.Count} 项）");
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning("配置方案", "导入失败：" + ex.Message);
+        }
+    }}

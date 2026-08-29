@@ -34,7 +34,8 @@ public static class DetectionService
                 @default = true,
                 reboot = def.Reboot,
                 optimized = state.Optimized,
-                current = state.Current
+                current = state.Current,
+                group = def.Group
             };
         }).ToList();
 

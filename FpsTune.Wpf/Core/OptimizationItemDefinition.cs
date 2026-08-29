@@ -7,7 +7,8 @@ public sealed record OptimizationItemDefinition(
     string SideEffect,
     bool Admin,
     bool Reboot,
-    string Kind);
+    string Kind,
+    string Group);
 
 /// <summary>
 /// 优化项目录。实际数据来自 catalog/catalog.json（见 OptimizationCatalog），
