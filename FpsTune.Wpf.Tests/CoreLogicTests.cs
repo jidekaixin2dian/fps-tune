@@ -205,6 +205,25 @@ public class CoreLogicTests
     }
 
     [Fact]
+    public void BackupRecord_validation_accepts_known_target_and_rejects_tampering()
+    {
+        var record = new BackupRecord
+        {
+            Id = "hags",
+            Kind = "registry",
+            Hive = RegistryHive.LocalMachine.ToString(),
+            Path = @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
+            Name = "HwSchMode",
+            ValueKind = RegistryValueKind.DWord.ToString()
+        };
+
+        BackupService.ValidateRecord(record);
+
+        record.Path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+        Assert.Throws<InvalidOperationException>(() => BackupService.ValidateRecord(record));
+    }
+
+    [Fact]
     public void Backup_file_guards_keep_legacy_PowerShell_documents_out_of_CSharp()
     {
         var tmp = Path.Combine(Path.GetTempPath(), "fpstune-backup-guards-" + Guid.NewGuid().ToString("N"));
