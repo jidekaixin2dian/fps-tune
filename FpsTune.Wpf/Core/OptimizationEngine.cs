@@ -26,15 +26,25 @@ public static class OptimizationEngine
         => OptimizationCatalog.ResolvePreset(preset);
 
     public static Task<RunResult> ApplyPresetAsync(string preset)
+        => ApplyPresetAsync(preset, AppState.GamePath);
+
+    /// <summary>
+    /// 使用调用方明确提供的游戏路径应用预设；不会改写 AppState，避免并发操作串错目标。
+    /// </summary>
+    public static Task<RunResult> ApplyPresetAsync(string preset, string? gamePath)
     {
-        var gamePath = AppState.GamePath;
         var itemIds = GetPresetIds(preset).ToArray();
         return Task.Run(() => ApplyNative(itemIds, gamePath));
     }
 
     public static Task<RunResult> ApplyItemsAsync(IEnumerable<string> ids)
+        => ApplyItemsAsync(ids, AppState.GamePath);
+
+    /// <summary>
+    /// 使用调用方明确提供的游戏路径应用项目；不会改写 AppState，避免自动应用时备份/修改目标漂移。
+    /// </summary>
+    public static Task<RunResult> ApplyItemsAsync(IEnumerable<string> ids, string? gamePath)
     {
-        var gamePath = AppState.GamePath;
         var itemIds = ids.Distinct().ToArray();
         return Task.Run(() => ApplyNative(itemIds, gamePath));
     }

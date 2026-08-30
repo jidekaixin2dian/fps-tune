@@ -26,11 +26,47 @@ public sealed class AppSettings
     // 低配模式: 减弱动效与阴影、拉长采样间隔
     public bool LowSpecMode { get; set; }
 
+    // 按游戏自动应用：仅按进程名轮询，不读取进程路径或进程内存。
+    public bool AutoProfileEnabled { get; set; }
+    public List<AutoProfileBinding> AutoProfileBindings { get; set; } = new();
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||
         !string.IsNullOrWhiteSpace(Douyin) ||
         !string.IsNullOrWhiteSpace(Email);
+}
+
+/// <summary>按进程名触发配置方案的最小持久化映射。</summary>
+public sealed class AutoProfileBinding
+{
+    public string DisplayName { get; set; } = "";
+    public string ProcessName { get; set; } = "";
+    public string ExePath { get; set; } = "";
+    public string ProfileName { get; set; } = "";
+    public bool Enabled { get; set; } = true;
+
+    public AutoProfileBinding Clone() => new()
+    {
+        DisplayName = DisplayName,
+        ProcessName = ProcessName,
+        ExePath = ExePath,
+        ProfileName = ProfileName,
+        Enabled = Enabled
+    };
+
+    /// <summary>Process.GetProcessesByName 使用不带 .exe 的规范名。</summary>
+    public static string NormalizeProcessName(string? value)
+    {
+        var text = (value ?? "").Trim().Trim('"');
+        if (text.Length == 0)
+            return "";
+
+        var name = Path.GetFileName(text);
+        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            name = name[..^4];
+        return name.Trim();
+    }
 }
 
 public static class SettingsService
@@ -67,6 +103,7 @@ public static class SettingsService
 
             var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
+            Current.AutoProfileBindings ??= new List<AutoProfileBinding>();
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
                 Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
         }

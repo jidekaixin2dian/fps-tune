@@ -101,29 +101,55 @@ public static class ProfileStore
 
     public static List<OptProfile> Load()
     {
+        TryLoad(out var profiles, out _);
+        return profiles;
+    }
+
+    /// <summary>读取方案并保留错误原因，供自动应用等后台路径记录诊断。</summary>
+    public static bool TryLoad(out List<OptProfile> profiles, out string? error)
+    {
         try
         {
             if (!File.Exists(ProfilesFile))
-                return new List<OptProfile>();
-            return JsonSerializer.Deserialize<List<OptProfile>>(File.ReadAllText(ProfilesFile, Encoding.UTF8))
-                   ?? new List<OptProfile>();
+            {
+                profiles = new List<OptProfile>();
+                error = null;
+                return true;
+            }
+
+            profiles = JsonSerializer.Deserialize<List<OptProfile>>(
+                           File.ReadAllText(ProfilesFile, Encoding.UTF8))
+                       ?? new List<OptProfile>();
+            error = null;
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
-            return new List<OptProfile>();
+            profiles = new List<OptProfile>();
+            error = ex.Message;
+            return false;
         }
     }
 
     public static void Save(List<OptProfile> profiles)
     {
+        TrySave(profiles, out _);
+    }
+
+    /// <summary>保存方案并返回错误原因；旧 Save 保持兼容且仍不抛异常。</summary>
+    public static bool TrySave(List<OptProfile> profiles, out string? error)
+    {
         try
         {
             Directory.CreateDirectory(BaseDir);
             File.WriteAllText(ProfilesFile, JsonSerializer.Serialize(profiles, JsonOpts), new UTF8Encoding(false));
+            error = null;
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
-            // 持久化失败不致命，下次保存再试。
+            error = ex.Message;
+            return false;
         }
     }
 }

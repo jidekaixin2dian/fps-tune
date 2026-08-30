@@ -85,6 +85,114 @@
                 </StackPanel>
             </Border>
 
+            <!-- 按游戏自动应用 -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="按游戏自动应用" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="仅按游戏进程名每 3 秒轮询启动边沿，不读取进程路径、内存或注入进程。国服与国际服若使用同一进程名，当前接口无法区分，只能保留一个绑定。"
+                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    <CheckBox x:Name="AutoProfileCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="检测到绑定游戏启动时自动应用对应方案"
+                              Margin="0,10,0,0"
+                              Checked="AutoProfileSetting_Changed"
+                              Unchecked="AutoProfileSetting_Changed"/>
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="GameCandidateCombo"
+                                  Style="{StaticResource SelectComboBoxStyle}"
+                                  MinHeight="36"
+                                  Margin="0,0,8,0"
+                                  ToolTip="已扫描的游戏候选">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding ExePath}" Foreground="{DynamicResource TextMutedBrush}" FontSize="10"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <ComboBox x:Name="ProfileCombo"
+                                  Grid.Column="1"
+                                  Style="{StaticResource SelectComboBoxStyle}"
+                                  DisplayMemberPath="Name"
+                                  MinHeight="36"
+                                  Margin="0,0,8,0"
+                                  ToolTip="已保存的配置方案"/>
+                        <Button Grid.Column="2"
+                                Content="添加绑定"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="92"
+                                Click="AddAutoProfileBinding_Click"/>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="重新扫描游戏 / 方案"
+                                Style="{StaticResource GhostButtonStyle}"
+                                MinWidth="150"
+                                Margin="0,0,10,0"
+                                Click="RefreshAutoProfileData_Click"/>
+                        <TextBlock x:Name="AutoProfileStatusText"
+                                   Text="尚未扫描"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <ListBox x:Name="AutoBindingList"
+                             Margin="0,12,0,0"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource CardListItemStyle}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold"/>
+                                        <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="11">
+                                            <Run Text="进程："/>
+                                            <Run Text="{Binding ProcessName}" FontFamily="Cascadia Mono, Consolas"/>
+                                            <Run Text="  ·  方案："/>
+                                            <Run Text="{Binding ProfileName}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding ExePath}"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   FontSize="10"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              IsChecked="{Binding Enabled, Mode=TwoWay}"
+                                              VerticalAlignment="Center"
+                                              Margin="12,0,12,0"
+                                              Checked="AutoProfileBinding_Changed"
+                                              Unchecked="AutoProfileBinding_Changed"/>
+                                    <Button Grid.Column="2"
+                                            Content="删除"
+                                            Style="{StaticResource GhostButtonStyle}"
+                                            MinWidth="56"
+                                            VerticalAlignment="Center"
+                                            Click="RemoveAutoProfileBinding_Click"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
             <!-- 高级 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16">
                 <StackPanel>

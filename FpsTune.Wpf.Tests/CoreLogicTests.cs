@@ -29,6 +29,25 @@ public class CoreLogicTests
         Assert.False(UpdateService.IsNewer("abc", "1.0.0"));
     }
 
+    // ---------- 按游戏自动应用（纯逻辑） ----------
+
+    [Theory]
+    [InlineData("VALORANT-Win64-Shipping.exe", "VALORANT-Win64-Shipping")]
+    [InlineData("  cs2  ", "cs2")]
+    public void AutoProfileBinding_normalizes_process_name(string input, string expected)
+        => Assert.Equal(expected, AutoProfileBinding.NormalizeProcessName(input));
+
+    [Fact]
+    public void ProcessEdgeTracker_triggers_once_until_process_exits()
+    {
+        var tracker = new ProcessEdgeTracker();
+        var running = new Dictionary<string, bool?> { ["game"] = true };
+        Assert.Single(tracker.Update(running));
+        Assert.Empty(tracker.Update(running));
+        Assert.Empty(tracker.Update(new Dictionary<string, bool?> { ["game"] = false }));
+        Assert.Single(tracker.Update(running));
+    }
+
     // ---------- ItemCatalog 完整性 ----------
 
     [Fact]

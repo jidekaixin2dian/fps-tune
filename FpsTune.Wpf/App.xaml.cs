@@ -8,6 +8,8 @@ namespace FpsTune.Wpf;
 
 public partial class App : Application
 {
+    private AutoProfileService? _autoProfileService;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -16,10 +18,13 @@ public partial class App : Application
         LegacyMigrations.EnsureRun();
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         base.OnStartup(e);
+        _autoProfileService = new AutoProfileService();
+        _autoProfileService.Start();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _autoProfileService?.Dispose();
         TrayService.Dispose();
         base.OnExit(e);
     }

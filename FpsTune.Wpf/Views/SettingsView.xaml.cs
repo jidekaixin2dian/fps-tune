@@ -5,6 +5,9 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using FpsTune.Wpf.Services;
 
+using System.Collections.ObjectModel;
+using FpsTune.Wpf.Core;
+
 namespace FpsTune.Wpf.Views;
 
 public partial class SettingsView : UserControl
@@ -12,10 +15,13 @@ public partial class SettingsView : UserControl
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string RunValueName = "FpsTune";
     private bool _suppressUiEvents;
+    private bool _autoBindingsReady;
+    private readonly ObservableCollection<AutoProfileBinding> _autoBindings = new();
 
     public SettingsView()
     {
         InitializeComponent();
+        AutoBindingList.ItemsSource = _autoBindings;
         Loaded += (_, _) => LoadSettings();
 
         ThemeDarkRadio.Checked += (_, _) => ApplyThemeMode("dark");
@@ -61,9 +67,25 @@ public partial class SettingsView : UserControl
         NotifyCheck.IsChecked = s.NotifyOnComplete;
         AuroraCheck.IsChecked = s.AuroraEnabled;
         LowSpecCheck.IsChecked = s.LowSpecMode;
+        AutoProfileCheck.IsChecked = s.AutoProfileEnabled;
         AutostartCheck.IsChecked = ReadAutostart();
+
+        _autoBindingsReady = false;
+        _autoBindings.Clear();
+        var seenProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var source in s.AutoProfileBindings ?? new List<AutoProfileBinding>())
+        {
+            var binding = source.Clone();
+            binding.ProcessName = AutoProfileBinding.NormalizeProcessName(binding.ProcessName);
+            if (binding.ProcessName.Length == 0 || binding.ProfileName.Trim().Length == 0
+                || !seenProcesses.Add(binding.ProcessName))
+                continue;
+            _autoBindings.Add(binding);
+        }
+        _autoBindingsReady = true;
         _suppressUiEvents = false;
         RefreshAdminStatus();
+        _ = RefreshAutoProfileDataAsync();
     }
 
     private void ApplyThemeMode(string mode)
@@ -228,6 +250,182 @@ public partial class SettingsView : UserControl
         UiPerformance.LowSpec = s.LowSpecMode;
         // 重算卡片阴影等资源
         ThemeManager.SetMode(s.ThemeMode);
+    }
+
+    // ---------- 按游戏自动应用 ----------
+
+    private async void RefreshAutoProfileData_Click(object sender, RoutedEventArgs e)
+        => await RefreshAutoProfileDataAsync();
+
+    private async Task RefreshAutoProfileDataAsync()
+    {
+        SetAutoProfileStatus("正在后台扫描游戏与配置方案...");
+        var oldCandidatePath = (GameCandidateCombo.SelectedItem as GamePathService.GameCandidate)?.ExePath;
+        var oldProfileName = (ProfileCombo.SelectedItem as OptProfile)?.Name;
+
+        try
+        {
+            var data = await Task.Run(() =>
+            {
+                var candidates = GamePathService.DetectAll();
+                var profileOk = ProfileStore.TryLoad(out var profiles, out var profileError);
+                return (Candidates: candidates, Profiles: profiles, ProfileOk: profileOk, ProfileError: profileError);
+            });
+
+            GameCandidateCombo.ItemsSource = data.Candidates;
+            ProfileCombo.ItemsSource = data.Profiles;
+            GameCandidateCombo.SelectedItem = data.Candidates.FirstOrDefault(x =>
+                string.Equals(x.ExePath, oldCandidatePath, StringComparison.OrdinalIgnoreCase));
+            ProfileCombo.SelectedItem = data.Profiles.FirstOrDefault(x =>
+                string.Equals(x.Name, oldProfileName, StringComparison.OrdinalIgnoreCase));
+
+            if (!data.ProfileOk)
+                SetAutoProfileStatus("方案读取失败：" + data.ProfileError, warning: true);
+            else
+                SetAutoProfileStatus($"已扫描 {data.Candidates.Count} 个游戏候选、{data.Profiles.Count} 个方案");
+        }
+        catch (Exception ex)
+        {
+            SetAutoProfileStatus("扫描失败：" + ex.Message, warning: true);
+        }
+    }
+
+    private void AddAutoProfileBinding_Click(object sender, RoutedEventArgs e)
+    {
+        if (GameCandidateCombo.SelectedItem is not GamePathService.GameCandidate candidate)
+        {
+            SetAutoProfileStatus("请先选择已扫描的游戏候选。", warning: true);
+            return;
+        }
+        if (ProfileCombo.SelectedItem is not OptProfile profile
+            || string.IsNullOrWhiteSpace(profile.Name))
+        {
+            SetAutoProfileStatus("请先选择已保存的配置方案。", warning: true);
+            return;
+        }
+
+        var processName = AutoProfileBinding.NormalizeProcessName(candidate.ExePath);
+        if (processName.Length == 0)
+        {
+            SetAutoProfileStatus("无法从候选路径确定进程名，未添加。", warning: true);
+            return;
+        }
+        if (_autoBindings.Any(x => string.Equals(
+                AutoProfileBinding.NormalizeProcessName(x.ProcessName), processName,
+                StringComparison.OrdinalIgnoreCase)))
+        {
+            SetAutoProfileStatus(
+                $"进程名「{processName}」已经绑定。轮询无法区分同名国服/国际服，不能重复添加。",
+                warning: true);
+            return;
+        }
+
+        var binding = new AutoProfileBinding
+        {
+            DisplayName = candidate.Name,
+            ProcessName = processName,
+            ExePath = candidate.ExePath,
+            ProfileName = profile.Name.Trim(),
+            Enabled = true
+        };
+        _autoBindings.Add(binding);
+        if (!TrySaveAutoBindings(out var error))
+        {
+            _autoBindings.Remove(binding);
+            SetAutoProfileStatus("绑定保存失败：" + error, warning: true);
+            return;
+        }
+
+        SetAutoProfileStatus($"已绑定「{candidate.Name}」→「{profile.Name}」");
+    }
+
+    private void AutoProfileBinding_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_autoBindingsReady || _suppressUiEvents
+            || sender is not CheckBox { DataContext: AutoProfileBinding binding }
+            || !_autoBindings.Contains(binding))
+            return;
+
+        binding.Enabled = (sender as CheckBox)?.IsChecked == true;
+        if (TrySaveAutoBindings(out var error))
+        {
+            SetAutoProfileStatus(binding.Enabled ? "已启用绑定" : "已停用绑定");
+            return;
+        }
+
+        binding.Enabled = !binding.Enabled;
+        SetAutoProfileStatus("绑定开关保存失败：" + error, warning: true);
+        _suppressUiEvents = true;
+        (sender as CheckBox)!.IsChecked = binding.Enabled;
+        _suppressUiEvents = false;
+    }
+
+    private void RemoveAutoProfileBinding_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: AutoProfileBinding binding })
+            return;
+        var index = _autoBindings.IndexOf(binding);
+        if (index < 0)
+            return;
+
+        _autoBindings.RemoveAt(index);
+        if (!TrySaveAutoBindings(out var error))
+        {
+            _autoBindings.Insert(index, binding);
+            SetAutoProfileStatus("绑定删除保存失败：" + error, warning: true);
+            return;
+        }
+        SetAutoProfileStatus($"已删除绑定「{binding.DisplayName}」");
+    }
+
+    private void AutoProfileSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents || AutoProfileCheck.IsChecked is null)
+            return;
+
+        var settings = SettingsService.Current;
+        var oldValue = settings.AutoProfileEnabled;
+        settings.AutoProfileEnabled = AutoProfileCheck.IsChecked == true;
+        try
+        {
+            SettingsService.Save(settings);
+            SetAutoProfileStatus(settings.AutoProfileEnabled ? "自动应用已开启" : "自动应用已关闭");
+        }
+        catch (Exception ex)
+        {
+            settings.AutoProfileEnabled = oldValue;
+            _suppressUiEvents = true;
+            AutoProfileCheck.IsChecked = oldValue;
+            _suppressUiEvents = false;
+            SetAutoProfileStatus("自动应用开关保存失败：" + ex.Message, warning: true);
+        }
+    }
+
+    private bool TrySaveAutoBindings(out string? error)
+    {
+        var settings = SettingsService.Current;
+        var oldBindings = settings.AutoProfileBindings;
+        try
+        {
+            settings.AutoProfileBindings = _autoBindings.Select(x => x.Clone()).ToList();
+            SettingsService.Save(settings);
+            error = null;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            settings.AutoProfileBindings = oldBindings;
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    private void SetAutoProfileStatus(string text, bool warning = false)
+    {
+        AutoProfileStatusText.Text = text;
+        var key = warning ? "WarningBrush" : "TextMutedBrush";
+        if (Application.Current?.Resources[key] is System.Windows.Media.Brush brush)
+            AutoProfileStatusText.Foreground = brush;
     }
 
     // ---------- 高级与维护 ----------
