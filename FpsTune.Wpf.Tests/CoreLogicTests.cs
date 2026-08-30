@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Win32;
+using System.Security.Cryptography;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using Xunit;
@@ -27,6 +28,36 @@ public class CoreLogicTests
         Assert.False(UpdateService.IsNewer("v1.2.3", "1.0.0"));
         Assert.False(UpdateService.IsNewer("", "1.0.0"));
         Assert.False(UpdateService.IsNewer("abc", "1.0.0"));
+    }
+
+    [Fact]
+    public void UpdateService_reads_only_the_exact_sha256_manifest_entry()
+    {
+        const string expected = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+        var manifest = $"{expected}  FpsTune-Setup-1.3.4.exe\n{expected}  FpsTune-Setup-1.3.40.exe";
+
+        Assert.True(UpdateService.TryReadSha256(manifest, "FpsTune-Setup-1.3.4.exe", out var actual));
+        Assert.Equal(expected, actual);
+        Assert.False(UpdateService.TryReadSha256(manifest, "FpsTune-Setup-1.3.5.exe", out _));
+    }
+
+    [Fact]
+    public void UpdateService_verifies_downloaded_file_sha256()
+    {
+        var file = Path.Combine(Path.GetTempPath(), "fpstune-sha256-" + Guid.NewGuid().ToString("N") + ".tmp");
+        try
+        {
+            File.WriteAllText(file, "payload");
+            var expected = Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes("payload")));
+
+            Assert.True(UpdateService.VerifySha256(file, expected));
+            Assert.False(UpdateService.VerifySha256(file, new string('0', 64)));
+        }
+        finally
+        {
+            if (File.Exists(file))
+                File.Delete(file);
+        }
     }
 
     // ---------- 按游戏自动应用（纯逻辑） ----------

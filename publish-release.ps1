@@ -3,43 +3,80 @@ $ErrorActionPreference = 'Stop'
 
 $root = $PSScriptRoot
 $proj = Join-Path $root 'FpsTune.Wpf\FpsTune.Wpf.csproj'
+$propsPath = Join-Path $root 'Directory.Build.props'
 $dist = Join-Path $root 'dist'
-$publishTmp = Join-Path $dist 'publish-tmp'
+
+[xml]$propsXml = Get-Content $propsPath -Raw -Encoding UTF8
+$version = $null
+foreach ($pg in @($propsXml.Project.PropertyGroup)) {
+    if ($pg.Version) { $version = [string]$pg.Version; break }
+}
+if ($version -notmatch '^\d+\.\d+\.\d+$') {
+    Write-Error 'Directory.Build.props 缺少有效的三段版本号'
+    exit 1
+}
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     Write-Error 'dotnet not found. Install .NET 8 SDK first.'
     exit 1
 }
 
-New-Item -ItemType Directory -Path $dist -Force | Out-Null
-New-Item -ItemType Directory -Path $publishTmp -Force | Out-Null
-
+$singleOut = Join-Path $dist "single-file-$version"
+$folderOut = Join-Path $dist "folder-$version"
+$publishTmp = Join-Path $dist "publish-tmp-$version"
 $singleBld = Join-Path $publishTmp 'single-bld'
 $folderBld = Join-Path $publishTmp 'folder-bld'
+$zipName = "FpsTune-Portable-$version.zip"
+$zip = Join-Path $dist $zipName
+$manifest = Join-Path $dist "SHA256SUMS-v$version.txt"
 
-Write-Host 'Publishing single-file EXE...'
-dotnet publish $proj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:OutDir=$singleBld -o (Join-Path $dist 'single-file') | Out-Host
-if ($LASTEXITCODE -ne 0) { exit 1 }
+New-Item -ItemType Directory -Path $dist -Force | Out-Null
 
-Write-Host 'Publishing green folder...'
-dotnet publish $proj -c Release -r win-x64 --self-contained false /p:OutDir=$folderBld -o (Join-Path $dist 'folder') | Out-Host
-if ($LASTEXITCODE -ne 0) { exit 1 }
-
-$singleExe = Join-Path $dist 'single-file\FpsTune.exe'
-if (-not (Test-Path $singleExe)) {
-    Write-Error "Single-file publish did not produce expected file: $singleExe"
-    exit 1
+# 只清理当前版本的输出，历史 dist 资产保持不变。
+foreach ($path in @($singleOut, $folderOut, $publishTmp, $zip, $manifest)) {
+    if (Test-Path -LiteralPath $path) {
+        Remove-Item -LiteralPath $path -Recurse -Force
+    }
 }
 
-Write-Host 'Creating portable zip...'
-$zip = Join-Path $dist 'FpsTune-Portable.zip'
-if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path (Join-Path $dist 'folder\*') -DestinationPath $zip -CompressionLevel Optimal
+New-Item -ItemType Directory -Path $publishTmp -Force | Out-Null
 
-# 清理发布过程的临时中间目录
-Remove-Item $publishTmp -Recurse -Force -ErrorAction SilentlyContinue
+try {
+    Write-Host "Publishing single-file EXE v$version..."
+    dotnet publish $proj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:OutDir=$singleBld -o $singleOut | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw 'single-file publish failed' }
+
+    Write-Host "Publishing green folder v$version..."
+    dotnet publish $proj -c Release -r win-x64 --self-contained false /p:OutDir=$folderBld -o $folderOut | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw 'folder publish failed' }
+
+    $singleExe = Join-Path $singleOut 'FpsTune.exe'
+    $folderExe = Join-Path $folderOut 'FpsTune.exe'
+    if (-not (Test-Path -LiteralPath $singleExe) -or -not (Test-Path -LiteralPath $folderExe)) {
+        throw '发布未生成预期的 FpsTune.exe'
+    }
+
+    Write-Host 'Creating portable zip...'
+    Compress-Archive -Path (Join-Path $folderOut '*') -DestinationPath $zip -CompressionLevel Optimal
+
+    $hashLines = @(
+        "$((Get-FileHash -LiteralPath $singleExe -Algorithm SHA256).Hash)  FpsTune.exe",
+        "$((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash)  $zipName"
+    )
+    $installer = Join-Path $dist "installer\FpsTune-Setup-$version.exe"
+    if (Test-Path -LiteralPath $installer) {
+        $hashLines += "$((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash)  FpsTune-Setup-$version.exe"
+    }
+    [System.IO.File]::WriteAllLines($manifest, [string[]]$hashLines, [System.Text.UTF8Encoding]::new($false))
+}
+finally {
+    if (Test-Path -LiteralPath $publishTmp) {
+        Remove-Item -LiteralPath $publishTmp -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
 
 Write-Host ''
 Write-Host "Done: $dist"
-Write-Host "  $singleExe"
+Write-Host "  $singleOut\FpsTune.exe"
 Write-Host "  $zip"
+Write-Host "  $manifest"

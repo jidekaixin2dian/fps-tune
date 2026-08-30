@@ -75,9 +75,11 @@ public partial class SettingsView : UserControl
         var seenProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var source in s.AutoProfileBindings ?? new List<AutoProfileBinding>())
         {
+            if (source is null)
+                continue;
             var binding = source.Clone();
             binding.ProcessName = AutoProfileBinding.NormalizeProcessName(binding.ProcessName);
-            if (binding.ProcessName.Length == 0 || binding.ProfileName.Trim().Length == 0
+            if (binding.ProcessName.Length == 0 || string.IsNullOrWhiteSpace(binding.ProfileName)
                 || !seenProcesses.Add(binding.ProcessName))
                 continue;
             _autoBindings.Add(binding);
@@ -528,6 +530,12 @@ public partial class SettingsView : UserControl
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(info.InstallerUrl) || string.IsNullOrWhiteSpace(info.ChecksumUrl))
+            {
+                UpdateStatusText.Text = $"版本 {info.Version} 缺少对应安装包或 SHA256 清单，已拒绝更新";
+                return;
+            }
+
             UpdateStatusText.Text = $"发现新版本 {info.Version}";
             var go = DialogService.Confirm(
                 "FPS 帧律",
@@ -540,34 +548,48 @@ public partial class SettingsView : UserControl
                 return;
             }
 
-            var url = await UpdateService.FindInstallerUrlAsync();
-            if (url is null)
-            {
-                UpdateStatusText.Text = "更新服务暂不可达，请手动下载";
-                try { Process.Start(new ProcessStartInfo(info.Url) { UseShellExecute = true }); } catch { }
-                return;
-            }
-
             var tmp = Path.Combine(Path.GetTempPath(), $"FpsTune-Setup-{info.Version}.exe");
+            var checksumTmp = Path.Combine(Path.GetTempPath(), $"SHA256SUMS-v{info.Version}.txt");
+            var started = false;
             var lastPct = -1;
-            await UpdateService.DownloadAsync(url, tmp, pct =>
+            try
             {
-                var percent = (int)pct;
-                if (percent == lastPct)
-                    return;
-                lastPct = percent;
-                Dispatcher.Invoke(() => UpdateStatusText.Text = $"下载中 {percent}%");
-            });
+                await UpdateService.DownloadAsync(info.InstallerUrl, tmp, pct =>
+                {
+                    var percent = (int)pct;
+                    if (percent == lastPct)
+                        return;
+                    lastPct = percent;
+                    Dispatcher.Invoke(() => UpdateStatusText.Text = $"下载中 {percent}%");
+                });
 
-            UpdateStatusText.Text = "下载完成，正在启动安装...";
-            var dir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-            Process.Start(new ProcessStartInfo(tmp)
+                UpdateStatusText.Text = "正在下载 SHA256 清单...";
+                await UpdateService.DownloadAsync(info.ChecksumUrl, checksumTmp, null);
+                var manifest = await File.ReadAllTextAsync(checksumTmp);
+                if (!UpdateService.TryReadSha256(manifest, Path.GetFileName(tmp), out var expectedHash))
+                    throw new InvalidOperationException("SHA256 清单缺少当前安装包记录");
+                if (!UpdateService.VerifySha256(tmp, expectedHash))
+                    throw new InvalidOperationException("安装包 SHA256 校验不匹配");
+
+                UpdateStatusText.Text = "校验通过，正在启动安装...";
+                var dir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+                var installer = Process.Start(new ProcessStartInfo(tmp)
+                {
+                    UseShellExecute = true,
+                    Arguments = $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"{dir}\""
+                });
+                if (installer is null)
+                    throw new InvalidOperationException("无法启动安装程序");
+                started = true;
+                await Task.Delay(1200);
+                Application.Current.Shutdown();
+            }
+            finally
             {
-                UseShellExecute = true,
-                Arguments = $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"{dir}\""
-            });
-            await Task.Delay(1200);
-            Application.Current.Shutdown();
+                TryDeleteFile(checksumTmp);
+                if (!started)
+                    TryDeleteFile(tmp);
+            }
         }
         catch (Exception ex)
         {
@@ -576,6 +598,18 @@ public partial class SettingsView : UserControl
         finally
         {
             CheckUpdateButton.IsEnabled = true;
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
         }
     }
 }
