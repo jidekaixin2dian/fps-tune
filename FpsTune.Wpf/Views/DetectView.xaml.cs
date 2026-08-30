@@ -41,7 +41,7 @@ public partial class DetectView : UserControl
     {
         if (_monitorTimer is not null)
             return;
-        _monitorTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _monitorTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1) };
         _monitorTimer.Tick += (_, _) => SampleMonitor();
         _monitorTimer.Start();
     }

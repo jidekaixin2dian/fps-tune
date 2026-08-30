@@ -12,6 +12,8 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         DispatcherUnhandledException += OnDispatcherUnhandledException;
+        SettingsService.Load();
+        UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
         LegacyMigrations.EnsureRun();
         PreferDiscreteGpuForSelf();
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;

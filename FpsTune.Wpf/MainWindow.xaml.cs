@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
@@ -60,6 +60,8 @@ public partial class MainWindow : Window
         // SwitchPage 的动画显式 From=24, 不受此处归零影响。
         _pageSlide.X = 0;
         PageHost.Content = GetPage("home");
+        // 托盘图标随应用启动常驻(与最小化设置无关); 设置只控制最小化行为
+        TrayService.EnsureCreated();
 
         // 版本号唯一来源：程序集（编译自 Directory.Build.props）
         var ver = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -235,6 +237,14 @@ public partial class MainWindow : Window
     {
         if (ReferenceEquals(PageHost.Content, page))
             return;
+
+        // 低配模式: 跳过滑入/淡入动画
+        if (UiPerformance.LowSpec)
+        {
+            PageHost.Opacity = 1;
+            PageHost.Content = page;
+            return;
+        }
 
         PageHost.Opacity = 0;
         PageHost.Content = page;

@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Services;
@@ -41,7 +42,7 @@ public static class ThemeManager
         var t = resolved == "light" ? LightPalette : DarkPalette;
 
         SetBrush("AppBackgroundBrush", t.AppBackground);
-        SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, 0xD9));
+        SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, 0xB4));
         SetBrush("SurfaceBrush", t.Surface);
         SetBrush("SurfaceAltBrush", t.SurfaceAlt);
         SetBrush("ElevatedBrush", t.Elevated);
@@ -119,6 +120,21 @@ public static class ThemeManager
         backdrop.Freeze();
         glow?.Freeze();
         CurrentGlowBrush = glow;
+
+        // 卡片阴影: 低配模式整体关闭(阴影是 WPF 里最贵的视觉), 收敛后的尺寸
+        // 保证不超出 24px 页边距、不会被窗口圆角裁切成"断裂"
+        if (UiPerformance.LowSpec)
+            app.Resources["CardShadowEffect"] = null;
+        else
+            app.Resources["CardShadowEffect"] = new DropShadowEffect
+            {
+                BlurRadius = 16,
+                ShadowDepth = 2,
+                Direction = 270,
+                Opacity = 0.20,
+                Color = Color.FromRgb(0, 0, 0)
+            };
+
         app.Resources["AppBackdropBrush"] = backdrop;
         // 页面根全部引用 Transparent 版 AppBackgroundBrush(App.xaml), 窗口层背景透出
         app.Resources["AppBackgroundBrush"] = TransparentBrush();

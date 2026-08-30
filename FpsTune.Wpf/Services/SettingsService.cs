@@ -23,6 +23,9 @@ public sealed class AppSettings
     // 界面氛围: 顶部极光柔光（加强版参数），默认开
     public bool AuroraEnabled { get; set; } = true;
 
+    // 低配模式: 减弱动效与阴影、拉长采样间隔
+    public bool LowSpecMode { get; set; }
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||

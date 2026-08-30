@@ -26,6 +26,10 @@
                               Style="{StaticResource ToggleSwitchStyle}"
                               Content="顶部氛围光（页面顶部的极光柔光）"
                               Margin="0,8,0,0"/>
+                    <CheckBox x:Name="LowSpecCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="低配模式（减弱动效与阴影、降低采样频率）"
+                              Margin="0,8,0,0"/>
 
                     <TextBlock Text="启动" Style="{StaticResource MutedTextStyle}" Margin="0,16,0,0"/>
                     <CheckBox x:Name="AutostartCheck"

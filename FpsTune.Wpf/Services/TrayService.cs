@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
 
 namespace FpsTune.Wpf.Services;
@@ -21,13 +22,10 @@ public static class TrayService
     private const int WM_TRAYICON = WM_APPBASE + 0x47F;   // WM_APP + 1151
     private const int WM_LBUTTONDBLCLK = 0x0203;
     private const int WM_RBUTTONUP = 0x0205;
-    private const int WM_COMMAND = 0x0111;
 
     private const uint NIM_ADD = 0, NIM_MODIFY = 1, NIM_DELETE = 2;
     private const uint NIF_MESSAGE = 0x1, NIF_ICON = 0x2, NIF_TIP = 0x4, NIF_INFO = 0x10;
     private const uint NIIF_INFO = 0x1;
-
-    private const int MENU_OPEN = 1, MENU_OPT = 2, MENU_AB = 3, MENU_EXIT = 9;
 
     private static HwndSource? _hwnd;
     private static bool _added;
@@ -40,13 +38,13 @@ public static class TrayService
     /// <summary>托盘图标当前是否真实挂载成功（决定最小化时能否安全隐藏窗口）。</summary>
     public static bool IsTrayVisible => _added;
 
-    /// <summary>按当前设置创建或销毁托盘图标；设置页切换开关时调用。</summary>
+    /// <summary>
+    /// 托盘图标随应用启动常驻, 与"最小化到托盘"设置无关——设置只控制最小化行为。
+    /// 幂等, 可安全重复调用。
+    /// </summary>
     public static void ApplySettings()
     {
-        if (IsEnabled)
-            EnsureCreated();
-        else
-            Dispose();
+        EnsureCreated();
     }
 
     public static bool EnsureCreated()
@@ -219,47 +217,47 @@ public static class TrayService
             return nint.Zero;
         }
 
-        if (msg == WM_COMMAND)
-        {
-            switch ((int)(wParam & 0xFFFF))
-            {
-                case MENU_OPEN: ShowMainWindow(null); break;
-                case MENU_OPT: ShowMainWindow("opt"); break;
-                case MENU_AB: ShowMainWindow("ab"); break;
-                case MENU_EXIT:
-                    Dispose();
-                    Application.Current.MainWindow?.Close();
-                    Application.Current.Shutdown();
-                    break;
-            }
-            handled = true;
-            return nint.Zero;
-        }
-
         return nint.Zero;
     }
 
     private static void ShowTrayMenu()
     {
-        if (_hwnd is null)
+        var app = Application.Current;
+        if (app is null || _hwnd is null)
             return;
-        // 经典托盘菜单套路：先把消息窗口设为前台，否则点击菜单外无法收起
-        Native.SetForegroundWindow(_hwnd.Handle);
-        var menu = Native.CreatePopupMenu();
-        Native.AppendMenu(menu, Native.MF_STRING, MENU_OPEN, "打开主窗口");
-        Native.AppendMenu(menu, Native.MF_STRING, MENU_OPT, "打开优化页");
-        Native.AppendMenu(menu, Native.MF_STRING, MENU_AB, "打开 A/B 实验");
-        Native.AppendMenu(menu, Native.MF_SEPARATOR, 0, null);
-        Native.AppendMenu(menu, Native.MF_STRING, MENU_EXIT, "退出");
+        app.Dispatcher.Invoke(() =>
+        {
+            // 先把线程消息窗口设为前台, 托盘菜单才能在点击外部时收起
+            Native.SetForegroundWindow(_hwnd.Handle);
 
-        Native.GetCursorPos(out var pt);
-        // TPM_RETURNCMD: 同步返回选中项，走 WM_COMMAND 分支处理
-        var cmd = Native.TrackPopupMenuEx(menu,
-            Native.TPM_RETURNCMD | Native.TPM_RIGHTBUTTON | Native.TPM_NONOTIFY,
-            pt.X, pt.Y, _hwnd.Handle, IntPtr.Zero);
-        Native.DestroyMenu(menu);
-        if (cmd != 0)
-            Native.SendMessage(_hwnd.Handle, WM_COMMAND, (nint)(nuint)(ushort)cmd, nint.Zero);
+            var danger = app.TryFindResource("DangerBrush") as System.Windows.Media.Brush;
+            var menu = new ContextMenu { Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+            if (app.MainWindow is not null)
+                menu.PlacementTarget = app.MainWindow;
+
+            var open = new MenuItem { Header = "打开主窗口" };
+            open.Click += (_, _) => ShowMainWindow(null);
+            var opt = new MenuItem { Header = "打开优化页" };
+            opt.Click += (_, _) => ShowMainWindow("opt");
+            var ab = new MenuItem { Header = "打开 A/B 实验" };
+            ab.Click += (_, _) => ShowMainWindow("ab");
+            var exit = new MenuItem { Header = "退出" };
+            if (danger is not null)
+                exit.Foreground = danger;
+            exit.Click += (_, _) =>
+            {
+                Dispose();
+                Application.Current.MainWindow?.Close();
+                Application.Current.Shutdown();
+            };
+
+            menu.Items.Add(open);
+            menu.Items.Add(opt);
+            menu.Items.Add(ab);
+            menu.Items.Add(new Separator());
+            menu.Items.Add(exit);
+            menu.IsOpen = true;
+        });
     }
 
     private static void ShowMainWindow(string? navigateTo)
@@ -285,9 +283,6 @@ public static class TrayService
         public const uint IMAGE_ICON = 1;
         public const uint LR_LOADFROMFILE = 0x10;
         public const uint LR_DEFAULTSIZE = 0x40, LR_SHARED = 0x8000;
-        public const uint MF_STRING = 0x0, MF_SEPARATOR = 0x800;
-        public const uint TPM_RETURNCMD = 0x100, TPM_RIGHTBUTTON = 0x2, TPM_NONOTIFY = 0x80;
-
         [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool Shell_NotifyIcon(uint message, ref NOTIFYICONDATA data);
 
@@ -307,25 +302,7 @@ public static class TrayService
         public static extern bool SetForegroundWindow(IntPtr hwnd);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr CreatePopupMenu();
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        public static extern bool AppendMenu(IntPtr menu, uint flags, uint id, string? text);
-
-        [DllImport("user32.dll")]
-        public static extern bool DestroyMenu(IntPtr menu);
-
-        [DllImport("user32.dll")]
-        public static extern bool GetCursorPos(out POINT pt);
-
-        [DllImport("user32.dll")]
-        public static extern int TrackPopupMenuEx(IntPtr menu, uint flags, int x, int y, IntPtr hwnd, IntPtr tpm);
-
-        [DllImport("user32.dll")]
         public static extern IntPtr SendMessage(IntPtr hwnd, int msg, nint wParam, nint lParam);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT { public int X, Y; }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public struct NOTIFYICONDATA

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -32,6 +32,8 @@ public partial class SettingsView : UserControl
         NotifyCheck.Unchecked += NotifySetting_Changed;
         AuroraCheck.Checked += AuroraSetting_Changed;
         AuroraCheck.Unchecked += AuroraSetting_Changed;
+        LowSpecCheck.Checked += LowSpecSetting_Changed;
+        LowSpecCheck.Unchecked += LowSpecSetting_Changed;
 
         AutostartCheck.IsChecked = ReadAutostart();
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -58,6 +60,7 @@ public partial class SettingsView : UserControl
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
         AuroraCheck.IsChecked = s.AuroraEnabled;
+        LowSpecCheck.IsChecked = s.LowSpecMode;
         AutostartCheck.IsChecked = ReadAutostart();
         _suppressUiEvents = false;
         RefreshAdminStatus();
@@ -209,7 +212,21 @@ public partial class SettingsView : UserControl
         var s = SettingsService.Current;
         s.AuroraEnabled = AuroraCheck.IsChecked == true;
         SettingsService.Save(s);
-        // 氛围光随主题一起重算
+        // 重算主题刷子并把新极光刷子即时推给主窗口(不重启生效)
+        ThemeManager.SetMode(s.ThemeMode);
+        if (Application.Current.MainWindow is MainWindow main)
+            main.ApplyAuroraSetting(ThemeManager.CurrentGlowBrush);
+    }
+
+    private void LowSpecSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents)
+            return;
+        var s = SettingsService.Current;
+        s.LowSpecMode = LowSpecCheck.IsChecked == true;
+        SettingsService.Save(s);
+        UiPerformance.LowSpec = s.LowSpecMode;
+        // 重算卡片阴影等资源
         ThemeManager.SetMode(s.ThemeMode);
     }
 
