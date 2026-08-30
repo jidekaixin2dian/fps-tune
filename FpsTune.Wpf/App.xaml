@@ -187,59 +187,6 @@
                 </Setter>
             </Style>
 
-            <!-- 全局细滚动条: 细圆角、主题化, 应用于所有 ScrollViewer/ListBox/TextBox -->
-            <Style TargetType="ScrollBar">
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Width" Value="8"/>
-                <Setter Property="MinWidth" Value="8"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ScrollBar">
-                            <Grid Background="Transparent">
-                                <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                    <Track.DecreaseRepeatButton>
-                                        <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
-                                    </Track.DecreaseRepeatButton>
-                                    <Track.IncreaseRepeatButton>
-                                        <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
-                                    </Track.IncreaseRepeatButton>
-                                    <Track.Thumb>
-                                        <Thumb>
-                                            <Thumb.Template>
-                                                <ControlTemplate TargetType="Thumb">
-                                                    <Border x:Name="ThumbBd" Background="{DynamicResource BorderHoverBrush}"
-                                                            CornerRadius="4" Margin="1"/>
-                                                    <ControlTemplate.Triggers>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="ThumbBd" Property="Background" Value="{DynamicResource TextMutedBrush}"/>
-                                                        </Trigger>
-                                                        <Trigger Property="IsDragging" Value="True">
-                                                            <Setter TargetName="ThumbBd" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                                        </Trigger>
-                                                    </ControlTemplate.Triggers>
-                                                </ControlTemplate>
-                                            </Thumb.Template>
-                                        </Thumb>
-                                    </Track.Thumb>
-                                </Track>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="Orientation" Value="Horizontal">
-                                    <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-                <Style.Triggers>
-                    <Trigger Property="Orientation" Value="Horizontal">
-                        <Setter Property="Width" Value="Auto"/>
-                        <Setter Property="Height" Value="8"/>
-                        <Setter Property="MinHeight" Value="8"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-
             <!-- 托盘右键菜单: 与主界面同款的圆角卡片样式 -->
             <Style TargetType="ContextMenu">
                 <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
@@ -591,9 +538,16 @@
                                         <Thumb>
                                             <Thumb.Template>
                                                 <ControlTemplate TargetType="Thumb">
-                                                    <Border Background="{DynamicResource BorderHoverBrush}"
-                                                            BorderThickness="0"
-                                                            CornerRadius="3"/>
+                                                    <Border x:Name="Bd" Background="{DynamicResource BorderHoverBrush}"
+                                                            BorderThickness="0" CornerRadius="3"/>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TextMutedBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsDragging" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
                                                 </ControlTemplate>
                                             </Thumb.Template>
                                         </Thumb>
