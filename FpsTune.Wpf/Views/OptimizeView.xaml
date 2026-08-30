@@ -6,9 +6,9 @@
     <Grid Margin="28,24,28,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <!-- 双栏必须吃满剩余高度: 若放 Auto 行, 右栏列表会按自然高度
+                 撑到约 3000px 溢出窗口, 滚动条不出现且卡片阴影被窗口底边截断 -->
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 页头 -->
@@ -44,10 +44,15 @@
                     <StackPanel>
                         <TextBlock Text="预设" Style="{StaticResource CardTitleStyle}"/>
                         <WrapPanel Margin="0,8,0,0">
-                            <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
-                            <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Style="{StaticResource PillRadioStyle}"/>
-                            <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
-                            <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+                            <!-- 胶囊之间留足横向间距; 底部 8px 保证换行后两行不贴死 -->
+                            <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Margin="0,0,14,8"
+                                         Style="{StaticResource PillRadioStyle}"/>
+                            <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Margin="0,0,14,8"
+                                         Style="{StaticResource PillRadioStyle}"/>
+                            <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Margin="0,0,14,8"
+                                         Style="{StaticResource PillRadioStyle}"/>
+                            <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Margin="0,0,14,8"
+                                         Style="{StaticResource PillRadioStyle}"/>
                         </WrapPanel>
                         <CheckBox x:Name="ConsentCheck"
                                   Style="{StaticResource ToggleSwitchStyle}"

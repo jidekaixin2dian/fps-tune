@@ -38,7 +38,7 @@
 
             <!-- 表单 -->
             <Border Grid.Column="0" Style="{StaticResource CardStyle}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer x:Name="FormScroll" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="基础信息" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="昵称" Style="{StaticResource MutedTextStyle}"/>
@@ -80,11 +80,13 @@
                         </Grid>
 
                         <TextBlock Text="备注" Style="{StaticResource MutedTextStyle}"/>
+                        <!-- 多行输入框: 滚到边时把滚轮还给外层表单滚动, 由 code-behind 处理 -->
                         <TextBox x:Name="NotesBox"
                                  Style="{StaticResource InputTextBoxStyle}"
                                  Height="84"
                                  AcceptsReturn="True"
                                  TextWrapping="Wrap"
+                                 PreviewMouseWheel="NotesBoxWheelToRoot"
                                  Margin="0,4,0,0"/>
                     </StackPanel>
                 </ScrollViewer>

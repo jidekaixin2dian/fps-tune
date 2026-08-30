@@ -21,6 +21,19 @@ public partial class AbExperimentView : UserControl
         Loaded += (_, _) => RefreshHistory();
     }
 
+    // 原始输出框自身可滚: 滚到尽头时把滚轮还给页面根滚动(与检测页同款)
+    private void RawBoxWheelToRoot(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if (e.Delta == 0)
+            return;
+        var atTop = RawBox.VerticalOffset <= 0.1;
+        var atBottom = RawBox.VerticalOffset >= RawBox.ExtentHeight - RawBox.ViewportHeight - 0.1;
+        if ((e.Delta < 0 && !atBottom) || (e.Delta > 0 && !atTop))
+            return; // 框内还有内容可滚
+        RootScroll.ScrollToVerticalOffset(RootScroll.VerticalOffset - e.Delta);
+        e.Handled = true;
+    }
+
     private async void Baseline_Click(object sender, RoutedEventArgs e)
         => await Run("基线", "基线采样中（3 次，每次约 90 秒），请保持游戏场景固定...", "-Baseline", "-Json");
 

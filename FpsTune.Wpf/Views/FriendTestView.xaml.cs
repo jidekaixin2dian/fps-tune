@@ -21,6 +21,19 @@ public partial class FriendTestView : UserControl
         Directory.CreateDirectory(_outputDir);
     }
 
+    // 备注框自身可滚: 滚到尽头时把滚轮还给外层表单滚动(与检测页同款)
+    private void NotesBoxWheelToRoot(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if (e.Delta == 0)
+            return;
+        var atTop = NotesBox.VerticalOffset <= 0.1;
+        var atBottom = NotesBox.VerticalOffset >= NotesBox.ExtentHeight - NotesBox.ViewportHeight - 0.1;
+        if ((e.Delta < 0 && !atBottom) || (e.Delta > 0 && !atTop))
+            return; // 框内还有内容可滚
+        FormScroll.ScrollToVerticalOffset(FormScroll.VerticalOffset - e.Delta);
+        e.Handled = true;
+    }
+
 
     private async void GenerateButton_Click(object sender, RoutedEventArgs e)
     {

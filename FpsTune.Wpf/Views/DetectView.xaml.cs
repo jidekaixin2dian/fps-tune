@@ -164,12 +164,30 @@ public partial class DetectView : UserControl
 
         var current = StateStore.LoadGamePath() ?? AppState.GamePath;
         var idx = -1;
-        for (var i = 0; i < GameSwitcher.Items.Count; i++)
+        if (!string.IsNullOrWhiteSpace(current))
         {
-            if (GameSwitcher.Items[i] is ComboBoxItem ci && ci.Tag as string == current)
+            // 保存的路径可能指向同游戏的另一层 exe(启动器 vs Shipping 真进程):
+            // 依次按 精确路径 → 文件名 → 显示名 匹配
+            var currentName = System.IO.Path.GetFileName(current);
+            var currentLabel = GamePathService.LabelFor(current);
+            for (var i = 0; i < GameSwitcher.Items.Count; i++)
             {
-                idx = i;
-                break;
+                if (GameSwitcher.Items[i] is not ComboBoxItem ci || ci.Tag is not string path || path.Length == 0)
+                    continue;
+                if (string.Equals(path, current, StringComparison.OrdinalIgnoreCase)
+                    || System.IO.Path.GetFileName(path).Equals(currentName, StringComparison.OrdinalIgnoreCase)
+                    || GamePathService.LabelFor(path) == currentLabel)
+                {
+                    idx = i;
+                    break;
+                }
+            }
+
+            if (idx < 0)
+            {
+                // 保存路径不在候选里: 把它自身列为当前项, 避免下拉框出现无解释的空白
+                GameSwitcher.Items.Insert(0, new ComboBoxItem { Content = currentLabel, Tag = current, ToolTip = current });
+                idx = 0;
             }
         }
         GameSwitcher.SelectedIndex = idx;
@@ -401,6 +419,34 @@ public partial class DetectView : UserControl
             Clipboard.SetText(OutputBox.Text);
             DialogService.Info("检测详情", "已将检测详情复制到剪贴板。");
         }
+    }
+
+    // ---------- 页面滚轮穿透 ----------
+
+    // 概览列表在根 ScrollViewer 里按自然高度完全展开(自身永不需要滚动),
+    // 但其内部 ScrollViewer 仍会把鼠标滚轮标记为已处理, 页面因此"滚几格就停"。
+    // 统一在 Preview 阶段转发给根滚动。
+    private void ForwardWheelToRoot(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if (e.Delta == 0)
+            return;
+        RootScroll.ScrollToVerticalOffset(RootScroll.VerticalOffset - e.Delta);
+        e.Handled = true;
+    }
+
+    // JSON 详情框自身可滚: 仅当已滚到对应方向的尽头时把滚轮还给页面。
+    private void TextBoxWheelToRoot(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if (e.Delta == 0)
+            return;
+        var atTop = OutputBox.VerticalOffset <= 0.1;
+        var atBottom = OutputBox.VerticalOffset >= OutputBox.ExtentHeight - OutputBox.ViewportHeight - 0.1;
+        var leavingDown = e.Delta < 0 && atBottom;
+        var leavingUp = e.Delta > 0 && atTop;
+        if (!leavingDown && !leavingUp)
+            return; // 框内还有内容可滚, 保留默认行为
+        RootScroll.ScrollToVerticalOffset(RootScroll.VerticalOffset - e.Delta);
+        e.Handled = true;
     }
 
     private static void SetCheck(System.Windows.Controls.TextBlock target, JsonNode? node)
