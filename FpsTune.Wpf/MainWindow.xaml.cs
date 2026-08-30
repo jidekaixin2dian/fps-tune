@@ -90,6 +90,49 @@ public partial class MainWindow : Window
         ApplyHotkeyRegistration();
     }
 
+    protected override void OnContentRendered(EventArgs e)
+    {
+        base.OnContentRendered(e);
+        // 首启自检: 个别情况下(显示缩放调整后/多屏环境) WPF 首次布局按错误 DPI
+        // 测量, 页面整体偏宽、右侧被窗口边缘裁切, 且不会自愈。渲染完成后用
+        // 首页联系条右缘做探针, 溢出即执行"最大化→还原"强制重排(已验证可修复)。
+        Dispatcher.BeginInvoke(() =>
+        {
+            try
+            {
+                if (WindowState != WindowState.Normal)
+                    return;
+                if (PageHost.Content is not Views.HomeView home)
+                    return;
+                var right = home.ContactRightEdge();
+                Services.TrayService.LogDiagnostic(
+                    $"layout probe contactRight={right:0.0} homeW={home.ActualWidth:0.0} " +
+                    $"wpfDpi={VisualTreeHelper.GetDpi(this).PixelsPerDip:0.###}");
+                // 正常: 联系条右缘 ≈ 页宽 - 边距(24)。溢出或页面本身比槽位宽,
+                // 都说明首布局按错误 DPI 测量了。
+                var overflown = right > home.ActualWidth - 14
+                                || home.ActualWidth > (ActualWidth - 220) + 2;
+                if (overflown)
+                {
+                    Services.TrayService.LogDiagnostic("heal: maximize/restore cycle");
+                    WindowState = WindowState.Maximized;
+                    WindowState = WindowState.Normal;
+                    Width = 1200;
+                    Height = 780;
+                    Left = Math.Max(0, (SystemParameters.WorkArea.Width - Width) / 2);
+                    Top = Math.Max(0, (SystemParameters.WorkArea.Height - Height) / 2);
+                }
+            }
+            catch
+            {
+                // 自检失败不影响使用
+            }
+        }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
+    private static extern uint NativeGetDpiForWindow(nint hwnd);
+
     private HwndSource? _hwndSource;
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)

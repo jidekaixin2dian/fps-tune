@@ -1,21 +1,41 @@
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using FpsTune.Wpf.Views;
+using System.Windows.Interop;
 
 namespace FpsTune.Wpf.Services;
 
 /// <summary>
-/// 系统托盘常驻：托盘图标、右键菜单、气泡通知。
-/// 只在 UI 线程调用；图标借用 WinForms NotifyIcon，菜单是 WinForms ContextMenuStrip。
+/// 系统托盘常驻：Shell_NotifyIcon 纯 P/Invoke 实现。
+/// 历史教训：v1.2.0 曾借用 WinForms NotifyIcon，WinForms 的 DPI 模式初始化会
+/// 干扰 WPF 的 PerMonitorV2，导致首次启动界面按错误缩放测量（联系条溢出被裁）。
+/// 本实现不引入 System.Windows.Forms，进程 DPI 处理权完全归 WPF。
+/// 只在 UI 线程调用。
 /// </summary>
 public static class TrayService
 {
     private const string HotkeyHint = "\n\n最小化后不占任务栏，可从托盘图标或全局热键 Ctrl+Alt+F 呼出。";
 
-    private static System.Windows.Forms.NotifyIcon? _icon;
-    private static bool _minimizeHintShown;
+    private const int WM_APPBASE = unchecked((int)0x8000); // WM_APP
+    // 自定义回调消息；TaskbarCreated 用于 explorer.exe 重启后自动补挂图标
+    private const int WM_TRAYICON = WM_APPBASE + 0x47F;   // WM_APP + 1151
+    private const int WM_LBUTTONDBLCLK = 0x0203;
+    private const int WM_RBUTTONUP = 0x0205;
+    private const int WM_COMMAND = 0x0111;
 
-    /// <summary>托盘功能当前是否开启（跟随设置项）。</summary>
+    private const uint NIM_ADD = 0, NIM_MODIFY = 1, NIM_DELETE = 2;
+    private const uint NIF_MESSAGE = 0x1, NIF_ICON = 0x2, NIF_TIP = 0x4, NIF_INFO = 0x10;
+    private const uint NIIF_INFO = 0x1;
+
+    private const int MENU_OPEN = 1, MENU_OPT = 2, MENU_AB = 3, MENU_EXIT = 9;
+
+    private static HwndSource? _hwnd;
+    private static bool _added;
+    private static bool _minimizeHintShown;
+    private static int _taskbarCreatedMsg = -1;
+    private static IntPtr _hIcon;
+
     public static bool IsEnabled => SettingsService.Current.MinimizeToTray;
 
     /// <summary>按当前设置创建或销毁托盘图标；设置页切换开关时调用。</summary>
@@ -29,58 +49,65 @@ public static class TrayService
 
     public static void EnsureCreated()
     {
-        var icon = _icon;
-        if (icon is not null)
-        {
-            icon.Visible = true;
+        if (_added)
             return;
+        var app = Application.Current;
+        if (app is null)
+            return;
+
+        // 隐藏消息窗口：接收托盘回调与菜单命令
+        _hwnd = new HwndSource(0, unchecked((int)Native.WS_POPUP), 0, 0, 0, 0, 0, "FpsTuneTrayHwnd", IntPtr.Zero);
+        _hwnd.AddHook(WndProc);
+
+        if (_taskbarCreatedMsg == -1)
+            _taskbarCreatedMsg = Native.RegisterWindowMessage("TaskbarCreated");
+
+        if (_hIcon == IntPtr.Zero)
+        {
+            // 应用主图标 = exe 内编号 1 的图标资源
+            _hIcon = Native.LoadImage(Native.GetModuleHandle(null), "#1",
+                Native.IMAGE_ICON, 0, 0, Native.LR_DEFAULTSIZE | Native.LR_SHARED);
         }
 
-        icon = new System.Windows.Forms.NotifyIcon
+        var nid = new Native.NOTIFYICONDATA
         {
-            Text = "FPS 帧律",
-            Visible = true
+            cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(),
+            hWnd = _hwnd.Handle,
+            uID = 1,
+            uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP,
+            uCallbackMessage = (uint)WM_TRAYICON,
+            hIcon = _hIcon,
+            szTip = "FPS 帧律"
         };
-        try
+        _added = Native.Shell_NotifyIcon(NIM_ADD, ref nid);
+        if (!_added)
         {
-            var sri = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"));
-            if (sri is not null)
-                icon.Icon = new System.Drawing.Icon(sri.Stream);
+            // 极少见的失败（托盘尚未就绪等），不阻塞主流程
+            _hwnd.RemoveHook(WndProc);
+            _hwnd.Dispose();
+            _hwnd = null;
         }
-        catch
-        {
-            // 图标读取失败时托盘仍可用（显示默认空白图标），不影响功能。
-        }
-
-        var menu = new System.Windows.Forms.ContextMenuStrip();
-        menu.Items.Add("打开主窗口", null, (_, _) => ShowMainWindow());
-        menu.Items.Add("打开优化页", null, (_, _) => ShowMainWindow("opt"));
-        menu.Items.Add("打开 A/B 实验", null, (_, _) => ShowMainWindow("ab"));
-        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("退出", null, (_, _) =>
-        {
-            var app = Application.Current;
-            app?.Dispatcher.Invoke(() =>
-            {
-                Dispose();
-                Application.Current.MainWindow?.Close();
-                app.Shutdown();
-            });
-        });
-        icon.ContextMenuStrip = menu;
-        icon.DoubleClick += (_, _) => ShowMainWindow();
-
-        _icon = icon;
     }
 
     public static void Dispose()
     {
-        var icon = _icon;
-        _icon = null;
-        if (icon is null)
-            return;
-        icon.Visible = false;
-        icon.Dispose();
+        if (_added)
+        {
+            var nid = new Native.NOTIFYICONDATA
+            {
+                cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(),
+                hWnd = _hwnd?.Handle ?? IntPtr.Zero,
+                uID = 1
+            };
+            Native.Shell_NotifyIcon(NIM_DELETE, ref nid);
+            _added = false;
+        }
+        if (_hwnd is not null)
+        {
+            _hwnd.RemoveHook(WndProc);
+            _hwnd.Dispose();
+            _hwnd = null;
+        }
     }
 
     /// <summary>最小化进托盘时的提示，每次会话只弹一次。</summary>
@@ -108,16 +135,113 @@ public static class TrayService
         app.Dispatcher.Invoke(() =>
         {
             EnsureCreated();
-            if (_icon is null)
+            if (!_added || _hwnd is null)
                 return;
-            _icon.BalloonTipTitle = title;
-            _icon.BalloonTipText = message;
-            // ShowBalloonTip 的 timeout 参数在新系统上由 OS 决定，传最小值即可。
-            _icon.ShowBalloonTip(1000);
+            var nid = new Native.NOTIFYICONDATA
+            {
+                cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(),
+                hWnd = _hwnd.Handle,
+                uID = 1,
+                uFlags = NIF_INFO,
+                szInfoTitle = title,
+                szInfo = message,
+                dwInfoFlags = NIIF_INFO
+            };
+            Native.Shell_NotifyIcon(NIM_MODIFY, ref nid);
         });
     }
 
-    private static void ShowMainWindow(string? navigateTo = null)
+    /// <summary>诊断日志（与错误日志同目录），用于排查 DPI 首布局问题。</summary>
+    public static void LogDiagnostic(string message)
+    {
+        try
+        {
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FpsTune", "logs");
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "diag.log"),
+                $"[{DateTime.Now:HH:mm:ss.fff}] {message}\n", Encoding.UTF8);
+        }
+        catch
+        {
+            // 日志失败不影响功能
+        }
+    }
+
+    private static nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    {
+        if (msg == WM_TRAYICON)
+        {
+            switch ((uint)(lParam & 0xFFFF))
+            {
+                case WM_LBUTTONDBLCLK:
+                    ShowMainWindow(null);
+                    handled = true;
+                    break;
+                case WM_RBUTTONUP:
+                    ShowTrayMenu();
+                    handled = true;
+                    break;
+            }
+            return nint.Zero;
+        }
+
+        // explorer.exe 重启后托盘被清空：TaskbarCreated 广播到达时重新挂图标
+        if (msg == _taskbarCreatedMsg && _taskbarCreatedMsg != -1)
+        {
+            if (_added)
+            {
+                Dispose();
+                EnsureCreated();
+            }
+            return nint.Zero;
+        }
+
+        if (msg == WM_COMMAND)
+        {
+            switch ((int)(wParam & 0xFFFF))
+            {
+                case MENU_OPEN: ShowMainWindow(null); break;
+                case MENU_OPT: ShowMainWindow("opt"); break;
+                case MENU_AB: ShowMainWindow("ab"); break;
+                case MENU_EXIT:
+                    Dispose();
+                    Application.Current.MainWindow?.Close();
+                    Application.Current.Shutdown();
+                    break;
+            }
+            handled = true;
+            return nint.Zero;
+        }
+
+        return nint.Zero;
+    }
+
+    private static void ShowTrayMenu()
+    {
+        if (_hwnd is null)
+            return;
+        // 经典托盘菜单套路：先把消息窗口设为前台，否则点击菜单外无法收起
+        Native.SetForegroundWindow(_hwnd.Handle);
+        var menu = Native.CreatePopupMenu();
+        Native.AppendMenu(menu, Native.MF_STRING, MENU_OPEN, "打开主窗口");
+        Native.AppendMenu(menu, Native.MF_STRING, MENU_OPT, "打开优化页");
+        Native.AppendMenu(menu, Native.MF_STRING, MENU_AB, "打开 A/B 实验");
+        Native.AppendMenu(menu, Native.MF_SEPARATOR, 0, null);
+        Native.AppendMenu(menu, Native.MF_STRING, MENU_EXIT, "退出");
+
+        Native.GetCursorPos(out var pt);
+        // TPM_RETURNCMD: 同步返回选中项，走 WM_COMMAND 分支处理
+        var cmd = Native.TrackPopupMenuEx(menu,
+            Native.TPM_RETURNCMD | Native.TPM_RIGHTBUTTON | Native.TPM_NONOTIFY,
+            pt.X, pt.Y, _hwnd.Handle, IntPtr.Zero);
+        Native.DestroyMenu(menu);
+        if (cmd != 0)
+            Native.SendMessage(_hwnd.Handle, WM_COMMAND, (nint)(nuint)(ushort)cmd, nint.Zero);
+    }
+
+    private static void ShowMainWindow(string? navigateTo)
     {
         var app = Application.Current;
         if (app is null)
@@ -130,5 +254,72 @@ public static class TrayService
             if (navigateTo is not null)
                 win.NavigateTo(navigateTo);
         });
+    }
+
+    /// <summary>Shell_NotifyIcon 与配套 user32 互操作。</summary>
+    private static class Native
+    {
+        public const uint WS_POPUP = 0x80000000;
+        public const uint IMAGE_ICON = 1;
+        public const uint LR_DEFAULTSIZE = 0x40, LR_SHARED = 0x8000;
+        public const uint MF_STRING = 0x0, MF_SEPARATOR = 0x800;
+        public const uint TPM_RETURNCMD = 0x100, TPM_RIGHTBUTTON = 0x2, TPM_NONOTIFY = 0x80;
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern bool Shell_NotifyIcon(uint message, ref NOTIFYICONDATA data);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint fuLoad);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int RegisterWindowMessage(string message);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        public static extern IntPtr GetModuleHandle(string? name);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr CreatePopupMenu();
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern bool AppendMenu(IntPtr menu, uint flags, uint id, string? text);
+
+        [DllImport("user32.dll")]
+        public static extern bool DestroyMenu(IntPtr menu);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out POINT pt);
+
+        [DllImport("user32.dll")]
+        public static extern int TrackPopupMenuEx(IntPtr menu, uint flags, int x, int y, IntPtr hwnd, IntPtr tpm);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hwnd, int msg, nint wParam, nint lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT { public int X, Y; }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct NOTIFYICONDATA
+        {
+            public int cbSize;
+            public IntPtr hWnd;
+            public uint uID;
+            public uint uFlags;
+            public uint uCallbackMessage;
+            public IntPtr hIcon;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+            public string szTip;
+            public uint dwState;
+            public uint dwStateMask;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+            public string szInfo;
+            public uint uVersion;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
+            public string szInfoTitle;
+            public uint dwInfoFlags;
+        }
     }
 }
