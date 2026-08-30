@@ -32,10 +32,6 @@
                 <GradientStop Color="#0A0D12" Offset="0.6"/>
                 <GradientStop Color="#0A0D12" Offset="1"/>
             </LinearGradientBrush>
-            <RadialGradientBrush po:Freeze="False" x:Key="AuroraGlowBrush">
-                <GradientStop Color="#304DA3FF" Offset="0"/>
-                <GradientStop Color="#004DA3FF" Offset="1"/>
-            </RadialGradientBrush>
             <Color x:Key="PrimaryColor">#45B0FE</Color>
             <Color x:Key="AccentColor">#7A70FF</Color>
 
@@ -123,11 +119,6 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="ThemeRadioStyle" TargetType="RadioButton" BasedOn="{StaticResource NavRadioStyle}">
-                <Setter Property="Height" Value="32"/>
-                <Setter Property="FontSize" Value="12"/>
-            </Style>
-
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
                 <Setter Property="Foreground" Value="White"/>
                 <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI"/>
@@ -169,9 +160,6 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
-                                <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="Root" Property="Opacity" Value="0.8"/>
                                 </Trigger>

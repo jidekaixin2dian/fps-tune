@@ -34,7 +34,7 @@
 
         <!-- 预设与确认 -->
         <StackPanel Grid.Row="1" Margin="0,0,0,14">
-        <Border Style="{StaticResource CardStyle}">
+        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,14">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -93,14 +93,29 @@
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <TextBlock x:Name="ItemListTitle" Text="优化项" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Grid Width="220" Height="30">
                         <TextBox x:Name="SearchBox"
                                  Style="{StaticResource InputTextBoxStyle}"
-                                 Width="220" Height="30"
                                  VerticalContentAlignment="Center"
                                  FontSize="12"
                                  TextChanged="SearchBox_TextChanged"/>
-                        <TextBlock Text="搜索" Style="{StaticResource MutedTextStyle}"
-                                   VerticalAlignment="Center" Margin="-208,0,0,0" IsHitTestVisible="False"/>
+                        <!-- 占位文字: 叠在输入框内部, 有输入即隐藏(替代旧的负 Margin hack) -->
+                        <TextBlock Text="搜索"
+                                   IsHitTestVisible="False"
+                                   HorizontalAlignment="Left" VerticalAlignment="Center"
+                                   Margin="11,0,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
                         <Button Content="全选"
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="60" Height="30" Margin="8,0,0,0"
@@ -113,7 +128,7 @@
                 </Grid>
 
                 <!-- 分类过滤 -->
-                <StackPanel Orientation="Horizontal" Margin="0,2,0,10">
+                <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,2,0,10">
                     <RadioButton Content="全部" GroupName="grpfilter" IsChecked="True" Tag=""
                                  Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
                     <RadioButton Content="键鼠" GroupName="grpfilter" Tag="键鼠"

@@ -47,12 +47,6 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- 顶部柔光辉光层：给素底加氛围，不参与命中 -->
-            <Ellipse Width="1200" Height="520"
-                     HorizontalAlignment="Center" VerticalAlignment="Top"
-                     Margin="0,-300,0,0"
-                     Fill="{DynamicResource AuroraGlowBrush}"
-                     IsHitTestVisible="False"/>
             <!-- 标题栏 -->
             <Grid Grid.Row="0" Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
@@ -69,18 +63,18 @@
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click"
                             Width="46" Height="32" Style="{StaticResource CaptionButtonStyle}">
                         <Path Data="M0 0 H10" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"/>
                     </Button>
                     <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click"
                             Width="46" Height="32" Style="{StaticResource CaptionButtonStyle}">
-                        <Path Data="M0 0.5 H9 V9.5 H0 Z M3 0 V-2" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"
+                        <Path Data="M0.5 0.5 H8.5 V8.5 H0.5 Z" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"
                               StrokeLineJoin="Round" Fill="Transparent"/>
                     </Button>
                     <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click"
-                            Width="46" Height="32" Style="{StaticResource CaptionButtonStyle}">
+                            Width="46" Height="32" Style="{StaticResource CaptionCloseButtonStyle}">
                         <Path Data="M0 0 L8 8 M8 0 L0 8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.2"
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Button>

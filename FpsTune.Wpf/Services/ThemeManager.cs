@@ -63,7 +63,7 @@ public static class ThemeManager
         ApplyBackdrop(resolved);
     }
 
-    // 页面底色: 顶部带一点蓝调的垂直渐变, 加顶部柔光, 让"素底"有层次
+    // 页面底色: 顶部带一点蓝调的垂直渐变, 让"素底"有层次
     private static void ApplyBackdrop(string resolved)
     {
         var app = Application.Current;
@@ -71,28 +71,19 @@ public static class ThemeManager
             return;
 
         LinearGradientBrush backdrop;
-        RadialGradientBrush glow;
         if (resolved == "light")
         {
-            // 浅色主题的蓝调要足够可感知：上一版 #F7FAFF→#EFF2F7 与白底几乎无差别，
-            // 用户看不出氛围层的存在；这里加深一档但仍保证正文对比度。
+            // 浅色主题的氛围要"看得见"：底色带明确蓝调（顶部更深、往下渐浅）；
+            // 卡片保持纯白，靠色差与投影形成层次。
             backdrop = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
                 EndPoint = new Point(0, 1),
                 GradientStops =
                 {
-                    new GradientStop(Parse("#E8F0FE"), 0),
-                    new GradientStop(Parse("#E4E9F4"), 0.55),
-                    new GradientStop(Parse("#ECEFF5"), 1)
-                }
-            };
-            glow = new RadialGradientBrush
-            {
-                GradientStops =
-                {
-                    new GradientStop(Color.FromArgb(0x3C, 0x4F, 0x46, 0xE5), 0),
-                    new GradientStop(Color.FromArgb(0x00, 0x4F, 0x46, 0xE5), 1)
+                    new GradientStop(Parse("#D9E6FB"), 0),
+                    new GradientStop(Parse("#E2E9F5"), 0.55),
+                    new GradientStop(Parse("#E9EEF7"), 1)
                 }
             };
         }
@@ -109,20 +100,14 @@ public static class ThemeManager
                     new GradientStop(Parse("#0A0D12"), 1)
                 }
             };
-            glow = new RadialGradientBrush
-            {
-                GradientStops =
-                {
-                    new GradientStop(Color.FromArgb(0x30, 0x4D, 0xA3, 0xFF), 0),
-                    new GradientStop(Color.FromArgb(0x00, 0x4D, 0xA3, 0xFF), 1)
-                }
-            };
         }
 
         backdrop.Freeze();
-        glow.Freeze();
         app.Resources["AppBackdropBrush"] = backdrop;
-        app.Resources["AuroraGlowBrush"] = glow;
+        // 关键: 各页面 UserControl 用 AppBackgroundBrush 做整页背景(不透明平色),
+        // 若只改 AppBackdropBrush, 氛围渐变会被页面平色完全盖住(去素无效的根因)。
+        // 两个键指向同一渐变, 页面自然透出顶部蓝调。
+        app.Resources["AppBackgroundBrush"] = backdrop;
     }
 
     private static void SetBrush(string key, Color target)
