@@ -55,6 +55,10 @@ public partial class MainWindow : Window
         };
 
         PageHost.RenderTransform = _pageSlide;
+        // 初始首页不走滑入动画: 若保留 X=24, 首页会永久右偏 24px,
+        // 右侧页边距被吃掉(联系条顶到窗口边框)——"首次打开界面残缺"的根因。
+        // SwitchPage 的动画显式 From=24, 不受此处归零影响。
+        _pageSlide.X = 0;
         PageHost.Content = GetPage("home");
 
         // 版本号唯一来源：程序集（编译自 Directory.Build.props）
@@ -90,46 +94,6 @@ public partial class MainWindow : Window
         ApplyHotkeyRegistration();
     }
 
-    protected override void OnContentRendered(EventArgs e)
-    {
-        base.OnContentRendered(e);
-        // 首启自检: 个别情况下(显示缩放调整后/多屏环境) WPF 首次布局按错误 DPI
-        // 测量, 页面整体偏宽、右侧被窗口边缘裁切, 且不会自愈。渲染完成后用
-        // 首页联系条右缘做探针, 溢出即执行"最大化→还原"强制重排(已验证可修复)。
-        Dispatcher.BeginInvoke(() =>
-        {
-            try
-            {
-                if (WindowState != WindowState.Normal)
-                    return;
-                if (PageHost.Content is not Views.HomeView home)
-                    return;
-                var right = home.ContactRightEdge();
-                Services.TrayService.LogDiagnostic(
-                    $"layout probe contactRight={right:0.0} homeW={home.ActualWidth:0.0} " +
-                    $"wpfDpi={VisualTreeHelper.GetDpi(this).PixelsPerDip:0.###}");
-                // 正常: 联系条右缘 ≈ 页宽 - 边距(24)。溢出或页面本身比槽位宽,
-                // 都说明首布局按错误 DPI 测量了。
-                var overflown = right > home.ActualWidth - 14
-                                || home.ActualWidth > (ActualWidth - 220) + 2;
-                if (overflown)
-                {
-                    Services.TrayService.LogDiagnostic("heal: maximize/restore cycle");
-                    WindowState = WindowState.Maximized;
-                    WindowState = WindowState.Normal;
-                    Width = 1200;
-                    Height = 780;
-                    Left = Math.Max(0, (SystemParameters.WorkArea.Width - Width) / 2);
-                    Top = Math.Max(0, (SystemParameters.WorkArea.Height - Height) / 2);
-                }
-            }
-            catch
-            {
-                // 自检失败不影响使用
-            }
-        }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-    }
-
     [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
     private static extern uint NativeGetDpiForWindow(nint hwnd);
 
@@ -162,11 +126,17 @@ public partial class MainWindow : Window
         UpdateRootClip();
         if (WindowState == WindowState.Minimized && SettingsService.Current.MinimizeToTray)
         {
-            // 先让最小化动画落定再隐藏窗口，托盘图标接管入口。
+            // 先让最小化动画落定再决定去向: 托盘图标挂载成功才隐藏窗口,
+            // 否则保持任务栏最小化(避免窗口隐藏后托盘也没有、失去入口)。
             Dispatcher.BeginInvoke(() =>
             {
-                Hide();
-                TrayService.ShowMinimizedHint();
+                if (WindowState != WindowState.Minimized)
+                    return;
+                if (TrayService.EnsureCreated())
+                {
+                    Hide();
+                    TrayService.ShowMinimizedHint();
+                }
             }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
     }

@@ -81,7 +81,7 @@
 
         <!-- 功能模块 -->
         <UniformGrid Grid.Row="2" Columns="3">
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="6" Cursor="Hand" Tag="detect" MouseLeftButtonUp="Module_Click">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="detect" MouseLeftButtonUp="Module_Click">
                 <StackPanel>
                     <Border Width="44" Height="44" CornerRadius="22"
                         Background="{DynamicResource ElevatedBrush}"
@@ -101,7 +101,7 @@
                     <TextBlock Text="硬件信息、游戏路径、体检和优化项状态" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="6" Cursor="Hand" Tag="opt" MouseLeftButtonUp="Module_Click">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="opt" MouseLeftButtonUp="Module_Click">
                 <StackPanel>
                     <Border Width="44" Height="44" CornerRadius="22"
                         Background="{DynamicResource ElevatedBrush}"
@@ -119,7 +119,7 @@
                     <TextBlock x:Name="OptCardSummary" Text="预设与逐项开关、系统层优化、一键还原" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="6" Cursor="Hand" Tag="ab" MouseLeftButtonUp="Module_Click">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="ab" MouseLeftButtonUp="Module_Click">
                 <StackPanel>
                     <Border Width="44" Height="44" CornerRadius="22"
                         Background="{DynamicResource ElevatedBrush}"
@@ -137,7 +137,7 @@
                     <TextBlock Text="基线采样、候选组对比、keep/revert 决策" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="6" Cursor="Hand" Tag="friend" MouseLeftButtonUp="Module_Click">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="friend" MouseLeftButtonUp="Module_Click">
                 <StackPanel>
                     <Border Width="44" Height="44" CornerRadius="22"
                         Background="{DynamicResource ElevatedBrush}"
@@ -163,7 +163,7 @@
                     <TextBlock Text="生成优化前后帧率对比记录表" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="6" Cursor="Hand" Tag="backup" MouseLeftButtonUp="Module_Click">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="backup" MouseLeftButtonUp="Module_Click">
                 <StackPanel>
                     <Border Width="44" Height="44" CornerRadius="22"
                         Background="{DynamicResource ElevatedBrush}"
@@ -188,7 +188,7 @@
                     <TextBlock Text="备份文件、还原全部、日志和 JSON 输出" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="6" Cursor="Hand" Tag="settings" MouseLeftButtonUp="Module_Click">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="settings" MouseLeftButtonUp="Module_Click">
                 <StackPanel>
                     <Border Width="44" Height="44" CornerRadius="22"
                         Background="{DynamicResource ElevatedBrush}"

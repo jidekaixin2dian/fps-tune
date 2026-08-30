@@ -58,31 +58,31 @@
 
         <!-- 指标瓦片 -->
         <UniformGrid Grid.Row="3" Columns="6" Margin="0,0,0,14">
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="平均 FPS" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="AvgFpsText" Text="--" Style="{StaticResource StatValueStyle}" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="1% LOW" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="P1LowText" Text="--" Style="{StaticResource StatValueStyle}" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="P99 (MS)" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="P99Text" Text="--" Style="{StaticResource StatValueStyle}" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="卡顿" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="StutterText" Text="--" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource WarningBrush}" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="波动 CV" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="CvText" Text="--" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource AccentBrush}" Margin="0,6,0,0"/>

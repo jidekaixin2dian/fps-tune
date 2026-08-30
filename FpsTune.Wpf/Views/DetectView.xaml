@@ -34,7 +34,7 @@
 
         <!-- 硬件瓦片 -->
         <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,14">
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="CpuText" Text="--"
@@ -43,7 +43,7 @@
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="GpuText" Text="--"
@@ -52,7 +52,7 @@
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
                 <StackPanel>
                     <TextBlock Text="内存" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="RamText" Text="--"

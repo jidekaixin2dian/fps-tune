@@ -22,6 +22,10 @@
                         <RadioButton x:Name="ThemeLightRadio" Content="亮色" GroupName="defaultTheme" Style="{StaticResource PillRadioStyle}"/>
                         <RadioButton x:Name="ThemeSystemRadio" Content="跟随系统" GroupName="defaultTheme" Style="{StaticResource PillRadioStyle}"/>
                     </StackPanel>
+                    <CheckBox x:Name="AuroraCheck"
+                              Style="{StaticResource ToggleSwitchStyle}"
+                              Content="顶部氛围光（页面顶部的极光柔光）"
+                              Margin="0,8,0,0"/>
 
                     <TextBlock Text="启动" Style="{StaticResource MutedTextStyle}" Margin="0,16,0,0"/>
                     <CheckBox x:Name="AutostartCheck"
@@ -104,8 +108,12 @@
                                 Click="OpenLogs_Click"/>
                         <Button Content="打开备份目录"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                MinWidth="120"
+                                MinWidth="120" Margin="0,0,10,0"
                                 Click="OpenBackups_Click"/>
+                        <Button Content="导出诊断报告"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="120"
+                                Click="ExportDiagnostics_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

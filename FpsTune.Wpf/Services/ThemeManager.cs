@@ -63,14 +63,17 @@ public static class ThemeManager
         ApplyBackdrop(resolved);
     }
 
-    // 页面底色: 顶部带一点蓝调的垂直渐变, 让"素底"有层次
+    // 页面底色: 顶部带蓝调的垂直渐变 + 顶部中央极光柔光(用户选定加强版参数)。
     private static void ApplyBackdrop(string resolved)
     {
         var app = Application.Current;
         if (app is null)
             return;
 
+        bool aurora = SettingsService.Current.AuroraEnabled;
+
         LinearGradientBrush backdrop;
+        RadialGradientBrush? glow = null;
         if (resolved == "light")
         {
             // 浅色主题的氛围要"看得见"：底色带明确蓝调（顶部更深、往下渐浅）；
@@ -86,6 +89,11 @@ public static class ThemeManager
                     new GradientStop(Parse("#E9EEF7"), 1)
                 }
             };
+            if (aurora)
+            {
+                // 加强版: v1.1.5 原参数为 0x22, 几乎不可感知
+                glow = Radial(Color.FromArgb(0x4A, 0x4F, 0x46, 0xE5));
+            }
         }
         else
         {
@@ -100,14 +108,66 @@ public static class ThemeManager
                     new GradientStop(Parse("#0A0D12"), 1)
                 }
             };
+            if (aurora)
+            {
+                // 加强版: v1.1.5 原参数为 0x30
+                glow = Radial(Color.FromArgb(0x55, 0x4D, 0xA3, 0xFF));
+            }
         }
 
         backdrop.Freeze();
         app.Resources["AppBackdropBrush"] = backdrop;
-        // 关键: 各页面 UserControl 用 AppBackgroundBrush 做整页背景(不透明平色),
-        // 若只改 AppBackdropBrush, 氛围渐变会被页面平色完全盖住(去素无效的根因)。
-        // 两个键指向同一渐变, 页面自然透出顶部蓝调。
-        app.Resources["AppBackgroundBrush"] = backdrop;
+
+        // 关键: 各页面 UserControl 用 AppBackgroundBrush 做整页背景, 若只改
+        // AppBackdropBrush, 窗口层的任何氛围都会被页面平色盖住。页面底色
+        // = 渐变叠极光的合成画刷, 极光才会真正显示。
+        app.Resources["AppBackgroundBrush"] = ComposeBackdrop(backdrop, glow);
+    }
+
+    private static Brush ComposeBackdrop(Brush backdrop, RadialGradientBrush? glow)
+    {
+        if (glow is null)
+            return backdrop;
+
+        var group = new DrawingGroup();
+        group.Children.Add(new GeometryDrawing
+        {
+            Brush = backdrop,
+            Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
+        });
+        group.Children.Add(new GeometryDrawing
+        {
+            Brush = glow,
+            Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
+        });
+        var brush = new DrawingBrush
+        {
+            Drawing = group,
+            Viewbox = new Rect(0, 0, 1, 1),
+            Viewport = new Rect(0, 0, 1, 1),
+            TileMode = TileMode.None
+        };
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>顶部中央的极光柔光: 中心在页面上缘、向四周渐隐。</summary>
+    private static RadialGradientBrush Radial(Color centerColor)
+    {
+        var brush = new RadialGradientBrush
+        {
+            Center = new Point(0.5, 0.02),
+            GradientOrigin = new Point(0.5, 0.02),
+            RadiusX = 0.85,
+            RadiusY = 0.65,
+            GradientStops =
+            {
+                new GradientStop(centerColor, 0),
+                new GradientStop(Color.FromArgb(0x00, centerColor.R, centerColor.G, centerColor.B), 1)
+            }
+        };
+        brush.Freeze();
+        return brush;
     }
 
     private static void SetBrush(string key, Color target)

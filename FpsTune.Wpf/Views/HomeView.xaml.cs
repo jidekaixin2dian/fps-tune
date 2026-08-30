@@ -25,23 +25,6 @@ public partial class HomeView : UserControl
             StartOptimizeButton.Visibility = Visibility.Collapsed;
     }
 
-    /// <summary>
-    /// 顶部联系条右缘相对本页面的 X 坐标(DIP)。MainWindow 的首启布局自检用它
-    /// 判断页面是否被按错误 DPI 测量(正常时右缘 ≈ 页宽-边距, 异常时溢出到页外)。
-    /// </summary>
-    public double ContactRightEdge()
-    {
-        try
-        {
-            var t = ContactPanel.TransformToVisual(this);
-            return t.Transform(new Point(ContactPanel.ActualWidth, 0)).X;
-        }
-        catch
-        {
-            return double.NaN;
-        }
-    }
-
     public void RefreshContacts()
     {
         var s = SettingsService.Current;

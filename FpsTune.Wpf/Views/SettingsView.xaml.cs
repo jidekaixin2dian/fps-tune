@@ -30,6 +30,8 @@ public partial class SettingsView : UserControl
         HotkeyCheck.Unchecked += HotkeySetting_Changed;
         NotifyCheck.Checked += NotifySetting_Changed;
         NotifyCheck.Unchecked += NotifySetting_Changed;
+        AuroraCheck.Checked += AuroraSetting_Changed;
+        AuroraCheck.Unchecked += AuroraSetting_Changed;
 
         AutostartCheck.IsChecked = ReadAutostart();
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -55,6 +57,7 @@ public partial class SettingsView : UserControl
         TrayCheck.IsChecked = s.MinimizeToTray;
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
+        AuroraCheck.IsChecked = s.AuroraEnabled;
         AutostartCheck.IsChecked = ReadAutostart();
         _suppressUiEvents = false;
         RefreshAdminStatus();
@@ -197,6 +200,17 @@ public partial class SettingsView : UserControl
         SettingsService.Save(s);
     }
 
+    private void AuroraSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents)
+            return;
+        var s = SettingsService.Current;
+        s.AuroraEnabled = AuroraCheck.IsChecked == true;
+        SettingsService.Save(s);
+        // 氛围光随主题一起重算
+        ThemeManager.SetMode(s.ThemeMode);
+    }
+
     // ---------- 高级与维护 ----------
 
     private void RefreshAdminStatus()
@@ -250,6 +264,21 @@ public partial class SettingsView : UserControl
         var dir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "backup");
         OpenInExplorer(dir);
+    }
+
+    private void ExportDiagnostics_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var path = DiagnosticReportExporter.Export();
+            if (path is null)
+                return;
+            DialogService.Info("诊断报告", "已导出:\n" + path + "\n\n报告不含联系方式等个人信息, 可直接发给开发者协助排障。");
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning("诊断报告", "导出失败：" + ex.Message);
+        }
     }
 
     private void OpenGitHub_Click(object sender, RoutedEventArgs e)

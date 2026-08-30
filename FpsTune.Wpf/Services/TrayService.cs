@@ -1,6 +1,4 @@
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 
@@ -38,6 +36,9 @@ public static class TrayService
 
     public static bool IsEnabled => SettingsService.Current.MinimizeToTray;
 
+    /// <summary>托盘图标当前是否真实挂载成功（决定最小化时能否安全隐藏窗口）。</summary>
+    public static bool IsTrayVisible => _added;
+
     /// <summary>按当前设置创建或销毁托盘图标；设置页切换开关时调用。</summary>
     public static void ApplySettings()
     {
@@ -47,13 +48,13 @@ public static class TrayService
             Dispose();
     }
 
-    public static void EnsureCreated()
+    public static bool EnsureCreated()
     {
         if (_added)
-            return;
+            return true;
         var app = Application.Current;
         if (app is null)
-            return;
+            return false;
 
         // 隐藏消息窗口：接收托盘回调与菜单命令
         _hwnd = new HwndSource(0, unchecked((int)Native.WS_POPUP), 0, 0, 0, 0, 0, "FpsTuneTrayHwnd", IntPtr.Zero);
@@ -62,9 +63,18 @@ public static class TrayService
         if (_taskbarCreatedMsg == -1)
             _taskbarCreatedMsg = Native.RegisterWindowMessage("TaskbarCreated");
 
+        // 图标句柄: 优先取主窗口已在标题栏使用的图标(必然有效)。
+        // LoadImage 按资源编号取图标在打包后不可靠, 曾取到空句柄导致托盘"看不见"。
         if (_hIcon == IntPtr.Zero)
         {
-            // 应用主图标 = exe 内编号 1 的图标资源
+            var mainHwnd = app.MainWindow is Window w
+                ? new WindowInteropHelper(w).Handle
+                : IntPtr.Zero;
+            if (mainHwnd != IntPtr.Zero)
+                _hIcon = Native.GetClassLongPtr(mainHwnd, Native.GCLP_HICON);
+        }
+        if (_hIcon == IntPtr.Zero)
+        {
             _hIcon = Native.LoadImage(Native.GetModuleHandle(null), "#1",
                 Native.IMAGE_ICON, 0, 0, Native.LR_DEFAULTSIZE | Native.LR_SHARED);
         }
@@ -74,7 +84,7 @@ public static class TrayService
             cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(),
             hWnd = _hwnd.Handle,
             uID = 1,
-            uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP,
+            uFlags = NIF_MESSAGE | (_hIcon != IntPtr.Zero ? NIF_ICON : 0u) | NIF_TIP,
             uCallbackMessage = (uint)WM_TRAYICON,
             hIcon = _hIcon,
             szTip = "FPS 帧律"
@@ -82,11 +92,13 @@ public static class TrayService
         _added = Native.Shell_NotifyIcon(NIM_ADD, ref nid);
         if (!_added)
         {
-            // 极少见的失败（托盘尚未就绪等），不阻塞主流程
+            // 挂载失败(托盘未就绪等): 清理并让调用方保持任务栏可见, 避免窗口与图标同时消失
             _hwnd.RemoveHook(WndProc);
             _hwnd.Dispose();
             _hwnd = null;
+            return false;
         }
+        return true;
     }
 
     public static void Dispose()
@@ -149,24 +161,6 @@ public static class TrayService
             };
             Native.Shell_NotifyIcon(NIM_MODIFY, ref nid);
         });
-    }
-
-    /// <summary>诊断日志（与错误日志同目录），用于排查 DPI 首布局问题。</summary>
-    public static void LogDiagnostic(string message)
-    {
-        try
-        {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FpsTune", "logs");
-            Directory.CreateDirectory(dir);
-            File.AppendAllText(Path.Combine(dir, "diag.log"),
-                $"[{DateTime.Now:HH:mm:ss.fff}] {message}\n", Encoding.UTF8);
-        }
-        catch
-        {
-            // 日志失败不影响功能
-        }
     }
 
     private static nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -260,6 +254,7 @@ public static class TrayService
     private static class Native
     {
         public const uint WS_POPUP = 0x80000000;
+        public const int GCLP_HICON = -14;
         public const uint IMAGE_ICON = 1;
         public const uint LR_DEFAULTSIZE = 0x40, LR_SHARED = 0x8000;
         public const uint MF_STRING = 0x0, MF_SEPARATOR = 0x800;
@@ -267,6 +262,9 @@ public static class TrayService
 
         [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool Shell_NotifyIcon(uint message, ref NOTIFYICONDATA data);
+
+        [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")]
+        public static extern IntPtr GetClassLongPtr(IntPtr hwnd, int nIndex);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint fuLoad);
