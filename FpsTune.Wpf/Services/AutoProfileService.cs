@@ -136,8 +136,8 @@ public sealed class AutoProfileService : IDisposable
                 return;
             }
 
-            var profile = profiles.FirstOrDefault(x =>
-                string.Equals(x.Name, binding.ProfileName, StringComparison.OrdinalIgnoreCase));
+            var profile = profiles.FirstOrDefault(x => x is not null
+                && string.Equals(x.Name, binding.ProfileName, StringComparison.OrdinalIgnoreCase));
             if (profile is null)
             {
                 Report("自动应用跳过", $"未找到方案「{binding.ProfileName}」，未修改系统设置。");
