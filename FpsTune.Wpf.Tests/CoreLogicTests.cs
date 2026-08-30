@@ -60,6 +60,15 @@ public class CoreLogicTests
         }
     }
 
+    [Theory]
+    [InlineData("26200", "19045", true)]
+    [InlineData("19045", "26200", true)]
+    [InlineData("19045", "19045", false)]
+    [InlineData("", "", null)]
+    public void WindowsVersionHelper_prefers_windows_build_numbers(
+        string currentBuild, string currentBuildNumber, bool? expected)
+        => Assert.Equal(expected, WindowsVersionHelper.IsWindows11Build(currentBuild, currentBuildNumber));
+
     // ---------- 按游戏自动应用（纯逻辑） ----------
 
     [Theory]

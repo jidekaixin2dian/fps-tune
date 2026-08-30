@@ -212,6 +212,12 @@ public static class DetectionService
         {
             using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
                 .OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+            var byBuild = WindowsVersionHelper.IsWindows11Build(
+                key?.GetValue("CurrentBuild")?.ToString(),
+                key?.GetValue("CurrentBuildNumber")?.ToString());
+            if (byBuild.HasValue)
+                return byBuild;
+
             var product = key?.GetValue("ProductName")?.ToString() ?? string.Empty;
             if (product.Contains("Windows 11", StringComparison.OrdinalIgnoreCase))
                 return true;

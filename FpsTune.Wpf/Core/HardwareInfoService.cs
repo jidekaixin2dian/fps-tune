@@ -259,16 +259,23 @@ public static class HardwareInfoService
             var os = Environment.OSVersion;
             var build = os.Version.Build;
             var productName = "Windows";
+            string? currentBuild = null;
+            string? currentBuildNumber = null;
 
             try
             {
                 using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
                     .OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
                 productName = key?.GetValue("ProductName")?.ToString()?.Trim() ?? "Windows";
+                currentBuild = key?.GetValue("CurrentBuild")?.ToString();
+                currentBuildNumber = key?.GetValue("CurrentBuildNumber")?.ToString();
             }
             catch
             {
             }
+
+            if (WindowsVersionHelper.IsWindows11Build(currentBuild, currentBuildNumber) == true)
+                productName = productName.Replace("Windows 10", "Windows 11", StringComparison.OrdinalIgnoreCase);
 
             return $"{productName} (Build {build})";
         }
