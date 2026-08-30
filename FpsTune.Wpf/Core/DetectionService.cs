@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using FpsTune.Wpf.Services;
@@ -103,7 +105,224 @@ public static class DetectionService
             ? new { name = "PCIe 链路", status = "attention", message = "未识别到 PCIe 链路，可安装 GPU-Z 查看" }
             : new { name = "PCIe 链路", status = "ok", message = pcie });
 
+        var refreshRate = GetDisplayRefreshRateCheck();
+        checks.Add(new { name = "显示器刷新率", status = refreshRate.Status, message = refreshRate.Message });
+
+        var colorProfile = GetColorProfileCheck();
+        checks.Add(new { name = "颜色配置", status = colorProfile.Status, message = colorProfile.Message });
+
+        var directStorage = GetDirectStorageCheck();
+        checks.Add(new { name = "DirectStorage", status = directStorage.Status, message = directStorage.Message });
+
+        var audio = GetAudioExclusiveCheck();
+        checks.Add(new { name = "音频独占模式", status = audio.Status, message = audio.Message });
+
         return checks;
+    }
+
+    private static (string Status, string Message) GetDisplayRefreshRateCheck()
+    {
+        try
+        {
+            var mode = new DevMode { dmSize = (short)Marshal.SizeOf<DevMode>() };
+            if (!EnumDisplaySettings(null, EnumCurrentSettings, ref mode) || mode.dmDisplayFrequency <= 1)
+                return ("attention", "无法通过 EnumDisplaySettings 可靠读取当前主显示器刷新率，待核实。");
+
+            var resolution = mode.dmPelsWidth > 0 && mode.dmPelsHeight > 0
+                ? $"（{mode.dmPelsWidth}×{mode.dmPelsHeight}）"
+                : string.Empty;
+            return ("ok", $"当前主显示器 {mode.dmDisplayFrequency} Hz{resolution}。");
+        }
+        catch
+        {
+            return ("attention", "无法通过 EnumDisplaySettings 可靠读取当前主显示器刷新率，待核实。");
+        }
+    }
+
+    private static (string Status, string Message) GetColorProfileCheck()
+    {
+        IntPtr dc = IntPtr.Zero;
+        try
+        {
+            dc = GetDC(IntPtr.Zero);
+            if (dc == IntPtr.Zero)
+                return ("attention", "无法取得当前输出设备上下文，ICC/WCS 颜色配置待核实（不代表色域异常）。");
+
+            uint length = 1024;
+            var profile = new StringBuilder((int)length);
+            if (!GetICMProfile(dc, ref length, profile))
+                return ("attention", "未读取到当前输出 ICC/WCS 配置文件，待核实（不代表色域异常）。");
+
+            var path = profile.ToString().Trim();
+            if (path.Length == 0)
+                return ("attention", "当前输出未返回 ICC/WCS 配置文件名，待核实（不代表色域异常）。");
+
+            var expanded = Environment.ExpandEnvironmentVariables(path);
+            if (!File.Exists(expanded))
+                return ("attention", $"系统报告当前 ICC/WCS 配置文件“{path}”，但文件不可访问，待核实（不代表色域异常）。");
+
+            return ("ok", $"当前 ICC/WCS 配置文件已存在：“{path}”（仅报告配置存在，不代表色域覆盖）。");
+        }
+        catch
+        {
+            return ("attention", "无法可靠读取当前 ICC/WCS 配置文件，待核实（不代表色域异常）。");
+        }
+        finally
+        {
+            if (dc != IntPtr.Zero)
+                ReleaseDC(IntPtr.Zero, dc);
+        }
+    }
+
+    private static (string Status, string Message) GetDirectStorageCheck()
+    {
+        var details = new List<string>();
+        var windows = TryIsWindows11();
+        if (windows == true)
+            details.Add("Windows 11 已确认");
+        else if (windows == false)
+            details.Add("未确认 Windows 11");
+        else
+            details.Add("Windows 版本无法确认");
+
+        var nvme = TryHasNvmeDisk();
+        if (nvme == true)
+            details.Add("已发现 NVMe 固态硬盘");
+        else if (nvme == false)
+            details.Add("未确认 NVMe 固态硬盘");
+        else
+            details.Add("NVMe 固态硬盘无法确认");
+
+        var d3d12 = TryCreateD3D12Device();
+        if (d3d12 == true)
+            details.Add("DirectX 12 设备创建成功");
+        else if (d3d12 == false)
+            details.Add("DirectX 12 设备未确认");
+        else
+            details.Add("DirectX 12 能力无法确认");
+
+        // D3D12CreateDevice 不等价于 Shader Model 6 能力查询；不以显卡名称或驱动版本猜测。
+        details.Add("Shader Model 6 未通过可靠接口确认");
+        return ("attention", string.Join("；", details) + "。DirectStorage 需 Windows 11 + NVMe + DirectX 12/Shader Model 6，当前仅作保守检查，待核实。");
+    }
+
+    private static bool? TryIsWindows11()
+    {
+        try
+        {
+            using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+                .OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+            var product = key?.GetValue("ProductName")?.ToString() ?? string.Empty;
+            if (product.Contains("Windows 11", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (product.Contains("Windows 10", StringComparison.OrdinalIgnoreCase))
+                return false;
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool? TryHasNvmeDisk()
+    {
+        try
+        {
+            using var searcher = new System.Management.ManagementObjectSearcher(
+                "SELECT Model, MediaType, InterfaceType, PNPDeviceID FROM Win32_DiskDrive");
+            using var disks = searcher.Get();
+            foreach (System.Management.ManagementObject disk in disks)
+            {
+                var text = string.Join(" ",
+                    disk["Model"]?.ToString(),
+                    disk["MediaType"]?.ToString(),
+                    disk["InterfaceType"]?.ToString(),
+                    disk["PNPDeviceID"]?.ToString());
+                if (ContainsNvme(text))
+                    return true;
+            }
+
+            // 某些驱动会暴露控制器名称，但没有可关联的磁盘型号；这不足以确认 NVMe SSD，故不据此报 ready。
+            using var controllerSearcher = new System.Management.ManagementObjectSearcher(
+                "SELECT Name, PNPDeviceID FROM Win32_PnPEntity");
+            using var controllers = controllerSearcher.Get();
+            foreach (System.Management.ManagementObject controller in controllers)
+            {
+                var text = string.Join(" ", controller["Name"]?.ToString(), controller["PNPDeviceID"]?.ToString());
+                if (ContainsNvme(text) && text.Contains("Controller", StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool ContainsNvme(string text)
+        => text.Contains("NVMe", StringComparison.OrdinalIgnoreCase)
+           || text.Contains("NVM Express", StringComparison.OrdinalIgnoreCase);
+
+    private static bool? TryCreateD3D12Device()
+    {
+        IntPtr device = IntPtr.Zero;
+        try
+        {
+            var iid = D3D12DeviceIid;
+            var hr = D3D12CreateDevice(IntPtr.Zero, D3DFeatureLevel.Level12_0, ref iid, out device);
+            return hr >= 0 && device != IntPtr.Zero;
+        }
+        catch (DllNotFoundException)
+        {
+            return null;
+        }
+        catch (EntryPointNotFoundException)
+        {
+            return null;
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            if (device != IntPtr.Zero)
+                Marshal.Release(device);
+        }
+    }
+
+    private static (string Status, string Message) GetAudioExclusiveCheck()
+    {
+        IMMDeviceEnumerator? enumerator = null;
+        IMMDevice? device = null;
+        try
+        {
+            enumerator = (IMMDeviceEnumerator)new MmDeviceEnumeratorComObject();
+            var hr = enumerator.GetDefaultAudioEndpoint((int)AudioDataFlow.Render, (int)AudioRole.Multimedia, out device);
+            if (hr < 0 || device is null)
+                return ("attention", "未找到默认播放端点；未打开音频流，独占模式可用性待核实。");
+
+            var stateHr = device.GetState(out var state);
+            if (stateHr < 0)
+                return ("attention", "已找到默认播放端点，但无法读取端点状态；未打开音频流，独占模式可用性待核实。");
+
+            var stateText = (state & DeviceStateActive) != 0 ? "活动" : $"状态 0x{state:X}";
+            return ("attention", $"默认播放端点可用（{stateText}）；为避免占用设备，未打开音频流，无法仅凭只读接口确认独占设置或当前占用状态，待核实。");
+        }
+        catch
+        {
+            return ("attention", "无法可靠读取默认播放端点；未打开音频流，音频独占模式待核实。");
+        }
+        finally
+        {
+            if (device is not null)
+                Marshal.ReleaseComObject(device);
+            if (enumerator is not null)
+                Marshal.ReleaseComObject(enumerator);
+        }
     }
 
     private static (bool Optimized, string Current) GetItemState(OptimizationItemDefinition item, string? gamePath)
@@ -280,5 +499,108 @@ public static class DetectionService
 
         var value = RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, "DisableDynamicPstate");
         return (value?.ToString() == "1", value?.ToString() ?? "未设置");
+    }
+
+    private const int EnumCurrentSettings = -1;
+    private const uint DeviceStateActive = 0x00000001;
+    private static readonly Guid D3D12DeviceIid = new("189819F1-1DB6-4B57-BE54-1821339B85F7");
+
+    private enum D3DFeatureLevel : int
+    {
+        Level12_0 = 0xC000
+    }
+
+    private enum AudioDataFlow : int
+    {
+        Render = 0
+    }
+
+    private enum AudioRole : int
+    {
+        Multimedia = 1
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct DevMode
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmDeviceName;
+        public short dmSpecVersion;
+        public short dmDriverVersion;
+        public short dmSize;
+        public short dmDriverExtra;
+        public int dmFields;
+        public int dmPositionX;
+        public int dmPositionY;
+        public int dmDisplayOrientation;
+        public int dmDisplayFixedOutput;
+        public short dmColor;
+        public short dmDuplex;
+        public short dmYResolution;
+        public short dmTTOption;
+        public short dmCollate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmFormName;
+        public short dmLogPixels;
+        public int dmBitsPerPel;
+        public int dmPelsWidth;
+        public int dmPelsHeight;
+        public int dmDisplayFlags;
+        public int dmDisplayFrequency;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool EnumDisplaySettings(string? lpszDeviceName, int iModeNum, ref DevMode lpDevMode);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr GetDC(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDc);
+
+    [DllImport("gdi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool GetICMProfile(IntPtr hDc, ref uint lpcchName, [Out] StringBuilder lpszFilename);
+
+    [DllImport("d3d12.dll", ExactSpelling = true)]
+    private static extern int D3D12CreateDevice(
+        IntPtr pAdapter,
+        D3DFeatureLevel minimumFeatureLevel,
+        ref Guid riid,
+        out IntPtr ppDevice);
+
+    [ComImport]
+    [Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
+    private class MmDeviceEnumeratorComObject
+    {
+    }
+
+    [ComImport]
+    [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IMMDeviceEnumerator
+    {
+        [PreserveSig]
+        int EnumAudioEndpoints(int dataFlow, uint stateMask, out IntPtr devices);
+
+        [PreserveSig]
+        int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice device);
+    }
+
+    [ComImport]
+    [Guid("D666063F-1587-4E43-81F1-B948E807363F")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IMMDevice
+    {
+        [PreserveSig]
+        int Activate(ref Guid iid, uint clsContext, IntPtr activationParams, out IntPtr interfacePointer);
+
+        [PreserveSig]
+        int OpenPropertyStore(uint access, out IntPtr propertyStore);
+
+        [PreserveSig]
+        int GetId(out IntPtr id);
+
+        [PreserveSig]
+        int GetState(out uint state);
     }
 }

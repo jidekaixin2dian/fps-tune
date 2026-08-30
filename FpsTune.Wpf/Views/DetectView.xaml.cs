@@ -11,6 +11,8 @@ namespace FpsTune.Wpf.Views;
 
 public partial class DetectView : UserControl
 {
+    private sealed record CheckItemViewModel(string Name, string Summary, Brush Foreground);
+
     private bool _hasSavedState;
 
     private System.Windows.Threading.DispatcherTimer? _monitorTimer;
@@ -306,12 +308,7 @@ public partial class DetectView : UserControl
         GamePathText.Text = AppState.GamePath ?? "--";
 
         var checks = root["checks"]?.AsArray();
-        if (checks is not null)
-        {
-            SetCheck(Check1Text, checks.ElementAtOrDefault(0));
-            SetCheck(Check2Text, checks.ElementAtOrDefault(1));
-            SetCheck(Check3Text, checks.ElementAtOrDefault(2));
-        }
+        CheckList.ItemsSource = BuildCheckItems(checks);
 
         AppState.Items.Clear();
         var items = root["items"]?.AsArray();
@@ -449,23 +446,40 @@ public partial class DetectView : UserControl
         e.Handled = true;
     }
 
-    private static void SetCheck(System.Windows.Controls.TextBlock target, JsonNode? node)
+    private static IReadOnlyList<CheckItemViewModel> BuildCheckItems(JsonArray? checks)
     {
-        if (node is null)
+        if (checks is null || checks.Count == 0)
         {
-            target.Text = "待检测";
-            return;
+            return new[]
+            {
+                new CheckItemViewModel("体检", "待检测", GetStatusBrush(string.Empty))
+            };
         }
 
-        var status = node["status"]?.GetValue<string>() ?? "";
-        var message = node["message"]?.GetValue<string>() ?? "";
-        target.Text = $"● {status}  {message}".Trim();
-        target.Foreground = status switch
+        return checks.Select(node =>
         {
-            "ok" => (System.Windows.Media.Brush)Application.Current.Resources["OkBrush"],
-            "attention" => (System.Windows.Media.Brush)Application.Current.Resources["WarningBrush"],
-            "danger" => (System.Windows.Media.Brush)Application.Current.Resources["DangerBrush"],
-            _ => (System.Windows.Media.Brush)Application.Current.Resources["TextSecondaryBrush"],
+            var name = node?["name"]?.GetValue<string>() ?? "体检项";
+            var status = node?["status"]?.GetValue<string>() ?? string.Empty;
+            var message = node?["message"]?.GetValue<string>() ?? string.Empty;
+            var summary = string.IsNullOrWhiteSpace(status) && string.IsNullOrWhiteSpace(message)
+                ? "待检测"
+                : $"● {status}  {message}".Trim();
+            return new CheckItemViewModel(name, summary, GetStatusBrush(status));
+        }).ToList();
+    }
+
+    private static Brush GetStatusBrush(string status)
+    {
+        var key = status switch
+        {
+            "ok" => "OkBrush",
+            "attention" => "WarningBrush",
+            "danger" => "DangerBrush",
+            _ => "TextSecondaryBrush"
         };
+
+        if (Application.Current?.TryFindResource(key) is Brush brush)
+            return brush;
+        return Brushes.Gray;
     }
 }

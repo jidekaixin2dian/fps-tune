@@ -1371,6 +1371,24 @@ function Get-CheckItems {
         $checks += @{ id = 'pcie-check'; name = 'PCIe 链路'; status = 'ok'; message = '仅 NVIDIA 显卡支持自动读取，当前显卡跳过（非问题）。' }
     }
 
+    # 以下项目在 PowerShell 5.1 兼容路径不调用设备占用或不可靠的猜测 API，无法确认时明确标记待核实。
+    $checks += @{
+        id = 'display-refresh-check'; name = '显示器刷新率'; status = 'attention'
+        message = 'PowerShell 兼容路径未调用 EnumDisplaySettings，无法可靠读取当前主显示器刷新率，待核实。'
+    }
+    $checks += @{
+        id = 'color-profile-check'; name = '颜色配置'; status = 'attention'
+        message = 'PowerShell 兼容路径未调用 GetICMProfile，无法可靠读取当前 ICC/WCS 配置；不据此推断色域覆盖，待核实。'
+    }
+    $checks += @{
+        id = 'directstorage-check'; name = 'DirectStorage'; status = 'attention'
+        message = 'PowerShell 兼容路径无法可靠同时确认 Windows 11、NVMe 固态硬盘、DirectX 12 与 Shader Model 6，未判定为就绪，待核实。'
+    }
+    $checks += @{
+        id = 'audio-exclusive-check'; name = '音频独占模式'; status = 'attention'
+        message = 'PowerShell 兼容路径不打开或占用音频设备，无法可靠确认独占设置或当前占用状态，待核实。'
+    }
+
     return $checks
 }
 
