@@ -122,11 +122,11 @@ public class CoreLogicTests
     // ---------- disabledynamictick 状态与备份消费守卫 ----------
 
     [Theory]
-    [InlineData("", DynamicTickState.Absent)]
-    [InlineData("disabledynamictick    no", DynamicTickState.No)]
-    [InlineData("disabledynamictick    yes", DynamicTickState.Yes)]
-    public void DynamicTick_parser_distinguishes_absent_no_and_yes(string output, DynamicTickState expected)
-        => Assert.Equal(expected, NativeSystem.ParseDynamicTickState(output));
+    [InlineData("", "Absent")]
+    [InlineData("disabledynamictick    no", "No")]
+    [InlineData("disabledynamictick    yes", "Yes")]
+    public void DynamicTick_parser_distinguishes_absent_no_and_yes(string output, string expected)
+        => Assert.Equal(expected, NativeSystem.ParseDynamicTickState(output).ToString());
 
     [Fact]
     public void RestoreAll_keeps_a_backup_file_when_any_record_fails()
