@@ -39,6 +39,8 @@ $ErrorActionPreference = 'Stop'
 
 $ToolName    = 'delta-optimizer'
 $BackupRoot  = Join-Path $env:LOCALAPPDATA 'FpsTune\backup'
+$PowerShellBackupPrefix = 'ps-backup-'
+$PowerShellBackupSchema = 'fps-tune-powershell-backup-v1'
 
 # ---------------------------------------------------------------------------
 # 单一数据源
@@ -194,15 +196,38 @@ function Get-PowerAcIndex {
 }
 }
 
-# 原子写文件：先写 .tmp 再改名
+# 原子写文件：先写唯一临时文件再改名，目标已存在时不覆盖。
 function Write-AtomicJson {
     param([string]$Path, $Object)
     $dir = Split-Path $Path -Parent
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-    $tmp = "$Path.tmp"
-    $Object | ConvertTo-Json -Depth 12 | Out-File -FilePath $tmp -Encoding UTF8
-    if (Test-Path $Path) { Remove-Item $Path -Force }
-    Move-Item $tmp $Path -Force
+    $tmp = "$Path.$([guid]::NewGuid().ToString('N')).tmp"
+    try {
+        $Object | ConvertTo-Json -Depth 12 | Out-File -FilePath $tmp -Encoding UTF8
+        [System.IO.File]::Move($tmp, $Path)
+    } finally {
+        if (Test-Path $tmp) { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function Assert-NativeSuccess {
+    param($Result, [string]$Operation)
+    if ($Result.code -ne 0) {
+        $detail = ($Result.error -join '; ')
+        if (-not $detail) { $detail = "退出码 $($Result.code)" }
+        throw "$Operation 失败: $detail"
+    }
+}
+
+function New-PowerShellBackupPath {
+    if (-not (Test-Path $BackupRoot)) { New-Item -ItemType Directory -Path $BackupRoot -Force | Out-Null }
+    for ($attempt = 0; $attempt -lt 10; $attempt++) {
+        $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
+        $shortGuid = ([guid]::NewGuid().ToString('N')).Substring(0, 8)
+        $path = Join-Path $BackupRoot "$PowerShellBackupPrefix$stamp-$shortGuid.json"
+        if (-not (Test-Path $path)) { return $path }
+    }
+    throw '无法创建不覆盖现有文件的 PowerShell 备份路径。'
 }
 
 function Get-RebootItems {
@@ -461,9 +486,9 @@ $OptimizationItems = @(
                     }
                 }
                 if ($null -ne $recorded) { $value = [int]$recorded }
-                Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', $d.sub, $d.setting, [string]$value) | Out-Null
+                Assert-NativeSuccess (Invoke-Native 'powercfg.exe' @('-setacvalueindex', 'SCHEME_CURRENT', $d.sub, $d.setting, [string]$value)) '还原电源隐藏项'
             }
-            Invoke-Native 'powercfg.exe' @('-setactive', 'SCHEME_CURRENT') | Out-Null
+            Assert-NativeSuccess (Invoke-Native 'powercfg.exe' @('-setactive', 'SCHEME_CURRENT')) '重新应用电源计划'
         }
     }
     @{
@@ -776,7 +801,7 @@ $OptimizationItems = @(
             param($ctx)
             $mode = $ctx.backupItem.oldStart
             if (-not $mode) { $mode = 'Manual' }
-            Invoke-Native 'sc.exe' @('config', 'SysMain', 'start=', $mode) | Out-Null
+            Assert-NativeSuccess (Invoke-Native 'sc.exe' @('config', 'SysMain', 'start=', $mode)) '还原 SysMain 启动类型'
         }
     }
     @{
@@ -795,7 +820,7 @@ $OptimizationItems = @(
             param($ctx)
             $mode = $ctx.backupItem.oldStart
             if (-not $mode) { $mode = 'Manual' }
-            Invoke-Native 'sc.exe' @('config', 'WSearch', 'start=', $mode) | Out-Null
+            Assert-NativeSuccess (Invoke-Native 'sc.exe' @('config', 'WSearch', 'start=', $mode)) '还原 WSearch 启动类型'
         }
     }
     @{
@@ -899,18 +924,29 @@ $OptimizationItems = @(
         apply = {
             param($ctx)
             $q = Invoke-Native 'bcdedit.exe' @('/enum', '{current}')
-            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'bcdedit'; oldState = if (($q.output -join "`n") -match 'disabledynamictick\s+yes') { 'on' } else { 'off' } }
-            if ($ctx.backupItem.oldState -eq 'on') { return $false }
+            if ($q.code -ne 0) { throw '查询 disabledynamictick 失败: ' + (($q.error -join '; ')) }
+            $text = $q.output -join "`n"
+            $state = 'absent'
+            if ($text -match '(?im)^\s*disabledynamictick\s+(yes|no)\b') {
+                $state = $matches[1].ToLowerInvariant()
+            }
+            $ctx.backupItem = @{ id = $ctx.item.id; kind = 'bcdedit'; oldState = $state }
+            if ($state -eq 'yes') { return $false }
             $r = Invoke-Native 'bcdedit.exe' @('/set', '{current}', 'disabledynamictick', 'yes')
             if ($r.code -ne 0) { throw '设置 disabledynamictick 失败: ' + (($r.error -join '; ')) }
             return $true
         }
         revert = {
             param($ctx)
-            if ($ctx.backupItem.oldState -eq 'on') {
-                $r = Invoke-Native 'bcdedit.exe' @('/set', '{current}', 'disabledynamictick', 'no')
-                if ($r.code -ne 0) { throw '还原 disabledynamictick 失败: ' + (($r.error -join '; ')) }
+            $commandArgs = $null
+            switch ([string]$ctx.backupItem.oldState.ToLowerInvariant()) {
+                'absent' { $commandArgs = @('/deletevalue', '{current}', 'disabledynamictick') }
+                'no' { $commandArgs = @('/set', '{current}', 'disabledynamictick', 'no') }
+                'yes' { $commandArgs = @('/set', '{current}', 'disabledynamictick', 'yes') }
+                default { throw '备份缺少有效的 disabledynamictick 状态' }
             }
+            $r = Invoke-Native 'bcdedit.exe' $commandArgs
+            if ($r.code -ne 0) { throw '还原 disabledynamictick 失败: ' + (($r.error -join '; ')) }
         }
     }
     @{
@@ -1574,10 +1610,9 @@ function Invoke-Apply {
     # 写备份（含失败项也记录，便于排查）
     $backupFile = $null
     if ($backupItems.Count -gt 0) {
-        $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
-        $backupFile = Join-Path $BackupRoot "backup-$ts.json"
+        $backupFile = New-PowerShellBackupPath
         $backupDoc = @{
-            schema = 'v1'; tool = $ToolName; version = (Get-ToolVersion);
+            schema = $PowerShellBackupSchema; tool = $ToolName; version = (Get-ToolVersion);
             createdAt = (Get-Date).ToString('o'); preset = $PresetName;
             items = $backupItems; results = $results
         }
@@ -1602,10 +1637,28 @@ function Invoke-Apply {
 # 还原（-ListRestoreItems / -Restore）
 # ---------------------------------------------------------------------------
 
+function Test-PowerShellBackupFile {
+    param([string]$Path)
+    $name = Split-Path $Path -Leaf
+    if ($name.StartsWith($PowerShellBackupPrefix, [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    if (-not $name.StartsWith('backup-', [System.StringComparison]::OrdinalIgnoreCase)) { return $false }
+    try {
+        $doc = Get-Content $Path -Raw -Encoding UTF8 | ConvertFrom-Json
+        $items = $doc.PSObject.Properties['items']
+        return $doc.PSObject.Properties['schema'] -and
+               $doc.PSObject.Properties['tool'] -and
+               $doc.tool -eq $ToolName -and
+               $items -and $doc.schema -eq 'v1'
+    } catch {
+        return $false
+    }
+}
+
 function Get-BackupFiles {
     if (-not (Test-Path $BackupRoot)) { return @() }
-    return @(Get-ChildItem $BackupRoot -Filter 'backup-*.json' -File -ErrorAction SilentlyContinue |
-             Where-Object { $_.Name -notmatch '\.restored$' } | Sort-Object LastWriteTime -Descending)
+    return @(Get-ChildItem $BackupRoot -Filter '*.json' -File -ErrorAction SilentlyContinue |
+             Where-Object { $_.Name -notmatch '\.restored$' -and (Test-PowerShellBackupFile $_.FullName) } |
+             Sort-Object LastWriteTime -Descending)
 }
 
 function Invoke-ListRestore {
@@ -1638,35 +1691,55 @@ function Invoke-Restore {
     $consumedFiles = @()
 
     foreach ($f in $files) {
+        $fileReadyToConsume = $true
+        $matchedCount = 0
         try {
             $doc = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
         } catch {
             $failed += @{ backupFile = $f.Name; id = '(备份损坏)'; message = '备份文件无法解析' }
             continue
         }
-        foreach ($bit in $doc.items) {
+        $itemsProperty = $doc.PSObject.Properties['items']
+        $backupItems = if ($itemsProperty) { @($itemsProperty.Value) } else { @() }
+        if ($backupItems.Count -eq 0) {
+            $failed += @{ backupFile = $f.Name; id = '(备份内容)'; message = '备份内容为空或缺少 items' }
+            continue
+        }
+        foreach ($bit in $backupItems) {
             $itemDef = $OptimizationItems | Where-Object { $_.id -eq $bit.id } | Select-Object -First 1
             if (-not $itemDef) {
                 $skipped += @{ backupFile = $f.Name; id = $bit.id; message = '未知项，跳过' }
+                $fileReadyToConsume = $false
                 continue
             }
-            if (-not $wantAll -and $bit.id -notin $restoreIds) { continue }
+            if (-not $wantAll -and $bit.id -notin $restoreIds) {
+                # 精确还原只处理选中的项，文件仍需保留给下一次还原。
+                $fileReadyToConsume = $false
+                continue
+            }
+            $matchedCount++
             try {
                 $ctx = @{ item = $itemDef; backupItem = $bit; gamePath = $null; gameName = $null }
                 & $itemDef.revert $ctx
                 $restored += @{ backupFile = $f.Name; id = $bit.id; message = '已还原' }
             } catch {
+                $fileReadyToConsume = $false
                 $failed += @{ backupFile = $f.Name; id = $bit.id; message = $_.Exception.Message }
             }
         }
-        $consumedFiles += $f.FullName
+        if ($matchedCount -eq 0) { $fileReadyToConsume = $false }
+        if ($fileReadyToConsume) { $consumedFiles += $f.FullName }
     }
 
-    # 消费备份：重命名为 .restored（保留文件供审计）
+    # 只有整份文件成功还原才消费；失败或部分选择的文件必须保留。
     foreach ($path in $consumedFiles) {
         $renamed = "$path.restored"
-        if (Test-Path $renamed) { Remove-Item $renamed -Force }
-        Rename-Item $path $renamed -Force
+        try {
+            if (Test-Path $renamed) { throw '目标 .restored 文件已存在，未覆盖' }
+            Rename-Item -LiteralPath $path -NewName ([System.IO.Path]::GetFileName($renamed)) -ErrorAction Stop
+        } catch {
+            $failed += @{ backupFile = (Split-Path $path -Leaf); id = '(备份文件)'; message = $_.Exception.Message }
+        }
     }
 
     return @{
@@ -1722,6 +1795,7 @@ try {
                 $result.restored | Format-Table id, message -AutoSize | Out-String | Write-Host
                 $result.failed | Format-Table id, message -AutoSize | Out-String | Write-Host
             }
+            if (@($result.failed).Count -gt 0) { exit 1 }
         }
         'list-restore' {
             $result = Invoke-ListRestore

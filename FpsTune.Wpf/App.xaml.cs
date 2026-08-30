@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Text;
 using System.Windows;
-using Microsoft.Win32;
 using FpsTune.Wpf.Services;
 using System.Windows.Threading;
 
@@ -15,7 +14,6 @@ public partial class App : Application
         SettingsService.Load();
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
         LegacyMigrations.EnsureRun();
-        PreferDiscreteGpuForSelf();
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         base.OnStartup(e);
     }
@@ -25,31 +23,6 @@ public partial class App : Application
         TrayService.Dispose();
         base.OnExit(e);
     }
-
-
-    /// <summary>
-    /// 混合显卡笔记本上让 WPF 渲染走独立显卡（写入系统 per-app GPU 偏好），
-    /// 界面动画/滚动更顺滑；只写本程序自己的条目，卸载残留无副作用。
-    /// </summary>
-    private static void PreferDiscreteGpuForSelf()
-    {
-        try
-        {
-            var exe = Environment.ProcessPath;
-            if (string.IsNullOrWhiteSpace(exe))
-                return;
-            using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\DirectX\UserGpuPreferences");
-            var current = key.GetValue(exe) as string;
-            if (current == "GpuPreference=2;")
-                return;
-            key.SetValue(exe, "GpuPreference=2;", RegistryValueKind.String);
-        }
-        catch
-        {
-            // 非关键优化，失败不影响启动。
-        }
-    }
-
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         LogException(e.Exception);

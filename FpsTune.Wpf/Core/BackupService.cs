@@ -38,6 +38,9 @@ public sealed class BackupRecord
 
 public static class BackupService
 {
+    private const string CSharpBackupPrefix = "csharp-backup-";
+    private const string LegacyBackupPrefix = "backup-";
+
     // 测试可注入；生产代码保持默认目录
     internal static string? BackupDirOverride { get; set; }
 
@@ -53,18 +56,56 @@ public static class BackupService
             records.AddRange(CreateBackupRecords(id, gamePath));
 
         Directory.CreateDirectory(BackupDir);
-        var ts = DateTime.Now.ToString("yyyyMMdd-HHmmss");
-        var file = Path.Combine(BackupDir, $"backup-{ts}.json");
-        File.WriteAllText(file, JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true }));
-        return file;
+        var json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            var ts = DateTime.Now.ToString("yyyyMMdd-HHmmss-fff");
+            var suffix = Guid.NewGuid().ToString("N")[..8];
+            var file = Path.Combine(BackupDir, $"{CSharpBackupPrefix}{ts}-{suffix}.json");
+            try
+            {
+                // CreateNew 保证并发调用不会覆盖另一份备份。
+                using var stream = new FileStream(file, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                using var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false));
+                writer.Write(json);
+                return file;
+            }
+            catch (IOException) when (File.Exists(file))
+            {
+                // 极低概率的路径冲突，换新的短 GUID 重试。
+            }
+        }
+
+        throw new IOException("无法创建不覆盖现有文件的备份。");
     }
 
     public static IReadOnlyList<string> ListBackups()
     {
         Directory.CreateDirectory(BackupDir);
-        return Directory.GetFiles(BackupDir, "backup-*.json")
+        return Directory.GetFiles(BackupDir, "*.json")
+            .Where(IsCSharpBackupFile)
             .OrderByDescending(File.GetLastWriteTime)
             .ToList();
+    }
+
+    // 新旧格式均只认 C# 自己的前缀；旧的通用前缀再用 JSON 数组守卫，避免误读 PowerShell 文档。
+    internal static bool IsCSharpBackupFile(string file)
+    {
+        var name = Path.GetFileName(file);
+        if (name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (!name.StartsWith(LegacyBackupPrefix, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(file));
+            return document.RootElement.ValueKind == JsonValueKind.Array;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public sealed class RestoreAllResult
@@ -77,7 +118,8 @@ public static class BackupService
     public static RestoreAllResult RestoreAll()
     {
         Directory.CreateDirectory(BackupDir);
-        var files = Directory.GetFiles(BackupDir, "backup-*.json")
+        var files = Directory.GetFiles(BackupDir, "*.json")
+            .Where(IsCSharpBackupFile)
             .OrderByDescending(File.GetLastWriteTime)
             .ToList();
 
@@ -103,23 +145,35 @@ public static class BackupService
                 continue;
             }
 
-            var anyRestored = false;
+            if (records.Count == 0)
+            {
+                result.Failures.Add($"{Path.GetFileName(file)}: 备份内容为空");
+                continue;
+            }
+
+            var fileFailed = false;
             foreach (var record in records)
             {
+                if (record is null)
+                {
+                    fileFailed = true;
+                    result.Failures.Add($"{Path.GetFileName(file)}: 备份包含空记录");
+                    continue;
+                }
                 try
                 {
                     RestoreOne(record);
                     result.Restored.Add((file, record.Id));
-                    anyRestored = true;
                 }
                 catch (Exception ex)
                 {
-                    // 不再静默吞掉：失败项进入报告。
+                    fileFailed = true;
                     result.Failures.Add($"{Path.GetFileName(file)} / {record.Id}: {ex.Message}");
                 }
             }
 
-            if (anyRestored)
+            // 只有整份文件的每一条记录都成功，才允许消费文件；部分成功也必须保留原文件。
+            if (!fileFailed)
                 consumed.Add(file);
         }
 
@@ -130,12 +184,15 @@ public static class BackupService
             {
                 var renamed = file + ".restored";
                 if (File.Exists(renamed))
-                    File.Delete(renamed);
+                {
+                    result.Failures.Add($"{Path.GetFileName(file)}: 目标 .restored 文件已存在，未覆盖");
+                    continue;
+                }
                 File.Move(file, renamed);
             }
-            catch
+            catch (Exception ex)
             {
-                // 重命名失败不影响还原结果本身。
+                result.Failures.Add($"{Path.GetFileName(file)}: 还原后备份文件改名失败（{ex.Message}）");
             }
         }
 
@@ -182,7 +239,15 @@ public static class BackupService
             case "hibernate-off":
                 return new[] { new BackupRecord { Id = id, Kind = "hibernate", OldState = NativeSystem.IsHibernateEnabled() ? "on" : "off" } };
             case "dyntick-off":
-                return new[] { new BackupRecord { Id = id, Kind = "bcdedit", OldState = NativeSystem.IsDynamicTickEnabled() ? "on" : "off" } };
+                return new[]
+                {
+                    new BackupRecord
+                    {
+                        Id = id,
+                        Kind = "bcdedit",
+                        OldState = NativeSystem.GetDynamicTickState().ToString().ToLowerInvariant()
+                    }
+                };
             case "gpu-pstate-lock":
             {
                 var gpuPath = NativeSystem.GetMainGpuDriverKeyPath();
@@ -353,6 +418,8 @@ public static class BackupService
             case "bcdedit":
                 RestoreBcdedit(r);
                 break;
+            default:
+                throw new InvalidOperationException("不支持的备份记录类型: " + r.Kind);
         }
     }
 
@@ -381,7 +448,7 @@ public static class BackupService
     private static void RestoreService(BackupRecord r)
     {
         if (string.IsNullOrWhiteSpace(r.ServiceName))
-            return;
+            throw new InvalidOperationException("备份缺少服务名称");
 
         var mode = r.OldStartMode;
         if (string.IsNullOrWhiteSpace(mode))
@@ -398,15 +465,19 @@ public static class BackupService
         }
 
         // sc.exe 的参数中间必须保留空格，例如 "start= demand"。
-        NativeSystem.Run("sc.exe", "config", r.ServiceName, "start=", mode);
+        EnsureNativeSuccess(
+            NativeSystem.Run("sc.exe", "config", r.ServiceName, "start=", mode),
+            $"还原 {r.ServiceName} 启动类型");
     }
 
     private static void RestorePowerPlan(BackupRecord r)
     {
         if (string.IsNullOrWhiteSpace(r.OldActiveGuid))
-            return;
+            throw new InvalidOperationException("备份缺少原电源计划 GUID");
 
-        NativeSystem.Run("powercfg.exe", "-setactive", r.OldActiveGuid);
+        EnsureNativeSuccess(
+            NativeSystem.Run("powercfg.exe", "-setactive", r.OldActiveGuid),
+            "还原原电源计划");
     }
 
     private static void RestorePowerTuning(BackupRecord r)
@@ -415,11 +486,15 @@ public static class BackupService
         SetAcValue("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", r.OldUsbValue ?? 1);
         SetAcValue("be337238-0d82-4146-a960-4f3749d470c7", "45bcc044-d885-43e2-8605-ee0ec6e96b59", r.OldBoostValue ?? 0);
         SetAcValue("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d", "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3", r.OldIdleValue ?? 1);
-        NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT");
+        EnsureNativeSuccess(
+            NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT"),
+            "重新应用电源计划");
     }
 
     private static void SetAcValue(string subgroup, string setting, int value)
-        => NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value.ToString());
+        => EnsureNativeSuccess(
+            NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value.ToString()),
+            "还原电源隐藏项");
 
     // 查询某电源设置的当前 AC 值（失败返回 null），用于 power-tuning 无损备份。
     private static int? GetPowerAcIndex(string subgroup, string setting)
@@ -445,14 +520,49 @@ public static class BackupService
 
     private static void RestoreHibernate(BackupRecord r)
     {
-        if (r.OldState == "on")
-            NativeSystem.Run("powercfg.exe", "/h", "on");
+        switch (r.OldState?.ToLowerInvariant())
+        {
+            case "on":
+                EnsureNativeSuccess(NativeSystem.Run("powercfg.exe", "/h", "on"), "重新开启休眠");
+                break;
+            case "off":
+                break;
+            default:
+                throw new InvalidOperationException("备份缺少有效的休眠状态");
+        }
     }
 
     private static void RestoreBcdedit(BackupRecord r)
     {
-        if (r.OldState == "on")
-            NativeSystem.Run("bcdedit.exe", "/set", "{current}", "disabledynamictick", "no");
+        switch (r.OldState?.ToLowerInvariant())
+        {
+            case "yes":
+                EnsureNativeSuccess(
+                    NativeSystem.Run("bcdedit.exe", "/set", "{current}", "disabledynamictick", "yes"),
+                    "还原 disabledynamictick=yes");
+                break;
+            case "no":
+                EnsureNativeSuccess(
+                    NativeSystem.Run("bcdedit.exe", "/set", "{current}", "disabledynamictick", "no"),
+                    "还原 disabledynamictick=no");
+                break;
+            case "absent":
+                EnsureNativeSuccess(
+                    NativeSystem.Run("bcdedit.exe", "/deletevalue", "{current}", "disabledynamictick"),
+                    "删除 disabledynamictick");
+                break;
+            default:
+                throw new InvalidOperationException("备份缺少有效的 disabledynamictick 状态");
+        }
+    }
+
+    private static void EnsureNativeSuccess(NativeResult result, string operation)
+    {
+        if (!result.Success)
+        {
+            var detail = string.IsNullOrWhiteSpace(result.Error) ? $"退出码 {result.ExitCode}" : result.Error.Trim();
+            throw new InvalidOperationException($"{operation}失败：{detail}");
+        }
     }
 
     internal static object ConvertValue(object value, RegistryValueKind kind)

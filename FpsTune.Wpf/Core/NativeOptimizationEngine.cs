@@ -316,7 +316,17 @@ public static class NativeOptimizationEngine
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyDynamicTickOff()
     {
-        if (NativeSystem.IsDynamicTickEnabled())
+        DynamicTickState state;
+        try
+        {
+            state = NativeSystem.GetDynamicTickState();
+        }
+        catch (Exception ex)
+        {
+            return (false, false, false, ex.Message);
+        }
+
+        if (state == DynamicTickState.Yes)
             return (true, false, false, "动态计时器本就禁用");
 
         var r = NativeSystem.Run("bcdedit.exe", "/set", "{current}", "disabledynamictick", "yes");

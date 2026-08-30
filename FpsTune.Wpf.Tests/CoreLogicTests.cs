@@ -119,6 +119,60 @@ public class CoreLogicTests
         Assert.Equal(1, Convert.ToInt32(result));
     }
 
+    // ---------- disabledynamictick 状态与备份消费守卫 ----------
+
+    [Theory]
+    [InlineData("", DynamicTickState.Absent)]
+    [InlineData("disabledynamictick    no", DynamicTickState.No)]
+    [InlineData("disabledynamictick    yes", DynamicTickState.Yes)]
+    public void DynamicTick_parser_distinguishes_absent_no_and_yes(string output, DynamicTickState expected)
+        => Assert.Equal(expected, NativeSystem.ParseDynamicTickState(output));
+
+    [Fact]
+    public void RestoreAll_keeps_a_backup_file_when_any_record_fails()
+    {
+        var tmp = Path.Combine(Path.GetTempPath(), "fpstune-restore-tests-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tmp);
+        BackupService.BackupDirOverride = tmp;
+        var file = Path.Combine(tmp, "csharp-backup-test.json");
+        try
+        {
+            File.WriteAllText(file, "[{\"Id\":\"bad\",\"Kind\":\"unknown\"}]");
+
+            var result = OptimizationEngine.RestoreAsync().GetAwaiter().GetResult();
+
+            Assert.Equal(1, result.ExitCode);
+            Assert.Contains("[失败]", result.Output);
+            Assert.True(File.Exists(file), "失败的整份备份不得被消费");
+            Assert.False(File.Exists(file + ".restored"));
+        }
+        finally
+        {
+            BackupService.BackupDirOverride = null;
+            if (Directory.Exists(tmp))
+                Directory.Delete(tmp, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Backup_file_guards_keep_legacy_PowerShell_documents_out_of_CSharp()
+    {
+        var tmp = Path.Combine(Path.GetTempPath(), "fpstune-backup-guards-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tmp);
+        try
+        {
+            var powershellFile = Path.Combine(tmp, "backup-legacy.json");
+            File.WriteAllText(powershellFile, "{\"schema\":\"v1\",\"tool\":\"delta-optimizer\",\"items\":[]}");
+
+            Assert.False(BackupService.IsCSharpBackupFile(powershellFile));
+        }
+        finally
+        {
+            if (Directory.Exists(tmp))
+                Directory.Delete(tmp, recursive: true);
+        }
+    }
+
     // ---------- PowerShellRunner.Quote（参数安全引用）----------
 
     [Fact]

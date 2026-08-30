@@ -201,6 +201,7 @@ public class CatalogConsistencyTests
             // 仅 HKCU 只读采样，不写系统设置；文件落在临时目录。
             var file = BackupService.Capture(new[] { "game-mode", "dvr-off" }, null);
             Assert.True(File.Exists(file));
+            Assert.Matches(@"^csharp-backup-\d{8}-\d{6}-\d{3}-[0-9a-f]{8}\.json$", Path.GetFileName(file));
 
             var list = JsonSerializer.Deserialize<List<BackupRecord>>(
                 File.ReadAllText(file), new JsonSerializerOptions { WriteIndented = true });

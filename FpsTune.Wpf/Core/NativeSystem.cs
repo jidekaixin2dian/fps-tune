@@ -11,6 +11,13 @@ public sealed record NativeResult(int ExitCode, string Output, string Error)
     public bool Success => ExitCode == 0;
 }
 
+internal enum DynamicTickState
+{
+    Absent,
+    No,
+    Yes
+}
+
 /// <summary>
 /// 直接调用 Windows 原生命令的轻量封装，避免为了核心改动再回退 PowerShell。
 /// </summary>
@@ -100,8 +107,35 @@ internal static class NativeSystem
 
     public static bool IsDynamicTickEnabled()
     {
+        try
+        {
+            return GetDynamicTickState() == DynamicTickState.Yes;
+        }
+        catch
+        {
+            // 检测接口保持布尔兼容；需要修改/备份时由调用方显式报告查询失败。
+            return false;
+        }
+    }
+
+    public static DynamicTickState GetDynamicTickState()
+    {
         var r = Run("bcdedit.exe", "/enum", "{current}");
-        return r.Success && Regex.IsMatch(r.Output, @"disabledynamictick\s+yes", RegexOptions.IgnoreCase);
+        if (!r.Success)
+            throw new InvalidOperationException("查询 disabledynamictick 失败：" + (string.IsNullOrWhiteSpace(r.Error) ? $"退出码 {r.ExitCode}" : r.Error.Trim()));
+
+        return ParseDynamicTickState(r.Output);
+    }
+
+    internal static DynamicTickState ParseDynamicTickState(string output)
+    {
+        var match = Regex.Match(output ?? "", @"(?im)^\s*disabledynamictick\s+(yes|no)\b");
+        if (!match.Success)
+            return DynamicTickState.Absent;
+
+        return string.Equals(match.Groups[1].Value, "yes", StringComparison.OrdinalIgnoreCase)
+            ? DynamicTickState.Yes
+            : DynamicTickState.No;
     }
 
     public static string? GetMainGpuDriverKeyPath()
