@@ -7,6 +7,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -82,8 +83,44 @@
             </Border>
         </UniformGrid>
 
+        <!-- 实时监控 -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+            <StackPanel>
+                <Grid Margin="0,0,0,8">
+                    <TextBlock Text="实时监控" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="每秒采样 · 只读性能数据" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right"/>
+                </Grid>
+                <UniformGrid Columns="3">
+                    <StackPanel Margin="0,0,14,0">
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock Text="CPU 占用" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock x:Name="CpuNowText" Text="--" HorizontalAlignment="Right"
+                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                        </Grid>
+                        <Canvas x:Name="CpuChart" Height="78"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,14,0">
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock Text="内存占用" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock x:Name="MemNowText" Text="--" HorizontalAlignment="Right"
+                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                        </Grid>
+                        <Canvas x:Name="MemChart" Height="78"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock Text="GPU 占用" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock x:Name="GpuNowText" Text="--" HorizontalAlignment="Right"
+                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OkBrush}"/>
+                        </Grid>
+                        <Canvas x:Name="GpuChart" Height="78"/>
+                    </StackPanel>
+                </UniformGrid>
+            </StackPanel>
+        </Border>
+
         <!-- 游戏路径 + 体检 -->
-        <Grid Grid.Row="2" Margin="0,0,0,14">
+        <Grid Grid.Row="3" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="11*"/>
                 <ColumnDefinition Width="14"/>
@@ -104,6 +141,21 @@
                     <TextBlock x:Name="GamePathText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
                                TextWrapping="Wrap"/>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="当前游戏" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1" x:Name="GameSwitcher" Style="{StaticResource SelectComboBoxStyle}"
+                                  Margin="8,0,0,0" MaxDropDownHeight="280"
+                                  SelectionChanged="GameSwitcher_SelectionChanged"/>
+                        <Button Grid.Column="2" Content="重新扫描"
+                                Style="{StaticResource GhostButtonStyle}"
+                                Height="26" MinWidth="72" Margin="8,0,0,0"
+                                Click="RescanGames_Click"/>
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -141,7 +193,7 @@
         </Grid>
 
         <!-- 优化项概览 -->
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -213,7 +265,7 @@
         </Border>
 
         <!-- 详情 -->
-        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Height="170">
+        <Border Grid.Row="5" Style="{StaticResource CardStyle}" Height="170">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

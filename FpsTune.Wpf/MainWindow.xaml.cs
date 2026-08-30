@@ -71,6 +71,7 @@ public partial class MainWindow : Window
             theme = "dark";
         ThemeManager.Initialize();
         ThemeManager.SetMode(theme);
+        ApplyAuroraSetting(ThemeManager.CurrentGlowBrush);
 
         StateChanged += OnStateChanged;
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
@@ -96,6 +97,16 @@ public partial class MainWindow : Window
 
     [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
     private static extern uint NativeGetDpiForWindow(nint hwnd);
+
+    /// <summary>按设置应用/移除窗口级极光层; 设置页切换氛围光开关时调用。</summary>
+    public void ApplyAuroraSetting(RadialGradientBrush? glow)
+    {
+        if (glow is not null)
+            AuroraLayer.Background = glow;
+        AuroraLayer.Visibility = glow is null
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    }
 
     private HwndSource? _hwndSource;
 

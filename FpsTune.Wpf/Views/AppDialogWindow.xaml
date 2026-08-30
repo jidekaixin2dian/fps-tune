@@ -14,7 +14,7 @@
         Background="Transparent"
         FontFamily="Microsoft YaHei UI">
     <Border Margin="18"
-            Background="{DynamicResource AppBackgroundBrush}"
+            Background="{DynamicResource AppBackdropBrush}"
             BorderBrush="{DynamicResource BorderHoverBrush}"
             BorderThickness="1"
             CornerRadius="16"

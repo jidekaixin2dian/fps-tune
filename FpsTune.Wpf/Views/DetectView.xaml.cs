@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using System.Linq;
@@ -11,6 +12,12 @@ namespace FpsTune.Wpf.Views;
 public partial class DetectView : UserControl
 {
     private bool _hasSavedState;
+
+    private System.Windows.Threading.DispatcherTimer? _monitorTimer;
+    private readonly List<double> _cpuHist = new();
+    private readonly List<double> _memHist = new();
+    private readonly List<double> _gpuHist = new();
+    private bool _suppressGameSwitch;
 
     public DetectView()
     {
@@ -22,7 +29,188 @@ public partial class DetectView : UserControl
             {
                 _ = RunDetectionAsync();
             }
+            StartMonitor();
+            StartGameScan();
         };
+        Unloaded += (_, _) => StopMonitor();
+    }
+
+    // ---------- 实时监控 ----------
+
+    private void StartMonitor()
+    {
+        if (_monitorTimer is not null)
+            return;
+        _monitorTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _monitorTimer.Tick += (_, _) => SampleMonitor();
+        _monitorTimer.Start();
+    }
+
+    private void StopMonitor()
+    {
+        _monitorTimer?.Stop();
+        _monitorTimer = null;
+    }
+
+    private void SampleMonitor()
+    {
+        var (cpu, mem, gpu) = LiveMetrics.ReadOnce();
+        Push(_cpuHist, cpu);
+        Push(_memHist, mem);
+        Push(_gpuHist, gpu);
+        CpuNowText.Text = Fmt(cpu);
+        MemNowText.Text = Fmt(mem);
+        GpuNowText.Text = Fmt(gpu);
+        DrawChart(CpuChart, _cpuHist, "AccentBrush");
+        DrawChart(MemChart, _memHist, "PrimaryBrush");
+        DrawChart(GpuChart, _gpuHist, "OkBrush");
+    }
+
+    private static string Fmt(double v) => double.IsFinite(v) ? $"{v:0}%" : "--";
+
+    private static void Push(List<double> history, double v)
+    {
+        if (double.IsFinite(v))
+            history.Add(Math.Clamp(v, 0, 100));
+        while (history.Count > 60)
+            history.RemoveAt(0);
+    }
+
+    private void DrawChart(System.Windows.Controls.Canvas canvas, List<double> history, string brushKey)
+    {
+        var w = canvas.ActualWidth;
+        var h = canvas.ActualHeight;
+        if (w < 10 || h < 10)
+            return;
+        canvas.Children.Clear();
+
+        // 底线与半高线
+        for (var i = 0; i < 2; i++)
+        {
+            var y = i == 0 ? h - 1 : h / 2;
+            canvas.Children.Add(new System.Windows.Shapes.Line
+            {
+                X1 = 0, Y1 = y, X2 = w, Y2 = y,
+                Stroke = (Brush)Application.Current.Resources["BorderBrush"],
+                StrokeThickness = 1,
+                Opacity = 0.5
+            });
+        }
+
+        if (history.Count == 0)
+            return;
+
+        var stroke = (Brush)Application.Current.Resources[brushKey];
+        double Step() => w / Math.Max(60 - 1, history.Count - 1);
+        var offset = 60 - history.Count;
+        var points = new System.Windows.Media.PointCollection();
+        for (var i = 0; i < history.Count; i++)
+            points.Add(new Point(offset * Step() + i * Step(), h - 2 - (h - 4) * history[i] / 100));
+        canvas.Children.Add(new System.Windows.Shapes.Polyline
+        {
+            Points = points,
+            Stroke = stroke,
+            StrokeThickness = 1.6,
+            StrokeLineJoin = System.Windows.Media.PenLineJoin.Round
+        });
+
+        var last = history[^1];
+        canvas.Children.Add(new System.Windows.Shapes.Ellipse
+        {
+            Width = 6, Height = 6,
+            Fill = stroke,
+            Margin = new Thickness(points[^1].X - 3, points[^1].Y - 3, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top
+        });
+        _ = last;
+    }
+
+    // ---------- 游戏切换 ----------
+
+    private void StartGameScan()
+    {
+        if (_suppressGameSwitch)
+            return;
+        _suppressGameSwitch = true;
+        GameSwitcher.Items.Clear();
+        GameSwitcher.Items.Add(new ComboBoxItem { Content = "扫描中…", IsEnabled = false });
+        GameSwitcher.SelectedIndex = 0;
+        _suppressGameSwitch = false;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                var games = GamePathService.DetectAll();
+                await Dispatcher.InvokeAsync(() => FillGameSwitcher(games));
+            }
+            catch
+            {
+                await Dispatcher.InvokeAsync(() => FillGameSwitcher(new List<GamePathService.GameCandidate>()));
+            }
+        });
+    }
+
+    private void FillGameSwitcher(IReadOnlyList<GamePathService.GameCandidate> games)
+    {
+        _suppressGameSwitch = true;
+        GameSwitcher.Items.Clear();
+        foreach (var g in games)
+            GameSwitcher.Items.Add(new ComboBoxItem { Content = g.Name, Tag = g.ExePath, ToolTip = g.ExePath });
+        if (games.Count == 0)
+            GameSwitcher.Items.Add(new ComboBoxItem { Content = "未检测到已安装游戏", IsEnabled = false });
+        GameSwitcher.Items.Add(new ComboBoxItem { Content = "手动指定…", Tag = "manual" });
+
+        var current = StateStore.LoadGamePath() ?? AppState.GamePath;
+        var idx = -1;
+        for (var i = 0; i < GameSwitcher.Items.Count; i++)
+        {
+            if (GameSwitcher.Items[i] is ComboBoxItem ci && ci.Tag as string == current)
+            {
+                idx = i;
+                break;
+            }
+        }
+        GameSwitcher.SelectedIndex = idx;
+        _suppressGameSwitch = false;
+        RefreshGamePathText();
+    }
+
+    private void GameSwitcher_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressGameSwitch)
+            return;
+        if (GameSwitcher.SelectedItem is not ComboBoxItem ci)
+            return;
+        if (ci.Tag as string == "manual")
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog { Title = "选择游戏主程序", Filter = "可执行文件 (*.exe)|*.exe" };
+            if (dlg.ShowDialog() == true)
+                ApplyGame(dlg.FileName);
+            else
+                StartGameScan(); // 取消选择, 恢复显示当前值
+            return;
+        }
+        if (ci.Tag is string path && path.Length > 0)
+            ApplyGame(path);
+    }
+
+    private void ApplyGame(string path)
+    {
+        StateStore.SaveGamePath(path);
+        AppState.GamePath = path;
+        RefreshGamePathText();
+    }
+
+    private void RescanGames_Click(object sender, RoutedEventArgs e) => StartGameScan();
+
+    private void RefreshGamePathText()
+    {
+        var path = StateStore.LoadGamePath() ?? AppState.GamePath;
+        GamePathText.Text = string.IsNullOrWhiteSpace(path)
+            ? "未检测到已安装游戏，可在下方切换或手动指定"
+            : path;
     }
 
     private async void RunButton_Click(object sender, RoutedEventArgs e)

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
@@ -25,23 +26,63 @@ public static class GamePathService
 
     public static string? Find()
     {
-        var fromProcess = FindFromRunningProcess();
-        if (fromProcess is not null)
-            return fromProcess;
-
-        var fromUninstall = FindFromUninstallRegistry();
-        if (fromUninstall is not null)
-            return fromUninstall;
-
-        var fromCommonDirs = FindFromCommonDirectories();
-        if (fromCommonDirs is not null)
-            return fromCommonDirs;
-
-        return null;
+        return DetectAll().FirstOrDefault()?.ExePath;
     }
 
-    private static string? FindFromRunningProcess()
+    /// <summary>可执行文件名 → 中文显示名（切换游戏选择器用）。</summary>
+    private static readonly Dictionary<string, string> ExeLabel = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["cs2.exe"] = "反恐精英 2 (CS2)",
+        ["VALORANT-Win64-Shipping.exe"] = "无畏契约 (VALORANT)",
+        ["r5apex_dx12.exe"] = "APEX 英雄",
+        ["TslGame.exe"] = "绝地求生 (PUBG)",
+        ["Overwatch.exe"] = "守望先锋",
+        ["cod.exe"] = "使命召唤",
+        ["TheFinals.exe"] = "THE FINALS",
+        ["RainbowSix.exe"] = "彩虹六号",
+        ["EscapeFromTarkov.exe"] = "逃离塔科夫",
+        ["destiny2.exe"] = "命运 2",
+        ["BF2042.exe"] = "战地 2042",
+        ["DeltaForceClient-Win64-Shipping.exe"] = "三角洲行动",
+        ["DeltaForceClient.exe"] = "三角洲行动",
+    };
+
+    public static string LabelFor(string exePath)
+    {
+        var name = Path.GetFileName(exePath);
+        return ExeLabel.TryGetValue(name, out var label) ? label : name;
+    }
+
+    /// <summary>
+    /// 扫描全部已知游戏（运行中进程 → 卸载注册表 → 常见目录），返回所有候选。
+    /// 顺序即优先级: 正在运行的游戏排最前。
+    /// </summary>
+    public static IReadOnlyList<GameCandidate> DetectAll()
+    {
+        var found = new Dictionary<string, GameCandidate>(StringComparer.OrdinalIgnoreCase);
+
+        void Add(string exePath)
+        {
+            if (string.IsNullOrWhiteSpace(exePath) || !File.Exists(exePath))
+                return;
+            found.TryAdd(exePath, new GameCandidate(LabelFor(exePath), exePath));
+        }
+
+        foreach (var path in CollectFromRunningProcesses())
+            Add(path);
+        foreach (var path in CollectFromUninstallRegistry())
+            Add(path);
+        foreach (var path in CollectFromCommonDirectories())
+            Add(path);
+
+        return found.Values.ToList();
+    }
+
+    public sealed record GameCandidate(string Name, string ExePath);
+
+    private static IEnumerable<string> CollectFromRunningProcesses()
+    {
+        var paths = new List<string>();
         try
         {
             foreach (var name in GameProcessNames)
@@ -51,7 +92,7 @@ public static class GamePathService
                     try
                     {
                         if (!string.IsNullOrWhiteSpace(p.MainModule?.FileName) && File.Exists(p.MainModule.FileName))
-                            return p.MainModule.FileName;
+                            paths.Add(p.MainModule.FileName);
                     }
                     catch
                     {
@@ -63,12 +104,12 @@ public static class GamePathService
         catch
         {
         }
-
-        return null;
+        return paths;
     }
 
-    private static string? FindFromUninstallRegistry()
+    private static IEnumerable<string> CollectFromUninstallRegistry()
     {
+        var paths = new List<string>();
         var roots = new[]
         {
             (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", RegistryView.Registry64),
@@ -89,10 +130,7 @@ public static class GamePathService
                 {
                     using var key = baseKey.OpenSubKey(sub);
                     var displayName = key?.GetValue("DisplayName")?.ToString() ?? "";
-                    if (string.IsNullOrWhiteSpace(displayName))
-                        continue;
-
-                    if (!ContainsGameKeyword(displayName))
+                    if (string.IsNullOrWhiteSpace(displayName) || !ContainsGameKeyword(displayName))
                         continue;
 
                     var install = key?.GetValue("InstallLocation")?.ToString();
@@ -100,7 +138,7 @@ public static class GamePathService
                     {
                         var found = SearchForExe(install, maxDepth: 5);
                         if (found is not null)
-                            return found;
+                            paths.Add(found);
                     }
                 }
             }
@@ -109,11 +147,23 @@ public static class GamePathService
             }
         }
 
-        return null;
+        return paths;
     }
 
-    private static string? FindFromCommonDirectories()
+    // 根目录下认识的安装目录名（常见盘符兜底扫描用）
+    private static readonly string[] KnownInstallDirNames =
     {
+        "Delta Force", "DeltaForce", "三角洲",
+        "Counter-Strike Global Offensive", "CS2", "Counter-Strike 2",
+        "VALORANT", "Apex Legends", "Apex",
+        "PUBG", "Call of Duty", "Overwatch", "THE FINALS",
+        "Rainbow Six Siege", "RainbowSix", "Escape from Tarkov",
+        "Destiny 2", "Battlefield 2042", "战地",
+    };
+
+    private static IEnumerable<string> CollectFromCommonDirectories()
+    {
+        var paths = new List<string>();
         try
         {
             foreach (var drive in DriveInfo.GetDrives())
@@ -126,13 +176,12 @@ public static class GamePathService
                     foreach (var dir in Directory.EnumerateDirectories(drive.RootDirectory.FullName, "*", SearchOption.TopDirectoryOnly))
                     {
                         var name = Path.GetFileName(dir);
-                        if (name.Contains("Delta", StringComparison.OrdinalIgnoreCase) ||
-                            name.Contains("三角洲", StringComparison.Ordinal))
-                        {
-                            var found = SearchForExe(dir, maxDepth: 5);
-                            if (found is not null)
-                                return found;
-                        }
+                        if (!KnownInstallDirNames.Any(k => name.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                            continue;
+
+                        var found = SearchForExe(dir, maxDepth: 5);
+                        if (found is not null)
+                            paths.Add(found);
                     }
                 }
                 catch
@@ -144,7 +193,7 @@ public static class GamePathService
         {
         }
 
-        return null;
+        return paths;
     }
 
     private static bool ContainsGameKeyword(string text)

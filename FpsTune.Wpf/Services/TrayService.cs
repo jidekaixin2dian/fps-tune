@@ -1,3 +1,4 @@
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -63,20 +64,46 @@ public static class TrayService
         if (_taskbarCreatedMsg == -1)
             _taskbarCreatedMsg = Native.RegisterWindowMessage("TaskbarCreated");
 
-        // 图标句柄: 优先取主窗口已在标题栏使用的图标(必然有效)。
-        // LoadImage 按资源编号取图标在打包后不可靠, 曾取到空句柄导致托盘"看不见"。
+        // 图标句柄: 确定性方案——把内嵌 app.ico 解包到临时文件后按文件加载 16px。
+        // 资源编号(LoadImage "#1")在打包后不可靠、窗口类图标(GCLP_HICON)在 WPF 里
+        // 常为空, 两者都曾导致托盘挂出"空白图标"。
+        if (_hIcon == IntPtr.Zero)
+        {
+            try
+            {
+                var tmpIco = Path.Combine(Path.GetTempPath(), "fpstune-tray.ico");
+                var sri = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"));
+                if (sri != null)
+                {
+                    using var ms = new MemoryStream();
+                    sri.Stream.CopyTo(ms);
+                    File.WriteAllBytes(tmpIco, ms.ToArray());
+                }
+                if (File.Exists(tmpIco))
+                {
+                    _hIcon = Native.LoadImage(IntPtr.Zero, tmpIco,
+                        Native.IMAGE_ICON, 16, 16, Native.LR_LOADFROMFILE);
+                }
+            }
+            catch
+            {
+                // 图标提取失败时走下方主窗口图标兜底
+            }
+        }
         if (_hIcon == IntPtr.Zero)
         {
             var mainHwnd = app.MainWindow is Window w
                 ? new WindowInteropHelper(w).Handle
                 : IntPtr.Zero;
             if (mainHwnd != IntPtr.Zero)
-                _hIcon = Native.GetClassLongPtr(mainHwnd, Native.GCLP_HICON);
-        }
-        if (_hIcon == IntPtr.Zero)
-        {
-            _hIcon = Native.LoadImage(Native.GetModuleHandle(null), "#1",
-                Native.IMAGE_ICON, 0, 0, Native.LR_DEFAULTSIZE | Native.LR_SHARED);
+            {
+                // WM_GETICON(ICON_SMALL): WPF 从 Window.Icon 设置的小图标, 托盘正合适
+                _hIcon = Native.SendMessage(mainHwnd, 0x7F, (nint)0, nint.Zero);
+                if (_hIcon == IntPtr.Zero)
+                    _hIcon = Native.SendMessage(mainHwnd, 0x7F, (nint)1, nint.Zero);
+                if (_hIcon == IntPtr.Zero)
+                    _hIcon = Native.GetClassLongPtr(mainHwnd, Native.GCLP_HICON);
+            }
         }
 
         var nid = new Native.NOTIFYICONDATA
@@ -256,6 +283,7 @@ public static class TrayService
         public const uint WS_POPUP = 0x80000000;
         public const int GCLP_HICON = -14;
         public const uint IMAGE_ICON = 1;
+        public const uint LR_LOADFROMFILE = 0x10;
         public const uint LR_DEFAULTSIZE = 0x40, LR_SHARED = 0x8000;
         public const uint MF_STRING = 0x0, MF_SEPARATOR = 0x800;
         public const uint TPM_RETURNCMD = 0x100, TPM_RIGHTBUTTON = 0x2, TPM_NONOTIFY = 0x80;

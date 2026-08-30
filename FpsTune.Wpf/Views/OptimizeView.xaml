@@ -32,57 +32,78 @@
             </StackPanel>
         </Grid>
 
-        <!-- 预设与确认 -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,14">
-        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,14">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="24"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="预设" Style="{StaticResource CardTitleStyle}"/>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
-                        <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Style="{StaticResource PillRadioStyle}"/>
-                        <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
-                        <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+        <!-- 左栏: 预设 / 配置方案 / 执行结果 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="0">
+                <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="预设" Style="{StaticResource CardTitleStyle}"/>
+                        <WrapPanel Margin="0,8,0,0">
+                            <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+                            <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Style="{StaticResource PillRadioStyle}"/>
+                            <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+                            <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Style="{StaticResource PillRadioStyle}"/>
+                        </WrapPanel>
+                        <CheckBox x:Name="ConsentCheck"
+                                  Style="{StaticResource ToggleSwitchStyle}"
+                                  Margin="0,12,0,0"
+                                  HorizontalContentAlignment="Left">
+                            <TextBlock Text="我已了解各项作用，同意执行" TextWrapping="Wrap"/>
+                        </CheckBox>
                     </StackPanel>
-                </StackPanel>
-                <CheckBox Grid.Column="2"
-                          x:Name="ConsentCheck"
-                          Style="{StaticResource ToggleSwitchStyle}"
-                          Content="我已了解各项作用，同意执行（写前自动备份）"
-                          VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
+                </Border>
 
-        <Border Style="{StaticResource CardStyle}">
-            <StackPanel>
-                <TextBlock Text="配置方案" Style="{StaticResource CardTitleStyle}"/>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="ProfileNameBox"
-                             Style="{StaticResource InputTextBoxStyle}"
-                             Width="220" Height="30"
-                             VerticalContentAlignment="Center"
-                             FontSize="12"/>
-                    <Button Content="保存" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="8,0,0,0" Click="ProfileSave_Click"/>
-                    <Button Content="载入" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileLoad_Click"/>
-                    <Button Content="删除" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileDelete_Click"/>
-                    <Button Content="导出" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileExport_Click"/>
-                    <Button Content="导入" Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="30" Margin="6,0,0,0" Click="ProfileImport_Click"/>
-                </StackPanel>
-                <TextBlock x:Name="ProfileHint"
-                           Text="输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
-            </StackPanel>
-        </Border>
+                <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="配置方案" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBox x:Name="ProfileNameBox"
+                                 Style="{StaticResource InputTextBoxStyle}"
+                                 Height="30" Margin="0,8,0,0"
+                                 VerticalContentAlignment="Center" FontSize="12"/>
+                        <WrapPanel Margin="0,8,0,0">
+                            <Button Content="保存" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileSave_Click"/>
+                            <Button Content="载入" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileLoad_Click"/>
+                            <Button Content="删除" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileDelete_Click"/>
+                            <Button Content="导出" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileExport_Click"/>
+                            <Button Content="导入" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,0,6" Click="ProfileImport_Click"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="ProfileHint"
+                                   Text="输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享"
+                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
 
-        </StackPanel>
+                <!-- 执行结果(填满左栏剩余高度) -->
+                <Border Style="{StaticResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="执行结果" Style="{StaticResource CardTitleStyle}"/>
+                        <FlowDocumentScrollViewer Grid.Row="1"
+                                 x:Name="OutputBox"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Background="Transparent">
+                            <FlowDocument x:Name="OutputDoc" PagePadding="0" Background="Transparent"
+                                          FontFamily="Microsoft YaHei UI" FontSize="12">
+                                <Paragraph Foreground="{DynamicResource TextSecondaryBrush}">
+                                    选择预设后点击“应用”。
+                                </Paragraph>
+                            </FlowDocument>
+                        </FlowDocumentScrollViewer>
+                    </Grid>
+                </Border>
+            </DockPanel>
 
+            <!-- 右栏: 优化项列表(占满高度) -->
         <!-- 优化项列表 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+        <Border Grid.Column="2" Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -237,27 +258,6 @@
                 </ListBox>
             </Grid>
         </Border>
-
-        <!-- 执行结果 -->
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Height="190">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="执行结果" Style="{StaticResource CardTitleStyle}"/>
-                <FlowDocumentScrollViewer Grid.Row="1"
-                         x:Name="OutputBox"
-                         VerticalScrollBarVisibility="Auto"
-                         Background="Transparent">
-                    <FlowDocument x:Name="OutputDoc" PagePadding="0" Background="Transparent"
-                                  FontFamily="Microsoft YaHei UI" FontSize="12">
-                        <Paragraph Foreground="{DynamicResource TextSecondaryBrush}">
-                            选择预设后点击“应用”。
-                        </Paragraph>
-                    </FlowDocument>
-                </FlowDocumentScrollViewer>
-            </Grid>
-        </Border>
+        </Grid>
     </Grid>
 </UserControl>

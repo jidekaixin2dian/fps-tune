@@ -73,6 +73,8 @@ public partial class SettingsView : UserControl
         settings.ThemeMode = mode;
         SettingsService.Save(settings);
         ThemeManager.SetMode(mode);
+        if (Application.Current.MainWindow is MainWindow main)
+            main.ApplyAuroraSetting(ThemeManager.CurrentGlowBrush);
     }
 
     // ---------- 游戏路径 ----------
@@ -301,27 +303,60 @@ public partial class SettingsView : UserControl
             var info = await UpdateService.CheckAsync();
             if (info is null)
             {
-                UpdateStatusText.Text = "检查失败或已是最新";
+                UpdateStatusText.Text = "无法连接更新服务（GitHub 可能暂不可达），可稍后重试";
                 return;
             }
 
-            if (UpdateService.IsNewer(info.Version, UpdateService.CurrentVersion))
-            {
-                UpdateStatusText.Text = $"发现新版本 {info.Version}";
-                var open = DialogService.Confirm(
-                    "FPS 帧律",
-                    $"发现新版本 {info.Version}\n\n{info.Notes}\n\n是否打开下载页面？",
-                    confirmText: "打开");
-                if (open)
-                {
-                    try { Process.Start(new ProcessStartInfo(info.Url) { UseShellExecute = true }); }
-                    catch { }
-                }
-            }
-            else
+            if (!UpdateService.IsNewer(info.Version, UpdateService.CurrentVersion))
             {
                 UpdateStatusText.Text = "当前已是最新版本";
+                return;
             }
+
+            UpdateStatusText.Text = $"发现新版本 {info.Version}";
+            var go = DialogService.Confirm(
+                "FPS 帧律",
+                $"发现新版本 {info.Version}（当前 v{UpdateService.CurrentVersion}）。\n\n" +
+                "是否立即下载并静默安装？安装完成后软件会自动关闭并完成升级。",
+                confirmText: "立即更新");
+            if (!go)
+            {
+                UpdateStatusText.Text = $"已跳过 {info.Version}，可随时在 GitHub 主页手动下载";
+                return;
+            }
+
+            var url = await UpdateService.FindInstallerUrlAsync();
+            if (url is null)
+            {
+                UpdateStatusText.Text = "更新服务暂不可达，请手动下载";
+                try { Process.Start(new ProcessStartInfo(info.Url) { UseShellExecute = true }); } catch { }
+                return;
+            }
+
+            var tmp = Path.Combine(Path.GetTempPath(), $"FpsTune-Setup-{info.Version}.exe");
+            var lastPct = -1;
+            await UpdateService.DownloadAsync(url, tmp, pct =>
+            {
+                var percent = (int)pct;
+                if (percent == lastPct)
+                    return;
+                lastPct = percent;
+                Dispatcher.Invoke(() => UpdateStatusText.Text = $"下载中 {percent}%");
+            });
+
+            UpdateStatusText.Text = "下载完成，正在启动安装...";
+            var dir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
+            Process.Start(new ProcessStartInfo(tmp)
+            {
+                UseShellExecute = true,
+                Arguments = $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"{dir}\""
+            });
+            await Task.Delay(1200);
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusText.Text = "更新失败: " + ex.Message;
         }
         finally
         {

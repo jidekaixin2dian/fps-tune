@@ -47,6 +47,18 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
+            <!-- 极光层: 窗口级固定背景, 盖满全窗(含侧栏), 页面在其上滑动 -->
+            <Border x:Name="AuroraLayer"
+                    Grid.Row="0" Grid.RowSpan="2"
+                    IsHitTestVisible="False">
+                <Border.Background>
+                    <RadialGradientBrush Center="0.5,0" GradientOrigin="0.5,0" RadiusX="0.75" RadiusY="0.72">
+                        <GradientStop Color="#554DA3FF" Offset="0"/>
+                        <GradientStop Color="#004DA3FF" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+
             <!-- 标题栏 -->
             <Grid Grid.Row="0" Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">

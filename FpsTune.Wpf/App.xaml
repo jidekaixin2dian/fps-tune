@@ -8,7 +8,8 @@
 
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-            <SolidColorBrush po:Freeze="False" x:Key="AppBackgroundBrush" Color="#0A0D12"/>
+            <!-- 页面根背景统一透明: 渐变底与极光都在主窗口层, 页面在其上滑动 -->
+            <SolidColorBrush po:Freeze="False" x:Key="AppBackgroundBrush" Color="Transparent"/>
             <SolidColorBrush po:Freeze="False" x:Key="SidebarBackgroundBrush" Color="#0D1016"/>
             <SolidColorBrush po:Freeze="False" x:Key="SurfaceBrush" Color="#12161E"/>
             <SolidColorBrush po:Freeze="False" x:Key="SurfaceAltBrush" Color="#161B24"/>
@@ -115,6 +116,76 @@
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="SelectComboBoxStyle" TargetType="ComboBox">
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="Bd" Background="{DynamicResource InputBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8">
+                                                <Path Data="M0 0 L4 4 L8 0" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.4"
+                                                      HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  Margin="11,0,26,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                                  TextBlock.Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True"
+                                       Placement="Bottom" PopupAnimation="Slide" Focusable="False">
+                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"
+                                            CornerRadius="8" Margin="0,4,0,0"
+                                            MinWidth="{TemplateBinding ActualWidth}" MaxHeight="280">
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="ItemContainerStyle">
+                    <Setter.Value>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                            <Setter Property="Padding" Value="10,6"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ComboBoxItem">
+                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsEnabled" Value="False">
+                                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
                     </Setter.Value>
                 </Setter>
             </Style>

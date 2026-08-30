@@ -41,7 +41,7 @@ public static class ThemeManager
         var t = resolved == "light" ? LightPalette : DarkPalette;
 
         SetBrush("AppBackgroundBrush", t.AppBackground);
-        SetBrush("SidebarBackgroundBrush", t.Sidebar);
+        SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, 0xD9));
         SetBrush("SurfaceBrush", t.Surface);
         SetBrush("SurfaceAltBrush", t.SurfaceAlt);
         SetBrush("ElevatedBrush", t.Elevated);
@@ -63,7 +63,8 @@ public static class ThemeManager
         ApplyBackdrop(resolved);
     }
 
-    // 页面底色: 顶部带蓝调的垂直渐变 + 顶部中央极光柔光(用户选定加强版参数)。
+    // 页面底色: 顶部带蓝调的垂直渐变。极光柔光在主窗口的独立层(AuroraLayer),
+    // 不放进页面背景——否则会随页面滑入动画平移, 且侧栏区域出现"无光割裂"。
     private static void ApplyBackdrop(string resolved)
     {
         var app = Application.Current;
@@ -116,40 +117,25 @@ public static class ThemeManager
         }
 
         backdrop.Freeze();
+        glow?.Freeze();
+        CurrentGlowBrush = glow;
         app.Resources["AppBackdropBrush"] = backdrop;
-
-        // 关键: 各页面 UserControl 用 AppBackgroundBrush 做整页背景, 若只改
-        // AppBackdropBrush, 窗口层的任何氛围都会被页面平色盖住。页面底色
-        // = 渐变叠极光的合成画刷, 极光才会真正显示。
-        app.Resources["AppBackgroundBrush"] = ComposeBackdrop(backdrop, glow);
+        // 页面根全部引用 Transparent 版 AppBackgroundBrush(App.xaml), 窗口层背景透出
+        app.Resources["AppBackgroundBrush"] = TransparentBrush();
     }
 
-    private static Brush ComposeBackdrop(Brush backdrop, RadialGradientBrush? glow)
+    /// <summary>当前主题的极光刷子; 氛围光关闭时为 null。主窗口的极光层使用。</summary>
+    public static RadialGradientBrush? CurrentGlowBrush { get; private set; }
+
+    private static Brush TransparentBrush()
     {
-        if (glow is null)
-            return backdrop;
-
-        var group = new DrawingGroup();
-        group.Children.Add(new GeometryDrawing
-        {
-            Brush = backdrop,
-            Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
-        });
-        group.Children.Add(new GeometryDrawing
-        {
-            Brush = glow,
-            Geometry = new RectangleGeometry(new Rect(0, 0, 1, 1))
-        });
-        var brush = new DrawingBrush
-        {
-            Drawing = group,
-            Viewbox = new Rect(0, 0, 1, 1),
-            Viewport = new Rect(0, 0, 1, 1),
-            TileMode = TileMode.None
-        };
-        brush.Freeze();
-        return brush;
+        var b = new SolidColorBrush(Colors.Transparent);
+        b.Freeze();
+        return b;
     }
+
+    private static Color WithAlpha(Color color, byte alpha) =>
+        Color.FromArgb(alpha, color.R, color.G, color.B);
 
     /// <summary>顶部中央的极光柔光: 中心在页面上缘、向四周渐隐。</summary>
     private static RadialGradientBrush Radial(Color centerColor)

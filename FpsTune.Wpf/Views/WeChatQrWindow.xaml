@@ -6,7 +6,7 @@
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="{DynamicResource AppBackgroundBrush}"
+        Background="{DynamicResource AppBackdropBrush}"
         FontFamily="Microsoft YaHei UI">
     <StackPanel Margin="24">
         <TextBlock Text="微信二维码"
