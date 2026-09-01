@@ -44,19 +44,6 @@ public class DetectionChecksTests
     }
 
     [Fact]
-    public void PowerShell_checks_use_the_same_names()
-    {
-        var script = File.ReadAllText(Path.Combine(RepoRoot(), "fps-tune.ps1"), Encoding.UTF8);
-        foreach (var name in ExpectedNames)
-            Assert.Contains($"name = '{name}'", script, StringComparison.Ordinal);
-
-        Assert.Contains("name = '显示器刷新率'; status = 'attention'", script, StringComparison.Ordinal);
-        Assert.Contains("name = '颜色配置'; status = 'attention'", script, StringComparison.Ordinal);
-        Assert.Contains("name = 'DirectStorage'; status = 'attention'", script, StringComparison.Ordinal);
-        Assert.Contains("name = '音频独占模式'; status = 'attention'", script, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void DetectView_renders_checks_from_a_dynamic_items_control()
     {
         var xaml = File.ReadAllText(

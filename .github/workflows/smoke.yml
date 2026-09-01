@@ -1,7 +1,8 @@
-﻿name: smoke
+name: smoke
 
 on:
   push:
+    branches: [ main ]
   pull_request:
 
 jobs:
@@ -10,10 +11,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build
+        run: dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release
+
       - name: Core detect (read-only)
-        shell: powershell
-        run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Detect -Json
+        run: FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe -Detect -Json
 
       - name: A/B simulated full chain
         shell: powershell

@@ -22,15 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\fps-tune.ps1" Link="fps-tune.ps1" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\tuning-experiment.ps1" Link="tuning-experiment.ps1" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\tools\friend-test.ps1" Link="friend-test.ps1" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\catalog\catalog.json" Link="catalog.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\Directory.Build.props" Link="Directory.Build.props" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\fps-tune.ps1" LogicalName="FpsTune.Wpf.Scripts.fps-tune.ps1" />
     <EmbeddedResource Include="..\tuning-experiment.ps1" LogicalName="FpsTune.Wpf.Scripts.tuning-experiment.ps1" />
     <EmbeddedResource Include="..\tools\friend-test.ps1" LogicalName="FpsTune.Wpf.Scripts.friend-test.ps1" />
     <EmbeddedResource Include="..\catalog\catalog.json" LogicalName="FpsTune.Wpf.Catalog.catalog.json" />

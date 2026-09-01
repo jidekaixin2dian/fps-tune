@@ -68,6 +68,14 @@ $csvPath = Join-Path $OutDir "delta-friend-test-$stamp.csv"
 
 $enc = New-Object System.Text.UTF8Encoding($true)
 
+# CSV 字段转义：含逗号/引号/换行的字段必须整体加引号，内部引号翻倍
+function ConvertTo-CsvField {
+    param([string]$Value)
+    if ($null -eq $Value) { return '""' }
+    if ($Value -match '[,"\r\n]') { return '"' + ($Value -replace '"', '""') + '"' }
+    return $Value
+}
+
 # Markdown
 $md = @()
 $md += '# 三角洲行动 · 朋友测试记录'
@@ -91,7 +99,7 @@ $md += '> 回传这个 .md 文件或把表格内容发给项目方即可。'
 # CSV（UTF-8 BOM，Excel 可直接打开）
 $csv = @(
     'name,scene,avg_fps_before,p1low_before,avg_fps_after,p1low_after,notes',
-    ($Name + ',' + $Scene + ',' + $(if ($null -eq $beforeAvg) { '' } else { $beforeAvg }) + ',' + $(if ($null -eq $beforeP1) { '' } else { $beforeP1 }) + ',' + $(if ($null -eq $afterAvg) { '' } else { $afterAvg }) + ',' + $(if ($null -eq $afterP1) { '' } else { $afterP1 }) + ',"' + ($Notes -replace '"', '""') + '"')
+    ((ConvertTo-CsvField $Name) + ',' + (ConvertTo-CsvField $Scene) + ',' + $(if ($null -eq $beforeAvg) { '' } else { $beforeAvg }) + ',' + $(if ($null -eq $beforeP1) { '' } else { $beforeP1 }) + ',' + $(if ($null -eq $afterAvg) { '' } else { $afterAvg }) + ',' + $(if ($null -eq $afterP1) { '' } else { $afterP1 }) + ',' + (ConvertTo-CsvField $Notes))
 )
 [System.IO.File]::WriteAllText($csvPath, ($csv -join "`r`n"), $enc)
 

@@ -71,16 +71,6 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
-    public void Every_catalog_item_exists_in_powershell_engine()
-    {
-        var (ids, _) = LoadCatalog();
-        var ps = File.ReadAllText(RepoFile("fps-tune.ps1"));
-        var missing = ids.Where(id => !ps.Contains($"id = '{id}'", StringComparison.Ordinal)).ToList();
-        Assert.True(missing.Count == 0,
-            "以下优化项在 fps-tune.ps1 缺少实现条目: " + string.Join(", ", missing));
-    }
-
-    [Fact]
     public void Preset_references_resolve_to_known_ids()
     {
         var json = File.ReadAllText(RepoFile("catalog", "catalog.json"));

@@ -31,17 +31,35 @@ param(
     [string]$Group = '',
     [string]$PresentMon = '',
     [string]$CsvPath = '',
+    [string]$EngineExe = '',
     [string]$GameName = 'DeltaForceClient-Win64-Shipping'
 )
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
+# 版本号唯一来源：Directory.Build.props（读不到时回退 0.0.0）
 $ToolName    = 'fps-tune'
-$ToolVersion = '0.2.0'
-$EnginePath  = Join-Path $PSScriptRoot 'fps-tune.ps1'
-$StateDir    = Join-Path $env:LOCALAPPDATA 'FpsTune\experiment'
-$StateFile   = Join-Path $StateDir 'state.json'
+$ToolVersion = '0.0.0'
+$propsPath   = Join-Path $PSScriptRoot 'Directory.Build.props'
+if (Test-Path $propsPath) {
+    if ((Get-Content $propsPath -Raw -Encoding UTF8) -match '<Version>\s*([^<]+?)\s*</Version>') {
+        $ToolVersion = $Matches[1]
+    }
+}
+
+# 引擎：FpsTune.exe 无头 CLI（同目录/发布目录/构建输出自动探测，可用 -EngineExe 覆盖）
+$EnginePath = $EngineExe
+if (-not $EnginePath) {
+    $engineCandidates = @(
+        (Join-Path $PSScriptRoot 'FpsTune.exe'),
+        (Join-Path $PSScriptRoot 'FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe'),
+        (Join-Path $PSScriptRoot 'FpsTune.Wpf\bin\Debug\net8.0-windows\FpsTune.exe')
+    )
+    $EnginePath = ($engineCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1)
+}
+$StateDir  = Join-Path $env:LOCALAPPDATA 'FpsTune\experiment'
+$StateFile = Join-Path $StateDir 'state.json'
 
 # 候选组定义
 $CandidateGroups = @(
@@ -85,7 +103,8 @@ function Write-AtomicJson {
     param([string]$Path, $Object)
     $dir = Split-Path $Path -Parent
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-    $tmp = "$Path.tmp"
+    # GUID 临时名：两个实例同时写 state.json 时不会互踩对方的临时文件
+    $tmp = "$Path.$([guid]::NewGuid().ToString('N')).tmp"
     $json = $Object | ConvertTo-Json -Depth 12
     # PS 5.1 会把空数组值序列化成 {}，这里定向还原为 []
     $json = $json -replace '"groups":\s*\{\s*\}', '"groups": []'
@@ -297,9 +316,6 @@ function Decide-Keep {
     if ($dP1 -ge 5.0 -and $dAvg -ge -3.0) {
         return @{ keep = $true; reason = "1% low 提升 $([math]::Round($dP1,1))%，平均帧率未明显下降（$([math]::Round($dAvg,1))%）" }
     }
-    if ($dAvg -ge 2.0 -and $dP1 -ge 5.0) {
-        return @{ keep = $true; reason = "平均帧率与 1% low 双提升（$([math]::Round($dAvg,1))% / $([math]::Round($dP1,1))%）" }
-    }
     if ($dStut -le -10 -and $dAvg -ge -3.0) {
         return @{ keep = $true; reason = "卡顿次数显著减少（$($Baseline.stutters) → $($Group.stutters)）且帧率未明显下降" }
     }
@@ -310,16 +326,24 @@ function Decide-Keep {
 # 引擎子进程调用（应用/还原候选组）
 # ---------------------------------------------------------------------------
 
+function Assert-Engine {
+    if (-not $EnginePath -or -not (Test-Path $EnginePath)) {
+        throw "未找到 FpsTune.exe 引擎（探测了脚本目录与构建输出）。请先 dotnet build，或用 -EngineExe 指定路径。"
+    }
+}
+
 function Invoke-EngineApply {
     param([string[]]$ItemIds)
-    $r = Invoke-Native 'powershell.exe' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $EnginePath, '-Apply', '-Items', ($ItemIds -join ','), '-Force', '-Json')
+    Assert-Engine
+    $r = Invoke-Native $EnginePath @('-Apply', '-Items', ($ItemIds -join ','), '-Json')
     if ($r.code -ne 0) { return @{ ok = $false; error = ($r.output -join ' ') } }
     try { return @{ ok = $true; result = ($r.output -join ' ' | ConvertFrom-Json) } } catch { return @{ ok = $true; result = $null } }
 }
 
 function Invoke-EngineRestore {
     param([string[]]$ItemIds)
-    $r = Invoke-Native 'powershell.exe' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $EnginePath, '-Restore', '-Items', ($ItemIds -join ','), '-Json')
+    Assert-Engine
+    $r = Invoke-Native $EnginePath @('-Restore', '-Items', ($ItemIds -join ','), '-Json')
     if ($r.code -ne 0) { return @{ ok = $false; error = ($r.output -join ' ') } }
     return @{ ok = $true }
 }
