@@ -1,59 +1,64 @@
 ﻿# fps-tune
 
 Windows **system-layer** frame-rate tuning for Windows games, including *Delta Force (example)*, *Valorant*,
-*CS2*, *APEX* and most PC titles. Built with C# WPF + .NET 8, with PowerShell scripts retained
-for compatibility/fallback.
+*CS2*, *APEX* and most PC titles. Built with C# WPF + .NET 8; `FpsTune.exe` also ships a
+headless CLI mode for command-line / AI-agent use.
 
-- - **System layer only, fully reversible** — touches Windows settings (registry, power
+- **System layer only, fully reversible** — touches Windows settings (registry, power
   plans, services, boot config). Every write is backed up first; one-command restore.
-- - **Never touches the game** — no game-file edits, no process injection, no anti-cheat
+- **Never touches the game** — no game-file edits, no process injection, no anti-cheat
   interaction, no virtualization toggling, no GPU model spoofing.
-- - **C# WPF + .NET 8** — modern desktop UI, with PowerShell scripts retained for CLI/Agent compatibility.
-- - **Automatic backup & restore** — every write is backed up first; one-command restore.
-- - **MIT licensed, clean-room implementation.**
+- **One engine** — the same C# engine powers the GUI and the CLI; 33 optimizations
+  defined in a single catalog (`catalog/catalog.json`).
+- **Automatic backup & restore** — every write is backed up first; one-command restore.
+- **MIT licensed, clean-room implementation.**
 
-![build](https://github.com/jiaxindeyang-a11y/fps-tune/actions/workflows/build.yml/badge.svg)
-![release](https://img.shields.io/github/v/release/jiaxindeyang-a11y/fps-tune)
-![license](https://img.shields.io/github/license/jiaxindeyang-a11y/fps-tune)
+![build](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml/badge.svg)
+![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
+![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 
 ## Why this project exists
 
 Existing tools in this space (e.g. DeltaForceBooster) use a proprietary EULA that forbids
 modification and redistribution. This project is written from scratch against the *public
 feature list* only, releases under a permissive license, and deliberately does less:
-no telemetry, no auto-updater; optional functional GUI, but the core is still one script, plug and play.
+no telemetry; in-app update checks only (nothing is downloaded without your consent).
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `fps-tune.ps1` | Core engine: detect / apply / restore, 22 optimizations + 3 read-only health checks |
-| `FpsTune.Wpf/` | Current WPF GUI (.NET 8, visual pass completed): detect / optimize / A-B / friend test / backup / settings |
-| `delta-gui.ps1` | Legacy WinForms GUI (kept for compatibility) |
-| `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export |
-| `friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
+| `FpsTune.Wpf/` | WPF app + C# engine (.NET 8): detect / optimize / A-B / friend test / backup / settings; `FpsTune.exe` doubles as the headless CLI |
+| `catalog/catalog.json` | Single source of truth: 33 optimization items + presets |
+| `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export (calls FpsTune.exe for apply/restore) |
+| `tools/friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
 | `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
-| `GUI_PLAN.md` | Historical planning docs (the WPF GUI visual version is done) |
-| `GUI_DESIGN_PROMPT.md` | Visual design prompt for the V4 flash vision pass |
+| `installer/` | Inno Setup packaging |
 
 ## Quick start (CLI)
 
+`FpsTune.exe` enters headless CLI mode when given arguments (no GUI window, stdout output, exit code 0/1):
+
 ```powershell
 # 1. Detect (read-only)
-powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Detect -Json
+FpsTune.exe -Detect -Json
 
-# 2. Apply (explain to the user and get consent first; -Force means "user agreed")
-powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Apply -Preset balanced -Force -Json
+# 2. Apply (explain to the user and get consent first)
+FpsTune.exe -Apply -Preset balanced -Json
 
 # 3. Restore
-powershell -NoProfile -ExecutionPolicy Bypass -File fps-tune.ps1 -Restore -Json
+FpsTune.exe -Restore -Json
+
+# Also: -Version / -ListRestore -Json / -Apply -Items id1,id2 / -Restore -Items id1,id2
 ```
+
+Admin-required items fail loudly in non-elevated terminals (the exe runs as asInvoker).
 
 ## Quick start (GUI, functional)
 
-- Recommended installer: <https://github.com/jiaxindeyang-a11y/fps-tune/releases>
-- Portable: unzip `FpsTune-Portable.zip` and run `FpsTune.exe`
+- Recommended installer: <https://github.com/jidekaixin2dian/fps-tune/releases>
+- Portable: unzip `FpsTune-Portable-*.zip` and run `FpsTune.exe`
 
 Or build locally:
 
@@ -65,7 +70,7 @@ cd <project-directory>
 
 ## Quick start (AI agent)
 
-Project repository: <https://github.com/jiaxindeyang-a11y/fps-tune>
+Project repository: <https://github.com/jidekaixin2dian/fps-tune>
 
 If the agent is already inside the repo:
 
@@ -76,7 +81,7 @@ Read SKILL.md in the current directory and strictly follow its workflow to tune 
 If the agent does not have the project yet, let it clone the repo first:
 
 ```text
-Run: git clone https://github.com/jiaxindeyang-a11y/fps-tune.git
+Run: git clone https://github.com/jidekaixin2dian/fps-tune.git
 Then read SKILL.md in the cloned directory and strictly follow its workflow to tune Delta Force (example) frame rates.
 ```
 
@@ -115,4 +120,3 @@ will never download or run installers for you.
 ## License
 
 MIT. Written from scratch; no derivative relationship to any existing tool's code or docs.
-.\FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe

@@ -1,14 +1,15 @@
-﻿# FPS 帧律 · FpsTune WPF
+# FPS 帧律 · FpsTune WPF
 
-最终公开发布版 GUI。
+最终公开发布版 GUI。优化引擎全部为 C# 实现（Core/ 目录），
+`FpsTune.exe` 带命令行参数时进入无头 CLI 模式（`-Detect` / `-Apply` / `-Restore` / `-ListRestore` / `-Version`）。
 
 ## 当前结构
 
 - 左侧导航 + 右侧内容区
 - 检测 / 优化 / A/B 实验 / 朋友测试 / 备份日志
 - 暗色 / 亮色 / 跟随系统
-- 调用现有的 `fps-tune.ps1` / `tuning-experiment.ps1` / `friend-test.ps1`
-- PowerShell 版本继续保留，作为命令行和备用入口
+- 外部脚本仅剩两枚：`tuning-experiment.ps1`（A/B 实验，实际应用/还原调用 FpsTune.exe CLI）、
+  `tools/friend-test.ps1`（朋友测试记录）；两者均已作为嵌入资源随包分发
 
 ## 构建
 
@@ -21,7 +22,7 @@ dotnet build -c Release
 ## 发布单文件 EXE
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:DebugType=none
 ```
 
 ## 绿色文件夹
@@ -30,4 +31,4 @@ dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=
 dotnet publish -c Release -r win-x64 --self-contained false
 ```
 
-发布后把 `fps-tune.ps1`、`tuning-experiment.ps1`、`friend-test.ps1` 和生成的 EXE 放在同一目录即可。
+推荐直接使用仓库根目录的 `publish-release.ps1`：一键产出单文件 EXE、便携 zip、SHA256 清单并打印各产物体积。
