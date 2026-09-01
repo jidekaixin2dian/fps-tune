@@ -237,8 +237,14 @@ public static class ExperimentWizardStore
                 if (double.IsFinite(avg) && double.IsFinite(p1))
                 {
                     state = ExperimentWizard.WithBaseline(state, avg, p1, cv, summary["stable"]?.GetValue<bool>() == true, null);
-                    if (obj["baseline"]?["appliedAt"] is JsonNode at && DateTime.TryParse(at.GetValue<string>(), out var t))
-                        state = state with { BaselineAt = t };
+                    // 旧 state.json 的 baseline 没有 appliedAt，回退到文件级 updatedAt
+                    var baselineAt = obj["baseline"]?["appliedAt"] is JsonNode at && DateTime.TryParse(at.GetValue<string>(), out var t)
+                        ? t
+                        : obj["updatedAt"] is JsonNode up && DateTime.TryParse(up.GetValue<string>(), out var t2)
+                            ? t2
+                            : (DateTime?)null;
+                    if (baselineAt is not null)
+                        state = state with { BaselineAt = baselineAt };
                 }
             }
 

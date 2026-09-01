@@ -253,6 +253,19 @@ public sealed class SessionTests : IDisposable
         Assert.Equal(session.Id, root.GetProperty("session").GetProperty("Id").GetString());
     }
 
+    [Fact]
+    public void Session_roundtrip_keeps_vram_total_for_offline_insights()
+    {
+        var session = MakeSession(PerformanceSessionStore.NewSessionId(), 3) with { VramTotalMib = 12227 };
+        PerformanceSessionStore.Save(session);
+        var loaded = PerformanceSessionStore.LoadAll().Single();
+        Assert.Equal(12227, loaded.VramTotalMib);
+        var sum = SessionStatistics.Summarize(loaded);
+        Assert.Equal(12227, sum.VramTotalMib); // 洞察可据此计算占比
+        var findings = SessionInsights.Evaluate(sum);
+        Assert.DoesNotContain(findings, f => f.Kind == "VramUnknownTotal");
+    }
+
     // ---------- 会话服务 ----------
 
     [Fact]

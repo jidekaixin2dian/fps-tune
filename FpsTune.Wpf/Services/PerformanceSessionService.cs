@@ -112,6 +112,11 @@ public sealed class PerformanceSessionService : IDisposable
                 s.MemoryPercent,
                 s.GpuPercent,
                 s.VramUsedBytes is { } b && double.IsFinite(b) ? Math.Round(b / 1024.0 / 1024.0, 1) : null));
+        // 显存容量在会话内是常量：取首个有效样本的容量入库，供离线洞察计算占比
+        var vramTotalRaw = buffer.Select(s => s.VramTotalBytes).FirstOrDefault(t => t is { } v && v > 0);
+        var vramTotalMib = vramTotalRaw is { } total
+            ? Math.Round(total / 1024.0 / 1024.0, 1)
+            : (double?)null;
         return new PerformanceSession(
             PerformanceSessionStore.NewSessionId(),
             _name,
@@ -119,7 +124,8 @@ public sealed class PerformanceSessionService : IDisposable
             endedAt,
             PerformanceSessionStore.CurrentSchemaVersion,
             CurrentInterval.TotalSeconds,
-            points);
+            points,
+            vramTotalMib);
     }
 
     private void OnSample(MetricSample sample)

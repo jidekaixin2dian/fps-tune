@@ -21,7 +21,8 @@ public sealed record PerformanceSession(
     DateTime? EndedAt,
     int SchemaVersion,
     double IntervalSeconds,
-    IReadOnlyList<SessionSamplePoint> Samples);
+    IReadOnlyList<SessionSamplePoint> Samples,
+    double? VramTotalMib = null);
 
 /// <summary>单指标的摘要统计。</summary>
 public sealed record MetricStats(int Count, double Avg, double Peak, double LowP5, double HighP95);
@@ -62,7 +63,10 @@ public static class SessionStatistics
     }
 
     public static SessionSummary Summarize(PerformanceSession session)
-        => Summarize(session.Samples, session.StartedAt, session.EndedAt);
+    {
+        var summary = Summarize(session.Samples, session.StartedAt, session.EndedAt);
+        return summary.VramTotalMib is null ? summary with { VramTotalMib = session.VramTotalMib } : summary;
+    }
 
     private static MetricStats? Stats(IEnumerable<double?> values)
     {
