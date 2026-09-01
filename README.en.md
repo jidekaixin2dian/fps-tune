@@ -27,7 +27,7 @@ no telemetry; in-app updates require explicit consent before download and SHA-25
 
 | File | Purpose |
 |---|---|
-| `FpsTune.Wpf/` | WPF app + C# engine (.NET 8): detect / optimize / A-B / friend test / backup / settings; `FpsTune.exe` doubles as the headless CLI |
+| `FpsTune.Wpf/` | WPF app + C# engine (.NET 8): detect / optimize / performance sessions / A-B wizard / auto-profile activity / friend test / backup / settings; `FpsTune.exe` doubles as the headless CLI |
 | `catalog/catalog.json` | Single source of truth: 33 optimization items + presets |
 | `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export (calls FpsTune.exe for apply/restore) |
 | `tools/friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |

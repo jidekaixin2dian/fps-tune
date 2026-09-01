@@ -10,8 +10,8 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public sealed class PerformanceSessionService : IDisposable
 {
-    /// <summary>内存缓冲上限：≥4 小时 @1s 采样；低配模式间隔更长，等效覆盖更久。</summary>
-    public const int BufferCapacity = 14400;
+    /// <summary>内存缓冲上限：正常 14400（≥4 小时 @1s）；低配 4800（采样 3 秒，等效覆盖更久且内存更省）。</summary>
+    public static int CurrentBufferCapacity => UiPerformance.LowSpec ? 4800 : 14400;
     public const int AutosaveEverySamples = 60;
 
     private MetricsSampler? _sampler;
@@ -50,7 +50,7 @@ public sealed class PerformanceSessionService : IDisposable
         _name = string.IsNullOrWhiteSpace(name) ? DefaultSessionName() : name.Trim();
         _startedAt = DateTime.Now;
         _sampleCount = 0;
-        _sampler = new MetricsSampler(CurrentInterval, BufferCapacity);
+        _sampler = new MetricsSampler(CurrentInterval, CurrentBufferCapacity);
         _sampler.Sampled += OnSample;
         IsRunning = true;
         _sampler.SampleOnce(); // 立即出第一个样本，界面无需等一个间隔
