@@ -93,7 +93,7 @@
                     <TextBlock Text="实时监控" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="每秒采样 · 只读性能数据" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right"/>
                 </Grid>
-                <UniformGrid Columns="3">
+                <UniformGrid Columns="4">
                     <StackPanel Margin="0,0,14,0">
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="CPU 占用" Style="{StaticResource MutedTextStyle}"/>
@@ -110,13 +110,24 @@
                         </Grid>
                         <Canvas x:Name="MemChart" Height="78"/>
                     </StackPanel>
-                    <StackPanel>
+                    <StackPanel Margin="0,0,14,0">
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="GPU 占用" Style="{StaticResource MutedTextStyle}"/>
                             <TextBlock x:Name="GpuNowText" Text="--" HorizontalAlignment="Right"
                                        FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OkBrush}"/>
                         </Grid>
                         <Canvas x:Name="GpuChart" Height="78"/>
+                    </StackPanel>
+                    <StackPanel ToolTipService.HasDropShadow="True">
+                        <Grid Margin="0,0,0,4">
+                            <TextBlock Text="显存占用（专用）" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock x:Name="VramNowText" Text="--" HorizontalAlignment="Right"
+                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                        </Grid>
+                        <Canvas x:Name="VramChart" Height="78"/>
+                        <TextBlock x:Name="VramNoteText" Text="" FontSize="10" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </UniformGrid>
             </StackPanel>

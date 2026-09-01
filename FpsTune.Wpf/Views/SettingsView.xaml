@@ -190,6 +190,67 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+
+                    <!-- 活动中心：本地审计事件，可解释自动应用都发生了什么 -->
+                    <Grid Margin="0,18,0,0">
+                        <TextBlock Text="活动中心（最近事件，仅保存在本机）" Style="{StaticResource CardTitleStyle}"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <ComboBox x:Name="ActivityFilter"
+                                      Style="{StaticResource SelectComboBoxStyle}"
+                                      MinHeight="28" MinWidth="96" Margin="0,0,8,0"
+                                      SelectionChanged="ActivityFilter_SelectionChanged">
+                                <ComboBoxItem Content="全部" IsSelected="True"/>
+                                <ComboBoxItem Content="已应用"/>
+                                <ComboBoxItem Content="跳过"/>
+                                <ComboBoxItem Content="失败"/>
+                                <ComboBoxItem Content="匹配"/>
+                            </ComboBox>
+                            <Button Content="清除记录"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="76"
+                                    Click="ClearActivity_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock x:Name="ActivityScanText"
+                               Style="{StaticResource MutedTextStyle}"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,0"/>
+                    <ListBox x:Name="ActivityList"
+                             Margin="0,10,0,0"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             MaxHeight="210"
+                             ItemContainerStyle="{StaticResource CardListItemStyle}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border CornerRadius="5" Padding="6,1"
+                                            Background="{DynamicResource ElevatedBrush}"
+                                            BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding KindText}" FontSize="10"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="{Binding TimeText}" FontSize="11"
+                                               Margin="10,0,10,0" VerticalAlignment="Top"
+                                               Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock x:Name="ActivityEmptyText"
+                               Text="暂无活动记录。检测到绑定游戏启动（或触发被跳过/失败）时，这里会显示原因与结果。"
+                               Style="{StaticResource MutedTextStyle}"
+                               Margin="0,10,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 

@@ -300,6 +300,42 @@
                     <TextBlock Text="实验与数据"
                                    Style="{StaticResource SectionLabelStyle}"
                                    Margin="4,18,0,8"/>
+                    <RadioButton x:Name="NavSession"
+                                 Tag="session"
+                                 Style="{StaticResource NavRadioStyle}"
+                                 Checked="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="30" Height="30"
+                                    CornerRadius="9"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="M2 12 H7 L9.5 6.5 L13 17.5 L15.5 12 H22"
+                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Fill="Transparent"/>
+                            </Canvas>
+                        </Viewbox>
+                            </Border>
+                            <TextBlock Text="性能会话"
+                                       Margin="10,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
                     <RadioButton x:Name="NavAb"
                                  Tag="ab"
                                  Style="{StaticResource NavRadioStyle}"

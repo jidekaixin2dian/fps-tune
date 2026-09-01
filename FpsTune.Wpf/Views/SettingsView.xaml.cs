@@ -23,6 +23,13 @@ public partial class SettingsView : UserControl
         InitializeComponent();
         AutoBindingList.ItemsSource = _autoBindings;
         Loaded += (_, _) => LoadSettings();
+        Loaded += (_, _) =>
+        {
+            RefreshActivity();
+            _activityTimer.Start();
+        };
+        Unloaded += (_, _) => _activityTimer.Stop();
+        _activityTimer.Tick += (_, _) => UpdateActivityScanLine();
 
         ThemeDarkRadio.Checked += (_, _) => ApplyThemeMode("dark");
         ThemeLightRadio.Checked += (_, _) => ApplyThemeMode("light");
@@ -384,6 +391,68 @@ public partial class SettingsView : UserControl
             return;
         }
         SetAutoProfileStatus($"已删除绑定「{binding.DisplayName}」");
+    }
+
+    // ---------- 自动 Profile 活动中心 ----------
+
+    private readonly System.Windows.Threading.DispatcherTimer _activityTimer = new()
+    {
+        Interval = TimeSpan.FromSeconds(5)
+    };
+
+    private sealed record ActivityVm(string TimeText, string KindText, string Detail);
+
+    private void RefreshActivity()
+    {
+        UpdateActivityScanLine();
+        var filter = ActivityFilter.SelectedItem is ComboBoxItem { Content: string content } ? content : "全部";
+        var events = AutoProfileActivityStore.Load();
+        if (filter != "全部")
+        {
+            var kind = filter switch
+            {
+                "已应用" => AutoProfileActivityStore.KindApplied,
+                "跳过" => AutoProfileActivityStore.KindSkipped,
+                "失败" => AutoProfileActivityStore.KindFailed,
+                "匹配" => AutoProfileActivityStore.KindMatch,
+                _ => null
+            };
+            if (kind is not null)
+                events = events.Where(ev => ev.Kind == kind).ToList();
+        }
+
+        ActivityList.ItemsSource = events.Select(ev => new ActivityVm(
+            ev.Time.ToString("MM-dd HH:mm:ss"),
+            AutoProfileActivityStore.KindText(ev.Kind),
+            (string.IsNullOrWhiteSpace(ev.Process) ? "" : "[" + ev.Process + "] ")
+            + (string.IsNullOrWhiteSpace(ev.Profile) ? "" : "方案「" + ev.Profile + "」 ")
+            + ev.Detail)).ToList();
+        ActivityEmptyText.Visibility = events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateActivityScanLine()
+    {
+        var lastScan = AutoProfileActivityStore.LastScanAt;
+        var trigger = "触发条件：启用绑定的进程出现启动边沿时自动应用一次；进程持续存在不重复应用，全部同名进程退出后再次启动才可再次触发。";
+        ActivityScanText.Text = (lastScan is { } t
+                ? $"最后扫描 {t:HH:mm:ss}（本轮第 {AutoProfileActivityStore.ScanCount} 次轮询，间隔 3 秒）。"
+                : "本轮尚未扫描（后台服务启动且有启用绑定时开始轮询）。")
+            + trigger
+            + " 审计记录最多保留 200 条，不含完整用户路径。";
+    }
+
+    private void ActivityFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ActivityList is not null)
+            RefreshActivity();
+    }
+
+    private void ClearActivity_Click(object sender, RoutedEventArgs e)
+    {
+        if (!DialogService.Confirm("清除活动记录", "确定清除全部自动 Profile 活动记录？", danger: true, confirmText: "清除"))
+            return;
+        AutoProfileActivityStore.Clear();
+        RefreshActivity();
     }
 
     private void AutoProfileSetting_Changed(object sender, RoutedEventArgs e)

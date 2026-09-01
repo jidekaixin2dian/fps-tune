@@ -47,6 +47,8 @@ public sealed class AutoProfileService : IDisposable
         }
         catch (Exception ex)
         {
+            AutoProfileActivityStore.Append(new AutoProfileEvent(
+                DateTime.Now, AutoProfileActivityStore.KindFailed, "", null, "轮询异常：" + ex.Message));
             Record("轮询异常：" + ex.Message);
         }
         finally
@@ -85,6 +87,8 @@ public sealed class AutoProfileService : IDisposable
             return;
         }
 
+        AutoProfileActivityStore.NoteScan();
+
         var states = new Dictionary<string, bool?>(StringComparer.OrdinalIgnoreCase);
         foreach (var binding in bindings)
         {
@@ -100,7 +104,18 @@ public sealed class AutoProfileService : IDisposable
             var binding = bindings.FirstOrDefault(x =>
                 string.Equals(x.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
             if (binding is not null)
+            {
+                AutoProfileActivityStore.Append(new AutoProfileEvent(
+                    DateTime.Now, AutoProfileActivityStore.KindMatch, processName, binding.ProfileName,
+                    "检测到进程启动，准备自动应用方案。"));
                 await ApplyBindingAsync(binding, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                AutoProfileActivityStore.Append(new AutoProfileEvent(
+                    DateTime.Now, AutoProfileActivityStore.KindSkipped, processName, null,
+                    "检测到进程启动，但没有对应的启用绑定。"));
+            }
         }
     }
 
@@ -128,11 +143,26 @@ public sealed class AutoProfileService : IDisposable
     private static async Task ApplyBindingAsync(
         AutoProfileBinding binding, CancellationToken cancellationToken)
     {
+        void Notify(string kind, string title, string message)
+        {
+            AutoProfileActivityStore.Append(new AutoProfileEvent(
+                DateTime.Now, kind, binding.ProcessName, binding.ProfileName, message));
+            Record(title + "：" + message);
+            try
+            {
+                TrayService.NotifyComplete("FPS 帧律 · " + title, message);
+            }
+            catch (Exception ex)
+            {
+                Record("通知失败：" + ex.Message);
+            }
+        }
+
         try
         {
             if (!ProfileStore.TryLoad(out var profiles, out var loadError))
             {
-                Report("自动应用失败", $"方案文件读取失败：{loadError}");
+                Notify(AutoProfileActivityStore.KindFailed, "自动应用失败", $"方案文件读取失败：{loadError}");
                 return;
             }
 
@@ -140,7 +170,8 @@ public sealed class AutoProfileService : IDisposable
                 && string.Equals(x.Name, binding.ProfileName, StringComparison.OrdinalIgnoreCase));
             if (profile is null)
             {
-                Report("自动应用跳过", $"未找到方案「{binding.ProfileName}」，未修改系统设置。");
+                Notify(AutoProfileActivityStore.KindSkipped, "自动应用跳过",
+                    $"未找到方案「{binding.ProfileName}」，未修改系统设置。");
                 return;
             }
 
@@ -152,7 +183,7 @@ public sealed class AutoProfileService : IDisposable
                 .ToArray();
             if (invalidIds.Length > 0)
             {
-                Report("自动应用跳过",
+                Notify(AutoProfileActivityStore.KindSkipped, "自动应用跳过",
                     $"方案「{profile.Name}」包含未知或无效优化项（{string.Join("、", invalidIds.Where(x => !string.IsNullOrWhiteSpace(x)).DefaultIfEmpty("空 id"))}），整份方案已跳过。");
                 return;
             }
@@ -162,13 +193,15 @@ public sealed class AutoProfileService : IDisposable
                 .ToArray();
             if (ids.Length == 0)
             {
-                Report("自动应用跳过", $"方案「{profile.Name}」为空或不包含有效优化项，未修改系统设置。");
+                Notify(AutoProfileActivityStore.KindSkipped, "自动应用跳过",
+                    $"方案「{profile.Name}」为空或不包含有效优化项，未修改系统设置。");
                 return;
             }
 
             if (ids.Any(id => catalog[id].Admin) && !AdminHelper.IsAdministrator())
             {
-                Report("自动应用跳过", $"方案「{profile.Name}」包含需要管理员权限的项目；当前不是管理员，整份方案已跳过。");
+                Notify(AutoProfileActivityStore.KindSkipped, "自动应用跳过",
+                    $"方案「{profile.Name}」包含需要管理员权限的项目；当前不是管理员，整份方案已跳过。");
                 return;
             }
 
@@ -177,26 +210,29 @@ public sealed class AutoProfileService : IDisposable
                 .ConfigureAwait(false);
             if (!result.Success)
             {
-                Report("自动应用失败", $"方案「{profile.Name}」执行失败：{result.Error.Trim()}");
+                Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
+                    $"方案「{profile.Name}」执行失败：{result.Error.Trim()}");
                 return;
             }
 
             var incomplete = ReadIncompleteItems(result.Output);
             if (incomplete.Count > 0)
             {
-                Report("自动应用未完成",
+                Notify(AutoProfileActivityStore.KindSkipped, "自动应用未完成",
                     $"方案「{profile.Name}」有 {incomplete.Count} 项未完成：{string.Join("、", incomplete)}");
                 return;
             }
 
-            Report("自动应用完成", $"检测到「{binding.DisplayName}」启动，已应用方案「{profile.Name}」（{ids.Length} 项）。");
+            Notify(AutoProfileActivityStore.KindApplied, "自动应用完成",
+                $"检测到「{binding.DisplayName}」启动，已应用方案「{profile.Name}」（{ids.Length} 项）。");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
         }
         catch (Exception ex)
         {
-            Report("自动应用失败", $"方案「{binding.ProfileName}」执行异常：{ex.Message}");
+            Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
+                $"方案「{binding.ProfileName}」执行异常：{ex.Message}");
         }
     }
 
@@ -227,19 +263,6 @@ public sealed class AutoProfileService : IDisposable
         catch
         {
             return new[] { "结果无法解析" };
-        }
-    }
-
-    private static void Report(string title, string message)
-    {
-        Record(title + "：" + message);
-        try
-        {
-            TrayService.NotifyComplete("FPS 帧律 · " + title, message);
-        }
-        catch (Exception ex)
-        {
-            Record("通知失败：" + ex.Message);
         }
     }
 

@@ -1,0 +1,252 @@
+<UserControl x:Class="FpsTune.Wpf.Views.SessionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource AppBackgroundBrush}">
+    <ScrollViewer x:Name="RootScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid Margin="28,24,28,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 页头 -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="性能会话" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="开始一次本地采样，记录 CPU / 内存 / GPU / 显存曲线与摘要；数据只保存在本机"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 采样控制 -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="采样控制" Style="{StaticResource CardTitleStyle}"/>
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="SessionNameBox"
+                             Style="{StaticResource InputTextBoxStyle}"
+                             VerticalContentAlignment="Center"
+                             MaxLength="60"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                        <Button x:Name="StartButton" Content="开始会话"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                MinWidth="110" Margin="0,0,8,0"
+                                Click="Start_Click"/>
+                        <Button x:Name="StopButton" Content="停止并保存"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="110" Margin="0,0,8,0" IsEnabled="False"
+                                Click="Stop_Click"/>
+                        <Button x:Name="CancelButton" Content="取消"
+                                Style="{StaticResource GhostButtonStyle}"
+                                MinWidth="72" IsEnabled="False"
+                                Click="Cancel_Click"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock x:Name="RunStateText"
+                           Text="就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。"
+                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                           Margin="0,10,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 实时指标 -->
+        <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,14">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="CpuNowText" Text="--" Style="{StaticResource StatValueStyle}"
+                                   HorizontalAlignment="Right" Margin="0,-6,0,0"/>
+                    </Grid>
+                    <Canvas x:Name="CpuChart" Height="64" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="内存" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="MemNowText" Text="--" Style="{StaticResource StatValueStyle}"
+                                   HorizontalAlignment="Right" Margin="0,-6,0,0"/>
+                    </Grid>
+                    <Canvas x:Name="MemChart" Height="64" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="GpuNowText" Text="--" Style="{StaticResource StatValueStyle}"
+                                   HorizontalAlignment="Right" Margin="0,-6,0,0"/>
+                    </Grid>
+                    <Canvas x:Name="GpuChart" Height="64" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource CardStyle}" ToolTipService.ShowOnDisabled="True">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="显存（专用）" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="VramNowText" Text="--" Style="{StaticResource StatValueStyle}"
+                                   HorizontalAlignment="Right" Margin="0,-6,0,0"/>
+                    </Grid>
+                    <Canvas x:Name="VramChart" Height="64" Margin="0,8,0,0"/>
+                    <TextBlock x:Name="VramTotalText" Text="" Style="{StaticResource MutedTextStyle}" FontSize="10"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- 性能洞察 -->
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="性能洞察" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="以下为启发式判断：仅描述采样期间信号的相关性，不代表因果，也不预测 FPS 提升。"
+                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                <TextBlock x:Name="InsightTargetText" Text="选择历史会话或完成一次采样后显示。"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
+                <ItemsControl x:Name="InsightList" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,8"
+                                    Padding="12,10"
+                                    CornerRadius="8"
+                                    Background="{DynamicResource ElevatedBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="8" Height="8" VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="{DynamicResource OkBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Level}" Value="attention">
+                                                            <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding KindLabel}" FontSize="10" Margin="10,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMutedBrush}"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Detail}" TextWrapping="Wrap" Margin="16,6,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding WindowText}" FontSize="11" Margin="16,4,0,0"
+                                               Foreground="{DynamicResource TextMutedBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- 历史会话 -->
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="历史会话" Style="{StaticResource CardTitleStyle}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="刷新" Style="{StaticResource GhostButtonStyle}"
+                                MinWidth="64" Margin="0,0,10,0" Click="Refresh_Click"/>
+                        <Button x:Name="ExportJsonButton" Content="导出 JSON"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="96" Margin="0,0,8,0" IsEnabled="False" Click="ExportJson_Click"/>
+                        <Button x:Name="ExportCsvButton" Content="导出 CSV"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="96" Margin="0,0,8,0" IsEnabled="False" Click="ExportCsv_Click"/>
+                        <Button x:Name="DeleteButton" Content="删除所选"
+                                Style="{StaticResource GhostButtonStyle}"
+                                MinWidth="86" IsEnabled="False" Click="Delete_Click"/>
+                    </StackPanel>
+                </Grid>
+                <ListBox x:Name="HistoryList" Grid.Row="1"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ItemContainerStyle="{StaticResource CardListItemStyle}"
+                         MaxHeight="220"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         SelectionChanged="HistoryList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding MetaText}" FontSize="11"
+                                               Foreground="{DynamicResource TextMutedBrush}"/>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="11"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock x:Name="HistoryEmptyText" Grid.Row="1"
+                           Text="还没有保存的会话。开始一次采样并停止后，会话会保存在本机数据目录。"
+                           FontSize="12" Foreground="{DynamicResource TextMutedBrush}"
+                           HorizontalAlignment="Center" Margin="0,18,0,18" TextWrapping="Wrap" MaxWidth="460"
+                           TextAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- 并排比较 -->
+        <Border Grid.Row="5" Style="{StaticResource CardStyle}">
+            <StackPanel>
+                <TextBlock Text="会话比较" Style="{StaticResource CardTitleStyle}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <ComboBox x:Name="CompareA" Style="{StaticResource SelectComboBoxStyle}"
+                              MinHeight="36" MinWidth="230" Margin="0,0,10,0"
+                              DisplayMemberPath="Name" SelectionChanged="Compare_SelectionChanged"/>
+                    <ComboBox x:Name="CompareB" Style="{StaticResource SelectComboBoxStyle}"
+                              MinHeight="36" MinWidth="230"
+                              DisplayMemberPath="Name" SelectionChanged="Compare_SelectionChanged"/>
+                </StackPanel>
+                <TextBlock x:Name="CompareHint" Text="选择两个会话进行并排比较。" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
+                <ItemsControl x:Name="CompareRows" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Metric}" FontWeight="SemiBold" FontSize="12"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding AVal}" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding BVal}" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="3" Text="{Binding Delta}" FontSize="12"
+                                           Foreground="{DynamicResource AccentBrush}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </Grid>
+    </ScrollViewer>
+</UserControl>

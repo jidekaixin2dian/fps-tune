@@ -18,8 +18,8 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="A/B 实验" Style="{StaticResource PageTitleStyle}"/>
-                <TextBlock Text="同一场景分别采样“基线”与“优化后”，用数据判断优化是否真的有效"
+                <TextBlock Text="A/B 实验室" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="向导式实验：先采基线，再依次测试三个候选组，每步可关联一次性能会话，结论只来自实际采样"
                            Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
             </StackPanel>
             <Button x:Name="OpenDirButton"
@@ -30,17 +30,76 @@
                     Click="OpenDirButton_Click"/>
         </Grid>
 
-        <!-- 步骤 -->
+        <!-- 向导步骤 -->
         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
             <StackPanel>
-                <TextBlock Text="采样流程（每步在同一游戏场景内进行）" Style="{StaticResource CardTitleStyle}"/>
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button x:Name="BaselineButton" Content="1 · 基线" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Baseline_Click"/>
-                    <Button x:Name="Group1Button" Content="2 · group-1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group1_Click"/>
-                    <Button x:Name="Group2Button" Content="3 · group-2" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group2_Click"/>
-                    <Button x:Name="Group3Button" Content="4 · group-3" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group3_Click"/>
-                    <Button x:Name="ReportButton" Content="5 · 生成报告" Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Click="Report_Click"/>
-                </StackPanel>
+                <TextBlock Text="实验向导（每步在同一游戏场景内进行）" Style="{StaticResource CardTitleStyle}"/>
+                <ItemsControl x:Name="WizardStepsList" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,8" Padding="12,10" CornerRadius="8"
+                                    Background="{DynamicResource ElevatedBrush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="9" Height="9" VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="{DynamicResource BorderBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Level}" Value="done">
+                                                                <Setter Property="Fill" Value="{DynamicResource OkBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="reverted">
+                                                                <Setter Property="Fill" Value="{DynamicResource WarningBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="error">
+                                                                <Setter Property="Fill" Value="{DynamicResource DangerBrush}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Level}" Value="running">
+                                                                <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" Margin="10,0,0,0"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding ResultText}" FontSize="11" Margin="17,5,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="17,6,0,0">
+                                            <TextBlock Text="关联性能会话：" FontSize="11" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                                            <ComboBox ItemsSource="{Binding SessionOptions}"
+                                                      SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
+                                                      DisplayMemberPath="Label"
+                                                      Style="{StaticResource SelectComboBoxStyle}"
+                                                      MinHeight="28" MinWidth="220" Margin="4,0,0,0"
+                                                      SelectionChanged="StepSession_SelectionChanged"
+                                                      Tag="{Binding}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="{Binding RunLabel}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            MinWidth="92" VerticalAlignment="Center" Margin="12,0,0,0"
+                                            IsEnabled="{Binding CanRun}"
+                                            Click="WizardStepRun_Click"
+                                            Tag="{Binding}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </Border>
 

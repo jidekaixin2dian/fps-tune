@@ -10,6 +10,9 @@ public partial class App : Application
 {
     private AutoProfileService? _autoProfileService;
 
+    /// <summary>性能会话服务：应用级单例，页面切换不影响运行中的会话。</summary>
+    public static PerformanceSessionService SessionService { get; } = new();
+
     protected override void OnStartup(StartupEventArgs e)
     {
         // 无头 CLI 模式：命令行以已知动词（-Detect/-Apply/...）开头时不进 GUI，执行完直接退出。
@@ -24,6 +27,16 @@ public partial class App : Application
         SettingsService.Load();
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
         LegacyMigrations.EnsureRun();
+        // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话
+        try
+        {
+            PerformanceSessionStore.RecoverInterruptedSession();
+            PerformanceSessionStore.EnforceRetention();
+        }
+        catch
+        {
+            // 恢复失败不阻塞启动
+        }
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         base.OnStartup(e);
         var mainWindow = new MainWindow();
@@ -35,6 +48,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        SessionService.Dispose();
         _autoProfileService?.Dispose();
         TrayService.Dispose();
         base.OnExit(e);

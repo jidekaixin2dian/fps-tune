@@ -16,10 +16,7 @@ public partial class DetectView : UserControl
     private bool _hasSavedState;
     private bool _detectionInFlight;
 
-    private System.Windows.Threading.DispatcherTimer? _monitorTimer;
-    private readonly List<double> _cpuHist = new();
-    private readonly List<double> _memHist = new();
-    private readonly List<double> _gpuHist = new();
+    private MetricsSampler? _sampler;
     private bool _suppressGameSwitch;
 
     public DetectView()
@@ -54,96 +51,78 @@ public partial class DetectView : UserControl
             StopMonitor();
     }
 
-    // ---------- 实时监控 ----------
+    // ---------- 实时监控（实例拥有的采样内核，页面隐藏即释放） ----------
 
     private void StartMonitor()
     {
-        if (_monitorTimer is not null)
+        if (_sampler is not null)
             return;
-        _monitorTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1) };
-        _monitorTimer.Tick += (_, _) => SampleMonitor();
-        _monitorTimer.Start();
+        _sampler = new MetricsSampler(
+            TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), capacity: 120);
+        _sampler.Sampled += Sampler_Sampled;
+        _sampler.SampleOnce();
+        _sampler.Start();
     }
 
     private void StopMonitor()
     {
-        _monitorTimer?.Stop();
-        _monitorTimer = null;
-    }
-
-    private void SampleMonitor()
-    {
-        var (cpu, mem, gpu) = LiveMetrics.ReadOnce();
-        Push(_cpuHist, cpu);
-        Push(_memHist, mem);
-        Push(_gpuHist, gpu);
-        CpuNowText.Text = Fmt(cpu);
-        MemNowText.Text = Fmt(mem);
-        GpuNowText.Text = Fmt(gpu);
-        DrawChart(CpuChart, _cpuHist, "AccentBrush");
-        DrawChart(MemChart, _memHist, "PrimaryBrush");
-        DrawChart(GpuChart, _gpuHist, "OkBrush");
-    }
-
-    private static string Fmt(double v) => double.IsFinite(v) ? $"{v:0}%" : "--";
-
-    private static void Push(List<double> history, double v)
-    {
-        if (double.IsFinite(v))
-            history.Add(Math.Clamp(v, 0, 100));
-        while (history.Count > 60)
-            history.RemoveAt(0);
-    }
-
-    private void DrawChart(System.Windows.Controls.Canvas canvas, List<double> history, string brushKey)
-    {
-        var w = canvas.ActualWidth;
-        var h = canvas.ActualHeight;
-        if (w < 10 || h < 10)
+        if (_sampler is null)
             return;
-        canvas.Children.Clear();
+        _sampler.Sampled -= Sampler_Sampled;
+        _sampler.Dispose();
+        _sampler = null;
+    }
 
-        // 底线与半高线
-        for (var i = 0; i < 2; i++)
+    private void Sampler_Sampled(MetricSample sample)
+    {
+        var cpu = _sampler?.Buffer.Select(s => s.CpuPercent ?? double.NaN).ToList();
+        var mem = _sampler?.Buffer.Select(s => s.MemoryPercent ?? double.NaN).ToList();
+        var gpu = _sampler?.Buffer.Select(s => s.GpuPercent ?? double.NaN).ToList();
+        var vramRatio = BuildVramSeries();
+
+        CpuNowText.Text = Fmt(sample.CpuPercent);
+        MemNowText.Text = Fmt(sample.MemoryPercent);
+        GpuNowText.Text = Fmt(sample.GpuPercent);
+        if (cpu is not null) MiniChart.Draw(CpuChart, cpu, "AccentBrush");
+        if (mem is not null) MiniChart.Draw(MemChart, mem, "PrimaryBrush");
+        if (gpu is not null) MiniChart.Draw(GpuChart, gpu, "OkBrush");
+        if (vramRatio is not null) MiniChart.Draw(VramChart, vramRatio, "WarningBrush");
+
+        if (sample.VramUsedBytes is { } used)
         {
-            var y = i == 0 ? h - 1 : h / 2;
-            canvas.Children.Add(new System.Windows.Shapes.Line
-            {
-                X1 = 0, Y1 = y, X2 = w, Y2 = y,
-                Stroke = (Brush)Application.Current.Resources["BorderBrush"],
-                StrokeThickness = 1,
-                Opacity = 0.5
-            });
+            VramNowText.Text = sample.VramTotalBytes is { } total && total > 0
+                ? $"{used / total * 100.0:0}%"
+                : $"{used / 1024.0 / 1024.0:0} MiB";
+            VramNoteText.Text = sample.VramTotalBytes is { } t2 && t2 > 0
+                ? $"{used / 1024.0 / 1024.0:0} / {t2 / 1024.0 / 1024.0:0} MiB"
+                : "容量不可得，仅显示用量";
         }
-
-        if (history.Count == 0)
-            return;
-
-        var stroke = (Brush)Application.Current.Resources[brushKey];
-        double Step() => w / Math.Max(60 - 1, history.Count - 1);
-        var offset = 60 - history.Count;
-        var points = new System.Windows.Media.PointCollection();
-        for (var i = 0; i < history.Count; i++)
-            points.Add(new Point(offset * Step() + i * Step(), h - 2 - (h - 4) * history[i] / 100));
-        canvas.Children.Add(new System.Windows.Shapes.Polyline
+        else
         {
-            Points = points,
-            Stroke = stroke,
-            StrokeThickness = 1.6,
-            StrokeLineJoin = System.Windows.Media.PenLineJoin.Round
-        });
-
-        var last = history[^1];
-        canvas.Children.Add(new System.Windows.Shapes.Ellipse
-        {
-            Width = 6, Height = 6,
-            Fill = stroke,
-            Margin = new Thickness(points[^1].X - 3, points[^1].Y - 3, 0, 0),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top
-        });
-        _ = last;
+            VramNowText.Text = "不可用";
+            VramNoteText.Text = _sampler?.UnavailableReasons.TryGetValue("vram", out var reason) == true
+                ? reason
+                : "未提供 GPU Adapter Memory 计数器";
+        }
     }
+
+    /// <summary>显存序列：容量可得时为占比 0-100，否则为窗口内相对水位。</summary>
+    private List<double>? BuildVramSeries()
+    {
+        if (_sampler is null)
+            return null;
+        var buffer = _sampler.Buffer;
+        if (buffer.Count == 0)
+            return [];
+        if (buffer[0].VramTotalBytes is { } total && total > 0)
+            return buffer.Select(s => s.VramUsedBytes is { } u ? u / total * 100.0 : double.NaN).ToList();
+        var peak = buffer.Where(s => s.VramUsedBytes is not null).Select(s => s.VramUsedBytes ?? 0).DefaultIfEmpty(0).Max();
+        if (peak <= 0)
+            return [];
+        return buffer.Select(s => s.VramUsedBytes is { } u ? u / peak * 100.0 : double.NaN).ToList();
+    }
+
+    private static string Fmt(double? v) => v is double d && double.IsFinite(d) ? $"{d:0}%" : "--";
 
     // ---------- 游戏切换 ----------
 
