@@ -114,9 +114,17 @@ public static class BackupService
         public List<string> Failures { get; } = new();
     }
 
-    /// <summary>遍历全部备份文件逐项还原；失败的项会如实报告，不会静默吞掉。</summary>
-    public static RestoreAllResult RestoreAll()
+    /// <summary>
+    /// 遍历全部备份文件逐项还原；失败的项会如实报告，不会静默吞掉。
+    /// 传入 <paramref name="ids"/> 时只还原指定项（A/B 实验语义）：
+    /// 文件中其余未选中的记录保持不动，且该文件不会被消费（改名 .restored）。
+    /// </summary>
+    public static RestoreAllResult RestoreAll(IReadOnlyCollection<string>? ids = null)
     {
+        HashSet<string>? selection = null;
+        if (ids is not null && ids.Count > 0)
+            selection = new HashSet<string>(ids, StringComparer.Ordinal);
+
         Directory.CreateDirectory(BackupDir);
         var files = Directory.GetFiles(BackupDir, "*.json")
             .Where(IsCSharpBackupFile)
@@ -177,7 +185,12 @@ public static class BackupService
             if (fileFailed)
                 continue;
 
-            foreach (var record in records)
+            // 按选择过滤：只还原指定项；文件里还有未选中的记录时不消费该文件。
+            var (targets, hasUnselected) = FilterRecords(records, selection);
+            if (targets.Count == 0)
+                continue;
+
+            foreach (var record in targets)
             {
                 try
                 {
@@ -192,7 +205,8 @@ public static class BackupService
             }
 
             // 只有整份文件的每一条记录都成功，才允许消费文件；部分成功也必须保留原文件。
-            if (!fileFailed)
+            // 定向还原时文件里还留有未选中的备份记录，同样不能消费。
+            if (!fileFailed && !hasUnselected)
                 consumed.Add(file);
         }
 
@@ -216,6 +230,18 @@ public static class BackupService
         }
 
         return result;
+    }
+
+    // 定向还原的过滤决策（纯函数，便于单测）：
+    // 无选择时返回全部；有选择时只留所选，并标记文件里是否还有未选中记录。
+    internal static (IReadOnlyList<BackupRecord> Targets, bool HasUnselected) FilterRecords(
+        IReadOnlyList<BackupRecord> records, HashSet<string>? selection)
+    {
+        if (selection is null)
+            return (records.ToList(), false);
+
+        var targets = records.Where(r => selection.Contains(r.Id)).ToList();
+        return (targets, targets.Count != records.Count);
     }
 
     // 备份文件位于用户可写目录，还原前必须验证其目标。
@@ -398,9 +424,7 @@ public static class BackupService
                         OldUsbValue = GetPowerAcIndex(
                             "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226"),
                         OldBoostValue = GetPowerAcIndex(
-                            "be337238-0d82-4146-a960-4f3749d470c7", "45bcc044-d885-43e2-8605-ee0ec6e96b59"),
-                        OldIdleValue = GetPowerAcIndex(
-                            "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d", "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3")
+                            "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7")
                     }
                 };
             case "sysmain-off":
@@ -666,10 +690,12 @@ public static class BackupService
 
     private static void RestorePowerTuning(BackupRecord r)
     {
-        // 优先还原备份的原值；旧版本备份没有数据时回退到常见默认值。
-        SetAcValue("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", r.OldUsbValue ?? 1);
-        SetAcValue("be337238-0d82-4146-a960-4f3749d470c7", "45bcc044-d885-43e2-8605-ee0ec6e96b59", r.OldBoostValue ?? 0);
-        SetAcValue("bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d", "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3", r.OldIdleValue ?? 1);
+        // 只还原备份里实际读到的原值；读不到（null）说明该设置从未被应用或平台不支持，跳过。
+        // 旧版本备份的 boost 查询用的是错误 GUID（必然为 null），更不能按默认值强写。
+        if (r.OldUsbValue.HasValue)
+            SetAcValue("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", r.OldUsbValue.Value);
+        if (r.OldBoostValue.HasValue)
+            SetAcValue("54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7", r.OldBoostValue.Value);
         EnsureNativeSuccess(
             NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT"),
             "重新应用电源计划");

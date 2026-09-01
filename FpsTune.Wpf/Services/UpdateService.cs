@@ -15,7 +15,7 @@ public sealed record UpdateInfo(
 public static class UpdateService
 {
     private const string ReleaseApi =
-        "https://api.github.com/repos/jiaxindeyang-a11y/fps-tune/releases/latest";
+        "https://api.github.com/repos/jidekaixin2dian/fps-tune/releases/latest";
 
     public static string CurrentVersion =>
         System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";

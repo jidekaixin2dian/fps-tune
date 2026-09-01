@@ -342,4 +342,108 @@ public class CoreLogicTests
         Assert.True(File.Exists(Path.Combine(from, "conflict.txt")));
         Directory.Delete(baseDir, recursive: true);
     }
+
+    // ---------- RestoreAll 定向还原过滤（A/B 实验语义） ----------
+
+    private static List<BackupRecord> Records(params string[] ids)
+        => ids.Select(id => new BackupRecord { Id = id, Kind = "registry" }).ToList();
+
+    [Fact]
+    public void RestoreFilter_without_selection_returns_everything()
+    {
+        var records = Records("hags", "dvr-off", "game-mode");
+        var (targets, hasUnselected) = BackupService.FilterRecords(records, null);
+
+        Assert.Equal(new[] { "hags", "dvr-off", "game-mode" }, targets.Select(r => r.Id));
+        Assert.False(hasUnselected);
+    }
+
+    [Fact]
+    public void RestoreFilter_with_partial_selection_marks_file_as_not_consumable()
+    {
+        var records = Records("hags", "dvr-off", "game-mode");
+        var (targets, hasUnselected) = BackupService.FilterRecords(
+            records, new HashSet<string> { "hags" });
+
+        Assert.Equal(new[] { "hags" }, targets.Select(r => r.Id));
+        Assert.True(hasUnselected, "文件里还有未选中的记录时不得消费该备份文件");
+    }
+
+    [Fact]
+    public void RestoreFilter_with_full_selection_is_consumable()
+    {
+        var records = Records("hags", "dvr-off");
+        var (targets, hasUnselected) = BackupService.FilterRecords(
+            records, new HashSet<string> { "hags", "dvr-off" });
+
+        Assert.Equal(2, targets.Count);
+        Assert.False(hasUnselected);
+    }
+
+    [Fact]
+    public void RestoreFilter_with_no_match_returns_empty()
+    {
+        var records = Records("hags", "dvr-off");
+        var (targets, hasUnselected) = BackupService.FilterRecords(
+            records, new HashSet<string> { "net-nagle-off" });
+
+        Assert.Empty(targets);
+        Assert.True(hasUnselected);
+    }
+
+    [Fact]
+    public void RestoreFilter_keeps_duplicate_ids_in_selection()
+    {
+        // net-nagle-off 等一项会展开多条记录（每个网络接口一条）。
+        var records = Records("net-nagle-off", "net-nagle-off", "hags");
+        var (targets, hasUnselected) = BackupService.FilterRecords(
+            records, new HashSet<string> { "net-nagle-off" });
+
+        Assert.Equal(2, targets.Count);
+        Assert.True(hasUnselected);
+    }
+
+    // ---------- power-tuning 电源 GUID 回归守卫 ----------
+    // v1.3.x 把 PERFBOOSTMODE 的设置 GUID 当子组用，且带了一对查无出处的
+    // "空闲降频" GUID：应用报成功但从未生效，还原必然失败。此处锁定正确配对。
+
+    private static string RepoRoot()
+    {
+        var dir = AppContext.BaseDirectory;
+        for (var i = 0; i < 10; i++)
+        {
+            if (File.Exists(Path.Combine(dir, "catalog", "catalog.json")))
+                return dir;
+            dir = Path.GetDirectoryName(dir.TrimEnd(Path.DirectorySeparatorChar))!;
+        }
+        throw new InvalidOperationException("未定位到仓库根");
+    }
+
+    private static string CoreSource(params string[] parts)
+        => File.ReadAllText(Path.Combine(new[] { RepoRoot(), "FpsTune.Wpf", "Core" }.Concat(parts).ToArray()));
+
+    [Fact]
+    public void PowerTuning_uses_the_documented_subgroup_and_setting_pair()
+    {
+        const string subProcessor = "54533251-82be-4824-96c1-47b60b740d00";
+        const string perfBoostMode = "be337238-0d82-4146-a960-4f3749d470c7";
+
+        foreach (var file in new[] { "NativeOptimizationEngine.cs", "DetectionService.cs", "BackupService.cs" })
+        {
+            var src = CoreSource(file);
+            Assert.Contains(subProcessor, src);
+            Assert.Contains(perfBoostMode, src);
+        }
+    }
+
+    [Fact]
+    public void PowerTuning_no_longer_references_fabricated_guids()
+    {
+        foreach (var file in new[] { "NativeOptimizationEngine.cs", "DetectionService.cs", "BackupService.cs" })
+        {
+            var src = CoreSource(file);
+            Assert.DoesNotContain("bd3b718a", src);
+            Assert.DoesNotContain("4f2f7c6f", src);
+        }
+    }
 }

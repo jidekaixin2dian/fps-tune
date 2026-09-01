@@ -152,7 +152,7 @@
       "default": true,
       "reboot": true,
       "kind": "power",
-      "description": "解除隐藏并调整几项影响性能的电源参数：关闭 USB3 链路省电、允许处理器更高性能提升、关闭空闲降频等待。",
+      "description": "解除隐藏并调整两项影响性能的电源参数：关闭 USB3 链路省电、处理器性能提升模式设为激进。",
       "group": "电源"
     },
     {

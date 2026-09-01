@@ -360,26 +360,46 @@ public static class NativeOptimizationEngine
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerTuning()
     {
-        const string usbSubgroup = "2a737441-1930-4402-8d77-b2bebba308a3";
-        const string usbSetting = "48e6b7a6-50f5-4782-a5d4-53bb8f07e226";
-        const string boostSubgroup = "be337238-0d82-4146-a960-4f3749d470c7";
-        const string boostSetting = "45bcc044-d885-43e2-8605-ee0ec6e96b59";
-        const string idleSubgroup = "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d";
-        const string idleSetting = "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3";
+        // SUB_USB\USB 选择性暂停=0 + SUB_PROCESSOR\PERFBOOSTMODE=2（激进）。
+        // 历史版本的 idle 一对 GUID 无效（powercfg 拒绝，靠忽略退出码掩盖），已移除。
+        const string subUsb = "2a737441-1930-4402-8d77-b2bebba308a3";
+        const string usbSelectiveSuspend = "48e6b7a6-50f5-4782-a5d4-53bb8f07e226";
+        const string subProcessor = "54533251-82be-4824-96c1-47b60b740d00";
+        const string perfBoostMode = "be337238-0d82-4146-a960-4f3749d470c7";
 
-        NativeSystem.Run("powercfg.exe", "-attributes", usbSubgroup, usbSetting, "-ATTRIB_HIDE");
-        NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", usbSubgroup, usbSetting, "0");
-        NativeSystem.Run("powercfg.exe", "-attributes", boostSubgroup, boostSetting, "-ATTRIB_HIDE");
-        NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", boostSubgroup, boostSetting, "2");
-        NativeSystem.Run("powercfg.exe", "-attributes", idleSubgroup, idleSetting, "-ATTRIB_HIDE");
-        NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", idleSubgroup, idleSetting, "0");
+        var applied = new List<string>();
+        var skipped = new List<string>();
+        TrySetPowerIndex(subUsb, usbSelectiveSuspend, "0", "USB3 链路省电", applied, skipped);
+        TrySetPowerIndex(subProcessor, perfBoostMode, "2", "处理器性能提升", applied, skipped);
+
+        if (applied.Count == 0)
+            return (true, false, true, $"平台不支持，已跳过：{string.Join("、", skipped)}");
 
         var apply = NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT");
         if (!apply.Success)
-            return (false, false, false, $"应用电源隐藏项失败：{apply.Error.Trim()}");
+            return (false, false, false, $"应用电源隐藏项失败：{NativeDetail(apply)}");
 
-        return (true, true, false, "已调整电源计划隐藏项");
+        var message = $"已调整：{string.Join("、", applied)}";
+        if (skipped.Count > 0)
+            message += $"；平台不支持已跳过：{string.Join("、", skipped)}";
+        return (true, true, false, message);
     }
+
+    // 平台不存在的设置 powercfg 会拒绝：按 catalog 承诺跳过该项而不是整体报错。
+    private static void TrySetPowerIndex(
+        string subgroup, string setting, string value, string label,
+        List<string> applied, List<string> skipped)
+    {
+        NativeSystem.Run("powercfg.exe", "-attributes", subgroup, setting, "-ATTRIB_HIDE");
+        var r = NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value);
+        if (r.Success)
+            applied.Add(label);
+        else
+            skipped.Add(label);
+    }
+
+    internal static string NativeDetail(NativeResult r)
+        => string.IsNullOrWhiteSpace(r.Error) ? $"退出码 {r.ExitCode}" : r.Error.Trim();
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyGpuPstateLock()
     {

@@ -346,6 +346,13 @@ public static class DetectionService
             "sys-responsiveness" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", "10"),
             "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", "1"),
             "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", "0"),
+            "keyboard-latency" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", "50"),
+            "menu-delay-off" => (RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", "0"),
+            "usb-power-save-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", "1"),
+            "visual-fx-perf" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", "2"),
+            "delivery-opt-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization", "DODownloadMode", "0"),
+            "bg-apps-off" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications", "GlobalUserDisabled", "1"),
+            "telemetry-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Data Collection", "AllowTelemetry", "0"),
             _ => default
         };
 
@@ -369,8 +376,62 @@ public static class DetectionService
             "game-priority" => GetGamePriorityState(gamePath),
             "mmcss-games" => GetMmcssState(),
             "gpu-pstate-lock" => GetGpuPstateLockState(),
+            "mouse-accel-off" => GetMouseAccelState(),
+            "keyboard-repeat" => GetKeyboardRepeatState(),
+            "sticky-keys-off" => GetStickyKeysState(),
+            "net-nagle-off" => GetNagleState(),
             _ => (false, "需要运行时检测")
         };
+    }
+
+    private static (bool Optimized, string Current) GetMouseAccelState()
+    {
+        const string path = @"Control Panel\Mouse";
+        var speed = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, "MouseSpeed")?.ToString();
+        var t1 = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, "MouseThreshold1")?.ToString();
+        var t2 = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, "MouseThreshold2")?.ToString();
+        var optimized = speed == "0" && t1 == "0" && t2 == "0";
+        return (optimized, $"MouseSpeed={speed ?? "未设置"}, 阈值={t1 ?? "未设置"}/{t2 ?? "未设置"}");
+    }
+
+    private static (bool Optimized, string Current) GetKeyboardRepeatState()
+    {
+        const string path = @"Control Panel\Keyboard";
+        var delay = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, "KeyboardDelay")?.ToString();
+        var speed = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, "KeyboardSpeed")?.ToString();
+        var optimized = delay == "0" && speed == "31";
+        return (optimized, $"延迟={delay ?? "未设置"}, 速率={speed ?? "未设置"}");
+    }
+
+    private static (bool Optimized, string Current) GetStickyKeysState()
+    {
+        var sticky = RegistryHelper.ReadValue(RegistryHive.CurrentUser,
+            @"Control Panel\Accessibility\StickyKeys", "Flags")?.ToString();
+        var toggle = RegistryHelper.ReadValue(RegistryHive.CurrentUser,
+            @"Control Panel\Accessibility\ToggleKeys", "Flags")?.ToString();
+        var optimized = sticky == "510" && toggle == "58";
+        return (optimized, $"粘滞键={sticky ?? "未设置"}, 切换键={toggle ?? "未设置"}");
+    }
+
+    private static (bool Optimized, string Current) GetNagleState()
+    {
+        using var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+        using var interfaces = root.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces");
+        if (interfaces is null)
+            return (false, "未找到网络接口配置");
+
+        var total = 0;
+        var off = 0;
+        foreach (var sub in interfaces.GetSubKeyNames())
+        {
+            total++;
+            using var key = interfaces.OpenSubKey(sub);
+            if (key?.GetValue("TcpAckFrequency") is int ack && ack == 1 &&
+                key.GetValue("TCPNoDelay") is int noDelay && noDelay == 1)
+                off++;
+        }
+
+        return (total > 0 && off == total, $"{off}/{total} 个接口已关闭 Nagle");
     }
 
     private static (bool Optimized, string Current) GetPowerUltimateState()
@@ -387,17 +448,14 @@ public static class DetectionService
             "2a737441-1930-4402-8d77-b2bebba308a3",
             "48e6b7a6-50f5-4782-a5d4-53bb8f07e226");
         var boost = GetPowerSettingIndex(
-            "be337238-0d82-4146-a960-4f3749d470c7",
-            "45bcc044-d885-43e2-8605-ee0ec6e96b59");
-        var idle = GetPowerSettingIndex(
-            "bd3b718a-0680-4d9d-8ab2-e1d2b4ac806d",
-            "4f2f7c6f-5e88-40dd-bad6-c8e8e0f8a9b3");
+            "54533251-82be-4824-96c1-47b60b740d00",
+            "be337238-0d82-4146-a960-4f3749d470c7");
 
-        if (usb is null || boost is null || idle is null)
+        if (usb is null || boost is null)
             return (false, "无法读取全部电源隐藏项");
 
-        var optimized = usb == 0 && boost == 2 && idle == 0;
-        return (optimized, $"USB3={usb}, 提升={boost}, 空闲={idle}");
+        var optimized = usb == 0 && boost == 2;
+        return (optimized, $"USB3={usb}, 提升={boost}");
     }
 
     private static int? GetPowerSettingIndex(string subgroup, string setting)
