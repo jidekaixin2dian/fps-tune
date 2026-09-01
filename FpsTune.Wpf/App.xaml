@@ -1,8 +1,8 @@
 ﻿<Application x:Class="FpsTune.Wpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
-             StartupUri="MainWindow.xaml">
+             xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options">
+    <!-- 不用 StartupUri：命令行带 CLI 动词时不创建主窗口（见 App.OnStartup/CliHost） -->
     <Application.Resources>
         <ResourceDictionary>
 

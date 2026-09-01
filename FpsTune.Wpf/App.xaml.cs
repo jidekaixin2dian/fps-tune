@@ -12,12 +12,23 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // 无头 CLI 模式：命令行以已知动词（-Detect/-Apply/...）开头时不进 GUI，执行完直接退出。
+        if (e.Args.Length > 0 && CliHost.IsCliInvocation(e.Args))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Shutdown(CliHost.Run(e.Args));
+            return;
+        }
+
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         SettingsService.Load();
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
         LegacyMigrations.EnsureRun();
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         base.OnStartup(e);
+        var mainWindow = new MainWindow();
+        MainWindow = mainWindow;
+        mainWindow.Show();
         _autoProfileService = new AutoProfileService();
         _autoProfileService.Start();
     }

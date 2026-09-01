@@ -5,8 +5,8 @@ namespace FpsTune.Wpf.Core;
 
 /// <summary>
 /// 优化项与预设的唯一数据源：catalog/catalog.json。
-/// PowerShell CLI（fps-tune.ps1）与本类消费同一份文件；
-/// 任一侧引用了 catalog 中不存在的 id 都会在启动时立即失败。
+/// 检测/应用/还原引擎与 CLI 均消费同一份文件；
+/// 引用 catalog 中不存在的 id 会在启动时立即失败。
 /// </summary>
 public static class OptimizationCatalog
 {
@@ -28,6 +28,19 @@ public static class OptimizationCatalog
     public static IReadOnlyList<string> ItemOrder
     {
         get { return Ensure().Order; }
+    }
+
+    /// <summary>catalog 中定义的预设名（供 CLI 校验与帮助信息使用）。</summary>
+    public static IReadOnlyList<string> PresetNames
+    {
+        get
+        {
+            var data = Ensure();
+            var names = new List<string>();
+            if (data.Presets.ValueKind == JsonValueKind.Object)
+                names.AddRange(data.Presets.EnumerateObject().Select(p => p.Name));
+            return names;
+        }
     }
 
     /// <summary>
