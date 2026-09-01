@@ -13,7 +13,8 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Baseline [-Duration 90] [-Json]
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Test -Group group-1 [-Json]
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Report [-Json]
-#   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate [-Group group-2] [-Json]   # dry-run 测试
+#   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Baseline -Simulate [-Json]            # dry-run 测试
+#   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Test -Group group-2 -Simulate [-Json]
 #
 # 候选组（全部低风险、无需重启、可完整回滚）：
 #   group-1 调度组：mmcss-games + sys-responsiveness + prio-separation

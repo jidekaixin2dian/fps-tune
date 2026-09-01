@@ -2,11 +2,11 @@
 
 > 目标：让不熟悉命令行的玩家也能安全地使用 fps-tune。
 >
-> **当前状态**：功能版 `delta-gui.ps1` 已实现（检测 / 优化授权 / A/B 实验 /
-> 朋友测试 / 备份日志）。视觉设计后续交给 V4 flash version，提示词见
+> **历史说明**：本文保留早期 GUI 规划供设计参考。当前 WPF `FpsTune.exe` 已覆盖
+> 检测 / 优化授权 / A/B 实验 / 朋友测试 / 备份日志。视觉设计后续交给 V4 flash version，提示词见
 > [GUI_DESIGN_PROMPT.md](GUI_DESIGN_PROMPT.md)。
-> 原则：GUI 只做“调用脚本 + 展示结果 + 确认授权”，所有系统改动仍由
-> `fps-tune.ps1` / `tuning-experiment.ps1` 完成，GUI 不绕过备份与还原机制。
+> 原则：GUI 只做“调用引擎 + 展示结果 + 确认授权”，所有系统改动仍由
+> `FpsTune.exe` / `tuning-experiment.ps1` 完成，GUI 不绕过备份与还原机制。
 
 ## 明确不做
 
@@ -20,7 +20,7 @@
 
 ### 1. 首页：检测与概览
 
-- 调用 `fps-tune.ps1 -Detect -Json`
+- 调用 `FpsTune.exe -Detect -Json`
 - 展示：
   - CPU / 内存 / 显卡 / 系统版本 / 是否笔记本 / 是否管理员
   - 游戏路径（找不到时允许用户手动选择主程序）
@@ -38,7 +38,7 @@
   - 高亮需要重启的项
   - 高亮有副作用的项（wsearch-off / hibernate-off 等）
 - 必须用户手动勾选“我已阅读并同意上述说明”后，才允许调用：
-  - `fps-tune.ps1 -Apply -Items ... -Force -Json`
+  - `FpsTune.exe -Apply -Items ... -Json`
 - 执行后展示：成功 / 失败 / 跳过、备份文件路径、需重启项列表。
 - 提供“一键还原”入口。
 
@@ -84,7 +84,7 @@
 
 ## 技术方案建议
 
-- **阶段 1**：PowerShell 5.1 + WinForms 单文件 `delta-gui.ps1`
+- **阶段 1（历史）**：PowerShell 5.1 + WinForms 单文件 `delta-gui.ps1`，已由 WPF `FpsTune.exe` 替代。
   - 零依赖，Windows 10/11 自带
   - 仅封装现有 CLI，不引入新引擎逻辑
   - 文件保存为 UTF-8 BOM

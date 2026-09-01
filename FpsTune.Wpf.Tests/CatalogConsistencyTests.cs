@@ -10,6 +10,7 @@ namespace FpsTune.Wpf.Tests;
 /// 结构一致性守卫：catalog.json 是 C# 与 PowerShell 的唯一数据源，
 /// 这组测试防止任一引擎悄悄漂移（新增项漏实现、预设引用不存在项、版本号失同步）。
 /// </summary>
+[Collection("BackupService serial")]
 public class CatalogConsistencyTests
 {
     private static string RepoRoot()

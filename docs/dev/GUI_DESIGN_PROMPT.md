@@ -1,7 +1,7 @@
 ﻿# V4 flash vision GUI 设计提示词
 
 > 把下面「提示词正文」整段复制，发给 V4 flash vision 版本使用。
-> 可选：附上 `delta-gui.ps1` 文件内容，或当前功能版截图。
+> 可选：附上当前 WPF 功能版截图。
 
 ---
 
@@ -14,7 +14,7 @@ shadcn/ui 暗色主题 dashboard。
 ### 项目背景
 
 - fps-tune 是《三角洲行动》的 Windows 系统层帧率优化工具。
-- 现有 GUI 是功能版：PowerShell 5.1 + WinForms，入口文件 `delta-gui.ps1`。
+- 当前 GUI 是 WPF 功能版，入口为 `FpsTune.exe`；早期 PowerShell/WinForms 入口已删除。
 - 你的任务只做视觉/布局设计，功能逻辑不动。
 - 用户是竞技游戏玩家，喜欢暗色、科技感、高效信息呈现。
 

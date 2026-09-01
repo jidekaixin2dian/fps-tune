@@ -350,12 +350,13 @@ public static class NativeOptimizationEngine
         if (!dup.Success || !TryExtractGuid(dup.Output, out var newGuid))
             throw new InvalidOperationException("无法激活或创建卓越性能电源计划：" + dup.Error.Trim());
 
-        NativeSystem.Run("powercfg.exe", "-changename", newGuid, "三角洲优化 · 卓越性能");
+        var rename = NativeSystem.Run("powercfg.exe", "-changename", newGuid, "三角洲优化 · 卓越性能");
         var activate = NativeSystem.Run("powercfg.exe", "-setactive", newGuid);
         if (!activate.Success)
             throw new InvalidOperationException("创建后激活失败：" + activate.Error.Trim());
 
-        return (true, true, false, "已切换到卓越性能（自动创建）");
+        var nameNote = rename.Success ? "" : $"；计划命名失败（{NativeDetail(rename)}）";
+        return (true, true, false, "已切换到卓越性能（自动创建）" + nameNote);
     }
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerTuning()
@@ -369,8 +370,12 @@ public static class NativeOptimizationEngine
 
         var applied = new List<string>();
         var skipped = new List<string>();
-        TrySetPowerIndex(subUsb, usbSelectiveSuspend, "0", "USB3 链路省电", applied, skipped);
-        TrySetPowerIndex(subProcessor, perfBoostMode, "2", "处理器性能提升", applied, skipped);
+        var failures = new List<string>();
+        TrySetPowerIndex(subUsb, usbSelectiveSuspend, "0", "USB3 链路省电", applied, skipped, failures);
+        TrySetPowerIndex(subProcessor, perfBoostMode, "2", "处理器性能提升", applied, skipped, failures);
+
+        if (failures.Count > 0)
+            return (false, false, false, "调整电源隐藏项失败：" + string.Join("；", failures));
 
         if (applied.Count == 0)
             return (true, false, true, $"平台不支持，已跳过：{string.Join("、", skipped)}");
@@ -385,17 +390,47 @@ public static class NativeOptimizationEngine
         return (true, true, false, message);
     }
 
-    // 平台不存在的设置 powercfg 会拒绝：按 catalog 承诺跳过该项而不是整体报错。
+    // 只有 powercfg 明确报告“设置不存在/不支持”时才跳过；访问拒绝等不能伪装成兼容性问题。
     private static void TrySetPowerIndex(
         string subgroup, string setting, string value, string label,
-        List<string> applied, List<string> skipped)
+        List<string> applied, List<string> skipped, List<string> failures)
     {
-        NativeSystem.Run("powercfg.exe", "-attributes", subgroup, setting, "-ATTRIB_HIDE");
+        var attributes = NativeSystem.Run("powercfg.exe", "-attributes", subgroup, setting, "-ATTRIB_HIDE");
+        if (!attributes.Success)
+        {
+            AddPowerSettingFailure(label, attributes, skipped, failures);
+            return;
+        }
+
         var r = NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value);
         if (r.Success)
             applied.Add(label);
         else
+            AddPowerSettingFailure(label, r, skipped, failures);
+    }
+
+    private static void AddPowerSettingFailure(string label, NativeResult result, List<string> skipped, List<string> failures)
+    {
+        if (IsPowerSettingUnsupported(result))
             skipped.Add(label);
+        else
+            failures.Add($"{label}（{NativeDetail(result)}）");
+    }
+
+    internal static bool IsPowerSettingUnsupported(NativeResult result)
+    {
+        // NativeSystem 用负退出码表示进程无法启动；即使错误文字包含“找不到”，也不能当成平台不支持。
+        if (result.Success || result.ExitCode < 0)
+            return false;
+
+        var detail = result.Error + "\n" + result.Output;
+        return detail.Contains("not supported", StringComparison.OrdinalIgnoreCase)
+               || detail.Contains("not found", StringComparison.OrdinalIgnoreCase)
+               || detail.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
+               || detail.Contains("不支持", StringComparison.Ordinal)
+               || detail.Contains("不存在", StringComparison.Ordinal)
+               || detail.Contains("未找到", StringComparison.Ordinal)
+               || detail.Contains("找不到", StringComparison.Ordinal);
     }
 
     internal static string NativeDetail(NativeResult r)

@@ -7,9 +7,13 @@ using Xunit;
 
 namespace FpsTune.Wpf.Tests;
 
+[CollectionDefinition("BackupService serial", DisableParallelization = true)]
+public sealed class BackupServiceSerialCollection { }
+
 /// <summary>
 /// 纯逻辑单元测试：不触碰注册表与系统设置，只验证核心决策代码。
 /// </summary>
+[Collection("BackupService serial")]
 public class CoreLogicTests
 {
     // ---------- UpdateService.IsNewer ----------
@@ -188,7 +192,7 @@ public class CoreLogicTests
         => Assert.Equal(expected, NativeSystem.ParseDynamicTickState(output).ToString());
 
     [Fact]
-    public void RestoreAll_keeps_a_backup_file_when_any_record_fails()
+    public async Task RestoreAll_keeps_a_backup_file_when_any_record_fails()
     {
         var tmp = Path.Combine(Path.GetTempPath(), "fpstune-restore-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tmp);
@@ -198,7 +202,7 @@ public class CoreLogicTests
         {
             File.WriteAllText(file, "[{\"Id\":\"bad\",\"Kind\":\"unknown\"}]");
 
-            var result = OptimizationEngine.RestoreAsync().GetAwaiter().GetResult();
+            var result = await OptimizationEngine.RestoreAsync();
 
             Assert.Equal(1, result.ExitCode);
             Assert.Contains("[失败]", result.Output);
@@ -403,6 +407,109 @@ public class CoreLogicTests
         Assert.True(hasUnselected);
     }
 
+    [Fact]
+    public void RestoreFilter_skips_records_already_marked_restored()
+    {
+        var records = Records("hags", "dvr-off");
+        records[0].Restored = true;
+
+        var (targets, hasUnselected) = BackupService.FilterRecords(
+            records, new HashSet<string> { "hags", "dvr-off" });
+
+        Assert.Equal(new[] { "dvr-off" }, targets.Select(r => r.Id));
+        Assert.False(hasUnselected);
+    }
+
+    [Fact]
+    public void RestoreAll_persists_partial_progress_and_does_not_restore_it_twice()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fpstune-partial-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        BackupService.BackupDirOverride = dir;
+        BackupService.RestoreRecordOverride = _ => { };
+        try
+        {
+            var file = BackupService.Capture(new[] { "mouse-accel-off", "dvr-off" }, null);
+
+            var first = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+            var second = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+            var records = JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(file))!;
+
+            Assert.NotEmpty(first.Restored);
+            Assert.Empty(first.Failures);
+            Assert.Empty(second.Restored);
+            Assert.All(records.Where(r => r.Id == "mouse-accel-off"), r => Assert.True(r.Restored));
+            Assert.All(records.Where(r => r.Id == "dvr-off"), r => Assert.False(r.Restored));
+        }
+        finally
+        {
+            BackupService.RestoreRecordOverride = null;
+            BackupService.BackupDirOverride = null;
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Catalog_default_flag_is_exposed_by_item_definition()
+        => Assert.False(ItemCatalog.All.Single(x => x.Id == "mouse-accel-off").Default);
+
+    // ---------- CLI 参数边界 ----------
+
+    private static (int ExitCode, string Output) RunCli(params string[] args)
+    {
+        using var output = new StringWriter();
+        var exitCode = CliHost.Run(args, output);
+        return (exitCode, output.ToString());
+    }
+
+    [Fact]
+    public void Cli_restore_rejects_empty_items_instead_of_restoring_everything()
+    {
+        var result = RunCli("-Restore", "-Items=");
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains("-Items 不能为空", result.Output);
+    }
+
+    [Fact]
+    public void Cli_restore_rejects_apply_only_options()
+    {
+        var result = RunCli("-Restore", "-Preset", "balanced");
+        Assert.Equal(1, result.ExitCode);
+        Assert.Contains("-Restore 只接受", result.Output);
+    }
+
+    [Fact]
+    public void Cli_value_options_reject_a_following_flag()
+    {
+        var game = RunCli("-Detect", "-Game", "-Json");
+        var preset = RunCli("-Apply", "-Preset", "-Json");
+
+        Assert.Equal(1, game.ExitCode);
+        Assert.Contains("-Game 缺少值", game.Output);
+        Assert.Equal(1, preset.ExitCode);
+        Assert.Contains("-Preset 缺少值", preset.Output);
+    }
+
+    // ---------- AtomicFile ----------
+
+    [Fact]
+    public void AtomicFile_removes_its_temporary_file_after_a_move_failure()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fpstune-atomic-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var targetDirectory = Path.Combine(dir, "destination");
+        Directory.CreateDirectory(targetDirectory);
+        try
+        {
+            Assert.Throws<UnauthorizedAccessException>(() => AtomicFile.WriteAllText(targetDirectory, "data", System.Text.Encoding.UTF8));
+            Assert.Empty(Directory.GetFiles(dir, "*.tmp"));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     // ---------- power-tuning 电源 GUID 回归守卫 ----------
     // v1.3.x 把 PERFBOOSTMODE 的设置 GUID 当子组用，且带了一对查无出处的
     // "空闲降频" GUID：应用报成功但从未生效，还原必然失败。此处锁定正确配对。
@@ -445,5 +552,16 @@ public class CoreLogicTests
             Assert.DoesNotContain("bd3b718a", src);
             Assert.DoesNotContain("4f2f7c6f", src);
         }
+    }
+
+    [Fact]
+    public void PowerTuning_only_skips_explicitly_unsupported_settings()
+    {
+        Assert.True(NativeOptimizationEngine.IsPowerSettingUnsupported(
+            new NativeResult(1, "", "The power setting does not exist.")));
+        Assert.False(NativeOptimizationEngine.IsPowerSettingUnsupported(
+            new NativeResult(5, "", "Access is denied.")));
+        Assert.False(NativeOptimizationEngine.IsPowerSettingUnsupported(
+            new NativeResult(-1, "", "系统找不到指定的文件。")));
     }
 }

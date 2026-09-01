@@ -20,8 +20,11 @@ public static class CliHost
     private sealed class CliOptions
     {
         public bool Json { get; set; }
+        public bool ItemsSpecified { get; set; }
         public List<string> Items { get; } = new();
+        public bool PresetSpecified { get; set; }
         public string? Preset { get; set; }
+        public bool GameSpecified { get; set; }
         public string? GamePath { get; set; }
     }
 
@@ -31,10 +34,16 @@ public static class CliHost
     public static int Run(string[] args)
     {
         var output = CreateStdoutWriter();
+        return Run(args, output);
+    }
+
+    // 供无副作用的命令行回归测试复用，避免测试启动 GUI 子系统进程或依赖控制台句柄。
+    internal static int Run(string[] args, TextWriter output)
+    {
         try
         {
             var verb = ParseVerb(args[0])!;
-            var options = ParseOptions(args, out var error);
+            var options = ParseOptions(args, verb, out var error);
             if (error is not null)
             {
                 output.WriteLine("参数错误: " + error);
@@ -150,7 +159,8 @@ public static class CliHost
         var ids = presetName is not null
             ? OptimizationCatalog.ResolvePreset(presetName)
             : options.Items;
-        if (!AdminHelper.IsAdministrator() && ids.Any(NeedsAdmin))
+        // -Json 的 stdout 是机器协议，不能混入人为提示；非 JSON 模式才输出说明。
+        if (!options.Json && !AdminHelper.IsAdministrator() && ids.Any(NeedsAdmin))
             output.WriteLine("提示: 当前非管理员会话，需要管理员的优化项会失败并如实报错。");
 
         var result = presetName is not null
@@ -302,7 +312,7 @@ public static class CliHost
         return null;
     }
 
-    private static CliOptions ParseOptions(string[] args, out string? error)
+    private static CliOptions ParseOptions(string[] args, string verb, out string? error)
     {
         error = null;
         var options = new CliOptions();
@@ -316,10 +326,14 @@ public static class CliHost
                     options.Json = true;
                     break;
                 case "items" when inline is not null:
+                    options.ItemsSpecified = true;
                     options.Items.AddRange(SplitIds(inline));
+                    if (options.Items.Count == 0)
+                        error = "-Items 不能为空";
                     break;
                 case "items":
                 {
+                    options.ItemsSpecified = true;
                     var consumed = false;
                     while (i + 1 < args.Length && !IsFlag(args[i + 1]))
                     {
@@ -331,19 +345,29 @@ public static class CliHost
                     break;
                 }
                 case "preset" when inline is not null:
-                    options.Preset = inline;
+                    options.PresetSpecified = true;
+                    if (string.IsNullOrWhiteSpace(inline))
+                        error = "-Preset 不能为空";
+                    else
+                        options.Preset = inline;
                     break;
                 case "preset":
-                    if (i + 1 >= args.Length)
+                    options.PresetSpecified = true;
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
                         error = "-Preset 缺少值";
                     else
                         options.Preset = args[++i];
                     break;
                 case "game" when inline is not null:
-                    options.GamePath = inline;
+                    options.GameSpecified = true;
+                    if (string.IsNullOrWhiteSpace(inline))
+                        error = "-Game 不能为空";
+                    else
+                        options.GamePath = inline;
                     break;
                 case "game":
-                    if (i + 1 >= args.Length)
+                    options.GameSpecified = true;
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
                         error = "-Game 缺少值";
                     else
                         options.GamePath = args[++i];
@@ -356,7 +380,25 @@ public static class CliHost
             if (error is not null)
                 return options;
         }
+
+        error = ValidateOptionsForVerb(verb, options);
         return options;
+    }
+
+    private static string? ValidateOptionsForVerb(string verb, CliOptions options)
+    {
+        var hasApplyOnly = options.ItemsSpecified || options.PresetSpecified;
+        var hasGame = options.GameSpecified;
+        return verb switch
+        {
+            "Detect" when hasApplyOnly => "-Detect 只接受 -Game 和 -Json",
+            "Restore" when options.PresetSpecified || hasGame => "-Restore 只接受 -Items 和 -Json",
+            "ListRestore" when hasApplyOnly || hasGame => "-ListRestore 只接受 -Json",
+            "Version" when hasApplyOnly || hasGame => "-Version 不接受额外参数",
+            "Help" when hasApplyOnly || hasGame => "-Help 不接受额外参数",
+            "?" when hasApplyOnly || hasGame => "-Help 不接受额外参数",
+            _ => null
+        };
     }
 
     private static (string Name, string? Inline) SplitOption(string token)

@@ -273,7 +273,7 @@ public partial class SettingsView : UserControl
         {
             var data = await Task.Run(() =>
             {
-                var candidates = GamePathService.DetectAll();
+                var candidates = GamePathService.DetectAll(refresh: true);
                 var profileOk = ProfileStore.TryLoad(out var profiles, out var profileError);
                 return (Candidates: candidates, Profiles: profiles, ProfileOk: profileOk, ProfileError: profileError);
             });
@@ -508,7 +508,7 @@ public partial class SettingsView : UserControl
     {
         try
         {
-            Process.Start(new ProcessStartInfo("https://github.com/jiaxindeyang-a11y/fps-tune") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("https://github.com/jidekaixin2dian/fps-tune") { UseShellExecute = true });
         }
         catch
         {

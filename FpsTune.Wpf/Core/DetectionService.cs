@@ -33,7 +33,7 @@ public static class DetectionService
                 desc = def.Description,
                 sideEffect = def.SideEffect,
                 admin = def.Admin,
-                @default = true,
+                @default = def.Default,
                 reboot = def.Reboot,
                 optimized = state.Optimized,
                 current = state.Current,
@@ -452,7 +452,14 @@ public static class DetectionService
             "be337238-0d82-4146-a960-4f3749d470c7");
 
         if (usb is null || boost is null)
-            return (false, "无法读取全部电源隐藏项");
+        {
+            var missing = new List<string>();
+            if (usb is null)
+                missing.Add("USB3 链路省电");
+            if (boost is null)
+                missing.Add("处理器性能提升");
+            return (false, "无法读取电源隐藏项：" + string.Join("、", missing));
+        }
 
         var optimized = usb == 0 && boost == 2;
         return (optimized, $"USB3={usb}, 提升={boost}");

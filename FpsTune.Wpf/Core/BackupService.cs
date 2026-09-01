@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Text;
+using FpsTune.Wpf.Services;
 using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
@@ -34,6 +36,9 @@ public sealed class BackupRecord
     public string? OldStartMode { get; set; }
     public string? OldActiveGuid { get; set; }
     public string? OldState { get; set; }
+
+    // 定向还原后保留原始快照供审计，同时防止同一记录被后续 RestoreAll 重复覆盖。
+    public bool Restored { get; set; }
 }
 
 public static class BackupService
@@ -43,6 +48,7 @@ public static class BackupService
 
     // 测试可注入；生产代码保持默认目录
     internal static string? BackupDirOverride { get; set; }
+    internal static Action<BackupRecord>? RestoreRecordOverride { get; set; }
 
     private static string BackupDir =>
         BackupDirOverride ?? Path.Combine(
@@ -117,7 +123,7 @@ public static class BackupService
     /// <summary>
     /// 遍历全部备份文件逐项还原；失败的项会如实报告，不会静默吞掉。
     /// 传入 <paramref name="ids"/> 时只还原指定项（A/B 实验语义）：
-    /// 文件中其余未选中的记录保持不动，且该文件不会被消费（改名 .restored）。
+    /// 文件中其余未选中的记录保持不动；已成功的记录会持久化标记，防止重复还原。
     /// </summary>
     public static RestoreAllResult RestoreAll(IReadOnlyCollection<string>? ids = null)
     {
@@ -161,7 +167,7 @@ public static class BackupService
 
             var fileFailed = false;
 
-            // 先校验整份文件的所有目标，避免文件中后面的篡改记录导致前面的记录先写入系统。
+            // 先校验尚未还原的记录，避免后面的篡改记录导致前面的记录先写入系统。
             foreach (var record in records)
             {
                 if (record is null)
@@ -170,6 +176,8 @@ public static class BackupService
                     result.Failures.Add($"{Path.GetFileName(file)}: 备份包含空记录");
                     continue;
                 }
+                if (record.Restored)
+                    continue;
 
                 try
                 {
@@ -185,16 +193,27 @@ public static class BackupService
             if (fileFailed)
                 continue;
 
-            // 按选择过滤：只还原指定项；文件里还有未选中的记录时不消费该文件。
-            var (targets, hasUnselected) = FilterRecords(records, selection);
+            // 按选择过滤：已还原的记录不再执行，文件里还有未选中的待还原记录时不消费。
+            var (targets, _) = FilterRecords(records, selection);
             if (targets.Count == 0)
+            {
+                // 兼容早期部分还原留下的全已还原 JSON：补做审计归档。
+                if (records.All(r => r.Restored))
+                    consumed.Add(file);
                 continue;
+            }
 
+            var progressChanged = false;
             foreach (var record in targets)
             {
                 try
                 {
-                    RestoreOne(record);
+                    if (RestoreRecordOverride is not null)
+                        RestoreRecordOverride(record);
+                    else
+                        RestoreOne(record);
+                    record.Restored = true;
+                    progressChanged = true;
                     result.Restored.Add((file, record.Id));
                 }
                 catch (Exception ex)
@@ -204,9 +223,23 @@ public static class BackupService
                 }
             }
 
-            // 只有整份文件的每一条记录都成功，才允许消费文件；部分成功也必须保留原文件。
-            // 定向还原时文件里还留有未选中的备份记录，同样不能消费。
-            if (!fileFailed && !hasUnselected)
+            // 部分还原也必须落盘进度，否则下次会再次覆盖已经还原过的系统值。
+            if (progressChanged)
+            {
+                try
+                {
+                    var json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+                    AtomicFile.WriteAllText(file, json, new UTF8Encoding(false));
+                }
+                catch (Exception ex)
+                {
+                    fileFailed = true;
+                    result.Failures.Add($"{Path.GetFileName(file)}: 还原进度无法保存（{ex.Message}）");
+                }
+            }
+
+            // 只有全部待还原记录成功后才消费为 .restored；部分成功保留 JSON 及逐条状态。
+            if (!fileFailed && !records.Any(r => !r.Restored))
                 consumed.Add(file);
         }
 
@@ -233,15 +266,16 @@ public static class BackupService
     }
 
     // 定向还原的过滤决策（纯函数，便于单测）：
-    // 无选择时返回全部；有选择时只留所选，并标记文件里是否还有未选中记录。
+    // 已标记还原的记录永不重复执行；有选择时只留所选待还原记录。
     internal static (IReadOnlyList<BackupRecord> Targets, bool HasUnselected) FilterRecords(
         IReadOnlyList<BackupRecord> records, HashSet<string>? selection)
     {
+        var pending = records.Where(r => !r.Restored).ToList();
         if (selection is null)
-            return (records.ToList(), false);
+            return (pending, false);
 
-        var targets = records.Where(r => selection.Contains(r.Id)).ToList();
-        return (targets, targets.Count != records.Count);
+        var targets = pending.Where(r => selection.Contains(r.Id)).ToList();
+        return (targets, targets.Count != pending.Count);
     }
 
     // 备份文件位于用户可写目录，还原前必须验证其目标。

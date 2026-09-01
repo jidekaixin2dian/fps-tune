@@ -14,9 +14,26 @@ internal static class AtomicFile
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
 
-        var tmp = path + ".tmp";
-        File.WriteAllText(tmp, content, encoding);
-        File.Move(tmp, path, overwrite: true);
+        // 临时文件必须由本次调用独占：固定 .tmp 会让并发保存互相覆盖。
+        var tmp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(tmp, content, encoding);
+            File.Move(tmp, path, overwrite: true);
+        }
+        finally
+        {
+            // Move 成功后文件已不存在；失败时清理本次残留，不触碰其他调用的临时文件。
+            try
+            {
+                if (File.Exists(tmp))
+                    File.Delete(tmp);
+            }
+            catch
+            {
+                // 原始写入异常优先；清理失败不应掩盖它。
+            }
+        }
     }
 
     /// <summary>读取失败时把损坏文件留档为 .corrupt，便于用户找回线索而不是被静默覆盖。</summary>

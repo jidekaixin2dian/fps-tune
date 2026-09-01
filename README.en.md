@@ -13,7 +13,6 @@ headless CLI mode for command-line / AI-agent use.
 - **Automatic backup & restore** — every write is backed up first; one-command restore.
 - **MIT licensed, clean-room implementation.**
 
-![build](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml/badge.svg)
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 
@@ -22,7 +21,7 @@ headless CLI mode for command-line / AI-agent use.
 Existing tools in this space (e.g. DeltaForceBooster) use a proprietary EULA that forbids
 modification and redistribution. This project is written from scratch against the *public
 feature list* only, releases under a permissive license, and deliberately does less:
-no telemetry; in-app update checks only (nothing is downloaded without your consent).
+no telemetry; in-app updates require explicit consent before download and SHA-256 verification.
 
 ## Files
 
@@ -58,7 +57,7 @@ Admin-required items fail loudly in non-elevated terminals (the exe runs as asIn
 ## Quick start (GUI, functional)
 
 - Recommended installer: <https://github.com/jidekaixin2dian/fps-tune/releases>
-- Portable: unzip `FpsTune-Portable-*.zip` and run `FpsTune.exe`
+- Portable: unzip `FpsTune-Portable-*.zip`, install the [.NET 8 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0), then run `FpsTune.exe`
 
 Or build locally:
 

@@ -11,13 +11,12 @@
 
 - **系统层，可还原**：只改 Windows 设置，每次写入前自动备份原值（含"原本不存在"状态），支持一键还原。
 - **不碰游戏**：不修改游戏目录文件、不注入进程、不与反作弊交互、不关引导虚拟化、不做显卡伪装。
-- **全游戏自动定位**：内置主流 FPS 的进程与卸载表检测；也可用 `-GamePath` 手动指定任意游戏 EXE。
+- **全游戏自动定位**：内置主流 FPS 的进程与卸载表检测；也可用 `-Game` 手动指定任意游戏 EXE。
 - **单一数据源**：33 个优化项与预设统一定义在 `catalog/catalog.json`，
   GUI 与 CLI 共用同一份 C# 引擎与数据，加载即校验。
 - **版本单源化**：程序集版本 / 安装器版本 / CLI 自报版本全部来自 `Directory.Build.props` 的 `<Version>`。
 - **MIT 开源**：代码完全原创（Clean-room），无遥测。
 
-![build](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml/badge.svg)
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 
@@ -55,7 +54,7 @@ FpsTune.exe -Restore -Json
 ## 快速开始（GUI）
 
 - 安装包：从 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases) 下载 `FpsTune-Setup-*.exe`
-- 便携版：解压 `FpsTune-Portable-*.zip` 后运行 `FpsTune.exe`
+- 便携版：解压 `FpsTune-Portable-*.zip` 后运行 `FpsTune.exe`；需已安装 [.NET 8 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 本地构建：
 

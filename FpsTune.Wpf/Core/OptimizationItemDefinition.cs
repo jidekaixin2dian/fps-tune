@@ -6,6 +6,7 @@ public sealed record OptimizationItemDefinition(
     string Description,
     string SideEffect,
     bool Admin,
+    bool Default,
     bool Reboot,
     string Kind,
     string Group);

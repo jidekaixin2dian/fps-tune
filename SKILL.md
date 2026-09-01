@@ -13,7 +13,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 
 ## 前置条件
 
-- Windows 10 / 11。核心流程只需要 `FpsTune.exe`，无需安装任何运行时（自包含发布）。
+- Windows 10 / 11。安装包和单文件 `FpsTune.exe` 为自包含发布；便携版需要 .NET 8 Windows Desktop Runtime。
 - 部分项（电源计划、HAGS、系统服务等）需要**管理员权限**的终端。
 - 程序位置：`<root>\FpsTune.exe`（下文 `<root>` 指仓库/安装目录；本地构建产物在
   `FpsTune.Wpf\bin\Release\net8.0-windows\`）。
@@ -32,8 +32,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 - `hardware`：CPU / 内存 / 显卡（含厂商）/ 系统版本 / 是否笔记本 / 是否管理员
 - `gamePath`：自动找到的游戏主程序（运行中进程 → 卸载注册表 → 常见盘符兜底；找不到为 null）
 - `items`：每个优化项的 id、说明、副作用、是否需要管理员、当前是否已达标
-- `checks`：只读体检结果（VC++ 运行库缺失 / 内存频率 / PCIe 链路），只报告不修改
-- `gpuGuide`：按用户显卡厂商生成的驱动内手动设置清单
+- `checks`：只读体检结果（VC++ 运行库、内存频率、PCIe 链路、显示器刷新率、颜色配置、DirectStorage、音频独占模式），只报告不修改
 
 ### 第 2 步：向用户汇报并确认
 
@@ -44,7 +43,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 
 - 需要管理员的项，当前会话不是管理员时会失败并明确报错——此时请用户用管理员身份重开终端。
 - `fso-off` / `gpu-pref` / `game-priority` 依赖找到游戏主程序；找不到时这三项自动跳过，
-  可让用户提供游戏安装位置后用 `-GamePath "主程序完整路径"` 补上。
+  可让用户提供游戏安装位置后用 `-Game "主程序完整路径"` 补上。
 - `wsearch-off`（禁用搜索索引）会让系统搜索明显变慢；`hibernate-off`（关休眠）会顺带
   关掉快速启动，笔记本合盖只剩睡眠——这两项默认不勾选，勾选前务必说明。
 - `power-tuning` 会改电源隐藏参数（关闭 USB3 链路省电、处理器性能提升模式设为激进），
@@ -77,7 +76,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 
 ### 第 4 步：显卡驱动内设置（手动，念给用户听）
 
-驱动内的 3D 设置无法安全脚本化。把检测结果里的 `gpuGuide` 清单展示给用户，
+驱动内的 3D 设置无法安全脚本化。根据用户显卡厂商给出手动设置建议，
 指导其在 NVIDIA 控制面板 / AMD Adrenalin / Intel Arc 控制面板中手动设置（约 2 分钟）。
 清单已按检测到的显卡厂商生成（先确认 `hardware.gpuVendor` 再给对应内容）。
 
