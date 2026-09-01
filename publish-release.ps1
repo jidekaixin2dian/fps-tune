@@ -58,10 +58,15 @@ try {
     }
 
     Write-Host 'Creating portable zip...'
-    # DebugType=none 后 folder 输出本应无 pdb; 删除属双保险, 便携包不携带调试符号
-    Get-ChildItem -LiteralPath $folderOut -Recurse -Include '*.pdb' -File -ErrorAction SilentlyContinue |
+    # DebugType=none 后 folder 输出本应无 pdb; 此清理属双保险。
+    # 不用 Get-ChildItem -Include: 它与 -LiteralPath(目录)+-Recurse 组合在 PS5.1 下
+    # 不做过滤, 会把目录里全部文件当匹配项删掉
+    Get-ChildItem -LiteralPath $folderOut -Recurse -File |
+        Where-Object { $_.Extension -eq '.pdb' } |
         Remove-Item -Force -ErrorAction SilentlyContinue
     Compress-Archive -Path (Join-Path $folderOut '*') -DestinationPath $zip -CompressionLevel Optimal
+    # Compress-Archive 对空源目录会静默不产出 zip, 必须显式断言
+    if (-not (Test-Path -LiteralPath $zip)) { throw 'portable zip was not created' }
 
     $hashLines = @(
         "$((Get-FileHash -LiteralPath $singleExe -Algorithm SHA256).Hash)  FpsTune.exe",
