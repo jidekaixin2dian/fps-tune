@@ -16,7 +16,8 @@ switch ($Mode) {
         dotnet build $project -c Release
     }
     'PublishSingleFile' {
-        dotnet publish $project -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+        # 压缩 + 去 PDB: 单文件体积 149MB → 约 70-80MB（WPF 不支持 trimming）
+        dotnet publish $project -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:DebugType=none
     }
     'PublishFolder' {
         dotnet publish $project -c Release -r win-x64 --self-contained false

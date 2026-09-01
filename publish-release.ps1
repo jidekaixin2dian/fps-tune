@@ -43,11 +43,12 @@ New-Item -ItemType Directory -Path $publishTmp -Force | Out-Null
 
 try {
     Write-Host "Publishing single-file EXE v$version..."
-    dotnet publish $proj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:OutDir=$singleBld -o $singleOut | Out-Host
+    # 压缩 + 去 PDB: 单文件体积 149MB → 约 70-80MB（WPF 不支持 trimming）
+    dotnet publish $proj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:DebugType=none /p:OutDir=$singleBld -o $singleOut | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'single-file publish failed' }
 
     Write-Host "Publishing green folder v$version..."
-    dotnet publish $proj -c Release -r win-x64 --self-contained false /p:OutDir=$folderBld -o $folderOut | Out-Host
+    dotnet publish $proj -c Release -r win-x64 --self-contained false /p:DebugType=none /p:OutDir=$folderBld -o $folderOut | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'folder publish failed' }
 
     $singleExe = Join-Path $singleOut 'FpsTune.exe'
@@ -57,6 +58,9 @@ try {
     }
 
     Write-Host 'Creating portable zip...'
+    # DebugType=none 后 folder 输出本应无 pdb; 删除属双保险, 便携包不携带调试符号
+    Get-ChildItem -LiteralPath $folderOut -Recurse -Include '*.pdb' -File -ErrorAction SilentlyContinue |
+        Remove-Item -Force -ErrorAction SilentlyContinue
     Compress-Archive -Path (Join-Path $folderOut '*') -DestinationPath $zip -CompressionLevel Optimal
 
     $hashLines = @(
@@ -77,6 +81,18 @@ finally {
 
 Write-Host ''
 Write-Host "Done: $dist"
-Write-Host "  $singleOut\FpsTune.exe"
-Write-Host "  $zip"
-Write-Host "  $manifest"
+$artifacts = @(
+    @{ Label = "single-file EXE"; Path = (Join-Path $singleOut 'FpsTune.exe') },
+    @{ Label = "portable zip";    Path = $zip },
+    @{ Label = "manifest";        Path = $manifest }
+)
+$installerPath = Join-Path $dist "installer\FpsTune-Setup-$version.exe"
+if (Test-Path -LiteralPath $installerPath) {
+    $artifacts += @{ Label = 'installer'; Path = $installerPath }
+}
+foreach ($a in $artifacts) {
+    if (Test-Path -LiteralPath $a.Path) {
+        $mb = [math]::Round((Get-Item -LiteralPath $a.Path).Length / 1MB, 1)
+        Write-Host ("  {0,-16} {1}  ({2} MB)" -f $a.Label, $a.Path, $mb)
+    }
+}
