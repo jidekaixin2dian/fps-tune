@@ -41,7 +41,11 @@ public partial class SettingsView : UserControl
         LowSpecCheck.Checked += LowSpecSetting_Changed;
         LowSpecCheck.Unchecked += LowSpecSetting_Changed;
 
+        // 初始化勾选状态会触发 Checked 事件, 必须抑制, 否则构造视图就会重写 HKCU Run 值
+        // (从 bin\Debug 或临时目录启动时会把自启动指向错误路径)
+        _suppressUiEvents = true;
         AutostartCheck.IsChecked = ReadAutostart();
+        _suppressUiEvents = false;
         VersionText.Text = "版本：v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         RefreshAdminStatus();
     }

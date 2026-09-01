@@ -14,6 +14,7 @@ public partial class DetectView : UserControl
     private sealed record CheckItemViewModel(string Name, string Summary, Brush Foreground);
 
     private bool _hasSavedState;
+    private bool _detectionInFlight;
 
     private System.Windows.Threading.DispatcherTimer? _monitorTimer;
     private readonly List<double> _cpuHist = new();
@@ -33,8 +34,24 @@ public partial class DetectView : UserControl
             }
             StartMonitor();
             StartGameScan();
+            if (Window.GetWindow(this) is { } window)
+                window.IsVisibleChanged += HostWindow_IsVisibleChanged;
         };
-        Unloaded += (_, _) => StopMonitor();
+        Unloaded += (_, _) =>
+        {
+            StopMonitor();
+            if (Window.GetWindow(this) is { } window)
+                window.IsVisibleChanged -= HostWindow_IsVisibleChanged;
+        };
+    }
+
+    // 托盘隐藏调用 Window.Hide(), 不触发 Unloaded, 需按可见性联动采样计时器
+    private void HostWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (IsVisible)
+            StartMonitor();
+        else
+            StopMonitor();
     }
 
     // ---------- 实时监控 ----------
@@ -130,7 +147,7 @@ public partial class DetectView : UserControl
 
     // ---------- 游戏切换 ----------
 
-    private void StartGameScan()
+    private void StartGameScan(bool refresh = false)
     {
         if (_suppressGameSwitch)
             return;
@@ -144,7 +161,7 @@ public partial class DetectView : UserControl
         {
             try
             {
-                var games = GamePathService.DetectAll();
+                var games = GamePathService.DetectAll(refresh);
                 await Dispatcher.InvokeAsync(() => FillGameSwitcher(games));
             }
             catch
@@ -223,7 +240,7 @@ public partial class DetectView : UserControl
         RefreshGamePathText();
     }
 
-    private void RescanGames_Click(object sender, RoutedEventArgs e) => StartGameScan();
+    private void RescanGames_Click(object sender, RoutedEventArgs e) => StartGameScan(refresh: true);
 
     private void RefreshGamePathText()
     {
@@ -241,6 +258,10 @@ public partial class DetectView : UserControl
 
     private async Task<bool> RunDetectionAsync()
     {
+        if (_detectionInFlight)
+            return false;
+        _detectionInFlight = true;
+
         RunButton.IsEnabled = false;
         LoadButton.IsEnabled = false;
         OutputBox.Text = "正在检测...";
@@ -273,6 +294,7 @@ public partial class DetectView : UserControl
         }
         finally
         {
+            _detectionInFlight = false;
             RunButton.IsEnabled = true;
             LoadButton.IsEnabled = true;
         }

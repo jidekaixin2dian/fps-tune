@@ -17,8 +17,13 @@ public partial class HomeView : UserControl
         VersionText.Text = "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         // 优化项数量随 catalog 增长，首页文案不写死
         OptCardSummary.Text = $"预设与逐项开关、{ItemCatalog.All.Count} 项系统层优化、一键还原";
-        var hw = Core.HardwareInfoService.Get();
-        HardwareSummaryText.Text = $"{hw.Cpu}  |  {hw.Gpu}  |  {hw.RamGB:0.#} GB";
+        // WMI 查询较慢，放后台线程避免阻塞首帧
+        HardwareSummaryText.Text = "--";
+        Loaded += async (_, _) =>
+        {
+            var hw = await Task.Run(Core.HardwareInfoService.Get);
+            HardwareSummaryText.Text = $"{hw.Cpu}  |  {hw.Gpu}  |  {hw.RamGB:0.#} GB";
+        };
 
         // 新手引导入口只在首次打开时显示。
         if (StateStore.HasSeenOnboarding)

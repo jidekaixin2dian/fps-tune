@@ -109,6 +109,7 @@ public static class SettingsService
         }
         catch
         {
+            AtomicFile.PreserveCorrupt(SettingsFile);
             Current = CreateDefault();
         }
     }
@@ -125,6 +126,6 @@ public static class SettingsService
         Current = settings;
         Directory.CreateDirectory(BaseDir);
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(SettingsFile, json, new UTF8Encoding(false));
+        AtomicFile.WriteAllText(SettingsFile, json, new UTF8Encoding(false));
     }
 }

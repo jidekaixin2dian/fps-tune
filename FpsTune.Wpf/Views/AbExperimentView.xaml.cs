@@ -53,13 +53,22 @@ public partial class AbExperimentView : UserControl
 
     private async Task Run(string title, string status, params string[] args)
     {
+        var runButtons = new[] { BaselineButton, Group1Button, Group2Button, Group3Button, ReportButton };
+        foreach (var b in runButtons)
+            b.IsEnabled = false;
+
         StatusText.Text = status;
         RawBox.Text = "正在运行： " + title;
         ResetMetrics();
 
         try
         {
-            var result = await PowerShellRunner.RunAsync(_tuningPath, args);
+            // 脚本可能从嵌入资源释放到 LOCALAPPDATA，探测不到本 exe，显式指定引擎路径
+            var allArgs = args;
+            if (Environment.ProcessPath is { } exePath)
+                allArgs = args.Concat(new[] { "-EngineExe", exePath }).ToArray();
+
+            var result = await PowerShellRunner.RunAsync(_tuningPath, allArgs);
             RawBox.Text = result.Success
                 ? result.Output
                 : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
@@ -71,6 +80,11 @@ public partial class AbExperimentView : UserControl
         {
             RawBox.Text = ex.ToString();
             StatusText.Text = "执行失败。";
+        }
+        finally
+        {
+            foreach (var b in runButtons)
+                b.IsEnabled = true;
         }
     }
 
@@ -155,7 +169,7 @@ public partial class AbExperimentView : UserControl
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "FpsTune", "experiment");
         Directory.CreateDirectory(dir);
-        Process.Start("explorer.exe", dir);
+        Process.Start("explorer.exe", $"\"{dir}\"");
     }
 
     // ---------- 历史趋势图 ----------

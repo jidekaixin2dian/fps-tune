@@ -22,7 +22,7 @@ public static class PowerShellRunner
         {
             foreach (var stale in Directory.EnumerateFiles(tempDir))
             {
-                if (File.GetLastWriteTime(stale) < DateTime.UtcNow - TimeSpan.FromDays(1))
+                if (File.GetLastWriteTime(stale) < DateTime.Now - TimeSpan.FromDays(1))
                     File.Delete(stale);
             }
         }

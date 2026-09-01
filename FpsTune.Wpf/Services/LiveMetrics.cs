@@ -62,16 +62,18 @@ public static class LiveMetrics
     {
         try
         {
-            // 实例(随游戏进程增减)定期重建
+            // 实例(随游戏进程增减)定期重建; 先构建新列表再释放旧的,
+            // 构建中途抛异常(驱动过旧等)时旧计数器仍可用
             if (_gpuCounters is null || _gpuRefreshCountdown-- <= 0)
             {
                 _gpuRefreshCountdown = 20;
-                _gpuCounters?.ForEach(c => c.Dispose());
                 var category = new PerformanceCounterCategory("GPU Engine");
-                _gpuCounters = category
+                var fresh = category
                     .GetInstanceNames()
                     .Select(name => new PerformanceCounter("GPU Engine", "Utilization Percentage", name, readOnly: true))
                     .ToList();
+                _gpuCounters?.ForEach(c => c.Dispose());
+                _gpuCounters = fresh;
             }
             if (_gpuCounters.Count == 0)
                 return double.NaN;

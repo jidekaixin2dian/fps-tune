@@ -35,11 +35,11 @@
             <StackPanel>
                 <TextBlock Text="采样流程（每步在同一游戏场景内进行）" Style="{StaticResource CardTitleStyle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Content="1 · 基线" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Baseline_Click"/>
-                    <Button Content="2 · group-1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group1_Click"/>
-                    <Button Content="3 · group-2" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group2_Click"/>
-                    <Button Content="4 · group-3" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group3_Click"/>
-                    <Button Content="5 · 生成报告" Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Click="Report_Click"/>
+                    <Button x:Name="BaselineButton" Content="1 · 基线" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Baseline_Click"/>
+                    <Button x:Name="Group1Button" Content="2 · group-1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group1_Click"/>
+                    <Button x:Name="Group2Button" Content="3 · group-2" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group2_Click"/>
+                    <Button x:Name="Group3Button" Content="4 · group-3" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96" Margin="0,0,8,0" Click="Group3_Click"/>
+                    <Button x:Name="ReportButton" Content="5 · 生成报告" Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Click="Report_Click"/>
                 </StackPanel>
             </StackPanel>
         </Border>

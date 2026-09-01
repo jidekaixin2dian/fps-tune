@@ -17,11 +17,11 @@
                            Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                <Button Content="列出可还原项"
+                <Button x:Name="ListBackupButton" Content="列出可还原项"
                         Style="{StaticResource SecondaryButtonStyle}"
                         MinWidth="126" Margin="0,0,8,0"
                         Click="ListBackup_Click"/>
-                <Button Content="还原全部"
+                <Button x:Name="RestoreAllButton" Content="还原全部"
                         Style="{StaticResource DangerButtonStyle}"
                         MinWidth="106" Margin="0,0,8,0"
                         Click="RestoreAll_Click"/>

@@ -20,8 +20,7 @@ public static class StateStore
     {
         try
         {
-            Directory.CreateDirectory(BaseDir);
-            File.WriteAllText(OnboardingFile, DateTime.Now.ToString("O"), new UTF8Encoding(false));
+            AtomicFile.WriteAllText(OnboardingFile, DateTime.Now.ToString("O"), new UTF8Encoding(false));
         }
         catch
         {
@@ -31,8 +30,7 @@ public static class StateStore
 
     public static void SaveDetect(JsonNode root)
     {
-        Directory.CreateDirectory(BaseDir);
-        File.WriteAllText(DetectFile, root.ToJsonString(), new UTF8Encoding(false));
+        AtomicFile.WriteAllText(DetectFile, root.ToJsonString(), new UTF8Encoding(false));
     }
 
     public static JsonNode? LoadDetect()
@@ -46,6 +44,7 @@ public static class StateStore
         }
         catch
         {
+            AtomicFile.PreserveCorrupt(DetectFile);
             return null;
         }
     }
@@ -63,7 +62,7 @@ public static class StateStore
                 if (File.Exists(GamePathFile)) File.Delete(GamePathFile);
                 return;
             }
-            File.WriteAllText(GamePathFile, path.Trim(), new UTF8Encoding(false));
+            AtomicFile.WriteAllText(GamePathFile, path.Trim(), new UTF8Encoding(false));
         }
         catch
         {
@@ -125,6 +124,7 @@ public static class ProfileStore
         }
         catch (Exception ex)
         {
+            AtomicFile.PreserveCorrupt(ProfilesFile);
             profiles = new List<OptProfile>();
             error = ex.Message;
             return false;
@@ -142,7 +142,7 @@ public static class ProfileStore
         try
         {
             Directory.CreateDirectory(BaseDir);
-            File.WriteAllText(ProfilesFile, JsonSerializer.Serialize(profiles, JsonOpts), new UTF8Encoding(false));
+            AtomicFile.WriteAllText(ProfilesFile, JsonSerializer.Serialize(profiles, JsonOpts), new UTF8Encoding(false));
             error = null;
             return true;
         }

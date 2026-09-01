@@ -32,6 +32,9 @@ public static class TrayService
     private static bool _minimizeHintShown;
     private static int _taskbarCreatedMsg = -1;
     private static IntPtr _hIcon;
+    // LoadImage(LR_LOADFROMFILE) 的句柄归本进程所有, 退出时需 DestroyIcon;
+    // WM_GETICON/GCLP_HICON 拿到的句柄属于窗口/窗口类, 不能销毁
+    private static bool _ownsIcon;
 
     public static bool IsEnabled => SettingsService.Current.MinimizeToTray;
 
@@ -81,6 +84,7 @@ public static class TrayService
                 {
                     _hIcon = Native.LoadImage(IntPtr.Zero, tmpIco,
                         Native.IMAGE_ICON, 16, 16, Native.LR_LOADFROMFILE);
+                    _ownsIcon = _hIcon != IntPtr.Zero;
                 }
             }
             catch
@@ -144,6 +148,12 @@ public static class TrayService
             _hwnd.RemoveHook(WndProc);
             _hwnd.Dispose();
             _hwnd = null;
+        }
+        if (_ownsIcon && _hIcon != IntPtr.Zero)
+        {
+            Native.DestroyIcon(_hIcon);
+            _hIcon = IntPtr.Zero;
+            _ownsIcon = false;
         }
     }
 
@@ -297,6 +307,9 @@ public static class TrayService
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         public static extern IntPtr GetModuleHandle(string? name);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool DestroyIcon(IntPtr hIcon);
 
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hwnd);

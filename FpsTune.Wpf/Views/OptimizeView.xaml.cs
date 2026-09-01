@@ -231,24 +231,10 @@ public partial class OptimizeView : UserControl
             return;
         }
 
-        var args = new List<string>();
-        if (PresetFull.IsChecked == true)
-            args.AddRange(new[] { "-Apply", "-Preset", "full", "-Force", "-Json" });
-        else if (PresetSafeOnly.IsChecked == true)
-            args.AddRange(new[] { "-Apply", "-Preset", "safe-only", "-Force", "-Json" });
-        else if (PresetCustom.IsChecked == true)
+        if (PresetCustom.IsChecked == true && Items.All(i => !i.IsChecked))
         {
-            var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
-            if (ids.Count == 0)
-            {
-                DialogService.Info("提示", "请勾选至少一个优化项。");
-                return;
-            }
-            args.AddRange(new[] { "-Apply", "-Items", string.Join(",", ids), "-Force", "-Json" });
-        }
-        else
-        {
-            args.AddRange(new[] { "-Apply", "-Preset", "balanced", "-Force", "-Json" });
+            DialogService.Info("提示", "请勾选至少一个优化项。");
+            return;
         }
 
         ApplyButton.IsEnabled = false;
@@ -575,6 +561,11 @@ public partial class OptimizeView : UserControl
         {
             var names = profiles.Count == 0 ? "（尚无已保存方案）" : string.Join("、", profiles.Select(p => p.Name));
             DialogService.Warning("配置方案", $"未找到方案「{name}」。已有：{names}");
+            return;
+        }
+        if (hit.Ids is null || hit.Ids.Count == 0)
+        {
+            DialogService.Warning("配置方案", $"方案「{name}」不包含任何优化项，可能是文件损坏，请删除后重建。");
             return;
         }
         ApplyProfileIds(hit.Ids);

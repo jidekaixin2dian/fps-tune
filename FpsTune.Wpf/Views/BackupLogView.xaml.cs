@@ -16,7 +16,7 @@ public partial class BackupLogView : UserControl
     public BackupLogView()
     {
         InitializeComponent();
-        _tempDir = Path.Combine(Path.GetTempPath(), "delta-gui-tmp");
+        _tempDir = Path.Combine(Path.GetTempPath(), "delta-tune-wpf-tmp");
         _backupDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "FpsTune", "backup");
@@ -44,6 +44,8 @@ public partial class BackupLogView : UserControl
 
     private async Task Run(Func<Task<RunResult>> action)
     {
+        ListBackupButton.IsEnabled = false;
+        RestoreAllButton.IsEnabled = false;
         LogBox.Text = "正在执行...";
         try
         {
@@ -58,18 +60,23 @@ public partial class BackupLogView : UserControl
             LogBox.Text = ex.ToString();
             StatusText.Text = "执行异常";
         }
+        finally
+        {
+            ListBackupButton.IsEnabled = true;
+            RestoreAllButton.IsEnabled = true;
+        }
     }
 
     private void OpenBackup_Click(object sender, RoutedEventArgs e)
     {
         Directory.CreateDirectory(_backupDir);
-        Process.Start("explorer.exe", _backupDir);
+        Process.Start("explorer.exe", $"\"{_backupDir}\"");
     }
 
     private void OpenTemp_Click(object sender, RoutedEventArgs e)
     {
         Directory.CreateDirectory(_tempDir);
-        Process.Start("explorer.exe", _tempDir);
+        Process.Start("explorer.exe", $"\"{_tempDir}\"");
     }
 
     private void ExportLog_Click(object sender, RoutedEventArgs e)

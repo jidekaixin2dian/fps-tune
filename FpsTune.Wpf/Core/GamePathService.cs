@@ -70,8 +70,23 @@ public static class GamePathService
     /// <summary>
     /// 扫描全部已知游戏（运行中进程 → 卸载注册表 → 常见目录），返回所有候选。
     /// 顺序即优先级: 正在运行的游戏排最前。
+    /// 全盘目录扫描代价高，会话内缓存结果；refresh=true（重扫按钮）强制重扫。
     /// </summary>
-    public static IReadOnlyList<GameCandidate> DetectAll()
+    public static IReadOnlyList<GameCandidate> DetectAll(bool refresh = false)
+    {
+        lock (_gate)
+        {
+            if (!refresh && _cached is not null)
+                return _cached;
+            _cached = DetectAllCore();
+            return _cached;
+        }
+    }
+
+    private static readonly object _gate = new();
+    private static IReadOnlyList<GameCandidate>? _cached;
+
+    private static IReadOnlyList<GameCandidate> DetectAllCore()
     {
         var found = new Dictionary<string, GameCandidate>(StringComparer.OrdinalIgnoreCase);
 
