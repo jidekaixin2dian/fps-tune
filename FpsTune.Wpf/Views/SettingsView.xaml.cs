@@ -105,7 +105,7 @@ public partial class SettingsView : UserControl
         SettingsService.Save(settings);
         ThemeManager.SetMode(mode);
         if (Application.Current.MainWindow is MainWindow main)
-            main.ApplyAuroraSetting(ThemeManager.CurrentGlowBrush);
+            main.ApplyAuroraSetting();
     }
 
     // ---------- 游戏路径 ----------
@@ -240,10 +240,10 @@ public partial class SettingsView : UserControl
         var s = SettingsService.Current;
         s.AuroraEnabled = AuroraCheck.IsChecked == true;
         SettingsService.Save(s);
-        // 重算主题刷子并把新极光刷子即时推给主窗口(不重启生效)
+        // 重算主题刷子并把新的整窗极光光场即时推给主窗口(不重启生效)
         ThemeManager.SetMode(s.ThemeMode);
         if (Application.Current.MainWindow is MainWindow main)
-            main.ApplyAuroraSetting(ThemeManager.CurrentGlowBrush);
+            main.ApplyAuroraSetting();
     }
 
     private void LowSpecSetting_Changed(object sender, RoutedEventArgs e)
@@ -254,8 +254,10 @@ public partial class SettingsView : UserControl
         s.LowSpecMode = LowSpecCheck.IsChecked == true;
         SettingsService.Save(s);
         UiPerformance.LowSpec = s.LowSpecMode;
-        // 重算卡片阴影等资源
+        // 重算卡片阴影等资源, 并立即停止或恢复极光动效
         ThemeManager.SetMode(s.ThemeMode);
+        if (Application.Current.MainWindow is MainWindow main)
+            main.ApplyAuroraSetting();
     }
 
     // ---------- 按游戏自动应用 ----------

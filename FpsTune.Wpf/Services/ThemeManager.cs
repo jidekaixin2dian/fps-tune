@@ -42,11 +42,12 @@ public static class ThemeManager
         var t = resolved == "light" ? LightPalette : DarkPalette;
 
         SetBrush("AppBackgroundBrush", t.AppBackground);
-        SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, 0xB4));
-        SetBrush("SurfaceBrush", t.Surface);
-        SetBrush("SurfaceAltBrush", t.SurfaceAlt);
-        SetBrush("ElevatedBrush", t.Elevated);
-        SetBrush("InputBackgroundBrush", t.Input);
+        // 保留足够不透明度保证文字可读, 同时让整窗极光能够穿透各层表面。
+        SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, resolved == "light" ? (byte)0xC6 : (byte)0xA0));
+        SetBrush("SurfaceBrush", WithAlpha(t.Surface, resolved == "light" ? (byte)0xEA : (byte)0xD9));
+        SetBrush("SurfaceAltBrush", WithAlpha(t.SurfaceAlt, resolved == "light" ? (byte)0xEE : (byte)0xDF));
+        SetBrush("ElevatedBrush", WithAlpha(t.Elevated, resolved == "light" ? (byte)0xF0 : (byte)0xE5));
+        SetBrush("InputBackgroundBrush", WithAlpha(t.Input, resolved == "light" ? (byte)0xED : (byte)0xE2));
         SetBrush("BorderBrush", t.Border);
         SetBrush("BorderHoverBrush", t.BorderHover);
         // 窗口外框专用: 比卡片边框深一档, 保证圆角描边在两种主题下都清晰可辨
@@ -64,7 +65,7 @@ public static class ThemeManager
         ApplyBackdrop(resolved);
     }
 
-    // 页面底色: 顶部带蓝调的垂直渐变。极光柔光在主窗口的独立层(AuroraLayer),
+    // 页面底色只提供基础对比; 极光由主窗口的三层固定渐变覆盖,
     // 不放进页面背景——否则会随页面滑入动画平移, 且侧栏区域出现"无光割裂"。
     private static void ApplyBackdrop(string resolved)
     {
@@ -72,14 +73,13 @@ public static class ThemeManager
         if (app is null)
             return;
 
-        bool aurora = SettingsService.Current.AuroraEnabled;
+        bool auroraEnabled = SettingsService.Current.AuroraEnabled;
 
         LinearGradientBrush backdrop;
-        RadialGradientBrush? glow = null;
         if (resolved == "light")
         {
             // 浅色主题的氛围要"看得见"：底色带明确蓝调（顶部更深、往下渐浅）；
-            // 卡片保持纯白，靠色差与投影形成层次。
+            // 表面保留高不透明度，靠少量冷色透光与投影形成层次。
             backdrop = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
@@ -91,11 +91,6 @@ public static class ThemeManager
                     new GradientStop(Parse("#E9EEF7"), 1)
                 }
             };
-            if (aurora)
-            {
-                // 加强版: v1.1.5 原参数为 0x22, 几乎不可感知
-                glow = Radial(Color.FromArgb(0x4A, 0x4F, 0x46, 0xE5));
-            }
         }
         else
         {
@@ -110,16 +105,11 @@ public static class ThemeManager
                     new GradientStop(Parse("#0A0D12"), 1)
                 }
             };
-            if (aurora)
-            {
-                // 加强版: v1.1.5 原参数为 0x30
-                glow = Radial(Color.FromArgb(0x55, 0x4D, 0xA3, 0xFF));
-            }
         }
 
         backdrop.Freeze();
-        glow?.Freeze();
-        CurrentGlowBrush = glow;
+        var layers = auroraEnabled ? BuildAurora(resolved) : null;
+        CurrentAuroraBrushes = layers;
 
         // 卡片阴影: 低配模式整体关闭(阴影是 WPF 里最贵的视觉), 收敛后的尺寸
         // 保证不超出 24px 页边距、不会被窗口圆角裁切成"断裂"
@@ -140,8 +130,8 @@ public static class ThemeManager
         app.Resources["AppBackgroundBrush"] = TransparentBrush();
     }
 
-    /// <summary>当前主题的极光刷子; 氛围光关闭时为 null。主窗口的极光层使用。</summary>
-    public static RadialGradientBrush? CurrentGlowBrush { get; private set; }
+    /// <summary>当前主题的三层整窗极光刷子; 光场关闭时为 null。</summary>
+    internal static AuroraBrushSet? CurrentAuroraBrushes { get; private set; }
 
     private static Brush TransparentBrush()
     {
@@ -153,23 +143,65 @@ public static class ThemeManager
     private static Color WithAlpha(Color color, byte alpha) =>
         Color.FromArgb(alpha, color.R, color.G, color.B);
 
-    /// <summary>顶部中央的极光柔光: 中心在页面上缘、向四周渐隐。</summary>
-    private static RadialGradientBrush Radial(Color centerColor)
+    private static AuroraBrushSet BuildAurora(string resolved)
+    {
+        if (resolved == "light")
+        {
+            return new AuroraBrushSet(
+                Radial(new Point(0.48, 0.02), 0.92, 0.8,
+                    Color.FromArgb(0x3A, 0x4F, 0x5D, 0xF5),
+                    Color.FromArgb(0x16, 0x3E, 0x5C, 0xB8)),
+                Radial(new Point(1.02, 0.42), 0.78, 0.9,
+                    Color.FromArgb(0x28, 0x28, 0xB9, 0xC7),
+                    Color.FromArgb(0x10, 0x2D, 0x7F, 0xA8)),
+                Radial(new Point(0.42, 1.08), 0.94, 0.64,
+                    Color.FromArgb(0x22, 0x3A, 0x7E, 0xAC),
+                    Color.FromArgb(0x0C, 0x2B, 0x58, 0x80)));
+        }
+
+        return new AuroraBrushSet(
+            Radial(new Point(0.48, 0.02), 0.92, 0.8,
+                Color.FromArgb(0x70, 0x5A, 0x5B, 0xFF),
+                Color.FromArgb(0x2E, 0x52, 0x6F, 0xB8)),
+            Radial(new Point(1.02, 0.42), 0.78, 0.9,
+                Color.FromArgb(0x49, 0x38, 0xD6, 0xD8),
+                Color.FromArgb(0x1E, 0x2F, 0x9C, 0xB5)),
+            Radial(new Point(0.42, 1.08), 0.94, 0.64,
+                Color.FromArgb(0x38, 0x5D, 0x70, 0xBE),
+                Color.FromArgb(0x18, 0x2E, 0x61, 0x90)));
+    }
+
+    private static RadialGradientBrush Radial(Point center, double radiusX, double radiusY, Color centerColor, Color midColor)
     {
         var brush = new RadialGradientBrush
         {
-            Center = new Point(0.5, 0.02),
-            GradientOrigin = new Point(0.5, 0.02),
-            RadiusX = 0.85,
-            RadiusY = 0.65,
+            Center = center,
+            GradientOrigin = center,
+            RadiusX = radiusX,
+            RadiusY = radiusY,
             GradientStops =
             {
                 new GradientStop(centerColor, 0),
-                new GradientStop(Color.FromArgb(0x00, centerColor.R, centerColor.G, centerColor.B), 1)
+                new GradientStop(midColor, 0.54),
+                new GradientStop(Color.FromArgb(0x00, midColor.R, midColor.G, midColor.B), 1)
             }
         };
         brush.Freeze();
         return brush;
+    }
+
+    internal sealed class AuroraBrushSet
+    {
+        public RadialGradientBrush Main { get; }
+        public RadialGradientBrush Side { get; }
+        public RadialGradientBrush Reflection { get; }
+
+        public AuroraBrushSet(RadialGradientBrush main, RadialGradientBrush side, RadialGradientBrush reflection)
+        {
+            Main = main;
+            Side = side;
+            Reflection = reflection;
+        }
     }
 
     private static void SetBrush(string key, Color target)

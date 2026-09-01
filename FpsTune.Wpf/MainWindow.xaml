@@ -47,17 +47,33 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- 极光层: 窗口级固定背景, 盖满全窗(含侧栏), 页面在其上滑动 -->
-            <Border x:Name="AuroraLayer"
-                    Grid.Row="0" Grid.RowSpan="2"
-                    IsHitTestVisible="False">
-                <Border.Background>
-                    <RadialGradientBrush Center="0.5,0" GradientOrigin="0.5,0" RadiusX="0.75" RadiusY="0.72">
-                        <GradientStop Color="#554DA3FF" Offset="0"/>
-                        <GradientStop Color="#004DA3FF" Offset="1"/>
-                    </RadialGradientBrush>
-                </Border.Background>
-            </Border>
+            <!-- 极光层: 三组全窗渐变叠加在基础底色之上, 覆盖标题栏、侧栏与页面。 -->
+            <Grid x:Name="AuroraLayer"
+                  Grid.Row="0" Grid.RowSpan="2"
+                  IsHitTestVisible="False"
+                  ClipToBounds="True">
+                <!-- 蓝紫主光: 从上缘向内容区缓慢漂移。 -->
+                <Border x:Name="AuroraMainLayer"
+                        Opacity="0.9">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="AuroraMainTransform"/>
+                    </Border.RenderTransform>
+                </Border>
+                <!-- 青色侧光: 从右侧斜向扫过, 保持低饱和避免抢文字层级。 -->
+                <Border x:Name="AuroraSideLayer"
+                        Opacity="0.78">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="AuroraSideTransform"/>
+                    </Border.RenderTransform>
+                </Border>
+                <!-- 底部反射光: 很轻的冷色回光, 让整窗而非顶部单点有层次。 -->
+                <Border x:Name="AuroraReflectionLayer"
+                        Opacity="0.68">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="AuroraReflectionTransform"/>
+                    </Border.RenderTransform>
+                </Border>
+            </Grid>
 
             <!-- 标题栏 -->
             <Grid Grid.Row="0" Background="{DynamicResource SidebarBackgroundBrush}">

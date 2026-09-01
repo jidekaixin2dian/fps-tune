@@ -20,7 +20,7 @@ public sealed class AppSettings
     public bool HotkeyEnabled { get; set; } = true;
     public bool NotifyOnComplete { get; set; } = true;
 
-    // 界面氛围: 顶部极光柔光（加强版参数），默认开
+    // 界面氛围: 整窗三层极光光场，默认开
     public bool AuroraEnabled { get; set; } = true;
 
     // 低配模式: 减弱动效与阴影、拉长采样间隔

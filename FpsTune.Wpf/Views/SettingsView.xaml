@@ -24,7 +24,7 @@
                     </StackPanel>
                     <CheckBox x:Name="AuroraCheck"
                               Style="{StaticResource ToggleSwitchStyle}"
-                              Content="顶部氛围光（页面顶部的极光柔光）"
+                              Content="整窗极光光场（覆盖页面与侧栏的多层渐变）"
                               Margin="0,8,0,0"/>
                     <CheckBox x:Name="LowSpecCheck"
                               Style="{StaticResource ToggleSwitchStyle}"
