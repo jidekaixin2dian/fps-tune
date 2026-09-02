@@ -1,4 +1,4 @@
-# Build final release: single-file EXE + green folder + portable zip.
+﻿# Build final release: single-file EXE + green folder + portable zip.
 #
 # This script is a post-commit release gate. It deliberately refuses a dirty
 # tracked tree and embeds the SHA of the HEAD it actually builds. A build made
