@@ -12,25 +12,29 @@ namespace FpsTune.Wpf.Services;
 public static class SessionExporter
 {
     public static void ExportJson(PerformanceSession session, string path)
-        => File.WriteAllText(path, BuildJson(session), new UTF8Encoding(false));
+        => AtomicFile.WriteAllText(path, BuildJson(session), new UTF8Encoding(false));
 
     public static void ExportCsv(PerformanceSession session, string path)
-        => File.WriteAllText(path, BuildCsv(session), new UTF8Encoding(true)); // BOM：便于 Excel 直接打开
+        => AtomicFile.WriteAllText(path, BuildCsv(session), new UTF8Encoding(true)); // BOM：便于 Excel 直接打开
 
     public static string BuildJson(PerformanceSession session)
     {
+        // 会话名称是用户输入，可能主动包含机器路径或用户名；导出时也按
+        // 诊断包同一规则脱敏，避免“本地导出不含隐私”的承诺被名称绕过。
+        var exportSession = session with { Name = PrivacyScrub.Sanitize(session.Name) };
         var payload = new
         {
             export = "fpstune-performance-session",
-            schemaVersion = PerformanceSessionStore.CurrentSchemaVersion,
+            schemaVersion = session.SchemaVersion,
             units = new
             {
                 cpuPct = "百分比 0-100，null = 不可用",
                 memPct = "百分比 0-100，null = 不可用",
                 gpuPct = "百分比 0-100，null = 不可用",
-                vramUsedMib = "MiB，null = 不可用"
+                vramUsedMib = "MiB，null = 不可用",
+                vramTotalMib = "MiB，null = 未能可靠取得"
             },
-            session = session
+            session = exportSession
         };
         return JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
     }
@@ -41,8 +45,8 @@ public static class SessionExporter
         sb.AppendLine("schema_version,timestamp_iso,cpu_pct,mem_pct,gpu_pct,vram_used_mib");
         foreach (var s in session.Samples)
         {
-            sb.Append(PerformanceSessionStore.CurrentSchemaVersion).Append(',')
-              .Append(s.T.ToString("O"))
+            sb.Append(session.SchemaVersion).Append(',')
+              .Append(s.T.ToString("O", CultureInfo.InvariantCulture))
               .Append(',').Append(Fmt(s.CpuPct))
               .Append(',').Append(Fmt(s.MemPct))
               .Append(',').Append(Fmt(s.GpuPct))

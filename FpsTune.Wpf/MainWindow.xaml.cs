@@ -78,6 +78,13 @@ public partial class MainWindow : Window
 
         StateChanged += OnStateChanged;
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
+        Closing += (_, _) =>
+        {
+            // 只取消本窗口 A/B 页面启动的脚本；PowerShellRunner 会结束其子进程树，
+            // 不按名称影响正式安装版或其他用户进程。RunningStep 留在磁盘时可在下次启动恢复。
+            if (_pageCache.TryGetValue("ab", out var page) && page is AbExperimentView ab)
+                ab.CancelPendingRun();
+        };
         Closed += (_, _) =>
         {
             TrayService.Dispose();

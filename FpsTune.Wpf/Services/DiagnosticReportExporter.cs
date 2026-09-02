@@ -18,7 +18,12 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class DiagnosticReportExporter
 {
-    private static string BaseDir => Path.Combine(
+    // 测试可注入；生产代码保持默认目录。
+    internal static string? BaseDirOverride { get; set; }
+    internal static Func<ExperimentWizardState>? ExperimentWizardLoaderOverride { get; set; }
+    internal static Func<string, FileAttributes>? FileMetadataProbeOverride { get; set; }
+
+    private static string BaseDir => BaseDirOverride ?? Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
 
     public static string? Export()
@@ -33,37 +38,61 @@ public static class DiagnosticReportExporter
             return null;
 
         var target = dlg.FileName;
-        var stagingDir = Path.Combine(Path.GetTempPath(), "fpstune-diag-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            return ExportTo(target);
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning("导出诊断报告", "导出失败，主程序不受影响：\n" + PrivacyScrub.Sanitize(ex.Message));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// 将报告先写入目标所在目录下的随机临时目录，再在同一卷内原子替换目标。
+    /// 这样跨卷移动不会把导出降级成复制/删除，也不会在替换失败时丢失旧报告。
+    /// </summary>
+    internal static string ExportTo(string target)
+    {
+        if (string.IsNullOrWhiteSpace(target))
+            throw new ArgumentException("导出目标不能为空。", nameof(target));
+
+        var fullTarget = Path.GetFullPath(target);
+        var targetDir = Path.GetDirectoryName(fullTarget);
+        if (string.IsNullOrWhiteSpace(targetDir))
+            throw new InvalidOperationException("无法确定导出目标目录。");
+
+        Directory.CreateDirectory(targetDir);
+        var stagingDir = Path.Combine(targetDir, ".fpstune-diag-" + Guid.NewGuid().ToString("N"));
         try
         {
             Directory.CreateDirectory(stagingDir);
             var stagingZip = Path.Combine(stagingDir, "report.zip");
-            using (var fs = new FileStream(stagingZip, FileMode.CreateNew))
+            using (var fs = new FileStream(stagingZip, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
             using (var zip = new ZipArchive(fs, ZipArchiveMode.Create))
             {
+                var inputStatuses = new List<object>();
                 AddMarkdownSummary(zip);
                 AddReportJson(zip);
-                AddIfExists(zip, Path.Combine(BaseDir, "last-detect.json"), "detect.json");
                 AddSanitizedSettings(zip);
-                AddIfExists(zip, Path.Combine(BaseDir, "experiment", "state.json"), "experiment/state.json");
-                AddIfExists(zip, Path.Combine(BaseDir, "experiment", "history.jsonl"), "experiment/history.jsonl");
-                AddIfExists(zip, Path.Combine(BaseDir, "experiment", "wizard.json"), "experiment/wizard.json");
+                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "last-detect.json"), "last-detect.json", inputStatuses);
+                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "state.json"), "experiment/state.json", inputStatuses);
+                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "history.jsonl"), "experiment/history.jsonl", inputStatuses);
+                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "wizard.json"), "experiment/wizard.json", inputStatuses);
+                AddText(zip, "diagnostic-input-status.json", JsonSerializer.Serialize(new
+                {
+                    status = "complete",
+                    files = inputStatuses
+                }, new JsonSerializerOptions { WriteIndented = true }));
                 AddSessionsSummary(zip);
                 AddAutoProfileEvents(zip);
                 AddErrorLogTail(zip);
                 AddBackupManifest(zip);
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            if (File.Exists(target))
-                File.Delete(target);
-            File.Move(stagingZip, target);
-            return target;
-        }
-        catch (Exception ex)
-        {
-            DialogService.Warning("导出诊断报告", "导出失败，主程序不受影响：\n" + ex.Message);
-            return null;
+            MoveArchiveAtomically(stagingZip, fullTarget);
+            return fullTarget;
         }
         finally
         {
@@ -77,6 +106,15 @@ public static class DiagnosticReportExporter
                 // 临时目录清理失败不影响导出结果
             }
         }
+    }
+
+    /// <summary>同目录内使用原子替换；目标不存在时用同卷 Move，绝不先删除旧文件。</summary>
+    internal static void MoveArchiveAtomically(string stagingZip, string target)
+    {
+        if (File.Exists(target))
+            File.Replace(stagingZip, target, destinationBackupFileName: null, ignoreMetadataErrors: true);
+        else
+            File.Move(stagingZip, target);
     }
 
     // ---------- report.json（机器可读） ----------
@@ -115,7 +153,11 @@ public static class DiagnosticReportExporter
                 sessions = TryGet(() => SessionsSnapshot()),
                 experiment = TryGet(() => new
                 {
-                    wizard = ExperimentWizardStore.Load(),
+                    // LastRawOutput can contain arbitrary script output (up to
+                    // 256 KiB), so report.json uses an explicit diagnostic
+                    // projection instead of serializing the whole state.
+                    wizard = ProjectWizardForDiagnostic(
+                        ExperimentWizardLoaderOverride?.Invoke() ?? ExperimentWizardStore.Load()),
                     historyRuns = ExperimentHistory.Load().Count
                 }),
                 autoProfile = TryGet(() => new
@@ -136,7 +178,8 @@ public static class DiagnosticReportExporter
                     SettingsService.Current.AuroraEnabled,
                     SettingsService.Current.LowSpecMode,
                     SettingsService.Current.AutoProfileEnabled,
-                    gamePath = StateStore.LoadGamePath()
+                    // 路径字段显式脱敏；AddText 仍作为新增字段的最后一道防线。
+                    gamePath = PrivacyScrub.Sanitize(StateStore.LoadGamePath() ?? "")
                 }),
                 notes = new[]
                 {
@@ -160,6 +203,45 @@ public static class DiagnosticReportExporter
             }));
         }
     }
+
+    private static object ProjectWizardForDiagnostic(ExperimentWizardState wizard)
+        => new
+        {
+            wizard.SchemaVersion,
+            wizard.BaselineDone,
+            wizard.BaselineStable,
+            wizard.BaselineAvgFps,
+            wizard.BaselineP1Low,
+            wizard.BaselineCv,
+            wizard.BaselineSessionId,
+            wizard.BaselineAt,
+            Groups = (wizard.Groups ?? [])
+                .Where(g => g is not null)
+                .Select(g => new
+                {
+                    g.GroupId,
+                    g.Keep,
+                    g.Reverted,
+                    g.Reason,
+                    g.AvgFps,
+                    g.P1Low,
+                    g.SessionId,
+                    g.Simulated,
+                    g.CompletedAt
+                })
+                .ToList(),
+            wizard.ReportGenerated,
+            wizard.ReportAt,
+            wizard.RunningStep,
+            wizard.RunningSince,
+            wizard.LastError,
+            wizard.LastErrorAt,
+            wizard.LastErrorStep,
+            CompletedSteps = wizard.CompletedSteps.ToArray(),
+            wizard.NextStep,
+            wizard.CurrentStep,
+            rawOutputOmitted = true
+        };
 
     /// <summary>会话摘要（最近 5 条）与失败原因。</summary>
     private static object SessionsSnapshot()
@@ -528,23 +610,48 @@ public static class DiagnosticReportExporter
         }
     }
 
-    private static void AddIfExists(ZipArchive zip, string path, string entryName)
+    private static void AddPrivacyMinimizedStatus(
+        string path,
+        string sourceName,
+        ICollection<object> statuses)
     {
         try
         {
-            if (File.Exists(path))
-                zip.CreateEntryFromFile(path, entryName, CompressionLevel.Optimal);
+            // File.Exists suppresses access/metadata errors and would turn an
+            // unreadable source into a misleading "missing" status. Attributes
+            // is a metadata-only query that preserves those exceptions.
+            _ = (FileMetadataProbeOverride?.Invoke(path) ?? File.GetAttributes(path));
+            statuses.Add(new { source = sourceName, status = "source-present-but-omitted-by-privacy" });
         }
-        catch
+        catch (Exception ex)
         {
-            // 单个文件读取失败不阻塞整个报告
+            var status = ClassifyPrivacyMetadataException(ex);
+            if (status == "source-missing")
+            {
+                statuses.Add(new { source = sourceName, status });
+            }
+            else
+            {
+                statuses.Add(new
+                {
+                    source = sourceName,
+                    status,
+                    message = PrivacyScrub.Sanitize(ex.Message)
+                });
+            }
         }
     }
+
+    internal static string ClassifyPrivacyMetadataException(Exception ex)
+        => ex is FileNotFoundException or DirectoryNotFoundException
+            ? "source-missing"
+            : "metadata-check-failed";
 
     private static void AddText(ZipArchive zip, string entryName, string content)
     {
         var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
         using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
-        writer.Write(content);
+        // 统一兜底脱敏，避免新增摘要字段或异常分支忘记单独调用 PrivacyScrub。
+        writer.Write(PrivacyScrub.Sanitize(content));
     }
 }

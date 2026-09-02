@@ -22,12 +22,19 @@
                 <TextBlock Text="向导式实验：先采基线，再依次测试三个候选组，每步可关联一次性能会话，结论只来自实际采样"
                            Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
             </StackPanel>
-            <Button x:Name="OpenDirButton"
-                    Content="打开实验目录"
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    MinWidth="130"
-                    Click="OpenDirButton_Click"/>
+             <Button x:Name="OpenDirButton"
+                     Content="打开实验目录"
+                     Style="{StaticResource SecondaryButtonStyle}"
+                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                     MinWidth="130"
+                     Click="OpenDirButton_Click"/>
+             <Button x:Name="CancelRunButton"
+                     Content="取消当前步骤"
+                     Style="{StaticResource GhostButtonStyle}"
+                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                     MinWidth="110" Margin="0,0,142,0"
+                     IsEnabled="False"
+                     Click="CancelRunButton_Click"/>
         </Grid>
 
         <!-- 向导步骤 -->
@@ -83,9 +90,10 @@
                                             <ComboBox ItemsSource="{Binding SessionOptions}"
                                                       SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
                                                       DisplayMemberPath="Label"
-                                                      Style="{StaticResource SelectComboBoxStyle}"
-                                                      MinHeight="28" MinWidth="220" Margin="4,0,0,0"
-                                                      SelectionChanged="StepSession_SelectionChanged"
+                                             Style="{StaticResource SelectComboBoxStyle}"
+                                             MinHeight="28" MinWidth="220" Margin="4,0,0,0"
+                                                       IsEnabled="{Binding CanEditSession}"
+                                                       SelectionChanged="StepSession_SelectionChanged"
                                                       Tag="{Binding}"/>
                                         </StackPanel>
                                     </StackPanel>

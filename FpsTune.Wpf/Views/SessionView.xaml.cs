@@ -159,7 +159,14 @@ public partial class SessionView : UserControl
             DialogService.Warning("性能会话", "会话名称包含不能用于文件的字符，请修改后重试。");
             return;
         }
-        Service.Start(name);
+        if (!Service.Start(name))
+        {
+            DialogService.Warning(
+                "性能会话",
+                "另一个 FpsTune 实例正在使用性能会话，或上次中断会话尚未处理。请先关闭该实例或恢复/清理上次会话后重试。");
+            RefreshControlState();
+            return;
+        }
         UpdateTiles(null);
         DrawCharts();
     }
@@ -180,8 +187,18 @@ public partial class SessionView : UserControl
             return;
         if (!DialogService.Confirm("取消会话", "确定取消当前会话？已采集的数据将被丢弃。", danger: true, confirmText: "取消会话"))
             return;
-        Service.Cancel();
-        RefreshAll();
+        try
+        {
+            Service.Cancel();
+            RefreshAll();
+        }
+        catch (Exception ex)
+        {
+            RefreshAll();
+            DialogService.Warning(
+                "取消失败",
+                "未能安全写入取消标记，会话快照仍保留，未将本次会话视为已取消。请重试或先检查本地磁盘。\n\n" + ex.Message);
+        }
     }
 
     // ---------- 历史 / 导出 / 删除 ----------

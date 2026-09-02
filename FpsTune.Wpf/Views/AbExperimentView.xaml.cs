@@ -21,6 +21,8 @@ public partial class AbExperimentView : UserControl
     private readonly string _tuningPath;
     private ExperimentWizardState _wizard = new();
     private bool _running;
+    private bool _cancelRequested;
+    private CancellationTokenSource? _runCancellation;
 
     public AbExperimentView()
     {
@@ -33,9 +35,19 @@ public partial class AbExperimentView : UserControl
 
     private void ReloadWizard()
     {
+        // 页面切换不会取消正在运行的脚本；不能在同一实例回到页面时把
+        // 持久化的 RunningStep 当成“上次中断”，否则 UI 会与实际运行脱节。
+        if (_running)
+        {
+            RebuildWizardUi();
+            return;
+        }
         _wizard = ExperimentWizardStore.Load();
         RebuildWizardUi();
         RefreshHistory();
+        RawBox.Text = string.IsNullOrWhiteSpace(_wizard.LastRawOutput)
+            ? "等待采样..."
+            : _wizard.LastRawOutput;
         ShowStateMessage();
     }
 
@@ -43,8 +55,11 @@ public partial class AbExperimentView : UserControl
     {
         if (_running)
             return;
-        if (_wizard.LastError is { } err)
-            StatusText.Text = "上次出现问题：" + err + " 可重试失败步骤。";
+        if (_wizard.IsFutureSchema)
+            StatusText.Text = _wizard.CompatibilityError;
+        else if (_wizard.LastError is { } err)
+            StatusText.Text = "上次出现问题：" + err
+                + (_wizard.LastErrorStep is { } failed ? $" 可重试：{WizardSteps.DisplayName(failed)}。" : " 可重试对应步骤。");
         else if (!_wizard.BaselineDone)
             StatusText.Text = "就绪。从第 1 步基线采样开始；-Simulate 模式可在无游戏时安全验证流程。";
         else if (_wizard.Groups.Count < WizardSteps.Groups.Length)
@@ -67,7 +82,8 @@ public partial class AbExperimentView : UserControl
         string RunLabel,
         bool CanRun,
         List<WizardSessionOption> SessionOptions,
-        WizardSessionOption? SelectedSession);
+        WizardSessionOption? SelectedSession,
+        bool CanEditSession);
 
     private void RebuildWizardUi()
     {
@@ -75,10 +91,14 @@ public partial class AbExperimentView : UserControl
         var steps = new List<WizardStepVm>();
 
         var baselineLevel = _wizard.BaselineDone ? (_wizard.BaselineStable ? "done" : "reverted") : "";
+        if (_wizard.RunningStep == WizardSteps.Baseline)
+            baselineLevel = "running";
         steps.Add(new WizardStepVm(
             WizardSteps.Baseline,
             "1 · 基线采样",
-            _wizard.BaselineDone
+            _wizard.RunningStep == WizardSteps.Baseline
+                ? "运行中"
+                : _wizard.BaselineDone
                 ? $"完成（平均 {_wizard.BaselineAvgFps:0.#} FPS，CV {_wizard.BaselineCv:0.###}{(_wizard.BaselineStable ? "" : "，不稳定")}）"
                 : "待运行",
             baselineLevel,
@@ -86,39 +106,52 @@ public partial class AbExperimentView : UserControl
                 ? $"1% low {_wizard.BaselineP1Low:0.#} · {_wizard.BaselineAt:yy-MM-dd HH:mm}。基线稳定后才能测试候选组。"
                 : "3 次采样求均值与稳定性（CV）。重复运行会覆盖当前基线。",
             _wizard.BaselineDone ? "重新采样" : "开始采样",
-            !_running,
+            !_running && !_wizard.IsFutureSchema,
             options,
-            FindSessionOption(options, _wizard.BaselineSessionId)));
+            FindSessionOption(options, _wizard.BaselineSessionId),
+            !_running && !_wizard.IsFutureSchema));
 
         foreach (var group in WizardSteps.Groups)
         {
             var result = _wizard.GroupResult(group);
             var blocked = ExperimentWizard.CanRunStep(_wizard, group);
+            var isRunning = _wizard.RunningStep == group;
             steps.Add(new WizardStepVm(
                 group,
                 $"{2 + Array.IndexOf(WizardSteps.Groups, group)} · {WizardSteps.DisplayName(group)}",
-                result is null ? (blocked is null ? "待运行" : "未解锁") : result.Keep == true ? "完成：保留" : "完成：已还原",
-                result is null ? "" : result.Keep == true ? "done" : "reverted",
-                result is null
+                isRunning
+                    ? "运行中"
+                    : result is null ? (blocked is null ? "待运行" : "未解锁") : result.Keep == true ? "完成：保留" : "完成：已还原",
+                isRunning ? "running" : result is null ? "" : result.Keep == true ? "done" : "reverted",
+                isRunning
+                    ? "脚本正在执行，请保持游戏场景固定；可取消并在结果未知时检查后重试。"
+                    : result is null
                     ? (blocked is not null ? blocked : "应用候选组 → 采样 → 自动判定 keep / revert。")
                     : $"{result.Reason}（平均 {result.AvgFps:0.#} FPS · 1% low {result.P1Low:0.#} · {result.CompletedAt:yy-MM-dd HH:mm}{(result.Simulated ? " · 模拟" : "")}）",
-                "运行",
-                !_running && blocked is null,
+                isRunning ? "运行中" : "运行",
+                !_running && !_wizard.IsFutureSchema && blocked is null,
                 options,
-                FindSessionOption(options, result?.SessionId)));
+                FindSessionOption(options, result?.SessionId),
+                !_running && !_wizard.IsFutureSchema));
         }
 
         var reportBlocked = ExperimentWizard.CanRunStep(_wizard, WizardSteps.Report);
+        var reportRunning = _wizard.RunningStep == WizardSteps.Report;
         steps.Add(new WizardStepVm(
             WizardSteps.Report,
             "5 · 生成报告",
-            _wizard.ReportGenerated ? $"已生成（{_wizard.ReportAt:yy-MM-dd HH:mm}）" : "待运行",
-            _wizard.ReportGenerated ? "done" : "",
-            "汇总基线与各候选组结论，写入实验目录 report-latest.md；关联会话的摘要一并写入。",
-            "生成报告",
+            reportRunning ? "运行中" : _wizard.ReportGenerated ? $"已生成（{_wizard.ReportAt:yy-MM-dd HH:mm}）" : reportBlocked is null ? "待运行" : "未解锁",
+            reportRunning ? "running" : _wizard.ReportGenerated ? "done" : "",
+            reportRunning
+                ? "正在合成脚本原始指标与会话摘要；可取消并在结果未知时重试。"
+                : reportBlocked is null
+                    ? "汇总基线与各候选组结论，写入实验目录 report-latest.md；关联会话的摘要一并写入。"
+                    : reportBlocked,
+            reportRunning ? "运行中" : "生成报告",
             !_running && reportBlocked is null,
             options,
-            null));
+            FindSessionOption(options, null),
+            false));
 
         WizardStepsList.ItemsSource = steps;
     }
@@ -132,15 +165,21 @@ public partial class AbExperimentView : UserControl
     }
 
     private static WizardSessionOption? FindSessionOption(List<WizardSessionOption> options, string? sessionId)
-        => sessionId is null ? null : options.FirstOrDefault(o => o.Id == sessionId) is { } hit ? hit : null;
+        => sessionId is null
+            ? options.FirstOrDefault()
+            : options.FirstOrDefault(o => o.Id == sessionId);
 
     // ---------- 步骤交互 ----------
 
     private void StepSession_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (sender is not ComboBox { Tag: WizardStepVm vm } || vm.SelectedSession is null)
+        if (sender is not ComboBox combo || combo.Tag is not WizardStepVm vm)
             return;
-        var sessionId = vm.SelectedSession.Id;
+        if (_wizard.IsFutureSchema)
+            return;
+        // WizardStepVm 是不可变 record，不能依赖 SelectedItem 双向写回其 init 属性；
+        // 直接读取控件当前选择，才能正确保存“取消关联”（null）。
+        var sessionId = (combo.SelectedItem as WizardSessionOption)?.Id;
         if (vm.Step == WizardSteps.Baseline)
         {
             if (_wizard.BaselineSessionId == sessionId)
@@ -158,7 +197,38 @@ public partial class AbExperimentView : UserControl
         {
             return;
         }
-        ExperimentWizardStore.Save(_wizard);
+        SaveWizardState();
+        RebuildWizardUi();
+    }
+
+    private bool SaveWizardState()
+    {
+        if (_wizard.IsFutureSchema)
+        {
+            StatusText.Text = _wizard.CompatibilityError;
+            return false;
+        }
+        if (ExperimentWizardStore.TrySave(_wizard, out var error))
+            return true;
+        StatusText.Text = "向导状态保存失败：" + error + "。本次结果未被可靠记录，请先解决权限/磁盘问题后重试。";
+        return false;
+    }
+
+    private void CancelRunButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_running || _runCancellation is null)
+            return;
+        _cancelRequested = true;
+        CancelRunButton.IsEnabled = false;
+        StatusText.Text = "正在取消当前步骤……将停止脚本，当前结果不会形成结论。";
+        _runCancellation.Cancel();
+    }
+
+    /// <summary>主窗口关闭时停止本页启动的脚本；不会按模糊进程名影响其他程序。</summary>
+    public void CancelPendingRun()
+    {
+        if (_running)
+            _runCancellation?.Cancel();
     }
 
     private async void WizardStepRun_Click(object sender, RoutedEventArgs e)
@@ -176,9 +246,21 @@ public partial class AbExperimentView : UserControl
         }
 
         _running = true;
+        _cancelRequested = false;
+        using var cancellation = new CancellationTokenSource();
+        _runCancellation = cancellation;
+        CancelRunButton.IsEnabled = true;
         var sessionId = vm.SelectedSession?.Id;
         _wizard = ExperimentWizard.WithRunning(_wizard, vm.Step);
-        ExperimentWizardStore.Save(_wizard);
+        if (!SaveWizardState())
+        {
+            _wizard = ExperimentWizard.WithError(_wizard, vm.Step, "向导状态无法保存，步骤尚未启动。请解决权限/磁盘问题后重试。");
+            _running = false;
+            _runCancellation = null;
+            CancelRunButton.IsEnabled = false;
+            RebuildWizardUi();
+            return;
+        }
         RebuildWizardUi();
         StatusText.Text = $"正在运行：{WizardSteps.DisplayName(vm.Step)}……运行期间步骤按钮已禁用，请保持游戏场景固定。";
         RawBox.Text = "正在运行： " + WizardSteps.DisplayName(vm.Step);
@@ -196,23 +278,36 @@ public partial class AbExperimentView : UserControl
             if (Environment.ProcessPath is { } exePath)
                 args = args.Concat(["-EngineExe", exePath]).ToArray();
 
-            var result = await PowerShellRunner.RunAsync(_tuningPath, args);
+            var result = await PowerShellRunner.RunAsync(_tuningPath, args, cancellation.Token);
             RawBox.Text = result.Success
                 ? result.Output
                 : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
+            _wizard = ExperimentWizard.WithRawOutput(_wizard, RawBox.Text);
 
             ApplyStepResult(vm.Step, result.Success, result.Success ? result.Output : null, sessionId);
+        }
+        catch (OperationCanceledException)
+        {
+            RawBox.Text = "步骤已取消。脚本未完成，结果未知；如果候选组已经应用，请先检查/还原设置，再重试。";
+            _wizard = ExperimentWizard.WithRawOutput(_wizard, RawBox.Text);
+            ApplyStepResult(vm.Step, false, null, sessionId,
+                "用户取消了步骤；脚本已停止，结果未知。请检查候选设置后重试。");
         }
         catch (Exception ex)
         {
             RawBox.Text = ex.ToString();
+            _wizard = ExperimentWizard.WithRawOutput(_wizard, RawBox.Text);
             ApplyStepResult(vm.Step, false, null, sessionId, ex.Message);
         }
         finally
         {
+            _runCancellation = null;
+            CancelRunButton.IsEnabled = false;
             _running = false;
             _wizard = _wizard with { RunningStep = null, RunningSince = null };
-            ExperimentWizardStore.Save(_wizard);
+            if (_cancelRequested && _wizard.LastError is null)
+                _wizard = ExperimentWizard.WithError(_wizard, vm.Step, "用户取消了步骤；结果未知，可重试。");
+            SaveWizardState();
             RebuildWizardUi();
             RefreshHistory();
             ShowStateMessage();
@@ -224,7 +319,8 @@ public partial class AbExperimentView : UserControl
     {
         if (!success)
         {
-            _wizard = ExperimentWizard.WithError(_wizard, $"步骤执行失败{(exceptionMessage is null ? "（脚本返回非零退出码）" : "：" + exceptionMessage)}");
+            _wizard = ExperimentWizard.WithError(_wizard, step,
+                $"步骤执行失败{(exceptionMessage is null ? "（脚本返回非零退出码）" : "：" + exceptionMessage)}");
             StatusText.Text = "执行失败，详见原始输出。可重试该步骤。";
             return;
         }
@@ -236,13 +332,13 @@ public partial class AbExperimentView : UserControl
         }
         catch
         {
-            _wizard = ExperimentWizard.WithError(_wizard, "脚本输出无法解析为 JSON（可能被其他输出污染）。");
+            _wizard = ExperimentWizard.WithError(_wizard, step, "脚本输出无法解析为 JSON（可能被其他输出污染）。");
             StatusText.Text = "输出解析失败，详见原始输出。";
             return;
         }
         if (root is not JsonObject obj)
         {
-            _wizard = ExperimentWizard.WithError(_wizard, "脚本输出不是 JSON 对象。");
+            _wizard = ExperimentWizard.WithError(_wizard, step, "脚本输出不是 JSON 对象。");
             StatusText.Text = "输出解析失败，详见原始输出。";
             return;
         }
@@ -250,7 +346,7 @@ public partial class AbExperimentView : UserControl
         if (obj["ok"]?.GetValue<bool>() == false)
         {
             var error = obj["error"]?.GetValue<string>() ?? "脚本报告失败（未提供原因）";
-            _wizard = ExperimentWizard.WithError(_wizard, error);
+            _wizard = ExperimentWizard.WithError(_wizard, step, error);
             StatusText.Text = "步骤未完成：" + error;
             return;
         }
@@ -259,9 +355,14 @@ public partial class AbExperimentView : UserControl
         if (step == WizardSteps.Baseline && mode == "baseline")
         {
             var summary = obj["baseline"]?["summary"] as JsonObject;
-            var avg = summary?["avgFps"]?.GetValue<double>() ?? double.NaN;
-            var p1 = summary?["p1Low"]?.GetValue<double>() ?? double.NaN;
-            var cv = summary?["cv"]?.GetValue<double>() ?? 1.0;
+            if (!TryReadRequiredMetric(summary, "avgFps", out var avg)
+                || !TryReadRequiredMetric(summary, "p1Low", out var p1)
+                || !TryReadRequiredMetric(summary, "cv", out var cv))
+            {
+                _wizard = ExperimentWizard.WithError(_wizard, step, "脚本基线结果缺少有效指标，未保存为完成状态。");
+                StatusText.Text = "基线结果无效，详见原始输出。";
+                return;
+            }
             var stable = summary?["stable"]?.GetValue<bool>() ?? false;
             _wizard = ExperimentWizard.WithBaseline(_wizard, avg, p1, cv, stable, sessionId);
             SetMetrics(summary);
@@ -272,11 +373,16 @@ public partial class AbExperimentView : UserControl
         else if (WizardSteps.IsGroup(step) && mode == "test")
         {
             var summary = obj["groupSummary"] as JsonObject;
+            if (!TryReadRequiredMetric(summary, "avgFps", out var avg)
+                || !TryReadRequiredMetric(summary, "p1Low", out var p1))
+            {
+                _wizard = ExperimentWizard.WithError(_wizard, step, "脚本候选组结果缺少有效指标，未保存为完成状态。");
+                StatusText.Text = "候选组结果无效，详见原始输出。";
+                return;
+            }
             var keep = obj["keep"]?.GetValue<bool>() == true;
             var reverted = obj["reverted"]?.GetValue<bool>() ?? false;
             var reason = obj["reason"]?.GetValue<string>() ?? "";
-            var avg = summary?["avgFps"]?.GetValue<double>();
-            var p1 = summary?["p1Low"]?.GetValue<double>();
             _wizard = ExperimentWizard.WithGroupResult(_wizard,
                 new WizardGroupResult(step, keep, reverted, reason, avg, p1, sessionId,
                     obj["samplerMode"]?.GetValue<string>() == "simulated", DateTime.Now),
@@ -288,22 +394,54 @@ public partial class AbExperimentView : UserControl
         }
         else if (step == WizardSteps.Report && mode == "report")
         {
+            if (obj["baseline"] is not JsonObject reportBaseline
+                || !TryReadRequiredMetric(reportBaseline, "avgFps", out _)
+                || !TryReadRequiredMetric(reportBaseline, "p1Low", out _)
+                || obj["groups"] is not JsonArray reportGroups
+                || !WizardSteps.Groups.All(id => reportGroups
+                    .OfType<JsonObject>()
+                    .Any(group => string.Equals(group["id"]?.GetValue<string>(), id, StringComparison.Ordinal))) )
+            {
+                _wizard = ExperimentWizard.WithError(_wizard, step, "脚本报告缺少完整基线或候选组指标，未标记为已生成。");
+                StatusText.Text = "报告结果不完整，详见原始输出。";
+                return;
+            }
+            if (!TryComposeReportFile(obj, out var reportError))
+            {
+                _wizard = ExperimentWizard.WithError(_wizard, step, reportError ?? "报告文件写入失败。");
+                StatusText.Text = "报告写入失败，详见原始输出。可重试。";
+                return;
+            }
             _wizard = ExperimentWizard.WithReportGenerated(_wizard);
             SetMetrics(obj["baseline"] as JsonObject);
-            ComposeReportFile(obj);
             DecisionText.Text = "报告已生成";
             StatusText.Text = "报告已生成：实验目录 report-latest.md（含关联会话摘要）。";
         }
         else
         {
-            _wizard = ExperimentWizard.WithError(_wizard, $"脚本返回模式（{mode}）与请求步骤（{step}）不匹配。");
+            _wizard = ExperimentWizard.WithError(_wizard, step, $"脚本返回模式（{mode}）与请求步骤（{step}）不匹配。");
             StatusText.Text = "结果与步骤不匹配，详见原始输出。";
         }
     }
 
-    /// <summary>报告 = 脚本原始指标 + 关联性能会话的摘要，写入 experiment/report-latest.md。</summary>
-    private void ComposeReportFile(JsonObject scriptReport)
+    private static bool TryReadRequiredMetric(JsonObject? summary, string key, out double value)
     {
+        value = 0;
+        try
+        {
+            value = summary?[key]?.GetValue<double>() ?? double.NaN;
+            return double.IsFinite(value);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>报告 = 脚本原始指标 + 关联性能会话的摘要，写入 experiment/report-latest.md。</summary>
+    private bool TryComposeReportFile(JsonObject scriptReport, out string? error)
+    {
+        error = null;
         var sb = new StringBuilder();
         sb.AppendLine("# FPS 帧律 · A/B 实验报告");
         sb.AppendLine();
@@ -362,12 +500,15 @@ public partial class AbExperimentView : UserControl
             var dir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "experiment");
             Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "report-latest.md"), sb.ToString(), new UTF8Encoding(false));
+            AtomicFile.WriteAllText(Path.Combine(dir, "report-latest.md"), sb.ToString(), new UTF8Encoding(false));
             RawBox.Text = sb.ToString() + "\n\n（原始 JSON 输出见脚本；文件已保存 report-latest.md）";
+            return true;
         }
         catch (Exception ex)
         {
-            RawBox.Text = "报告文件写入失败：" + ex.Message + "\n\n" + sb;
+            error = "报告文件写入失败：" + ex.Message;
+            RawBox.Text = error + "\n\n" + sb;
+            return false;
         }
     }
 

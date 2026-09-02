@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Windows.Threading;
 
 namespace FpsTune.Wpf.Services;
@@ -19,6 +20,7 @@ public sealed class PerformanceSessionService : IDisposable
     private DateTime _startedAt;
     private int _sampleCount;
     private int _disposed;
+    private IDisposable? _activeOwner;
 
     public bool IsRunning { get; private set; }
     public string SessionName => _name;
@@ -41,21 +43,47 @@ public sealed class PerformanceSessionService : IDisposable
     /// <summary>运行中已缓冲的样本（只读快照语义，UI 线程使用）。</summary>
     public IReadOnlyList<MetricSample> RunningBuffer => _sampler?.Buffer ?? Array.Empty<MetricSample>();
 
-    public void Start(string name)
+    public bool Start(string name)
     {
         if (Volatile.Read(ref _disposed) != 0)
             throw new ObjectDisposedException(nameof(PerformanceSessionService));
         if (IsRunning)
-            return;
-        _name = string.IsNullOrWhiteSpace(name) ? DefaultSessionName() : name.Trim();
-        _startedAt = DateTime.Now;
-        _sampleCount = 0;
-        _sampler = new MetricsSampler(CurrentInterval, CurrentBufferCapacity);
-        _sampler.Sampled += OnSample;
-        IsRunning = true;
-        _sampler.SampleOnce(); // 立即出第一个样本，界面无需等一个间隔
-        _sampler.Start();
-        StateChanged?.Invoke();
+            return false;
+
+        var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership();
+        if (owner is null)
+            return false;
+        _activeOwner = owner;
+        try
+        {
+            // A leftover active snapshot without a cancellation tombstone is
+            // recoverable data and must never be overwritten by a new session.
+            if (!PerformanceSessionStore.PrepareForNewSession())
+            {
+                ReleaseActiveOwner();
+                return false;
+            }
+
+            _name = string.IsNullOrWhiteSpace(name) ? DefaultSessionName() : name.Trim();
+            _startedAt = DateTime.Now;
+            _sampleCount = 0;
+            _sampler = new MetricsSampler(CurrentInterval, CurrentBufferCapacity);
+            _sampler.Sampled += OnSample;
+            IsRunning = true;
+            _sampler.SampleOnce(); // 立即出第一个样本，界面无需等一个间隔
+            _sampler.Start();
+            StateChanged?.Invoke();
+            return true;
+        }
+        catch
+        {
+            IsRunning = false;
+            _sampler?.Dispose();
+            _sampler = null;
+            LatestSample = null;
+            ReleaseActiveOwner();
+            throw;
+        }
     }
 
     /// <summary>结束会话；save=false 等价取消（丢弃数据）。返回保存或构造出的会话，未保存时返回 null。</summary>
@@ -63,30 +91,104 @@ public sealed class PerformanceSessionService : IDisposable
     {
         if (!IsRunning)
             return null;
-        IsRunning = false;
-        if (_sampler is not null)
+
+        var sampler = _sampler;
+        PerformanceSession? session = null;
+        Exception? failure = null;
+        try
         {
-            _sampler.Sampled -= OnSample;
-            var endedAt = DateTime.Now;
-            var session = ToSession(endedAt);
-            _sampler.Dispose();
+            // Stop the timer before taking the final snapshot. This keeps the
+            // sampler from ticking while persistence is in progress.
+            sampler?.Stop();
+            if (sampler is not null)
+            {
+                sampler.Sampled -= OnSample;
+                session = ToSession(DateTime.Now);
+            }
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+        }
+        finally
+        {
+            // Cleanup is unconditional: a full disk or a malformed callback must
+            // never leave a live DispatcherTimer/event subscription behind.
+            IsRunning = false;
+            sampler?.Dispose();
             _sampler = null;
             LatestSample = null;
-            if (save)
+        }
+
+        if (save && session is not null && failure is null)
+        {
+            var sessionPersisted = false;
+            try
             {
                 PerformanceSessionStore.Save(session);
+                sessionPersisted = true;
                 PerformanceSessionStore.EnforceRetention();
-                PerformanceSessionStore.ClearActiveSnapshot();
+                if (PerformanceSessionStore.HasActiveSnapshot)
+                {
+                    // The historical save is complete, so persist a durable
+                    // "handled" tombstone before attempting active cleanup.
+                    if (!PerformanceSessionStore.MarkActiveSnapshotHandledOwned())
+                        throw new IOException("无法写入会话已处理标记；active 快照仍保留。");
+                    if (PerformanceSessionStore.ClearActiveSnapshotOwned())
+                        PerformanceSessionStore.ClearActiveCancellationOwned();
+                }
+                else
+                {
+                    PerformanceSessionStore.ClearActiveCancellationOwned();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                PerformanceSessionStore.ClearActiveSnapshot();
+                failure = ex;
+                if (!sessionPersisted)
+                {
+                    // Keep a complete fallback snapshot for the next launch when
+                    // the final historical write fails (for example, disk full).
+                    PerformanceSessionStore.SaveActiveSnapshotOwned(session with { Id = "active-snapshot" });
+                }
             }
-            StateChanged?.Invoke();
-            return save ? session : null;
         }
-        StateChanged?.Invoke();
-        return null;
+        else if (!save)
+        {
+            // Write the tombstone before deleting. If deletion fails, the next
+            // process will honor the cancellation and only retry cleanup.
+            if (PerformanceSessionStore.HasActiveSnapshot &&
+                !PerformanceSessionStore.MarkActiveSnapshotCancelledOwned())
+            {
+                failure ??= new IOException("无法写入取消标记；会话未取消，active 快照仍保留。");
+            }
+            else if (PerformanceSessionStore.HasActiveSnapshot &&
+                     PerformanceSessionStore.ClearActiveSnapshotOwned())
+            {
+                PerformanceSessionStore.ClearActiveCancellationOwned();
+            }
+            else if (!PerformanceSessionStore.HasActiveSnapshot)
+            {
+                PerformanceSessionStore.ClearActiveCancellationOwned();
+            }
+        }
+
+        try
+        {
+            StateChanged?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            failure ??= ex;
+        }
+        finally
+        {
+            ReleaseActiveOwner();
+        }
+
+        if (failure is not null)
+            ExceptionDispatchInfo.Capture(failure).Throw();
+        return save ? session : null;
     }
 
     public void Cancel() => Stop(save: false);
@@ -96,9 +198,22 @@ public sealed class PerformanceSessionService : IDisposable
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
             return;
         if (IsRunning)
-            Stop(save: false);
+        {
+            try
+            {
+                Stop(save: false);
+            }
+            catch
+            {
+                // Dispose is used by application shutdown and must not abort
+                // exit. Stop has already released the sampler and owner; when
+                // the durable cancel tombstone failed it deliberately leaves
+                // _active.json in place for the next launch to recover.
+            }
+        }
         _sampler?.Dispose();
         _sampler = null;
+        ReleaseActiveOwner();
     }
 
     private PerformanceSession ToSession(DateTime endedAt)
@@ -135,7 +250,7 @@ public sealed class PerformanceSessionService : IDisposable
         if (_sampleCount % AutosaveEverySamples == 0 && _sampler is not null)
         {
             var snapshot = ToSession(DateTime.Now) with { Id = "active-snapshot" };
-            PerformanceSessionStore.SaveActiveSnapshot(snapshot);
+            PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
         }
         Sampled?.Invoke(sample);
     }
@@ -149,5 +264,12 @@ public sealed class PerformanceSessionService : IDisposable
             && t.Length <= 60
             && t.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
             && !t.Any(char.IsControl);
+    }
+
+    private void ReleaseActiveOwner()
+    {
+        var owner = _activeOwner;
+        _activeOwner = null;
+        owner?.Dispose();
     }
 }

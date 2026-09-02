@@ -17,6 +17,8 @@ public sealed class SessionTests : IDisposable
     public void Dispose()
     {
         PerformanceSessionStore.OverrideDir = null;
+        PerformanceSessionStore.DeleteFileOverride = null;
+        PerformanceSessionStore.WriteActiveTombstoneOverride = null;
         if (Directory.Exists(_dir))
             Directory.Delete(_dir, recursive: true);
     }
@@ -138,6 +140,15 @@ public sealed class SessionTests : IDisposable
     }
 
     [Fact]
+    public void Store_rejects_path_like_id_before_writing_outside_sessions_dir()
+    {
+        var id = "../fpstune-session-escape-" + Guid.NewGuid().ToString("N");
+        var session = MakeSession(id, 1);
+        Assert.Throws<ArgumentException>(() => PerformanceSessionStore.Save(session));
+        Assert.False(Directory.Exists(_dir) && Directory.EnumerateFiles(_dir, "*.json").Any());
+    }
+
+    [Fact]
     public void Store_tolerates_corrupt_file_and_keeps_corrupt_copy()
     {
         PerformanceSessionStore.Save(MakeSession(PerformanceSessionStore.NewSessionId(), 2));
@@ -169,6 +180,43 @@ public sealed class SessionTests : IDisposable
         {
             PerformanceSessionStore.OverrideDir = _dir;
         }
+    }
+
+    [Fact]
+    public void Store_preserves_structurally_invalid_json_as_corrupt()
+    {
+        var id = PerformanceSessionStore.NewSessionId();
+        var file = Path.Combine(_dir, id + ".json");
+        Directory.CreateDirectory(_dir);
+        // JSON syntax is valid, but the Samples field is absent.
+        File.WriteAllText(file, "{\"Id\":\"" + id + "\",\"Name\":\"x\",\"SchemaVersion\":1,\"StartedAt\":\"2026-09-02T01:00:00\",\"IntervalSeconds\":1}");
+
+        var ok = PerformanceSessionStore.TryLoadFile(file, out var session, out var error);
+        Assert.False(ok);
+        Assert.Null(session);
+        Assert.NotNull(error);
+        Assert.True(File.Exists(file + ".corrupt"));
+
+        var nullFile = Path.Combine(_dir, PerformanceSessionStore.NewSessionId() + ".json");
+        File.WriteAllText(nullFile, "null");
+        Assert.False(PerformanceSessionStore.TryLoadFile(nullFile, out _, out _));
+        Assert.True(File.Exists(nullFile + ".corrupt"));
+    }
+
+    [Fact]
+    public void Store_preserves_old_schema_as_corrupt_and_does_not_load_it()
+    {
+        var id = PerformanceSessionStore.NewSessionId();
+        var file = Path.Combine(_dir, id + ".json");
+        var old = MakeSession(id, 1) with { SchemaVersion = 0 };
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(old));
+
+        var ok = PerformanceSessionStore.TryLoadFile(file, out var session, out var error);
+        Assert.False(ok);
+        Assert.Null(session);
+        Assert.Contains("过旧", error);
+        Assert.True(File.Exists(file + ".corrupt"));
     }
 
     [Fact]
@@ -214,12 +262,285 @@ public sealed class SessionTests : IDisposable
     }
 
     [Fact]
+    public void Active_owner_blocks_second_service_recovery_and_clear()
+    {
+        using var first = new PerformanceSessionService();
+        using var second = new PerformanceSessionService();
+
+        Assert.True(first.Start("实例 A"));
+        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+
+        Assert.False(second.Start("实例 B"));
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        Assert.False(PerformanceSessionStore.ClearActiveSnapshot());
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveLockPath));
+
+        first.Cancel();
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+        Assert.True(second.Start("实例 B"));
+        second.Cancel();
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+    }
+
+    [Fact]
+    public void Active_owner_release_allows_recovery_after_owner_disposes()
+    {
+        var snapshot = MakeSession("active-snapshot", 8);
+        using (var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership())
+        {
+            Assert.NotNull(owner);
+            PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
+            Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        }
+
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+        var recovered = PerformanceSessionStore.RecoverInterruptedSession();
+        Assert.NotNull(recovered);
+        Assert.True(PerformanceSessionStore.IsValidSessionId(recovered!.Id));
+        Assert.Single(PerformanceSessionStore.LoadAll());
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+    }
+
+    [Fact]
+    public void Service_cancel_and_dispose_remove_active_lock()
+    {
+        var cancelled = new PerformanceSessionService();
+        try
+        {
+            Assert.True(cancelled.Start("取消后清理锁"));
+            Assert.True(File.Exists(PerformanceSessionStore.ActiveLockPath));
+            cancelled.Cancel();
+            Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+        }
+        finally
+        {
+            cancelled.Dispose();
+        }
+
+        var disposed = new PerformanceSessionService();
+        try
+        {
+            Assert.True(disposed.Start("退出后清理锁"));
+            Assert.True(File.Exists(PerformanceSessionStore.ActiveLockPath));
+        }
+        finally
+        {
+            disposed.Dispose();
+        }
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+    }
+
+    [Fact]
+    public void Service_cancel_reports_marker_write_failure_and_keeps_active()
+    {
+        using var service = new PerformanceSessionService();
+        Assert.True(service.Start("取消标记失败"));
+        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        PerformanceSessionStore.WriteActiveTombstoneOverride = _ => throw new IOException("simulated marker write failure");
+        try
+        {
+            Assert.Throws<IOException>(() => service.Cancel());
+        }
+        finally
+        {
+            PerformanceSessionStore.WriteActiveTombstoneOverride = null;
+        }
+
+        Assert.False(service.IsRunning);
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+
+        // Clean the fixture explicitly without passing through recovery.
+        Assert.True(PerformanceSessionStore.MarkActiveSnapshotCancelled());
+        Assert.True(PerformanceSessionStore.ClearActiveSnapshot());
+        Assert.True(PerformanceSessionStore.ClearActiveCancellation());
+        Assert.Empty(PerformanceSessionStore.LoadAll());
+    }
+
+    [Fact]
+    public void Active_tombstone_is_durably_written_with_expected_content()
+    {
+        Assert.True(PerformanceSessionStore.MarkActiveSnapshotCancelled());
+        Assert.Equal("cancelled\n", File.ReadAllText(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Empty(Directory.GetFiles(_dir, "*.tmp"));
+
+        Assert.True(PerformanceSessionStore.ClearActiveCancellation());
+    }
+
+    [Fact]
+    public void Recovery_unknown_tombstone_keeps_active_and_quarantines_marker()
+    {
+        PerformanceSessionStore.SaveActiveSnapshot(MakeSession("active-snapshot", 8));
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(PerformanceSessionStore.ActiveCancellationPath, "unknown-marker\n");
+
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Equal("unknown-marker\n", File.ReadAllText(PerformanceSessionStore.ActiveCancellationPath + ".corrupt"));
+
+        Assert.True(PerformanceSessionStore.ClearActiveSnapshot());
+    }
+
+    [Fact]
+    public void Future_schema_active_is_never_deleted_by_known_tombstone()
+    {
+        var snapshot = MakeSession("active-snapshot", 8) with { SchemaVersion = 99 };
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath,
+            System.Text.Json.JsonSerializer.Serialize(snapshot));
+        Assert.True(PerformanceSessionStore.MarkActiveSnapshotCancelled());
+
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+
+        using (var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership())
+        {
+            Assert.NotNull(owner);
+            Assert.False(PerformanceSessionStore.PrepareForNewSession());
+            Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+            Assert.True(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        }
+
+        Assert.True(PerformanceSessionStore.ClearActiveCancellation());
+        Assert.True(PerformanceSessionStore.ClearActiveSnapshot());
+    }
+
+    [Fact]
+    public void Service_save_tombstone_prevents_duplicate_recovery_when_active_delete_fails()
+    {
+        using var service = new PerformanceSessionService();
+        Assert.True(service.Start("保存后清理失败"));
+        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        PerformanceSessionStore.DeleteFileOverride = _ => throw new IOException("simulated delete failure");
+        PerformanceSession? saved;
+        try
+        {
+            saved = service.Stop(save: true);
+        }
+        finally
+        {
+            PerformanceSessionStore.DeleteFileOverride = null;
+        }
+
+        Assert.NotNull(saved);
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Equal("handled\n", File.ReadAllText(PerformanceSessionStore.ActiveCancellationPath));
+
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Single(PerformanceSessionStore.LoadAll());
+        Assert.Contains(PerformanceSessionStore.LoadAll(), s => s.Id == saved!.Id);
+    }
+
+    [Fact]
+    public void Service_dispose_swallows_cancel_marker_failure_and_keeps_active()
+    {
+        var service = new PerformanceSessionService();
+        Assert.True(service.Start("退出时取消标记失败"));
+        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        PerformanceSessionStore.WriteActiveTombstoneOverride = _ => throw new IOException("simulated marker write failure");
+
+        try
+        {
+            service.Dispose();
+        }
+        finally
+        {
+            PerformanceSessionStore.WriteActiveTombstoneOverride = null;
+        }
+
+        Assert.False(service.IsRunning);
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+
+        // The owner is released even though Dispose cannot report the failure.
+        Assert.True(PerformanceSessionStore.MarkActiveSnapshotCancelled());
+        Assert.True(PerformanceSessionStore.ClearActiveSnapshot());
+        Assert.True(PerformanceSessionStore.ClearActiveCancellation());
+    }
+
+    [Fact]
+    public void Service_cancel_tombstone_prevents_recovery_when_active_delete_fails()
+    {
+        using var service = new PerformanceSessionService();
+        Assert.True(service.Start("可取消会话"));
+        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        PerformanceSessionStore.DeleteFileOverride = _ => throw new IOException("simulated delete failure");
+        try
+        {
+            service.Cancel();
+        }
+        finally
+        {
+            PerformanceSessionStore.DeleteFileOverride = null;
+        }
+
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Empty(PerformanceSessionStore.LoadAll());
+    }
+
+    [Fact]
+    public void Recovery_is_idempotent_when_active_cleanup_fails()
+    {
+        PerformanceSessionStore.SaveActiveSnapshot(MakeSession("active-snapshot", 8));
+        PerformanceSessionStore.DeleteFileOverride = _ => throw new IOException("simulated delete failure");
+
+        PerformanceSession? first;
+        PerformanceSession? second;
+        try
+        {
+            first = PerformanceSessionStore.RecoverInterruptedSession(minSamples: 5);
+            second = PerformanceSessionStore.RecoverInterruptedSession(minSamples: 5);
+        }
+        finally
+        {
+            PerformanceSessionStore.DeleteFileOverride = null;
+        }
+
+        Assert.NotNull(first);
+        Assert.NotNull(second);
+        Assert.Equal(first!.Id, second!.Id);
+        Assert.True(PerformanceSessionStore.IsValidSessionId(first.Id));
+        Assert.Single(PerformanceSessionStore.LoadAll());
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+
+        // Once deletion is available again, the existing deterministic copy is
+        // recognized and only the active marker is cleared.
+        var cleaned = PerformanceSessionStore.RecoverInterruptedSession(minSamples: 5);
+        Assert.Equal(first.Id, cleaned?.Id);
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.Single(PerformanceSessionStore.LoadAll());
+    }
+
+    [Fact]
     public void Recovery_discards_snapshot_with_too_few_samples()
     {
         PerformanceSessionStore.SaveActiveSnapshot(MakeSession("active-snapshot", 3));
         var recovered = PerformanceSessionStore.RecoverInterruptedSession(minSamples: 5);
         Assert.Null(recovered);
         Assert.False(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.Empty(PerformanceSessionStore.LoadAll());
+    }
+
+    [Fact]
+    public void Recovery_does_not_promote_future_schema_snapshot_or_delete_it()
+    {
+        var snapshot = MakeSession("active-snapshot", 8) with { SchemaVersion = 99 };
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath,
+            System.Text.Json.JsonSerializer.Serialize(snapshot));
+
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession(minSamples: 5));
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
         Assert.Empty(PerformanceSessionStore.LoadAll());
     }
 
@@ -251,6 +572,23 @@ public sealed class SessionTests : IDisposable
         Assert.Equal(1, root.GetProperty("schemaVersion").GetInt32());
         Assert.True(root.TryGetProperty("units", out _));
         Assert.Equal(session.Id, root.GetProperty("session").GetProperty("Id").GetString());
+    }
+
+    [Fact]
+    public void Export_json_scrubs_path_like_session_name_and_writes_atomically()
+    {
+        var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var session = MakeSession(PerformanceSessionStore.NewSessionId(), 1) with
+        {
+            Name = "路径 " + profile + "\\game"
+        };
+        var path = Path.Combine(_dir, "export.json");
+
+        SessionExporter.ExportJson(session, path);
+
+        var json = File.ReadAllText(path);
+        Assert.DoesNotContain(profile, json, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(".tmp", string.Join("\n", Directory.GetFiles(_dir)));
     }
 
     [Fact]

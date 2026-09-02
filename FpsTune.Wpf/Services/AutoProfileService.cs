@@ -10,15 +10,23 @@ namespace FpsTune.Wpf.Services;
 /// 按绑定的进程名自动应用 Profile。
 /// 轮询只使用 Process.GetProcessesByName，不读取 MainModule、进程路径或进程内存。
 /// </summary>
-public sealed class AutoProfileService : IDisposable
+public sealed class AutoProfileService : IDisposable, IAsyncDisposable
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
 
     private readonly Timer _timer;
     private readonly CancellationTokenSource _stop = new();
+    private readonly object _lifetimeGate = new();
     private readonly ProcessEdgeTracker _edgeTracker = new();
+    private readonly Dictionary<string, string> _probeErrors = new(StringComparer.OrdinalIgnoreCase);
+    private string? _bindingSignature;
+    private bool _needsBaseline = true;
     private int _polling;
     private int _disposed;
+    private int _activePolls;
+    private int _activeApplications;
+    private TaskCompletionSource<object?>? _pollsDrained;
+    private Task? _disposeTask;
 
     public AutoProfileService()
     {
@@ -27,17 +35,38 @@ public sealed class AutoProfileService : IDisposable
 
     public void Start()
     {
-        if (Volatile.Read(ref _disposed) != 0)
-            return;
-        _timer.Change(TimeSpan.Zero, PollInterval);
+        lock (_lifetimeGate)
+        {
+            if (_disposed != 0 || _stop.IsCancellationRequested)
+                return;
+            _timer.Change(TimeSpan.Zero, PollInterval);
+        }
     }
 
-    private async void TimerTick(object? state)
+    private void TimerTick(object? state)
     {
         if (Volatile.Read(ref _disposed) != 0
             || Interlocked.Exchange(ref _polling, 1) != 0)
             return;
 
+        lock (_lifetimeGate)
+        {
+            if (_disposed != 0 || _stop.IsCancellationRequested)
+            {
+                Volatile.Write(ref _polling, 0);
+                return;
+            }
+
+            if (_activePolls++ == 0)
+                _pollsDrained = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            // 在生命周期锁内启动 async 方法：Dispose 若先取得锁，绝不会在其后启动新的轮询。
+            _ = RunPollAsync();
+        }
+    }
+
+    private async Task RunPollAsync()
+    {
         try
         {
             await PollAsync(_stop.Token).ConfigureAwait(false);
@@ -47,90 +76,156 @@ public sealed class AutoProfileService : IDisposable
         }
         catch (Exception ex)
         {
-            AutoProfileActivityStore.Append(new AutoProfileEvent(
-                DateTime.Now, AutoProfileActivityStore.KindFailed, "", null, "轮询异常：" + ex.Message));
-            Record("轮询异常：" + ex.Message);
+            TryAudit(
+                new AutoProfileEvent(DateTime.Now, AutoProfileActivityStore.KindFailed, "", null,
+                    "轮询异常：" + SafeError(ex)),
+                "轮询异常：" + SafeError(ex));
         }
         finally
         {
             Volatile.Write(ref _polling, 0);
+            lock (_lifetimeGate)
+            {
+                if (--_activePolls == 0)
+                {
+                    _pollsDrained?.TrySetResult(null);
+                    _pollsDrained = null;
+                }
+            }
         }
     }
 
     private async Task PollAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var settings = SettingsService.Current;
         if (!settings.AutoProfileEnabled)
         {
             _edgeTracker.Reset();
+            _probeErrors.Clear();
+            _bindingSignature = null;
+            _needsBaseline = true;
             return;
         }
 
-        var bindings = settings.AutoProfileBindings?
-            .Where(x => x is not null && x.Enabled)
+        // 即使绑定被停用也继续观察其进程名：这样停用/重新启用时，正在运行的进程
+        // 不会被误判成新的启动边沿。轮询仍然只调用 Process.GetProcessesByName。
+        var configured = settings.AutoProfileBindings?
+            .Where(x => x is not null)
             .Select(x => x.Clone())
-            .Where(x => !string.IsNullOrWhiteSpace(x.ProcessName)
-                        && !string.IsNullOrWhiteSpace(x.ProfileName))
+            .Where(x => AutoProfileBinding.NormalizeProcessName(x.ProcessName).Length > 0)
             .GroupBy(x => AutoProfileBinding.NormalizeProcessName(x.ProcessName), StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Key.Length > 0)
             .Select(g =>
             {
-                var binding = g.First();
+                // 重复绑定不重复轮询/应用；若首条被停用，优先使用同名的启用条目。
+                var binding = g.FirstOrDefault(x => x.Enabled && !string.IsNullOrWhiteSpace(x.ProfileName))
+                    ?? g.First();
                 binding.ProcessName = g.Key;
                 return binding;
             })
             .ToList() ?? new List<AutoProfileBinding>();
 
-        if (bindings.Count == 0)
+        if (configured.Count == 0)
         {
             _edgeTracker.Reset();
+            _probeErrors.Clear();
+            _bindingSignature = null;
+            _needsBaseline = true;
             return;
         }
 
         AutoProfileActivityStore.NoteScan();
 
+        var activeBindings = configured
+            .Where(x => x.Enabled && !string.IsNullOrWhiteSpace(x.ProfileName))
+            .ToDictionary(x => x.ProcessName, StringComparer.OrdinalIgnoreCase);
         var states = new Dictionary<string, bool?>(StringComparer.OrdinalIgnoreCase);
-        foreach (var binding in bindings)
+        foreach (var binding in configured)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (states.ContainsKey(binding.ProcessName))
                 continue;
-            states[binding.ProcessName] = ProbeProcess(binding.ProcessName);
-        }
 
-        foreach (var processName in _edgeTracker.Update(states))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var binding = bindings.FirstOrDefault(x =>
-                string.Equals(x.ProcessName, processName, StringComparison.OrdinalIgnoreCase));
-            if (binding is not null)
+            var probe = ProbeProcess(binding.ProcessName);
+            states[binding.ProcessName] = probe.Running;
+            if (probe.Error is { } error)
             {
-                AutoProfileActivityStore.Append(new AutoProfileEvent(
-                    DateTime.Now, AutoProfileActivityStore.KindMatch, processName, binding.ProfileName,
-                    "检测到进程启动，准备自动应用方案。"));
-                await ApplyBindingAsync(binding, cancellationToken).ConfigureAwait(false);
+                if (!_probeErrors.TryGetValue(binding.ProcessName, out var previous)
+                    || !string.Equals(previous, error, StringComparison.Ordinal))
+                {
+                    var profile = activeBindings.TryGetValue(binding.ProcessName, out var active)
+                        ? active.ProfileName
+                        : null;
+                    var detail = $"扫描进程「{binding.ProcessName}」失败：{error}；本轮不会触发启动边沿。";
+                    TryAudit(new AutoProfileEvent(
+                        DateTime.Now, AutoProfileActivityStore.KindFailed, binding.ProcessName, profile, detail), detail);
+                }
+                _probeErrors[binding.ProcessName] = error;
             }
             else
             {
-                AutoProfileActivityStore.Append(new AutoProfileEvent(
+                _probeErrors.Remove(binding.ProcessName);
+            }
+        }
+
+        var signature = string.Join("\u001f", configured
+            .Select(x => $"{x.ProcessName}\u001e{x.Enabled}\u001e{x.ProfileName}\u001e{x.ExePath}")
+            .OrderBy(x => x, StringComparer.Ordinal));
+        var configurationChanged = _needsBaseline
+            || !string.Equals(_bindingSignature, signature, StringComparison.Ordinal);
+        _bindingSignature = signature;
+        _needsBaseline = false;
+        if (configurationChanged)
+        {
+            // 服务首次观察、全局开关恢复、添加/停用/修改绑定都只建立基线；
+            // 只有之后观测到 false → true 才算真实启动边沿。
+            _edgeTracker.Observe(states);
+            return;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        foreach (var processName in _edgeTracker.Update(states))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (activeBindings.TryGetValue(processName, out var binding))
+            {
+                var applyTask = StartBinding(binding, cancellationToken);
+                if (applyTask is null)
+                    return;
+                try
+                {
+                    await applyTask.ConfigureAwait(false);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _activeApplications);
+                }
+            }
+            else
+            {
+                TryAudit(new AutoProfileEvent(
                     DateTime.Now, AutoProfileActivityStore.KindSkipped, processName, null,
-                    "检测到进程启动，但没有对应的启用绑定。"));
+                    "检测到进程启动，但没有对应的有效启用绑定。"));
             }
         }
     }
 
-    private static bool? ProbeProcess(string processName)
+    private sealed record ProcessProbe(bool? Running, string? Error);
+
+    private static ProcessProbe ProbeProcess(string processName)
     {
         Process[]? processes = null;
         try
         {
             processes = Process.GetProcessesByName(processName);
-            return processes.Length > 0;
+            return new ProcessProbe(processes.Length > 0, null);
         }
-        catch
+        catch (Exception ex)
         {
-            // 查询失败时保留上一轮边沿状态，避免一次权限/瞬时错误重复触发。
-            return null;
+            // 查询失败时保留上一轮边沿状态，避免一次权限/瞬时错误重复触发；
+            // 同时把失败原因交给活动中心，而不是静默吞掉。
+            return new ProcessProbe(null, SafeError(ex));
         }
         finally
         {
@@ -140,21 +235,70 @@ public sealed class AutoProfileService : IDisposable
         }
     }
 
-    private static async Task ApplyBindingAsync(
+    private static string SafeError(Exception ex)
+        => string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().Name : PrivacyScrub.Sanitize(ex.Message);
+
+    internal bool TryAudit(AutoProfileEvent e, string? logMessage = null)
+    {
+        lock (_lifetimeGate)
+        {
+            if (_disposed != 0 || _stop.IsCancellationRequested)
+                return false;
+
+            AutoProfileActivityStore.Append(e);
+            if (!string.IsNullOrWhiteSpace(logMessage))
+                Record(logMessage);
+            return true;
+        }
+    }
+
+    private Task? StartBinding(AutoProfileBinding binding, CancellationToken cancellationToken)
+    {
+        lock (_lifetimeGate)
+        {
+            if (_disposed != 0 || cancellationToken.IsCancellationRequested)
+                return null;
+
+            // 匹配审计与 ApplyBindingAsync 的启动处于同一生命周期临界区；
+            // Dispose 若先取得锁，绝不会在退出后再产生新的应用或审计。
+            AutoProfileActivityStore.Append(new AutoProfileEvent(
+                DateTime.Now, AutoProfileActivityStore.KindMatch, binding.ProcessName, binding.ProfileName,
+                "检测到进程启动，准备自动应用方案。"));
+            Interlocked.Increment(ref _activeApplications);
+            try
+            {
+                // async 方法会同步执行到第一个 await，因此底层应用若开始，必在线程释放生命周期锁前开始。
+                return ApplyBindingAsync(binding, cancellationToken);
+            }
+            catch
+            {
+                Interlocked.Decrement(ref _activeApplications);
+                throw;
+            }
+        }
+    }
+
+    private async Task ApplyBindingAsync(
         AutoProfileBinding binding, CancellationToken cancellationToken)
     {
         void Notify(string kind, string title, string message)
         {
-            AutoProfileActivityStore.Append(new AutoProfileEvent(
-                DateTime.Now, kind, binding.ProcessName, binding.ProfileName, message));
-            Record(title + "：" + message);
+            if (!TryAudit(
+                    new AutoProfileEvent(DateTime.Now, kind, binding.ProcessName, binding.ProfileName, message),
+                    title + "：" + message))
+                return;
+
             try
             {
                 TrayService.NotifyComplete("FPS 帧律 · " + title, message);
             }
             catch (Exception ex)
             {
-                Record("通知失败：" + ex.Message);
+                // The tray path is best-effort and must not keep the lifetime
+                // gate held while it marshals to the UI dispatcher.
+                TryAudit(new AutoProfileEvent(
+                    DateTime.Now, AutoProfileActivityStore.KindFailed, binding.ProcessName, binding.ProfileName,
+                    "通知失败：" + SafeError(ex)), "通知失败：" + SafeError(ex));
             }
         }
 
@@ -210,8 +354,9 @@ public sealed class AutoProfileService : IDisposable
                 .ConfigureAwait(false);
             if (!result.Success)
             {
+                var error = string.IsNullOrWhiteSpace(result.Error) ? "未提供错误信息" : result.Error.Trim();
                 Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
-                    $"方案「{profile.Name}」执行失败：{result.Error.Trim()}");
+                    $"方案「{profile.Name}」执行失败：{error}");
                 return;
             }
 
@@ -232,7 +377,7 @@ public sealed class AutoProfileService : IDisposable
         catch (Exception ex)
         {
             Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
-                $"方案「{binding.ProfileName}」执行异常：{ex.Message}");
+                $"方案「{binding.ProfileName}」执行异常：{SafeError(ex)}");
         }
     }
 
@@ -275,6 +420,7 @@ public sealed class AutoProfileService : IDisposable
                 "FpsTune", "logs");
             Directory.CreateDirectory(dir);
             var path = Path.Combine(dir, "auto-profile.log");
+            message = PrivacyScrub.Sanitize(message);
             File.AppendAllText(path,
                 $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}",
                 new UTF8Encoding(false));
@@ -287,13 +433,44 @@ public sealed class AutoProfileService : IDisposable
 
     public void Dispose()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
-            return;
-        _stop.Cancel();
-        _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
-        _timer.Dispose();
+        DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        lock (_lifetimeGate)
+        {
+            _disposeTask ??= DisposeCoreAsync();
+            return new ValueTask(_disposeTask);
+        }
+    }
+
+    private async Task DisposeCoreAsync()
+    {
+        Task drain;
+        lock (_lifetimeGate)
+        {
+            if (_disposed == 0)
+            {
+                _disposed = 1;
+                _stop.Cancel();
+                _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+                _timer.Dispose();
+                _edgeTracker.Reset();
+                _probeErrors.Clear();
+            }
+
+            drain = _pollsDrained?.Task ?? Task.CompletedTask;
+            if (Volatile.Read(ref _activeApplications) > 0)
+            {
+                Trace.WriteLine(
+                    "AutoProfileService 正在退出：底层 ApplyItemsAsync 不支持取消，等待其完成且不再发送通知/审计。");
+            }
+        }
+
+        // 等待当前轮询（包括不可取消的底层应用）结束，避免后台任务越过服务生命周期。
+        await drain.ConfigureAwait(false);
         _stop.Dispose();
-        _edgeTracker.Reset();
     }
 }
 
@@ -301,6 +478,7 @@ public sealed class AutoProfileService : IDisposable
 internal sealed class ProcessEdgeTracker
 {
     private readonly HashSet<string> _running = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _baselinePending = new(StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyList<string> Update(IReadOnlyDictionary<string, bool?> states)
     {
@@ -309,6 +487,7 @@ internal sealed class ProcessEdgeTracker
             .Where(x => x.Length > 0)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         _running.RemoveWhere(x => !names.Contains(x));
+        _baselinePending.RemoveWhere(x => !names.Contains(x));
 
         var started = new List<string>();
         foreach (var pair in states)
@@ -319,15 +498,53 @@ internal sealed class ProcessEdgeTracker
             if (pair.Value.Value)
             {
                 if (_running.Add(name))
+                {
+                    if (_baselinePending.Remove(name))
+                        continue;
                     started.Add(name);
+                }
+                else
+                {
+                    // Observe() 可能在进程已运行时建立了 true 基线。
+                    _baselinePending.Remove(name);
+                }
             }
             else
             {
                 _running.Remove(name);
+                _baselinePending.Remove(name);
             }
         }
         return started;
     }
 
-    public void Reset() => _running.Clear();
+    /// <summary>记录当前状态但不把当前已运行进程当作启动边沿。</summary>
+    public void Observe(IReadOnlyDictionary<string, bool?> states)
+    {
+        var names = states.Keys
+            .Select(AutoProfileBinding.NormalizeProcessName)
+            .Where(x => x.Length > 0)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        _running.RemoveWhere(x => !names.Contains(x));
+        _baselinePending.RemoveWhere(x => !names.Contains(x));
+
+        foreach (var pair in states)
+        {
+            var name = AutoProfileBinding.NormalizeProcessName(pair.Key);
+            if (name.Length == 0)
+                continue;
+
+            _baselinePending.Add(name);
+            if (pair.Value == true)
+                _running.Add(name);
+            else if (pair.Value == false)
+                _running.Remove(name);
+        }
+    }
+
+    public void Reset()
+    {
+        _running.Clear();
+        _baselinePending.Clear();
+    }
 }

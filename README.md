@@ -17,7 +17,8 @@
 - **性能可验证**：内置性能会话（CPU/内存/GPU/显存本地采样、摘要与启发式洞察、
   会话对比与导出）和 A/B 实验向导（基线 + 三候选组 + 报告，可关联会话）；
   结论只来自本机实测，洞察仅标注相关性、不承诺 FPS 提升。
-- **版本单源化**：程序集版本 / 安装器版本 / CLI 自报版本全部来自 `Directory.Build.props` 的 `<Version>`。
+- **版本可追溯**：程序集版本 / 安装器版本 / CLI 自报版本来自 `Directory.Build.props` 的 `<Version>`；
+  正式发布脚本从最终干净提交读取完整 SHA，嵌入 `InformationalVersion` 并用本机文件版本信息核验。
 - **MIT 开源**：代码完全原创（Clean-room），无遥测。
 
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)

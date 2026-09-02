@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace FpsTune.Wpf.Services;
 
 /// <summary>解析后的 GPU Engine 实例身份。</summary>
@@ -32,22 +30,26 @@ public static class GpuCounterMath
         var tokens = raw.Split('_');
         for (var i = 0; i < tokens.Length; i++)
         {
-            switch (tokens[i])
+            if (tokens[i].Equals("pid", StringComparison.OrdinalIgnoreCase) && i + 1 < tokens.Length)
             {
-                case "pid" when i + 1 < tokens.Length:
-                    pid = tokens[i + 1];
-                    break;
-                case "luid" when i + 2 < tokens.Length:
-                    luid = tokens[i + 1] + "_" + tokens[i + 2];
-                    i += 2;
-                    break;
-                case "phys" when i + 1 < tokens.Length:
-                    phys = tokens[i + 1];
-                    break;
-                case "engtype":
-                    engType = string.Join('_', tokens[(i + 1)..]);
-                    i = tokens.Length;
-                    break;
+                pid = tokens[i + 1];
+                continue;
+            }
+            if (tokens[i].Equals("luid", StringComparison.OrdinalIgnoreCase) && i + 2 < tokens.Length)
+            {
+                luid = tokens[i + 1] + "_" + tokens[i + 2];
+                i += 2;
+                continue;
+            }
+            if (tokens[i].Equals("phys", StringComparison.OrdinalIgnoreCase) && i + 1 < tokens.Length)
+            {
+                phys = tokens[i + 1];
+                continue;
+            }
+            if (tokens[i].Equals("engtype", StringComparison.OrdinalIgnoreCase))
+            {
+                engType = string.Join('_', tokens[(i + 1)..]);
+                i = tokens.Length;
             }
         }
 
@@ -72,9 +74,19 @@ public static class GpuCounterMath
             if (double.IsNaN(value) || double.IsInfinity(value) || value < 0)
                 continue;
             var inst = ParseEngineInstance(instance);
+            // A malformed/unknown counter name has no stable engine identity. Treating
+            // all such samples as one engine would turn unrelated counters into a fake
+            // 100% reading, so only aggregate names that expose an engine type.
+            if (string.IsNullOrWhiteSpace(inst.EngineType) ||
+                inst.EngineType.Equals("unknown", StringComparison.OrdinalIgnoreCase))
+                continue;
             if (!byAdapter.TryGetValue(inst.Adapter, out var engines))
                 byAdapter[inst.Adapter] = engines = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-            engines[inst.EngineType] = engines.TryGetValue(inst.EngineType, out var sum) ? sum + value : value;
+            // Per-process values are summed within an engine, but saturating at 100
+            // avoids a double overflow from turning an abnormal reading into Infinity.
+            engines[inst.EngineType] = engines.TryGetValue(inst.EngineType, out var sum)
+                ? Math.Min(100, sum + Math.Min(100, value))
+                : Math.Min(100, value);
         }
 
         double? result = null;
@@ -104,12 +116,13 @@ public static class GpuCounterMath
         }
         if (perAdapter.Count == 0)
             return null;
-        return perAdapter.Values.Sum();
+        var total = perAdapter.Values.Sum();
+        return double.IsFinite(total) ? total : null;
     }
 
     /// <summary>字节数 → MiB 文本；unknown 时返回占位。</summary>
     public static string FormatBytesMiB(double? bytes)
-        => bytes is double b && double.IsFinite(b)
+        => bytes is double b && double.IsFinite(b) && b >= 0
             ? $"{b / 1024.0 / 1024.0:0} MiB"
             : "不可用";
 

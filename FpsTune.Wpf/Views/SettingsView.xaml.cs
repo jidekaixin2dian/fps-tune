@@ -174,8 +174,8 @@ public partial class SettingsView : UserControl
     {
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath);
-            var val = key?.GetValue(RunValueName) as string;
+            var val = RegistryHelper.ReadValue(
+                Microsoft.Win32.RegistryHive.CurrentUser, RunKeyPath, RunValueName) as string;
             return !string.IsNullOrWhiteSpace(val);
         }
         catch
@@ -190,18 +190,7 @@ public partial class SettingsView : UserControl
             return;
         try
         {
-            using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath);
-            if (AutostartCheck.IsChecked == true)
-            {
-                var exe = Environment.ProcessPath;
-                if (string.IsNullOrWhiteSpace(exe))
-                    throw new InvalidOperationException("无法定位当前程序路径");
-                key.SetValue(RunValueName, '"' + exe + '"', RegistryValueKind.String);
-            }
-            else
-            {
-                key.DeleteValue(RunValueName, throwOnMissingValue: false);
-            }
+            BackupService.SetAutostart(AutostartCheck.IsChecked == true, Environment.ProcessPath);
         }
         catch (Exception ex)
         {

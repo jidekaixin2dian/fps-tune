@@ -408,6 +408,26 @@ function Invoke-TestGroup {
         return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false; error = '基线不稳定，重新采集基线后再测试。' }
     }
 
+    # 候选组必须按 group-1 → group-2 → group-3 推进；允许重跑当前组，
+    # 但缺少前置组时在任何 apply、state/history/CSV 写入前明确拒绝。
+    $requiredGroups = @()
+    switch ($GroupId) {
+        'group-2' { $requiredGroups = @('group-1'); break }
+        'group-3' { $requiredGroups = @('group-1', 'group-2'); break }
+    }
+    $completedGroups = @()
+    if ($state.groups) {
+        foreach ($existingGroup in @($state.groups)) {
+            if ($existingGroup -and $existingGroup.id) {
+                $completedGroups += [string]$existingGroup.id
+            }
+        }
+    }
+    $missingGroups = @($requiredGroups | Where-Object { $completedGroups -notcontains $_ })
+    if ($missingGroups.Count -gt 0) {
+        return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false; error = "候选组顺序不合法：运行 $GroupId 前必须先完成 $($missingGroups -join '、')；当前未写入任何状态。" }
+    }
+
     # 1) 应用候选组（真实模式）
     if ($Simulate) {
         $applied = @{ ok = $true }
@@ -530,18 +550,27 @@ try {
     switch ($actions[0]) {
         'baseline' {
             $result = Invoke-Baseline $Duration
-            if ($Json) { $result | ConvertTo-Json -Depth 12 }
+            if ($Json) {
+                $result | ConvertTo-Json -Depth 12
+                if (-not $result.ok) { exit 1 }
+            }
             else { Write-Host $result.message }
         }
         'test' {
             if (-not $Group) { throw '请用 -Group 指定候选组: group-1 / group-2 / group-3' }
             $result = Invoke-TestGroup $Group $Duration
-            if ($Json) { $result | ConvertTo-Json -Depth 12 }
+            if ($Json) {
+                $result | ConvertTo-Json -Depth 12
+                if (-not $result.ok) { exit 1 }
+            }
             else { Write-Host $result.message }
         }
         'report' {
             $result = Invoke-Report
-            if ($Json) { $result | ConvertTo-Json -Depth 12 }
+            if ($Json) {
+                $result | ConvertTo-Json -Depth 12
+                if (-not $result.ok) { exit 1 }
+            }
             else {
                 if (-not $result.ok) { Write-Host $result.error; exit 1 }
                 Write-Host ('基线: 平均 ' + $result.baseline.avgFps + ' FPS / 1% low ' + $result.baseline.p1Low + ' / 稳定度 CV ' + $result.baseline.cv)

@@ -11,6 +11,8 @@ headless CLI mode for command-line / AI-agent use.
 - **One engine** — the same C# engine powers the GUI and the CLI; 33 optimizations
   defined in a single catalog (`catalog/catalog.json`).
 - **Automatic backup & restore** — every write is backed up first; one-command restore.
+- **Traceable releases** — the post-commit release script embeds the full final Git SHA
+  in `InformationalVersion` and verifies it in the produced executable metadata.
 - **MIT licensed, clean-room implementation.**
 
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)

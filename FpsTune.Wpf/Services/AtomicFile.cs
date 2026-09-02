@@ -36,6 +36,57 @@ internal static class AtomicFile
         }
     }
 
+    /// <summary>
+    /// 写入需要在崩溃恢复中作为事实依据的小文件。临时文件独占写入并
+    /// Flush(true) 后才原子替换目标，避免 tombstone 只停留在缓存中。
+    /// </summary>
+    public static void WriteAllTextDurable(string path, string content, Encoding encoding)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        var tmp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            // CreateNew + FileShare.None makes the temporary file exclusive even
+            // if a caller happens to collide with the generated name.
+            using (var stream = new FileStream(
+                tmp,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 4096,
+                options: FileOptions.WriteThrough))
+            {
+                var preamble = encoding.GetPreamble();
+                if (preamble.Length > 0)
+                    stream.Write(preamble);
+                var bytes = encoding.GetBytes(content);
+                stream.Write(bytes);
+                stream.Flush(flushToDisk: true);
+            }
+
+            // Moving a fully flushed file over the destination is the atomic
+            // publish step; no partially written marker can become visible.
+            File.Move(tmp, path, overwrite: true);
+        }
+        finally
+        {
+            // Move success leaves no temporary file. On any failure only remove
+            // this invocation's file and never mask the original exception.
+            try
+            {
+                if (File.Exists(tmp))
+                    File.Delete(tmp);
+            }
+            catch
+            {
+                // The write/replace failure is the actionable error.
+            }
+        }
+    }
+
     /// <summary>读取失败时把损坏文件留档为 .corrupt，便于用户找回线索而不是被静默覆盖。</summary>
     public static void PreserveCorrupt(string path)
     {

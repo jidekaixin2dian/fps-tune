@@ -57,12 +57,31 @@ public static class AutoProfileActivityStore
 
     public static void Append(AutoProfileEvent e)
     {
+        if (e is null)
+            return;
+
         try
         {
             lock (Gate)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(EventsFile)!);
-                File.AppendAllText(EventsFile, JsonSerializer.Serialize(e, LineOpts) + "\n", new UTF8Encoding(false));
+                var path = EventsFile;
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+                // 活动中心只保存短文本；异常消息/用户自定义名称也不能把完整路径写入审计。
+                var sanitized = new AutoProfileEvent(
+                    e.Time,
+                    PrivacyScrub.Sanitize(e.Kind),
+                    PrivacyScrub.Sanitize(e.Process),
+                    string.IsNullOrWhiteSpace(e.Profile) ? null : PrivacyScrub.Sanitize(e.Profile),
+                    PrivacyScrub.Sanitize(e.Detail));
+                var events = File.Exists(path) ? ReadEventsChronologicalLocked(path) : new List<AutoProfileEvent>();
+                events.Add(sanitized);
+                if (events.Count > MaxEvents)
+                    events = events.TakeLast(MaxEvents).ToList();
+
+                var text = string.Join("\n", events.Select(x => JsonSerializer.Serialize(x, LineOpts))) + "\n";
+                // 与其他本地状态一样原子落盘，且令物理文件本身保持有界，而不是只在 Load 时截断。
+                AtomicFile.WriteAllText(path, text, new UTF8Encoding(false));
             }
         }
         catch
@@ -74,21 +93,27 @@ public static class AutoProfileActivityStore
     /// <summary>最近事件（新→旧），最多 MaxEvents 条；尾部多余行会被截断回收。</summary>
     public static List<AutoProfileEvent> Load()
     {
-        List<string> lines;
         try
         {
             lock (Gate)
             {
                 if (!File.Exists(EventsFile))
                     return [];
-                lines = File.ReadAllLines(EventsFile, Encoding.UTF8).ToList();
+                var events = ReadEventsChronologicalLocked(EventsFile);
+                events.Reverse();
+                return events;
             }
         }
         catch
         {
             return [];
         }
+    }
 
+    private static List<AutoProfileEvent> ReadEventsChronologicalLocked(string path)
+    {
+        // 只读取尾部有限行，避免一个历史损坏/被外部放大的文件拖垮设置页。
+        var lines = File.ReadLines(path, Encoding.UTF8).TakeLast(MaxEvents * 2).ToList();
         var result = new List<AutoProfileEvent>();
         foreach (var raw in lines)
         {
@@ -109,7 +134,6 @@ public static class AutoProfileActivityStore
 
         if (result.Count > MaxEvents)
             result = result.TakeLast(MaxEvents).ToList();
-        result.Reverse();
         return result;
     }
 

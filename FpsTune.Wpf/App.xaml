@@ -150,7 +150,8 @@
                                     <Border Background="{DynamicResource SurfaceBrush}"
                                             BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"
                                             CornerRadius="8" Margin="0,4,0,0"
-                                            MinWidth="{TemplateBinding ActualWidth}" MaxHeight="280">
+                                            MinWidth="{TemplateBinding ActualWidth}"
+                                            MaxWidth="{TemplateBinding ActualWidth}" MaxHeight="280">
                                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                                             <ItemsPresenter/>
                                         </ScrollViewer>

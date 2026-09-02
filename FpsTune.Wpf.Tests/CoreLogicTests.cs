@@ -237,6 +237,25 @@ public class CoreLogicTests
     }
 
     [Fact]
+    public void BackupRecord_validation_accepts_autostart_run_target_and_rejects_other_run_values()
+    {
+        var record = new BackupRecord
+        {
+            Id = "autostart",
+            Kind = "registry",
+            Hive = RegistryHive.CurrentUser.ToString(),
+            Path = @"Software\Microsoft\Windows\CurrentVersion\Run",
+            Name = "FpsTune",
+            ValueKind = RegistryValueKind.String.ToString()
+        };
+
+        BackupService.ValidateRecord(record);
+
+        record.Name = "OtherApp";
+        Assert.Throws<InvalidOperationException>(() => BackupService.ValidateRecord(record));
+    }
+
+    [Fact]
     public void Backup_file_guards_keep_legacy_PowerShell_documents_out_of_CSharp()
     {
         var tmp = Path.Combine(Path.GetTempPath(), "fpstune-backup-guards-" + Guid.NewGuid().ToString("N"));
@@ -446,6 +465,224 @@ public class CoreLogicTests
             BackupService.RestoreRecordOverride = null;
             BackupService.BackupDirOverride = null;
             Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RestoreAll_keeps_inflight_journal_and_never_repeats_uncertain_write()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fpstune-inflight-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        BackupService.BackupDirOverride = dir;
+        var restoreCalls = 0;
+        BackupService.RestoreRecordOverride = _ => restoreCalls++;
+        BackupService.RestoreProgressWriteOverride = (_, _) =>
+            throw new IOException("simulated progress persistence failure");
+        try
+        {
+            var file = BackupService.Capture(new[] { "mouse-accel-off" }, null);
+
+            var first = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+            Assert.Equal(1, restoreCalls);
+            Assert.Single(first.Restored);
+            Assert.Contains(first.Failures, x => x.Contains("状态无法确定", StringComparison.Ordinal));
+            Assert.True(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
+
+            BackupService.RestoreProgressWriteOverride = null;
+            var second = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+
+            Assert.Equal(1, restoreCalls);
+            Assert.Empty(second.Restored);
+            Assert.Contains(second.Failures, x => x.Contains("需人工核实", StringComparison.Ordinal));
+            Assert.True(File.Exists(file), "未决还原不得消费备份文件");
+        }
+        finally
+        {
+            BackupService.RestoreProgressWriteOverride = null;
+            BackupService.RestoreRecordOverride = null;
+            BackupService.BackupDirOverride = null;
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RestoreAll_stops_before_other_backup_when_inflight_record_is_uncertain()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fpstune-inflight-multi-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        BackupService.BackupDirOverride = dir;
+        var calls = new List<string>();
+        BackupService.RestoreRecordOverride = record => calls.Add(record.Id);
+        BackupService.RestoreProgressWriteOverride = (_, _) =>
+            throw new IOException("simulated progress persistence failure");
+        try
+        {
+            var fileB = BackupService.Capture(new[] { "menu-delay-off" }, null);
+            var fileA = BackupService.Capture(new[] { "mouse-accel-off" }, null);
+            var now = DateTime.UtcNow;
+            File.SetLastWriteTimeUtc(fileB, now);
+            File.SetLastWriteTimeUtc(fileA, now.AddMinutes(1));
+
+            var first = BackupService.RestoreAll();
+
+            Assert.Single(first.Restored);
+            Assert.Equal(new[] { "mouse-accel-off" }, calls);
+            Assert.Contains(first.Failures, x => x.Contains("状态无法确定", StringComparison.Ordinal));
+            Assert.True(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
+            Assert.All(JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(fileB))!,
+                record => Assert.False(record.Restored));
+
+            // 即便进度写入故障已恢复，未决 A marker 也必须在任何 B 记录前阻断整个批次。
+            BackupService.RestoreProgressWriteOverride = null;
+            var second = BackupService.RestoreAll();
+
+            Assert.Equal(new[] { "mouse-accel-off" }, calls);
+            Assert.Empty(second.Restored);
+            Assert.Contains(second.Failures, x => x.Contains("需人工核实", StringComparison.Ordinal));
+            Assert.True(File.Exists(fileA), "未决 A 备份不得消费");
+            Assert.True(File.Exists(fileB), "被阻断的 B 备份不得消费");
+            Assert.False(File.Exists(fileA + ".restored"));
+            Assert.False(File.Exists(fileB + ".restored"));
+        }
+        finally
+        {
+            BackupService.RestoreProgressWriteOverride = null;
+            BackupService.RestoreRecordOverride = null;
+            BackupService.RestoreMutexWaitTimeoutOverride = null;
+            BackupService.BackupDirOverride = null;
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RestoreAll_clears_matching_persisted_marker_without_replaying_record()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fpstune-persisted-marker-restore-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        BackupService.BackupDirOverride = dir;
+        var restoreCalls = 0;
+        BackupService.RestoreRecordOverride = _ => restoreCalls++;
+        BackupService.RestoreProgressWriteOverride = (path, json) =>
+        {
+            // 模拟系统写入后进度已经落盘，但进程在清理 journal 前失败。
+            File.WriteAllText(path, json);
+            throw new IOException("simulated failure after progress persistence");
+        };
+        try
+        {
+            var file = BackupService.Capture(new[] { "menu-delay-off" }, null);
+
+            var first = BackupService.RestoreAll();
+            Assert.Equal(1, restoreCalls);
+            Assert.Single(first.Restored);
+            Assert.True(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
+
+            BackupService.RestoreProgressWriteOverride = null;
+            var second = BackupService.RestoreAll();
+
+            Assert.Equal(1, restoreCalls);
+            Assert.Empty(second.Restored);
+            Assert.Empty(second.Failures);
+            Assert.False(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
+            Assert.False(File.Exists(file));
+            Assert.True(File.Exists(file + ".restored"));
+        }
+        finally
+        {
+            BackupService.RestoreProgressWriteOverride = null;
+            BackupService.RestoreRecordOverride = null;
+            BackupService.RestoreMutexWaitTimeoutOverride = null;
+            BackupService.BackupDirOverride = null;
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task RestoreAll_serializes_concurrent_calls_with_named_mutex()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fpstune-restore-mutex-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        BackupService.BackupDirOverride = dir;
+        BackupService.RestoreMutexWaitTimeoutOverride = TimeSpan.FromSeconds(5);
+        var entered = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var calls = 0;
+        var active = 0;
+        var maxActive = 0;
+        BackupService.RestoreRecordOverride = _ =>
+        {
+            var current = Interlocked.Increment(ref active);
+            Interlocked.Increment(ref calls);
+            while (true)
+            {
+                var observed = Volatile.Read(ref maxActive);
+                if (current <= observed || Interlocked.CompareExchange(ref maxActive, current, observed) == observed)
+                    break;
+            }
+            entered.TrySetResult(null);
+            release.Task.GetAwaiter().GetResult();
+            Interlocked.Decrement(ref active);
+        };
+        try
+        {
+            BackupService.Capture(new[] { "mouse-accel-off" }, null);
+            var first = Task.Run(() => BackupService.RestoreAll(new[] { "mouse-accel-off" }));
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            var second = Task.Run(() => BackupService.RestoreAll(new[] { "mouse-accel-off" }));
+            await Task.Delay(150);
+            Assert.Equal(1, Volatile.Read(ref calls));
+            Assert.Equal(1, Volatile.Read(ref maxActive));
+            Assert.False(second.IsCompleted, "第二次还原必须在命名互斥上等待");
+
+            release.TrySetResult(null);
+            await Task.WhenAll(first, second);
+            // mouse-accel-off 展开为三条注册表记录；三次均来自第一次调用，第二次没有重放。
+            Assert.Equal(3, Volatile.Read(ref calls));
+            Assert.Equal(1, Volatile.Read(ref maxActive));
+        }
+        finally
+        {
+            release.TrySetResult(null);
+            BackupService.RestoreRecordOverride = null;
+            BackupService.RestoreMutexWaitTimeoutOverride = null;
+            BackupService.BackupDirOverride = null;
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RestoreAll_times_out_without_entering_restore()
+    {
+        BackupService.RestoreMutexWaitTimeoutOverride = TimeSpan.FromMilliseconds(100);
+        using var acquired = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        var holder = new Thread(() =>
+        {
+            using var held = new Mutex(initiallyOwned: false, name: BackupService.RestoreMutexName);
+            Assert.True(held.WaitOne(TimeSpan.FromSeconds(2)));
+            acquired.Set();
+            release.Wait();
+            held.ReleaseMutex();
+        });
+        holder.Start();
+        Assert.True(acquired.Wait(TimeSpan.FromSeconds(2)));
+        try
+        {
+            var result = BackupService.RestoreAll();
+
+            Assert.Empty(result.Restored);
+            Assert.Contains(result.Failures, x => x.Contains("超时", StringComparison.Ordinal));
+        }
+        finally
+        {
+            release.Set();
+            Assert.True(holder.Join(TimeSpan.FromSeconds(2)));
+            BackupService.RestoreMutexWaitTimeoutOverride = null;
         }
     }
 

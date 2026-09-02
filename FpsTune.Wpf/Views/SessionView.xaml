@@ -216,11 +216,25 @@
                 <TextBlock Text="会话比较" Style="{StaticResource CardTitleStyle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <ComboBox x:Name="CompareA" Style="{StaticResource SelectComboBoxStyle}"
-                              MinHeight="36" MinWidth="230" Margin="0,0,10,0"
-                              DisplayMemberPath="Name" SelectionChanged="Compare_SelectionChanged"/>
+                              MinHeight="36" Width="240" MaxWidth="240" Margin="0,0,10,0"
+                              SelectionChanged="Compare_SelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Display}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <ComboBox x:Name="CompareB" Style="{StaticResource SelectComboBoxStyle}"
-                              MinHeight="36" MinWidth="230"
-                              DisplayMemberPath="Name" SelectionChanged="Compare_SelectionChanged"/>
+                              MinHeight="36" Width="240" MaxWidth="240"
+                              SelectionChanged="Compare_SelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Display}" TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Display}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
                 <TextBlock x:Name="CompareHint" Text="选择两个会话进行并排比较。" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
                 <ItemsControl x:Name="CompareRows" Margin="0,10,0,0">

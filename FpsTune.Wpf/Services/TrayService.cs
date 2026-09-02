@@ -11,7 +11,7 @@ namespace FpsTune.Wpf.Services;
 /// 历史教训：v1.2.0 曾借用 WinForms NotifyIcon，WinForms 的 DPI 模式初始化会
 /// 干扰 WPF 的 PerMonitorV2，导致首次启动界面按错误缩放测量（联系条溢出被裁）。
 /// 本实现不引入 System.Windows.Forms，进程 DPI 处理权完全归 WPF。
-/// 只在 UI 线程调用。
+/// 托盘对象只在 UI 线程操作；通知入口可从后台线程调用，会异步投递到 UI。
 /// </summary>
 public static class TrayService
 {
@@ -32,6 +32,8 @@ public static class TrayService
     private static bool _minimizeHintShown;
     private static int _taskbarCreatedMsg = -1;
     private static IntPtr _hIcon;
+    private static int _lifetimeClosed;
+    private static long _notificationGeneration;
     // LoadImage(LR_LOADFROMFILE) 的句柄归本进程所有, 退出时需 DestroyIcon;
     // WM_GETICON/GCLP_HICON 拿到的句柄属于窗口/窗口类, 不能销毁
     private static bool _ownsIcon;
@@ -53,7 +55,13 @@ public static class TrayService
     public static bool EnsureCreated()
     {
         if (_added)
+        {
+            Volatile.Write(ref _lifetimeClosed, 0);
             return true;
+        }
+        // Dispose also serves the explorer.exe restart path; a successful
+        // re-creation starts a new notification generation.
+        Volatile.Write(ref _lifetimeClosed, 0);
         var app = Application.Current;
         if (app is null)
             return false;
@@ -132,6 +140,11 @@ public static class TrayService
 
     public static void Dispose()
     {
+        // Invalidate callbacks before tearing down the HWND. A notification
+        // already queued on the dispatcher must not resurrect the tray or
+        // call Shell_NotifyIcon after disposal.
+        Interlocked.Increment(ref _notificationGeneration);
+        Volatile.Write(ref _lifetimeClosed, 1);
         if (_added)
         {
             var nid = new Native.NOTIFYICONDATA
@@ -174,28 +187,67 @@ public static class TrayService
         NotifyRaw(title, message);
     }
 
+    internal static long NotificationGeneration => Volatile.Read(ref _notificationGeneration);
+
+    internal static bool IsNotificationCurrent(long generation)
+        => Volatile.Read(ref _lifetimeClosed) == 0
+           && Volatile.Read(ref _notificationGeneration) == generation;
+
     private static void NotifyRaw(string title, string message)
     {
+        if (Volatile.Read(ref _lifetimeClosed) != 0)
+            return;
         var app = Application.Current;
         if (app is null)
             return;
-        app.Dispatcher.Invoke(() =>
+
+        var generation = Volatile.Read(ref _notificationGeneration);
+        void Publish()
         {
-            EnsureCreated();
-            if (!_added || _hwnd is null)
+            if (!IsNotificationCurrent(generation))
                 return;
-            var nid = new Native.NOTIFYICONDATA
+
+            try
             {
-                cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(),
-                hWnd = _hwnd.Handle,
-                uID = 1,
-                uFlags = NIF_INFO,
-                szInfoTitle = title,
-                szInfo = message,
-                dwInfoFlags = NIIF_INFO
-            };
-            Native.Shell_NotifyIcon(NIM_MODIFY, ref nid);
-        });
+                if (!EnsureCreated()
+                    || !IsNotificationCurrent(generation)
+                    || !_added
+                    || _hwnd is null)
+                    return;
+
+                var nid = new Native.NOTIFYICONDATA
+                {
+                    cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(),
+                    hWnd = _hwnd.Handle,
+                    uID = 1,
+                    uFlags = NIF_INFO,
+                    szInfoTitle = title,
+                    szInfo = message,
+                    dwInfoFlags = NIIF_INFO
+                };
+                Native.Shell_NotifyIcon(NIM_MODIFY, ref nid);
+            }
+            catch
+            {
+                // Notifications are best-effort. In particular, dispatcher
+                // shutdown and tray teardown must not surface as app errors.
+            }
+        }
+
+        try
+        {
+            // Never synchronously marshal from a worker thread: App.OnExit
+            // waits for AutoProfileService to drain, so Dispatcher.Invoke here
+            // would deadlock against that drain.
+            if (app.Dispatcher.CheckAccess())
+                Publish();
+            else
+                _ = app.Dispatcher.BeginInvoke(Publish);
+        }
+        catch
+        {
+            // Dispatcher shutdown is equivalent to a disposed tray.
+        }
     }
 
     private static nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)

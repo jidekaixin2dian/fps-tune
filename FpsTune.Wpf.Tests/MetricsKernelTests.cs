@@ -30,6 +30,16 @@ public class MetricsKernelTests
         Assert.Equal("unknown", garbage.EngineType);
     }
 
+    [Fact]
+    public void ParseEngineInstance_is_case_insensitive_for_counter_tokens()
+    {
+        var inst = GpuCounterMath.ParseEngineInstance(
+            "PID_1234_LUID_0x00000000_0x0000C770_PHYS_0_ENG_0_ENGTYPE_3D");
+        Assert.Equal("1234", inst.Pid);
+        Assert.Equal("0x00000000_0x0000C770_phys_0", inst.Adapter);
+        Assert.Equal("3D", inst.EngineType);
+    }
+
     // ---------- 利用率聚合：多引擎去重、多进程求和、多适配器取最大 ----------
 
     [Fact]
@@ -69,6 +79,15 @@ public class MetricsKernelTests
         Assert.Null(GpuCounterMath.AggregateGpuUtilization(new (string, double)[] { ("pid_1_x", double.NaN) }));
     }
 
+    [Fact]
+    public void AggregateGpuUtilization_skips_unknown_counter_identity()
+    {
+        Assert.Null(GpuCounterMath.AggregateGpuUtilization(
+            new (string, double)[] { ("not-a-gpu-instance", 100) }));
+        Assert.Null(GpuCounterMath.AggregateGpuUtilization(
+            new (string, double)[] { ("pid_1_luid_0x0_0x1_phys_0_engtype_", 100) }));
+    }
+
     // ---------- 显存聚合：按适配器去重 ----------
 
     [Fact]
@@ -95,6 +114,7 @@ public class MetricsKernelTests
     public void FormatBytesMiB_handles_null()
     {
         Assert.Equal("不可用", GpuCounterMath.FormatBytesMiB(null));
+        Assert.Equal("不可用", GpuCounterMath.FormatBytesMiB(-1));
         Assert.Equal("1024 MiB", GpuCounterMath.FormatBytesMiB(1024.0 * 1024 * 1024));
     }
 

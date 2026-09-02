@@ -57,4 +57,17 @@ public class DetectionChecksTests
         Assert.DoesNotContain("Check3Text", xaml, StringComparison.Ordinal);
         Assert.Contains("BuildCheckItems(checks)", code, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void SelectComboBox_popup_is_bounded_to_control_width()
+    {
+        var appXaml = File.ReadAllText(
+            Path.Combine(RepoRoot(), "FpsTune.Wpf", "App.xaml"), Encoding.UTF8);
+        var sessionXaml = File.ReadAllText(
+            Path.Combine(RepoRoot(), "FpsTune.Wpf", "Views", "SessionView.xaml"), Encoding.UTF8);
+
+        Assert.Contains("x:Key=\"SelectComboBoxStyle\"", appXaml, StringComparison.Ordinal);
+        Assert.Contains("MaxWidth=\"{TemplateBinding ActualWidth}\"", appXaml, StringComparison.Ordinal);
+        Assert.Contains("TextTrimming=\"CharacterEllipsis\"", sessionXaml, StringComparison.Ordinal);
+    }
 }

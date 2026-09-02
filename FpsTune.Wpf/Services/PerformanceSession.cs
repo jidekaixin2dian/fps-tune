@@ -119,6 +119,17 @@ public static class SessionInsights
         DateTime? ws = windowStart == DateTime.MinValue ? null : windowStart;
         DateTime? we = windowEnd == DateTime.MinValue ? null : windowEnd;
 
+        // 缺失信号本身也是洞察证据：不能只提示 GPU 缺失而把 CPU、内存或
+        // 显存全程不可用静默当成“没有压力”。
+        if (summary.Cpu is null)
+            findings.Add(Missing("CPU 指标全程不可用", "本次会话没有取得任何有效的 CPU 占用样本，无法评估 CPU 侧压力。", "cpu", ws, we));
+        if (summary.Mem is null)
+            findings.Add(Missing("内存指标全程不可用", "本次会话没有取得任何有效的系统内存占用样本，无法评估内存压力。", "mem", ws, we));
+        if (summary.Gpu is null)
+            findings.Add(Missing("GPU 指标全程不可用", "本次会话没有取得任何有效的 GPU 利用率样本（系统可能未提供 GPU Engine 性能计数器），无法评估 GPU 侧压力。", "gpu", ws, we));
+        if (summary.VramAvgMib is null)
+            findings.Add(Missing("显存用量指标全程不可用", "本次会话没有取得任何有效的专用显存用量样本，无法评估显存压力。", "vram", ws, we));
+
         if (summary.Cpu is { } cpu)
         {
             if (cpu.Avg >= 80 && cpu.HighP95 >= 90)
@@ -141,14 +152,6 @@ public static class SessionInsights
                     $"GPU 平均 {gpu.Avg}%、95 位 {gpu.HighP95}%、峰值 {gpu.Peak}%（{gpu.Count} 个样本）。GPU 满载时提高画质相关限制通常不再增加帧率。",
                     ws, we, Array.Empty<string>()));
         }
-        else
-        {
-            findings.Add(new InsightFinding("MissingSignal", "info",
-                "GPU 指标全程不可用",
-                "本次会话没有取得任何有效的 GPU 利用率样本（系统可能未提供 GPU Engine 性能计数器），无法评估 GPU 侧压力。",
-                ws, we, new[] { "gpu" }));
-        }
-
         if (summary.VramAvgMib is { } used)
         {
             if (summary.VramTotalMib is { } total && total > 0)
@@ -190,4 +193,8 @@ public static class SessionInsights
                 ws, we, Array.Empty<string>()));
         return findings;
     }
+
+    private static InsightFinding Missing(
+        string title, string detail, string signal, DateTime? windowStart, DateTime? windowEnd)
+        => new("MissingSignal", "info", title, detail, windowStart, windowEnd, new[] { signal });
 }
