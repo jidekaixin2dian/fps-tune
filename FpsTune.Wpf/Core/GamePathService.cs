@@ -1,4 +1,3 @@
-﻿using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Win32;
@@ -7,15 +6,6 @@ namespace FpsTune.Wpf.Core;
 
 public static class GamePathService
 {
-    // 覆盖主流 FPS 的进程名 / 主程序名；工具只调系统设置，检测到哪个就针对哪个。
-    private static readonly string[] GameProcessNames =
-    {
-        "cs2", "valve_w64", "VALORANT-Win64-Shipping", "Apex", "r5apex_dx12",
-        "TslGame", "cod", "cod22-cod", "Overwatch", "TheFinals",
-        "RainbowSix", "EscapeFromTarkov", "destiny2", "BF2042",
-        "DeltaForceClient-Win64-Shipping", "DeltaForceClient", "DeltaForce"
-    };
-
     private static readonly string[] ExeNames =
     {
         "cs2.exe", "VALORANT-Win64-Shipping.exe", "r5apex_dx12.exe",
@@ -68,8 +58,8 @@ public static class GamePathService
     }
 
     /// <summary>
-    /// 扫描全部已知游戏（运行中进程 → 卸载注册表 → 常见目录），返回所有候选。
-    /// 顺序即优先级: 正在运行的游戏排最前。
+    /// 扫描全部已知游戏（卸载注册表 → 常见目录），返回所有候选。
+    /// 不读取运行中进程的路径；用户可通过 -Game 或设置页手动绑定完整路径。
     /// 全盘目录扫描代价高，会话内缓存结果；refresh=true（用户主动重扫）强制重扫。
     /// </summary>
     public static IReadOnlyList<GameCandidate> DetectAll(bool refresh = false)
@@ -97,8 +87,6 @@ public static class GamePathService
             found.TryAdd(exePath, new GameCandidate(LabelFor(exePath), exePath));
         }
 
-        foreach (var path in CollectFromRunningProcesses())
-            Add(path);
         foreach (var path in CollectFromUninstallRegistry())
             Add(path);
         foreach (var path in CollectFromCommonDirectories())
@@ -108,33 +96,6 @@ public static class GamePathService
     }
 
     public sealed record GameCandidate(string Name, string ExePath);
-
-    private static IEnumerable<string> CollectFromRunningProcesses()
-    {
-        var paths = new List<string>();
-        try
-        {
-            foreach (var name in GameProcessNames)
-            {
-                foreach (var p in Process.GetProcessesByName(name))
-                {
-                    try
-                    {
-                        if (!string.IsNullOrWhiteSpace(p.MainModule?.FileName) && File.Exists(p.MainModule.FileName))
-                            paths.Add(p.MainModule.FileName);
-                    }
-                    catch
-                    {
-                        // 某些进程可能无法读取 MainModule，继续。
-                    }
-                }
-            }
-        }
-        catch
-        {
-        }
-        return paths;
-    }
 
     private static IEnumerable<string> CollectFromUninstallRegistry()
     {
