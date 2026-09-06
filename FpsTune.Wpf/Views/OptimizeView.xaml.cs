@@ -624,12 +624,16 @@ public partial class OptimizeView : UserControl
         {
             var hit = System.Text.Json.JsonSerializer.Deserialize<OptProfile>(
                 System.IO.File.ReadAllText(dlg.FileName, Encoding.UTF8));
-            if (hit is null || string.IsNullOrWhiteSpace(hit.Name))
-                throw new InvalidOperationException("文件内容不是有效的配置方案");
+            ProfileStore.ValidateImport(hit);
+            if (hit is null) return;
             var profiles = ProfileStore.Load();
+            if (profiles.Any(p => p.Name == hit.Name)
+                && !DialogService.Confirm("配置方案", $"方案「{hit.Name}」已存在，覆盖？", danger: true))
+                return;
             profiles.RemoveAll(p => p.Name == hit.Name);
             profiles.Add(hit);
-            ProfileStore.Save(profiles);
+            if (!ProfileStore.TrySave(profiles, out var saveError))
+                throw new IOException("方案保存失败：" + saveError);
             ProfileNameBox.Text = hit.Name;
             ApplyProfileIds(hit.Ids);
             SetProfileHint($"已导入「{hit.Name}」（{hit.Ids.Count} 项）");

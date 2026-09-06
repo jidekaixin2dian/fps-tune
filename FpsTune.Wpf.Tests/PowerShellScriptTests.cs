@@ -18,7 +18,9 @@ public sealed class PowerShellScriptTests
             Assert.Equal(0, result.ExitCode);
             Assert.True(json.GetProperty("ok").GetBoolean());
             Assert.Equal("baseline", json.GetProperty("mode").GetString());
-            Assert.Equal("1.5.0", json.GetProperty("version").GetString());
+            var props = System.Xml.Linq.XDocument.Load(Path.Combine(FindRepositoryRoot(), "Directory.Build.props"));
+            var expectedVersion = props.Descendants("Version").First().Value.Trim();
+            Assert.Equal(expectedVersion, json.GetProperty("version").GetString());
             Assert.True(File.Exists(Path.Combine(dataRoot, "FpsTune", "experiment", "state.json")));
             Assert.True(File.Exists(Path.Combine(dataRoot, "FpsTune", "experiment", "history.jsonl")));
         }

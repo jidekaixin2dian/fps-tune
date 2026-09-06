@@ -1,7 +1,7 @@
 # Release Guide
 
 版本号唯一来源：`Directory.Build.props` 的 `<Version>`（程序集 / 安装器 / CLI 自报版本共用）。
-下文 `<ver>` 指该版本号；当前发布版本为 `1.6.0`。
+下文 `<ver>` 指该版本号；当前发布版本为 `1.6.1`。
 
 发布必须从最终提交开始。`publish-release.ps1` 读取干净工作树的
 `git rev-parse HEAD`，把完整 40 位 `finalSha` 嵌入程序集
@@ -32,8 +32,18 @@ Output:
 ## 3. Installer
 Requires Inno Setup 6:
 ```powershell
+.\build-installer.ps1 -CheckOnly
 .\build-installer.ps1
 ```
+
+编译器按显式 `-IsccPath` / `ISCC_PATH`，或 PATH、Program Files、
+`$env:LOCALAPPDATA\Programs\Inno Setup 6` 查找。非默认安装可指定：
+```powershell
+.\build-installer.ps1 -CheckOnly -IsccPath 'D:\Tools\Inno Setup 6\ISCC.exe'
+```
+`-CheckOnly` 会实际启动编译器，不生成安装包。文件存在但启动被拒绝时，
+应检查当前执行账户、沙箱和 Windows 权限，并通过工具的权限提升流程重试；
+不能据此断言“未安装”，也不应直接重装。查找失败会列出检查路径。
 
 Output:
 - `dist\installer\FpsTune-Setup-<ver>.exe`

@@ -91,6 +91,15 @@ public sealed record OptProfile(string Name, IReadOnlyList<string> Ids);
 /// <summary>优化页"配置方案"的本地持久化（%LOCALAPPDATA%\FpsTune\profiles.json）。</summary>
 public static class ProfileStore
 {
+    internal static void ValidateImport(OptProfile? profile)
+    {
+        if (profile is null || string.IsNullOrWhiteSpace(profile.Name) || profile.Ids is null || profile.Ids.Count == 0)
+            throw new InvalidOperationException("方案必须包含名称和优化项列表。");
+        var known = FpsTune.Wpf.Core.OptimizationCatalog.ItemOrder.ToHashSet(StringComparer.Ordinal);
+        if (profile.Ids.Any(id => string.IsNullOrWhiteSpace(id) || !known.Contains(id)))
+            throw new InvalidOperationException("方案包含未知或空的优化项，未导入。");
+    }
+
     private static string BaseDir => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
 

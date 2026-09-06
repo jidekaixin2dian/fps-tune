@@ -350,7 +350,7 @@ public static class NativeOptimizationEngine
         if (!dup.Success || !TryExtractGuid(dup.Output, out var newGuid))
             throw new InvalidOperationException("无法激活或创建卓越性能电源计划：" + dup.Error.Trim());
 
-        var rename = NativeSystem.Run("powercfg.exe", "-changename", newGuid, "三角洲优化 · 卓越性能");
+        var rename = NativeSystem.Run("powercfg.exe", "-changename", newGuid, "FPS 帧律 · 卓越性能");
         var activate = NativeSystem.Run("powercfg.exe", "-setactive", newGuid);
         if (!activate.Success)
             throw new InvalidOperationException("创建后激活失败：" + activate.Error.Trim());

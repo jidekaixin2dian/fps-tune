@@ -10,22 +10,26 @@ public static class ScriptLocator
 
     public static string Resolve(string fileName)
     {
-        // 1. 外部文件优先（绿色文件夹 / 开发输出目录）
-        var external = Path.Combine(AppContext.BaseDirectory, fileName);
-        if (File.Exists(external))
-            return external;
+        _scriptDir ??= Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "FpsTune", "scripts");
+        return Resolve(fileName, AppContext.BaseDirectory, _scriptDir);
+    }
 
-        external = Path.Combine(Environment.CurrentDirectory, fileName);
+    internal static string Resolve(string fileName, string applicationDirectory, string scriptDirectory)
+    {
+        if (fileName is not ("tuning-experiment.ps1" or "friend-test.ps1"))
+            throw new ArgumentException("未知的应用脚本", nameof(fileName));
+        // 1. 外部文件优先（绿色文件夹 / 开发输出目录）
+        var external = Path.Combine(applicationDirectory, fileName);
         if (File.Exists(external))
             return external;
 
         // 2. 从嵌入资源释放到本地，支持真正单文件 EXE
-        _scriptDir ??= Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "scripts");
-        Directory.CreateDirectory(_scriptDir);
+        // 当前工作目录不属于应用安装目录，不能用于查找可执行脚本。
+        Directory.CreateDirectory(scriptDirectory);
 
-        var target = Path.Combine(_scriptDir, fileName);
+        var target = Path.Combine(scriptDirectory, fileName);
         var assembly = Assembly.GetExecutingAssembly();
         var resourceName = "FpsTune.Wpf.Scripts." + fileName;
 

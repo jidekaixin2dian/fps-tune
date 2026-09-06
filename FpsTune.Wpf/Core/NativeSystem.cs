@@ -23,11 +23,23 @@ internal enum DynamicTickState
 /// </summary>
 internal static class NativeSystem
 {
+    internal static string ResolveExecutable(string fileName)
+    {
+        if (fileName is not ("powercfg.exe" or "sc.exe" or "bcdedit.exe" or "nvidia-smi.exe"))
+            throw new ArgumentException("未知的系统工具", nameof(fileName));
+
+        var systemPath = Path.Combine(Environment.SystemDirectory, fileName);
+        if (fileName == "nvidia-smi.exe" && !File.Exists(systemPath))
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                "NVIDIA Corporation", "NVSMI", fileName);
+        return systemPath;
+    }
+
     public static NativeResult Run(string fileName, params string[] arguments)
     {
         var psi = new ProcessStartInfo
         {
-            FileName = fileName,
+            FileName = ResolveExecutable(fileName),
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
@@ -43,10 +55,10 @@ internal static class NativeSystem
             if (process is null)
                 return new NativeResult(-1, "", "无法启动 " + fileName);
 
-            var output = process.StandardOutput.ReadToEnd();
-            var error = process.StandardError.ReadToEnd();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
             process.WaitForExit();
-            return new NativeResult(process.ExitCode, output, error);
+            return new NativeResult(process.ExitCode, outputTask.GetAwaiter().GetResult(), errorTask.GetAwaiter().GetResult());
         }
         catch (Exception ex)
         {

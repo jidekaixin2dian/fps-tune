@@ -1,6 +1,8 @@
 ﻿# fps-tune
 
-Windows **system-layer** frame-rate tuning for Windows games, including *Delta Force (example)*, *Valorant*,
+[简体中文](README.md) · [Download latest release](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
+
+Windows **system-layer** frame-rate tuning for Windows games, including *Delta Force*, *Valorant*,
 *CS2*, *APEX* and most PC titles. Built with C# WPF + .NET 8; `FpsTune.exe` also ships a
 headless CLI mode for command-line / AI-agent use.
 
@@ -43,23 +45,33 @@ no telemetry; in-app updates require explicit consent before download and SHA-25
 
 ```powershell
 # 1. Detect (read-only)
-FpsTune.exe -Detect -Json
+.\FpsTune.exe -Detect -Json
 
 # 2. Apply (explain to the user and get consent first)
-FpsTune.exe -Apply -Preset balanced -Json
+.\FpsTune.exe -Apply -Preset balanced -Json
 
 # 3. Restore
-FpsTune.exe -Restore -Json
+.\FpsTune.exe -Restore -Json
 
 # Also: -Version / -ListRestore -Json / -Apply -Items id1,id2 / -Restore -Items id1,id2
 ```
 
 Admin-required items fail loudly in non-elevated terminals (the exe runs as asInvoker).
 
-## Quick start (GUI, functional)
+## Quick start (GUI)
 
+- Requires Windows 10/11 x64.
+- Standalone: download `FpsTune.exe` and run it; the .NET runtime is included.
 - Recommended installer: <https://github.com/jidekaixin2dian/fps-tune/releases>
 - Portable: unzip `FpsTune-Portable-*.zip`, install the [.NET 8 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0), then run `FpsTune.exe`
+
+Version 1.6 uses a console layout with top tabs for overview, detection, optimization,
+performance sessions, A/B experiments, friend testing, backups/logs, and settings.
+The UI supports dark, light, and system themes. Version 1.6.1 hardens executable/script
+resolution, validates imported profiles, and fixes installer compiler diagnostics.
+Verify downloads against the release's `SHA256SUMS-v<version>.txt` with `Get-FileHash -Algorithm SHA256`.
+Game detection uses uninstall registry entries and known installation directories; it does
+not read running processes' executable paths. Use `-Game` for an unrecognized game.
 
 Or build locally:
 
@@ -76,14 +88,14 @@ Project repository: <https://github.com/jidekaixin2dian/fps-tune>
 If the agent is already inside the repo:
 
 ```text
-Read SKILL.md in the current directory and strictly follow its workflow to tune Delta Force (example) frame rates.
+Read SKILL.md in the current directory and follow its workflow to inspect and tune my Windows gaming settings.
 ```
 
 If the agent does not have the project yet, let it clone the repo first:
 
 ```text
 Run: git clone https://github.com/jidekaixin2dian/fps-tune.git
-Then read SKILL.md in the cloned directory and strictly follow its workflow to tune Delta Force (example) frame rates.
+Then read SKILL.md in the cloned directory and follow its workflow to inspect and tune my Windows gaming settings.
 ```
 
 > Do not just say "optimize my FPS": the agent does not know where the project is.

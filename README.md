@@ -1,5 +1,7 @@
 ﻿# FPS 帧律 · fps-tune
 
+[English](README.en.md) · [下载最新版](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
+
 面向 Windows 玩家的**系统层**帧率优化工具，核心采用 C# WPF + .NET 8，
 `FpsTune.exe` 同时提供无头 CLI 模式（命令行 / AI Agent 入口）。
 
@@ -11,7 +13,7 @@
 
 - **系统层，可还原**：只改 Windows 设置，每次写入前自动备份原值（含"原本不存在"状态），支持一键还原。
 - **不碰游戏**：不修改游戏目录文件、不注入进程、不与反作弊交互、不关引导虚拟化、不做显卡伪装。
-- **全游戏自动定位**：内置主流 FPS 的进程与卸载表检测；也可用 `-Game` 手动指定任意游戏 EXE。
+- **游戏定位**：从卸载注册表和常见安装目录查找已支持的 FPS 游戏，不读取运行中进程的路径；未识别的游戏可用 `-Game` 手动指定 EXE。
 - **单一数据源**：33 个优化项与预设统一定义在 `catalog/catalog.json`，
   GUI 与 CLI 共用同一份 C# 引擎与数据，加载即校验。
 - **性能可验证**：内置性能会话（CPU/内存/GPU/显存本地采样、摘要与启发式洞察、
@@ -42,13 +44,13 @@ SKILL.md 是唯一的操作流程入口，不要凭空发挥。
 
 ```powershell
 # 1. 检测（只读，安全）
-FpsTune.exe -Detect -Json
+.\FpsTune.exe -Detect -Json
 
 # 2. 应用（先向用户说明并征得同意再执行；需要管理员权限的项会明确报错）
-FpsTune.exe -Apply -Preset balanced -Json
+.\FpsTune.exe -Apply -Preset balanced -Json
 
 # 3. 还原
-FpsTune.exe -Restore -Json
+.\FpsTune.exe -Restore -Json
 
 # 其他：-Version / -ListRestore -Json / -Apply -Items id1,id2 / -Restore -Items id1,id2
 ```
@@ -57,8 +59,15 @@ FpsTune.exe -Restore -Json
 
 ## 快速开始（GUI）
 
+- 适用环境：Windows 10/11 x64。
+- 单文件：下载 `FpsTune.exe` 直接运行，自带 .NET 运行时。
 - 安装包：从 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases) 下载 `FpsTune-Setup-*.exe`
 - 便携版：解压 `FpsTune-Portable-*.zip` 后运行 `FpsTune.exe`；需已安装 [.NET 8 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
+
+v1.6 使用顶部中文页签的控制台布局：概览 / 检测 / 优化 / 性能会话 / A/B 实验 / 朋友测试 / 备份日志 / 设置。
+支持深色、浅色及跟随系统主题。v1.6.1 修复执行路径安全边界、配置导入校验和安装器探测。
+每个 Release 提供 `SHA256SUMS-v<版本>.txt`，可用 `Get-FileHash -Algorithm SHA256` 核对下载文件。
+程序尚未代码签名，Windows 可能提示未知发布者。应用内更新会先征求同意，再下载和核验安装器 SHA256。
 
 本地构建：
 
@@ -92,9 +101,9 @@ installer/                    Inno Setup 打包
 ## 测试
 
 ```powershell
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 # 以及无副作用的 CLI 冒烟（CI 已集成）
-FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe -Detect -Json
+.\FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe -Detect -Json
 ```
 
 ## 许可

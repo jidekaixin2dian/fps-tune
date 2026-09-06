@@ -52,7 +52,7 @@ public static class PowerShellRunner
 
             var psi = new ProcessStartInfo
             {
-                FileName = "powershell.exe",
+                FileName = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe"),
                 Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"{wrapper}\"",
                 UseShellExecute = false,
                 CreateNoWindow = true,
