@@ -1,6 +1,7 @@
 ﻿<Window x:Class="FpsTune.Wpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
 
         Icon="Assets/app.ico"
         Width="1200" Height="780"
@@ -44,22 +45,23 @@
         <Grid x:Name="ChromeGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="44"/>
+                <RowDefinition Height="38"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- 极光层: 三组全窗渐变叠加在基础底色之上, 覆盖标题栏、侧栏与页面。 -->
+            <!-- 极光层: 三组全窗渐变叠加在基础底色之上, 贯穿标题栏、页签栏与页面。 -->
             <Grid x:Name="AuroraLayer"
-                  Grid.Row="0" Grid.RowSpan="2"
+                  Grid.Row="0" Grid.RowSpan="3"
                   IsHitTestVisible="False"
                   ClipToBounds="True">
-                <!-- 蓝紫主光: 从上缘向内容区缓慢漂移。 -->
+                <!-- 青色主光: 从上缘向内容区缓慢漂移。 -->
                 <Border x:Name="AuroraMainLayer"
                         Opacity="0.9">
                     <Border.RenderTransform>
                         <TranslateTransform x:Name="AuroraMainTransform"/>
                     </Border.RenderTransform>
                 </Border>
-                <!-- 青色侧光: 从右侧斜向扫过, 保持低饱和避免抢文字层级。 -->
+                <!-- 蓝色侧光: 从右侧斜向扫过, 保持低饱和避免抢文字层级。 -->
                 <Border x:Name="AuroraSideLayer"
                         Opacity="0.78">
                     <Border.RenderTransform>
@@ -75,396 +77,99 @@
                 </Border>
             </Grid>
 
-            <!-- 标题栏 -->
-            <Grid Grid.Row="0" Background="{DynamicResource SidebarBackgroundBrush}">
+            <!-- 标题栏：品牌 + 状态 + 窗口按钮 -->
+            <Grid Grid.Row="0"
+                  Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-                    <Image Source="/Assets/app-icon.png" Width="18" Height="18" RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="FPS 帧律"
+                    <Image Source="/Assets/app-icon.png" Width="16" Height="16" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="FPS-TUNE"
                                Margin="9,0,0,0"
-                               FontSize="12" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               FontSize="12" FontWeight="Bold"
+                               FontFamily="{StaticResource FontMono}"
+                               Foreground="{DynamicResource AccentBrush}"
                                VerticalAlignment="Center"/>
                     <TextBlock x:Name="TitleVersionText"
                                Text="v1.0.1"
                                Margin="10,1,0,0"
                                FontSize="11"
+                               FontFamily="{StaticResource FontMono}"
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click"
-                            Width="46" Height="32" Style="{StaticResource CaptionButtonStyle}">
+                            Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}">
                         <Path Data="M0 0 H10" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"/>
                     </Button>
                     <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click"
-                            Width="46" Height="32" Style="{StaticResource CaptionButtonStyle}">
+                            Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}">
                         <Path Data="M0.5 0.5 H8.5 V8.5 H0.5 Z" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"
                               StrokeLineJoin="Round" Fill="Transparent"/>
                     </Button>
                     <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click"
-                            Width="46" Height="32" Style="{StaticResource CaptionCloseButtonStyle}">
+                            Width="44" Height="32" Style="{StaticResource CaptionCloseButtonStyle}">
                         <Path Data="M0 0 L8 8 M8 0 L0 8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.2"
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Button>
                 </StackPanel>
             </Grid>
-            <Grid Grid.Row="1">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- 左侧导航 -->
-        <Border Grid.Column="0"
-                Background="{DynamicResource SidebarBackgroundBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0,0,1,0">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Margin="18,22,18,16">
-                    <TextBlock Text="fps-tune"
-                               FontSize="16" FontWeight="Bold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="通用 FPS · Windows 系统层帧率优化"
-                               Margin="0,4,0,0"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextMutedBrush}"/>
-                </StackPanel>
+            <!-- 页签栏：中文页签 + 底部指示线 -->
+            <Grid Grid.Row="1"
+                  Background="{DynamicResource SidebarBackgroundBrush}">
+                <Border BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal" Margin="8,0,8,0" VerticalAlignment="Bottom">
+                        <controls:NavButton x:Name="NavHome"
+                                            Tag="home"
+                                            Text="概览"
+                                            IsChecked="True"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavDetect"
+                                            Tag="detect"
+                                            Text="检测"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavOpt"
+                                            Tag="opt"
+                                            Text="优化"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavSession"
+                                            Tag="session"
+                                            Text="性能会话"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavAb"
+                                            Tag="ab"
+                                            Text="A/B 实验"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavFriend"
+                                            Tag="friend"
+                                            Text="朋友测试"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavBackup"
+                                            Tag="backup"
+                                            Text="备份 / 日志"
+                                            Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavSettings"
+                                            Tag="settings"
+                                            Text="设置"
+                                            Checked="Nav_Checked"/>
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="SidebarVersionText"
+                           Text="v1.0.1"
+                           Margin="0,0,14,0"
+                           FontSize="11"
+                           FontFamily="{StaticResource FontMono}"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"/>
+            </Grid>
 
-                <!-- 设置固定左下角 -->
-                <StackPanel DockPanel.Dock="Bottom" Margin="18,0,18,20">
-                    <Border Height="1"
-                            Background="{DynamicResource BorderBrush}"
-                            Margin="0,0,0,14"/>
-                    <RadioButton x:Name="NavSettings"
-                                 Tag="settings"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Ellipse Canvas.Left="5" Canvas.Top="5" Width="14" Height="14"
-                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
-                                <Ellipse Canvas.Left="9" Canvas.Top="9" Width="6" Height="6"
-                                         Fill="{DynamicResource AccentBrush}"/>
-                                <Line X1="12" Y1="2" X2="12" Y2="5" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="12" Y1="19" X2="12" Y2="22" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="2" Y1="12" X2="5" Y2="12" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="19" Y1="12" X2="22" Y2="12" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="4.9" Y1="4.9" X2="7.1" Y2="7.1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="16.9" Y1="16.9" X2="19.1" Y2="19.1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="4.9" Y1="19.1" X2="7.1" Y2="16.9" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="16.9" Y1="7.1" X2="19.1" Y2="4.9" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="设置"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-                    <TextBlock x:Name="SidebarVersionText"
-                               Text="v1.0.1"
-                               Margin="14,10,0,0"
-                               FontSize="11"
-                               Foreground="{DynamicResource TextMutedBrush}"/>
-                </StackPanel>
-
-                <StackPanel Margin="18,20,18,0">
-                    <TextBlock Text="工作区"
-                                   Style="{StaticResource SectionLabelStyle}"
-                                   Margin="4,18,0,8"/>
-                    <RadioButton x:Name="NavHome"
-                                 Tag="home"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 IsChecked="True"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="首页"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton x:Name="NavDetect"
-                                 Tag="detect"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Ellipse Canvas.Left="3.5" Canvas.Top="3.5" Width="13" Height="13"
-                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
-                                <Line X1="14.5" Y1="14.5" X2="20" Y2="20"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="检测"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton x:Name="NavOpt"
-                                 Tag="opt"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M13 2 L5.5 14 H11.5 L9.5 22 L18.5 10 H12.5 Z"
-                                      Fill="{DynamicResource AccentBrush}"
-                                      StrokeLineJoin="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="优化"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <TextBlock Text="实验与数据"
-                                   Style="{StaticResource SectionLabelStyle}"
-                                   Margin="4,18,0,8"/>
-                    <RadioButton x:Name="NavSession"
-                                 Tag="session"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M2 12 H7 L9.5 6.5 L13 17.5 L15.5 12 H22"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                      Fill="Transparent"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="性能会话"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton x:Name="NavAb"
-                                 Tag="ab"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Rectangle Canvas.Left="4" Canvas.Top="13" Width="3.5" Height="8" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
-                                <Rectangle Canvas.Left="10.25" Canvas.Top="9" Width="3.5" Height="12" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
-                                <Rectangle Canvas.Left="16.5" Canvas.Top="5" Width="3.5" Height="16" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="A/B 实验"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton x:Name="NavFriend"
-                                 Tag="friend"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M17 21 V19 A4 4 0 0 0 13 15 H5 A4 4 0 0 0 1 19 V21"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Ellipse Canvas.Left="5" Canvas.Top="3" Width="8" Height="8"
-                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
-                                <Path Data="M23 21 V19 A4 4 0 0 0 20 15.13"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Path Data="M16 3.13 A4 4 0 0 1 16 10.87"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="朋友测试"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton x:Name="NavBackup"
-                                 Tag="backup"
-                                 Style="{StaticResource NavRadioStyle}"
-                                 Checked="Nav_Checked">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Width="30" Height="30"
-                                    CornerRadius="9"
-                                    BorderThickness="1"
-                                    VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Viewbox Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M5 3 H14 L18 7 V21 H5 Z"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round"/>
-                                <Path Data="M14 3 V7 H18"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round"/>
-                                <Line X1="8.5" Y1="12" X2="15.5" Y2="12"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="8.5" Y1="16" X2="15.5" Y2="16"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                            </Border>
-                            <TextBlock Text="备份 / 日志"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <!-- 右侧内容 -->
+            <!-- 内容 -->
             <ContentControl x:Name="PageHost"
-                            Grid.Column="1"
+                            Grid.Row="2"
                             Margin="0"
                             Focusable="False"/>
         </Grid>
-    </Grid>
     </Border>
 </Window>

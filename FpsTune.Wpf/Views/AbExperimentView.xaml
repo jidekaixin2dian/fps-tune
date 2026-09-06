@@ -5,7 +5,7 @@
     <!-- 页面根滚动: 上方 Auto 行合计约 590px, 小窗口下会把"原始输出"挤到不可见;
          与检测页同款做法, 整页自然高度 + 根 ScrollViewer -->
     <ScrollViewer x:Name="RootScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <Grid Margin="28,24,28,24">
+    <Grid Margin="28,22,28,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -18,9 +18,9 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="A/B 实验室" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="A/B 实验 · LAB" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="向导式实验：先采基线，再依次测试三个候选组，每步可关联一次性能会话，结论只来自实际采样"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
+                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
              <Button x:Name="OpenDirButton"
                      Content="打开实验目录"
@@ -38,14 +38,14 @@
         </Grid>
 
         <!-- 向导步骤 -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="实验向导（每步在同一游戏场景内进行）" Style="{StaticResource CardTitleStyle}"/>
-                <ItemsControl x:Name="WizardStepsList" Margin="0,10,0,0">
+                <TextBlock Text="实验向导 · WIZARD（每步在同一游戏场景内进行）" Style="{StaticResource CardTitleStyle}"/>
+                <ItemsControl x:Name="WizardStepsList" Margin="0,2,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,8" Padding="12,10" CornerRadius="8"
-                                    Background="{DynamicResource ElevatedBrush}"
+                            <Border Margin="0,0,0,6" Padding="12,9" CornerRadius="{StaticResource RadiusControl}"
+                                    Background="{DynamicResource SurfaceAltBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -54,7 +54,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <Ellipse Width="9" Height="9" VerticalAlignment="Center">
+                                            <Ellipse Width="7" Height="7" VerticalAlignment="Center">
                                                 <Ellipse.Style>
                                                     <Style TargetType="Ellipse">
                                                         <Setter Property="Fill" Value="{DynamicResource BorderBrush}"/>
@@ -77,14 +77,14 @@
                                             </Ellipse>
                                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" Margin="10,0,0,0"
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="10,0,0,0"
                                                        VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding ResultText}" FontSize="11" Margin="17,5,0,0"
+                                        <TextBlock Text="{Binding ResultText}" FontSize="11" Margin="15,5,0,0"
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                        <StackPanel Orientation="Horizontal" Margin="17,6,0,0">
+                                        <StackPanel Orientation="Horizontal" Margin="15,6,0,0">
                                             <TextBlock Text="关联性能会话：" FontSize="11" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                             <ComboBox ItemsSource="{Binding SessionOptions}"
@@ -112,83 +112,93 @@
         </Border>
 
         <!-- 状态条 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,14"
-                BorderBrush="{DynamicResource AccentBrush}">
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12"
+                BorderBrush="{DynamicResource AccentBrush}" Padding="14,10">
             <!-- Grid 而非横向 StackPanel: 让状态文本获得受限宽度, 长错误信息才能换行 -->
             <Grid>
-                <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}"
+                <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}"
                          HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <TextBlock x:Name="StatusText"
                            Text="就绪。点击上方步骤开始采样。"
-                           FontSize="13"
+                           FontSize="12.5"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            TextWrapping="Wrap"
-                           Margin="18,0,0,0"
+                           Margin="16,0,0,0"
                            VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
-        <!-- 指标瓦片 -->
-        <UniformGrid Grid.Row="3" Columns="6" Margin="0,0,0,14">
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
-                <StackPanel>
-                    <TextBlock Text="平均 FPS" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="AvgFpsText" Text="--" Style="{StaticResource StatValueStyle}" Margin="0,6,0,0"/>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
-                <StackPanel>
-                    <TextBlock Text="1% LOW" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="P1LowText" Text="--" Style="{StaticResource StatValueStyle}" Margin="0,6,0,0"/>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
-                <StackPanel>
-                    <TextBlock Text="P99 (MS)" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="P99Text" Text="--" Style="{StaticResource StatValueStyle}" Margin="0,6,0,0"/>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
-                <StackPanel>
-                    <TextBlock Text="卡顿" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="StutterText" Text="--" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource WarningBrush}" Margin="0,6,0,0"/>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,14,0">
-                <StackPanel>
-                    <TextBlock Text="波动 CV" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="CvText" Text="--" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource AccentBrush}" Margin="0,6,0,0"/>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource CardStyle}">
-                <StackPanel>
-                    <TextBlock Text="结论" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="DecisionText" Text="--" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource OkBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
+        <!-- 指标通栏 -->
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="平均 FPS" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="AvgFpsText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="1% LOW" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="P1LowText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="P99 (MS)" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="P99Text" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="卡顿" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="StutterText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Foreground="{DynamicResource WarningBrush}" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="4" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="波动 CV" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="CvText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Foreground="{DynamicResource AccentBrush}" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="5" Padding="12,10">
+                    <StackPanel>
+                        <TextBlock Text="结论" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="DecisionText" Text="--" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource OkBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
 
         <!-- 历史趋势 -->
-        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="210"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock Text="历史趋势" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="历史趋势 · TREND" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Border Width="16" Height="3" CornerRadius="1.5"
+                        <Border Width="14" Height="2"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="平均 FPS" FontSize="11" Margin="6,0,14,0"
+                        <TextBlock Text="平均 FPS" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                        <Border Width="16" Height="3" CornerRadius="1.5"
+                        <Border Width="14" Height="2"
                                 Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="1% LOW" FontSize="11" Margin="6,0,14,0"
+                        <TextBlock Text="1% LOW" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Button Content="刷新" Style="{StaticResource GhostButtonStyle}"
-                                MinWidth="64" Click="RefreshHistory_Click"/>
+                                MinWidth="56" Click="RefreshHistory_Click"/>
                     </StackPanel>
                 </Grid>
                 <Grid Grid.Row="1">
@@ -210,7 +220,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="原始输出" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Grid.Row="0" Text="原始输出 · RAW" Style="{StaticResource CardTitleStyle}"/>
                 <!-- 根滚动布局下给固定高度, 内部自带滚动; 滚到边由 code-behind 还给页面 -->
                 <TextBox Grid.Row="1"
                          x:Name="RawBox"

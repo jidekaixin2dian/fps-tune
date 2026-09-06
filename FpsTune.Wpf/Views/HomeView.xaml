@@ -2,237 +2,159 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
-    <Grid Margin="24">
+    <Grid Margin="28,22,28,24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 顶部：产品名 + 联系方式 -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="FPS 帧律"
-                       Style="{StaticResource PageTitleStyle}"
+        <!-- 页头：mono 标签 + 联系方式（联系条目由 code-behind 动态填充） -->
+        <Grid Grid.Row="0" Margin="0,0,0,6">
+            <TextBlock Text="概览 · OVERVIEW"
+                       Style="{StaticResource SectionLabelStyle}"
                        VerticalAlignment="Center"/>
             <StackPanel x:Name="ContactPanel"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Center">
-                <TextBlock Text="微信：请点击查看二维码"
-                           Style="{StaticResource MutedTextStyle}"
-                           Margin="0,0,16,0"/>
-                <TextBlock Text="QQ：待设置"
-                           Style="{StaticResource MutedTextStyle}"
-                           Margin="0,0,16,0"/>
-                <TextBlock Text="抖音：待设置"
-                           Style="{StaticResource MutedTextStyle}"/>
-            </StackPanel>
+                        VerticalAlignment="Center"/>
         </Grid>
 
-        <!-- Hero 产品区 -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,20" Padding="28">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="24"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0"
-                        Width="120" Height="120"
-                        CornerRadius="24"
-                        Background="{DynamicResource SurfaceAltBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1">
-                    <Image Source="/Assets/app-icon.png" Stretch="Uniform" Margin="8"/>
-                </Border>
-                <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock Text="FPS 帧律"
-                               FontSize="30" FontWeight="Bold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="FPS TUNE · Windows 系统层帧率优化，全游戏通用"
-                               FontSize="14"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               Margin="0,6,0,0"/>
-                    <TextBlock Text="只做系统层优化 · 所有改动可还原 · 不碰游戏文件 · 不注入进程"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               Margin="0,8,0,0"/>
+        <!-- 状态宣言区 -->
+        <Grid Grid.Row="1" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="系统层帧率优化控制台"
+                           FontSize="26" FontWeight="SemiBold"
+                           FontFamily="{StaticResource FontDisplay}"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <TextBlock Text="检测 → 解释 → 确认 → 执行 → 还原 · 不碰游戏文件 · 不注入进程 · 所有改动可还原"
+                           FontSize="12.5"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,8,0,0"/>
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                     <TextBlock x:Name="VersionText"
                                Text="v1.0.0"
                                FontSize="11"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               Margin="0,8,0,0"/>
+                               FontFamily="{StaticResource FontMono}"
+                               Foreground="{DynamicResource AccentBrush}"
+                               VerticalAlignment="Center"/>
+                    <Border Width="1" Height="12" Background="{DynamicResource BorderBrush}" Margin="12,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="HardwareSummaryText"
                                Text=""
                                FontSize="11"
+                               FontFamily="{StaticResource FontMono}"
                                Foreground="{DynamicResource TextMutedBrush}"
-                               Margin="0,6,0,0"
+                               VerticalAlignment="Center"
                                TextWrapping="Wrap"/>
                 </StackPanel>
-                <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button x:Name="StartOptimizeButton"
-                            Content="检测并优化"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            MinWidth="140"
-                            Click="StartOptimize_Click"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+            </StackPanel>
+            <Button x:Name="StartOptimizeButton"
+                    Grid.Column="1"
+                    Content="开始检测 →"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    MinWidth="132"
+                    VerticalAlignment="Center"
+                    Click="StartOptimize_Click"/>
+        </Grid>
 
-        <!-- 功能模块 -->
-        <UniformGrid Grid.Row="2" Columns="3">
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="detect" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Ellipse Canvas.Left="3.5" Canvas.Top="3.5" Width="13" Height="13"
-                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
-                                <Line X1="14.5" Y1="14.5" X2="20" Y2="20"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="检测" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock Text="硬件信息、游戏路径、体检和优化项状态" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+        <Border Grid.Row="2" Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,18"/>
+
+        <!-- 功能模块：编号行块 -->
+        <UniformGrid Grid.Row="3" Columns="2">
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="0,0,6,6" Cursor="Hand" Tag="detect" MouseLeftButtonUp="Module_Click" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="01"
+                               FontFamily="{StaticResource FontMono}" FontSize="15"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="检测" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="硬件信息、游戏路径、体检和优化项状态，只读不改" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="opt" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M13 2 L5.5 14 H11.5 L9.5 22 L18.5 10 H12.5 Z"
-                                      Fill="{DynamicResource AccentBrush}"
-                                      StrokeLineJoin="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="优化" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock x:Name="OptCardSummary" Text="预设与逐项开关、系统层优化、一键还原" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="6,0,0,6" Cursor="Hand" Tag="opt" MouseLeftButtonUp="Module_Click" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="02"
+                               FontFamily="{StaticResource FontMono}" FontSize="15"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="优化" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock x:Name="OptCardSummary" Text="预设与逐项开关、系统层优化、一键还原" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="session" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M2 12 H7 L9.5 6.5 L13 17.5 L15.5 12 H22"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                      Fill="Transparent"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="性能会话" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock Text="本地采样 CPU / 内存 / GPU / 显存，生成摘要、洞察与对比" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="0,6,6,6" Cursor="Hand" Tag="session" MouseLeftButtonUp="Module_Click" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="03"
+                               FontFamily="{StaticResource FontMono}" FontSize="15"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="性能会话" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="本地采样 CPU / 内存 / GPU / 显存，生成摘要、洞察与对比" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="ab" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Rectangle Canvas.Left="4" Canvas.Top="13" Width="3.5" Height="8" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
-                                <Rectangle Canvas.Left="10.25" Canvas.Top="9" Width="3.5" Height="12" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
-                                <Rectangle Canvas.Left="16.5" Canvas.Top="5" Width="3.5" Height="16" RadiusX="1.75" RadiusY="1.75" Fill="{DynamicResource AccentBrush}"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="A/B 实验" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock Text="基线采样、候选组对比、keep/revert 决策" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="6,6,0,6" Cursor="Hand" Tag="ab" MouseLeftButtonUp="Module_Click" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="04"
+                               FontFamily="{StaticResource FontMono}" FontSize="15"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="A/B 实验" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="基线采样、候选组对比、keep/revert 决策" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="friend" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M17 21 V19 A4 4 0 0 0 13 15 H5 A4 4 0 0 0 1 19 V21"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                                <Ellipse Canvas.Left="5" Canvas.Top="3" Width="8" Height="8"
-                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
-                                <Path Data="M23 21 V19 A4 4 0 0 0 20 15.13"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Path Data="M16 3.13 A4 4 0 0 1 16 10.87"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="朋友测试" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock Text="生成优化前后帧率对比记录表" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="0,6,6,0" Cursor="Hand" Tag="friend" MouseLeftButtonUp="Module_Click" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="05"
+                               FontFamily="{StaticResource FontMono}" FontSize="15"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="朋友测试" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="生成优化前后帧率对比记录表" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="backup" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Path Data="M5 3 H14 L18 7 V21 H5 Z"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round"/>
-                                <Path Data="M14 3 V7 H18"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
-                                      StrokeLineJoin="Round"/>
-                                <Line X1="8.5" Y1="12" X2="15.5" Y2="12"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="8.5" Y1="16" X2="15.5" Y2="16"
-                                      Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="备份 / 日志" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock Text="备份文件、还原全部、日志和 JSON 输出" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="7" Cursor="Hand" Tag="settings" MouseLeftButtonUp="Module_Click">
-                <StackPanel>
-                    <Border Width="44" Height="44" CornerRadius="22"
-                        Background="{DynamicResource ElevatedBrush}"
-                        BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1">
-                        <Viewbox Width="22" Height="22">
-                            <Canvas Width="24" Height="24">
-                                <Ellipse Canvas.Left="5" Canvas.Top="5" Width="14" Height="14"
-                                         Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"/>
-                                <Ellipse Canvas.Left="9" Canvas.Top="9" Width="6" Height="6"
-                                         Fill="{DynamicResource AccentBrush}"/>
-                                <Line X1="12" Y1="2" X2="12" Y2="5" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="12" Y1="19" X2="12" Y2="22" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="2" Y1="12" X2="5" Y2="12" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="19" Y1="12" X2="22" Y2="12" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="4.9" Y1="4.9" X2="7.1" Y2="7.1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="16.9" Y1="16.9" X2="19.1" Y2="19.1" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="4.9" Y1="19.1" X2="7.1" Y2="16.9" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                                <Line X1="16.9" Y1="7.1" X2="19.1" Y2="4.9" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2" StrokeEndLineCap="Round"/>
-                            </Canvas>
-                        </Viewbox>
-                    </Border>
-                    <TextBlock Text="设置" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,10,0,4"/>
-                    <TextBlock Text="联系方式、默认主题等软件设置" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
-                </StackPanel>
+            <Border Style="{StaticResource FeatureCardStyle}" Margin="6,6,0,0" Cursor="Hand" Tag="backup" MouseLeftButtonUp="Module_Click" Padding="16,13">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="46"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="06"
+                               FontFamily="{StaticResource FontMono}" FontSize="15"
+                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="备份 / 日志" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="备份文件、还原全部、日志和 JSON 输出" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
         </UniformGrid>
 

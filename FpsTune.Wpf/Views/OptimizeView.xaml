@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:svc="clr-namespace:FpsTune.Wpf.Services"
              Background="{DynamicResource AppBackgroundBrush}">
-    <Grid Margin="28,24,28,24">
+    <Grid Margin="28,22,28,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <!-- 双栏必须吃满剩余高度: 若放 Auto 行, 右栏列表会按自然高度
@@ -14,13 +14,13 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="优化" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="优化 · TUNE" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="选预设或逐项开关，应用前自动备份，随时可还原"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,4,0,0"/>
+                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Button x:Name="ApplyButton"
-                        Content="应用"
+                        Content="应用 →"
                         Style="{StaticResource PrimaryButtonStyle}"
                         MinWidth="110" Margin="0,0,10,0"
                         Click="ApplyButton_Click"/>
@@ -36,50 +36,49 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300"/>
-                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="12"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <DockPanel Grid.Column="0">
-                <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+                <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="预设" Style="{StaticResource CardTitleStyle}"/>
-                        <WrapPanel Margin="0,8,0,0">
-                            <!-- 胶囊之间留足横向间距; 底部 8px 保证换行后两行不贴死 -->
-                            <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Margin="0,0,14,8"
+                        <TextBlock Text="预设 · PRESET" Style="{StaticResource CardTitleStyle}"/>
+                        <WrapPanel Margin="0,2,0,0">
+                            <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Margin="0,0,0,6"
                                          Style="{StaticResource PillRadioStyle}"/>
-                            <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Margin="0,0,14,8"
+                            <RadioButton x:Name="PresetBalanced" Content="均衡 balanced" GroupName="preset" IsChecked="True" Margin="0,0,0,6"
                                          Style="{StaticResource PillRadioStyle}"/>
-                            <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Margin="0,0,14,8"
+                            <RadioButton x:Name="PresetSafeOnly" Content="保守 safe-only" GroupName="preset" Margin="0,0,0,6"
                                          Style="{StaticResource PillRadioStyle}"/>
-                            <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Margin="0,0,14,8"
+                            <RadioButton x:Name="PresetCustom" Content="自定义" GroupName="preset" Margin="0,0,0,6"
                                          Style="{StaticResource PillRadioStyle}"/>
                         </WrapPanel>
+                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,8,0,10"/>
                         <CheckBox x:Name="ConsentCheck"
                                   Style="{StaticResource ToggleSwitchStyle}"
-                                  Margin="0,12,0,0"
                                   HorizontalContentAlignment="Left">
-                            <TextBlock Text="我已了解各项作用，同意执行" TextWrapping="Wrap"/>
+                            <TextBlock Text="我已了解各项作用，同意执行" TextWrapping="Wrap" FontSize="12.5"/>
                         </CheckBox>
                     </StackPanel>
                 </Border>
 
-                <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,14">
+                <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="配置方案" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="配置方案 · PROFILE" Style="{StaticResource CardTitleStyle}"/>
                         <TextBox x:Name="ProfileNameBox"
                                  Style="{StaticResource InputTextBoxStyle}"
-                                 Height="30" Margin="0,8,0,0"
+                                 Height="30"
                                  VerticalContentAlignment="Center" FontSize="12"/>
                         <WrapPanel Margin="0,8,0,0">
-                            <Button Content="保存" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileSave_Click"/>
-                            <Button Content="载入" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileLoad_Click"/>
-                            <Button Content="删除" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileDelete_Click"/>
-                            <Button Content="导出" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,6,6" Click="ProfileExport_Click"/>
-                            <Button Content="导入" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,0,6" Click="ProfileImport_Click"/>
+                            <Button Content="保存" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileSave_Click"/>
+                            <Button Content="载入" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileLoad_Click"/>
+                            <Button Content="删除" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileDelete_Click"/>
+                            <Button Content="导出" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileExport_Click"/>
+                            <Button Content="导入" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,0,4" Click="ProfileImport_Click"/>
                         </WrapPanel>
                         <TextBlock x:Name="ProfileHint"
                                    Text="输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享"
-                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                   Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
 
@@ -90,13 +89,13 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="执行结果" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Grid.Row="0" Text="执行结果 · OUTPUT" Style="{StaticResource CardTitleStyle}"/>
                         <FlowDocumentScrollViewer Grid.Row="1"
                                  x:Name="OutputBox"
                                  VerticalScrollBarVisibility="Auto"
                                  Background="Transparent">
                             <FlowDocument x:Name="OutputDoc" PagePadding="0" Background="Transparent"
-                                          FontFamily="Microsoft YaHei UI" FontSize="12">
+                                          FontFamily="{StaticResource FontBody}" FontSize="12">
                                 <Paragraph Foreground="{DynamicResource TextSecondaryBrush}">
                                     选择预设后点击“应用”。
                                 </Paragraph>
@@ -107,162 +106,152 @@
             </DockPanel>
 
             <!-- 右栏: 优化项列表(占满高度) -->
-        <!-- 优化项列表 -->
-        <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="14,14,4,14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock x:Name="ItemListTitle" Text="优化项" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Grid Width="220" Height="30">
-                        <TextBox x:Name="SearchBox"
-                                 Style="{StaticResource InputTextBoxStyle}"
-                                 VerticalContentAlignment="Center"
-                                 FontSize="12"
-                                 TextChanged="SearchBox_TextChanged"/>
-                        <!-- 占位文字: 叠在输入框内部, 有输入即隐藏(替代旧的负 Margin hack) -->
-                        <TextBlock Text="搜索"
-                                   IsHitTestVisible="False"
-                                   HorizontalAlignment="Left" VerticalAlignment="Center"
-                                   Margin="11,0,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                        <Button Content="全选"
-                                Style="{StaticResource GhostButtonStyle}"
-                                MinWidth="60" Height="30" Margin="8,0,0,0"
-                                Click="SelectAllVisible_Click"/>
-                        <Button Content="清空"
-                                Style="{StaticResource GhostButtonStyle}"
-                                MinWidth="60" Height="30" Margin="6,0,0,0"
-                                Click="ClearAll_Click"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- 分类过滤 -->
-                <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,2,0,10">
-                    <RadioButton Content="全部" GroupName="grpfilter" IsChecked="True" Tag=""
-                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
-                    <RadioButton Content="键鼠" GroupName="grpfilter" Tag="键鼠"
-                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
-                    <RadioButton Content="图形显示" GroupName="grpfilter" Tag="图形显示"
-                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
-                    <RadioButton Content="网络" GroupName="grpfilter" Tag="网络"
-                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
-                    <RadioButton Content="电源" GroupName="grpfilter" Tag="电源"
-                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
-                    <RadioButton Content="系统与调度" GroupName="grpfilter" Tag="系统与调度"
-                                 Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
-                </StackPanel>
-
-                <ListBox x:Name="ItemList"
-                         Grid.Row="2"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ItemContainerStyle="{StaticResource CardListItemStyle}"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         ItemsSource="{Binding ItemsView, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                    <ListBox.GroupStyle>
-                        <GroupStyle>
-                            <GroupStyle.HeaderTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,4">
-                                        <Border Width="3" Height="13" CornerRadius="2"
-                                                Background="{DynamicResource AccentBrush}"
-                                                VerticalAlignment="Center" Margin="0,0,7,0"/>
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontSize="12" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </GroupStyle.HeaderTemplate>
-                        </GroupStyle>
-                    </ListBox.GroupStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0"
-                                           Text="{Binding Id}"
-                                           FontFamily="Cascadia Mono, Consolas"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource AccentBrush}"
-                                           Margin="0,0,12,0"
-                                           VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               FontWeight="SemiBold"
-                                               TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding Description}"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Margin="0,2,0,0"/>
-                                    <TextBlock Text="{Binding SideEffect, StringFormat=副作用：{0}}"
-                                               Foreground="{DynamicResource WarningBrush}"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Margin="0,2,0,0"
-                                               Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/>
-                                </StackPanel>
-                                <Border Grid.Column="2"
-                                        Margin="8,0"
-                                        CornerRadius="6"
-                                        Padding="6,2"
-                                        Background="{DynamicResource ElevatedBrush}"
-                                        BorderBrush="{DynamicResource WarningBrush}"
-                                        BorderThickness="0.8"
-                                        VerticalAlignment="Center"
-                                        Visibility="{Binding RequiresAdmin, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="管理员"
-                                               Foreground="{DynamicResource WarningBrush}"
-                                               FontSize="10"/>
-                                </Border>
-                                <Border Grid.Column="3"
-                                        Margin="8,0,0,0"
-                                        CornerRadius="6"
-                                        Padding="6,2"
-                                        Background="{DynamicResource ElevatedBrush}"
-                                        BorderBrush="{DynamicResource AccentBrush}"
-                                        BorderThickness="0.8"
-                                        VerticalAlignment="Center"
-                                        Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="需重启"
-                                               Foreground="{DynamicResource AccentBrush}"
-                                               FontSize="10"/>
-                                </Border>
-                                <CheckBox Grid.Column="4"
-                                          Style="{StaticResource ToggleSwitchStyle}"
-                                          IsChecked="{Binding IsChecked}"
-                                          VerticalAlignment="Center"
-                                          Margin="14,0,0,0"/>
+                    <Grid Grid.Row="0" Margin="0,0,10,10">
+                        <TextBlock x:Name="ItemListTitle" Text="优化项 · ITEMS" Style="{StaticResource CardTitleStyle}" Margin="0" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Grid Width="200" Height="28">
+                                <TextBox x:Name="SearchBox"
+                                         Style="{StaticResource InputTextBoxStyle}"
+                                         VerticalContentAlignment="Center"
+                                         FontSize="12"
+                                         TextChanged="SearchBox_TextChanged"/>
+                                <!-- 占位文字: 叠在输入框内部, 有输入即隐藏 -->
+                                <TextBlock Text="搜索"
+                                           IsHitTestVisible="False"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                                           Margin="11,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
-        </Border>
+                            <Button Content="全选"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="52" Height="28" Margin="6,0,0,0"
+                                    Click="SelectAllVisible_Click"/>
+                            <Button Content="清空"
+                                    Style="{StaticResource GhostButtonStyle}"
+                                    MinWidth="52" Height="28" Margin="4,0,0,0"
+                                    Click="ClearAll_Click"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 分类过滤 -->
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,10,8">
+                        <RadioButton Content="全部" GroupName="grpfilter" IsChecked="True" Tag=""
+                                     Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                        <RadioButton Content="键鼠" GroupName="grpfilter" Tag="键鼠"
+                                     Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                        <RadioButton Content="图形显示" GroupName="grpfilter" Tag="图形显示"
+                                     Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                        <RadioButton Content="网络" GroupName="grpfilter" Tag="网络"
+                                     Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                        <RadioButton Content="电源" GroupName="grpfilter" Tag="电源"
+                                     Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                        <RadioButton Content="系统与调度" GroupName="grpfilter" Tag="系统与调度"
+                                     Style="{StaticResource PillRadioStyle}" Checked="GroupChip_Checked"/>
+                    </StackPanel>
+
+                    <ListBox x:Name="ItemList"
+                             Grid.Row="2"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource CardListItemStyle}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ItemsSource="{Binding ItemsView, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <ListBox.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,12,0,4">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="11" FontFamily="{StaticResource FontMono}"
+                                                       Foreground="{DynamicResource TextMutedBrush}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListBox.GroupStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,10,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Id}"
+                                               FontFamily="{StaticResource FontMono}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               Margin="0,0,12,0"
+                                               VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Description}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding SideEffect, StringFormat=副作用：{0}}"
+                                                   Foreground="{DynamicResource WarningBrush}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0"
+                                                   Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="2"
+                                            Margin="8,0"
+                                            Style="{StaticResource ChipStyle}"
+                                            BorderBrush="{DynamicResource WarningBrush}"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding RequiresAdmin, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="管理员"
+                                                   Foreground="{DynamicResource WarningBrush}"
+                                                   FontSize="10.5" FontFamily="{StaticResource FontMono}"/>
+                                    </Border>
+                                    <Border Grid.Column="3"
+                                            Margin="8,0,0,0"
+                                            Style="{StaticResource ChipStyle}"
+                                            BorderBrush="{DynamicResource AccentBrush}"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="需重启"
+                                                   Foreground="{DynamicResource AccentBrush}"
+                                                   FontSize="10.5" FontFamily="{StaticResource FontMono}"/>
+                                    </Border>
+                                    <CheckBox Grid.Column="4"
+                                              Style="{StaticResource ToggleSwitchStyle}"
+                                              IsChecked="{Binding IsChecked}"
+                                              VerticalAlignment="Center"
+                                              Margin="14,0,0,0"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

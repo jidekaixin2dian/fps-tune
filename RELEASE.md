@@ -1,7 +1,7 @@
 # Release Guide
 
 版本号唯一来源：`Directory.Build.props` 的 `<Version>`（程序集 / 安装器 / CLI 自报版本共用）。
-下文 `<ver>` 指该版本号；当前发布版本为 `1.5.0`。
+下文 `<ver>` 指该版本号；当前发布版本为 `1.6.0`。
 
 发布必须从最终提交开始。`publish-release.ps1` 读取干净工作树的
 `git rev-parse HEAD`，把完整 40 位 `finalSha` 嵌入程序集
