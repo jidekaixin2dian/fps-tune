@@ -24,10 +24,9 @@ public partial class MainWindow : Window
     private const uint MOD_ALT = 0x1, MOD_CONTROL = 0x2;
     private const uint VK_F = 0x46;
 
-    // Windows 11 会按系统圆角(约 8px)裁剪窗口并绘制系统阴影，与自绘 10px 圆角
-    // 叠加后四角出现白色缺口与断线；显式关闭系统圆角，形状完全交给 WPF 透明合成。
+    // 使用非分层窗口和 WindowChrome，保留 DWM 原生窗口动画与圆角。
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-    private const int DWMWCP_DONOTROUND = 1;
+    private const int DWMWCP_ROUND = 2;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(nint hwnd, int attr, ref int value, int size);
@@ -46,6 +45,7 @@ public partial class MainWindow : Window
         _pageFactories = new Dictionary<string, Func<UserControl>>
         {
             ["home"] = () => new HomeView(),
+            ["console"] = () => new ConsoleView(),
             ["detect"] = () => new DetectView(),
             ["opt"] = () => new OptimizeView(),
             ["session"] = () => new SessionView(),
@@ -68,6 +68,8 @@ public partial class MainWindow : Window
         var ver = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         TitleVersionText.Text = ver;
         SidebarVersionText.Text = ver;
+        AdminStatusText.Text = AdminHelper.IsAdministrator() ? "管理员模式" : "普通用户";
+        UpdateOverviewModeLabel();
 
         var theme = SettingsService.Current.ThemeMode;
         if (string.IsNullOrWhiteSpace(theme))
@@ -98,8 +100,7 @@ public partial class MainWindow : Window
         _hwndSource = (HwndSource?)HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
         _hwndSource?.AddHook(WndProc);
 
-        // 关闭 DWM 系统圆角（Win11）：防止系统按 8px 裁剪 10px 自绘圆角造成白角断线。
-        var pref = DWMWCP_DONOTROUND;
+        var pref = DWMWCP_ROUND;
         DwmSetWindowAttribute(_hwndSource!.Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref pref, sizeof(int));
 
         ApplyHotkeyRegistration();
@@ -214,23 +215,22 @@ public partial class MainWindow : Window
 
     // ---------- 托盘常驻 ----------
 
-    private void OnStateChanged(object? sender, EventArgs e)
+    private async void OnStateChanged(object? sender, EventArgs e)
     {
         UpdateRootClip();
         if (WindowState == WindowState.Minimized && SettingsService.Current.MinimizeToTray)
         {
             // 先让最小化动画落定再决定去向: 托盘图标挂载成功才隐藏窗口,
             // 否则保持任务栏最小化(避免窗口隐藏后托盘也没有、失去入口)。
-            Dispatcher.BeginInvoke(() =>
+            // ApplicationIdle 不等于 DWM 过渡完成，给系统最小化动画留出时间。
+            await Task.Delay(250);
+            if (!IsLoaded || WindowState != WindowState.Minimized)
+                return;
+            if (TrayService.EnsureCreated())
             {
-                if (WindowState != WindowState.Minimized)
-                    return;
-                if (TrayService.EnsureCreated())
-                {
-                    Hide();
-                    TrayService.ShowMinimizedHint();
-                }
-            }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                Hide();
+                TrayService.ShowMinimizedHint();
+            }
         }
     }
 
@@ -252,13 +252,14 @@ public partial class MainWindow : Window
     /// </summary>
     private void UpdateRootClip()
     {
-        var radius = WindowState == WindowState.Maximized ? 0 : 10;
+        var radius = WindowState == WindowState.Maximized ? 0 : 8;
         ChromeGrid.Clip = new RectangleGeometry(
             new Rect(0, 0, ChromeGrid.ActualWidth, ChromeGrid.ActualHeight), radius, radius);
     }
 
     private UserControl GetPage(string key)
     {
+        if (key == "home" && SettingsService.Current.OverviewMode != "classic") key = "console";
         if (!_pageCache.TryGetValue(key, out var page))
         {
             page = _pageFactories[key]();
@@ -272,6 +273,32 @@ public partial class MainWindow : Window
         NavigateTo("opt");
         if (GetPage("opt") is OptimizeView opt)
             opt.ReloadFromState();
+    }
+
+    private void UpdateOverviewModeLabel()
+    {
+        var classic = SettingsService.Current.OverviewMode == "classic";
+        OverviewModeButton.Content = classic ? "切换控制台界面" : "切换经典界面";
+        TitleBar.SetResourceReference(Panel.BackgroundProperty, classic ? "SidebarBackgroundBrush" : "ConsoleBackgroundBrush");
+        TabBar.SetResourceReference(Panel.BackgroundProperty, classic ? "SidebarBackgroundBrush" : "ConsoleBackgroundBrush");
+    }
+
+    private void OverviewMode_Click(object sender, RoutedEventArgs e)
+    {
+        SettingsService.Current.OverviewMode = SettingsService.Current.OverviewMode == "classic" ? "console" : "classic";
+        try { SettingsService.Save(SettingsService.Current); }
+        catch (Exception ex) { DialogService.Warning("界面模式", "本次切换已生效，但无法保存偏好：" + ex.Message); }
+        UpdateOverviewModeLabel();
+        if (_pageCache.TryGetValue("detect", out var detect) && detect is DetectView view) view.ApplyDisplayMode();
+        if (NavHome.IsChecked == true) SwitchPage(GetPage("home"));
+    }
+
+    internal Task<bool> RefreshDetectionAsync() => ((DetectView)GetPage("detect")).RunDetectionAsync();
+
+    internal void ReviewSelection(IEnumerable<string> ids)
+    {
+        ShowOptimizePage();
+        ((OptimizeView)GetPage("opt")).SelectForReview(ids);
     }
 
     public async Task RunOnboardingAsync()
@@ -329,13 +356,13 @@ public partial class MainWindow : Window
         PageHost.Opacity = 0;
         PageHost.Content = page;
 
-        var slideAnim = new DoubleAnimation(24, 0, TimeSpan.FromMilliseconds(220))
+        var slideAnim = new DoubleAnimation(8, 0, TimeSpan.FromMilliseconds(120))
         {
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
         };
         _pageSlide.BeginAnimation(TranslateTransform.XProperty, slideAnim);
 
-        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220))
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120))
         {
             EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
         };

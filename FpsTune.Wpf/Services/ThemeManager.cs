@@ -42,6 +42,7 @@ public static class ThemeManager
         var t = resolved == "light" ? LightPalette : DarkPalette;
 
         SetBrush("AppBackgroundBrush", t.AppBackground);
+        SetBrush("ConsoleBackgroundBrush", Parse(resolved == "light" ? "#F7F9FC" : "#07090B"));
         // 控制台风格：镀铬层（标题栏/页签栏）高通透，整窗极光从所有区域透上来；
         // 内容表面保留足够不透明度保证文字可读。
         SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, resolved == "light" ? (byte)0x7A : (byte)0x52));

@@ -12,7 +12,7 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="备份 / 日志 · BACKUP" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="备份 / 日志" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="每一次系统改动的原值都在这里，随时逐项还原"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
@@ -87,7 +87,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="日志 / JSON 输出 · LOG" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Grid.Row="0" Text="日志 / JSON 输出" Style="{StaticResource CardTitleStyle}"/>
                 <TextBox Grid.Row="1"
                          x:Name="LogBox"
                          Style="{StaticResource MonoTextBoxStyle}"

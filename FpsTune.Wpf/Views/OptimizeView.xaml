@@ -14,7 +14,7 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="优化 · TUNE" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="优化" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="选预设或逐项开关，应用前自动备份，随时可还原"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
@@ -42,7 +42,7 @@
             <DockPanel Grid.Column="0">
                 <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="预设 · PRESET" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="预设" Style="{StaticResource CardTitleStyle}"/>
                         <WrapPanel Margin="0,2,0,0">
                             <RadioButton x:Name="PresetFull" Content="全部" GroupName="preset" Margin="0,0,0,6"
                                          Style="{StaticResource PillRadioStyle}"/>
@@ -64,7 +64,7 @@
 
                 <Border DockPanel.Dock="Top" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="配置方案 · PROFILE" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="配置方案" Style="{StaticResource CardTitleStyle}"/>
                         <TextBox x:Name="ProfileNameBox"
                                  Style="{StaticResource InputTextBoxStyle}"
                                  Height="30"
@@ -89,7 +89,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="执行结果 · OUTPUT" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Grid.Row="0" Text="执行结果" Style="{StaticResource CardTitleStyle}"/>
                         <FlowDocumentScrollViewer Grid.Row="1"
                                  x:Name="OutputBox"
                                  VerticalScrollBarVisibility="Auto"
@@ -115,7 +115,7 @@
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="0,0,10,10">
-                        <TextBlock x:Name="ItemListTitle" Text="优化项 · ITEMS" Style="{StaticResource CardTitleStyle}" Margin="0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ItemListTitle" Text="优化项" Style="{StaticResource CardTitleStyle}" Margin="0" VerticalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Grid Width="200" Height="28">
                                 <TextBox x:Name="SearchBox"
@@ -198,7 +198,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0"
-                                               Text="{Binding Id}"
+                                               Text="{Binding Id}" Visibility="Collapsed"
                                                FontFamily="{StaticResource FontMono}"
                                                FontSize="11"
                                                Foreground="{DynamicResource AccentBrush}"

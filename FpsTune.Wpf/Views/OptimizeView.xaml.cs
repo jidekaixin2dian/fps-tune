@@ -43,6 +43,15 @@ public partial class OptimizeView : UserControl
     }
 
     private string _searchText = "";
+    internal void SelectForReview(IEnumerable<string> ids)
+    {
+        ReloadFromState();
+        SetCustomMode();
+        var selected = ids.ToHashSet(StringComparer.Ordinal);
+        foreach (var item in Items) item.IsChecked = selected.Contains(item.Id);
+        ConsentCheck.IsChecked = false;
+        SetPlain($"已带入 {selected.Count} 项选择。请审阅项目说明及副作用，勾选同意后点击“应用”。");
+    }
     private string _groupFilter = "";
     private bool FilterItem(object obj)
     {

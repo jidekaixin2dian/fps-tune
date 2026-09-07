@@ -18,7 +18,7 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="A/B 实验 · LAB" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="A/B 实验" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="向导式实验：先采基线，再依次测试三个候选组，每步可关联一次性能会话，结论只来自实际采样"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
@@ -187,7 +187,7 @@
                     <RowDefinition Height="210"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock Text="历史趋势 · TREND" Style="{StaticResource CardTitleStyle}" Margin="0"/>
+                    <TextBlock Text="历史趋势" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
@@ -220,7 +220,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="原始输出 · RAW" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Grid.Row="0" Text="原始输出" Style="{StaticResource CardTitleStyle}"/>
                 <!-- 根滚动布局下给固定高度, 内部自带滚动; 滚到边由 code-behind 还给页面 -->
                 <TextBox Grid.Row="1"
                          x:Name="RawBox"

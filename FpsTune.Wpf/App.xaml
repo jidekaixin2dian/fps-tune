@@ -10,9 +10,9 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <!-- ============ 设计令牌：字体 ============ -->
-            <FontFamily x:Key="FontDisplay">Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontBody">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontMono">Cascadia Mono, Consolas</FontFamily>
+            <FontFamily x:Key="FontDisplay">Microsoft YaHei UI, Segoe UI Variable Display, Segoe UI</FontFamily>
+            <FontFamily x:Key="FontBody">Microsoft YaHei UI, Segoe UI Variable Text, Segoe UI</FontFamily>
+            <FontFamily x:Key="FontMono">Cascadia Mono, Consolas, Microsoft YaHei UI</FontFamily>
 
             <!-- ============ 设计令牌：圆角（控制台 = 微圆角） ============ -->
             <CornerRadius x:Key="RadiusChip">3</CornerRadius>
@@ -22,6 +22,7 @@
 
             <!-- ============ 画刷（运行时由 ThemeManager 按主题覆写；此处为深色初值） ============ -->
             <!-- 页面根背景统一透明: 渐变底与极光都在主窗口层, 页面在其上滑动 -->
+            <SolidColorBrush x:Key="ConsoleBackgroundBrush" Color="#07090B"/>
             <SolidColorBrush po:Freeze="False" x:Key="AppBackgroundBrush" Color="Transparent"/>
             <SolidColorBrush po:Freeze="False" x:Key="SidebarBackgroundBrush" Color="#5205070A"/>
             <SolidColorBrush po:Freeze="False" x:Key="SurfaceBrush" Color="#C40A0E14"/>
@@ -50,6 +51,21 @@
             <Color x:Key="PrimaryColor">#3B82F6</Color>
             <Color x:Key="AccentColor">#22D3EE</Color>
 
+        <Style x:Key="ThinMeterStyle" TargetType="ProgressBar">
+            <Setter Property="Height" Value="3"/>
+            <Setter Property="Maximum" Value="100"/>
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid x:Name="PART_Track" Background="{TemplateBinding Background}">
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{TemplateBinding Foreground}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
             <!-- ============ 文本样式 ============ -->
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontDisplay}"/>
@@ -60,8 +76,8 @@
 
             <!-- 分区标题：mono 小号全大写 -->
             <Style x:Key="CardTitleStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="Normal"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="Margin" Value="0,0,0,10"/>
@@ -73,9 +89,9 @@
             </Style>
 
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                <Setter Property="FontSize" Value="10.5"/>
+                <Setter Property="FontSize" Value="12"/>
             </Style>
 
             <Style x:Key="StatValueStyle" TargetType="TextBlock">

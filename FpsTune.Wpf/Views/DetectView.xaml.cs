@@ -18,6 +18,8 @@ public partial class DetectView : UserControl
 
     private MetricsSampler? _sampler;
     private bool _suppressGameSwitch;
+    private Window? _hostWindow;
+    private MetricSample? _latestSample;
 
     public DetectView()
     {
@@ -29,16 +31,18 @@ public partial class DetectView : UserControl
             {
                 _ = RunDetectionAsync();
             }
+            ApplyDisplayMode();
             StartMonitor();
             StartGameScan();
-            if (Window.GetWindow(this) is { } window)
+            if ((_hostWindow = Window.GetWindow(this)) is { } window)
                 window.IsVisibleChanged += HostWindow_IsVisibleChanged;
         };
         Unloaded += (_, _) =>
         {
             StopMonitor();
-            if (Window.GetWindow(this) is { } window)
+            if (_hostWindow is { } window)
                 window.IsVisibleChanged -= HostWindow_IsVisibleChanged;
+            _hostWindow = null;
         };
     }
 
@@ -55,7 +59,7 @@ public partial class DetectView : UserControl
 
     private void StartMonitor()
     {
-        if (_sampler is not null)
+        if (_sampler is not null || !IsVisible)
             return;
         _sampler = new MetricsSampler(
             TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), capacity: 120);
@@ -72,21 +76,39 @@ public partial class DetectView : UserControl
         _sampler = null;
     }
 
+    internal void ApplyDisplayMode()
+    {
+        var classic = SettingsService.Current.OverviewMode == "classic";
+        Tag = classic ? "classic" : "console";
+        SetResourceReference(BackgroundProperty, classic ? "AppBackgroundBrush" : "ConsoleBackgroundBrush");
+        ClassicMonitorPanel.Visibility = classic ? Visibility.Visible : Visibility.Collapsed;
+        ConsoleMonitorPanel.Visibility = classic ? Visibility.Collapsed : Visibility.Visible;
+        if (_latestSample is { } sample) Sampler_Sampled(sample);
+    }
+
     private void Sampler_Sampled(MetricSample sample)
     {
-        var cpu = _sampler?.Buffer.Select(s => s.CpuPercent ?? double.NaN).ToList();
-        var mem = _sampler?.Buffer.Select(s => s.MemoryPercent ?? double.NaN).ToList();
-        var gpu = _sampler?.Buffer.Select(s => s.GpuPercent ?? double.NaN).ToList();
-        var vramRatio = BuildVramSeries();
+        _latestSample = sample;
+        if (ClassicMonitorPanel.Visibility == Visibility.Visible)
+        {
+            var cpu = _sampler?.Buffer.Select(s => s.CpuPercent ?? double.NaN).ToList();
+            var mem = _sampler?.Buffer.Select(s => s.MemoryPercent ?? double.NaN).ToList();
+            var gpu = _sampler?.Buffer.Select(s => s.GpuPercent ?? double.NaN).ToList();
+            var vramRatio = BuildVramSeries();
 
-        CpuNowText.Text = Fmt(sample.CpuPercent);
-        MemNowText.Text = Fmt(sample.MemoryPercent);
-        GpuNowText.Text = Fmt(sample.GpuPercent);
-        if (cpu is not null) MiniChart.Draw(CpuChart, cpu, "AccentBrush");
-        if (mem is not null) MiniChart.Draw(MemChart, mem, "PrimaryBrush");
-        if (gpu is not null) MiniChart.Draw(GpuChart, gpu, "OkBrush");
-        if (vramRatio is not null) MiniChart.Draw(VramChart, vramRatio, "WarningBrush");
-
+            if (cpu is not null) MiniChart.Draw(CpuChart, cpu, "AccentBrush");
+            if (mem is not null) MiniChart.Draw(MemChart, mem, "PrimaryBrush");
+            if (gpu is not null) MiniChart.Draw(GpuChart, gpu, "OkBrush");
+            if (vramRatio is not null) MiniChart.Draw(VramChart, vramRatio, "WarningBrush");
+        }
+        CpuNowText.Text = ConsoleCpuText.Text = Fmt(sample.CpuPercent);
+        MemNowText.Text = ConsoleMemText.Text = Fmt(sample.MemoryPercent);
+        GpuNowText.Text = ConsoleGpuText.Text = Fmt(sample.GpuPercent);
+        static double Meter(double? value) => value is { } v && double.IsFinite(v) ? Math.Clamp(v, 0, 100) : 0;
+        ConsoleCpuMeter.Value = Meter(sample.CpuPercent);
+        ConsoleMemMeter.Value = Meter(sample.MemoryPercent);
+        ConsoleGpuMeter.Value = Meter(sample.GpuPercent);
+        ConsoleVramMeter.Value = sample.VramTotalBytes is > 0 ? Meter(sample.VramUsedBytes / sample.VramTotalBytes * 100) : 0;
         if (sample.VramUsedBytes is { } used)
         {
             VramNowText.Text = sample.VramTotalBytes is { } total && total > 0
@@ -103,6 +125,8 @@ public partial class DetectView : UserControl
                 ? reason
                 : "未提供 GPU Adapter Memory 计数器";
         }
+        ConsoleVramText.Text = VramNowText.Text;
+        ConsoleVramText.ToolTip = VramNoteText.Text;
     }
 
     /// <summary>显存序列：容量可得时为占比 0-100，否则为窗口内相对水位。</summary>
@@ -234,7 +258,7 @@ public partial class DetectView : UserControl
     public Task<bool> RunOnboardingDetectionAsync()
         => RunDetectionAsync();
 
-    private async Task<bool> RunDetectionAsync()
+    internal async Task<bool> RunDetectionAsync()
     {
         if (_detectionInFlight)
             return false;
@@ -300,8 +324,8 @@ public partial class DetectView : UserControl
             var ramNode = hardware["ramGB"];
             RamText.Text = ramNode is null ? "--" : ramNode.ToString() + " GB";
             OsText.Text = hardware["os"]?.GetValue<string>() ?? "--";
-            LaptopText.Text = hardware["isLaptop"]?.GetValue<bool>() == true ? "是" : "否";
-            AdminText.Text = hardware["isAdmin"]?.GetValue<bool>() == true ? "是" : "否";
+            LaptopText.Text = hardware["isLaptop"]?.GetValue<bool>() == true ? "笔记本" : "台式机";
+            AdminText.Text = hardware["isAdmin"]?.GetValue<bool>() == true ? "管理员" : "普通用户";
         }
 
         AppState.GamePath = root["gamePath"]?.GetValue<string>();
@@ -310,7 +334,7 @@ public partial class DetectView : UserControl
         var checks = root["checks"]?.AsArray();
         CheckList.ItemsSource = BuildCheckItems(checks);
 
-        AppState.Items.Clear();
+        var detectedItems = new List<OptimizationItem>();
         var items = root["items"]?.AsArray();
         if (items is not null)
         {
@@ -334,10 +358,11 @@ public partial class DetectView : UserControl
                 var current = item?["current"]?.GetValue<string>() ?? "";
                 var isDefault = item?["default"]?.GetValue<bool>() ?? false;
                 var group = item?["group"]?.GetValue<string>() ?? "";
-                AppState.Items.Add(new OptimizationItem(id, name, desc, sideEffect, admin, reboot, optimized, current, isDefault, group));
+                detectedItems.Add(new OptimizationItem(id, name, desc, sideEffect, admin, reboot, optimized, current, isDefault, group));
             }
         }
 
+        AppState.Items = detectedItems;
         var viewModels = AppState.Items
             .Select(i => new OptimizationItemViewModel(i))
             .ToList();
@@ -461,9 +486,10 @@ public partial class DetectView : UserControl
             var name = node?["name"]?.GetValue<string>() ?? "体检项";
             var status = node?["status"]?.GetValue<string>() ?? string.Empty;
             var message = node?["message"]?.GetValue<string>() ?? string.Empty;
+            var statusLabel = status switch { "ok" => "正常", "attention" => "待检查", "danger" => "异常", _ => status };
             var summary = string.IsNullOrWhiteSpace(status) && string.IsNullOrWhiteSpace(message)
                 ? "待检测"
-                : $"● {status}  {message}".Trim();
+                : $"● {statusLabel}  {message}".Trim();
             return new CheckItemViewModel(name, summary, GetStatusBrush(status));
         }).ToList();
     }

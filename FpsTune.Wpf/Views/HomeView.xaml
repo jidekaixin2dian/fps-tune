@@ -12,7 +12,7 @@
 
         <!-- 页头：mono 标签 + 联系方式（联系条目由 code-behind 动态填充） -->
         <Grid Grid.Row="0" Margin="0,0,0,6">
-            <TextBlock Text="概览 · OVERVIEW"
+            <TextBlock Text="概览"
                        Style="{StaticResource SectionLabelStyle}"
                        VerticalAlignment="Center"/>
             <StackPanel x:Name="ContactPanel"
@@ -122,7 +122,7 @@
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
                         <TextBlock Text="A/B 实验" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="基线采样、候选组对比、keep/revert 决策" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="基线采样、候选组对比、保留或还原决策" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>

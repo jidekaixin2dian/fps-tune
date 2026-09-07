@@ -1,65 +1,68 @@
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace FpsTune.Wpf.Views;
 
-/// <summary>
-/// 检测页与性能会话页共用的迷你折线图：WPF 基本图元，无第三方库。
-/// values 为 0-100 的百分比序列（NaN/非有限值跳过）。
-/// </summary>
+/// <summary>有界的实时图表；保存最近一屏数据，在布局尺寸变化时立即重绘。</summary>
 public static class MiniChart
 {
+    private sealed class ChartState
+    {
+        public double[] Values = [];
+        public string BrushKey = "AccentBrush";
+        public int WindowSize = 60;
+    }
+    private static readonly ConditionalWeakTable<Canvas, ChartState> States = new();
     public static void Draw(Canvas canvas, IReadOnlyList<double> values, string brushKey, int windowSize = 60)
     {
+        if (!States.TryGetValue(canvas, out var state))
+        {
+            state = new ChartState();
+            States.Add(canvas, state);
+            canvas.ClipToBounds = true;
+            canvas.SizeChanged += (_, _) => Render(canvas, state);
+        }
+        state.WindowSize = Math.Max(2, windowSize);
+        state.Values = values.Skip(Math.Max(0, values.Count - state.WindowSize)).ToArray();
+        state.BrushKey = brushKey;
+        Render(canvas, state);
+    }
+    private static void Render(Canvas canvas, ChartState state)
+    {
+        canvas.Children.Clear();
         var w = canvas.ActualWidth;
         var h = canvas.ActualHeight;
-        if (w < 10 || h < 10)
-            return;
-        canvas.Children.Clear();
-
-        // 底线与半高线
-        for (var i = 0; i < 2; i++)
+        if (w < 10 || h < 10) return;
+        Brush BrushFor(string key) => canvas.TryFindResource(key) as Brush ?? Brushes.Gray;
+        foreach (var y in new[] { h - 1, h / 2 })
+            canvas.Children.Add(new Line { X1 = 0, Y1 = y, X2 = w, Y2 = y,
+                Stroke = BrushFor("BorderBrush"), StrokeThickness = 1, Opacity = 0.5 });
+        var stroke = BrushFor(state.BrushKey);
+        Polyline? segment = null;
+        Point? last = null;
+        for (var i = 0; i < state.Values.Length; i++)
         {
-            var y = i == 0 ? h - 1 : h / 2;
-            canvas.Children.Add(new System.Windows.Shapes.Line
+            // 不可用的采样留空，避免把缺失数据拼成连续的趋势。
+            if (!double.IsFinite(state.Values[i])) { segment = null; last = null; continue; }
+            var x = 3 + (w - 6) * (state.WindowSize - state.Values.Length + i) / (state.WindowSize - 1);
+            var y = h - 3 - (h - 6) * Math.Clamp(state.Values[i], 0, 100) / 100;
+            if (segment is null)
             {
-                X1 = 0, Y1 = y, X2 = w, Y2 = y,
-                Stroke = (Brush)Application.Current.Resources["BorderBrush"],
-                StrokeThickness = 1,
-                Opacity = 0.5
-            });
+                segment = new Polyline { Stroke = stroke, StrokeThickness = 1.6, StrokeLineJoin = PenLineJoin.Round };
+                canvas.Children.Add(segment);
+            }
+            last = new Point(x, y);
+            segment.Points.Add(last.Value);
         }
-
-        // 非有限值（该指标本轮不可用）跳过，避免 NaN 坐标破坏渲染
-        var finite = new List<double>();
-        foreach (var v in values)
-            if (double.IsFinite(v))
-                finite.Add(v);
-        if (finite.Count == 0)
-            return;
-
-        var stroke = (Brush)Application.Current.Resources[brushKey];
-        double Step() => w / Math.Max(windowSize - 1, finite.Count - 1);
-        var offset = windowSize - finite.Count;
-        var points = new System.Windows.Media.PointCollection();
-        for (var i = 0; i < finite.Count; i++)
-            points.Add(new Point(offset * Step() + i * Step(), h - 2 - (h - 4) * finite[i] / 100));
-        canvas.Children.Add(new System.Windows.Shapes.Polyline
+        if (last is { } point)
         {
-            Points = points,
-            Stroke = stroke,
-            StrokeThickness = 1.6,
-            StrokeLineJoin = System.Windows.Media.PenLineJoin.Round
-        });
-
-        canvas.Children.Add(new System.Windows.Shapes.Ellipse
-        {
-            Width = 6, Height = 6,
-            Fill = stroke,
-            Margin = new Thickness(points[^1].X - 3, points[^1].Y - 3, 0, 0),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top
-        });
+            var dot = new Ellipse { Width = 6, Height = 6, Fill = stroke };
+            Canvas.SetLeft(dot, point.X - 3);
+            Canvas.SetTop(dot, point.Y - 3);
+            canvas.Children.Add(dot);
+        }
     }
 }

@@ -9,11 +9,11 @@
         WindowStartupLocation="CenterScreen"
         Title="FPS 帧律"
         SourceInitialized="OnSourceInitialized"
-        WindowStyle="None"
+        WindowStyle="SingleBorderWindow"
         ResizeMode="CanResize"
-        Background="Transparent"
-        AllowsTransparency="True"
-        FontFamily="Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI"
+        Background="{DynamicResource AppBackdropBrush}"
+        AllowsTransparency="False"
+        FontFamily="{StaticResource FontBody}"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
         UseLayoutRounding="True"
@@ -29,10 +29,11 @@
     <Border x:Name="ChromeRoot"
             Background="{DynamicResource AppBackdropBrush}"
             BorderBrush="{DynamicResource WindowBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10">
+            >
         <Border.Style>
             <Style TargetType="Border">
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="8"/>
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
                         <Setter Property="CornerRadius" Value="0"/>
@@ -78,11 +79,11 @@
             </Grid>
 
             <!-- 标题栏：品牌 + 状态 + 窗口按钮 -->
-            <Grid Grid.Row="0"
+            <Grid x:Name="TitleBar" Grid.Row="0"
                   Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
                     <Image Source="/Assets/app-icon.png" Width="16" Height="16" RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="FPS-TUNE"
+                    <TextBlock Text="FPS 帧律"
                                Margin="9,0,0,0"
                                FontSize="12" FontWeight="Bold"
                                FontFamily="{StaticResource FontMono}"
@@ -97,17 +98,21 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <TextBlock x:Name="AdminStatusText" VerticalAlignment="Center" Margin="0,0,18,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <Button x:Name="OverviewModeButton" Content="切换经典界面" Click="OverviewMode_Click"
+                            Style="{StaticResource GhostButtonStyle}" Height="28" Padding="10,2" Margin="0,0,16,0"
+                            ToolTip="切换概览与检测页的显示模式，自动记住选择"/>
                     <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click"
-                            Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}">
+                            Width="44" Height="32" ToolTip="最小化" AutomationProperties.Name="最小化" Style="{StaticResource CaptionButtonStyle}">
                         <Path Data="M0 0 H10" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"/>
                     </Button>
                     <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click"
-                            Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}">
+                            Width="44" Height="32" ToolTip="最大化或还原" AutomationProperties.Name="最大化或还原" Style="{StaticResource CaptionButtonStyle}">
                         <Path Data="M0.5 0.5 H8.5 V8.5 H0.5 Z" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"
                               StrokeLineJoin="Round" Fill="Transparent"/>
                     </Button>
                     <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click"
-                            Width="44" Height="32" Style="{StaticResource CaptionCloseButtonStyle}">
+                            Width="44" Height="32" ToolTip="关闭" AutomationProperties.Name="关闭" Style="{StaticResource CaptionCloseButtonStyle}">
                         <Path Data="M0 0 L8 8 M8 0 L0 8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.2"
                               StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                     </Button>
@@ -115,7 +120,7 @@
             </Grid>
 
             <!-- 页签栏：中文页签 + 底部指示线 -->
-            <Grid Grid.Row="1"
+            <Grid x:Name="TabBar" Grid.Row="1"
                   Background="{DynamicResource SidebarBackgroundBrush}">
                 <Border BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="0,0,0,1">
@@ -156,6 +161,7 @@
                     </StackPanel>
                 </Border>
                 <TextBlock x:Name="SidebarVersionText"
+                           Visibility="Collapsed"
                            Text="v1.0.1"
                            Margin="0,0,14,0"
                            FontSize="11"

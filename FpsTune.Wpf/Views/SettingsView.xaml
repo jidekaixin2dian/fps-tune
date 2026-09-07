@@ -6,7 +6,7 @@
         <StackPanel Margin="28,22,28,28">
 
             <!-- 页头 -->
-            <TextBlock Text="设置 · CONFIG" Style="{StaticResource SectionLabelStyle}"/>
+            <TextBlock Text="设置" Style="{StaticResource SectionLabelStyle}"/>
             <TextBlock Text="个性化 · 游戏 · 维护，改动即时生效"
                        Style="{StaticResource MutedTextStyle}"
                        Margin="0,6,0,18"/>
@@ -14,7 +14,7 @@
             <!-- 常规 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="常规 · GENERAL" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="常规" Style="{StaticResource CardTitleStyle}"/>
 
                     <TextBlock Text="主题外观" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
@@ -60,7 +60,7 @@
             <!-- 游戏 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="游戏 · GAME" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="游戏" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="手动指定游戏 EXE，用于全屏优化 / GPU 偏好 / 进程优先级三类优化；留空则自动检测主流 FPS。"
                                Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap"/>
                     <Grid Margin="0,10,0,0">
@@ -92,7 +92,7 @@
             <!-- 按游戏自动应用 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="按游戏自动应用 · AUTO" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="按游戏自动应用" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="仅按游戏进程名每 3 秒轮询启动边沿，不读取进程路径、内存或注入进程。国服与国际服若使用同一进程名，当前接口无法区分，只能保留一个绑定。"
                                Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap"/>
                     <CheckBox x:Name="AutoProfileCheck"
@@ -260,7 +260,7 @@
             <!-- 高级 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
-                    <TextBlock Text="高级与维护 · ADMIN" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="高级与维护" Style="{StaticResource CardTitleStyle}"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock x:Name="AdminStatusText"
                                    Text="当前非管理员"
@@ -297,7 +297,7 @@
             <!-- 关于 -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="关于 · ABOUT" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="关于" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="VersionText" Text="版本：v1.0.0"
                                Foreground="{DynamicResource AccentBrush}" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold"/>
                     <TextBlock Text="FPS 帧律：面向 Windows 的系统层帧率优化工具，全 FPS 游戏通用。"

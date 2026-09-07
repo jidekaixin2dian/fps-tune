@@ -11,7 +11,7 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="朋友测试 · FRIEND" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="朋友测试" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="为朋友的机器生成一份优化前后对照记录，便于回访与收集反馈"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
@@ -40,7 +40,7 @@
             <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                 <ScrollViewer x:Name="FormScroll" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="基础信息 · FORM" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="基础信息" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="昵称" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                         <TextBox x:Name="NameBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
 
@@ -99,7 +99,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Markdown 预览 · PREVIEW" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Grid.Row="0" Text="Markdown 预览" Style="{StaticResource CardTitleStyle}"/>
                     <TextBox Grid.Row="1"
                              x:Name="PreviewBox"
                              Style="{StaticResource MonoTextBoxStyle}"
