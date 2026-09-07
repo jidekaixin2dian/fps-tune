@@ -83,24 +83,21 @@
             <Grid x:Name="TitleBar" Grid.Row="0"
                   Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-                    <Border Width="30" Height="30" CornerRadius="6" Background="{DynamicResource ConsoleBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" Margin="4,0,0,0">
-                        <Image Source="/Assets/app-icon.png" Width="24" Height="24" RenderOptions.BitmapScalingMode="HighQuality"/>
-                    </Border>
-                    <TextBlock Text="FPS 帧律"
-                               Margin="12,0,0,0"
-                               FontSize="16" FontWeight="SemiBold"
+                    <Image Source="/Assets/app-icon.png" Width="40" Height="40" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="帧律"/>
+                    <TextBlock Text="帧律"
+                               Margin="8,0,0,0"
+                               FontSize="19" FontWeight="SemiBold"
                                FontFamily="{StaticResource FontBody}"
                                Foreground="{DynamicResource TextPrimaryBrush}"
                                VerticalAlignment="Center"/>
-                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0" Margin="14,0,0,0" Padding="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="FPS" FontFamily="{StaticResource FontMono}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="10,3,0,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TitleVersionText"
                                Text="v1.0.1"
-                               Margin="0,1,0,0"
-                               FontSize="12"
+                               Margin="16,3,0,0"
+                               FontSize="11"
                                FontFamily="{StaticResource FontMono}"
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center"/>
-                    </Border>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBlock x:Name="AdminStatusText" VerticalAlignment="Center" Margin="0,0,18,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
