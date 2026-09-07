@@ -614,7 +614,8 @@ public sealed class SessionTests : IDisposable
         {
             service.Start("测试会话 A");
             Assert.True(service.IsRunning);
-            Assert.NotNull(service.LatestSample);
+            // 首样本异步读取；立即停止时允许保存零样本会话，不能用伪造的 0 填充。
+            Assert.Null(service.LatestSample);
             var saved = service.Stop(save: true);
             Assert.False(service.IsRunning);
             Assert.NotNull(saved);

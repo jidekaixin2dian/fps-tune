@@ -70,7 +70,6 @@ public sealed class PerformanceSessionService : IDisposable
             _sampler = new MetricsSampler(CurrentInterval, CurrentBufferCapacity);
             _sampler.Sampled += OnSample;
             IsRunning = true;
-            _sampler.SampleOnce(); // 立即出第一个样本，界面无需等一个间隔
             _sampler.Start();
             StateChanged?.Invoke();
             return true;

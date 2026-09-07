@@ -28,6 +28,13 @@ public sealed class MetricsSampler : IDisposable
     private readonly DispatcherTimer? _timer;
     private readonly List<MetricSample> _buffer = new();
     private readonly Dictionary<string, string> _unavailable = new();
+    private IReadOnlyDictionary<string, string> _publishedReasons = new Dictionary<string, string>();
+    private readonly object _counterGate = new();
+    private readonly Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
+    private readonly Func<MetricSample>? _readOverride;
+    private int _sampling;
+    private int _generation;
+    private double? _publishedVramTotal;
 
     private PerformanceCounter? _cpu;
     private bool _cpuPrimed;
@@ -43,12 +50,16 @@ public sealed class MetricsSampler : IDisposable
     public event Action<MetricSample>? Sampled;
 
     public MetricsSampler(TimeSpan? interval = null, int capacity = 600)
+        : this(interval, capacity, null) { }
+
+    internal MetricsSampler(TimeSpan? interval, int capacity, Func<MetricSample>? readOverride)
     {
+        _readOverride = readOverride;
         _interval = interval ?? TimeSpan.FromSeconds(1);
         _capacity = Math.Max(1, capacity);
         // 计时器随实例创建：由 Start/Stop 控制启停，Dispose 兜底停止。
         _timer = new DispatcherTimer { Interval = _interval };
-        _timer.Tick += (_, _) => SampleOnce();
+        _timer.Tick += async (_, _) => await SampleOnceAsync();
     }
 
     /// <summary>采样间隔。</summary>
@@ -61,33 +72,73 @@ public sealed class MetricsSampler : IDisposable
     public IReadOnlyList<MetricSample> Buffer => _buffer;
 
     /// <summary>各指标最近一次不可用的原因（键：cpu/mem/gpu/vram/vram-total）。</summary>
-    public IReadOnlyDictionary<string, string> UnavailableReasons => _unavailable;
+    public IReadOnlyDictionary<string, string> UnavailableReasons => _publishedReasons;
 
     /// <summary>GPU 专用显存容量（字节）；0 = 未能可靠取得。</summary>
-    public double? VramTotalBytes => _vramTotalQueried && _vramTotalBytes > 0 ? _vramTotalBytes : null;
+    public double? VramTotalBytes => _publishedVramTotal;
 
     public void Start()
     {
         if (Volatile.Read(ref _disposed) != 0)
             return;
+        if (IsRunning) return;
         _timer?.Start();
+        _ = SampleOnceAsync();
     }
 
     public void Stop()
     {
         _timer?.Stop();
+        Interlocked.Increment(ref _generation);
     }
 
     /// <summary>立即采样一次并写入缓冲、触发 Sampled。</summary>
     public MetricSample SampleOnce()
     {
-        if (Volatile.Read(ref _disposed) != 0)
-            throw new ObjectDisposedException(nameof(MetricsSampler));
+        lock (_counterGate)
+        {
+            ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+            var sample = ReadSample();
+            Publish(sample, new Dictionary<string, string>(_unavailable));
+            return sample;
+        }
+    }
 
+    /// <summary>后台读取计数器；最多一轮在途，停止/释放后丢弃迟到结果。</summary>
+    public async Task SampleOnceAsync()
+    {
+        if (Volatile.Read(ref _disposed) != 0 || Interlocked.CompareExchange(ref _sampling, 1, 0) != 0)
+            return;
+        var generation = Volatile.Read(ref _generation);
+        try
+        {
+            var result = await Task.Run(() =>
+            {
+                lock (_counterGate)
+                {
+                    if (Volatile.Read(ref _disposed) != 0 || generation != Volatile.Read(ref _generation))
+                        return ((MetricSample?)null, new Dictionary<string, string>());
+                    return ((MetricSample?)ReadSample(), new Dictionary<string, string>(_unavailable));
+                }
+            }).ConfigureAwait(false);
+            if (result.Item1 is null || _dispatcher.HasShutdownStarted) return;
+            await _dispatcher.InvokeAsync(() =>
+            {
+                if (Volatile.Read(ref _disposed) == 0 && generation == Volatile.Read(ref _generation))
+                    Publish(result.Item1, result.Item2);
+            });
+        }
+        catch (OperationCanceledException) when (_dispatcher.HasShutdownStarted) { }
+        finally { Interlocked.Exchange(ref _sampling, 0); }
+    }
+
+    private MetricSample ReadSample()
+    {
+        if (_readOverride is not null) return _readOverride();
         var now = DateTime.Now;
         var vramUsed = ReadVramUsedBytes();
 
-        var sample = new MetricSample(
+        return new MetricSample(
             now,
             ReadCpuPercent(),
             ReadMemoryPercent(),
@@ -95,6 +146,12 @@ public sealed class MetricsSampler : IDisposable
             vramUsed,
             ReadVramTotalBytes());
 
+    }
+
+    private void Publish(MetricSample sample, IReadOnlyDictionary<string, string> reasons)
+    {
+        _publishedReasons = reasons;
+        _publishedVramTotal = sample.VramTotalBytes;
         _buffer.Add(sample);
         while (_buffer.Count > _capacity)
             _buffer.RemoveAt(0);
@@ -107,7 +164,6 @@ public sealed class MetricsSampler : IDisposable
         {
             // 订阅方异常不应中断采样循环，也不应把 listener 伪装成缺失指标。
         }
-        return sample;
     }
 
     public void ClearBuffer() => _buffer.Clear();
@@ -116,16 +172,24 @@ public sealed class MetricsSampler : IDisposable
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
             return;
-        _timer?.Stop();
+        Stop();
         Sampled = null;
-        _cpu?.Dispose();
-        _cpu = null;
-        DisposeList(_gpuEngineCounters);
-        _gpuEngineCounters = null;
-        DisposeList(_vramCounters);
-        _vramCounters = null;
         _buffer.Clear();
-        _unavailable.Clear();
+        _publishedReasons = new Dictionary<string, string>();
+        // 不能在 UI 线程等待一次慢的驱动查询结束；计数器只在后台锁内释放。
+        _ = Task.Run(() =>
+        {
+            lock (_counterGate)
+            {
+                _cpu?.Dispose();
+                _cpu = null;
+                DisposeList(_gpuEngineCounters);
+                _gpuEngineCounters = null;
+                DisposeList(_vramCounters);
+                _vramCounters = null;
+                _unavailable.Clear();
+            }
+        });
     }
 
     // ---------- 各指标读取 ----------

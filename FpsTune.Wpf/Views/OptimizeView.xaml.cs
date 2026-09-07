@@ -106,13 +106,21 @@ public partial class OptimizeView : UserControl
     }
     private bool _suppressPresetAutoCheck;
 
+    private List<OptimizationItem>? _sourceItems;
+
     public void ReloadFromState()
     {
-        Items.Clear();
-        foreach (var item in AppState.Items)
-            Items.Add(new OptimizationItemViewModel(item));
+        // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
+        if (ReferenceEquals(_sourceItems, AppState.Items)) return;
+        var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
+        _sourceItems = AppState.Items;
+        using (ItemsView.DeferRefresh())
+        {
+            Items.Clear();
+            foreach (var item in AppState.Items)
+                Items.Add(new OptimizationItemViewModel(item) { IsChecked = selected.Contains(item.Id) });
+        }
         _loadedFromState = AppState.Items.Count > 0;
-        ItemsView.Refresh();
         if (!_loadedFromState)
         {
             SetPlain("暂无优化项，请先在检测页运行检测。");

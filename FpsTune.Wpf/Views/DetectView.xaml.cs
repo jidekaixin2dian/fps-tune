@@ -60,7 +60,6 @@ public partial class DetectView : UserControl
         _sampler = new MetricsSampler(
             TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), capacity: 120);
         _sampler.Sampled += Sampler_Sampled;
-        _sampler.SampleOnce();
         _sampler.Start();
     }
 

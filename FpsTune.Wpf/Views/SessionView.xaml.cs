@@ -15,6 +15,7 @@ public partial class SessionView : UserControl
 {
     private readonly DispatcherTimer _ticker;
     private bool _refreshing;
+    private IReadOnlyList<PerformanceSession> _sessions = Array.Empty<PerformanceSession>();
 
     public SessionView()
     {
@@ -205,7 +206,7 @@ public partial class SessionView : UserControl
 
     private void Refresh_Click(object sender, RoutedEventArgs e) => RefreshAll();
 
-    private void RefreshAll()
+    private async void RefreshAll()
     {
         if (_refreshing)
             return;
@@ -213,11 +214,22 @@ public partial class SessionView : UserControl
         try
         {
             RefreshControlState();
-            RefreshHistory();
+            var snapshot = await Task.Run(() =>
+            {
+                var sessions = PerformanceSessionStore.LoadAll();
+                return (Sessions: sessions, Rows: BuildHistoryRows(sessions));
+            });
+            _sessions = snapshot.Sessions;
+            HistoryList.ItemsSource = snapshot.Rows;
+            HistoryEmptyText.Visibility = _sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             RefreshCompareSources();
             UpdateTiles(null);
             if (Service.IsRunning)
                 DrawCharts();
+        }
+        catch (Exception ex)
+        {
+            RunStateText.Text = "历史记录读取失败：" + ex.Message;
         }
         finally
         {
@@ -225,10 +237,9 @@ public partial class SessionView : UserControl
         }
     }
 
-    private void RefreshHistory()
+    private static List<SessionListVm> BuildHistoryRows(IReadOnlyList<PerformanceSession> sessions)
     {
-        var sessions = PerformanceSessionStore.LoadAll();
-        HistoryList.ItemsSource = sessions.Select(s =>
+        return sessions.Select(s =>
         {
             var sum = SessionStatistics.Summarize(s);
             var avgParts = new List<string>();
@@ -243,7 +254,6 @@ public partial class SessionView : UserControl
                 avgParts.Count > 0 ? string.Join(" · ", avgParts) : "有效样本不足",
                 s.StartedAt);
         }).ToList();
-        HistoryEmptyText.Visibility = sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private sealed record SessionListVm(string Id, string Name, string MetaText, string AvgText, DateTime StartedAt);
@@ -256,7 +266,7 @@ public partial class SessionView : UserControl
         DeleteButton.IsEnabled = selected.Count > 0;
         if (selected.Count == 1)
         {
-            var store = PerformanceSessionStore.LoadAll().FirstOrDefault(s => s.Id == selected[0].Id);
+            var store = _sessions.FirstOrDefault(s => s.Id == selected[0].Id);
             if (store is not null)
                 ShowInsights(store);
         }
@@ -333,7 +343,7 @@ public partial class SessionView : UserControl
             DialogService.Info("性能会话", "请先在历史列表中选择恰好一个会话。");
             return null;
         }
-        return PerformanceSessionStore.LoadAll().FirstOrDefault(s => s.Id == selected[0].Id);
+        return _sessions.FirstOrDefault(s => s.Id == selected[0].Id);
     }
 
     private static string SanitizeFileName(string name)
@@ -382,7 +392,7 @@ public partial class SessionView : UserControl
 
     private void RefreshCompareSources()
     {
-        var sessions = PerformanceSessionStore.LoadAll();
+        var sessions = _sessions;
         var items = sessions.Select(s => new CompareSourceVm(s.Id, s.Name, s.StartedAt)).ToList();
         CompareA.ItemsSource = items;
         CompareB.ItemsSource = items;
@@ -403,7 +413,7 @@ public partial class SessionView : UserControl
             CompareRows.ItemsSource = null;
             return;
         }
-        var store = PerformanceSessionStore.LoadAll();
+        var store = _sessions;
         var a = store.FirstOrDefault(s => s.Id == va.Id);
         var b = store.FirstOrDefault(s => s.Id == vb.Id);
         if (a is null || b is null)
