@@ -122,13 +122,12 @@ public partial class OptimizeView : UserControl
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
         if (ReferenceEquals(_sourceItems, AppState.Items)) return;
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
+        // 分组 ListCollectionView 在集合变化时会访问 CurrentPosition，不能在
+        // DeferRefresh 作用域内逐项添加。列表规模很小，且仅在快照变化时重建。
+        Items.Clear();
+        foreach (var item in AppState.Items)
+            Items.Add(new OptimizationItemViewModel(item) { IsChecked = selected.Contains(item.Id) });
         _sourceItems = AppState.Items;
-        using (ItemsView.DeferRefresh())
-        {
-            Items.Clear();
-            foreach (var item in AppState.Items)
-                Items.Add(new OptimizationItemViewModel(item) { IsChecked = selected.Contains(item.Id) });
-        }
         _loadedFromState = AppState.Items.Count > 0;
         if (!_loadedFromState)
         {

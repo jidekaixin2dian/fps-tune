@@ -85,7 +85,7 @@
 
             <Style x:Key="MutedTextStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontSize" Value="13"/>
             </Style>
 
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
@@ -295,8 +295,8 @@
                 <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ToolTip">
@@ -315,8 +315,8 @@
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
                 <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
                 <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
-                <Setter Property="FontSize" Value="12.5"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="34"/>
@@ -350,7 +350,7 @@
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="12.5"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="32"/>
                 <Setter Property="Padding" Value="14,0"/>
@@ -393,8 +393,8 @@
             <Style x:Key="GhostButtonStyle" TargetType="Button">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="30"/>
                 <Setter Property="Padding" Value="10,0"/>
@@ -754,7 +754,7 @@
             <!-- ============ 分段单选（替代胶囊：方角 mono 文本段） ============ -->
             <Style x:Key="PillRadioStyle" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="11.5"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>

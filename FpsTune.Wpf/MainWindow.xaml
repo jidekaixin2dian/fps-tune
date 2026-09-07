@@ -100,7 +100,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBlock x:Name="AdminStatusText" VerticalAlignment="Center" Margin="0,0,18,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
                     <Button x:Name="OverviewModeButton" Content="切换经典界面" Click="OverviewMode_Click"
-                            Style="{StaticResource PrimaryButtonStyle}" FontFamily="{StaticResource FontBody}" Height="28" Padding="12,2" Margin="0,0,16,0"
+                            Style="{StaticResource PrimaryButtonStyle}" FontFamily="{StaticResource FontBody}" FontSize="13" MinWidth="136" Height="32" Padding="18,2" Margin="0,0,16,0"
                             ToolTip="切换概览与检测页的显示模式，自动记住选择"/>
                     <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click"
                             Width="44" Height="32" ToolTip="最小化" AutomationProperties.Name="最小化" Style="{StaticResource CaptionButtonStyle}">
