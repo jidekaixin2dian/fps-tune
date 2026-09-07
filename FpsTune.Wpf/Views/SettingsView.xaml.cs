@@ -57,8 +57,32 @@ public partial class SettingsView : UserControl
         RefreshAdminStatus();
     }
 
+    private void Section_Checked(object sender, RoutedEventArgs e)
+    {
+        if (Section0 is null || sender is not RadioButton { Tag: string tag }) return;
+        var sections = new[] { Section0, Section1, Section2, Section3 };
+        for (var i = 0; i < sections.Length; i++)
+            sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    internal void RefreshDisplayMode()
+    {
+        _suppressUiEvents = true;
+        ConsoleModeRadio.IsChecked = SettingsService.Current.OverviewMode != "classic";
+        ClassicModeRadio.IsChecked = SettingsService.Current.OverviewMode == "classic";
+        _suppressUiEvents = false;
+    }
+
+    private void DisplayMode_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents || ConsoleModeRadio is null) return;
+        if (sender is RadioButton { Tag: string mode } && Application.Current.MainWindow is MainWindow main)
+            main.SetDisplayMode(mode);
+    }
+
     private void LoadSettings()
     {
+        RefreshDisplayMode();
         var s = SettingsService.Current;
         _suppressUiEvents = true;
 
@@ -250,6 +274,7 @@ public partial class SettingsView : UserControl
         s.LowSpecMode = LowSpecCheck.IsChecked == true;
         SettingsService.Save(s);
         UiPerformance.LowSpec = s.LowSpecMode;
+        App.LiveMetrics.SetInterval(TimeSpan.FromSeconds(s.LowSpecMode ? 3 : 1));
         // 重算卡片阴影等资源, 并立即停止或恢复极光动效
         ThemeManager.SetMode(s.ThemeMode);
         if (Application.Current.MainWindow is MainWindow main)

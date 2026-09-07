@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
 
@@ -23,7 +23,7 @@ public sealed record MetricSample(
 /// </summary>
 public sealed class MetricsSampler : IDisposable
 {
-    private readonly TimeSpan _interval;
+    private TimeSpan _interval;
     private readonly int _capacity;
     private readonly DispatcherTimer? _timer;
     private readonly List<MetricSample> _buffer = new();
@@ -38,8 +38,10 @@ public sealed class MetricsSampler : IDisposable
 
     private PerformanceCounter? _cpu;
     private bool _cpuPrimed;
-    private List<PerformanceCounter>? _gpuEngineCounters;
-    private List<PerformanceCounter>? _vramCounters;
+    private readonly MetricCounterSet<PerformanceCounter> _gpuEngineCounters = new(
+        name => new PerformanceCounter("GPU Engine", "Utilization Percentage", name, readOnly: true), c => c.NextValue());
+    private readonly MetricCounterSet<PerformanceCounter> _vramCounters = new(
+        name => new PerformanceCounter("GPU Adapter Memory", "Dedicated Usage", name, readOnly: true), c => c.NextValue());
     private int _gpuRefreshCountdown;
     private int _vramRefreshCountdown;
     private double? _vramTotalBytes;
@@ -64,6 +66,12 @@ public sealed class MetricsSampler : IDisposable
 
     /// <summary>采样间隔。</summary>
     public TimeSpan Interval => _interval;
+    internal void SetInterval(TimeSpan interval)
+    {
+        if (interval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(interval));
+        _interval = interval;
+        if (_timer is not null) _timer.Interval = interval;
+    }
 
     /// <summary>是否正在采样。</summary>
     public bool IsRunning => _timer?.IsEnabled == true;
@@ -183,10 +191,8 @@ public sealed class MetricsSampler : IDisposable
             {
                 _cpu?.Dispose();
                 _cpu = null;
-                DisposeList(_gpuEngineCounters);
-                _gpuEngineCounters = null;
-                DisposeList(_vramCounters);
-                _vramCounters = null;
+                _gpuEngineCounters.Dispose();
+                _vramCounters.Dispose();
                 _unavailable.Clear();
             }
         });
@@ -211,6 +217,9 @@ public sealed class MetricsSampler : IDisposable
         }
         catch (Exception ex)
         {
+            _cpu?.Dispose();
+            _cpu = null;
+            _cpuPrimed = false;
             return SetReason("cpu", "CPU 计数器不可用：" + ex.Message);
         }
     }
@@ -235,167 +244,48 @@ public sealed class MetricsSampler : IDisposable
     {
         try
         {
-            var refreshed = false;
-            // 实例（随游戏进程增减）定期重建；先构建新列表再释放旧的，
-            // 构建中途抛异常（驱动过旧等）时旧计数器仍可用。
-            if (_gpuEngineCounters is null || _gpuRefreshCountdown-- <= 0)
+            if (_gpuEngineCounters.Count == 0 || _gpuRefreshCountdown-- <= 0)
             {
                 _gpuRefreshCountdown = 20;
-                var fresh = new List<PerformanceCounter>();
-                var committed = false;
-                try
-                {
-                    var category = new PerformanceCounterCategory("GPU Engine");
-                    foreach (var name in category.GetInstanceNames())
-                        fresh.Add(new PerformanceCounter("GPU Engine", "Utilization Percentage", name, readOnly: true));
-                    DisposeList(_gpuEngineCounters);
-                    _gpuEngineCounters = fresh;
-                    committed = true;
-                    refreshed = true;
-                }
-                finally
-                {
-                    // A constructor can fail after earlier instances were opened.
-                    // Dispose the uncommitted list so a refresh cannot leak handles.
-                    if (!committed)
-                        DisposeList(fresh);
-                }
+                try { _gpuEngineCounters.Refresh(new PerformanceCounterCategory("GPU Engine").GetInstanceNames()); }
+                catch when (_gpuEngineCounters.Count > 0) { _gpuRefreshCountdown = 0; }
             }
-            if (_gpuEngineCounters.Count == 0)
-            {
-                // 空实例列表可能只是驱动/适配器尚未就绪，下一轮立即重试。
-                _gpuRefreshCountdown = 0;
-                return SetReason("gpu", "系统未提供 GPU Engine 性能计数器（驱动过旧或虚拟机）");
-            }
-
-            if (refreshed)
-            {
-                // PerformanceCounter 的首个 NextValue 仅建立基线。不能在同一
-                // 采样中立刻再读，否则会把尚未计算出的值误报为 0%。
-                var primed = 0;
-                foreach (var c in _gpuEngineCounters)
-                {
-                    try { c.NextValue(); primed++; } catch { /* 实例可能刚消失 */ }
-                }
-                if (primed == 0)
-                {
-                    _gpuRefreshCountdown = 0;
-                    return SetReason("gpu", "GPU 计数器无法建立采样基线");
-                }
-                return SetReason("gpu", "GPU 计数器刚刷新，等待下一采样间隔");
-            }
-
-            var values = new List<(string Instance, double Value)>(_gpuEngineCounters.Count);
-            foreach (var c in _gpuEngineCounters)
-            {
-                try
-                {
-                    values.Add((c.InstanceName, c.NextValue()));
-                }
-                catch
-                {
-                    // 单个实例消失（进程退出）时跳过，下一轮刷新重建
-                }
-            }
+            var values = _gpuEngineCounters.Read(needsBaseline: true);
             var aggregated = GpuCounterMath.AggregateGpuUtilization(values);
             if (aggregated is null)
             {
                 _gpuRefreshCountdown = 0;
-                return SetReason("gpu", "GPU Engine 计数器存在但无有效样本");
+                return SetReason("gpu", _gpuEngineCounters.Count == 0
+                    ? "系统未提供 GPU Engine 性能计数器"
+                    : "GPU 正在建立采样基线，或当前实例尚无有效读数");
             }
             _unavailable.Remove("gpu");
             return aggregated;
         }
-        catch (Exception ex)
-        {
-            return SetReason("gpu", "GPU 计数器不可用：" + ex.Message);
-        }
+        catch (Exception ex) { return SetReason("gpu", "GPU 计数器不可用：" + ex.Message); }
     }
 
     private double? ReadVramUsedBytes()
     {
         try
         {
-            var refreshed = false;
-            // 显存适配器实例也会随适配器休眠/唤醒和热插拔变化，不能只在
-            // 第一次读取时缓存；定期重建与 GPU Engine 使用相同的有界周期。
-            if (_vramCounters is null || _vramRefreshCountdown-- <= 0)
+            if (_vramCounters.Count == 0 || _vramRefreshCountdown-- <= 0)
             {
                 _vramRefreshCountdown = 20;
-                var fresh = new List<PerformanceCounter>();
-                var committed = false;
-                try
-                {
-                    var category = new PerformanceCounterCategory("GPU Adapter Memory");
-                    foreach (var name in category.GetInstanceNames())
-                        fresh.Add(new PerformanceCounter("GPU Adapter Memory", "Dedicated Usage", name, readOnly: true));
-                    DisposeList(_vramCounters);
-                    _vramCounters = fresh;
-                    committed = true;
-                    refreshed = true;
-                }
-                finally
-                {
-                    // A constructor can fail after earlier instances were opened.
-                    if (!committed)
-                        DisposeList(fresh);
-                }
+                try { _vramCounters.Refresh(new PerformanceCounterCategory("GPU Adapter Memory").GetInstanceNames()); }
+                catch when (_vramCounters.Count > 0) { _vramRefreshCountdown = 0; }
             }
-            if (_vramCounters.Count == 0)
-            {
-                _vramRefreshCountdown = 0;
-                return SetReason("vram", "系统未提供 GPU Adapter Memory 计数器，无法读取专用显存用量");
-            }
-
-            if (refreshed)
-            {
-                // 和 GPU Engine 一样，首个读数只是基线，避免把基线 0 当成
-                // 真实的显存用量写入会话。
-                var primed = 0;
-                foreach (var c in _vramCounters)
-                {
-                    try { c.NextValue(); primed++; } catch { /* 实例可能刚消失 */ }
-                }
-                if (primed == 0)
-                {
-                    _vramRefreshCountdown = 0;
-                    return SetReason("vram", "显存计数器无法建立采样基线");
-                }
-                return SetReason("vram", "显存计数器刚刷新，等待下一采样间隔");
-            }
-
-            var values = new List<(string Instance, double Value)>(_vramCounters.Count);
-            foreach (var c in _vramCounters)
-            {
-                try
-                {
-                    values.Add((c.InstanceName, c.NextValue()));
-                }
-                catch
-                {
-                    // 实例消失（适配器休眠等）时跳过
-                }
-            }
-            var total = GpuCounterMath.AggregateAdapterDedicatedBytes(values);
+            // Dedicated Usage 是当前字节数，不是两次读数相减的利用率，无需抛弃首个读数。
+            var total = GpuCounterMath.AggregateAdapterDedicatedBytes(_vramCounters.Read(needsBaseline: false));
             if (total is null)
             {
                 _vramRefreshCountdown = 0;
-                return SetReason("vram", "显存计数器存在但无有效样本");
+                return SetReason("vram", "系统未提供有效的专用显存读数");
             }
             _unavailable.Remove("vram");
             return total;
         }
-        catch (Exception ex)
-        {
-            // Drop and dispose the current list before forcing a rebuild. This
-            // also covers a refresh that failed after the old list was created;
-            // simply nulling the field here would leak its native counter handles.
-            var stale = _vramCounters;
-            _vramCounters = null;
-            DisposeList(stale);
-            _vramRefreshCountdown = 0;
-            return SetReason("vram", "显存计数器不可用：" + ex.Message);
-        }
+        catch (Exception ex) { return SetReason("vram", "显存计数器不可用：" + ex.Message); }
     }
 
     private double? ReadVramTotalBytes()
@@ -423,16 +313,6 @@ public sealed class MetricsSampler : IDisposable
     {
         _unavailable[key] = reason;
         return null;
-    }
-
-    private static void DisposeList(List<PerformanceCounter>? counters)
-    {
-        if (counters is null)
-            return;
-        foreach (var c in counters)
-        {
-            try { c.Dispose(); } catch { /* 释放失败不致命 */ }
-        }
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]

@@ -55,16 +55,15 @@ public partial class DetectView : UserControl
             StopMonitor();
     }
 
-    // ---------- 实时监控（实例拥有的采样内核，页面隐藏即释放） ----------
+    // ---------- 实时监控（共享应用采样，页面隐藏只取消订阅） ----------
 
     private void StartMonitor()
     {
         if (_sampler is not null || !IsVisible)
             return;
-        _sampler = new MetricsSampler(
-            TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), capacity: 120);
+        _sampler = App.LiveMetrics;
         _sampler.Sampled += Sampler_Sampled;
-        _sampler.Start();
+        if (_sampler.Buffer.LastOrDefault() is { } latest) Sampler_Sampled(latest);
     }
 
     private void StopMonitor()
@@ -72,7 +71,6 @@ public partial class DetectView : UserControl
         if (_sampler is null)
             return;
         _sampler.Sampled -= Sampler_Sampled;
-        _sampler.Dispose();
         _sampler = null;
     }
 

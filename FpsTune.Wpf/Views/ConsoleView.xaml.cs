@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using FpsTune.Wpf.Core;
@@ -46,16 +46,15 @@ public partial class ConsoleView : UserControl
     private void StartMonitor()
     {
         if (_sampler is not null || !IsVisible) return;
-        _sampler = new MetricsSampler(TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), 2);
+        _sampler = App.LiveMetrics;
         _sampler.Sampled += ShowMetrics;
-        _sampler.Start();
+        if (_sampler.Buffer.LastOrDefault() is { } latest) ShowMetrics(latest);
     }
 
     private void StopMonitor()
     {
         if (_sampler is null) return;
         _sampler.Sampled -= ShowMetrics;
-        _sampler.Dispose();
         _sampler = null;
     }
 

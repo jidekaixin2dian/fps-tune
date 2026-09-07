@@ -9,6 +9,9 @@ namespace FpsTune.Wpf;
 public partial class App : Application
 {
     private AutoProfileService? _autoProfileService;
+    private static MetricsSampler? _liveMetrics;
+    public static MetricsSampler LiveMetrics => _liveMetrics ??= new(
+        TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), 120);
 
     /// <summary>性能会话服务：应用级单例，页面切换不影响运行中的会话。</summary>
     public static PerformanceSessionService SessionService { get; } = new();
@@ -41,6 +44,10 @@ public partial class App : Application
         base.OnStartup(e);
         var mainWindow = new MainWindow();
         MainWindow = mainWindow;
+        mainWindow.IsVisibleChanged += (_, _) =>
+        {
+            if (mainWindow.IsVisible) LiveMetrics.Start(); else _liveMetrics?.Stop();
+        };
         mainWindow.Show();
         _autoProfileService = new AutoProfileService();
         _autoProfileService.Start();
@@ -48,6 +55,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _liveMetrics?.Dispose();
         SessionService.Dispose();
         _autoProfileService?.Dispose();
         TrayService.Dispose();
