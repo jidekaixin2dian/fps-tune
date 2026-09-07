@@ -53,6 +53,33 @@ public partial class OptimizeView : UserControl
         SetPlain($"已带入 {selected.Count} 项选择。请审阅项目说明及副作用，勾选同意后点击“应用”。");
     }
     private string _groupFilter = "";
+    private void ItemToggle_Click(object sender, RoutedEventArgs e)
+    {
+        SetCustomMode();
+        if (sender is CheckBox { DataContext: OptimizationItemViewModel vm })
+            SetItemDetail(vm);
+    }
+
+    private void SelectionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(OptimizationItemViewModel.IsChecked)) return;
+        ConsentCheck.IsChecked = false;
+        UpdateSelectionSummary();
+    }
+
+    private void UpdateSelectionSummary()
+    {
+        var selected = Items.Where(i => i.IsChecked).ToList();
+        SelectionSummary.Text = $"待应用 {selected.Count} 项  ·  {selected.Count(i => i.RequiresAdmin)} 项需管理员  ·  {selected.Count(i => i.RequiresReboot)} 项需重启";
+    }
+
+    private void UpdateFilterSummary()
+    {
+        if (ItemsView is null) return;
+        var count = Items.Count(ItemsView.Contains);
+        ItemListTitle.Text = $"优化项  {count} / {Items.Count}";
+        EmptyHint.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
     private bool FilterItem(object obj)
     {
         if (obj is not OptimizationItemViewModel vm)
@@ -71,23 +98,16 @@ public partial class OptimizeView : UserControl
         if (sender is System.Windows.Controls.RadioButton rb && rb.Tag is string g)
         {
             _groupFilter = g;
-            ItemsView.Refresh();
+            ItemsView?.Refresh();
+            UpdateFilterSummary();
         }
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         _searchText = SearchBox.Text.Trim();
-        ItemsView.Refresh();
-        if (_searchText.Length == 0)
-        {
-            ItemListTitle.Text = "优化项";
-        }
-        else
-        {
-            var visible = Items.Cast<OptimizationItemViewModel>().Count(ItemsView.Contains);
-            ItemListTitle.Text = $"优化项（{visible}/{Items.Count}）";
-        }
+        ItemsView?.Refresh();
+        UpdateFilterSummary();
     }
 
     private void SelectAllVisible_Click(object sender, RoutedEventArgs e)
@@ -124,9 +144,16 @@ public partial class OptimizeView : UserControl
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
         // 分组 ListCollectionView 在集合变化时会访问 CurrentPosition，不能在
         // DeferRefresh 作用域内逐项添加。列表规模很小，且仅在快照变化时重建。
+        foreach (var old in Items) old.PropertyChanged -= SelectionChanged;
         Items.Clear();
         foreach (var item in AppState.Items)
-            Items.Add(new OptimizationItemViewModel(item) { IsChecked = selected.Contains(item.Id) });
+        {
+            var vm = new OptimizationItemViewModel(item) { IsChecked = selected.Contains(item.Id) };
+            vm.PropertyChanged += SelectionChanged;
+            Items.Add(vm);
+        }
+        UpdateFilterSummary();
+        UpdateSelectionSummary();
         _sourceItems = AppState.Items;
         _loadedFromState = AppState.Items.Count > 0;
         if (!_loadedFromState)
@@ -174,7 +201,7 @@ public partial class OptimizeView : UserControl
 
         if (PresetCustom.IsChecked == true)
         {
-            SetPlain("自定义模式：请在左侧列表中勾选需要执行的优化项，然后点击“应用”。");
+            SetPlain("自定义选择\n\n打开开关将项目加入待应用清单，不会立即修改系统。\n\n点击项目查看当前状态与副作用，确认后在底部应用。\n\n搜索和分类只影响显示，不会取消其他分类的选择。");
             return;
         }
 
@@ -200,7 +227,10 @@ public partial class OptimizeView : UserControl
         }
 
         var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
-        SetItemListDoc("预设", $"{presetName} · {selected.Count} 项", selected);
+        var label = presetName == "full" ? "全部项目" : presetName == "safe-only" ? "保守优化" : "均衡推荐";
+        SetPlain($"{label} · {selected.Count} 项\n\n" +
+            "开关表示待应用的选择，不代表当前系统状态。手动调整会切换为自定义。\n\n" +
+            "点击项目查看当前状态与副作用。确认后在底部应用，执行结果也会显示在这里。");
     }
 
     private void ShowSelectedItem()
