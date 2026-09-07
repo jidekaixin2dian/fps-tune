@@ -69,6 +69,10 @@ Version 1.6 uses a console layout with top tabs for overview, detection, optimiz
 performance sessions, A/B experiments, friend testing, backups/logs, and settings.
 The UI supports dark, light, and system themes. Version 1.6.1 hardens executable/script
 resolution, validates imported profiles, and fixes installer compiler diagnostics.
+Version 1.6.2 adds a persistent compact/classic display switch, a redesigned optimization
+workspace, clearer settings, shared live sampling, chart resize fixes, and native window
+animations. Manual item changes now select custom mode. New application artwork and a
+dedicated DPI-aware tray icon improve clarity at small sizes.
 Verify downloads against the release's `SHA256SUMS-v<version>.txt` with `Get-FileHash -Algorithm SHA256`.
 Game detection uses uninstall registry entries and known installation directories; it does
 not read running processes' executable paths. Use `-Game` for an unrecognized game.
