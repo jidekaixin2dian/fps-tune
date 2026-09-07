@@ -32,6 +32,7 @@
     <EmbeddedResource Include="..\tools\friend-test.ps1" LogicalName="FpsTune.Wpf.Scripts.friend-test.ps1" />
     <EmbeddedResource Include="..\catalog\catalog.json" LogicalName="FpsTune.Wpf.Catalog.catalog.json" />
     <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\tray.ico" />
     <Resource Include="Assets\app-icon.png" />
     <Resource Include="Assets\wechat-qr.jpg" />
   </ItemGroup>

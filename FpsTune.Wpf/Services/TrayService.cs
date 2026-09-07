@@ -32,6 +32,7 @@ public static class TrayService
     private static bool _minimizeHintShown;
     private static int _taskbarCreatedMsg = -1;
     private static IntPtr _hIcon;
+    private static int _iconSize;
     private static int _lifetimeClosed;
     private static long _notificationGeneration;
     // LoadImage(LR_LOADFROMFILE) 的句柄归本进程所有, 退出时需 DestroyIcon;
@@ -56,6 +57,7 @@ public static class TrayService
     {
         if (_added)
         {
+            RefreshIconSize();
             Volatile.Write(ref _lifetimeClosed, 0);
             return true;
         }
@@ -73,27 +75,16 @@ public static class TrayService
         if (_taskbarCreatedMsg == -1)
             _taskbarCreatedMsg = Native.RegisterWindowMessage("TaskbarCreated");
 
-        // 图标句柄: 确定性方案——把内嵌 app.ico 解包到临时文件后按文件加载 16px。
+        // 托盘使用独立的小尺寸图形，按任务栏 DPI 加载，避免固定 16px 被放大。
         // 资源编号(LoadImage "#1")在打包后不可靠、窗口类图标(GCLP_HICON)在 WPF 里
         // 常为空, 两者都曾导致托盘挂出"空白图标"。
         if (_hIcon == IntPtr.Zero)
         {
             try
             {
-                var tmpIco = Path.Combine(Path.GetTempPath(), "fpstune-tray.ico");
-                var sri = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/app.ico"));
-                if (sri != null)
-                {
-                    using var ms = new MemoryStream();
-                    sri.Stream.CopyTo(ms);
-                    File.WriteAllBytes(tmpIco, ms.ToArray());
-                }
-                if (File.Exists(tmpIco))
-                {
-                    _hIcon = Native.LoadImage(IntPtr.Zero, tmpIco,
-                        Native.IMAGE_ICON, 16, 16, Native.LR_LOADFROMFILE);
-                    _ownsIcon = _hIcon != IntPtr.Zero;
-                }
+                _iconSize = GetTrayIconSize();
+                _hIcon = LoadTrayIcon(_iconSize);
+                _ownsIcon = _hIcon != IntPtr.Zero;
             }
             catch
             {
@@ -268,6 +259,9 @@ public static class TrayService
             return nint.Zero;
         }
 
+        if (msg is 0x001A or 0x007E or 0x02E0) // settings / display / DPI changed
+            Application.Current?.Dispatcher.BeginInvoke(new Action(RefreshIconSize));
+
         // explorer.exe 重启后托盘被清空：TaskbarCreated 广播到达时重新挂图标
         if (msg == _taskbarCreatedMsg && _taskbarCreatedMsg != -1)
         {
@@ -280,6 +274,51 @@ public static class TrayService
         }
 
         return nint.Zero;
+    }
+
+    internal static int GetTrayIconSize()
+    {
+        var taskbar = Native.FindWindow("Shell_TrayWnd", null);
+        var dpi = taskbar != IntPtr.Zero ? Native.GetDpiForWindow(taskbar) : Native.GetDpiForSystem();
+        return Math.Clamp(Native.GetSystemMetricsForDpi(49 /* SM_CYSMICON */, dpi == 0 ? 96u : dpi), 16, 64);
+    }
+
+    private static IntPtr LoadTrayIcon(int size)
+    {
+        // 每次使用独立临时文件，避免多个预览实例互相覆盖或误读旧图标。
+        var path = Path.Combine(Path.GetTempPath(), $"fpstune-tray-{Guid.NewGuid():N}.ico");
+        try
+        {
+            var resource = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/tray.ico"));
+            if (resource is null) return IntPtr.Zero;
+            using (resource.Stream)
+            using (var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write))
+                resource.Stream.CopyTo(file);
+            return Native.LoadImage(IntPtr.Zero, path, Native.IMAGE_ICON, size, size, Native.LR_LOADFROMFILE);
+        }
+        finally { try { File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+    }
+
+    private static void RefreshIconSize()
+    {
+        if (!_added || _hwnd is null) return;
+        var size = GetTrayIconSize();
+        if (size == _iconSize) return;
+        IntPtr replacement;
+        try { replacement = LoadTrayIcon(size); }
+        catch (IOException) { return; }
+        catch (UnauthorizedAccessException) { return; }
+        if (replacement == IntPtr.Zero) return;
+        var data = new Native.NOTIFYICONDATA
+        {
+            cbSize = Marshal.SizeOf<Native.NOTIFYICONDATA>(), hWnd = _hwnd.Handle,
+            uID = 1, uFlags = NIF_ICON, hIcon = replacement
+        };
+        if (!Native.Shell_NotifyIcon(NIM_MODIFY, ref data)) { Native.DestroyIcon(replacement); return; }
+        if (_ownsIcon && _hIcon != IntPtr.Zero) Native.DestroyIcon(_hIcon);
+        _hIcon = replacement;
+        _ownsIcon = true;
+        _iconSize = size;
     }
 
     private static void ShowTrayMenu()
@@ -340,6 +379,14 @@ public static class TrayService
     /// <summary>Shell_NotifyIcon 与配套 user32 互操作。</summary>
     private static class Native
     {
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern IntPtr FindWindow(string className, string? windowName);
+        [DllImport("user32.dll")]
+        public static extern uint GetDpiForWindow(IntPtr hwnd);
+        [DllImport("user32.dll")]
+        public static extern uint GetDpiForSystem();
+        [DllImport("user32.dll")]
+        public static extern int GetSystemMetricsForDpi(int index, uint dpi);
         public const uint WS_POPUP = 0x80000000;
         public const int GCLP_HICON = -14;
         public const uint IMAGE_ICON = 1;
