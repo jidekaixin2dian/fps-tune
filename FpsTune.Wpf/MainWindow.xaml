@@ -20,7 +20,7 @@
         SnapsToDevicePixels="True"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="44"
+        <shell:WindowChrome CaptionHeight="52"
                             GlassFrameThickness="0"
                             CornerRadius="0"
                             ResizeBorderThickness="7"
@@ -39,13 +39,14 @@
                         <Setter Property="CornerRadius" Value="0"/>
                         <Setter Property="Margin" Value="0"/>
                         <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="{x:Static SystemParameters.WindowResizeBorderThickness}"/>
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
         </Border.Style>
         <Grid x:Name="ChromeGrid">
             <Grid.RowDefinitions>
-                <RowDefinition Height="44"/>
+                <RowDefinition Height="52"/>
                 <RowDefinition Height="38"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -82,20 +83,24 @@
             <Grid x:Name="TitleBar" Grid.Row="0"
                   Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-                    <Image Source="/Assets/app-icon.png" Width="16" Height="16" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <Border Width="30" Height="30" CornerRadius="6" Background="{DynamicResource ConsoleBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" Margin="4,0,0,0">
+                        <Image Source="/Assets/app-icon.png" Width="24" Height="24" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Border>
                     <TextBlock Text="FPS 帧律"
-                               Margin="9,0,0,0"
-                               FontSize="12" FontWeight="Bold"
-                               FontFamily="{StaticResource FontMono}"
-                               Foreground="{DynamicResource AccentBrush}"
+                               Margin="12,0,0,0"
+                               FontSize="16" FontWeight="SemiBold"
+                               FontFamily="{StaticResource FontBody}"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
                                VerticalAlignment="Center"/>
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0" Margin="14,0,0,0" Padding="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock x:Name="TitleVersionText"
                                Text="v1.0.1"
-                               Margin="10,1,0,0"
-                               FontSize="11"
+                               Margin="0,1,0,0"
+                               FontSize="12"
                                FontFamily="{StaticResource FontMono}"
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center"/>
+                    </Border>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <TextBlock x:Name="AdminStatusText" VerticalAlignment="Center" Margin="0,0,18,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
