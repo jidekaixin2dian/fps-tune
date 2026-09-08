@@ -11,12 +11,27 @@
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="154"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="132"/>
             <RowDefinition Height="60"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="64"/>
         </Grid.RowDefinitions>
-        <UniformGrid Grid.Row="0" Columns="4">
+        <Border Grid.Row="0" Padding="28,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,20,0">
+                    <TextBlock Text="三角洲 · 开局准备" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="GameReadyText" Text="定位游戏后，审阅基础设置并记录一局负载。" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="LocateDeltaButton" Content="定位游戏" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
+                    <Button x:Name="PrepareDeltaButton" Content="基础建议" Style="{StaticResource PrimaryButtonStyle}" MinWidth="104" Height="36" Margin="0,0,8,0" Click="PrepareDelta_Click" ToolTip="审阅游戏模式、后台录制和游戏显卡偏好；不会立即修改系统"/>
+                    <Button Content="记录一局" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="DeltaSession_Click" ToolTip="记录 CPU、GPU、内存负载，不等同于 FPS 测量"/>
+                    <Button Content="备份还原" Style="{StaticResource GhostButtonStyle}" MinWidth="88" Height="36" Click="DeltaRestore_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <UniformGrid Grid.Row="1" Columns="4">
             <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1">
                 <StackPanel>
                     <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
@@ -46,7 +61,7 @@
                 </StackPanel>
             </Border>
         </UniformGrid>
-        <Grid Grid.Row="1" Margin="28,0">
+        <Grid Grid.Row="2" Margin="28,0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="230"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="选择方案" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
@@ -61,7 +76,7 @@
             </TextBlock>
             <Button Grid.Column="3" x:Name="RefreshButton" Content="重新检测" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
         </Grid>
-        <ListBox x:Name="ItemList" Grid.Row="2" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
+        <ListBox x:Name="ItemList" Grid.Row="3" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" SelectionMode="Single">
             <ListBox.ItemContainerStyle>
@@ -98,7 +113,7 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="28,12">
+        <Border Grid.Row="4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="28,12">
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">

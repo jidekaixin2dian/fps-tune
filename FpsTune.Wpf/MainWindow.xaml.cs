@@ -299,6 +299,12 @@ public partial class MainWindow : Window
 
     internal Task<bool> RefreshDetectionAsync() => ((DetectView)GetPage("detect")).RunDetectionAsync();
 
+    internal void OpenDeltaSession()
+    {
+        NavigateTo("session");
+        ((SessionView)GetPage("session")).PrepareDeltaSession();
+    }
+
     internal void ReviewSelection(IEnumerable<string> ids)
     {
         ShowOptimizePage();

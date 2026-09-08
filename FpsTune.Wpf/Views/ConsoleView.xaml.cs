@@ -16,6 +16,80 @@ public partial class ConsoleView : UserControl
     private string _preset = "balanced";
     private bool _changingSelection;
     private bool _refreshing;
+    private bool _locating;
+
+    private bool DeltaLocated => DeltaPreparation.IsGameExecutable(AppState.GamePath)
+        && System.IO.File.Exists(AppState.GamePath);
+    private bool DeltaReady => DeltaLocated && AppState.Items.Count > 0
+        && string.Equals(AppState.DetectJson?["gamePath"]?.GetValue<string>(), AppState.GamePath, StringComparison.OrdinalIgnoreCase);
+
+    private void UpdatePreparation()
+    {
+        var count = DeltaPreparation.PendingItems(AppState.Items, DeltaReady).Count;
+        GameReadyText.Text = _locating ? "正在定位并更新检测…" : !DeltaReady
+            ? DeltaLocated ? "已选择三角洲 · 请更新检测，获取当前目标的基础建议。" : "先定位三角洲主程序，再获取对应的基础建议。"
+            : count > 0 ? $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。"
+            : "基础设置已达标 · 可记录一局负载，保留优化前后对照。";
+        GameReadyText.ToolTip = AppState.GamePath ?? "尚未选择游戏";
+        LocateDeltaButton.Content = DeltaLocated && !DeltaReady ? "更新检测" : "定位游戏";
+        PrepareDeltaButton.IsEnabled = DeltaReady && count > 0 && !_refreshing && !_locating;
+        PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
+    }
+
+    private async void LocateDelta_Click(object sender, RoutedEventArgs e)
+    {
+        if (_locating || _refreshing || Window.GetWindow(this) is not MainWindow main) return;
+        _locating = true;
+        LocateDeltaButton.IsEnabled = false;
+        UpdatePreparation();
+        try
+        {
+            if (DeltaLocated && !DeltaReady) { await RefreshDataAsync(); return; }
+            var games = await Task.Run(() => GamePathService.DetectAll(refresh: true)
+                .Where(g => DeltaPreparation.IsGameExecutable(g.ExePath)).ToList());
+            string? path = games.Count == 1 ? games[0].ExePath : null;
+            if (path is null)
+            {
+                var picker = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "选择三角洲主程序（不是启动器，通常位于 Game\\Binaries\\Win64）",
+                    Filter = "三角洲游戏主程序|DeltaForceClient-Win64-Shipping.exe", CheckFileExists = true
+                };
+                if (picker.ShowDialog(main) != true) return;
+                path = picker.FileName;
+            }
+            if (!DeltaPreparation.IsGameExecutable(path) || !System.IO.File.Exists(path))
+            {
+                DialogService.Warning("请选择游戏主程序", "需要选择 DeltaForceClient-Win64-Shipping.exe，不能选择启动器。");
+                return;
+            }
+            StateStore.SaveGamePath(path);
+            if (!string.Equals(StateStore.LoadGamePath(), path, StringComparison.OrdinalIgnoreCase))
+                throw new System.IO.IOException("游戏路径未能保存，请检查本地设置目录权限。");
+            AppState.GamePath = path;
+            await RefreshDataAsync();
+        }
+        catch (Exception ex) { DialogService.Warning("游戏定位未完成", ex.Message); }
+        finally { _locating = false; LocateDeltaButton.IsEnabled = true; UpdatePreparation(); }
+    }
+
+    private void PrepareDelta_Click(object sender, RoutedEventArgs e)
+    {
+        UpdatePreparation();
+        if (!PrepareDeltaButton.IsEnabled) return;
+        if (Window.GetWindow(this) is MainWindow main)
+            main.ReviewSelection(DeltaPreparation.PendingItems(AppState.Items, DeltaReady));
+    }
+
+    private void DeltaSession_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow main) main.OpenDeltaSession();
+    }
+
+    private void DeltaRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("backup");
+    }
 
     public ConsoleView()
     {
@@ -98,6 +172,7 @@ public partial class ConsoleView : UserControl
 
     private void RebuildRows()
     {
+        UpdatePreparation();
         if (ReferenceEquals(_source, AppState.Items)) return;
         var selected = _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToHashSet();
         foreach (var row in _rows) row.Item.PropertyChanged -= ItemChanged;
@@ -136,6 +211,7 @@ public partial class ConsoleView : UserControl
 
     private void UpdateSelection()
     {
+        UpdatePreparation();
         var count = _rows.Count(r => r.Item.IsChecked);
         SelectionText.Text = _rows.Count == 0 ? "尚无检测结果" : $"已选择 {count} 项 / 共 {_rows.Count} 项";
         ReviewButton.IsEnabled = count > 0 && !_refreshing;

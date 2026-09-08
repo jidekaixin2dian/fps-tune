@@ -20,8 +20,7 @@ public static class DetectionService
         if (string.IsNullOrWhiteSpace(gamePath))
             // 设置页手动指定的路径优先于自动检测
             gamePath = StateStore.LoadGamePath() ?? GamePathService.Find();
-        if (!string.IsNullOrWhiteSpace(gamePath))
-            AppState.GamePath = gamePath;
+        AppState.GamePath = gamePath;
 
         var items = ItemCatalog.All.Select(def =>
         {

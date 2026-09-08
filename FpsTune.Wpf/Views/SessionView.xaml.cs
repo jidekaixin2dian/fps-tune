@@ -15,6 +15,7 @@ public partial class SessionView : UserControl
 {
     private readonly DispatcherTimer _ticker;
     private bool _refreshing;
+    private string? _preparationHint;
     private IReadOnlyList<PerformanceSession> _sessions = Array.Empty<PerformanceSession>();
 
     public SessionView()
@@ -27,6 +28,16 @@ public partial class SessionView : UserControl
     }
 
     private PerformanceSessionService Service => App.SessionService;
+
+    internal void PrepareDeltaSession()
+    {
+        if (Service.IsRunning) return;
+        if (string.IsNullOrWhiteSpace(SessionNameBox.Text))
+            SessionNameBox.Text = $"三角洲 · 对照记录 {DateTime.Now:MM-dd HH:mm}";
+        _preparationHint = "在相同地图、画质和帧率上限下记录相近时长。点击开始后手动进入游戏；这里记录负载，不测量 FPS。";
+        UpdateRunState();
+        SessionNameBox.Focus();
+    }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -82,7 +93,7 @@ public partial class SessionView : UserControl
         }
         else
         {
-            RunStateText.Text = "就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。";
+            RunStateText.Text = _preparationHint ?? "就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。";
         }
     }
 

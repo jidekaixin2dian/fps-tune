@@ -153,7 +153,7 @@ public partial class SettingsView : UserControl
             return;
         }
         StateStore.SaveGamePath(text.Length > 0 ? text : null);
-        AppState.GamePath = text.Length > 0 ? text : AppState.GamePath;
+        AppState.GamePath = text.Length > 0 ? text : null;
         RefreshGamePathHint();
     }
 
@@ -189,6 +189,7 @@ public partial class SettingsView : UserControl
     {
         GamePathBox.Text = "";
         StateStore.SaveGamePath(null);
+        AppState.GamePath = null;
         RefreshGamePathHint();
     }
 
