@@ -31,12 +31,18 @@ public sealed class ExecutionTrustTests
             Assert.Equal(Embedded(name), File.ReadAllBytes(script.Path));
             Assert.Equal(HashOf(Embedded(name)), script.Sha256);
 
-            // 执行期间：写与删都必须被拒绝（否则"校验通过"没有意义）。
+            // 执行期间：写入与删除都必须被拒绝，且内容保持不变。
+            // 否则"父进程校验通过"到"子进程真正加载"之间仍然可以被掉包。
             Assert.Throws<IOException>(() => File.WriteAllText(script.Path, "throw 'rewritten'"));
-            var deleted = false;
-            try { File.Delete(script.Path); } catch (IOException) { deleted = true; }
-            catch (UnauthorizedAccessException) { deleted = true; }
-            Assert.False(deleted, "执行期间脚本文件不得被替换或删除");
+
+            var deleteBlocked = false;
+            try { File.Delete(script.Path); }
+            catch (IOException) { deleteBlocked = true; }
+            catch (UnauthorizedAccessException) { deleteBlocked = true; }
+
+            Assert.True(deleteBlocked, "执行期间脚本文件不得被删除或替换");
+            Assert.True(File.Exists(script.Path), "执行期间脚本文件必须仍然存在");
+            Assert.Equal(Embedded(name), File.ReadAllBytes(script.Path));
         }
         finally
         {
