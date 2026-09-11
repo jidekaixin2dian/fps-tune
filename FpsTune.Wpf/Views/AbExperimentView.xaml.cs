@@ -18,7 +18,6 @@ namespace FpsTune.Wpf.Views;
 /// </summary>
 public partial class AbExperimentView : UserControl
 {
-    private readonly string _tuningPath;
     private ExperimentWizardState _wizard = new();
     private bool _running;
     private bool _cancelRequested;
@@ -27,7 +26,6 @@ public partial class AbExperimentView : UserControl
     public AbExperimentView()
     {
         InitializeComponent();
-        _tuningPath = ScriptLocator.Resolve("tuning-experiment.ps1");
         Loaded += (_, _) => ReloadWizard();
     }
 
@@ -121,8 +119,8 @@ public partial class AbExperimentView : UserControl
                 $"{2 + Array.IndexOf(WizardSteps.Groups, group)} · {WizardSteps.DisplayName(group)}",
                 isRunning
                     ? "运行中"
-                    : result is null ? (blocked is null ? "待运行" : "未解锁") : result.Keep == true ? "完成：保留" : "完成：已还原",
-                isRunning ? "running" : result is null ? "" : result.Keep == true ? "done" : "reverted",
+                    : result is null ? (blocked is null ? "待运行" : "未解锁") : result.Keep == true ? "完成：保留" : result.Reverted ? "完成：已还原" : "完成：未还原",
+                isRunning ? "running" : result is null ? "" : result.Keep == true ? "done" : result.Reverted ? "reverted" : "error",
                 isRunning
                     ? "脚本正在执行，请保持游戏场景固定；可取消并在结果未知时检查后重试。"
                     : result is null
@@ -278,7 +276,12 @@ public partial class AbExperimentView : UserControl
             if (Environment.ProcessPath is { } exePath)
                 args = args.Concat(["-EngineExe", exePath]).ToArray();
 
-            var result = await PowerShellRunner.RunAsync(_tuningPath, args, cancellation.Token);
+            // 每次运行前重新解析并校验脚本（提权会话只接受与内置版本一致的副本）；
+            // 租约覆盖整个执行期，子进程还会用同一个哈希再校验一次，
+            // 因此"父进程验过的内容"和"子进程真正执行的字节"被绑在一起。
+            using var script = ScriptLocator.OpenVerified("tuning-experiment.ps1");
+
+            var result = await PowerShellRunner.RunAsync(script.Path, args, script.Sha256, cancellation.Token);
             RawBox.Text = result.Success
                 ? result.Output
                 : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
@@ -388,7 +391,7 @@ public partial class AbExperimentView : UserControl
                     obj["samplerMode"]?.GetValue<string>() == "simulated", DateTime.Now),
                 sessionId);
             SetMetrics(summary);
-            DecisionText.Text = keep ? "keep / 保留" : "revert / 已还原";
+            DecisionText.Text = keep ? "keep / 保留" : reverted ? "revert / 已还原" : "revert 未完成 / 未还原";
             StatusText.Text = obj["message"]?.GetValue<string>() ?? "测试完成。";
             TrayService.NotifyComplete("FPS 帧律 · A/B 实验", StatusText.Text);
         }
@@ -473,7 +476,7 @@ public partial class AbExperimentView : UserControl
             foreach (var g in groups.OfType<JsonObject>())
             {
                 var id = g["id"]?.GetValue<string>() ?? "";
-                sb.AppendLine($"- **{g["name"]?.GetValue<string>() ?? id}（{id}）**：{(g["keep"]?.GetValue<bool>() == true ? "保留" : "已还原")}"
+                sb.AppendLine($"- **{g["name"]?.GetValue<string>() ?? id}（{id}）**：{(g["keep"]?.GetValue<bool>() == true ? "保留" : g["reverted"]?.GetValue<bool>() == true ? "已还原" : "未还原")}"
                               + $" —— 平均 {g["summary"]?["avgFps"]} FPS、1% low {g["summary"]?["p1Low"]}。{g["reason"]?.GetValue<string>()}");
                 if (_wizard.GroupResult(id)?.SessionId is { } sid
                     && PerformanceSessionStore.LoadAll().FirstOrDefault(s => s.Id == sid) is { } session)
@@ -705,7 +708,9 @@ public partial class AbExperimentView : UserControl
     private static string BuildTooltip(ExperimentRun r)
     {
         var time = r.Time == DateTime.MinValue ? "" : $"\n{r.Time:yyyy-MM-dd HH:mm}";
-        var verdict = r.Keep is null ? "" : $"\n结论：{(r.Keep == true ? "保留" : "已还原")}";
+        var verdict = r.Keep is null
+            ? ""
+            : $"\n结论：{(r.Keep == true ? "保留" : r.Reverted == true ? "已还原" : "未还原")}";
         var reason = string.IsNullOrWhiteSpace(r.Reason) ? "" : $"\n{r.Reason}";
         return $"{r.Name}（{r.Id}）{time}\n平均 {r.AvgFps} FPS · 1% low {r.P1Low} FPS{verdict}{reason}";
     }

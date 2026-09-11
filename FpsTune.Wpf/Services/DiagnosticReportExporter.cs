@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text;
@@ -383,7 +383,7 @@ public static class DiagnosticReportExporter
             var wizard = ExperimentWizardStore.Load();
             sb.AppendLine($"- 基线：{(wizard.BaselineDone ? $"平均 {wizard.BaselineAvgFps} FPS / 1% low {wizard.BaselineP1Low} / CV {wizard.BaselineCv}{(wizard.BaselineStable ? "（稳定）" : "（不稳定）")}" : "未完成")}");
             foreach (var g in wizard.Groups)
-                sb.AppendLine($"- {WizardSteps.DisplayName(g.GroupId)}：{(g.Keep == true ? "保留" : "已还原")}（平均 {g.AvgFps} FPS）—— {g.Reason}");
+                sb.AppendLine($"- {WizardSteps.DisplayName(g.GroupId)}：{(g.Keep == true ? "保留" : g.Reverted ? "已还原" : "未还原")}（平均 {g.AvgFps} FPS）—— {g.Reason}");
             if (wizard.LastError is not null)
                 sb.AppendLine($"- 最近错误：{wizard.LastError}（{wizard.LastErrorAt:yyyy-MM-dd HH:mm:ss}）");
             sb.AppendLine($"- 报告：{(wizard.ReportGenerated ? $"已生成（{wizard.ReportAt:yyyy-MM-dd HH:mm}）" : "未生成")}");

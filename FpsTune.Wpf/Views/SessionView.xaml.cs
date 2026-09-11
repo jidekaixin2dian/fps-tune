@@ -171,16 +171,48 @@ public partial class SessionView : UserControl
             DialogService.Warning("性能会话", "会话名称包含不能用于文件的字符，请修改后重试。");
             return;
         }
-        if (!Service.Start(name))
+        if (!Service.Start(name) && !TryArchiveUnreadableSession(name))
         {
             DialogService.Warning(
                 "性能会话",
-                "另一个 FpsTune 实例正在使用性能会话，或上次中断会话尚未处理。请先关闭该实例或恢复/清理上次会话后重试。");
+                "无法开始会话：另一个 FpsTune 实例正在使用性能会话，或上次中断会话尚未处理。\n\n" +
+                "如确认只有一个实例在运行，可关闭程序后删除或改名这个文件：\n" +
+                Path.Combine(PerformanceSessionStore.SessionsDir, "_active.json"));
             RefreshControlState();
             return;
         }
         UpdateTiles(null);
         DrawCharts();
+    }
+
+    /// <summary>
+    /// 上次的活动快照本版本解释不了（更新版本写入或已损坏）时，让用户明确选择"改名留档"再开始：
+    /// 既不丢数据，也不会把会话功能永久锁死。
+    /// </summary>
+    private bool TryArchiveUnreadableSession(string name)
+    {
+        if (Service.IsRunning || !PerformanceSessionStore.HasUnreadableActiveSnapshot())
+            return false;
+
+        var go = DialogService.Confirm(
+            "性能会话",
+            "上次未完成的会话快照无法被当前版本读取（通常来自更新的版本，或文件已损坏）。\n\n" +
+            "可以把它改名留档（不删除、不参与统计），然后立即开始新会话。\n\n要现在归档吗？",
+            confirmText: "归档并开始");
+        if (!go)
+            return false;
+
+        if (!PerformanceSessionStore.TryArchiveUnreadableActiveSnapshot(out var archived, out var error))
+        {
+            DialogService.Warning("性能会话", "归档失败：" + error);
+            return false;
+        }
+
+        DialogService.Info(
+            "性能会话",
+            "已留档为：" + Environment.NewLine + Path.GetFileName(archived) + Environment.NewLine +
+            Environment.NewLine + "文件仍在会话目录中，可随时手动找回。");
+        return Service.Start(name);
     }
 
     private void Stop_Click(object sender, RoutedEventArgs e)

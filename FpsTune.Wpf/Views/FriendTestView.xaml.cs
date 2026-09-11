@@ -10,13 +10,11 @@ namespace FpsTune.Wpf.Views;
 
 public partial class FriendTestView : UserControl
 {
-    private readonly string _friendScriptPath;
     private readonly string _outputDir;
 
     public FriendTestView()
     {
         InitializeComponent();
-        _friendScriptPath = ScriptLocator.Resolve("friend-test.ps1");
         _outputDir = Path.Combine(Path.GetTempPath(), "delta-friend-test-out");
         Directory.CreateDirectory(_outputDir);
     }
@@ -63,7 +61,10 @@ public partial class FriendTestView : UserControl
 
         try
         {
-            var result = await PowerShellRunner.RunAsync(_friendScriptPath, args);
+            // 每次生成前重新解析并校验脚本；租约 + 子进程哈希复校验覆盖整个执行期。
+            using var script = ScriptLocator.OpenVerified("friend-test.ps1");
+
+            var result = await PowerShellRunner.RunAsync(script.Path, args, script.Sha256);
             if (!result.Success)
             {
                 PreviewBox.Text = result.Output + Environment.NewLine + result.Error;

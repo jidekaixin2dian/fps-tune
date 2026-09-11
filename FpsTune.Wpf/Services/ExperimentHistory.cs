@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -13,7 +13,8 @@ public sealed record ExperimentRun(
     double AvgFps,
     double P1Low,
     bool? Keep,
-    string? Reason)
+    string? Reason,
+    bool? Reverted = null)
 {
     public string ShortLabel => Kind == "baseline" ? "基线" : Id.Replace("group-", "G", StringComparison.Ordinal);
 }
@@ -47,7 +48,7 @@ public static class ExperimentHistory
                 return [];
             var list = new List<ExperimentRun>();
             if (root["baseline"]?["summary"] is JsonObject bs
-                && ParseRun(DateTime.MinValue, "baseline", "baseline", "基线", bs, null, null) is { } b)
+                && ParseRun(DateTime.MinValue, "baseline", "baseline", "基线", bs, null, null, null) is { } b)
                 list.Add(b);
             if (root["groups"] is JsonArray groups)
             {
@@ -59,7 +60,8 @@ public static class ExperimentHistory
                             g["name"]?.GetValue<string>() ?? "",
                             sum,
                             g["keep"] is JsonNode k ? k.GetValue<bool>() : null,
-                            g["reason"]?.GetValue<string>()) is { } r)
+                            g["reason"]?.GetValue<string>(),
+                            g["reverted"] is JsonNode rv ? rv.GetValue<bool>() : null) is { } r)
                         list.Add(r);
                 }
             }
@@ -90,7 +92,8 @@ public static class ExperimentHistory
                 if (o["summary"] is JsonObject sum
                     && ParseRun(time, kind, id, name, sum,
                         o["keep"] is JsonNode k ? k.GetValue<bool>() : null,
-                        o["reason"]?.GetValue<string>()) is { } run)
+                        o["reason"]?.GetValue<string>(),
+                        o["reverted"] is JsonNode rv ? rv.GetValue<bool>() : null) is { } run)
                     runs.Add(run);
             }
             catch
@@ -105,13 +108,14 @@ public static class ExperimentHistory
 
     private static ExperimentRun? ParseRun(
         DateTime time, string kind, string id, string name,
-        JsonObject summary, bool? keep, string? reason)
+        JsonObject summary, bool? keep, string? reason, bool? reverted)
     {
         var avg = summary["avgFps"] is JsonNode a ? a.GetValue<double>() : double.NaN;
         var p1 = summary["p1Low"] is JsonNode p ? p.GetValue<double>() : double.NaN;
         if (double.IsNaN(avg) || double.IsNaN(p1))
             return null;
-        return new ExperimentRun(time, kind, id, string.IsNullOrWhiteSpace(name) ? id : name, avg, p1, keep, reason);
+        return new ExperimentRun(
+            time, kind, id, string.IsNullOrWhiteSpace(name) ? id : name, avg, p1, keep, reason, reverted);
     }
 
     private static string[] ReadAllLinesSafe(string path)

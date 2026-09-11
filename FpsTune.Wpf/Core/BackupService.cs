@@ -175,8 +175,11 @@ public static class BackupService
     /// 遍历全部备份文件逐项还原；失败的项会如实报告，不会静默吞掉。
     /// 传入 <paramref name="ids"/> 时只还原指定项（A/B 实验语义）：
     /// 文件中其余未选中的记录保持不动；已成功的记录会持久化标记，防止重复还原。
+    /// 传入 <paramref name="onlyBackupFile"/> 时只处理这一份备份文件——调用方（A/B 实验）
+    /// 必须锚定"本步骤自己创建的那份快照"，否则会把更早备份里的值当成本步骤的原值。
     /// </summary>
-    public static RestoreAllResult RestoreAll(IReadOnlyCollection<string>? ids = null)
+    public static RestoreAllResult RestoreAll(
+        IReadOnlyCollection<string>? ids = null, string? onlyBackupFile = null)
     {
         Mutex? mutex = null;
         var acquired = false;
@@ -204,7 +207,7 @@ public static class BackupService
                 return result;
             }
 
-            result = RestoreAllCore(ids);
+            result = RestoreAllCore(ids, onlyBackupFile);
             if (abandoned)
                 result.Failures.Insert(0, "检测到上次还原进程异常退出，已接管互斥；请核对还原结果与未决标记。");
             return result;
@@ -239,7 +242,8 @@ public static class BackupService
         }
     }
 
-    private static RestoreAllResult RestoreAllCore(IReadOnlyCollection<string>? ids = null)
+    private static RestoreAllResult RestoreAllCore(
+        IReadOnlyCollection<string>? ids = null, string? onlyBackupFile = null)
     {
         HashSet<string>? selection = null;
         if (ids is not null && ids.Count > 0)
@@ -254,15 +258,44 @@ public static class BackupService
             return result;
         }
 
-        var files = Directory.GetFiles(BackupDir, "*.json")
+        var allFiles = Directory.GetFiles(BackupDir, "*.json")
             .Where(IsCSharpBackupFile)
             .OrderByDescending(File.GetLastWriteTime)
             .ToList();
 
+        // 定向锚定：只允许还原调用方明确指定的那一份备份，且必须位于本机备份目录内。
+        // 用户可写目录里的任意路径都不能成为还原目标。
+        string? anchoredFile = null;
+        if (onlyBackupFile is not null)
+        {
+            if (string.IsNullOrWhiteSpace(onlyBackupFile)
+                || !Path.IsPathFullyQualified(onlyBackupFile)
+                || !IsSafeBackupFilePath(onlyBackupFile))
+            {
+                result.Failures.Add("指定的备份文件不合法（必须是本机备份目录内的备份文件），未执行任何还原。");
+                return result;
+            }
+
+            anchoredFile = Path.GetFullPath(onlyBackupFile);
+            if (!File.Exists(anchoredFile))
+            {
+                result.Failures.Add(
+                    $"指定的备份文件不存在（可能已被还原或改名）：{Path.GetFileName(anchoredFile)}");
+                return result;
+            }
+
+            if (!allFiles.Any(file => SameBackupPath(file, anchoredFile)))
+            {
+                result.Failures.Add(
+                    $"指定的文件不是可还原的 FpsTune 备份（命名或内容不匹配）：{Path.GetFileName(anchoredFile)}");
+                return result;
+            }
+        }
+
         if (inFlight is { } marker)
         {
             var markerPath = Path.Combine(BackupDir, marker.BackupFile);
-            var markerFile = files.FirstOrDefault(file => string.Equals(
+            var markerFile = allFiles.FirstOrDefault(file => string.Equals(
                 Path.GetFileName(file), marker.BackupFile, StringComparison.OrdinalIgnoreCase));
             if (!IsSafeBackupFilePath(markerPath) || markerFile is null)
             {
@@ -324,6 +357,10 @@ public static class BackupService
                 return result;
             }
         }
+
+        var files = anchoredFile is null
+            ? allFiles
+            : allFiles.Where(file => SameBackupPath(file, anchoredFile)).ToList();
 
         var consumed = new List<string>();
 
@@ -530,6 +567,19 @@ public static class BackupService
                 return false;
         }
         return true;
+    }
+
+    private static bool SameBackupPath(string left, string right)
+    {
+        try
+        {
+            return string.Equals(
+                Path.GetFullPath(left), Path.GetFullPath(right), StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static bool IsSafeBackupFilePath(string file)

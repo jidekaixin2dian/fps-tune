@@ -26,6 +26,8 @@ public static class CliHost
         public string? Preset { get; set; }
         public bool GameSpecified { get; set; }
         public string? GamePath { get; set; }
+        public bool BackupFileSpecified { get; set; }
+        public string? BackupFile { get; set; }
     }
 
     public static bool IsCliInvocation(IReadOnlyList<string> args)
@@ -217,7 +219,7 @@ public static class CliHost
             ids = options.Items;
         }
 
-        var result = BackupService.RestoreAll(ids);
+        var result = BackupService.RestoreAll(ids, options.BackupFile);
         if (options.Json)
         {
             var payload = new
@@ -225,6 +227,8 @@ public static class CliHost
                 tool = "fps-tune",
                 version = UpdateService.CurrentVersion,
                 mode = "restore",
+                // 回显锚定文件，便于调用方核对"这次到底还原了哪份快照"
+                backupFile = options.BackupFile,
                 restored = result.Restored.Select(r => new { file = Path.GetFileName(r.File), id = r.Id }),
                 failures = result.Failures,
                 summary = $"{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败"
@@ -291,13 +295,15 @@ public static class CliHost
               FpsTune.exe -Version
               FpsTune.exe -Detect [-Game <游戏exe路径>] [-Json]
               FpsTune.exe -Apply -Items <id1,id2,...> | -Preset <预设名> [-Game <游戏exe路径>] [-Json]
-              FpsTune.exe -Restore [-Items <id1,id2,...>] [-Json]
+              FpsTune.exe -Restore [-Items <id1,id2,...>] [-BackupFile <备份文件路径>] [-Json]
               FpsTune.exe -ListRestore [-Json]
               FpsTune.exe -Help
 
             说明:
               -Json 输出机器可读 JSON（重定向/管道场景），默认输出人类可读摘要。
               预设: {presets}、full（全部 {OptimizationCatalog.ItemOrder.Count} 项）。
+              -BackupFile 只还原指定的那一份备份（A/B 实验用于锚定本步骤自己的快照）；
+              指定文件不合法或已被还原时会明确报错，绝不回退到其他备份。
               需要管理员的项在非管理员会话下会失败并明确报错；全部改动自动备份。
               PowerShell 交互式运行时输出可能在进程退出后才显示，重定向或 Start-Process -Wait 更可靠。
             """);
@@ -372,6 +378,20 @@ public static class CliHost
                     else
                         options.GamePath = args[++i];
                     break;
+                case "backupfile" when inline is not null:
+                    options.BackupFileSpecified = true;
+                    if (string.IsNullOrWhiteSpace(inline))
+                        error = "-BackupFile 不能为空";
+                    else
+                        options.BackupFile = inline;
+                    break;
+                case "backupfile":
+                    options.BackupFileSpecified = true;
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
+                        error = "-BackupFile 缺少值";
+                    else
+                        options.BackupFile = args[++i];
+                    break;
                 default:
                     error = "未知参数: " + token;
                     break;
@@ -389,14 +409,15 @@ public static class CliHost
     {
         var hasApplyOnly = options.ItemsSpecified || options.PresetSpecified;
         var hasGame = options.GameSpecified;
+        var hasBackupFile = options.BackupFileSpecified;
         return verb switch
         {
-            "Detect" when hasApplyOnly => "-Detect 只接受 -Game 和 -Json",
-            "Restore" when options.PresetSpecified || hasGame => "-Restore 只接受 -Items 和 -Json",
-            "ListRestore" when hasApplyOnly || hasGame => "-ListRestore 只接受 -Json",
-            "Version" when hasApplyOnly || hasGame => "-Version 不接受额外参数",
-            "Help" when hasApplyOnly || hasGame => "-Help 不接受额外参数",
-            "?" when hasApplyOnly || hasGame => "-Help 不接受额外参数",
+            "Detect" when hasApplyOnly || hasBackupFile => "-Detect 只接受 -Game 和 -Json",
+            "Restore" when options.PresetSpecified || hasGame => "-Restore 只接受 -Items、-BackupFile 和 -Json",
+            "ListRestore" when hasApplyOnly || hasGame || hasBackupFile => "-ListRestore 只接受 -Json",
+            "Version" when hasApplyOnly || hasGame || hasBackupFile => "-Version 不接受额外参数",
+            "Help" when hasApplyOnly || hasGame || hasBackupFile => "-Help 不接受额外参数",
+            "?" when hasApplyOnly || hasGame || hasBackupFile => "-Help 不接受额外参数",
             _ => null
         };
     }

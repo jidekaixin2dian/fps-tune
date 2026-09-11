@@ -82,6 +82,41 @@ public sealed class PowerShellScriptTests
         }
     }
 
+    [Fact]
+    public async Task Simulated_group_test_reports_revert_honestly_and_persists_it()
+    {
+        var dataRoot = NewDataRoot();
+        try
+        {
+            Assert.Equal(0, (await RunScriptAsync(dataRoot, "-Baseline", "-Simulate", "-Json")).ExitCode);
+            Assert.Equal(0, (await RunScriptAsync(dataRoot, "-Test", "-Group", "group-1", "-Simulate", "-Json")).ExitCode);
+
+            var result = await RunScriptAsync(dataRoot, "-Test", "-Group", "group-2", "-Simulate", "-Json");
+            var json = ParseJson(result.Stdout);
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.True(json.GetProperty("ok").GetBoolean());
+            Assert.Equal("simulated", json.GetProperty("samplerMode").GetString());
+            // group-2 在模拟数据里无收益：必须如实报告"已还原"，且不得留下还原错误
+            Assert.False(json.GetProperty("keep").GetBoolean());
+            Assert.True(json.GetProperty("reverted").GetBoolean());
+            Assert.Equal("", json.GetProperty("revertError").GetString());
+            Assert.Contains("已还原", json.GetProperty("message").GetString()!, StringComparison.Ordinal);
+
+            using var state = JsonDocument.Parse(File.ReadAllText(
+                Path.Combine(dataRoot, "FpsTune", "experiment", "state.json")));
+            var group = state.RootElement.GetProperty("groups").EnumerateArray()
+                .First(g => g.GetProperty("id").GetString() == "group-2");
+            Assert.False(group.GetProperty("keep").GetBoolean());
+            Assert.True(group.GetProperty("reverted").GetBoolean());
+            Assert.Equal("", group.GetProperty("revertError").GetString());
+        }
+        finally
+        {
+            DeleteDataRoot(dataRoot);
+        }
+    }
+
     private static string NewDataRoot()
     {
         var path = Path.Combine(Path.GetTempPath(), "fpstune-powershell-tests-" + Guid.NewGuid().ToString("N"));

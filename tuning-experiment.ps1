@@ -338,15 +338,38 @@ function Invoke-EngineApply {
     Assert-Engine
     $r = Invoke-Native $EnginePath @('-Apply', '-Items', ($ItemIds -join ','), '-Json')
     if ($r.code -ne 0) { return @{ ok = $false; error = ($r.output -join ' ') } }
-    try { return @{ ok = $true; result = ($r.output -join ' ' | ConvertFrom-Json) } } catch { return @{ ok = $true; result = $null } }
+    # 应用结果是后续"锚定还原"的唯一依据（backupFile / 每项 changed），解析不出来就必须当失败：
+    # 否则一旦判定无收益，脚本会去动更早的备份，等于回滚别人的现场。
+    $parsed = $null
+    try { $parsed = ($r.output -join ' ' | ConvertFrom-Json) } catch { $parsed = $null }
+    if ($null -eq $parsed) {
+        # 应用命令已经执行过，系统可能已被修改，但脚本拿不到锚定快照，绝不能再往下采样/还原。
+        return @{ ok = $false; error = '应用命令已返回，但结果无法解析为 JSON（系统可能已被修改，请务必到「还原」页核对）：' + ($r.output -join ' ') }
+    }
+    $changedIds = @()
+    if ($parsed.results) {
+        $changedIds = @($parsed.results | Where-Object { $_.changed -eq $true } | ForEach-Object { [string]$_.id })
+    }
+    return @{ ok = $true; result = $parsed; backupFile = [string]$parsed.backupFile; changedIds = $changedIds }
 }
 
 function Invoke-EngineRestore {
-    param([string[]]$ItemIds)
+    param([string[]]$ItemIds, [string]$BackupFile)
     Assert-Engine
-    $r = Invoke-Native $EnginePath @('-Restore', '-Items', ($ItemIds -join ','), '-Json')
-    if ($r.code -ne 0) { return @{ ok = $false; error = ($r.output -join ' ') } }
-    return @{ ok = $true }
+    $engineArgs = @('-Restore')
+    if ($ItemIds -and $ItemIds.Count -gt 0) { $engineArgs += @('-Items', ($ItemIds -join ',')) }
+    if ($BackupFile) { $engineArgs += @('-BackupFile', $BackupFile) }
+    $engineArgs += '-Json'
+    $r = Invoke-Native $EnginePath $engineArgs
+    $parsed = $null
+    if ($r.output.Count -gt 0) { try { $parsed = ($r.output -join ' ' | ConvertFrom-Json) } catch { $parsed = $null } }
+    if ($r.code -ne 0) {
+        $detail = if ($parsed -and $parsed.failures) { ($parsed.failures -join '；') } else { ($r.output -join ' ') }
+        return @{ ok = $false; error = $detail; restored = @(); result = $parsed }
+    }
+    $restoredIds = @()
+    if ($parsed -and $parsed.restored) { $restoredIds = @($parsed.restored | ForEach-Object { [string]$_.id }) }
+    return @{ ok = $true; restored = $restoredIds; result = $parsed }
 }
 
 # ---------------------------------------------------------------------------
@@ -428,14 +451,22 @@ function Invoke-TestGroup {
         return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false; error = "候选组顺序不合法：运行 $GroupId 前必须先完成 $($missingGroups -join '、')；当前未写入任何状态。" }
     }
 
-    # 1) 应用候选组（真实模式）
+    # 1) 应用候选组（真实模式），同时记下"本次应用写下的快照"与"真正被改动的项"
+    $appliedBackup = ''
+    $changedIds = @($group.items)
     if ($Simulate) {
         $applied = @{ ok = $true }
     } else {
         $applied = Invoke-EngineApply $group.items
-    }
-    if (-not $applied.ok) {
-        return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false; error = '应用候选组失败: ' + $applied.error }
+        if (-not $applied.ok) {
+            return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false; error = '应用候选组未完成：' + $applied.error }
+        }
+        $appliedBackup = [string]$applied.backupFile
+        $changedIds = @($applied.changedIds)
+        if (-not $appliedBackup -or -not (Test-Path -LiteralPath $appliedBackup)) {
+            return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false;
+                error = '应用已完成，但没有取得本步骤自己的备份快照，已停止采样以保证可还原；请在「还原」页核对该组项目后重试。' }
+        }
     }
 
     # 2) 采样 3 次
@@ -459,7 +490,14 @@ function Invoke-TestGroup {
         $samples = Collect-Samples 3 $Seconds
     }
     if (-not $samples.ok) {
-        if (-not $Simulate) { Invoke-EngineRestore $group.items | Out-Null }   # 采样失败，先还原现场
+        if (-not $Simulate) {
+            # 采样失败，先按本次快照还原现场；还原失败必须如实并入错误信息。
+            $rr = Invoke-EngineRestore $changedIds $appliedBackup
+            if (-not $rr.ok) {
+                return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false;
+                    error = $samples.error + '；且现场还原失败：' + $rr.error }
+            }
+        }
         return @{ tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $false; error = $samples.error }
     }
     $summary = Summarize-Samples $samples.samples
@@ -468,13 +506,29 @@ function Invoke-TestGroup {
     $decision = Decide-Keep $state.baseline.summary $summary
     $kept = $decision.keep
 
-    # 4) 无效 → 自动还原
+    # 4) 无效 → 自动还原（只还原本步骤真正改过、且记录在本次快照里的项）
+    #    注意：若本组在测试前就已达标，本次没有任何"原值"可还原，绝不能谎报"已还原"。
     $reverted = $false
-    if (-not $kept -and -not $Simulate) {
-        $rr = Invoke-EngineRestore $group.items
-        if ($rr.ok) { $reverted = $true }
+    $revertError = ''
+    if (-not $kept) {
+        if ($Simulate) {
+            $reverted = $true
+        } elseif ($changedIds.Count -eq 0) {
+            $revertError = '本组项目在测试前就已全部达标，本次没有产生可还原的改动；如需回到优化前状态，请在「还原」页核对该项目更早的备份。'
+        } else {
+            $rr = Invoke-EngineRestore $changedIds $appliedBackup
+            if (-not $rr.ok) {
+                $revertError = '还原失败：' + $rr.error
+            } else {
+                $missing = @($changedIds | Where-Object { $rr.restored -notcontains $_ })
+                if ($missing.Count -gt 0) {
+                    $revertError = '还原不完整，未确认还原：' + ($missing -join '、')
+                } else {
+                    $reverted = $true
+                }
+            }
+        }
     }
-    if (-not $kept -and $Simulate) { $reverted = $true }
 
     # 5) 更新状态
     # 注意：不能写成 $groups = if (...) { @(...) }——if 语句输出会被管道展开，
@@ -485,26 +539,29 @@ function Invoke-TestGroup {
     if ($existing.Count -gt 0) {
         $groups = @($groups | Where-Object { $_.id -ne $GroupId })
     }
+    $reason = $decision.reason
+    if (-not $kept -and -not $reverted -and $revertError) { $reason = $reason + ' ⚠ ' + $revertError }
     $groups += @{
         id = $group.id; name = $group.name; items = $group.items;
         appliedAt = (Get-Date).ToString('o'); summary = $summary;
-        keep = $kept; reverted = $reverted; reason = $decision.reason; samplerMode = $samples.mode
+        keep = $kept; reverted = $reverted; revertError = $revertError;
+        reason = $reason; samplerMode = $samples.mode
     }
     $newState = @{ schema = 'v1'; updatedAt = (Get-Date).ToString('o'); baseline = $state.baseline; groups = $groups }
     Write-AtomicJson $StateFile $newState
     Append-History @{
         time = (Get-Date).ToString('o'); kind = 'test'; id = $group.id; name = $group.name;
-        summary = $summary; keep = $kept; reverted = $reverted; reason = $decision.reason
+        summary = $summary; keep = $kept; reverted = $reverted; reason = $reason
     }
 
-    $verdict = if ($kept) { '保留' } else { '已还原' }
+    $verdict = if ($kept) { '保留' } else { if ($reverted) { '已还原' } else { '未还原' } }
     return @{
         tool = $ToolName; version = $ToolVersion; mode = 'test'; ok = $true;
         group = $group.id; groupName = $group.name; items = $group.items;
         baseline = $state.baseline.summary; groupSummary = $summary;
-        keep = $kept; reverted = $reverted; reason = $decision.reason;
+        keep = $kept; reverted = $reverted; revertError = $revertError; reason = $reason;
         samplerMode = $samples.mode;
-        message = "$($group.name)（$($group.id)）测试完成：$verdict。$($decision.reason)"
+        message = "$($group.name)（$($group.id)）测试完成：$verdict。$reason"
     }
 }
 
@@ -575,7 +632,7 @@ try {
                 if (-not $result.ok) { Write-Host $result.error; exit 1 }
                 Write-Host ('基线: 平均 ' + $result.baseline.avgFps + ' FPS / 1% low ' + $result.baseline.p1Low + ' / 稳定度 CV ' + $result.baseline.cv)
                 foreach ($g in @($result.groups)) {
-                    Write-Host ("$($g.id) $($g.name): " + $(if ($g.keep) { '保留' } else { '已还原' }) + " | 平均 $($g.summary.avgFps) FPS | 1% low $($g.summary.p1Low) | $($g.reason)")
+                    Write-Host ("$($g.id) $($g.name): " + $(if ($g.keep) { '保留' } elseif ($g.reverted) { '已还原' } else { '未还原' }) + " | 平均 $($g.summary.avgFps) FPS | 1% low $($g.summary.p1Low) | $($g.reason)")
                 }
                 Write-Host ('CSV: ' + $result.csvExport)
             }

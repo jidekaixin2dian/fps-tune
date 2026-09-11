@@ -639,4 +639,50 @@ public sealed class SessionTests : IDisposable
         Assert.False(PerformanceSessionService.IsValidSessionName("a/b\\c:d"));
         Assert.False(PerformanceSessionService.IsValidSessionName(new string('x', 61)));
     }
+
+    // ---------- P1：无法解释的活动快照必须"留档解锁"，不能把会话功能永久锁死 ----------
+
+    [Fact]
+    public void Unreadable_active_snapshot_can_be_archived_by_explicit_choice()
+    {
+        var snapshot = MakeSession("active-snapshot", 8) with { SchemaVersion = 99 };
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath,
+            System.Text.Json.JsonSerializer.Serialize(snapshot));
+        Assert.True(PerformanceSessionStore.MarkActiveSnapshotCancelled());
+
+        // 默认行为保持保守：不删数据、不自动解锁
+        Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.True(PerformanceSessionStore.HasUnreadableActiveSnapshot());
+
+        // 用户明确选择归档：数据改名保留，会话功能立刻恢复可用
+        Assert.True(PerformanceSessionStore.TryArchiveUnreadableActiveSnapshot(out var archived, out var error));
+        Assert.Null(error);
+        Assert.NotNull(archived);
+        Assert.True(File.Exists(archived));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+        Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
+        Assert.Equal(99, System.Text.Json.JsonSerializer
+            .Deserialize<PerformanceSession>(File.ReadAllText(archived!))!.SchemaVersion);
+
+        using var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership();
+        Assert.NotNull(owner);
+        Assert.True(PerformanceSessionStore.PrepareForNewSession());
+    }
+
+    [Fact]
+    public void Archive_refuses_readable_active_snapshot()
+    {
+        PerformanceSessionStore.SaveActiveSnapshot(MakeSession("active-snapshot", 8));
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
+
+        Assert.False(PerformanceSessionStore.HasUnreadableActiveSnapshot());
+        Assert.False(PerformanceSessionStore.TryArchiveUnreadableActiveSnapshot(out var archived, out var error));
+        Assert.Null(archived);
+        Assert.Contains("正常恢复", error ?? "", StringComparison.Ordinal);
+        Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath), "可恢复的数据不得被归档");
+
+        Assert.True(PerformanceSessionStore.ClearActiveSnapshot());
+    }
 }

@@ -278,6 +278,79 @@ public static class PerformanceSessionStore
         }
     }
 
+    /// <summary>
+    /// 是否存在"本版本无法解释"的活动快照（来自更新的版本，或已损坏/结构不合法）。
+    /// 这类快照会阻塞新会话，但绝不能静默删除，必须由用户明确决定是否归档。
+    /// 注意：损坏文件会在读取时按既有约定留档一份 .corrupt。
+    /// </summary>
+    public static bool HasUnreadableActiveSnapshot()
+    {
+        try
+        {
+            if (!File.Exists(ActiveSessionPath))
+                return false;
+            if (IsFutureSchemaActiveSnapshot())
+                return true;
+            return LoadActiveSnapshot() is null;
+        }
+        catch
+        {
+            return File.Exists(ActiveSessionPath);
+        }
+    }
+
+    /// <summary>
+    /// 用户明确要求后，把无法解释的活动快照改名留档（绝不删除、不参与统计），
+    /// 让性能会话恢复可用。可读的快照一律拒绝归档，避免丢掉可恢复数据。
+    /// </summary>
+    public static bool TryArchiveUnreadableActiveSnapshot(out string? archivedPath, out string? error)
+    {
+        archivedPath = null;
+        error = null;
+
+        var ownership = TryAcquireActiveSessionOwnership();
+        if (ownership is null)
+        {
+            error = "性能会话正在使用中，或另一个 FpsTune 实例持有会话锁。";
+            return false;
+        }
+
+        using (ownership)
+        {
+            if (!File.Exists(ActiveSessionPath))
+            {
+                error = "没有需要归档的活动快照。";
+                return false;
+            }
+
+            if (!HasUnreadableActiveSnapshot())
+            {
+                error = "当前活动快照可以被本版本读取，请走正常恢复流程，未执行归档。";
+                return false;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(SessionsDir);
+                var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+                var target = Path.Combine(SessionsDir, $"_active.archived-{stamp}.json");
+                for (var i = 1; File.Exists(target) && i < 100; i++)
+                    target = Path.Combine(SessionsDir, $"_active.archived-{stamp}-{i}.json");
+
+                File.Move(ActiveSessionPath, target);
+                archivedPath = target;
+                // 墓碑只对原快照有意义：归档成功后一并清理（清理失败不影响归档结果）。
+                ClearActiveCancellationOwned();
+                return !File.Exists(ActiveSessionPath);
+            }
+            catch (Exception ex)
+            {
+                error = "归档失败：" + (string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().Name : ex.Message);
+                return false;
+            }
+        }
+    }
+
     public static bool ClearActiveSnapshot()
         => !HasActiveSessionOwnership && ClearActiveSnapshotCore(requireOwnership: false);
 
