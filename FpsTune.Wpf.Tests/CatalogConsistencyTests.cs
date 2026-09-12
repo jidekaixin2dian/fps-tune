@@ -123,6 +123,64 @@ public class CatalogConsistencyTests
         Assert.Equal(expected, actual);
     }
 
+    // ---------- 预设解析（P2：未知预设回退只允许一次，坏 catalog 必须明确报错） ----------
+
+    private const string MinimalCatalogJson = """
+        {"items":[{"id":"a"},{"id":"b"},{"id":"c"}],
+         "presets":{"balanced":{"exclude":["c"]},"safe-only":{"include":["a","b"]}}}
+        """;
+
+    [Fact]
+    public void ResolvePreset_unknown_name_falls_back_to_balanced()
+    {
+        var ids = OptimizationCatalog.ResolvePresetFromJson(MinimalCatalogJson, "no-such-preset");
+        Assert.Equal(new[] { "a", "b" }, ids);
+    }
+
+    [Fact]
+    public void ResolvePreset_is_case_insensitive_for_known_names()
+    {
+        var ids = OptimizationCatalog.ResolvePresetFromJson(MinimalCatalogJson, "SAFE-Only");
+        Assert.Equal(new[] { "a", "b" }, ids);
+    }
+
+    [Fact]
+    public void Catalog_without_balanced_throws_clearly_instead_of_stack_overflow()
+    {
+        // 修复前：未知/缺失 balanced 会无限递归 ResolvePreset("balanced") → StackOverflow 崩进程
+        var json = """{"items":[{"id":"a"}],"presets":{"safe-only":{"include":["a"]}}}""";
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptimizationCatalog.ResolvePresetFromJson(json, "safe-only"));
+        Assert.Contains("缺少必需预设", ex.Message);
+        Assert.Contains("balanced", ex.Message);
+    }
+
+    [Fact]
+    public void Malformed_balanced_fails_explicitly_after_single_fallback()
+    {
+        // balanced 存在但既无 include 也无 exclude：回退一次后必须明确报错，不允许再递归
+        var json = """{"items":[{"id":"a"}],"presets":{"balanced":{},"safe-only":{"include":["a"]}}}""";
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => OptimizationCatalog.ResolvePresetFromJson(json, "whatever"));
+        Assert.Contains("无法解析", ex.Message);
+    }
+
+    [Fact]
+    public void Real_catalog_presets_resolve_to_nonempty_known_ids()
+    {
+        // 视图（OptimizeView）与 CLI/控制台页已统一走 ResolvePreset；
+        // 此测试守卫 catalog 里每个预设都能解析出非空且真实存在的 id 集合。
+        var order = OptimizationCatalog.ItemOrder;
+        Assert.Contains("balanced", OptimizationCatalog.PresetNames);
+        Assert.Contains("safe-only", OptimizationCatalog.PresetNames);
+        foreach (var name in OptimizationCatalog.PresetNames)
+        {
+            var ids = OptimizationCatalog.ResolvePreset(name);
+            Assert.NotEmpty(ids);
+            Assert.All(ids, id => Assert.Contains(id, order));
+        }
+    }
+
     // ---------- 版本号单源化 ----------
 
     [Fact]
