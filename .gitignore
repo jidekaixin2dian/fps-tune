@@ -22,5 +22,8 @@ obj/
 # Release artifacts
 dist/
 
+# 本地测试/验证输出（Tee-Object、手工冒烟日志等），不入库
+test-result*.txt
+
 # 本地 AI 交接文档，不入库
 HANDOFF_PROMPT*.md
