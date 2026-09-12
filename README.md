@@ -74,7 +74,7 @@ v1.6.2 提供两种界面模式：标题栏可切换紧凑中文控制台与经�
 
 ```powershell
 .\build-wpf.ps1 -Mode Build
-.\FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe
+.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe
 ```
 
 GUI 已完成：检测（含实时 CPU/内存/GPU/显存监控）、优化、性能会话（本地采样 + 摘要 + 启发式洞察 + 会话对比 + JSON/CSV 导出）、A/B 实验向导（可关联性能会话、中断恢复）、按游戏自动应用 Profile（活动中心可查事件）、朋友测试、备份/日志、设置、
@@ -104,7 +104,7 @@ installer/                    Inno Setup 打包
 ```powershell
 dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 # 以及无副作用的 CLI 冒烟（CI 已集成）
-.\FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe -Detect -Json
+.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json
 ```
 
 ## 许可

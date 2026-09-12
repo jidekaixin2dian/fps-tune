@@ -16,7 +16,7 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 - Windows 10 / 11。安装包和单文件 `FpsTune.exe` 为自包含发布；便携版需要 .NET 8 Windows Desktop Runtime。
 - 部分项（电源计划、HAGS、系统服务等）需要**管理员权限**的终端。
 - 程序位置：`<root>\FpsTune.exe`（下文 `<root>` 指仓库/安装目录；本地构建产物在
-  `FpsTune.Wpf\bin\Release\net8.0-windows\`）。
+  `FpsTune.Wpf\bin\Release\net10.0-windows\`）。
 - 带命令行参数时进入无头 CLI 模式：不弹 GUI 窗口、结果输出到 stdout、退出码 0/1。
 - 不要在未获得程序的机器上凭空执行；用户没有程序时，引导其从 Releases 下载或先构建。
 

@@ -54,8 +54,8 @@ $EnginePath = $EngineExe
 if (-not $EnginePath) {
     $engineCandidates = @(
         (Join-Path $PSScriptRoot 'FpsTune.exe'),
-        (Join-Path $PSScriptRoot 'FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe'),
-        (Join-Path $PSScriptRoot 'FpsTune.Wpf\bin\Debug\net8.0-windows\FpsTune.exe')
+        (Join-Path $PSScriptRoot 'FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe'),
+        (Join-Path $PSScriptRoot 'FpsTune.Wpf\bin\Debug\net10.0-windows\FpsTune.exe')
     )
     $EnginePath = ($engineCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1)
 }

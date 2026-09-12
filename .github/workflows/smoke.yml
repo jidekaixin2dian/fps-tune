@@ -15,13 +15,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Build
         run: dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release
 
       - name: Core detect (read-only)
-        run: FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe -Detect -Json
+        run: FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json
 
       - name: A/B simulated full chain
         shell: powershell

@@ -82,7 +82,7 @@ Or build locally:
 ```powershell
 cd <project-directory>
 .\build-wpf.ps1 -Mode Build
-.\FpsTune.Wpf\bin\Release\net8.0-windows\FpsTune.exe
+.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe
 ```
 
 ## Quick start (AI agent)
