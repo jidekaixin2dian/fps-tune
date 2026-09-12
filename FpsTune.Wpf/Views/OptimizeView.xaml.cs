@@ -18,11 +18,13 @@ public partial class OptimizeView : UserControl
 {
     private bool _loadedFromState;
 
-    private static readonly string[] SafeOnlyIds =
-        { "game-mode", "dvr-off", "transparency-off", "fso-off", "gpu-pref" };
+    // 预设集合与 CLI/控制台页同源：都走 catalog.presets（OptimizationCatalog），
+    // 不再各自硬编码，避免同一预设在不同界面解析出不同集合。
+    private static HashSet<string> SafeOnlyIds() =>
+        new(OptimizationCatalog.ResolvePreset("safe-only"), StringComparer.Ordinal);
 
-    private static readonly string[] BalancedExclude =
-        { "sysmain-off", "wsearch-off", "hibernate-off", "power-tuning" };
+    private static HashSet<string> BalancedIds() =>
+        new(OptimizationCatalog.ResolvePreset("balanced"), StringComparer.Ordinal);
 
     public ObservableCollection<OptimizationItemViewModel> Items { get; } = new();
     public ICollectionView ItemsView { get; private set; } = null!;
@@ -178,12 +180,12 @@ public partial class OptimizeView : UserControl
         }
         else if (PresetSafeOnly.IsChecked == true)
         {
-            foreach (var item in Items.Where(i => SafeOnlyIds.Contains(i.Id)))
+            foreach (var item in Items.Where(i => SafeOnlyIds().Contains(i.Id)))
                 item.IsChecked = true;
         }
         else
         {
-            foreach (var item in Items.Where(i => !BalancedExclude.Contains(i.Id)))
+            foreach (var item in Items.Where(i => BalancedIds().Contains(i.Id)))
                 item.IsChecked = true;
         }
     }
@@ -215,15 +217,12 @@ public partial class OptimizeView : UserControl
         else if (PresetSafeOnly.IsChecked == true)
         {
             presetName = "safe-only";
-            ids = SafeOnlyIds.ToList();
+            ids = SafeOnlyIds().ToList();
         }
         else
         {
             presetName = "balanced";
-            ids = AppState.Items
-                .Where(i => !BalancedExclude.Contains(i.Id))
-                .Select(i => i.Id)
-                .ToList();
+            ids = BalancedIds().ToList();
         }
 
         var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
@@ -246,10 +245,10 @@ public partial class OptimizeView : UserControl
         if (PresetFull.IsChecked == true)
             return AppState.Items.Select(i => i.Id);
         if (PresetSafeOnly.IsChecked == true)
-            return SafeOnlyIds;
+            return SafeOnlyIds();
         if (PresetCustom.IsChecked == true)
             return Items.Where(i => i.IsChecked).Select(i => i.Id);
-        return AppState.Items.Select(i => i.Id).Where(id => !BalancedExclude.Contains(id));
+        return BalancedIds();
     }
 
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)
