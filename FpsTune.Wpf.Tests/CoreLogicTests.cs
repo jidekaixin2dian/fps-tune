@@ -766,13 +766,25 @@ public class CoreLogicTests
     private static string CoreSource(params string[] parts)
         => File.ReadAllText(Path.Combine(new[] { RepoRoot(), "FpsTune.Wpf", "Core" }.Concat(parts).ToArray()));
 
+    /// <summary>BackupService 拆分为 partial 后的全部源文件，供"不得出现伪造 GUID"这类全量文本扫描。</summary>
+    private static IEnumerable<string> BackupServiceSourceFiles() => new[]
+    {
+        "BackupService.cs", "BackupService.Capture.cs", "BackupService.Restore.cs",
+        "BackupService.Journal.cs", "BackupService.Validation.cs"
+    };
+
     [Fact]
     public void PowerTuning_uses_the_documented_subgroup_and_setting_pair()
     {
         const string subProcessor = "54533251-82be-4824-96c1-47b60b740d00";
         const string perfBoostMode = "be337238-0d82-4146-a960-4f3749d470c7";
 
-        foreach (var file in new[] { "NativeOptimizationEngine.cs", "DetectionService.cs", "BackupService.cs" })
+        // 备份侧的 GUID 在拆分后分居 Capture（写快照）与 Restore（还原）两块
+        foreach (var file in new[]
+                 {
+                     "NativeOptimizationEngine.cs", "DetectionService.cs",
+                     "BackupService.Capture.cs", "BackupService.Restore.cs"
+                 })
         {
             var src = CoreSource(file);
             Assert.Contains(subProcessor, src);
@@ -783,7 +795,7 @@ public class CoreLogicTests
     [Fact]
     public void PowerTuning_no_longer_references_fabricated_guids()
     {
-        foreach (var file in new[] { "NativeOptimizationEngine.cs", "DetectionService.cs", "BackupService.cs" })
+        foreach (var file in BackupServiceSourceFiles())
         {
             var src = CoreSource(file);
             Assert.DoesNotContain("bd3b718a", src);
