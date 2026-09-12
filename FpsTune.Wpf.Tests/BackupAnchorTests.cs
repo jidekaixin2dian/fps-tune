@@ -123,7 +123,14 @@ public sealed class BackupAnchorTests
                 writer);
 
             Assert.Equal(1, exitCode);
-            Assert.Contains("不存在", writer.ToString(), StringComparison.Ordinal);
+            // -Json 输出对非 ASCII 会做 \uXXXX 转义，必须按消费者的方式解析后再断言，
+            // 不能直接比对中文字面量（CLI 的调用方也是先 ConvertFrom-Json）。
+            using var payload = JsonDocument.Parse(writer.ToString());
+            var failures = payload.RootElement.GetProperty("failures")
+                .EnumerateArray()
+                .Select(x => x.GetString() ?? string.Empty)
+                .ToList();
+            Assert.Contains(failures, x => x.Contains("不存在", StringComparison.Ordinal));
             Assert.Equal(0, calls);
         }
         finally

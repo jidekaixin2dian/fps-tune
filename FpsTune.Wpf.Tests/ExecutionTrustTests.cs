@@ -144,7 +144,7 @@ public sealed class ExecutionTrustTests
     public void Launch_command_is_constant_and_data_travels_via_environment()
     {
         var script = Path.Combine(Path.GetTempPath(), "fpstune scripts", "friend-test.ps1");
-        var args = new[] { "-Name", "张三 'quoted' $(not-a-command)", "-Scene", "靶场，2K 全高" };
+        var args = new[] { "-Name", "张三 'quoted' $(not-a-command)", "-Scene", "靶场，2K 全高", "-NoPrompt" };
         var expected = new string('A', 64);
         var psi = new ProcessStartInfo();
 
@@ -152,19 +152,50 @@ public sealed class ExecutionTrustTests
 
         Assert.Equal(Path.GetFullPath(script), psi.Environment[PowerShellRunner.ScriptPathVariable]);
         Assert.Equal(expected, psi.Environment[PowerShellRunner.ScriptHashVariable]);
-        Assert.Equal(
-            args.Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            psi.Environment[PowerShellRunner.ArgCountVariable]);
-        for (var i = 0; i < args.Length; i++)
-            Assert.Equal(args[i], psi.Environment[PowerShellRunner.ArgVariablePrefix + i]);
+        Assert.Equal("3", psi.Environment[PowerShellRunner.ParamCountVariable]);
 
-        // 启动命令是常量：脚本路径、参数与哈希一个字符都不参与命令行（也不落盘）；
-        // 但必须包含"由子进程自己校验哈希"这一步。
+        // 参数名与值都是独立的环境变量条目：值永远只是数据
+        Assert.Equal("Name", psi.Environment["FPSTUNE_LAUNCH_PARAM_0_NAME"]);
+        Assert.Equal("张三 'quoted' $(not-a-command)", psi.Environment["FPSTUNE_LAUNCH_PARAM_0_VALUE"]);
+        Assert.Equal("Scene", psi.Environment["FPSTUNE_LAUNCH_PARAM_1_NAME"]);
+        Assert.Equal("靶场，2K 全高", psi.Environment["FPSTUNE_LAUNCH_PARAM_1_VALUE"]);
+        Assert.Equal("NoPrompt", psi.Environment["FPSTUNE_LAUNCH_PARAM_2_NAME"]);
+        Assert.Equal("1", psi.Environment["FPSTUNE_LAUNCH_PARAM_2_FLAG"]);
+
+        // 启动命令是常量：脚本路径、参数名与参数值一个字符都不参与命令行（也不落盘）；
+        // 但必须包含"子进程自校验哈希"与"具名参数 splatting"这两步。
         Assert.Contains("Get-FileHash", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
+        Assert.Contains("@splat", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
         Assert.DoesNotContain(Path.GetFileName(script), PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
         foreach (var arg in args)
             Assert.DoesNotContain(arg, PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// 回归：数组 splatting 会把 -Name 当位置参数传给脚本（具名参数全部失效）。
+    /// 因此启动器必须解析成（名字, 值|开关）并用 hashtable splatting 调用。
+    /// </summary>
+    [Fact]
+    public void Parse_arguments_splits_named_parameters_and_switches()
+    {
+        var parsed = PowerShellRunner.ParseArguments(
+            new[] { "-Baseline", "-Group", "group-1", "-Json", "-Duration", "-1" });
+
+        Assert.Equal(4, parsed.Count);
+        Assert.Equal("Baseline", parsed[0].Name);
+        Assert.Null(parsed[0].Value);                    // 开关
+        Assert.Equal("Group", parsed[1].Name);
+        Assert.Equal("group-1", parsed[1].Value);
+        Assert.Equal("Json", parsed[2].Name);
+        Assert.Null(parsed[2].Value);                    // 开关
+        Assert.Equal("Duration", parsed[3].Name);
+        Assert.Equal("-1", parsed[3].Value);             // 负数值不是开关名
+    }
+
+    [Fact]
+    public void Parse_arguments_rejects_positional_tokens_instead_of_dropping_them()
+        => Assert.Throws<InvalidOperationException>(() =>
+            PowerShellRunner.ParseArguments(new[] { "-Name", "x", "stray" }));
 
     [Fact]
     public void Launch_environment_falls_back_to_local_hash_when_no_trusted_reference()

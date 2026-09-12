@@ -23,19 +23,28 @@ public static class PowerShellRunner
     // 残留窗口只剩子进程内部"算完哈希 → 按路径加载脚本"之间的极短时间；要彻底消除它，
     // 只能把脚本放进非提权账户不可写的目录（需要 ACL 编程）或改为从内存执行（会破坏 $PSScriptRoot）。
     // 这个残留窗口需要本机同账户攻击者在微秒级抢占，且届时内容不匹配会被拒绝执行而不是静默运行。
+    // 参数以"名字 + 值"逐个放进环境变量，子进程组装成哈希表后用具名 splatting 调用脚本：
+    // 值始终是数据，既不参与命令行、也不参与任何代码文本（数组 splatting 会把 -Name 当位置参数，
+    // 具名参数会全部失效，所以这里必须是 hashtable splatting）。
     internal const string LaunchCommand =
         "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " +
         "$p=$env:FPSTUNE_LAUNCH_SCRIPT; $ok=$false; " +
         "try { $ok=((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash -eq $env:FPSTUNE_LAUNCH_SHA256) } catch { $ok=$false }; " +
         "if (-not $ok) { [Console]::Error.WriteLine('FPS 帧律：脚本内容校验失败，已拒绝执行。'); exit 126 }; " +
-        "$a=@(); for($i=0; $i -lt [int]$env:FPSTUNE_LAUNCH_ARG_COUNT; $i++){ " +
-        "$a += [string][Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_ARG_'+$i) }; " +
-        "& $p @a";
+        "$splat=@{}; for($i=0; $i -lt [int]$env:FPSTUNE_LAUNCH_PARAM_COUNT; $i++){ " +
+        "$n=[Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_NAME'); " +
+        "if ([Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_FLAG') -eq '1') " +
+        "{ $splat[$n]=$true } else " +
+        "{ $splat[$n]=[string][Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_VALUE') } }; " +
+        "& $p @splat";
 
     internal const string ScriptPathVariable = "FPSTUNE_LAUNCH_SCRIPT";
     internal const string ScriptHashVariable = "FPSTUNE_LAUNCH_SHA256";
-    internal const string ArgCountVariable = "FPSTUNE_LAUNCH_ARG_COUNT";
-    internal const string ArgVariablePrefix = "FPSTUNE_LAUNCH_ARG_";
+    internal const string ParamCountVariable = "FPSTUNE_LAUNCH_PARAM_COUNT";
+    internal const string ParamVariablePrefix = "FPSTUNE_LAUNCH_PARAM_";
+    internal const string ParamNameSuffix = "_NAME";
+    internal const string ParamValueSuffix = "_VALUE";
+    internal const string ParamFlagSuffix = "_FLAG";
 
     /// <summary>环境块有硬上限（约 32K 字符），超过必须明确报错，绝不退化成写临时脚本。</summary>
     internal const int MaxLaunchPayloadChars = 8000;
@@ -122,7 +131,7 @@ public static class PowerShellRunner
     }
 
     /// <summary>
-    /// 脚本路径、参数与"期望哈希"只走环境变量：不落盘、不拼 Windows 命令行，值原样保留。
+    /// 脚本路径、具名参数与"期望哈希"只走环境变量：不落盘、不拼 Windows 命令行、不做引号转义。
     /// <paramref name="expectedSha256"/> 应为可信来源（内置资源）的哈希；为空时退化为
     /// "启动时本地哈希"，仍能发现启动之后发生的替换，但无法判断脚本本身是否可信。
     /// </summary>
@@ -144,11 +153,13 @@ public static class PowerShellRunner
             }
         }
 
+        var parameters = ParseArguments(args);
+
         // 环境块有硬上限；超限时明确失败，而不是退化到"写临时脚本"那条可被劫持的路。
         var payload = fullPath.Length + hash.Length + ScriptPathVariable.Length + ScriptHashVariable.Length +
-                      ArgCountVariable.Length + 64;
-        for (var i = 0; i < args.Length; i++)
-            payload += (args[i] ?? string.Empty).Length + ArgVariablePrefix.Length + 8;
+                      ParamCountVariable.Length + 64;
+        foreach (var (name, value) in parameters)
+            payload += name.Length + (value?.Length ?? 0) + ParamVariablePrefix.Length + 32;
         if (payload > MaxLaunchPayloadChars)
         {
             throw new InvalidOperationException(
@@ -158,10 +169,51 @@ public static class PowerShellRunner
 
         psi.Environment[ScriptPathVariable] = fullPath;
         psi.Environment[ScriptHashVariable] = hash;
-        psi.Environment[ArgCountVariable] = args.Length.ToString(CultureInfo.InvariantCulture);
-        for (var i = 0; i < args.Length; i++)
-            psi.Environment[ArgVariablePrefix + i.ToString(CultureInfo.InvariantCulture)] = args[i] ?? string.Empty;
+        psi.Environment[ParamCountVariable] = parameters.Count.ToString(CultureInfo.InvariantCulture);
+        for (var i = 0; i < parameters.Count; i++)
+        {
+            var prefix = ParamVariablePrefix + i.ToString(CultureInfo.InvariantCulture);
+            psi.Environment[prefix + ParamNameSuffix] = parameters[i].Name;
+            if (parameters[i].Value is { } value)
+                psi.Environment[prefix + ParamValueSuffix] = value;
+            else
+                psi.Environment[prefix + ParamFlagSuffix] = "1";
+        }
     }
+
+    /// <summary>
+    /// 把 PowerShell 具名参数序列拆成（名字, 值 | 开关）：
+    /// 只接受 "-Name value" 与 "-Switch" 两种形式，值与名字原样走环境变量。
+    /// 位置参数无法表达为具名绑定，宁可明确报错，也不能静默丢掉调用方给的参数。
+    /// </summary>
+    internal static List<(string Name, string? Value)> ParseArguments(string[] args)
+    {
+        var parameters = new List<(string Name, string? Value)>();
+        for (var i = 0; i < args.Length; i++)
+        {
+            var token = args[i] ?? string.Empty;
+            if (!IsParameterName(token))
+            {
+                throw new InvalidOperationException(
+                    "不支持的脚本参数形式（只接受 -Name value 或 -Switch）：" + token);
+            }
+
+            if (i + 1 < args.Length && !IsParameterName(args[i + 1] ?? string.Empty))
+                parameters.Add((token.TrimStart('-'), args[++i] ?? string.Empty));
+            else
+                parameters.Add((token.TrimStart('-'), null));
+        }
+        return parameters;
+    }
+
+    /// <summary>
+    /// 参数名形如 -Name：破折号后必须以字母或下划线开头，
+    /// 这样 -1.5 这类负数值不会被误判成开关名。
+    /// </summary>
+    private static bool IsParameterName(string token)
+        => token.Length >= 2
+           && token[0] == '-'
+           && (char.IsLetter(token[1]) || token[1] == '_');
 
     /// <summary>只清理本工具自己写下的失败输出，不动该目录里的其他文件。</summary>
     private static void CleanupStaleOutput(string tempDir)
