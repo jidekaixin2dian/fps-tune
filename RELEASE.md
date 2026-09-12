@@ -8,6 +8,11 @@
 `InformationalVersion`，并用本机 `FileVersionInfo.ProductVersion` 验证单文件、绿色目录和
 便携包内的 EXE 同时包含版本号与完整 SHA。提交前构建不能作为正式发布资产。
 
+行尾约定：仓库统一存 LF（`.gitattributes` 强制所有文本文件 `eol=lf`）。
+若 `git diff --stat` 出现大量"增删完全对称"的文件，说明行尾被工具翻转成了 CRLF，
+**不要提交**——用 `git checkout -- <file>` 丢弃或让编辑器保存为 LF 后再继续，
+否则会把整个仓库历史翻成 CRLF 并卡死发布闸门。
+
 ## 1. Build
 ```powershell
 .\build-wpf.ps1 -Mode Build

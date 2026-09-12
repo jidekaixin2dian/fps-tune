@@ -1,0 +1,15 @@
+# 仓库存 LF：所有文本文件在索引与工作树统一为 LF，
+# 防止 Windows 检出被改成 CRLF 后出现大批"纯行尾"幻影改动
+# （曾导致 88 个文件假修改，卡死 publish-release.ps1 的干净工作树闸门）。
+* text=auto eol=lf
+
+# 二进制文件不做任何行尾/编码转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.exe binary
+*.dll binary
+*.pdb binary
+*.zip binary
+*.snk binary
