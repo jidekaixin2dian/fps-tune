@@ -81,7 +81,7 @@ public static class CliHost
 
     private static int RunVersion(TextWriter output)
     {
-        output.WriteLine("FpsTune " + UpdateService.CurrentVersion);
+        output.WriteLine("FpsTune " + UpdateService.DisplayVersion);
         return 0;
     }
 

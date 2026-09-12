@@ -1,7 +1,10 @@
 ﻿<Project>
   <!-- 版本与产品标识的唯一来源：csproj / 安装器 / PowerShell CLI 均从此读取 -->
   <PropertyGroup>
-    <Version>1.6.2</Version>
+    <!-- 版本号拆两段：VersionPrefix 必须是三段数字（发布/安装脚本与更新比较都消费它），
+         VersionSuffix 是预发布标识（0.1 Beta 线），进 InformationalVersion/ProductVersion 展示 -->
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
     <Authors>FPS 帧律</Authors>

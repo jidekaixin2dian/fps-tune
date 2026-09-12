@@ -28,7 +28,7 @@ public class ExperimentRunnerTests
         Assert.True(json.GetProperty("ok").GetBoolean());
         Assert.Equal("baseline", json.GetProperty("mode").GetString());
         var props = XDocument.Load(Path.Combine(RepoRoot(), "Directory.Build.props"));
-        var expectedVersion = props.Descendants("Version").First().Value.Trim();
+        var expectedVersion = props.Descendants("VersionPrefix").First().Value.Trim();
         Assert.Equal(expectedVersion, json.GetProperty("version").GetString());
         Assert.True(File.Exists(Path.Combine(scope.Dir, "state.json")));
         Assert.True(File.Exists(Path.Combine(scope.Dir, "history.jsonl")));

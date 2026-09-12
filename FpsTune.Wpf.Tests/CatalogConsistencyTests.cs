@@ -186,10 +186,13 @@ public class CatalogConsistencyTests
     [Fact]
     public void Assembly_version_matches_Directory_Build_props()
     {
+        // 版本唯一来源拆为 VersionPrefix（数字三段，装配版本/发布/安装器共用）
+        // 与 VersionSuffix（预发布标识，如 beta，只进 InformationalVersion 展示）
         var propsText = File.ReadAllText(
             RepoFile("Directory.Build.props"), Encoding.UTF8);
-        var m = Regex.Match(propsText, "<Version>([^<]+)</Version>");
-        Assert.True(m.Success, "Directory.Build.props 缺少 <Version>");
+        var m = Regex.Match(propsText, "<VersionPrefix>([^<]+)</VersionPrefix>");
+        Assert.True(m.Success, "Directory.Build.props 缺少 <VersionPrefix>");
+        Assert.Matches(@"^\d+\.\d+\.\d+$", m.Groups[1].Value.Trim());
 
         var asmVersion = typeof(OptimizationCatalog).Assembly
             .GetName().Version?.ToString(3);

@@ -51,14 +51,18 @@ if ($finalSha -notmatch '^[0-9a-fA-F]{40}$') {
 Assert-CleanSource
 
 [xml]$propsXml = Get-Content $propsPath -Raw -Encoding UTF8
-$version = $null
+# 版本唯一来源拆两段：VersionPrefix（三段数字，产物目录/清单/比较用）+ VersionSuffix（预发布标识）
+$versionPrefix = $null
+$versionSuffix = $null
 foreach ($pg in @($propsXml.Project.PropertyGroup)) {
-    if ($pg.Version) { $version = [string]$pg.Version; break }
+    if (-not $versionPrefix -and $pg.VersionPrefix) { $versionPrefix = ([string]$pg.VersionPrefix).Trim() }
+    if (-not $versionSuffix -and $pg.VersionSuffix) { $versionSuffix = ([string]$pg.VersionSuffix).Trim() }
 }
-if ($version) { $version = $version.Trim() }
+$version = $versionPrefix
 if ($version -notmatch '^\d+\.\d+\.\d+$') {
-    throw 'Directory.Build.props 缺少有效的三段版本号'
+    throw 'Directory.Build.props 缺少有效的三段 VersionPrefix'
 }
+$displayVersion = if ($versionSuffix) { "$versionPrefix-$versionSuffix" } else { $versionPrefix }
 
 $singleOut = Join-Path $dist "single-file-$version"
 $folderOut = Join-Path $dist "folder-$version"
@@ -68,7 +72,7 @@ $folderBld = Join-Path $publishTmp 'folder-bld'
 $zipName = "FpsTune-Portable-$version.zip"
 $zip = Join-Path $dist $zipName
 $manifest = Join-Path $dist "SHA256SUMS-v$version.txt"
-$informationalVersion = "$version+$finalSha"
+$informationalVersion = "$displayVersion+$finalSha"
 
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
 

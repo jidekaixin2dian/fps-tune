@@ -17,8 +17,26 @@ public static class UpdateService
     private const string ReleaseApi =
         "https://api.github.com/repos/jidekaixin2dian/fps-tune/releases/latest";
 
+    /// <summary>数字版本（三段），供机器协议、更新比较使用。</summary>
     public static string CurrentVersion =>
         System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
+
+    /// <summary>人类可读版本（含预发布标识，如 0.1.0-beta），取 InformationalVersion 去掉构建哈希。</summary>
+    public static string DisplayVersion
+    {
+        get
+        {
+            var informational = System.Reflection.Assembly
+                .GetExecutingAssembly()
+                .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+                .FirstOrDefault()?.InformationalVersion;
+            if (string.IsNullOrEmpty(informational))
+                return CurrentVersion;
+            var plus = informational.IndexOf('+');
+            return plus > 0 ? informational[..plus] : informational;
+        }
+    }
 
     public static async Task<UpdateInfo?> CheckAsync()
     {

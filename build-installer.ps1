@@ -10,11 +10,12 @@ $root = $PSScriptRoot
 
 $propsPath = Join-Path $root 'Directory.Build.props'
 [xml]$propsXml = Get-Content $propsPath -Raw -Encoding UTF8
+# 安装器版本取 VersionPrefix（数字三段，与发布产物目录名一致）；预发布标识（VersionSuffix）不进安装器文件名
 $version = $null
-foreach ($pg in @($propsXml.Project.PropertyGroup)) { if ($pg.Version) { $version = [string]$pg.Version; break } }
-if (-not $version) { Write-Error 'Directory.Build.props 缺少 <Version>'; exit 1 }
+foreach ($pg in @($propsXml.Project.PropertyGroup)) { if ($pg.VersionPrefix) { $version = [string]$pg.VersionPrefix; break } }
+if (-not $version) { Write-Error 'Directory.Build.props 缺少 <VersionPrefix>'; exit 1 }
 $version = $version.Trim()
-if ($version -notmatch '^\d+\.\d+\.\d+$') { Write-Error 'Directory.Build.props 的 <Version> 必须是三段版本号'; exit 1 }
+if ($version -notmatch '^\d+\.\d+\.\d+$') { Write-Error 'Directory.Build.props 的 <VersionPrefix> 必须是三段版本号'; exit 1 }
 
 $singleExe = Join-Path $root "dist\single-file-$version\FpsTune.exe"
 $portableZip = Join-Path $root "dist\FpsTune-Portable-$version.zip"
