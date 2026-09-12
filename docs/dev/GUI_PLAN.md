@@ -6,7 +6,7 @@
 > 检测 / 优化授权 / A/B 实验 / 朋友测试 / 备份日志。视觉设计后续交给 V4 flash version，提示词见
 > [GUI_DESIGN_PROMPT.md](GUI_DESIGN_PROMPT.md)。
 > 原则：GUI 只做“调用引擎 + 展示结果 + 确认授权”，所有系统改动仍由
-> `FpsTune.exe` / `tuning-experiment.ps1` 完成，GUI 不绕过备份与还原机制。
+> `FpsTune.exe`（含进程内 `-Experiment` A/B 编排）完成，GUI 不绕过备份与还原机制。
 
 ## 明确不做
 
@@ -46,7 +46,7 @@
 
 - 检测 PresentMon 是否可用（`Get-Command PresentMon` 或已知路径）
 - 未安装时只展示官方安装命令，不代为安装
-- 基线按钮：`tuning-experiment.ps1 -Baseline -Json`
+- 基线按钮：`FpsTune.exe -Experiment -Baseline -Json`（进程内 ExperimentRunner）
   - 显示平均 FPS / 1% low / P99 / 卡顿 / CV
   - CV > 0.05 时禁止继续，提示用户重新采样
 - 候选组按钮：group-1 / group-2 / group-3

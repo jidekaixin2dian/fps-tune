@@ -83,19 +83,19 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 ### 自动寻找最佳配置（A/B 调优）
 
 同一台设备、固定场景下，用数据决定哪些优化组合值得保留
-（`tuning-experiment.ps1` 的实际应用/还原也是调用 `FpsTune.exe` 完成的）：
+（A/B 实验编排由 `FpsTune.exe -Experiment` 进程内完成；应用/还原同样走引擎并自动备份）：
 
 ```
 # 1) 先采集基线（3 次采样，需游戏在运行、场景固定）
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\tuning-experiment.ps1" -Baseline -Json
+FpsTune.exe -Experiment -Baseline -Json
 
 # 2) 依次测试候选组（每个组约 3 × 90 秒）
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\tuning-experiment.ps1" -Test -Group group-1 -Json
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\tuning-experiment.ps1" -Test -Group group-2 -Json
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\tuning-experiment.ps1" -Test -Group group-3 -Json
+FpsTune.exe -Experiment -Test -Group group-1 -Json
+FpsTune.exe -Experiment -Test -Group group-2 -Json
+FpsTune.exe -Experiment -Test -Group group-3 -Json
 
 # 3) 查看实验结果与 CSV 导出
-powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\tuning-experiment.ps1" -Report -Json
+FpsTune.exe -Experiment -Report -Json
 ```
 
 规则版决策（非统计推断）：按平均帧率 / 1% low / P99 帧时间 / 卡顿次数对比基线，

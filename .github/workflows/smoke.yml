@@ -28,8 +28,9 @@ jobs:
         run: |
           $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP 'FpsTuneSmoke'
           New-Item -ItemType Directory -Path $env:LOCALAPPDATA -Force | Out-Null
-          powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate -Baseline -Json
-          powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate -Test -Group group-1 -Json
-          powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate -Test -Group group-2 -Json
-          powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Simulate -Test -Group group-3 -Json
-          powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Report -Json
+          $exe = 'FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe'
+          & $exe -Experiment -Baseline -Simulate -Json
+          & $exe -Experiment -Test -Group group-1 -Simulate -Json
+          & $exe -Experiment -Test -Group group-2 -Simulate -Json
+          & $exe -Experiment -Test -Group group-3 -Simulate -Json
+          & $exe -Experiment -Report -Json

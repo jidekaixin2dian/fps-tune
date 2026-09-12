@@ -90,7 +90,6 @@ FpsTune.Wpf/
   Services/                   主题 / 设置 / 脚本定位 / 进程封装 / CLI 宿主
   Views/                      WPF 视图
 FpsTune.Wpf.Tests/            单元测试（含 catalog 一致性守卫）
-tuning-experiment.ps1         A/B 实验框架（模拟态可安全跑 CI，实际采样调用 FpsTune.exe CLI）
 tools/friend-test.ps1         朋友测试记录脚本（GUI 调用）
 installer/                    Inno Setup 打包
 ```

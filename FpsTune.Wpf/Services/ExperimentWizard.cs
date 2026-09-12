@@ -394,7 +394,7 @@ public static class ExperimentWizardStore
         };
     }
 
-    /// <summary>从 tuning-experiment.ps1 的 state.json 迁移（只读旧文件，不改动）。</summary>
+    /// <summary>从旧版（tuning-experiment.ps1 时代）的 state.json 迁移（只读旧文件，不改动）。</summary>
     internal static ExperimentWizardState? MigrateFromLegacyState()
     {
         try

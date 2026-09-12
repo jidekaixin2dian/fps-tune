@@ -201,7 +201,8 @@ public static class ScriptLocator
 
     private static byte[] ReadEmbedded(string fileName)
     {
-        if (fileName is not ("tuning-experiment.ps1" or "friend-test.ps1"))
+        // A/B 实验编排已迁入进程内 ExperimentRunner，脚本信任机器只剩朋友测试一处消费方
+        if (fileName is not "friend-test.ps1")
             throw new ArgumentException("未知的应用脚本", nameof(fileName));
 
         lock (Gate)

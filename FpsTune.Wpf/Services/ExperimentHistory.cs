@@ -20,7 +20,8 @@ public sealed record ExperimentRun(
 }
 
 /// <summary>
-/// A/B 实验历史加载：优先读 tuning-experiment.ps1 追加的 history.jsonl，
+/// A/B 实验历史加载：优先读 ExperimentRunner 追加的 history.jsonl
+/// （旧 tuning-experiment.ps1 时代的格式不变），
 /// 没有历史文件时回退到 state.json（把当前基线与候选组结果当作一次趋势）。
 /// </summary>
 public static class ExperimentHistory

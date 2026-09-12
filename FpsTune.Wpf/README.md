@@ -8,8 +8,8 @@
 - 左侧导航 + 右侧内容区
 - 检测 / 优化 / A/B 实验 / 朋友测试 / 备份日志
 - 暗色 / 亮色 / 跟随系统
-- 外部脚本仅剩两枚：`tuning-experiment.ps1`（A/B 实验，实际应用/还原调用 FpsTune.exe CLI）、
-  `tools/friend-test.ps1`（朋友测试记录）；两者均已作为嵌入资源随包分发
+- 外部脚本仅剩一枚：`tools/friend-test.ps1`（朋友测试记录），作为嵌入资源随包分发；
+  A/B 实验编排已迁入进程内 `ExperimentRunner`（CLI 动词 `-Experiment`）
 
 ## 构建
 

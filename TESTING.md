@@ -43,11 +43,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\friend-test.ps1 `
 2. 进入固定场景（推荐靶场），运行：
 
    ```powershell
-   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Baseline -Json
-   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Test -Group group-1 -Json
-   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Test -Group group-2 -Json
-   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Test -Group group-3 -Json
-   powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Report -Json
+   FpsTune.exe -Experiment -Baseline -Json
+   FpsTune.exe -Experiment -Test -Group group-1 -Json
+   FpsTune.exe -Experiment -Test -Group group-2 -Json
+   FpsTune.exe -Experiment -Test -Group group-3 -Json
+   FpsTune.exe -Experiment -Report -Json
    ```
 
 3. 把 `%LocalAppData%\FpsTune\experiment\experiment-summary.csv` 和

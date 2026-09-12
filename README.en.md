@@ -31,9 +31,8 @@ no telemetry; in-app updates require explicit consent before download and SHA-25
 
 | File | Purpose |
 |---|---|
-| `FpsTune.Wpf/` | WPF app + C# engine (.NET 8): detect / optimize / performance sessions / A-B wizard / auto-profile activity / friend test / backup / settings; `FpsTune.exe` doubles as the headless CLI |
+| `FpsTune.Wpf/` | WPF app + C# engine (.NET 10): detect / optimize / performance sessions / A-B wizard / auto-profile activity / friend test / backup / settings; `FpsTune.exe` doubles as the headless CLI (including `-Experiment` A/B orchestration) |
 | `catalog/catalog.json` | Single source of truth: 33 optimization items + presets |
-| `tuning-experiment.ps1` | A/B auto-tuning: baseline sampling, stability check, 3 candidate groups, rule-based keep/revert, CSV export (calls FpsTune.exe for apply/restore) |
 | `tools/friend-test.ps1` | Friend-test helper: one command generates a Markdown + CSV test record |
 | `SKILL.md` | Agent skill instructions: detect → explain → confirm → apply → report, with hard red lines |
 | `TESTING.md` | Friend-testing guide: full A/B, or minimal FPS / GamePP data template |
@@ -109,13 +108,13 @@ Then read SKILL.md in the cloned directory and follow its workflow to inspect an
 
 ```powershell
 # Baseline first (game running, fixed map/graphics/route; 3 samples)
-powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Baseline -Json
+FpsTune.exe -Experiment -Baseline -Json
 
 # Test candidate groups one by one
-powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Test -Group group-1 -Json
+FpsTune.exe -Experiment -Test -Group group-1 -Json
 
 # Report + CSV export
-powershell -NoProfile -ExecutionPolicy Bypass -File tuning-experiment.ps1 -Report -Json
+FpsTune.exe -Experiment -Report -Json
 ```
 
 Decisions are rule-based (avg FPS / 1% low / P99 frame time / stutter count vs baseline):

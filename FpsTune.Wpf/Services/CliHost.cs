@@ -15,7 +15,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Version", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "Version", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -28,6 +28,14 @@ public static class CliHost
         public string? GamePath { get; set; }
         public bool BackupFileSpecified { get; set; }
         public string? BackupFile { get; set; }
+        // -Experiment 动词
+        public bool ExpBaseline { get; set; }
+        public bool ExpTest { get; set; }
+        public bool ExpReport { get; set; }
+        public bool Simulate { get; set; }
+        public string? Group { get; set; }
+        public int? Duration { get; set; }
+        public string? CsvPath { get; set; }
     }
 
     public static bool IsCliInvocation(IReadOnlyList<string> args)
@@ -60,6 +68,7 @@ public static class CliHost
                 "Apply" => RunApply(options, output),
                 "Restore" => RunRestore(options, output),
                 "ListRestore" => RunListRestore(options, output),
+                "Experiment" => RunExperiment(options, output),
                 _ => RunHelp(output),
             };
         }
@@ -285,6 +294,68 @@ public static class CliHost
     private static bool NeedsAdmin(string id)
         => ItemCatalog.All.FirstOrDefault(d => d.Id == id)?.Admin == true;
 
+    private static string? ParseDuration(string token, CliOptions options)
+    {
+        if (!int.TryParse(token, out var seconds) || seconds <= 0)
+            return "-Duration 必须是正整数（秒）";
+        options.Duration = seconds;
+        return null;
+    }
+
+    /// <summary>
+    /// -Experiment：A/B 实验编排（ExperimentRunner，进程内）。
+    /// 取代已删除的 tuning-experiment.ps1；-Simulate 为 dry-run，不改任何系统设置。
+    /// </summary>
+    private static int RunExperiment(CliOptions options, TextWriter output)
+    {
+        var actions = new List<string>();
+        if (options.ExpBaseline) actions.Add("baseline");
+        if (options.ExpTest) actions.Add("test");
+        if (options.ExpReport) actions.Add("report");
+        if (actions.Count != 1)
+        {
+            output.WriteLine("-Experiment 需要且只能选择一个动作：-Baseline | -Test -Group <group-1|group-2|group-3> | -Report。");
+            return 1;
+        }
+
+        string step;
+        if (options.ExpTest)
+        {
+            var group = (options.Group ?? "").Trim();
+            if (group.Length == 0)
+            {
+                output.WriteLine("-Test 需要用 -Group 指定候选组: group-1 / group-2 / group-3");
+                return 1;
+            }
+            step = group;
+        }
+        else
+        {
+            step = actions[0];
+        }
+
+        var runnerOptions = new ExperimentRunner.Options(
+            Simulate: options.Simulate,
+            DurationSec: options.Duration ?? 90,
+            CsvPath: options.CsvPath);
+        var (exitCode, json) = ExperimentRunner.RunAsync(step, runnerOptions, CancellationToken.None)
+            .GetAwaiter().GetResult();
+
+        if (options.Json)
+        {
+            output.WriteLine(json);
+            return exitCode;
+        }
+
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        if (root.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
+            output.WriteLine(message.GetString());
+        if (root.GetProperty("ok").GetBoolean() && actions[0] == "report")
+            output.WriteLine("CSV: " + root.GetProperty("csvExport").GetString());
+        return exitCode;
+    }
+
     private static void WriteUsage(TextWriter output)
     {
         var presets = string.Join("、", OptimizationCatalog.PresetNames);
@@ -297,10 +368,13 @@ public static class CliHost
               FpsTune.exe -Apply -Items <id1,id2,...> | -Preset <预设名> [-Game <游戏exe路径>] [-Json]
               FpsTune.exe -Restore [-Items <id1,id2,...>] [-BackupFile <备份文件路径>] [-Json]
               FpsTune.exe -ListRestore [-Json]
+              FpsTune.exe -Experiment -Baseline | -Test -Group <group-1|group-2|group-3> | -Report [-Simulate] [-Duration <秒>] [-CsvPath <csv>] [-Json]
               FpsTune.exe -Help
 
             说明:
               -Json 输出机器可读 JSON（重定向/管道场景），默认输出人类可读摘要。
+              -Experiment 的 A/B 实验编排（基线/候选组/报告）在本进程内完成；
+              -Simulate 为 dry-run，使用模拟采样数据，不修改任何系统设置。
               预设: {presets}、full（全部 {OptimizationCatalog.ItemOrder.Count} 项）。
               -BackupFile 只还原指定的那一份备份（A/B 实验用于锚定本步骤自己的快照）；
               指定文件不合法或已被还原时会明确报错，绝不回退到其他备份。
@@ -391,6 +465,45 @@ public static class CliHost
                         error = "-BackupFile 缺少值";
                     else
                         options.BackupFile = args[++i];
+                    break;
+                case "baseline":
+                    options.ExpBaseline = true;
+                    break;
+                case "test":
+                    options.ExpTest = true;
+                    break;
+                case "report":
+                    options.ExpReport = true;
+                    break;
+                case "simulate":
+                    options.Simulate = true;
+                    break;
+                case "group" when inline is not null:
+                    options.Group = inline;
+                    break;
+                case "group":
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
+                        error = "-Group 缺少值";
+                    else
+                        options.Group = args[++i];
+                    break;
+                case "duration" when inline is not null:
+                    error = ParseDuration(inline, options);
+                    break;
+                case "duration":
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
+                        error = "-Duration 缺少值";
+                    else
+                        error = ParseDuration(args[++i], options);
+                    break;
+                case "csvpath" when inline is not null:
+                    options.CsvPath = inline;
+                    break;
+                case "csvpath":
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
+                        error = "-CsvPath 缺少值";
+                    else
+                        options.CsvPath = args[++i];
                     break;
                 default:
                     error = "未知参数: " + token;

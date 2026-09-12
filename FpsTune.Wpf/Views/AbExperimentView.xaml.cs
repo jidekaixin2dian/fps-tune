@@ -14,7 +14,7 @@ namespace FpsTune.Wpf.Views;
 /// <summary>
 /// A/B 实验室 2.0：向导式状态机驱动。步骤顺序、运行互斥、结果与会话关联、
 /// 错误与中断恢复全部持久化在 experiment/wizard.json（ExperimentWizardStore）。
-/// 脚本仍为 tuning-experiment.ps1（参数、输出、PS5.1 兼容保持不变）。
+/// 编排为进程内 ExperimentRunner（输出 JSON 与旧 tuning-experiment.ps1 同构，状态文件互认）。
 /// </summary>
 public partial class AbExperimentView : UserControl
 {
@@ -266,28 +266,23 @@ public partial class AbExperimentView : UserControl
 
         try
         {
-            string[] args = vm.Step switch
+            var step = vm.Step switch
             {
-                WizardSteps.Baseline => ["-Baseline", "-Json"],
-                WizardSteps.Report => ["-Report", "-Json"],
-                _ => ["-Test", "-Group", vm.Step, "-Json"]
+                WizardSteps.Baseline => "baseline",
+                WizardSteps.Report => "report",
+                _ => vm.Step,
             };
-            // 脚本可能从嵌入资源释放到 LOCALAPPDATA，探测不到本 exe，显式指定引擎路径
-            if (Environment.ProcessPath is { } exePath)
-                args = args.Concat(["-EngineExe", exePath]).ToArray();
+            // 编排全程在本进程内（ExperimentRunner）：应用/还原直接调引擎，
+            // 采样直接调 PresentMon，不再经过 PowerShell 脚本。
+            var (exitCode, json) = await ExperimentRunner.RunAsync(
+                step, new ExperimentRunner.Options(), cancellation.Token);
 
-            // 每次运行前重新解析并校验脚本（提权会话只接受与内置版本一致的副本）；
-            // 租约覆盖整个执行期，子进程还会用同一个哈希再校验一次，
-            // 因此"父进程验过的内容"和"子进程真正执行的字节"被绑在一起。
-            using var script = ScriptLocator.OpenVerified("tuning-experiment.ps1");
-
-            var result = await PowerShellRunner.RunAsync(script.Path, args, script.Sha256, cancellation.Token);
-            RawBox.Text = result.Success
-                ? result.Output
-                : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
+            RawBox.Text = exitCode == 0
+                ? json
+                : $"exit={exitCode}\n\n{json}";
             _wizard = ExperimentWizard.WithRawOutput(_wizard, RawBox.Text);
 
-            ApplyStepResult(vm.Step, result.Success, result.Success ? result.Output : null, sessionId);
+            ApplyStepResult(vm.Step, exitCode == 0, exitCode == 0 ? json : null, sessionId);
         }
         catch (OperationCanceledException)
         {

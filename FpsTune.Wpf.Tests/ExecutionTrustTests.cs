@@ -56,7 +56,7 @@ public sealed class ExecutionTrustTests
         var root = NewDir();
         var app = Path.Combine(root, "app");
         Directory.CreateDirectory(app);
-        const string name = "tuning-experiment.ps1";
+        const string name = "friend-test.ps1";
         var tampered = Path.Combine(app, name);
         File.WriteAllText(tampered, "throw 'tampered'");
         try
@@ -82,7 +82,7 @@ public sealed class ExecutionTrustTests
         var root = NewDir();
         var app = Path.Combine(root, "app");
         Directory.CreateDirectory(app);
-        const string name = "tuning-experiment.ps1";
+        const string name = "friend-test.ps1";
         var scriptPath = Path.Combine(app, name);
         File.WriteAllBytes(scriptPath, Embedded(name));
         try
