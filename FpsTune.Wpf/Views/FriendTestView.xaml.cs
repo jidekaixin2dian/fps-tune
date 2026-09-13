@@ -104,6 +104,7 @@ public partial class FriendTestView : UserControl
     private void OpenOutputButton_Click(object sender, RoutedEventArgs e)
     {
         Directory.CreateDirectory(_outputDir);
-        Process.Start("explorer.exe", _outputDir);
+        // 路径含空格会被拆成多个参数，与其他打开目录的调用点保持一致加引号
+        Process.Start("explorer.exe", $"\"{_outputDir}\"");
     }
 }

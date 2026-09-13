@@ -89,7 +89,11 @@ public partial class HomeView : UserControl
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(link))
+        // settings.json 是用户可改写的持久化数据，UseShellExecute 对任意路径/协议生效；
+        // 只放行 http(s)，防止文件被改成可执行路径后一点即启动。
+        if (!string.IsNullOrWhiteSpace(link)
+            && Uri.TryCreate(link, UriKind.Absolute, out var linkUri)
+            && linkUri.Scheme is "http" or "https")
         {
             try
             {

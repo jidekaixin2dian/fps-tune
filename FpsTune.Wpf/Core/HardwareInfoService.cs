@@ -67,14 +67,23 @@ public static class HardwareInfoService
         {
             var speeds = new List<int>();
             var configured = new List<int>();
-            var searcher = new System.Management.ManagementObjectSearcher(
+            // WMI 的 searcher/集合/对象都是 COM 资源，必须显式释放（对照 DetectionService 的写法）
+            using var searcher = new System.Management.ManagementObjectSearcher(
                 "SELECT Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
-            foreach (var mo in searcher.Get())
+            using var results = searcher.Get();
+            foreach (System.Management.ManagementObject mo in results)
             {
-                if (int.TryParse(mo["Speed"]?.ToString(), out var s) && s > 0)
-                    speeds.Add(s);
-                if (int.TryParse(mo["ConfiguredClockSpeed"]?.ToString(), out var c) && c > 0)
-                    configured.Add(c);
+                try
+                {
+                    if (int.TryParse(mo["Speed"]?.ToString(), out var s) && s > 0)
+                        speeds.Add(s);
+                    if (int.TryParse(mo["ConfiguredClockSpeed"]?.ToString(), out var c) && c > 0)
+                        configured.Add(c);
+                }
+                finally
+                {
+                    mo.Dispose();
+                }
             }
 
             if (speeds.Count == 0)

@@ -31,7 +31,7 @@ jobs:
         run: dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 
       - name: Publish single-file
-        run: dotnet publish FpsTune.Wpf\FpsTune.Wpf.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:DebugType=none /p:OutDir=publish-tmp -o dist/ci
+        run: dotnet publish FpsTune.Wpf\FpsTune.Wpf.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:DebugType=none /p:OutDir=publish-tmp -o dist/ci
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
