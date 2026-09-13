@@ -110,6 +110,63 @@
                 </StackPanel>
             </Border>
 
+            <!-- ICC 滤镜卡片：系统层色彩变换，A 卡/Intel 与整体桌面观感兜底 -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="ICC 滤镜（系统层 · 仅主显示器）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="IccCurrentText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                    <StackPanel x:Name="IccSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                        <TextBlock Text="预设（作用于主显示器，全桌面生效：含桌面、网页与游戏窗口）"
+                                   Style="{StaticResource MutedTextStyle}"/>
+                        <UniformGrid Columns="4" Margin="0,10,0,0">
+                            <RadioButton x:Name="IccPresetVivid" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="FPS 鲜艳" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="微增饱和与对比，通用竞技" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="IccPresetShadowBoost" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="暗部增强" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="阴影段上抬，死角优先" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="IccPresetDehaze" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="去雾" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="S 型对比 + 微降蓝，雾天场景" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="IccPresetStandard" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="标准" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="还原为你原始的色彩配置" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                        </UniformGrid>
+
+                        <TextBlock x:Name="IccStateText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="IccApplyButton" Content="应用预设"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    MinWidth="110" Margin="0,0,8,0" Click="IccApply_Click"/>
+                            <Button x:Name="IccRestoreButton" Content="还原原始"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="110" Click="IccRestore_Click"/>
+                        </StackPanel>
+
+                        <TextBlock Text="说明：程序生成的 ICC 是简单曲线变换，效果弱于专业校色；对色准敏感请保留原 profile。任何页面回到这里点「标准」或「还原原始」即可恢复原状。多显示器暂不支持。"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="IccUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
+                               Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

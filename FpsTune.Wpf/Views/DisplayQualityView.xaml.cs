@@ -25,6 +25,12 @@ public partial class DisplayQualityView : UserControl
         if (_busy)
             return;
 
+        RefreshDlss();
+        RefreshIcc();
+    }
+
+    private void RefreshDlss()
+    {
         if (!DisplayQualityService.FeatureEnabled)
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
@@ -192,6 +198,127 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             StateText.Text = "还原失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    // ---------- ICC 滤镜（第二张卡片，独立于 DLSS 的可用性） ----------
+
+    private void RefreshIcc()
+    {
+        try
+        {
+            var state = IccFilterService.GetState();
+            if (!state.Supported)
+            {
+                IccSupportedPanel.Visibility = Visibility.Collapsed;
+                IccUnsupportedText.Visibility = Visibility.Visible;
+                IccUnsupportedText.Text = state.UnsupportedReason ?? "ICC 滤镜在当前环境不可用。";
+                return;
+            }
+
+            IccSupportedPanel.Visibility = Visibility.Visible;
+            IccUnsupportedText.Visibility = Visibility.Collapsed;
+            IccCurrentText.Text = "当前生效：" + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
+
+            SetIccPresetCardsEnabled(true);
+            IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
+            IccRestoreButton.IsEnabled = state.Restorable;
+
+            if (state.Restorable)
+                IccStateText.Text = "已记录你的原始色彩配置，可一键还原。";
+            else if (state.CurrentProfileName is not null)
+                IccStateText.Text = "";
+        }
+        catch (Exception ex)
+        {
+            IccSupportedPanel.Visibility = Visibility.Collapsed;
+            IccUnsupportedText.Visibility = Visibility.Visible;
+            IccUnsupportedText.Text = "读取 ICC 状态失败：" + ex.Message;
+        }
+    }
+
+    private void SetIccPresetCardsEnabled(bool enabled)
+    {
+        foreach (var card in new RadioButton[] { IccPresetVivid, IccPresetShadowBoost, IccPresetDehaze, IccPresetStandard })
+            card.IsEnabled = enabled;
+    }
+
+    private IccFilterPreset? SelectedIccPreset()
+    {
+        if (IccPresetVivid.IsChecked == true) return IccFilterPreset.Vivid;
+        if (IccPresetShadowBoost.IsChecked == true) return IccFilterPreset.ShadowBoost;
+        if (IccPresetDehaze.IsChecked == true) return IccFilterPreset.Dehaze;
+        return null; // 「标准」卡片 = 还原语义，走 Restore
+    }
+
+    private async void IccApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var preset = SelectedIccPreset();
+        if (preset is null)
+        {
+            // 标准 = 还原原始
+            await IccRestoreCore();
+            return;
+        }
+
+        var confirmed = DialogService.Confirm(
+            "应用 ICC 滤镜",
+            "切换是系统全局的：整个桌面（含网页、视频、游戏）的观感都会变化。\n\n" +
+            "· 第一版只作用主显示器，多显示器暂不支持\n" +
+            "· 程序生成的 ICC 是简单曲线变换，效果弱于专业校色\n" +
+            "· 应用前会自动记录原始配置，随时可点「还原原始」恢复\n\n确定应用？",
+            confirmText: "应用");
+        if (!confirmed)
+            return;
+
+        _busy = true;
+        IccApplyButton.IsEnabled = false;
+        IccRestoreButton.IsEnabled = false;
+        IccStateText.Text = "正在应用预设…";
+        try
+        {
+            var name = await Task.Run(() => IccFilterService.Apply(preset.Value));
+            IccStateText.Text = $"已生效：{name}。系统全局切换即时可见；不满意点「还原原始」。";
+        }
+        catch (Exception ex)
+        {
+            IccStateText.Text = "应用失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    private async void IccRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        await IccRestoreCore();
+    }
+
+    private async Task IccRestoreCore()
+    {
+        _busy = true;
+        IccApplyButton.IsEnabled = false;
+        IccRestoreButton.IsEnabled = false;
+        IccStateText.Text = "正在还原…";
+        try
+        {
+            var restored = await Task.Run(() => IccFilterService.Restore());
+            IccStateText.Text = restored
+                ? "已还原：显示器的色彩配置已恢复为应用滤镜前的原样。"
+                : "没有找到需要还原的备份（尚未应用过滤镜），无需还原。";
+        }
+        catch (Exception ex)
+        {
+            IccStateText.Text = "还原失败：" + ex.Message;
         }
         finally
         {
