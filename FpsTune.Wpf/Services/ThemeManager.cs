@@ -71,7 +71,7 @@ public static class ThemeManager
         ApplyBackdrop(resolved);
     }
 
-    // 页面底色只提供基础对比（主题渐变直接铺在主窗口层），
+    // 页面底色只提供基础对比（纯平底色铺在主窗口层），
     // 不放进页面背景——否则会随页面滑入动画平移。
     private static void ApplyBackdrop(string resolved)
     {
@@ -79,38 +79,9 @@ public static class ThemeManager
         if (app is null)
             return;
 
-        LinearGradientBrush backdrop;
-        if (resolved == "light")
-        {
-            // 浅色控制台：纸面冷白，顶部一线冷色渐入
-            backdrop = new LinearGradientBrush
-            {
-                StartPoint = new Point(0, 0),
-                EndPoint = new Point(0, 1),
-                GradientStops =
-                {
-                    new GradientStop(Parse("#D8E7F3"), 0),
-                    new GradientStop(Parse("#E6EEF6"), 0.5),
-                    new GradientStop(Parse("#EDF2F8"), 1)
-                }
-            };
-        }
-        else
-        {
-            // 深色控制台：近黑底，顶部一线青色微光
-            backdrop = new LinearGradientBrush
-            {
-                StartPoint = new Point(0, 0),
-                EndPoint = new Point(0, 1),
-                GradientStops =
-                {
-                    new GradientStop(Parse("#08131C"), 0),
-                    new GradientStop(Parse("#05070A"), 0.55),
-                    new GradientStop(Parse("#05070A"), 1)
-                }
-            };
-        }
-
+        // 纯平风格（用户决策）：去掉渐变底，窗口层与页面层用同一颜色，
+        // 透明页与不透明页在任何主题下观感完全一致。
+        var backdrop = new SolidColorBrush(Parse(resolved == "light" ? "#F7F9FC" : "#07090B"));
         backdrop.Freeze();
 
         // 控制台风格无投影：平面 + 发丝分割线；保留资源键，低配与否都置空
