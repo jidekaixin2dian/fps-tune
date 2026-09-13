@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- 版本号拆两段：VersionPrefix 必须是三段数字（发布/安装脚本与更新比较都消费它），
          VersionSuffix 是预发布标识（0.1 Beta 线），进 InformationalVersion/ProductVersion 展示 -->
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>0.1.1</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
