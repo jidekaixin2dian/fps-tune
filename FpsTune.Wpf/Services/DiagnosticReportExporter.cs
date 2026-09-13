@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text;
@@ -175,7 +175,6 @@ public static class DiagnosticReportExporter
                     SettingsService.Current.MinimizeToTray,
                     SettingsService.Current.HotkeyEnabled,
                     SettingsService.Current.NotifyOnComplete,
-                    SettingsService.Current.AuroraEnabled,
                     SettingsService.Current.LowSpecMode,
                     SettingsService.Current.AutoProfileEnabled,
                     // 路径字段显式脱敏；AddText 仍作为新增字段的最后一道防线。
@@ -445,7 +444,7 @@ public static class DiagnosticReportExporter
         sb.AppendLine();
         sb.AppendLine("## 设置摘要（已脱敏）");
         sb.AppendLine();
-        sb.AppendLine($"- 主题：{s.ThemeMode} · 低配模式：{(s.LowSpecMode ? "开" : "关")} · 极光：{(s.AuroraEnabled ? "开" : "关")}");
+        sb.AppendLine($"- 主题：{s.ThemeMode} · 低配模式：{(s.LowSpecMode ? "开" : "关")}");
         sb.AppendLine($"- 托盘：{(s.MinimizeToTray ? "开" : "关")} · 热键：{(s.HotkeyEnabled ? "开" : "关")} · 通知：{(s.NotifyOnComplete ? "开" : "关")}");
         var gamePathText = StateStore.LoadGamePath() is { } gp ? PrivacyScrub.Sanitize(gp) : "（自动检测）";
         sb.AppendLine($"- 游戏路径：{gamePathText}");
@@ -467,7 +466,6 @@ public static class DiagnosticReportExporter
                 s.MinimizeToTray,
                 s.HotkeyEnabled,
                 s.NotifyOnComplete,
-                s.AuroraEnabled,
                 s.LowSpecMode,
                 s.AutoProfileEnabled,
                 bindings = (s.AutoProfileBindings ?? []).Select(b => new

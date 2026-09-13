@@ -51,33 +51,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- 极光层: 三组全窗渐变叠加在基础底色之上, 贯穿标题栏、页签栏与页面。 -->
-            <Grid x:Name="AuroraLayer"
-                  Grid.Row="0" Grid.RowSpan="3"
-                  IsHitTestVisible="False"
-                  ClipToBounds="True">
-                <!-- 青色主光: 从上缘向内容区缓慢漂移。 -->
-                <Border x:Name="AuroraMainLayer"
-                        Opacity="0.9">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="AuroraMainTransform"/>
-                    </Border.RenderTransform>
-                </Border>
-                <!-- 蓝色侧光: 从右侧斜向扫过, 保持低饱和避免抢文字层级。 -->
-                <Border x:Name="AuroraSideLayer"
-                        Opacity="0.78">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="AuroraSideTransform"/>
-                    </Border.RenderTransform>
-                </Border>
-                <!-- 底部反射光: 很轻的冷色回光, 让整窗而非顶部单点有层次。 -->
-                <Border x:Name="AuroraReflectionLayer"
-                        Opacity="0.68">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="AuroraReflectionTransform"/>
-                    </Border.RenderTransform>
-                </Border>
-            </Grid>
+            <!-- 极光层已按产品决策整体移除：常驻全窗渐变动画的合成开销不再值得，背景只留主题渐变底 -->
 
             <!-- 标题栏：品牌 + 状态 + 窗口按钮 -->
             <Grid x:Name="TitleBar" Grid.Row="0"

@@ -60,10 +60,6 @@
                             </StackPanel>
                         </RadioButton>
                     </UniformGrid>
-                    <CheckBox x:Name="AuroraCheck"
-                              Style="{StaticResource SettingsToggleStyle}"
-                              Content="显示极光背景（经典界面）"
-                              Margin="0,10,0,0"/>
                     <CheckBox x:Name="LowSpecCheck"
                               Style="{StaticResource SettingsToggleStyle}"
                               Content="低配模式（减少动画，实时采样改为每 3 秒一次）"

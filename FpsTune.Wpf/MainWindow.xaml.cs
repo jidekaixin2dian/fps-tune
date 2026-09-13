@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
@@ -76,7 +76,6 @@ public partial class MainWindow : Window
             theme = "dark";
         ThemeManager.Initialize();
         ThemeManager.SetMode(theme);
-        ApplyAuroraSetting();
 
         StateChanged += OnStateChanged;
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
@@ -108,88 +107,6 @@ public partial class MainWindow : Window
 
     [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
     private static extern uint NativeGetDpiForWindow(nint hwnd);
-
-    /// <summary>按设置应用/移除整窗极光光场, 并即时切换低配模式下的动效。</summary>
-    public void ApplyAuroraSetting()
-    {
-        var aurora = ThemeManager.CurrentAuroraBrushes;
-        var enabled = SettingsService.Current.AuroraEnabled && aurora is not null;
-        AuroraLayer.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-        if (!enabled)
-        {
-            StopAuroraMotion();
-            return;
-        }
-
-        AuroraMainLayer.Background = aurora!.Main;
-        AuroraSideLayer.Background = aurora.Side;
-        AuroraReflectionLayer.Background = aurora.Reflection;
-        RefreshAuroraMotion();
-    }
-
-    /// <summary>切换主题或低配开关后重置三层极光的静态位置与慢速动效。</summary>
-    private void RefreshAuroraMotion()
-    {
-        StopAuroraMotion();
-        if (AuroraLayer.Visibility != Visibility.Visible)
-            return;
-
-        if (UiPerformance.LowSpec)
-            return;
-
-        AuroraMainTransform.BeginAnimation(
-            TranslateTransform.XProperty,
-            new DoubleAnimation(-16, 16, TimeSpan.FromSeconds(34))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever
-            });
-        AuroraMainTransform.BeginAnimation(
-            TranslateTransform.YProperty,
-            new DoubleAnimation(-4, 8, TimeSpan.FromSeconds(41))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever
-            });
-        AuroraSideTransform.BeginAnimation(
-            TranslateTransform.XProperty,
-            new DoubleAnimation(10, -14, TimeSpan.FromSeconds(38))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever
-            });
-        AuroraSideTransform.BeginAnimation(
-            TranslateTransform.YProperty,
-            new DoubleAnimation(-10, 12, TimeSpan.FromSeconds(46))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever
-            });
-        AuroraReflectionTransform.BeginAnimation(
-            TranslateTransform.XProperty,
-            new DoubleAnimation(-12, 14, TimeSpan.FromSeconds(44))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever
-            });
-
-    }
-
-    private void StopAuroraMotion()
-    {
-        AuroraMainTransform.BeginAnimation(TranslateTransform.XProperty, null);
-        AuroraMainTransform.BeginAnimation(TranslateTransform.YProperty, null);
-        AuroraSideTransform.BeginAnimation(TranslateTransform.XProperty, null);
-        AuroraSideTransform.BeginAnimation(TranslateTransform.YProperty, null);
-        AuroraReflectionTransform.BeginAnimation(TranslateTransform.XProperty, null);
-        AuroraReflectionTransform.BeginAnimation(TranslateTransform.YProperty, null);
-        AuroraMainTransform.X = 0;
-        AuroraMainTransform.Y = 0;
-        AuroraSideTransform.X = 0;
-        AuroraSideTransform.Y = 0;
-        AuroraReflectionTransform.X = 0;
-        AuroraReflectionTransform.Y = 0;
-    }
 
     private HwndSource? _hwndSource;
 
@@ -366,15 +283,17 @@ public partial class MainWindow : Window
         PageHost.Opacity = 0;
         PageHost.Content = page;
 
-        var slideAnim = new DoubleAnimation(8, 0, TimeSpan.FromMilliseconds(120))
+        // 更舒适的切换：稍从容的时长 + 减速更自然的 CubicEase；
+        // 位移量小（16px）只提供方向感，不抢内容注意力。
+        var slideAnim = new DoubleAnimation(16, 0, TimeSpan.FromMilliseconds(200))
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         _pageSlide.BeginAnimation(TranslateTransform.XProperty, slideAnim);
 
-        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(120))
+        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
         {
-            EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
         PageHost.BeginAnimation(OpacityProperty, fade);
     }

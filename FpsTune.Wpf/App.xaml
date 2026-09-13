@@ -21,7 +21,7 @@
             <CornerRadius x:Key="RadiusCard">6</CornerRadius>
 
             <!-- ============ 画刷（运行时由 ThemeManager 按主题覆写；此处为深色初值） ============ -->
-            <!-- 页面根背景统一透明: 渐变底与极光都在主窗口层, 页面在其上滑动 -->
+            <!-- 页面根背景统一透明: 渐变底铺在主窗口层, 页面在其上滑动 -->
             <SolidColorBrush x:Key="ConsoleBackgroundBrush" Color="#07090B"/>
             <SolidColorBrush po:Freeze="False" x:Key="AppBackgroundBrush" Color="Transparent"/>
             <SolidColorBrush po:Freeze="False" x:Key="SidebarBackgroundBrush" Color="#5205070A"/>

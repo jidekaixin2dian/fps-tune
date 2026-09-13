@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,8 +43,6 @@ public partial class SettingsView : UserControl
         HotkeyCheck.Unchecked += HotkeySetting_Changed;
         NotifyCheck.Checked += NotifySetting_Changed;
         NotifyCheck.Unchecked += NotifySetting_Changed;
-        AuroraCheck.Checked += AuroraSetting_Changed;
-        AuroraCheck.Unchecked += AuroraSetting_Changed;
         LowSpecCheck.Checked += LowSpecSetting_Changed;
         LowSpecCheck.Unchecked += LowSpecSetting_Changed;
 
@@ -100,7 +98,6 @@ public partial class SettingsView : UserControl
         TrayCheck.IsChecked = s.MinimizeToTray;
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
-        AuroraCheck.IsChecked = s.AuroraEnabled;
         LowSpecCheck.IsChecked = s.LowSpecMode;
         AutoProfileCheck.IsChecked = s.AutoProfileEnabled;
         AutostartCheck.IsChecked = ReadAutostart();
@@ -135,8 +132,6 @@ public partial class SettingsView : UserControl
         settings.ThemeMode = mode;
         SettingsService.Save(settings);
         ThemeManager.SetMode(mode);
-        if (Application.Current.MainWindow is MainWindow main)
-            main.ApplyAuroraSetting();
     }
 
     // ---------- 游戏路径 ----------
@@ -254,19 +249,6 @@ public partial class SettingsView : UserControl
         SettingsService.Save(s);
     }
 
-    private void AuroraSetting_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents)
-            return;
-        var s = SettingsService.Current;
-        s.AuroraEnabled = AuroraCheck.IsChecked == true;
-        SettingsService.Save(s);
-        // 重算主题刷子并把新的整窗极光光场即时推给主窗口(不重启生效)
-        ThemeManager.SetMode(s.ThemeMode);
-        if (Application.Current.MainWindow is MainWindow main)
-            main.ApplyAuroraSetting();
-    }
-
     private void LowSpecSetting_Changed(object sender, RoutedEventArgs e)
     {
         if (_suppressUiEvents)
@@ -276,10 +258,8 @@ public partial class SettingsView : UserControl
         SettingsService.Save(s);
         UiPerformance.LowSpec = s.LowSpecMode;
         App.LiveMetrics.SetInterval(TimeSpan.FromSeconds(s.LowSpecMode ? 3 : 1));
-        // 重算卡片阴影等资源, 并立即停止或恢复极光动效
+        // 重算卡片阴影等资源
         ThemeManager.SetMode(s.ThemeMode);
-        if (Application.Current.MainWindow is MainWindow main)
-            main.ApplyAuroraSetting();
     }
 
     // ---------- 按游戏自动应用 ----------
