@@ -62,10 +62,12 @@ public static class OptimizationEngine
                 sb.AppendLine("== 还原结果 ==");
                 foreach (var (file, id) in result.Restored)
                     sb.AppendLine($"[已还原] {Path.GetFileName(file)}  {id}");
+                foreach (var stale in result.ArchivedStale)
+                    sb.AppendLine($"[已归档] {stale} → .stale");
                 foreach (var failure in result.Failures)
                     sb.AppendLine("[失败] " + failure);
                 sb.AppendLine();
-                sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败。");
+                sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档。");
                 if (result.Restored.Count > 0 && result.Failures.Count == 0)
                     sb.Append("已处理的备份文件已重命名为 .restored（保留供审计）。");
                 return new RunResult(result.Failures.Count == 0 ? 0 : 1, sb.ToString(), "");

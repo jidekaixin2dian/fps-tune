@@ -299,6 +299,17 @@ public static class NativeOptimizationEngine
         if (!r.Success)
             return (false, false, false, $"禁用 {serviceName} 失败：{r.Error.Trim()}");
 
+        // 只改 Start 值不停止运行中的服务，会出现"已禁用但服务仍在跑"；
+        // 停止失败不回滚配置，但如实报告完全生效需要重启。
+        var state = NativeSystem.GetServiceState(serviceName);
+        if (string.Equals(state, "RUNNING", StringComparison.OrdinalIgnoreCase))
+        {
+            var stop = NativeSystem.Run("sc.exe", "stop", serviceName);
+            return stop.Success
+                ? (true, true, false, $"已禁用并停止 {serviceName}")
+                : (true, true, false, $"已禁用 {serviceName}，但停止运行中的服务失败（{stop.Error.Trim()}）；完全生效需重启");
+        }
+
         return (true, true, false, $"已禁用 {serviceName}");
     }
 

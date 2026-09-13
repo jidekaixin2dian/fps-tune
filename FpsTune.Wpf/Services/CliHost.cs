@@ -240,13 +240,14 @@ public static class CliHost
                 backupFile = options.BackupFile,
                 restored = result.Restored.Select(r => new { file = Path.GetFileName(r.File), id = r.Id }),
                 failures = result.Failures,
-                summary = $"{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败"
+                archivedStale = result.ArchivedStale,
+                summary = $"{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档"
             };
             output.WriteLine(JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }));
         }
         else
         {
-            if (result.Restored.Count == 0 && result.Failures.Count == 0)
+            if (result.Restored.Count == 0 && result.Failures.Count == 0 && result.ArchivedStale.Count == 0)
             {
                 output.WriteLine("没有找到可还原的备份。");
             }
@@ -254,10 +255,12 @@ public static class CliHost
             {
                 foreach (var (file, id) in result.Restored)
                     output.WriteLine($"[已还原] {Path.GetFileName(file)}  {id}");
+                foreach (var stale in result.ArchivedStale)
+                    output.WriteLine($"[已归档] {stale} → .stale");
                 foreach (var failure in result.Failures)
                     output.WriteLine("[失败] " + failure);
                 output.WriteLine();
-                output.WriteLine($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败。");
+                output.WriteLine($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档。");
             }
         }
         return result.Failures.Count == 0 ? 0 : 1;

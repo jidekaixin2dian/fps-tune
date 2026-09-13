@@ -109,6 +109,9 @@ public static partial class BackupService
     {
         public List<(string File, string Id)> Restored { get; } = new();
         public List<string> Failures { get; } = new();
+
+        /// <summary>内容为空或无法解析、永远不可能再产生还原的备份：已改名 .stale 归档（一次性告知，不再反复报失败）。</summary>
+        public List<string> ArchivedStale { get; } = new();
     }
 
     private static IReadOnlyList<BackupRecord> CreateBackupRecords(string id, string? gamePath)
@@ -142,7 +145,9 @@ public static partial class BackupService
                         Kind = "service",
                         ServiceName = serviceName,
                         OldStartValue = NativeSystem.GetServiceStartValue(serviceName),
-                        OldStartMode = NativeSystem.GetServiceStartMode(serviceName)
+                        OldStartMode = NativeSystem.GetServiceStartMode(serviceName),
+                        // 记录应用前的运行状态（RUNNING 等），还原启动类型后据此拉回运行
+                        OldState = NativeSystem.GetServiceState(serviceName)
                     }
                 };
             }

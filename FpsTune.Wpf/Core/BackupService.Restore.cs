@@ -215,19 +215,15 @@ public static partial class BackupService
             }
             catch (Exception ex)
             {
-                result.Failures.Add($"{fileName}: 备份文件无法解析（{ex.Message}）");
+                // 解析失败的文件不可能再被本版本还原，永久报失败只会堵死汇总；
+                // 改名 .stale 归档（保留原始字节供人工检查）并一次性告知。
+                ArchiveStale(file, $"备份文件无法解析（{ex.Message}）", result);
                 continue;
             }
 
-            if (records is null)
+            if (records is null || records.Count == 0)
             {
-                result.Failures.Add($"{fileName}: 备份内容为空");
-                continue;
-            }
-
-            if (records.Count == 0)
-            {
-                result.Failures.Add($"{fileName}: 备份内容为空");
+                ArchiveStale(file, "备份内容为空", result);
                 continue;
             }
 
@@ -336,6 +332,29 @@ public static partial class BackupService
         return result;
     }
 
+    /// <summary>
+    /// 把永远不可能产生还原的备份（空内容/无法解析）改名 .stale 归档：
+    /// 退出备份清单、保留下原始字节供人工检查，避免每次一键还原都重复报失败。
+    /// </summary>
+    private static void ArchiveStale(string file, string reason, RestoreAllResult result)
+    {
+        try
+        {
+            var renamed = file + ".stale";
+            if (File.Exists(renamed))
+            {
+                result.Failures.Add($"{Path.GetFileName(file)}: {reason}；目标 .stale 文件已存在，未覆盖");
+                return;
+            }
+            File.Move(file, renamed);
+            result.ArchivedStale.Add($"{Path.GetFileName(file)}（{reason}）");
+        }
+        catch (Exception ex)
+        {
+            result.Failures.Add($"{Path.GetFileName(file)}: {reason}；归档改名失败（{ex.Message}）");
+        }
+    }
+
     private static void RestoreOne(BackupRecord r)
     {
         ValidateRecord(r);
@@ -409,6 +428,17 @@ public static partial class BackupService
         EnsureNativeSuccess(
             NativeSystem.Run("sc.exe", "config", r.ServiceName, "start=", mode),
             $"还原 {r.ServiceName} 启动类型");
+
+        // 备份时若服务在运行，还原启动类型后把它拉回运行状态。
+        // 旧版本备份没有 OldState（null）时保持不动；服务已在运行也不重复 start。
+        if (string.Equals(r.OldState, "RUNNING", StringComparison.OrdinalIgnoreCase))
+        {
+            var state = NativeSystem.GetServiceState(r.ServiceName);
+            if (!string.Equals(state, "RUNNING", StringComparison.OrdinalIgnoreCase))
+                EnsureNativeSuccess(
+                    NativeSystem.Run("sc.exe", "start", r.ServiceName),
+                    $"还原 {r.ServiceName} 运行状态");
+        }
     }
 
     private static void RestorePowerPlan(BackupRecord r)

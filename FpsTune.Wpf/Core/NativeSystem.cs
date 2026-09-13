@@ -104,6 +104,16 @@ internal static class NativeSystem
         };
     }
 
+    /// <summary>sc query 的当前 STATE（RUNNING / STOPPED / ...）；查询失败返回 null，由调用方保守处理。</summary>
+    public static string? GetServiceState(string serviceName)
+    {
+        var r = Run("sc.exe", "query", serviceName);
+        if (!r.Success)
+            return null;
+        var match = Regex.Match(r.Output, @"STATE\s*:\s*\d+\s+(\S+)");
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
     public static bool IsHibernateEnabled()
     {
         try

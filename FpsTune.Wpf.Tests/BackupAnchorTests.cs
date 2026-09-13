@@ -47,6 +47,38 @@ public sealed class BackupAnchorTests
     }
 
     [Fact]
+    public void Empty_backup_is_archived_as_stale_instead_of_failing_forever()
+    {
+        var dir = NewDir();
+        BackupService.BackupDirOverride = dir;
+        try
+        {
+            // 空 JSON 数组与解析不了的垃圾内容：都永远产生不了还原，必须归档而非永久报失败
+            var empty = Path.Combine(dir, "csharp-backup-20260101-000000-000-00000001.json");
+            var corrupt = Path.Combine(dir, "csharp-backup-20260101-000000-000-00000002.json");
+            File.WriteAllText(empty, "[]");
+            File.WriteAllText(corrupt, "{ this is not a backup list");
+
+            var result = BackupService.RestoreAll();
+
+            Assert.Empty(result.Failures);
+            Assert.Equal(2, result.ArchivedStale.Count);
+            Assert.True(File.Exists(empty + ".stale"), "空备份应改名 .stale 归档");
+            Assert.True(File.Exists(corrupt + ".stale"), "无法解析的备份应改名 .stale 归档");
+            Assert.False(File.Exists(empty));
+
+            // 归档后下次还原不再见到它们：不报失败也不重复归档
+            var next = BackupService.RestoreAll();
+            Assert.Empty(next.Failures);
+            Assert.Empty(next.ArchivedStale);
+        }
+        finally
+        {
+            Reset(dir);
+        }
+    }
+
+    [Fact]
     public void Anchored_restore_rejects_paths_outside_the_backup_directory()
     {
         var dir = NewDir();
