@@ -63,7 +63,8 @@ description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检
 & "<root>\FpsTune.exe" -Apply -Preset balanced -Json
 ```
 
-- 默认套用预设：`-Preset balanced`（29 项，副作用小）通常最合适；`full` 含全部
+- 默认套用预设：`-Preset balanced`（27 项，副作用小；不含会改变键鼠手感的
+  keyboard-latency / keyboard-repeat，鼠标加速关闭除外）通常最合适；`full` 含全部
   33 项；`safe-only` 只有 5 项当前用户级设置、不需要管理员。
 - 也可以逐项：`-Apply -Items power-ultimate,hags,dvr-off -Json`。
 - 预设/清单念给用户听，让用户选，不要替用户决定勾哪些。

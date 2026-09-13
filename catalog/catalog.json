@@ -371,7 +371,9 @@
         "sysmain-off",
         "wsearch-off",
         "hibernate-off",
-        "power-tuning"
+        "power-tuning",
+        "keyboard-latency",
+        "keyboard-repeat"
       ]
     },
     "safe-only": {
