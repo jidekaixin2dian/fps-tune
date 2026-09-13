@@ -299,8 +299,25 @@ public static class DetectionService
         }
     }
 
-    private static (string Status, string Message) GetAudioExclusiveCheck()
+    // 与引擎写入口径一致：这两项除主值外还写一个关联值（备份走 Secondary 字段），
+    // 检测必须覆盖全部写入值，否则会出现"显示已优化但策略未生效"。
+    private static (bool Optimized, string Current) GetGameModeState()
     {
+        var primary = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled")?.ToString();
+        var secondary = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode")?.ToString();
+        var optimized = primary == "1" && secondary == "1";
+        return (optimized, optimized ? "1 / 1" : $"{primary ?? "未设置"} / {secondary ?? "未设置"}");
+    }
+
+    private static (bool Optimized, string Current) GetDvrOffState()
+    {
+        var hkcu = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled")?.ToString();
+        var hklm = RegistryHelper.ReadValue(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR")?.ToString();
+        var optimized = hkcu == "0" && hklm == "0";
+        return (optimized, optimized ? "0 / 0" : $"{hkcu ?? "未设置"} / {hklm ?? "未设置"}");
+    }
+
+    private static (string Status, string Message) GetAudioExclusiveCheck()    {
         IMMDeviceEnumerator? enumerator = null;
         IMMDevice? device = null;
         try
@@ -335,8 +352,6 @@ public static class DetectionService
         var target = item.Id switch
         {
             "hags" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", "2"),
-            "game-mode" => (RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled", "1"),
-            "dvr-off" => (RegistryHive.CurrentUser, @"System\GameConfigStore", "GameDVR_Enabled", "0"),
             "prio-separation" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", "40"),
             "wer-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Windows Error Reporting", "Disabled", "1"),
             "transparency-off" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", "0"),
@@ -364,6 +379,8 @@ public static class DetectionService
 
         return item.Id switch
         {
+            "game-mode" => GetGameModeState(),
+            "dvr-off" => GetDvrOffState(),
             "power-ultimate" => GetPowerUltimateState(),
             "power-tuning" => GetPowerTuningState(),
             "sysmain-off" => GetServiceState("SysMain"),
