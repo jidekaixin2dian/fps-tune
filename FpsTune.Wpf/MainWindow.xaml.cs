@@ -48,6 +48,7 @@ public partial class MainWindow : Window
             ["console"] = () => new ConsoleView(),
             ["detect"] = () => new DetectView(),
             ["opt"] = () => new OptimizeView(),
+            ["display"] = () => new DisplayQualityView(),
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
             ["friend"] = () => new FriendTestView(),
@@ -255,7 +256,7 @@ public partial class MainWindow : Window
         {
             // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
             // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavSession, NavAb, NavFriend, NavBackup, NavSettings })
+            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavFriend, NavBackup, NavSettings })
             {
                 if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
                     radio.IsChecked = false;

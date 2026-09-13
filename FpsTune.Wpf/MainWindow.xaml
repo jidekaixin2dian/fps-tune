@@ -114,6 +114,10 @@
                                             Tag="opt"
                                             Text="优化"
                                             Checked="Nav_Checked"/>
+                        <controls:NavButton x:Name="NavDisplay"
+                                            Tag="display"
+                                            Text="显示与画质"
+                                            Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavSession"
                                             Tag="session"
                                             Text="性能会话"

@@ -1,0 +1,115 @@
+<UserControl x:Class="FpsTune.Wpf.Views.DisplayQualityView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{DynamicResource AppBackgroundBrush}">
+    <UserControl.Resources>
+        <!-- 预设卡片：与设置页的 SettingsChoice 同语言，两行内容（名称 + 说明） -->
+        <Style x:Key="PresetCard" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+            <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+            <Setter Property="Margin" Value="0,0,10,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+                <Border x:Name="ChoiceBorder" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="14,10">
+                    <ContentPresenter VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsChecked" Value="True"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/></Trigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ChoiceBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="PresetCardText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="PresetCardNote" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </UserControl.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,22,28,24" MaxWidth="1060" HorizontalAlignment="Left">
+
+            <!-- 页头 -->
+            <StackPanel Margin="0,0,0,16">
+                <TextBlock Text="显示与画质" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="驱动层的按游戏画质设置：不修改游戏文件，随时一键还原"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+            </StackPanel>
+
+            <!-- 主体卡片 -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,18">
+                <StackPanel>
+                    <TextBlock Text="DLSS 超分模型覆盖（仅 NVIDIA RTX）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="GameStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                    <StackPanel x:Name="SupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                        <TextBlock Text="覆盖预设（作用于当前定位的游戏；游戏内若自行选择超分设置，以本覆盖为准）"
+                                   Style="{StaticResource MutedTextStyle}"/>
+                        <UniformGrid Columns="3" Margin="0,10,0,0">
+                            <RadioButton x:Name="PresetFollowGame" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
+                                <StackPanel>
+                                    <TextBlock Text="跟随游戏内" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="不覆盖，由游戏内设置决定" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="PresetLatest" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="最新" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="跟随驱动更新自动演进" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="PresetM" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="M 预设" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="新一代模型 · 高端画质首选" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="PresetK" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="K 预设" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="新一代模型 · 社区常用，稳定" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="PresetJ" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="J 预设" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="新一代模型 · 较早版本" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="PresetE" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="E 预设" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="旧一代 CNN 模型 · 复古画质" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                        </UniformGrid>
+
+                        <TextBlock x:Name="StateText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="ApplyButton" Content="应用覆盖"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    MinWidth="110" Margin="0,0,8,0" Click="Apply_Click"/>
+                            <Button x:Name="RestoreButton" Content="还原默认"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="110" Click="Restore_Click"/>
+                        </StackPanel>
+
+                        <TextBlock Text="说明：覆盖写入本工具自建的驱动配置文件，删除即完全还原；不会触碰你或 NVIDIA App 自建的其他配置。画面差异需进游戏确认。"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="UnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
+                               Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
