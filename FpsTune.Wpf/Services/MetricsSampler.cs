@@ -25,7 +25,7 @@ public sealed class MetricsSampler : IDisposable
 {
     private TimeSpan _interval;
     private readonly int _capacity;
-    private readonly DispatcherTimer? _timer;
+    private DispatcherTimer? _timer;
     private readonly List<MetricSample> _buffer = new();
     private readonly Dictionary<string, string> _unavailable = new();
     private IReadOnlyDictionary<string, string> _publishedReasons = new Dictionary<string, string>();
@@ -59,9 +59,9 @@ public sealed class MetricsSampler : IDisposable
         _readOverride = readOverride;
         _interval = interval ?? TimeSpan.FromSeconds(1);
         _capacity = Math.Max(1, capacity);
-        // 计时器随实例创建：由 Start/Stop 控制启停，Dispose 兜底停止。
-        _timer = new DispatcherTimer { Interval = _interval };
-        _timer.Tick += async (_, _) => await SampleOnceAsync();
+        // 计时器不随构造创建：实例可能在后台线程构造（如诊断导出只用 SampleOnce），
+        // 那种 Dispatcher 永远不会泵，构造期建计时器会得到永不 tick 的摆设。
+        // 改为 Start() 时在调用线程上创建——Start 必须在 UI 线程调用。
     }
 
     /// <summary>采样间隔。</summary>
@@ -90,7 +90,13 @@ public sealed class MetricsSampler : IDisposable
         if (Volatile.Read(ref _disposed) != 0)
             return;
         if (IsRunning) return;
-        _timer?.Start();
+        if (_timer is null)
+        {
+            var timer = new DispatcherTimer { Interval = _interval };
+            timer.Tick += async (_, _) => await SampleOnceAsync();
+            _timer = timer;
+        }
+        _timer.Start();
         _ = SampleOnceAsync();
     }
 

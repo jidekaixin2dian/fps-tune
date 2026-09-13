@@ -36,6 +36,10 @@ public static class LegacyMigrations
             if (string.Equals(Path.GetFullPath(from), Path.GetFullPath(to), StringComparison.OrdinalIgnoreCase))
                 return;
 
+            // 目标目录不存在时 Directory.Move/File.Move 会逐项抛错并被结尾 catch 吞掉，
+            // 结果是"迁移静默失败、备份还原点全留在旧目录"；先建目标目录。
+            Directory.CreateDirectory(to);
+
             foreach (var sub in Directory.GetDirectories(from))
             {
                 var name = Path.GetFileName(sub);
