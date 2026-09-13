@@ -18,21 +18,26 @@ public partial class ConsoleView : UserControl
     private bool _refreshing;
     private bool _locating;
 
-    private bool DeltaLocated => DeltaPreparation.IsGameExecutable(AppState.GamePath)
+    // 概览对所有 FPS 游戏通用（红线四：游戏相关只做路径级适配）：
+    // 基础建议三项（游戏模式/后台录制/显卡偏好）是系统层设置，不挑游戏。
+    private bool GameLocated => !string.IsNullOrWhiteSpace(AppState.GamePath)
         && System.IO.File.Exists(AppState.GamePath);
-    private bool DeltaReady => DeltaLocated && AppState.Items.Count > 0
+    private bool GameReady => GameLocated && AppState.Items.Count > 0
         && string.Equals(AppState.DetectJson?["gamePath"]?.GetValue<string>(), AppState.GamePath, StringComparison.OrdinalIgnoreCase);
 
     private void UpdatePreparation()
     {
-        var count = DeltaPreparation.PendingItems(AppState.Items, DeltaReady).Count;
-        GameReadyText.Text = _locating ? "正在定位并更新检测…" : !DeltaReady
-            ? DeltaLocated ? "已选择三角洲 · 请更新检测，获取当前目标的基础建议。" : "先定位三角洲主程序，再获取对应的基础建议。"
+        var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
+        GameReadyTitle.Text = GameLocated
+            ? $"{GamePathService.LabelFor(AppState.GamePath!)} · 开局准备"
+            : "开局准备";
+        GameReadyText.Text = _locating ? "正在定位并更新检测…" : !GameReady
+            ? GameLocated ? "已选择游戏 · 请更新检测，获取当前目标的基础建议。" : "先定位游戏主程序，再获取对应的基础建议。"
             : count > 0 ? $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。"
             : "基础设置已达标 · 可记录一局负载，保留优化前后对照。";
         GameReadyText.ToolTip = AppState.GamePath ?? "尚未选择游戏";
-        LocateDeltaButton.Content = DeltaLocated && !DeltaReady ? "更新检测" : "定位游戏";
-        PrepareDeltaButton.IsEnabled = DeltaReady && count > 0 && !_refreshing && !_locating;
+        LocateDeltaButton.Content = GameLocated && !GameReady ? "更新检测" : "定位游戏";
+        PrepareDeltaButton.IsEnabled = GameReady && count > 0 && !_refreshing && !_locating;
         PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
     }
 
@@ -44,23 +49,23 @@ public partial class ConsoleView : UserControl
         UpdatePreparation();
         try
         {
-            if (DeltaLocated && !DeltaReady) { await RefreshDataAsync(); return; }
-            var games = await Task.Run(() => GamePathService.DetectAll(refresh: true)
-                .Where(g => DeltaPreparation.IsGameExecutable(g.ExePath)).ToList());
+            if (GameLocated && !GameReady) { await RefreshDataAsync(); return; }
+            // DetectAll 只返回已知游戏的主程序（各游戏 Shipping exe），不再限定三角洲
+            var games = await Task.Run(() => GamePathService.DetectAll(refresh: true).ToList());
             string? path = games.Count == 1 ? games[0].ExePath : null;
             if (path is null)
             {
                 var picker = new Microsoft.Win32.OpenFileDialog
                 {
-                    Title = "选择三角洲主程序（不是启动器，通常位于 Game\\Binaries\\Win64）",
-                    Filter = "三角洲游戏主程序|DeltaForceClient-Win64-Shipping.exe", CheckFileExists = true
+                    Title = "选择游戏主程序（不是启动器；主程序通常带 -Win64-Shipping 或位于 Binaries 目录）",
+                    Filter = "游戏主程序|*.exe", CheckFileExists = true
                 };
                 if (picker.ShowDialog(main) != true) return;
                 path = picker.FileName;
             }
-            if (!DeltaPreparation.IsGameExecutable(path) || !System.IO.File.Exists(path))
+            if (!System.IO.File.Exists(path) || !string.Equals(System.IO.Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase))
             {
-                DialogService.Warning("请选择游戏主程序", "需要选择 DeltaForceClient-Win64-Shipping.exe，不能选择启动器。");
+                DialogService.Warning("请选择游戏主程序", "需要选择游戏本体的主程序 exe，不能选择启动器或安装程序。");
                 return;
             }
             StateStore.SaveGamePath(path);
@@ -78,7 +83,7 @@ public partial class ConsoleView : UserControl
         UpdatePreparation();
         if (!PrepareDeltaButton.IsEnabled) return;
         if (Window.GetWindow(this) is MainWindow main)
-            main.ReviewSelection(DeltaPreparation.PendingItems(AppState.Items, DeltaReady));
+            main.ReviewSelection(DeltaPreparation.PendingItems(AppState.Items, GameReady));
     }
 
     private void DeltaSession_Click(object sender, RoutedEventArgs e)

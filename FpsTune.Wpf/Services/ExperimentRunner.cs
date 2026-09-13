@@ -43,7 +43,7 @@ public static class ExperimentRunner
         int DurationSec = 90,
         string? CsvPath = null,
         string? PresentMonPath = null,
-        string GameName = "DeltaForceClient-Win64-Shipping");
+        string? GameName = null);
 
     /// <summary>
     /// 执行一个实验步骤。step 取值：baseline / report / group-1 / group-2 / group-3。
@@ -52,6 +52,15 @@ public static class ExperimentRunner
     public static async Task<(int ExitCode, string Json)> RunAsync(
         string step, Options options, CancellationToken ct)
     {
+        // 采样目标进程默认跟随当前定位的游戏主程序（红线四：全 FPS 通用）；
+        // 未定位游戏时退回历史默认（三角洲）。
+        var gameName = options.GameName;
+        if (string.IsNullOrWhiteSpace(gameName))
+            gameName = !string.IsNullOrWhiteSpace(AppState.GamePath)
+                ? Path.GetFileNameWithoutExtension(AppState.GamePath)
+                : "DeltaForceClient-Win64-Shipping";
+        options = options with { GameName = gameName };
+
         var (mode, groupId) = step switch
         {
             "baseline" => ("baseline", null),

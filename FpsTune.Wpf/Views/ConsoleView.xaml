@@ -20,7 +20,7 @@
         <Border Grid.Row="0" Padding="28,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel Margin="0,0,20,0">
-                    <TextBlock Text="三角洲 · 开局准备" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="GameReadyTitle" Text="开局准备" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="GameReadyText" Text="定位游戏后，审阅基础设置并记录一局负载。" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

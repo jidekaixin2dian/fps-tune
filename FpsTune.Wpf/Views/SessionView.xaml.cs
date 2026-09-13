@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -33,7 +34,12 @@ public partial class SessionView : UserControl
     {
         if (Service.IsRunning) return;
         if (string.IsNullOrWhiteSpace(SessionNameBox.Text))
-            SessionNameBox.Text = $"三角洲 · 对照记录 {DateTime.Now:MM-dd HH:mm}";
+        {
+            var game = !string.IsNullOrWhiteSpace(AppState.GamePath)
+                ? GamePathService.LabelFor(AppState.GamePath)
+                : "对照";
+            SessionNameBox.Text = $"{game} · 对照记录 {DateTime.Now:MM-dd HH:mm}";
+        }
         _preparationHint = "在相同地图、画质和帧率上限下记录相近时长。点击开始后手动进入游戏；这里记录负载，不测量 FPS。";
         UpdateRunState();
         SessionNameBox.Focus();
