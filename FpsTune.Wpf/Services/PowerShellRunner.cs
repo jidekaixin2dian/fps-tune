@@ -26,6 +26,10 @@ public static class PowerShellRunner
     // 参数以"名字 + 值"逐个放进环境变量，子进程组装成哈希表后用具名 splatting 调用脚本：
     // 值始终是数据，既不参与命令行、也不参与任何代码文本（数组 splatting 会把 -Name 当位置参数，
     // 具名参数会全部失效，所以这里必须是 hashtable splatting）。
+    //
+    // 校验值用 .NET 类型直接算，不用 Get-FileHash：后者属于按需加载的模块，在部分环境里根本没注册
+    // （GitHub windows-latest runner 实测报 "not recognized as the name of a cmdlet"），
+    // 依赖它会让合法脚本在这些机器上被一律拒绝。
     internal const string LaunchCommand =
         "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " +
         "$p=$env:FPSTUNE_LAUNCH_SCRIPT; $sh=$env:FPSTUNE_LAUNCH_SHA256; $ok=$false; $why=''; " +
@@ -34,7 +38,9 @@ public static class PowerShellRunner
         "if (-not $p) { $why='脚本路径环境变量缺失' } " +
         "elseif (-not $sh) { $why='校验值环境变量缺失' } " +
         "else { for($t=0; $t -lt 10; $t++){ $h=$null; " +
-        "try { $h=(Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash } catch { $why=$_.Exception.Message }; " +
+        "try { $fs=[IO.File]::OpenRead($p); $sha=[Security.Cryptography.SHA256]::Create(); " +
+        "$h=[BitConverter]::ToString($sha.ComputeHash($fs)).Replace('-','') } " +
+        "catch { $why=$_.Exception.Message } finally { if ($fs) { $fs.Dispose() } }; " +
         "if ($h) { if ($h -eq $sh) { $ok=$true; $why='' } else { $why='内容与可信校验值不符' }; break }; " +
         "Start-Sleep -Milliseconds 250 } }; " +
         "if (-not $ok) { [Console]::Error.WriteLine('FPS 帧律：脚本完整性校验未通过（' + $why + '），已拒绝执行。'); exit 126 }; " +
