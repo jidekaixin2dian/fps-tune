@@ -14,7 +14,7 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'git not found. A release build requires a clean committed HEAD.'
 }
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    throw 'dotnet not found. Install .NET 8 SDK first.'
+    throw 'dotnet not found. Install .NET 10 SDK first.'
 }
 
 function Invoke-GitValue {
