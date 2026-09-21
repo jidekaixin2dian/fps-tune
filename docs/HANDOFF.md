@@ -7,30 +7,38 @@
 
 ## 1. 一句话现状
 
-0.1.2-beta 线上，ICC 滤镜（M2）已完成并全绿，DLSS 覆盖（M1 的一部分）代码在但未启用，
-公开门面（README / 贡献者入口）刚重写过，尚未发布 v0.1.2-beta。
+主线是 0.1 Beta 线（1.x 线因 .NET 8 将于 2026-11-10 EOL 已整体切到 .NET 10 并重开版本号）。
+ICC 滤镜（M2）已完成并全绿；DLSS 模型覆盖（M1）代码在但未启用，**`0.1.2` 这个版本号预留给它做完后的
+那次发布**，所以 `VersionPrefix` 回退在 0.1.1。公开门面（README / 贡献者入口 / 交接文档）刚重写过。
 
 ## 2. 版本与分支
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.2` / `VersionSuffix=beta` |
+| `Directory.Build.props` | `VersionPrefix=0.1.1` / `VersionSuffix=beta`（`0.1.2` 预留，见 §1） |
 | 已发布 Release | `v0.1.1-beta`（2026-09-13）；资产 = Setup + Portable + SHA256SUMS |
-| 未发布 | 0.1.2 的全部工作（ICC 滤镜、显示与画质页） |
+| 未发布的内容 | ICC 滤镜、显示与画质页 —— 已进 beta 分支，但版本号仍停在 0.1.1 |
 | `beta` | 开发线；已备份到 `origin/beta`（ICC 工作曾只存在于本机 3 个提交里，现已在远端） |
-| `main` | `d9a6c94` = 门面线，**落后 beta**：缺 ICC、缺显示与画质页、缺本文件与 AGENTS.md |
-| 本机安装位 | `D:\FpsTune` = `0.1.2-beta+6d0699e`（2026-09-14 构建，即 ICC 完成后的版本） |
+| `main` | 门面线，**落后 beta**：缺 ICC、缺显示与画质页、缺本文件与 AGENTS.md |
+| 本机安装位 | `D:\FpsTune` = `0.1.2-beta+6d0699e`（2026-09-14 构建，当时版本号已提前 bump） |
 | 测试基线 | 248 / 248（`dotnet test -c Release`，31 秒） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
+**版本号回退带来的一个坑，必须知道**：本机重建后 `-Version` 会自报 `0.1.1-beta`，与已发布的
+`v0.1.1-beta` **同号但内容更多**。区分两者只能看 `InformationalVersion` 里的完整 SHA，不要拿版本号当依据。
+`D:\FpsTune` 那份 0.1.2-beta 安装位保持原样，不回滚。
+
 **未决（需要用户拍板，别自作主张）**
 
-1. `main` 是否快进到 `beta`？现在两条线在文档层已合流（`origin/main` 的 README 已 merge 进 beta），
-   但代码层 beta 领先。发布 v0.1.2-beta 时自然要合，提前合等于把未完成功能摆到默认分支。
+1. `main` 是否快进到 `beta`？文档层已合流（`origin/main` 的 README 已 merge 进 beta），代码层 beta 领先。
+   正常路径是等 DLSS 做完、发 0.1.2 时一起合。
 2. 单文件 `FpsTune.exe` 没有上传到最近两个 Release，而 `RELEASE.md` §4 明确要求上传它。
    要么下次发版补上，要么改 `RELEASE.md` 删掉这个资产 —— 二者必须一致，README 已按"不提供单文件"改写。
-3. DLSS 模型覆盖：`DisplayQualityView.xaml.cs` 里 `ApplyButton.IsEnabled = false` 且提示"本版本暂未启用"。
-   是继续验证 M1 还是先砍掉发布 0.1.2，需要用户定。
+
+**已决**
+
+- DLSS（M1）做完才发 0.1.2；期间不发版、不占版本号（用户 2026-09-21）。
+- 主开发工作区 = `C:\Users\Aether\Documents\fpstune\review-3a060d1`（用户 2026-09-21 确认）。
 
 ## 3. 0.1.2 里程碑（依据 `docs/dev/PLAN-0.1.2-features.md`）
 
@@ -74,13 +82,19 @@
 - 删除 `D:\FpsTune\FpsTune.pdb`（安装目录里的调试符号，发布流水线本就会剥离）。
 - 修正 `RELEASE.md` 两处事实错误、`PLAN-0.1.2-features.md` 的过期状态行与指向未入库文件的引用。
 
+**第二轮（同日，用户拍板后）**
+- 确认 `review-3a060d1` 为主开发工作区；`VersionPrefix` 从 0.1.2 回退到 0.1.1，0.1.2 留给 DLSS 做完后的发布。
+- 删除 v1.4.0 时代的旧副本 `C:\Users\Aether\.zcode\workspace\default\dft-review`（237 MB）。
+  删前已核实：工作树干净、无 stash、无未推送提交；`git fsck` 报出的 1 个 dangling commit
+  （`5f5128d`）与已并入 `origin/main` 的 `fd931e3` 是同一份工作（rebase 前的重复对象），无独有内容。
+
 ## 5. 下一步建议（按性价比排序）
 
-1. 定 §2 的三个未决项，尤其"单文件 exe 到底提不提供"——它同时影响 README、RELEASE.md 和 Release 资产。
-2. 决定 0.1.2-beta 的发版范围：只发 ICC（M2），还是等 M1 的 DLSS 启用。前者可以很快发出去，
-   顺便解决"最近一次发布是 8 天前"的停滞观感。
-3. 真实 A/B 数据：目前 README 截图里的实验数字是历史/模拟状态，**不能用于宣传**。
+1. **M1 的 DLSS 模型覆盖**：这是 0.1.2 的发版门槛。`DisplayQualityView.xaml.cs` 目前把应用/还原按钮
+   锁死并提示"稳定性验证中"，需要拿真机（RTX + 支持 DLSS 预设的游戏）验证 SettingID 与回滚是否可靠。
+2. 真实 A/B 数据：目前 README 截图里的实验数字是历史/模拟状态，**不能用于宣传**。
    跑一轮真机 `-Experiment`（需 `winget install Intel.PresentMon.Console` + 真实对局）拿到可引用的收益。
+3. 统一"单文件 exe"口径：`README.md` / `RELEASE.md` §4 / 实际 Release 资产三处现在不一致，见 §2 未决 2。
 4. 界面文案国际化（issue #1）——公开口径里已经承诺了这件事。
 5. `docs/ROADMAP.md` 的现状基线段落仍停在 v1.5.0，下次动 ROADMAP 时一并刷新；
    在它刷新之前，本文是唯一的现状来源。

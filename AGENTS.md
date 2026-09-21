@@ -9,7 +9,8 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（33 个可还原优化项） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.1.2` + `VersionSuffix=beta`（见 `Directory.Build.props`）；已发布的是 `v0.1.1-beta` |
+| 版本 | `VersionPrefix=0.1.1` + `VersionSuffix=beta`（见 `Directory.Build.props`）；已发布 `v0.1.1-beta`。`0.1.2` 预留给 DLSS 模型覆盖做完后的发布，别提前占用 |
+| 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，整体切到 .NET 10 并重开为 0.1 Beta 线；`docs/` 里带 1.x 字样的文档是存档 |
 | 开发分支 | `beta`（本机与 `origin/beta` 同步）；`main` 是门面/发布线，当前落后 `beta` |
 | 测试基线 | **248 / 248 通过**，`dotnet test -c Release` 约 31 秒 |
 | 权威交接 | `docs/HANDOFF.md`（入库，长期有效）+ 仓库根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示） |
@@ -76,9 +77,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 248
 ## 工作区地图（这台机器上有三份，别搞混）
 
 ```
-C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（beta 分支，代码在这里）
-C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后弃用；
-                                                      2026-09-21 被用来改写 README/CONTRIBUTING 并推到 main
+C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
+C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；2026-09-21 被用来
+                                                      改写 README/CONTRIBUTING 并推到 main，内容已 merge 回 beta
 D:\FpsTune                                         ← 本机安装位（0.1.2-beta 构建），只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```

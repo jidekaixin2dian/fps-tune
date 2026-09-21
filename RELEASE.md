@@ -2,7 +2,8 @@
 
 版本号唯一来源：`Directory.Build.props` 的 `<VersionPrefix>`（三段数字，程序集 / 安装器 /
 CLI 自报版本共用）+ `<VersionSuffix>`（预发布标识，只进 `InformationalVersion` / `ProductVersion` 展示）。
-下文 `<ver>` 指 `VersionPrefix`。当前已发布：`v0.1.1-beta`；beta 线上待发布：`0.1.2-beta`。
+下文 `<ver>` 指 `VersionPrefix`。当前已发布：`v0.1.1-beta`；`0.1.2` 预留给 DLSS 模型覆盖（M1）
+做完后的那次发布，未完成的特性不占版本号。
 > 历史注记：1.x 版本线（v1.6.2 及之前）已在 `170a8bd` 重置为 0.1 Beta 线，旧版本号只出现在历史与 `docs/` 存档里。
 
 发布必须从最终提交开始。`publish-release.ps1` 读取干净工作树的
