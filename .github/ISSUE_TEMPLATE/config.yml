@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 使用问题先看 README
+    url: https://github.com/jidekaixin2dian/fps-tune#readme
+    about: 下载方式、CLI 参数、为什么不承诺帧数提升，都写在 README 里
+  - name: AI Agent 用法
+    url: https://github.com/jidekaixin2dian/fps-tune/blob/main/SKILL.md
+    about: 让 Agent 按固定流程驱动本工具的操作规范

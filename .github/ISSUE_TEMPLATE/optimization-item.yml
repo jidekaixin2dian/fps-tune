@@ -1,0 +1,62 @@
+name: 提议新增优化项
+description: 想加一个系统层优化项进 catalog
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        新增优化项的门槛比想象的高：这个项目要求**每项都能被 A/B 实验验证**，解释不清收益的项不进 catalog。
+        先说清改什么、为什么，再谈实现。
+  - type: textarea
+    id: change
+    attributes:
+      label: 具体改什么
+      description: 注册表键与值 / 电源参数 GUID 与属性 / 服务名与启动类型 / 启动配置项。写精确。
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 为什么可能有用
+      description: 官方文档、厂商说明或可复现的实测依据。不接受"论坛都说有用"。
+    validations:
+      required: true
+  - type: textarea
+    id: side-effect
+    attributes:
+      label: 副作用与谁不该开
+      description: 例如笔记本续航变短、需要辅助功能的用户不能开、Alt+Tab 变慢。
+    validations:
+      required: true
+  - type: dropdown
+    id: admin
+    attributes:
+      label: 是否需要管理员权限
+      options: ["需要", "不需要", "不确定"]
+    validations:
+      required: true
+  - type: dropdown
+    id: reboot
+    attributes:
+      label: 是否需要重启才完全生效
+      options: ["需要", "不需要", "注销即可", "不确定"]
+    validations:
+      required: true
+  - type: textarea
+    id: measure
+    attributes:
+      label: 怎么验证它有没有用
+      description: 用 A/B 实验能观测到的指标说明（平均帧率 / 1% low / P99 帧时间 / 卡顿次数），以及在什么场景下测。
+    validations:
+      required: true
+  - type: checkboxes
+    id: redlines
+    attributes:
+      label: 红线确认
+      options:
+        - label: 这一项不修改游戏目录里的任何文件
+          required: true
+        - label: 这一项不注入进程、不读游戏内存、不与反作弊交互
+          required: true
+        - label: 这一项的原始值可以被精确备份并还原（含"原本不存在"的情况）
+          required: true
