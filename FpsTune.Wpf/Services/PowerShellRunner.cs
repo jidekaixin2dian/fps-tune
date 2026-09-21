@@ -28,9 +28,15 @@ public static class PowerShellRunner
     // 具名参数会全部失效，所以这里必须是 hashtable splatting）。
     internal const string LaunchCommand =
         "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " +
-        "$p=$env:FPSTUNE_LAUNCH_SCRIPT; $ok=$false; " +
-        "try { $ok=((Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash -eq $env:FPSTUNE_LAUNCH_SHA256) } catch { $ok=$false }; " +
-        "if (-not $ok) { [Console]::Error.WriteLine('FPS 帧律：脚本内容校验失败，已拒绝执行。'); exit 126 }; " +
+        "$p=$env:FPSTUNE_LAUNCH_SCRIPT; $ok=$false; $read=$false; " +
+        // 读取校验值要容忍瞬时占用：杀软/索引器可能刚锁住这个新文件（CI 上实测会撞上）。
+        // 只对"读不到"重试；读到但哈希不符是最终结论，绝不重试、绝不放行。
+        "for($t=0; $t -lt 4; $t++){ $h=$null; " +
+        "try { $h=(Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash; $read=$true } catch { $h=$null }; " +
+        "if ($h -ne $null) { $ok=($h -eq $env:FPSTUNE_LAUNCH_SHA256); break }; " +
+        "Start-Sleep -Milliseconds 100 }; " +
+        "if (-not $ok) { if ($read) { [Console]::Error.WriteLine('FPS 帧律：脚本内容校验失败，已拒绝执行。') } " +
+        "else { [Console]::Error.WriteLine('FPS 帧律：脚本校验值读取失败（脚本被占用），已拒绝执行。') }; exit 126 }; " +
         "$splat=@{}; for($i=0; $i -lt [int]$env:FPSTUNE_LAUNCH_PARAM_COUNT; $i++){ " +
         "$n=[Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_NAME'); " +
         "if ([Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_FLAG') -eq '1') " +

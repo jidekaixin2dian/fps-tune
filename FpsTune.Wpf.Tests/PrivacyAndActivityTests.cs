@@ -5,6 +5,7 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>诊断脱敏与自动 Profile 活动审计。</summary>
+[Collection("BackupService serial")]
 public sealed class PrivacyAndActivityTests : IDisposable
 {
     private readonly string _dir;
@@ -95,6 +96,22 @@ public sealed class PrivacyAndActivityTests : IDisposable
         var events = AutoProfileActivityStore.Load();
         Assert.Equal(AutoProfileActivityStore.MaxEvents, events.Count);
         Assert.All(events, e => Assert.False(string.IsNullOrWhiteSpace(e.Kind)));
+    }
+
+    /// <summary>
+    /// 读取结束后不能留下文件句柄：句柄被留住时，下一次追加会撞
+    /// "being used by another process"（CI 上真实失败过）。
+    /// </summary>
+    [Fact]
+    public void Load_releases_the_events_file()
+    {
+        AutoProfileActivityStore.Append(new AutoProfileEvent(
+            DateTime.Now, AutoProfileActivityStore.KindInfo, "game", null, "一条记录"));
+
+        Assert.NotEmpty(AutoProfileActivityStore.Load());
+
+        using var probe = new FileStream(
+            AutoProfileActivityStore.EventsFile, FileMode.Open, FileAccess.Write, FileShare.None);
     }
 
     [Fact]

@@ -12,7 +12,7 @@
 | 版本 | `VersionPrefix=0.1.1` + `VersionSuffix=beta`（见 `Directory.Build.props`）；已发布 `v0.1.1-beta`。`0.1.2` 预留给 DLSS 模型覆盖做完后的发布，别提前占用 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，整体切到 .NET 10 并重开为 0.1 Beta 线；`docs/` 里带 1.x 字样的文档是存档 |
 | 开发分支 | `beta`（本机与 `origin/beta` 同步）；`main` 是门面/发布线，当前落后 `beta` |
-| 测试基线 | **248 / 248 通过**，`dotnet test -c Release` 约 31 秒 |
+| 测试基线 | **249 / 249 通过**，`dotnet test -c Release` 约 31 秒 |
 | 权威交接 | `docs/HANDOFF.md`（入库，长期有效）+ 仓库根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示） |
 
 ## 第一步：确认基线，不要先改代码
@@ -20,7 +20,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 248 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 249 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
@@ -58,7 +58,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 248
 ## 环境事实
 
 - 本机 SDK `10.0.401`，WindowsDesktop 运行时 `10.0.12`。
-- **不要依赖 GitHub Actions**：最近一次 CI 运行停在 2026-08-31，之后没有跑过。验证一律用本机命令。
+- **GitHub Actions 可用**（`build` + `smoke`，push 到 main / 开 PR 时触发）。但 CI 在 `windows-latest`
+  runner 上跑，比本机更容易撞上文件占用类瞬时失败——改完先本机全量绿，再看 CI；不要把 CI 的一次红
+  直接归因于自己的提交，先比对是不是同两条已知用例。
 - `gh` CLI 已登录，仓库为 `jidekaixin2dian/fps-tune`（公开）。
 - Inno Setup 6 存在，路径由 `build-installer.ps1 -CheckOnly` 探测。
 

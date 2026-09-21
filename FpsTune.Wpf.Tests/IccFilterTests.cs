@@ -108,6 +108,9 @@ public class IccFilterServiceTests : IDisposable
         IccFilterService.BackupDirOverride = null;
         if (Directory.Exists(_backupDir))
             Directory.Delete(_backupDir, recursive: true);
+        // FakeIccApi 的模拟色彩目录同样是临时产物，漏删会让每次 dotnet test 都留下几十个目录。
+        if (Directory.Exists(_api.ColorDirectory))
+            Directory.Delete(_api.ColorDirectory, recursive: true);
     }
 
     [Fact]

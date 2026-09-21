@@ -21,7 +21,8 @@ ICC 滤镜（M2）已完成并全绿；DLSS 模型覆盖（M1）代码在但未�
 | `beta` | 开发线；已备份到 `origin/beta`（ICC 工作曾只存在于本机 3 个提交里，现已在远端） |
 | `main` | 门面线，**落后 beta**：缺 ICC、缺显示与画质页、缺本文件与 AGENTS.md |
 | 本机安装位 | `D:\FpsTune` = `0.1.2-beta+6d0699e`（2026-09-14 构建，当时版本号已提前 bump） |
-| 测试基线 | 248 / 248（`dotnet test -c Release`，31 秒） |
+| 测试基线 | 249 / 249（`dotnet test -c Release`，约 37 秒；连跑三轮稳定） |
+| CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发）。2026-09-21 之前一度以为它停摆，实际是账号侧长期没触发；当天恢复运行并暴露两条只在 runner 上复现的用例，已修 |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
 **版本号回退带来的一个坑，必须知道**：本机重建后 `-Version` 会自报 `0.1.1-beta`，与已发布的
@@ -87,6 +88,25 @@ ICC 滤镜（M2）已完成并全绿；DLSS 模型覆盖（M1）代码在但未�
 - 删除 v1.4.0 时代的旧副本 `C:\Users\Aether\.zcode\workspace\default\dft-review`（237 MB）。
   删前已核实：工作树干净、无 stash、无未推送提交；`git fsck` 报出的 1 个 dangling commit
   （`5f5128d`）与已并入 `origin/main` 的 `fd931e3` 是同一份工作（rebase 前的重复对象），无独有内容。
+
+**第三轮：修 CI 上两条本地不复现的失败**
+
+runner 上 `build` 作业长期红，两条用例只在 CI 失败：
+
+1. `Activity_load_is_bounded_and_tolerates_bad_lines` → `IOException: being used by another process`。
+   根因是 `AutoProfileActivityStore.Append` 每条事件都做"整文件读 + 原子重写"（该测试连写 220 条 =
+   220 次文件替换），窗口撞上 runner 上杀软/索引器对新文件的独占扫描；同时读取用的是
+   `File.ReadLines` 惰性迭代器，句柄释放时机不确定。
+   修法：追加改为真·单行 append（与文档注释的"只追加"一致），仅在超过 `MaxEvents` 时压缩一次；
+   读取换成 `File.ReadAllLines`；新增回归用例 `Load_releases_the_events_file` 直接断言读完能立刻独占重开。
+2. `Script_runner_uses_system_powershell_and_preserves_quoted_data` → 子进程报"脚本内容校验失败"。
+   根因是子进程自校验里 `Get-FileHash` 一旦因瞬时占用抛异常，就被和"内容确实不符"混成同一条消息，
+   既误杀又不可诊断。修法：只对"读不到"重试（最多 4 次 / 100ms），**读到但不匹配仍是最终拒绝**，
+   并把两种情况分成两条消息。安全语义不变：哈希不匹配绝不执行脚本。
+3. 顺带修掉两个测试卫生问题：`PrivacyAndActivityTests` / `SessionTests` / `ExperimentWizardTests`
+   会改写进程级静态 `OverrideDir`，却没挂进既有的 `[Collection("BackupService serial")]`，
+   并行集合下别的类的 `Dispose` 会把正在用的目录重置成真实 `%LOCALAPPDATA%`；
+   `IccFilterTests` 的 `FakeIccApi` 色彩目录从不删除，每跑一次 `dotnet test` 泄漏 27 个临时目录（已修，实测归零）。
 
 ## 5. 下一步建议（按性价比排序）
 

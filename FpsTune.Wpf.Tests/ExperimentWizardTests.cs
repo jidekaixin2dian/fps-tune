@@ -5,6 +5,7 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>A/B 实验向导：合法/非法转换、重入、恢复、旧状态迁移与持久化。</summary>
+[Collection("BackupService serial")]
 public sealed class ExperimentWizardTests : IDisposable
 {
     private readonly string _dir;

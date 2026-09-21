@@ -4,6 +4,9 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>性能会话：统计、洞察规则、持久化、损坏恢复、保留上限与导出。</summary>
+// 会改写进程级静态 OverrideDir，必须与其他碰静态的测试同处串行集合，
+// 否则并行下别的集合会把这里正在用的目录重置成真实 %LOCALAPPDATA%。
+[Collection("BackupService serial")]
 public sealed class SessionTests : IDisposable
 {
     private readonly string _dir;
