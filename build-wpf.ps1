@@ -7,7 +7,7 @@ param(
 $project = Join-Path $PSScriptRoot 'FpsTune.Wpf\FpsTune.Wpf.csproj'
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
-    Write-Error 'dotnet not found. Please install .NET 8 SDK first.'
+    Write-Error 'dotnet not found. Please install .NET 10 SDK first.'
     exit 1
 }
 

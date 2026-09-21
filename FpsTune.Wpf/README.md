@@ -13,7 +13,7 @@
 
 ## 构建
 
-需要安装 .NET 8 SDK：
+需要安装 .NET 10 SDK：
 
 ```powershell
 dotnet build -c Release

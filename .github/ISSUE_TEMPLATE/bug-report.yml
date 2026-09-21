@@ -1,0 +1,47 @@
+name: Bug 反馈
+description: 报告检测/应用/还原/界面问题
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先跑一次 `FpsTune.exe -Detect -Json` 并确认问题不是权限导致的（需要管理员的项在普通权限下会明确报错，这是预期行为）。
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么
+      description: 现象 + 期望。有截图更好。
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 涉及哪块
+      options: [检测, 优化/应用, 还原, 性能会话, A/B 实验, 界面/主题, CLI, 安装/启动, 其他]
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境
+      description: 版本（标题栏或 `-Version` 输出）、Windows 版本、是否提权运行、GPU 型号
+      value: |
+        版本：
+        Windows：
+        是否以管理员运行：
+        GPU：
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 相关输出 / 日志
+      description: 粘贴 `-Json` 输出或「备份 / 日志」页内容。敏感路径可自行打码。
+      render: shell
+  - type: checkboxes
+    id: revert
+    attributes:
+      label: 还原确认
+      options:
+        - label: 我确认问题可以通过「还原全部」恢复到改动前的状态（或恢复本身有问题）
+          required: false
