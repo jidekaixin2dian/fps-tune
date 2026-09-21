@@ -108,6 +108,23 @@ runner 上 `build` 作业长期红，两条用例只在 CI 失败：
    并行集合下别的类的 `Dispose` 会把正在用的目录重置成真实 `%LOCALAPPDATA%`；
    `IccFilterTests` 的 `FakeIccApi` 色彩目录从不删除，每跑一次 `dotnet test` 泄漏 27 个临时目录（已修，实测归零）。
 
+**第四轮：上面第 2 条的假设是错的，CI 给出真实根因**
+
+第三轮加的重试没让 CI 转绿，但新的分类诊断直接说出原因：
+`The term 'Get-FileHash' is not recognized as the name of a cmdlet`。子进程自校验依赖的这个 cmdlet
+属于**按需加载的 PowerShell 模块**，在 `windows-latest` runner 上没注册——即在那类机器上
+**所有合法脚本都会被完整性校验一律拒绝**，朋友测试功能不可用，不只是测试红。
+已改用 `[IO.File]::OpenRead` + `[Security.Cryptography.SHA256]`（只用 mscorlib，无需模块），
+本机验证两条路径对同一文件算出的哈希逐字符一致。
+
+`ExecutionTrustTests` 原本断言启动命令必须含 `"Get-FileHash"`，把实现细节当成了不变量，因此拦下这次改动。
+已改为按不变量断言（含 SHA256 计算、与可信哈希 `$sh` 比对、不符即 `exit 126`），
+并反向加一条 `DoesNotContain("Get-FileHash")` 钉住本次回归。
+
+**记一条流程失误**：提交 `ee5c9bc` 的信息写"249/249"，实际那次是 248 通过 / 1 失败（就是上面那条守卫用例）。
+原因是我用 `grep` 过滤测试输出后直接 `&&` 串了提交与推送，只看有没有匹配行、没看退出码。
+以后本机全量必须亲眼看到"失败: 0"那一行本身。
+
 ## 5. 下一步建议（按性价比排序）
 
 1. **M1 的 DLSS 模型覆盖**：这是 0.1.2 的发版门槛。`DisplayQualityView.xaml.cs` 目前把应用/还原按钮
