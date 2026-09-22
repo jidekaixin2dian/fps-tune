@@ -164,7 +164,12 @@ public sealed class ExecutionTrustTests
 
         // 启动命令是常量：脚本路径、参数名与参数值一个字符都不参与命令行（也不落盘）；
         // 但必须包含"子进程自校验哈希"与"具名参数 splatting"这两步。
-        Assert.Contains("Get-FileHash", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
+        // 断言按不变量而非具体 cmdlet：曾经断言 "Get-FileHash"，但该 cmdlet 属于按需加载的
+        // PowerShell 模块，在 windows-latest runner 上根本没注册，依赖它会让合法脚本被一律拒绝。
+        Assert.Contains("SHA256", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
+        Assert.Contains("$sh", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
+        Assert.Contains("exit " + PowerShellRunner.ScriptIntegrityExitCode, PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
+        Assert.DoesNotContain("Get-FileHash", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
         Assert.Contains("@splat", PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
         Assert.DoesNotContain(Path.GetFileName(script), PowerShellRunner.LaunchCommand, StringComparison.Ordinal);
         foreach (var arg in args)
