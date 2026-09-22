@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
@@ -249,6 +249,60 @@ public partial class OptimizeView : UserControl
         if (PresetCustom.IsChecked == true)
             return Items.Where(i => i.IsChecked).Select(i => i.Id);
         return BalancedIds();
+    }
+
+    private async void OneClickButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ConsentCheck.IsChecked != true)
+        {
+            DialogService.Warning("未确认", "请先勾选同意说明，再执行一键优化。");
+            return;
+        }
+
+        if (OptimizationCatalog.ResolvePreset("balanced").Any(id =>
+                AppState.Items.FirstOrDefault(i => i.Id == id)?.RequiresAdmin == true)
+            && !AdminHelper.IsAdministrator())
+        {
+            var elevate = DialogService.Confirm(
+                "需要管理员权限",
+                "一键优化的均衡档包含电源计划等需要管理员权限的项目。\n\n" +
+                "要以管理员身份重启并继续吗？",
+                danger: false);
+            if (elevate)
+                AdminHelper.RestartAsAdministrator();
+            return;
+        }
+
+        var confirmed = DialogService.Confirm(
+            "一键优化",
+            "将一次应用：\n\n" +
+            "① 均衡档系统层（含电源计划→卓越性能、游戏强制高性能 GPU）\n" +
+            "② DLSS K 模型\n" +
+            "③ 显卡 3D（1070 Ti 档）：纹理高质量 · 电源最高性能优先 · 透明度 2x · 预渲染 1 帧\n\n" +
+            "全部写入前自动备份，可「还原全部」。确定开始？",
+            confirmText: "开始");
+        if (!confirmed)
+            return;
+
+        OneClickButton.IsEnabled = false;
+        ApplyButton.IsEnabled = false;
+        RestoreButton.IsEnabled = false;
+        SetPlain("正在一键优化...", "AccentBrush");
+        try
+        {
+            var result = await OneClickOptimizer.ApplyAsync();
+            SetApplyResult(result);
+        }
+        catch (Exception ex)
+        {
+            SetRawMonospace(ex.ToString());
+        }
+        finally
+        {
+            OneClickButton.IsEnabled = true;
+            ApplyButton.IsEnabled = true;
+            RestoreButton.IsEnabled = true;
+        }
     }
 
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)

@@ -264,6 +264,24 @@ public class DisplayQualityTests : IDisposable
         Assert.Equal(TransparencyAa.Supersample4x, s.TransparencyAa);
     }
 
+    [Fact]
+    public void OneClick_gpu_1070ti_pack_writes_k_model_and_2x_transparency()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        FpsTune.Wpf.Core.OneClickOptimizer.ApplyGpu1070TiPack(Exe);
+
+        var s = DisplayQualityService.GetDrsGameSettings(Exe);
+        var dlss = DisplayQualityService.GetDlssState(Exe);
+        Assert.Equal(DlssPreset.PresetK, (DlssPreset)(dlss.PresetValue ?? 0));
+        Assert.Equal(TextureFilterQuality.HighQuality, s.TextureQuality);
+        Assert.Equal(PowerMode.PreferMax, s.PowerMode);
+        // 1070 Ti 档 = 2x，不是 5070 Ti 桌面的 4x
+        Assert.Equal(TransparencyAa.Supersample2x, s.TransparencyAa);
+        Assert.Equal(1u, s.PreRenderLimit);
+        Assert.True(s.Restorable);
+    }
+
     private sealed class FakeNvdrsApi : INvdrsApi
     {
         private readonly Dictionary<string, FakeProfile> _profiles = new();

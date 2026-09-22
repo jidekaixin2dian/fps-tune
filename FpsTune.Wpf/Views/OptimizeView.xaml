@@ -231,6 +231,9 @@
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
      <Button x:Name="RestoreButton" Content="还原全部" Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Margin="12,0" Click="RestoreButton_Click"/>
+     <Button x:Name="OneClickButton" Content="一键优化"
+             Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Height="40" Margin="0,0,12,0" Click="OneClickButton_Click"
+             ToolTip="均衡档系统层 + DLSS K 模型 + 显卡 3D（1070 Ti 档：纹理高质量 / 最高性能优先 / 透明度 2x）+ 卓越性能电源"/>
      <Button x:Name="ApplyButton" Content="应用所选 →" Style="{StaticResource PrimaryButtonStyle}" MinWidth="144" Height="40" Click="ApplyButton_Click"/>
     </StackPanel>
    </Grid>

@@ -58,7 +58,7 @@
 | done-1 | 脚本完整性校验根因修复（弃用 `Get-FileHash`，改 .NET SHA256） | `b7e5803` 等，已在 `main` |
 | done-2 | 0.1 Beta 提升为 `main` 主线；1.x 冻结于 `legacy/1.x` | `1d9777c` / `legacy/1.x` |
 | done-3 | `.gitattributes` 统一 LF（AI-WORKFLOW 里的旧待办已落地） | 仓库根 |
-| done-4 | 每轮收工必更 `AGENTS.md` + `docs/HANDOFF.md` 并提交 | 硬纪律（2026-09-22） |
+| done-5 | **一键优化定稿**：均衡 + DLSS K + 1070 Ti 档 3D + 电源方案 | `OneClickOptimizer`，264/264 | 2026-09-22 |
 
 ---
 
