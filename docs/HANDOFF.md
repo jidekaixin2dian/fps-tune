@@ -7,8 +7,7 @@
 
 ## 1. 一句话现状
 
-主线是 0.1 Beta 线（现落在 **`main`**）。**M1 已完成**（DLSS 真机闭环 + 数字振动 DVC 读写/还原）；M2 ICC 完成；M3 未开始。
-**`v0.1.2-beta` 已发布**（2026-09-22，tag @ `4e6b728`；用户跳过真机 A/B，Release Notes 无编造收益数字）。
+主线是 0.1 Beta 线（现落在 **`main`**）。M1/M2/M3 功能与一键优化、i18n 已发 **`v0.1.3-beta`**。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
@@ -16,7 +15,7 @@
 | 项 | 值 |
 |---|---|
 | `Directory.Build.props` | `VersionPrefix=0.1.2` / `VersionSuffix=beta` |
-| 已发布 Release | **`v0.1.2-beta`**（2026-09-22，`4e6b728`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.1-beta` |
+| 已发布 Release | **`v0.1.3-beta`**（2026-09-22，`29ed0ea`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.2-beta` |
 | 未发布的内容 | M3（DRS 二期）未开始 |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
