@@ -1,6 +1,6 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-22（本轮由 MiMo 代理完成：根因修复 DLSS GetSetting AV 并真机验证通过）
+> 最后核对：2026-09-22（本轮由 MiMo 代理完成：脚本校验 4 个修复 cherry-pick 到 main，CI 根因闭环）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -18,7 +18,7 @@
 | 已发布 Release | `v0.1.1-beta`（2026-09-13）；资产 = Setup + Portable + SHA256SUMS |
 | 未发布的内容 | ICC 滤镜、显示与画质页 —— 已进 beta 分支，但版本号仍停在 0.1.1 |
 | `beta` | 开发线；已备份到 `origin/beta`（ICC 工作曾只存在于本机 3 个提交里，现已在远端） |
-| `main` | 门面线，**落后 beta**：缺 ICC、缺显示与画质页、缺本文件与 AGENTS.md |
+| `main` | 门面线，**仍落后 beta**（缺 ICC / 显示画质页 / 本文件 / AGENTS.md），但已含脚本完整性校验 4 修复（`cb821ba`…`5d1d917`） |
 | 本机安装位 | `D:\FpsTune` = `0.1.2-beta+6d0699e`（2026-09-14 构建，当时版本号已提前 bump） |
 | 测试基线 | 255 / 255（`dotnet test -c Release`；含 DLSS 与数字振动回归） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
@@ -30,8 +30,9 @@
 
 **未决（需要用户拍板，别自作主张）**
 
-1. `main` 是否快进到 `beta`？文档层已合流（`origin/main` 的 README 已 merge 进 beta），代码层 beta 领先。
-   正常路径是等 DLSS 做完、发 0.1.2 时一起合。
+1. `main` 是否快进到 `beta`？文档层已合流；代码层 beta 仍领先。
+   脚本校验根因修复已按用户决定 **只 cherry-pick 到 main**（不带 ICC/DVC 等未发布特性）。
+   功能层合并仍是等 0.1.2 发版时再合。
 2. 单文件 `FpsTune.exe` 没有上传到最近两个 Release，而 `RELEASE.md` §4 明确要求上传它。
    要么下次发版补上，要么改 `RELEASE.md` 删掉这个资产 —— 二者必须一致，README 已按"不提供单文件"改写。
 
@@ -51,6 +52,18 @@
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-22）做了什么
+
+**CI 根因修复落到 main（run 35582873412 闭环）**
+
+- 现象：`Script_runner_uses_system_powershell_and_preserves_quoted_data` 在 main 报
+  「FPS 帧律：脚本内容校验失败，已拒绝执行。」
+- 根因：子进程完整性校验用 `Get-FileHash`（按需加载模块，windows-latest 上未注册）
+  → catch 后一律拒绝合法脚本；旧文案又把「读不到」和「哈希不符」压成同一句。
+- 修复已在 beta（`9245ac1`→`6f5c9bb`），本轮按用户选择只把这 4 个提交的补丁 cherry-pick 到 main
+  （跳过 beta 独有的 AGENTS.md / HANDOFF / IccFilterTests），新提交：
+  `cb821ba` / `1a7e446` / `b7e5803` / `5d1d917`，已推送 `origin/main`。
+- 验证：main 上 `dotnet test -c Release` **228/228**（227 + 回归 `Load_releases_the_events_file`）。
+- 根因修复要点：`[IO.File]` + `[Security.Cryptography.SHA256]`，不再依赖 PowerShell 模块。
 
 **M1 DLSS：GetSetting AV 根因修复（阻断项已除）**
 
@@ -79,7 +92,7 @@
   早先混用旧 `SetDVCLevel` 会量纲漂移（set 75 读回 110），已按根因修掉。
 - 真机：读 min=0/max=100/default=50；set 75%→75；还原回原档；桌面已恢复 50。
 
-**测试**：255/255（上一提交 251 + 数字振动 4 条）。
+**测试**：beta 255/255；main（含 4 修复）228/228。
 
 **环境备忘（非仓库缺陷）**：MiMo 代理 shell 可能缺 `ProgramFiles*` 变量，会导致
 NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开。
