@@ -23,7 +23,7 @@
 | P0-1 | **M1 收尾目检**：GUI「显示与画质」三张卡（DLSS / 数字振动 / ICC）本机打开走查 | 代码已真机验证，但界面未过目；发 0.1.2 前必须人工看一眼（`PLAN-0.1.2-features.md` 里程碑约定） | 三卡布局/文案/状态/还原入口正常；深色/浅色不破 | **完成**（并修 2 处 UI 缺陷，`b7fe071`） |
 | P0-2 | **真实 A/B 实验数据** | README 截图里的实验数字是历史/模拟状态，**不能用于宣传**（红线「数据说话」） | 跑一轮真机 `-Experiment`（`winget install Intel.PresentMon.Console` + 真实对局）；报告中的收益可引用、可复现 | **部分**：PresentMon 2.5.1 就绪；`-Experiment -Simulate` baseline/group-1/report 通过。**待用户真实对局采样** |
 | P0-3 | **统一「单文件 exe」口径** | `README.md`、`RELEASE.md` §4、实际 Release 资产曾三处不一致 | 三处一致：公开 **不提供单文件**（已选此口径）；`RELEASE.md` §4 = Setup + Portable + SHA256SUMS | **完成** |
-| P0-4 | **0.1.2 发版门禁** | `VersionPrefix=0.1.1` 与已发布 `v0.1.1-beta` 同号不同内容；不发版则用户无法稳定获取 M1/M2 | P0-1～P0-3 完成 → 按 `RELEASE.md` 从干净 `finalSha` 构建四资产 → 部署 `D:\FpsTune` 给用户过目 → 认可后才发 | 阻塞于 P0-1/2/3 |
+| P0-4 | **0.1.2 发版门禁** | `VersionPrefix=0.1.1` 与已发布 `v0.1.1-beta` 同号不同内容；不发版则用户无法稳定获取 M1/M2 | P0-1～P0-3 完成 → 按 `RELEASE.md` 从干净 `finalSha` 构建四资产 → 部署 `D:\FpsTune` 给用户过目 → 认可后才发 | **阻塞于 P0-2 真机 A/B** |
 
 ---
 
