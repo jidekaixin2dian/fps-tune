@@ -3,8 +3,8 @@
   <PropertyGroup>
     <!-- 版本号拆两段：VersionPrefix 必须是三段数字（发布/安装脚本与更新比较都消费它），
          VersionSuffix 是预发布标识（0.1 Beta 线），进 InformationalVersion/ProductVersion 展示 -->
-    <!-- 0.1.2 = M1 DLSS/数字振动 + M2 ICC 发布；M3 做完再占 0.1.3 -->
-    <VersionPrefix>0.1.2</VersionPrefix>
+    <!-- 0.1.3 = M3 驱动 3D + 一键优化 + i18n + AF/VSync/着色器缓存；M3 功能发版 -->
+    <VersionPrefix>0.1.3</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
