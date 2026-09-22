@@ -28,9 +28,11 @@ CLI 自报版本共用）+ `<VersionSuffix>`（预发布标识，只进 `Informa
 
 脚本还会验证单文件目录只有 `FpsTune.exe`，从仅含该 EXE 的临时目录执行
 `-Version` 与 `-Detect -Json`，并生成只包含单文件和便携包的 SHA256 清单。
+**单文件仅作本机验证用，不作为 GitHub Release 资产**（与 README 下载表一致：
+公开只发安装包 + 便携 zip + SHA256 清单）。
 
 Output:
-- `dist\single-file-<ver>\FpsTune.exe`（压缩单文件，约 66 MB）
+- `dist\single-file-<ver>\FpsTune.exe`（压缩单文件，约 66 MB；**验证用，不上传**）
 - `dist\folder-<ver>\...`（绿色文件夹）
 - `dist\FpsTune-Portable-<ver>.zip`
 - `dist\SHA256SUMS-v<ver>.txt`
@@ -59,11 +61,11 @@ Output:
 ## 4. GitHub Release
 1. 先运行 `build-installer.ps1`；它会用当前单文件和便携包重写清单并加入安装器 SHA256。
 2. 只有所有本机验证通过后，创建与 `finalSha` 精确对应的 GitHub Release，tag 为 `v<ver>`。
-3. Upload:
+3. Upload（**三个资产，与 README / README.en 下载表一致**）:
    - `dist\installer\FpsTune-Setup-<ver>.exe`
-   - `dist\single-file-<ver>\FpsTune.exe`（真正单文件，不上传同目录依赖）
    - `dist\FpsTune-Portable-<ver>.zip`
    - `dist\SHA256SUMS-v<ver>.txt`
-4. 发布前核对四个资产均存在、非空、版本正确，并按清单复核 SHA256；远端 tag/资产也须再次核对。
+   不上传 `single-file-<ver>\FpsTune.exe`（验证用产物）。
+4. 发布前核对三个资产均存在、非空、版本正确，并按清单复核 SHA256；远端 tag/资产也须再次核对。
 5. Auto-update in the app will use GitHub latest release API
    (repo: `jidekaixin2dian/fps-tune`).

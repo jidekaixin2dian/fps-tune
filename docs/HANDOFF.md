@@ -32,11 +32,12 @@
 
 **未决（需要用户拍板，别自作主张）**
 
-1. 单文件 `FpsTune.exe` 没有上传到最近两个 Release，而 `RELEASE.md` §4 明确要求上传它。
-   要么下次发版补上，要么改 `RELEASE.md` 删掉这个资产 —— 二者必须一致，README 已按"不提供单文件"改写。
+1. 无。原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
+   （Setup + Portable + SHA256SUMS），与 README / README.en 下载表一致。
 
 **已决**
 
+- **公开 Release 不提供单文件 exe**（2026-09-22）：只发 Setup + Portable + SHA256SUMS。
 - **0.1 Beta 是主线，落在 `main`；1.x（1.6.X）停止维护**，冻结于 `legacy/1.x`（用户 2026-09-22）。
 - **每轮收工必须更新 `AGENTS.md` + `docs/HANDOFF.md` 并 `git commit`**（用户 2026-09-22）。
 - DLSS（M1）做完才发 0.1.2；期间不发版、不占版本号（用户 2026-09-21）。
@@ -54,9 +55,12 @@
 
 ## 4. 本轮（2026-09-22）做了什么
 
-**开发计划总表**
+**开发计划总表与 P0 推进**
 
-- 新增 `docs/dev/PLAN-backlog.md`：全部待办按 P0–P2 排序（P0 = 目检 / 真机 A/B / 单文件口径 / 发版门禁）。
+- `PLAN-backlog.md`：P0–P2 待办总表。
+- **P0-1 完成**：显示与画质三卡真机目检；修预设不与状态同步、操作结果被 Refresh 冲掉。
+- **P0-2 部分**：PresentMon 2.5.1 就绪，`-Experiment -Simulate` 全链路通过；**真机 A/B 待用户真实对局**。
+- **P0-3 完成**：单文件 exe 口径统一为「不提供」，`RELEASE.md` §4 改为三资产。
 - `AI-WORKFLOW.md` 里 `.gitattributes（待办）` 已落地，改为「已用根 .gitattributes」。
 
 **分支策略切换（用户拍板）**
@@ -113,10 +117,10 @@ NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开。
 
 **完整待办总表见 `docs/dev/PLAN-backlog.md`（P0–P2）。** 摘要：
 
-1. **P0-1** M1 收尾目检：GUI「显示与画质」三张卡本机打开看一眼。
-2. **P0-2** 真实 A/B 数据（README 截图数字**不能用于宣传**）。
-3. **P0-3** 统一"单文件 exe"口径（README / RELEASE.md §4 / 实际资产）。
-4. **P0-4** 0.1.2 发版门禁（依赖 P0-1/2/3）→ 部署 `D:\FpsTune` 过目。
+1. **P0-1 完成**：三卡目检 + UI 缺陷已修（`b7fe071`）。
+2. **P0-2 真实 A/B**（PresentMon 已就绪；simulate 已通；**待真实对局**）。
+3. **P0-3 完成**：单文件口径已统一。
+4. **P0-2 真机 A/B**（需你真实对局）→ 之后 **P0-4 发 0.1.2**。
 5. **P1-1** M3（DRS 二期）与 **P1-2** 界面文案国际化可并行。
 6. **P1-3** 刷新 `docs/ROADMAP.md` 现状基线（仍停在 v1.5.0）。
 

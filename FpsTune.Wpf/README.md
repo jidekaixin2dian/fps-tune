@@ -21,6 +21,8 @@ dotnet build -c Release
 
 ## 发布单文件 EXE
 
+（构建产物；**公开 Release 不提供单文件**，只发安装包 + 便携 zip + SHA256 清单，见根 `RELEASE.md` §4 与 README 下载表。）
+
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:EnableCompressionInSingleFile=true /p:DebugType=none
 ```
