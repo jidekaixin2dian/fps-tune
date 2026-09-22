@@ -21,7 +21,7 @@
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = `0.1.2-beta+6d0699e`（2026-09-14 构建，当时版本号已提前 bump） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.2-beta+4e6b728`**（2026-09-22，官方 Portable；旧目录备份 `D:\FpsTune-backup-20260922`） |
 | 测试基线 | 255 / 255（`dotnet test -c Release`；含 DLSS 与数字振动回归） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
