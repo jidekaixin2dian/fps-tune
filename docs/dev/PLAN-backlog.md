@@ -23,7 +23,7 @@
 | P0-1 | **M1 收尾目检**：GUI「显示与画质」三张卡（DLSS / 数字振动 / ICC）本机打开走查 | 代码已真机验证，但界面未过目；发 0.1.2 前必须人工看一眼（`PLAN-0.1.2-features.md` 里程碑约定） | 三卡布局/文案/状态/还原入口正常；深色/浅色不破 | **完成**（并修 2 处 UI 缺陷，`b7fe071`） |
 | P0-2 | **真实 A/B 实验数据** | README 截图里的实验数字是历史/模拟状态，**不能用于宣传**（红线「数据说话」） | 跑一轮真机 `-Experiment`；报告中的收益可引用、可复现 | **用户取消**（2026-09-22：不要真实数据，直接发；**禁止编造收益数字**） |
 | P0-3 | **统一「单文件 exe」口径** | `README.md`、`RELEASE.md` §4、实际 Release 资产曾三处不一致 | 三处一致：公开 **不提供单文件**（已选此口径）；`RELEASE.md` §4 = Setup + Portable + SHA256SUMS | **完成** |
-| P0-4 | **0.1.2 发版门禁** | `VersionPrefix` 与已发布号区分；不发版则用户无法稳定获取 M1/M2 | 按 `RELEASE.md` 从干净 `finalSha` 构建 → GitHub Release 三资产 → Release Notes **不含编造的 FPS/收益数字** | **进行中** |
+| P0-4 | **0.1.2 发版门禁** | `VersionPrefix` 与已发布号区分；不发版则用户无法稳定获取 M1/M2 | 按 `RELEASE.md` 从干净 `finalSha` 构建 → GitHub Release 三资产 → Release Notes **不含编造的 FPS/收益数字** | **完成**（`v0.1.2-beta` @ `4e6b728`） |
 
 ---
 
@@ -34,7 +34,7 @@
 | P1-1 | **M3：DRS 二期设置项**（纹理过滤 / 电源管理 / 低延迟 / AA 透明度）+ 收尾 | `PLAN-0.1.2-features.md` 里程碑；M1/M2 已完成，只剩 M3 | 每项 SettingID 以 `nvapi.h` / NPI 核对；单测 + 真机 apply→restore 闭环；只作用本工具创建的 profile | 未开始 |
 | P1-2 | **界面文案国际化（issue #1）** | 公开口径已承诺（README.en + issue） | 设置页可选语言并持久化；英文下「检测→选预设→应用→还原」无中文残留；**不含** catalog 33 项说明翻译 | 未开始 |
 | P1-3 | **刷新 `docs/ROADMAP.md` 现状基线** | 基线段落仍停在 v1.5.0，与 0.1 线事实不符 | 基线改写到 0.1.1-beta / M1+M2 现状；与 `HANDOFF.md` 无矛盾 | 待做 |
-| P1-4 | **本机安装位 `D:\FpsTune` 升到 0.1.2 发布构建** | 现为 `0.1.2-beta+6d0699e` 旧构建；发版后应与 Release 一致 | `-Version` / `InformationalVersion` 与发布 tag 对齐；替换前先确认用户同意覆盖 | 阻塞于 P0-4 |
+| P1-4 | **本机安装位 `D:\FpsTune` 升到 0.1.2 发布构建** | 现为 `0.1.2-beta+6d0699e` 旧构建；发版后应与 Release 一致 | `-Version` / `InformationalVersion` 与 `v0.1.2-beta` 对齐；**替换前先确认用户同意覆盖** | 待做（发版已完成） |
 
 ---
 

@@ -9,7 +9,7 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（33 个可还原优化项） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.1.2` + `VersionSuffix=beta`（见 `Directory.Build.props`）；发版中 `v0.1.2-beta`。下一版本号 `0.1.3` 留给 M3 |
+| 版本 | `VersionPrefix=0.1.2` + `VersionSuffix=beta`；**已发布 `v0.1.2-beta`**。下一版本号 `0.1.3` 留给 M3 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **255 / 255 通过**，`dotnet test -c Release` |

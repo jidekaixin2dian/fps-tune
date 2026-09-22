@@ -8,16 +8,16 @@
 ## 1. 一句话现状
 
 主线是 0.1 Beta 线（现落在 **`main`**）。**M1 已完成**（DLSS 真机闭环 + 数字振动 DVC 读写/还原）；M2 ICC 完成；M3 未开始。
-正在发布 **`v0.1.2-beta`**（用户 2026-09-22：跳过真机 A/B，不编造收益数字，直接发）。
+**`v0.1.2-beta` 已发布**（2026-09-22，tag @ `4e6b728`；用户跳过真机 A/B，Release Notes 无编造收益数字）。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.2` / `VersionSuffix=beta`（发 `v0.1.2-beta`） |
-| 已发布 Release | `v0.1.1-beta`（2026-09-13）；资产 = Setup + Portable + SHA256SUMS |
-| 未发布的内容 | M1/M2（ICC、显示与画质）—— 本次 `v0.1.2-beta` 发出 |
+| `Directory.Build.props` | `VersionPrefix=0.1.2` / `VersionSuffix=beta` |
+| 已发布 Release | **`v0.1.2-beta`**（2026-09-22，`4e6b728`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.1-beta` |
+| 未发布的内容 | M3（DRS 二期）未开始 |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
@@ -37,6 +37,7 @@
 
 **已决**
 
+- **跳过真机 A/B、直接发 0.1.2**（用户 2026-09-22）；**禁止编造收益数字**。
 - **公开 Release 不提供单文件 exe**（2026-09-22）：只发 Setup + Portable + SHA256SUMS。
 - **0.1 Beta 是主线，落在 `main`；1.x（1.6.X）停止维护**，冻结于 `legacy/1.x`（用户 2026-09-22）。
 - **每轮收工必须更新 `AGENTS.md` + `docs/HANDOFF.md` 并 `git commit`**（用户 2026-09-22）。
@@ -55,12 +56,11 @@
 
 ## 4. 本轮（2026-09-22）做了什么
 
-**开发计划总表与 P0 推进**
+**P0 收口 · 发布 v0.1.2-beta**
 
-- `PLAN-backlog.md`：P0–P2 待办总表。
-- **P0-1 完成**：显示与画质三卡真机目检；修预设不与状态同步、操作结果被 Refresh 冲掉。
-- **P0-2 部分**：PresentMon 2.5.1 就绪，`-Experiment -Simulate` 全链路通过；**真机 A/B 待用户真实对局**。
-- **P0-3 完成**：单文件 exe 口径统一为「不提供」，`RELEASE.md` §4 改为三资产。
+- P0-1 目检完成（`b7fe071`）；P0-2 用户取消；P0-3 口径统一（`8427593`）。
+- **P0-4 完成**：`4e6b728` 构建 → `gh release create v0.1.2-beta`（Setup + Portable + SHA256SUMS）。
+- Release Notes 无编造 FPS/收益数字。
 - `AI-WORKFLOW.md` 里 `.gitattributes（待办）` 已落地，改为「已用根 .gitattributes」。
 
 **分支策略切换（用户拍板）**
@@ -117,12 +117,9 @@ NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开。
 
 **完整待办总表见 `docs/dev/PLAN-backlog.md`（P0–P2）。** 摘要：
 
-1. **P0-1 完成**：三卡目检 + UI 缺陷已修（`b7fe071`）。
-2. **P0-2 真实 A/B**（PresentMon 已就绪；simulate 已通；**待真实对局**）。
-3. **P0-3 完成**：单文件口径已统一。
-4. **P0-2 真机 A/B**（需你真实对局）→ 之后 **P0-4 发 0.1.2**（当前阻塞在 P0-2）。
-5. **P1-1** M3（DRS 二期）与 **P1-2** 界面文案国际化可并行。
-6. **P1-3** 刷新 `docs/ROADMAP.md` 现状基线（仍停在 v1.5.0）。
+1. **P1-4** 将 `D:\FpsTune` 升到 0.1.2 发布构建（覆盖前需你点头）。
+2. **P1-1** M3 / **P1-2** 国际化 / **P1-3** ROADMAP 基线刷新。
+3. 若要可引用 A/B 数字，再跑真机 `-Experiment`（P0-2 已取消，可作 P2）。
 
 ## 6. 维护本文的规则
 
