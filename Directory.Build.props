@@ -1,10 +1,10 @@
-﻿<Project>
+<Project>
   <!-- 版本与产品标识的唯一来源：csproj / 安装器 / PowerShell CLI 均从此读取 -->
   <PropertyGroup>
     <!-- 版本号拆两段：VersionPrefix 必须是三段数字（发布/安装脚本与更新比较都消费它），
          VersionSuffix 是预发布标识（0.1 Beta 线），进 InformationalVersion/ProductVersion 展示 -->
-    <!-- 0.1.2 预留给 DLSS 模型覆盖（M1）做完后的那次发布；未完成的特性不占版本号 -->
-    <VersionPrefix>0.1.1</VersionPrefix>
+    <!-- 0.1.2 = M1 DLSS/数字振动 + M2 ICC 发布；M3 做完再占 0.1.3 -->
+    <VersionPrefix>0.1.2</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

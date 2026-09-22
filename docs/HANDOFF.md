@@ -8,16 +8,16 @@
 ## 1. 一句话现状
 
 主线是 0.1 Beta 线（现落在 **`main`**）。**M1 已完成**（DLSS 真机闭环 + 数字振动 DVC 读写/还原）；M2 ICC 完成；M3 未开始。
-`0.1.2` 仍预留给 M1 收尾后的发布，`VersionPrefix` 停在 0.1.1。
+正在发布 **`v0.1.2-beta`**（用户 2026-09-22：跳过真机 A/B，不编造收益数字，直接发）。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.1` / `VersionSuffix=beta`（`0.1.2` 预留，见 §1） |
+| `Directory.Build.props` | `VersionPrefix=0.1.2` / `VersionSuffix=beta`（发 `v0.1.2-beta`） |
 | 已发布 Release | `v0.1.1-beta`（2026-09-13）；资产 = Setup + Portable + SHA256SUMS |
-| 未发布的内容 | ICC 滤镜、显示与画质页 —— 已进 beta 分支，但版本号仍停在 0.1.1 |
+| 未发布的内容 | M1/M2（ICC、显示与画质）—— 本次 `v0.1.2-beta` 发出 |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
