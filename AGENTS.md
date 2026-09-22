@@ -37,7 +37,11 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
    说明行尾被翻成 CRLF —— 丢弃重来，别提交。
 6. **每轮收工必须更新 `AGENTS.md` 与 `docs/HANDOFF.md`，并立刻 `git commit`**（用户 2026-09-22 明确要求）。
    两份文档是下一个代理的唯一入口，不允许只改代码不改交接。
-7. 推送 `main` 前向用户确认节奏；禁止 force push / 改写 `main` 已推送历史。`legacy/1.x` 只读冻结，不接受修复。
+7. **发布流程（用户 2026-09-22 明确要求，不可跳步）**：
+   **本地构建 → `git` 提交 → 把效果给用户看（截图 / 产物路径 / 关键改动摘要）→ 等用户拍板 → 才允许发布**
+   （`publish-release.ps1` / `build-installer.ps1` / `gh release create` 一律停在「已构建待拍板」）。
+   拍板前禁止上传 GitHub Release，禁止覆盖 `D:\FpsTune`。
+8. 推送 `main` 前向用户确认节奏；禁止 force push / 改写 `main` 已推送历史。`legacy/1.x` 只读冻结，不接受修复。
 
 产品红线在 `docs/ROADMAP.md` §产品定位（安全闭环 / 零侵入 / 数据说话 / 全 FPS 通用 / 可信透明）。
 **注意**：ROADMAP 的现状基线段落停在 v1.5.0，是历史存档；当前状态看 `docs/HANDOFF.md`。
@@ -73,8 +77,8 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
 | 操作 | 为什么危险 |
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
-| 碰 `D:\FpsTune` | 那是**本机安装位**（当前 0.1.2-beta），不是源码；覆盖它等于换掉用户在用的程序 |
-| 跑 `publish-release.ps1` / `build-installer.ps1` 后发布 | 产物会公开出现在 GitHub Release |
+| 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（当前 0.1.2-beta），不是源码；覆盖前必须用户点头 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
