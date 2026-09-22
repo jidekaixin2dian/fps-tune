@@ -1,6 +1,6 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-22（本轮由 MiMo 代理完成：0.1 Beta 提升为 `main` 主线，1.x 冻结于 `legacy/1.x`）
+> 最后核对：2026-09-22（本轮：0.1 Beta 升 `main` 主线 + 待办总表 `PLAN-backlog.md`）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -54,6 +54,11 @@
 
 ## 4. 本轮（2026-09-22）做了什么
 
+**开发计划总表**
+
+- 新增 `docs/dev/PLAN-backlog.md`：全部待办按 P0–P2 排序（P0 = 目检 / 真机 A/B / 单文件口径 / 发版门禁）。
+- `AI-WORKFLOW.md` 里 `.gitattributes（待办）` 已落地，改为「已用根 .gitattributes」。
+
 **分支策略切换（用户拍板）**
 
 - 0.1 Beta 提升为仓库主线：`git merge -X theirs beta` 进 `main`（`1d9777c`），树与 `beta` 一致。
@@ -106,14 +111,14 @@ NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开。
 
 ## 5. 下一步建议（按性价比排序）
 
-1. **M1 收尾目检**：GUI「显示与画质」页三张卡（DLSS / 数字振动 / ICC）本机打开看一眼。
-2. 真实 A/B 数据：目前 README 截图里的实验数字是历史/模拟状态，**不能用于宣传**。
-   跑一轮真机 `-Experiment`（需 `winget install Intel.PresentMon.Console` + 真实对局）拿到可引用的收益。
-3. 统一"单文件 exe"口径：`README.md` / `RELEASE.md` §4 / 实际 Release 资产三处现在不一致，见 §2 未决 2。
-4. 界面文案国际化（issue #1）——公开口径里已经承诺了这件事。
-5. `docs/ROADMAP.md` 的现状基线段落仍停在 v1.5.0，下次动 ROADMAP 时一并刷新；
-   在它刷新之前，本文是唯一的现状来源。
-6. M3（DRS 二期：纹理过滤 / 电源 / 低延迟 / AA 透明度）——M1 做完后再开。
+**完整待办总表见 `docs/dev/PLAN-backlog.md`（P0–P2）。** 摘要：
+
+1. **P0-1** M1 收尾目检：GUI「显示与画质」三张卡本机打开看一眼。
+2. **P0-2** 真实 A/B 数据（README 截图数字**不能用于宣传**）。
+3. **P0-3** 统一"单文件 exe"口径（README / RELEASE.md §4 / 实际资产）。
+4. **P0-4** 0.1.2 发版门禁（依赖 P0-1/2/3）→ 部署 `D:\FpsTune` 过目。
+5. **P1-1** M3（DRS 二期）与 **P1-2** 界面文案国际化可并行。
+6. **P1-3** 刷新 `docs/ROADMAP.md` 现状基线（仍停在 v1.5.0）。
 
 ## 6. 维护本文的规则
 

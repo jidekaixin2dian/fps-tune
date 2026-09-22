@@ -51,6 +51,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
 | 发版流程 | `RELEASE.md` | 必须从干净最终提交构建 |
 | 当前状态 / 待办 | `docs/HANDOFF.md` | 比 `docs/ROADMAP.md` 新 |
 | 0.1.2 功能计划 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3 |
+| 待办总表（P0–P2） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；HANDOFF §5 与它对齐 |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
 
