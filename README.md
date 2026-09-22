@@ -13,6 +13,7 @@ C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入�
 ![.NET](https://img.shields.io/badge/.NET-10-512BD5)
 
 > 版本线 0.1 Beta：功能可用，仍在收敛期，破坏性变更会写进 Release Notes。
+> 1.x（含 1.6.X）**已停止维护**，冻结分支 `legacy/1.x`；请改用 0.1 Beta。
 
 ## 它只改 Windows，不碰游戏
 

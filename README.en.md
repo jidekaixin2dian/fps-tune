@@ -17,6 +17,7 @@ C# WPF + .NET 10; `FpsTune.exe` doubles as a headless CLI (command line / AI-age
 ![.NET](https://img.shields.io/badge/.NET-10-512BD5)
 
 Version line 0.1 Beta: usable today, still converging; breaking changes are called out in release notes.
+1.x (including 1.6.X) is **unmaintained** (frozen at `legacy/1.x`); use 0.1 Beta.
 
 ## It tunes Windows, never the game
 
