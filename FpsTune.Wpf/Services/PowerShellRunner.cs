@@ -28,15 +28,16 @@ public static class PowerShellRunner
     // 具名参数会全部失效，所以这里必须是 hashtable splatting）。
     internal const string LaunchCommand =
         "[Console]::OutputEncoding=[Text.Encoding]::UTF8; " +
-        "$p=$env:FPSTUNE_LAUNCH_SCRIPT; $ok=$false; $read=$false; " +
-        // 读取校验值要容忍瞬时占用：杀软/索引器可能刚锁住这个新文件（CI 上实测会撞上）。
-        // 只对"读不到"重试；读到但哈希不符是最终结论，绝不重试、绝不放行。
-        "for($t=0; $t -lt 4; $t++){ $h=$null; " +
-        "try { $h=(Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash; $read=$true } catch { $h=$null }; " +
-        "if ($h -ne $null) { $ok=($h -eq $env:FPSTUNE_LAUNCH_SHA256); break }; " +
-        "Start-Sleep -Milliseconds 100 }; " +
-        "if (-not $ok) { if ($read) { [Console]::Error.WriteLine('FPS 帧律：脚本内容校验失败，已拒绝执行。') } " +
-        "else { [Console]::Error.WriteLine('FPS 帧律：脚本校验值读取失败（脚本被占用），已拒绝执行。') }; exit 126 }; " +
+        "$p=$env:FPSTUNE_LAUNCH_SCRIPT; $sh=$env:FPSTUNE_LAUNCH_SHA256; $ok=$false; $why=''; " +
+        // 失败必须能区分三类原因，否则 CI 上无法定位：环境变量没传到、脚本文件读不到、内容确实不符。
+        // 只有"读不到"重试；读到但不匹配是最终结论，绝不重试、绝不放行。
+        "if (-not $p) { $why='脚本路径环境变量缺失' } " +
+        "elseif (-not $sh) { $why='校验值环境变量缺失' } " +
+        "else { for($t=0; $t -lt 10; $t++){ $h=$null; " +
+        "try { $h=(Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash } catch { $why=$_.Exception.Message }; " +
+        "if ($h) { if ($h -eq $sh) { $ok=$true; $why='' } else { $why='内容与可信校验值不符' }; break }; " +
+        "Start-Sleep -Milliseconds 250 } }; " +
+        "if (-not $ok) { [Console]::Error.WriteLine('FPS 帧律：脚本完整性校验未通过（' + $why + '），已拒绝执行。'); exit 126 }; " +
         "$splat=@{}; for($i=0; $i -lt [int]$env:FPSTUNE_LAUNCH_PARAM_COUNT; $i++){ " +
         "$n=[Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_NAME'); " +
         "if ([Environment]::GetEnvironmentVariable('FPSTUNE_LAUNCH_PARAM_'+$i+'_FLAG') -eq '1') " +
