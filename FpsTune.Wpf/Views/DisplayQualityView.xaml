@@ -110,6 +110,40 @@
                 </StackPanel>
             </Border>
 
+            <!-- 数字振动：显示级饱和度，全桌面生效 -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="数字振动（N 卡 · 显示器全局）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="VibStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                    <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                        <TextBlock Text="作用于整块屏幕（桌面、网页、游戏都会变鲜艳），不是只在游戏内生效。主播常用 70–80%。"
+                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <DockPanel Margin="0,12,0,0">
+                            <TextBlock DockPanel.Dock="Right" x:Name="VibPercentText" Text="—"
+                                       Style="{StaticResource MutedTextStyle}" MinWidth="48" TextAlignment="Right"/>
+                            <Slider x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
+                                    IsSnapToTickEnabled="False" ValueChanged="VibSlider_Changed"/>
+                        </DockPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="VibApplyButton" Content="应用"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    MinWidth="110" Margin="0,0,8,0" Click="VibApply_Click"/>
+                            <Button x:Name="VibRestoreButton" Content="还原原始"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="110" Click="VibRestore_Click"/>
+                        </StackPanel>
+
+                        <TextBlock Text="说明：调整前自动记住当前档位，点「还原原始」一键恢复。与 ICC 滤镜独立，可叠加。对色准敏感请用较低档位或保持默认。"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="VibUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
+                               Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
             <!-- ICC 滤镜卡片：系统层色彩变换，A 卡/Intel 与整体桌面观感兜底 -->
             <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
                 <StackPanel>

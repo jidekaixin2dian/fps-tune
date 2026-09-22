@@ -26,6 +26,7 @@ public partial class DisplayQualityView : UserControl
             return;
 
         RefreshDlss();
+        RefreshVibrance();
         RefreshIcc();
     }
 
@@ -217,6 +218,119 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             StateText.Text = "还原失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    // ---------- 数字振动（显示级，全桌面） ----------
+
+    private bool _vibSyncing;
+
+    private void RefreshVibrance()
+    {
+        try
+        {
+            var state = DigitalVibranceService.GetState();
+            if (!state.Supported)
+            {
+                VibSupportedPanel.Visibility = Visibility.Collapsed;
+                VibUnsupportedText.Visibility = Visibility.Visible;
+                VibUnsupportedText.Text = state.UnsupportedReason ?? "数字振动在当前环境不可用。";
+                return;
+            }
+
+            VibSupportedPanel.Visibility = Visibility.Visible;
+            VibUnsupportedText.Visibility = Visibility.Collapsed;
+
+            var percent = state.Max > state.Min
+                ? (int)Math.Round((state.Current - state.Min) * 100.0 / (state.Max - state.Min))
+                : 0;
+            _vibSyncing = true;
+            VibSlider.Value = percent;
+            VibPercentText.Text = percent + "%";
+            _vibSyncing = false;
+
+            VibApplyButton.IsEnabled = true;
+            VibRestoreButton.IsEnabled = state.Restorable;
+            VibStateText.Text = state.Restorable
+                ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
+                : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）";
+        }
+        catch (Exception ex)
+        {
+            VibSupportedPanel.Visibility = Visibility.Collapsed;
+            VibUnsupportedText.Visibility = Visibility.Visible;
+            VibUnsupportedText.Text = "读取数字振动状态失败：" + ex.Message;
+        }
+    }
+
+    private static int PercentOf(int level, VibranceState state)
+        => state.Max > state.Min
+            ? (int)Math.Round((level - state.Min) * 100.0 / (state.Max - state.Min))
+            : 0;
+
+    private void VibSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_vibSyncing)
+            return;
+        VibPercentText.Text = (int)VibSlider.Value + "%";
+    }
+
+    private async void VibApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var percent = (int)VibSlider.Value;
+        var confirmed = DialogService.Confirm(
+            "应用数字振动",
+            $"将把整块屏幕的色彩鲜艳度调到 {percent}%。\n\n" +
+            "· 这是显示全局设置：桌面、网页、游戏观感都会变化\n" +
+            "· 不是只在游戏内生效\n" +
+            "· 应用前会记住当前档位，可随时「还原原始」\n\n确定应用？",
+            confirmText: "应用");
+        if (!confirmed)
+            return;
+
+        _busy = true;
+        VibApplyButton.IsEnabled = false;
+        VibRestoreButton.IsEnabled = false;
+        VibStateText.Text = "正在写入…";
+        try
+        {
+            await Task.Run(() => DigitalVibranceService.SetPercent(percent));
+            VibStateText.Text = $"已应用：{percent}%。整屏即时生效；不满意点「还原原始」。";
+        }
+        catch (Exception ex)
+        {
+            VibStateText.Text = "应用失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    private async void VibRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        _busy = true;
+        VibApplyButton.IsEnabled = false;
+        VibRestoreButton.IsEnabled = false;
+        VibStateText.Text = "正在还原…";
+        try
+        {
+            var restored = await Task.Run(() => DigitalVibranceService.Restore());
+            VibStateText.Text = restored
+                ? "已还原：鲜艳度回到调整前的档位。"
+                : "没有找到需要还原的备份，无需还原。";
+        }
+        catch (Exception ex)
+        {
+            VibStateText.Text = "还原失败：" + ex.Message;
         }
         finally
         {
