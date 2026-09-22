@@ -35,7 +35,7 @@ public partial class DisplayQualityView : UserControl
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
             UnsupportedText.Visibility = Visibility.Visible;
-            UnsupportedText.Text = "DLSS 模型覆盖功能尚在稳定性验证中，本版本暂未启用。";
+            UnsupportedText.Text = "DLSS 模型覆盖功能已停用（FPS_ENABLE_DLSS=0）。";
             return;
         }
 
@@ -165,6 +165,16 @@ public partial class DisplayQualityView : UserControl
                 ? "已移除覆盖：DLSS 预设回到游戏内/驱动默认。进游戏生效。"
                 : $"已覆盖 DLSS 预设为 {PresetLabel((uint)preset.Value)}。进游戏生效；不满意可点「还原默认」。";
         }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            StateText.Text = "应用失败：写入 NVIDIA 配置需要管理员权限。系统设置未变。";
+            if (DialogService.Confirm(
+                    "需要管理员权限",
+                    "写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。\n\n" +
+                    "要以管理员身份重启并重试吗？",
+                    confirmText: "以管理员重启"))
+                AdminHelper.RestartAsAdministrator();
+        }
         catch (Exception ex)
         {
             StateText.Text = "应用失败：" + ex.Message + "。系统设置未变或已如实还原，可重试。";
@@ -194,6 +204,15 @@ public partial class DisplayQualityView : UserControl
             StateText.Text = removed
                 ? "已还原：覆盖前的原值已恢复（或自建配置文件已删除）。进游戏生效。"
                 : "没有找到本工具的覆盖或还原备份，无需还原。";
+        }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            StateText.Text = "还原失败：写入 NVIDIA 配置需要管理员权限。";
+            if (DialogService.Confirm(
+                    "需要管理员权限",
+                    "还原 NVIDIA 驱动配置需要管理员权限。\n\n要以管理员身份重启并重试吗？",
+                    confirmText: "以管理员重启"))
+                AdminHelper.RestartAsAdministrator();
         }
         catch (Exception ex)
         {

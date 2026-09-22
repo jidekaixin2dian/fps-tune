@@ -119,6 +119,34 @@ public class DisplayQualityTests : IDisposable
             DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
     }
 
+    [Fact]
+    public void Failed_save_does_not_leave_fake_backup()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+        _api.SimulateSaveDenied = true;
+
+        Assert.Throws<NvdrsException>(() =>
+            DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
+        Assert.False(DisplayQualityService.HasRestorableBackup(Exe));
+
+        // 保存失败后允许重试成功，并在成功后才出现备份
+        _api.SimulateSaveDenied = false;
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+    }
+
+    [Fact]
+    public void Save_denied_error_mentions_admin_rights()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+        _api.SimulateSaveDenied = true;
+
+        var ex = Assert.Throws<NvdrsException>(() =>
+            DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
+        Assert.Equal(-175, ex.Status);
+        Assert.Contains("管理员", ex.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>内存态 DRS：profile 集合 + 游戏 exe 登记表 + 设置字典。</summary>
     private sealed class FakeNvdrsApi : INvdrsApi
     {
@@ -127,6 +155,7 @@ public class DisplayQualityTests : IDisposable
 
         public bool SaveCalled { get; private set; }
         public bool SimulateMissingDriver { get; set; }
+        public bool SimulateSaveDenied { get; set; }
         public string? LastError { get; private set; }
 
         internal FakeProfile AddProfile(string name, string? gameExe = null)
@@ -194,7 +223,12 @@ public class DisplayQualityTests : IDisposable
                     api._exeOwners.Remove(key);
             }
 
-            public void Save() => api.SaveCalled = true;
+            public void Save()
+            {
+                if (api.SimulateSaveDenied)
+                    throw new NvdrsException(-175, "保存驱动设置失败：NVAPI_ACCESS_DENIED（NVAPI -175）");
+                api.SaveCalled = true;
+            }
         }
 
         internal sealed class FakeProfile

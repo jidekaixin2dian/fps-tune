@@ -33,11 +33,11 @@ public static class DisplayQualityService
     private static readonly uint[] ManagedSettingIds = { DlssSrEnableId, DlssSrPresetId };
 
     /// <summary>
-    /// DLSS 覆盖功能开关。真机验证发现：特定调用序列在 NVIDIA 新驱动上触发访问冲突
-    /// （0xC0000005，已系统排查封送方式/接口新旧 ID/结构尺寸/缓冲余量，均复现），
-    /// 根因未明前默认停用；设置环境变量 FPS_ENABLE_DLSS=1 可在验证机临时启用。
+    /// DLSS 覆盖功能开关。曾经因 profile 句柄被二次解引用（ReadIntPtr）导致 GetSetting AV 而停用；
+    /// 2026-09-22 按 nvidiaProfileInspector 句柄语义修复后默认启用。
+    /// 环境变量 FPS_ENABLE_DLSS=0 可在验证时临时关掉。
     /// </summary>
-    public static bool FeatureEnabled => Environment.GetEnvironmentVariable("FPS_ENABLE_DLSS") == "1";
+    public static bool FeatureEnabled => Environment.GetEnvironmentVariable("FPS_ENABLE_DLSS") != "0";
 
     // 测试注入：null 时使用真实 NVAPI
     internal static Func<INvdrsApi>? ApiOverride;
@@ -145,23 +145,34 @@ public static class DisplayQualityService
         // FindProfileByName 的句柄在本机驱动上不可与 GetSetting 组合（AV），还原时
         // 按 exe 重新定位 profile，因此自建/预置统一由 OwnProfile 标记区分
 
-        // 第一次写：把该 profile 上这两项设置的当前值备份下来（可能本就没有）
+        // 先只在内存里记下原值；Save 成功后才落盘备份——否则 Save 被拒时会留下假备份
+        List<SettingBackup>? pendingBackup = null;
         if (isFirstWrite)
         {
-            var settings = new List<SettingBackup>();
+            pendingBackup = new List<SettingBackup>();
             foreach (var id in ManagedSettingIds)
             {
                 if (session.TryGetSettingDword(owner, id, out var current))
-                    settings.Add(new SettingBackup(id, true, current));
+                    pendingBackup.Add(new SettingBackup(id, true, current));
                 else
-                    settings.Add(new SettingBackup(id, false, 0));
+                    pendingBackup.Add(new SettingBackup(id, false, 0));
             }
-            WriteBackup(new OverrideBackup(gameExe, ownProfile, settings));
         }
 
         session.SetSettingDword(owner, DlssSrEnableId, 1);
         session.SetSettingDword(owner, DlssSrPresetId, (uint)preset);
-        session.Save();
+        try
+        {
+            session.Save();
+        }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            throw new NvdrsException(-175,
+                "保存驱动设置被拒绝（NVAPI_ACCESS_DENIED）：写入 NVIDIA 配置需要管理员权限。" +
+                "请以管理员身份重启本程序后再应用。");
+        }
+        if (pendingBackup is not null)
+            WriteBackup(new OverrideBackup(gameExe, ownProfile, pendingBackup));
     }
 
     /// <summary>
@@ -200,7 +211,16 @@ public static class DisplayQualityService
                     }
                 }
             }
-            session.Save();
+            try
+            {
+                session.Save();
+            }
+            catch (NvdrsException ex) when (ex.Status == -175)
+            {
+                throw new NvdrsException(-175,
+                    "保存驱动设置被拒绝（NVAPI_ACCESS_DENIED）：还原 NVIDIA 配置需要管理员权限。" +
+                    "请以管理员身份重启本程序后再还原。");
+            }
             DeleteBackup(gameExe);
             return true;
         }
