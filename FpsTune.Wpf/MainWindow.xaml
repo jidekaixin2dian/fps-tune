@@ -1,4 +1,4 @@
-﻿<Window x:Class="FpsTune.Wpf.MainWindow"
+<Window x:Class="FpsTune.Wpf.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
@@ -103,40 +103,40 @@
                     <StackPanel Orientation="Horizontal" Margin="8,0,8,0" VerticalAlignment="Bottom">
                         <controls:NavButton x:Name="NavHome"
                                             Tag="home"
-                                            Text="概览"
+                                            Text="{DynamicResource Str.NavHome}"
                                             IsChecked="True"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavDetect"
                                             Tag="detect"
-                                            Text="检测"
+                                            Text="{DynamicResource Str.NavDetect}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavOpt"
                                             Tag="opt"
-                                            Text="优化"
+                                            Text="{DynamicResource Str.NavOpt}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavDisplay"
                                             Tag="display"
-                                            Text="显示与画质"
+                                            Text="{DynamicResource Str.NavDisplay}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavSession"
                                             Tag="session"
-                                            Text="性能会话"
+                                            Text="{DynamicResource Str.NavSession}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavAb"
                                             Tag="ab"
-                                            Text="A/B 实验"
+                                            Text="{DynamicResource Str.NavAb}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavFriend"
                                             Tag="friend"
-                                            Text="朋友测试"
+                                            Text="{DynamicResource Str.NavFriend}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavBackup"
                                             Tag="backup"
-                                            Text="备份 / 日志"
+                                            Text="{DynamicResource Str.NavBackup}"
                                             Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavSettings"
                                             Tag="settings"
-                                            Text="设置"
+                                            Text="{DynamicResource Str.NavSettings}"
                                             Checked="Nav_Checked"/>
                     </StackPanel>
                 </Border>

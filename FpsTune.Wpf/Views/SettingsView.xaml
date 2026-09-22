@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FpsTune.Wpf.Views.SettingsView"
+<UserControl x:Class="FpsTune.Wpf.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
@@ -32,14 +32,24 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <StackPanel Margin="0,0,0,18"><TextBlock Text="设置" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="选择一个分类即可调整，设置自动保存。" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/></StackPanel>
         <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,18">
-            <RadioButton Content="外观与显示" GroupName="settingsSection" Tag="0" Checked="Section_Checked" Style="{StaticResource SettingsChoice}" IsChecked="True"/>
-            <RadioButton Content="启动与通知" GroupName="settingsSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
-            <RadioButton Content="游戏与方案" GroupName="settingsSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
-            <RadioButton Content="数据与维护" GroupName="settingsSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
+            <RadioButton Content="{DynamicResource Str.SettingsAppearance}" GroupName="settingsSection" Tag="0" Checked="Section_Checked" Style="{StaticResource SettingsChoice}" IsChecked="True"/>
+            <RadioButton Content="{DynamicResource Str.SettingsStartup}" GroupName="settingsSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
+            <RadioButton Content="{DynamicResource Str.SettingsGame}" GroupName="settingsSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
+            <RadioButton Content="{DynamicResource Str.SettingsData}" GroupName="settingsSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
         </UniformGrid>
         <Grid Grid.Row="2">
             <ScrollViewer x:Name="Section0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Visible"><StackPanel Margin="0,0,12,0">
-<Border Style="{StaticResource CardStyle}"><StackPanel>                    <TextBlock Text="主题外观" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+<Border Style="{StaticResource CardStyle}"><StackPanel>                    <TextBlock Text="{DynamicResource Str.ThemeLabel}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                    <StackPanel Margin="0,14,0,0">
+                        <TextBlock Text="{DynamicResource Str.LanguageLabel}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <RadioButton x:Name="LangZhRadio" GroupName="uiLang" Content="{DynamicResource Str.LanguageZh}"
+                                         Style="{StaticResource SettingsChoice}" Checked="Lang_Checked"/>
+                            <RadioButton x:Name="LangEnRadio" GroupName="uiLang" Content="{DynamicResource Str.LanguageEn}"
+                                         Style="{StaticResource SettingsChoice}" Checked="Lang_Checked"/>
+                        </StackPanel>
+                        <TextBlock Text="{DynamicResource Str.LanguageNote}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,6,0,14"/>
+                    </StackPanel>
                     <UniformGrid Columns="3" Margin="0,12,0,16">
                         <RadioButton x:Name="ThemeDarkRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="深色主题">
                             <StackPanel><Border Height="26" Background="#07090B" CornerRadius="3" Margin="0,0,0,10"/>

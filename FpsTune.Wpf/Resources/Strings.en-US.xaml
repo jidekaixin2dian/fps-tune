@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- Main navigation -->
+    <s:String x:Key="Str.NavHome">Home</s:String>
+    <s:String x:Key="Str.NavDetect">Detect</s:String>
+    <s:String x:Key="Str.NavOpt">Optimize</s:String>
+    <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
+    <s:String x:Key="Str.NavSession">Sessions</s:String>
+    <s:String x:Key="Str.NavAb">A/B Test</s:String>
+    <s:String x:Key="Str.NavFriend">Friend Test</s:String>
+    <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>
+    <s:String x:Key="Str.NavSettings">Settings</s:String>
+
+    <!-- Window chrome -->
+    <s:String x:Key="Str.ClassicMode">Classic UI</s:String>
+    <s:String x:Key="Str.Minimize">Minimize</s:String>
+    <s:String x:Key="Str.Maximize">Maximize or restore</s:String>
+    <s:String x:Key="Str.Close">Close</s:String>
+    <s:String x:Key="Str.NormalUser">Standard user</s:String>
+    <s:String x:Key="Str.AdminUser">Administrator</s:String>
+
+    <!-- Settings -->
+    <s:String x:Key="Str.SettingsAppearance">Appearance</s:String>
+    <s:String x:Key="Str.SettingsStartup">Startup &amp; notifications</s:String>
+    <s:String x:Key="Str.SettingsGame">Game &amp; profiles</s:String>
+    <s:String x:Key="Str.SettingsData">Data &amp; maintenance</s:String>
+    <s:String x:Key="Str.ThemeLabel">Theme</s:String>
+    <s:String x:Key="Str.ThemeDark">Dark</s:String>
+    <s:String x:Key="Str.ThemeLight">Light</s:String>
+    <s:String x:Key="Str.ThemeSystem">Follow system</s:String>
+    <s:String x:Key="Str.LanguageLabel">Language</s:String>
+    <s:String x:Key="Str.LanguageZh">简体中文</s:String>
+    <s:String x:Key="Str.LanguageEn">English</s:String>
+    <s:String x:Key="Str.LanguageNote">Applies immediately. Item descriptions stay Chinese. Default is Chinese.</s:String>
+
+    <!-- Optimize -->
+    <s:String x:Key="Str.OptIntro">Pick a preset, review, then apply. All changes are backed up.</s:String>
+    <s:String x:Key="Str.PresetBalanced">Balanced</s:String>
+    <s:String x:Key="Str.PresetSafe">Safe only</s:String>
+    <s:String x:Key="Str.PresetFull">All items</s:String>
+    <s:String x:Key="Str.PresetCustom">Custom</s:String>
+    <s:String x:Key="Str.ApplySelected">Apply selected →</s:String>
+    <s:String x:Key="Str.RestoreAll">Restore all</s:String>
+    <s:String x:Key="Str.OneClick">One-click optimize</s:String>
+    <s:String x:Key="Str.OneClickTip">Balanced system tweaks + DLSS K + GPU 3D (1070 Ti tier: high-quality textures / prefer max power / transparency 2x) + Ultimate power plan</s:String>
+    <s:String x:Key="Str.NotConfirmed">Not confirmed</s:String>
+    <s:String x:Key="Str.PleaseConsent">Please check the consent box first.</s:String>
+
+    <!-- Display & quality -->
+    <s:String x:Key="Str.DisplayTitle">Display &amp; Quality</s:String>
+    <s:String x:Key="Str.DisplayIntro">Per-game driver quality settings: never touches game files; one-click restore</s:String>
+    <s:String x:Key="Str.DlssCard">DLSS SR model override (NVIDIA RTX only)</s:String>
+    <s:String x:Key="Str.VibCard">Digital vibrance (NVIDIA · full screen)</s:String>
+    <s:String x:Key="Str.IccCard">ICC filter (OS · primary display)</s:String>
+    <s:String x:Key="Str.DrsCard">Driver 3D settings (per game · NVIDIA)</s:String>
+    <s:String x:Key="Str.ApplyOverride">Apply override</s:String>
+    <s:String x:Key="Str.RestoreDefault">Restore default</s:String>
+    <s:String x:Key="Str.Apply">Apply</s:String>
+    <s:String x:Key="Str.RestoreOriginal">Restore original</s:String>
+    <s:String x:Key="Str.ApplyPreset">Apply preset</s:String>
+    <s:String x:Key="Str.ApplyDrs">Apply 3D settings</s:String>
+    <s:String x:Key="Str.OneClickEsports">Esports preset</s:String>
+    <s:String x:Key="Str.FollowGame">Follow in-game</s:String>
+    <s:String x:Key="Str.PresetLatest">Latest</s:String>
+    <s:String x:Key="Str.Reading">Loading…</s:String>
+
+    <!-- Common -->
+    <s:String x:Key="Str.Ok">OK</s:String>
+    <s:String x:Key="Str.Cancel">Cancel</s:String>
+    <s:String x:Key="Str.Detect">Detect</s:String>
+    <s:String x:Key="Str.LocateGame">Locate game</s:String>
+</ResourceDictionary>

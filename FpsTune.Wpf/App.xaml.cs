@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Windows;
 using FpsTune.Wpf.Services;
@@ -28,6 +28,8 @@ public partial class App : Application
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         SettingsService.Load();
+        LangService.Load();
+        LangService.Apply(LangService.Current);
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
         LegacyMigrations.EnsureRun();
         // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话

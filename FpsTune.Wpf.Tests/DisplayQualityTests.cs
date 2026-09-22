@@ -279,7 +279,31 @@ public class DisplayQualityTests : IDisposable
         // 1070 Ti 档 = 2x，不是 5070 Ti 桌面的 4x
         Assert.Equal(TransparencyAa.Supersample2x, s.TransparencyAa);
         Assert.Equal(1u, s.PreRenderLimit);
+        Assert.Equal(AnisoLevel.Level16, s.Aniso);
+        Assert.Equal(VSyncMode.ForceOff, s.VSync);
+        Assert.True(s.ShaderCache);
         Assert.True(s.Restorable);
+    }
+
+    [Fact]
+    public void M3_aniso_vsync_shader_cache_write_official_ids()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyAnisoLevel(Exe, AnisoLevel.Level16);
+        DisplayQualityService.ApplyVSyncMode(Exe, VSyncMode.ForceOff);
+        DisplayQualityService.ApplyShaderDiskCache(Exe, true);
+
+        var settings = _api.GetProfile("三角洲行动")!.Settings;
+        Assert.Equal(DisplayQualityService.AnisoSelectorUser, settings[DisplayQualityService.AnisoSelectorId]);
+        Assert.Equal(0x10u, settings[DisplayQualityService.AnisoLevelId]);
+        Assert.Equal(DisplayQualityService.VSyncForceOff, settings[DisplayQualityService.VSyncModeId]);
+        Assert.Equal(1u, settings[DisplayQualityService.ShaderDiskCacheId]);
+
+        var s = DisplayQualityService.GetDrsGameSettings(Exe);
+        Assert.Equal(AnisoLevel.Level16, s.Aniso);
+        Assert.Equal(VSyncMode.ForceOff, s.VSync);
+        Assert.True(s.ShaderCache);
     }
 
     private sealed class FakeNvdrsApi : INvdrsApi

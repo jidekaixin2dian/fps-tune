@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- 主导航 -->
+    <s:String x:Key="Str.NavHome">概览</s:String>
+    <s:String x:Key="Str.NavDetect">检测</s:String>
+    <s:String x:Key="Str.NavOpt">优化</s:String>
+    <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
+    <s:String x:Key="Str.NavSession">性能会话</s:String>
+    <s:String x:Key="Str.NavAb">A/B 实验</s:String>
+    <s:String x:Key="Str.NavFriend">朋友测试</s:String>
+    <s:String x:Key="Str.NavBackup">备份 / 日志</s:String>
+    <s:String x:Key="Str.NavSettings">设置</s:String>
+
+    <!-- 窗口 chrome -->
+    <s:String x:Key="Str.ClassicMode">切换经典界面</s:String>
+    <s:String x:Key="Str.Minimize">最小化</s:String>
+    <s:String x:Key="Str.Maximize">最大化或还原</s:String>
+    <s:String x:Key="Str.Close">关闭</s:String>
+    <s:String x:Key="Str.NormalUser">普通用户</s:String>
+    <s:String x:Key="Str.AdminUser">管理员</s:String>
+
+    <!-- 设置 -->
+    <s:String x:Key="Str.SettingsAppearance">外观与显示</s:String>
+    <s:String x:Key="Str.SettingsStartup">启动与通知</s:String>
+    <s:String x:Key="Str.SettingsGame">游戏与方案</s:String>
+    <s:String x:Key="Str.SettingsData">数据与维护</s:String>
+    <s:String x:Key="Str.ThemeLabel">主题外观</s:String>
+    <s:String x:Key="Str.ThemeDark">深色主题</s:String>
+    <s:String x:Key="Str.ThemeLight">浅色主题</s:String>
+    <s:String x:Key="Str.ThemeSystem">跟随系统主题</s:String>
+    <s:String x:Key="Str.LanguageLabel">界面语言</s:String>
+    <s:String x:Key="Str.LanguageZh">简体中文</s:String>
+    <s:String x:Key="Str.LanguageEn">English</s:String>
+    <s:String x:Key="Str.LanguageNote">切换立即生效；优化项说明仍为中文。默认中文。</s:String>
+
+    <!-- 优化页 -->
+    <s:String x:Key="Str.OptIntro">选择预设，审阅改动，再应用。所有改动自动备份。</s:String>
+    <s:String x:Key="Str.PresetBalanced">均衡推荐</s:String>
+    <s:String x:Key="Str.PresetSafe">保守优化</s:String>
+    <s:String x:Key="Str.PresetFull">全部项目</s:String>
+    <s:String x:Key="Str.PresetCustom">自定义</s:String>
+    <s:String x:Key="Str.ApplySelected">应用所选 →</s:String>
+    <s:String x:Key="Str.RestoreAll">还原全部</s:String>
+    <s:String x:Key="Str.OneClick">一键优化</s:String>
+    <s:String x:Key="Str.OneClickTip">均衡档系统层 + DLSS K 模型 + 显卡 3D（1070 Ti 档：纹理高质量 / 最高性能优先 / 透明度 2x）+ 卓越性能电源</s:String>
+    <s:String x:Key="Str.NotConfirmed">未确认</s:String>
+    <s:String x:Key="Str.PleaseConsent">请先勾选同意说明，再执行应用。</s:String>
+
+    <!-- 显示与画质 -->
+    <s:String x:Key="Str.DisplayTitle">显示与画质</s:String>
+    <s:String x:Key="Str.DisplayIntro">驱动层的按游戏画质设置：不修改游戏文件，随时一键还原</s:String>
+    <s:String x:Key="Str.DlssCard">DLSS 超分模型覆盖（仅 NVIDIA RTX）</s:String>
+    <s:String x:Key="Str.VibCard">数字振动（N 卡 · 显示器全局）</s:String>
+    <s:String x:Key="Str.IccCard">ICC 滤镜（系统层 · 仅主显示器）</s:String>
+    <s:String x:Key="Str.DrsCard">驱动 3D 设置（按游戏 · N 卡）</s:String>
+    <s:String x:Key="Str.ApplyOverride">应用覆盖</s:String>
+    <s:String x:Key="Str.RestoreDefault">还原默认</s:String>
+    <s:String x:Key="Str.Apply">应用</s:String>
+    <s:String x:Key="Str.RestoreOriginal">还原原始</s:String>
+    <s:String x:Key="Str.ApplyPreset">应用预设</s:String>
+    <s:String x:Key="Str.ApplyDrs">应用 3D 设置</s:String>
+    <s:String x:Key="Str.OneClickEsports">一键竞技推荐</s:String>
+    <s:String x:Key="Str.FollowGame">跟随游戏内</s:String>
+    <s:String x:Key="Str.PresetLatest">最新</s:String>
+    <s:String x:Key="Str.Reading">正在读取…</s:String>
+
+    <!-- 通用按钮 -->
+    <s:String x:Key="Str.Ok">确定</s:String>
+    <s:String x:Key="Str.Cancel">取消</s:String>
+    <s:String x:Key="Str.Detect">检测</s:String>
+    <s:String x:Key="Str.LocateGame">定位游戏</s:String>
+</ResourceDictionary>

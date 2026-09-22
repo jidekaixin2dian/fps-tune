@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.Win32;
 using System.Security.Cryptography;
 using FpsTune.Wpf.Core;
@@ -131,6 +131,20 @@ public class CoreLogicTests
         => Assert.Equal(
             new[] { "dvr-off", "fso-off", "game-mode", "gpu-pref", "transparency-off" },
             OptimizationEngine.GetPresetIds("safe-only").OrderBy(x => x).ToArray());
+
+    [Fact]
+    public void Lang_service_defaults_to_chinese_and_normalizes()
+    {
+        Assert.Equal("zh-CN", FpsTune.Wpf.Services.LangService.ZhCn);
+        Assert.Equal("en-US", FpsTune.Wpf.Services.LangService.EnUs);
+        // 非法值不落盘；Save 会归一到 zh-CN
+        FpsTune.Wpf.Services.LangService.Save("fr-FR");
+        Assert.Equal("zh-CN", FpsTune.Wpf.Services.LangService.Current);
+        FpsTune.Wpf.Services.LangService.Save("en-US");
+        Assert.Equal("en-US", FpsTune.Wpf.Services.LangService.Current);
+        FpsTune.Wpf.Services.LangService.Save("zh-CN");
+        Assert.Equal("zh-CN", FpsTune.Wpf.Services.LangService.Current);
+    }
 
     [Fact]
     public void Unknown_preset_falls_back_to_balanced()

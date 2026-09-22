@@ -34,6 +34,8 @@ public partial class SettingsView : UserControl
         ThemeDarkRadio.Checked += (_, _) => ApplyThemeMode("dark");
         ThemeLightRadio.Checked += (_, _) => ApplyThemeMode("light");
         ThemeSystemRadio.Checked += (_, _) => ApplyThemeMode("system");
+        LangZhRadio.Checked += Lang_Checked;
+        LangEnRadio.Checked += Lang_Checked;
         AutostartCheck.Checked += AutostartCheck_Changed;
         AutostartCheck.Unchecked += AutostartCheck_Changed;
         GamePathBox.LostFocus += (_, _) => SaveGamePathFromBox();
@@ -63,6 +65,14 @@ public partial class SettingsView : UserControl
             sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void Lang_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents) return;
+        var lang = ReferenceEquals(sender, LangEnRadio) ? LangService.EnUs : LangService.ZhCn;
+        if (lang == LangService.Current) return;
+        LangService.Apply(lang);
+    }
+
     internal void RefreshDisplayMode()
     {
         _suppressUiEvents = true;
@@ -90,6 +100,11 @@ public partial class SettingsView : UserControl
             ThemeSystemRadio.IsChecked = true;
         else
             ThemeDarkRadio.IsChecked = true;
+
+        if (LangService.Current == LangService.EnUs)
+            LangEnRadio.IsChecked = true;
+        else
+            LangZhRadio.IsChecked = true;
 
         var saved = StateStore.LoadGamePath();
         GamePathBox.Text = saved ?? "";

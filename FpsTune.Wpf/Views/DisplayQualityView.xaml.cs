@@ -508,6 +508,21 @@ public partial class DisplayQualityView : UserControl
             SelectComboByTag(PowerModeCombo, s.PowerMode is { } p ? ((uint)p).ToString() : "");
             SelectComboByTag(TransparencyCombo, s.TransparencyAa is { } a ? ((int)a).ToString() : "");
             SelectComboByTag(PreRenderCombo, s.PreRenderLimit is { } pr ? pr.ToString() : "");
+            SelectComboByTag(AnisoCombo, s.Aniso is null or AnisoLevel.AppControlled
+                ? ""
+                : ((uint)s.Aniso.Value).ToString());
+            SelectComboByTag(VSyncCombo, s.VSync switch
+            {
+                VSyncMode.ForceOff => "off",
+                VSyncMode.ForceOn => "on",
+                _ => "",
+            });
+            SelectComboByTag(ShaderCacheCombo, s.ShaderCache switch
+            {
+                true => "1",
+                false => "0",
+                null => "",
+            });
             _drsSyncing = false;
 
             DrsStateText.Text = _drsStatus ?? (s.Restorable
@@ -638,6 +653,25 @@ public partial class DisplayQualityView : UserControl
                     DisplayQualityService.ApplyPreRenderLimit(exeName, uint.Parse(pr));
                 else
                     DisplayQualityService.ApplyPreRenderLimit(exeName, null);
+                var aniso = ComboTag(AnisoCombo);
+                if (!string.IsNullOrEmpty(aniso))
+                    DisplayQualityService.ApplyAnisoLevel(exeName, (AnisoLevel)uint.Parse(aniso));
+                else
+                    DisplayQualityService.ApplyAnisoLevel(exeName, AnisoLevel.AppControlled);
+                var vsync = ComboTag(VSyncCombo);
+                DisplayQualityService.ApplyVSyncMode(exeName, vsync switch
+                {
+                    "off" => VSyncMode.ForceOff,
+                    "on" => VSyncMode.ForceOn,
+                    _ => VSyncMode.AppControlled,
+                });
+                var sc = ComboTag(ShaderCacheCombo);
+                DisplayQualityService.ApplyShaderDiskCache(exeName, sc switch
+                {
+                    "1" => true,
+                    "0" => false,
+                    _ => null,
+                });
             });
             _drsStatus = "已应用 3D 设置。进游戏生效；不满意点「还原默认」。";
         }

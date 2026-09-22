@@ -55,6 +55,25 @@ public enum TransparencyAa
     Supersample4x = 3,
 }
 
+/// <summary>各向异性过滤倍数（官方 ANISO_MODE_LEVEL；0/1=关，0x10=16x）。推荐 16x：现代卡开销极低。</summary>
+public enum AnisoLevel : uint
+{
+    AppControlled = 0xffffffff,
+    Off = 0x00000000,
+    Level2 = 0x00000002,
+    Level4 = 0x00000004,
+    Level8 = 0x00000008,
+    Level16 = 0x00000010,
+}
+
+/// <summary>垂直同步（官方 VSYNCMODE）。竞技推荐强制关。</summary>
+public enum VSyncMode
+{
+    AppControlled = 0,
+    ForceOff = 1,
+    ForceOn = 2,
+}
+
 /// <summary>
 /// 显示与画质服务：驱动层的按游戏设置（DLSS SR 预设覆盖 + M3 二期 3D 设置）。
 /// 覆盖写在"登记了该游戏 exe 的 profile"上（多为 NVIDIA 预置的游戏 profile，与
@@ -72,6 +91,16 @@ public static class DisplayQualityService
     public const uint TransparencyMultisampleId = 0x10FC2D9C; // AA_MODE_ALPHATOCOVERAGE_ID
     public const uint TransparencySupersampleId = 0x10D48A85; // AA_MODE_REPLAY_ID
     public const uint PreRenderLimitId = 0x007BA09E; // PRERENDERLIMIT_ID
+    // P2-6 热门面板项（官方 NvApiDriverSettings.h）
+    public const uint AnisoSelectorId = 0x10D2BB16; // ANISO_MODE_SELECTOR_ID
+    public const uint AnisoLevelId = 0x101E61A9; // ANISO_MODE_LEVEL_ID
+    public const uint VSyncModeId = 0x00A879CF; // VSYNCMODE_ID
+    public const uint ShaderDiskCacheId = 0x00198FFF; // PS_SHADERDISKCACHE_ID
+
+    public const uint AnisoSelectorUser = 0x1;
+    public const uint AnisoLevel16x = 0x10;
+    public const uint VSyncForceOff = 0x08416747;
+    public const uint ShaderCacheOn = 0x1;
 
     /// <summary>官方 AA_MODE_REPLAY_TRANSPARENCY（4x 超级采样透明度）= SAMPLES_FOUR|0x03。</summary>
     public const uint TransparencySupersample4x = 0x00000023;
@@ -86,6 +115,7 @@ public static class DisplayQualityService
         TextureQualityId, PowerModeId,
         TransparencyMultisampleId, TransparencySupersampleId,
         PreRenderLimitId,
+        AnisoSelectorId, AnisoLevelId, VSyncModeId, ShaderDiskCacheId,
     };
 
     /// <summary>
@@ -144,11 +174,51 @@ public static class DisplayQualityService
         PowerMode? PowerMode,
         TransparencyAa? TransparencyAa,
         uint? PreRenderLimit,
-        bool Restorable);
+        bool Restorable,
+        AnisoLevel? Aniso = null,
+        VSyncMode? VSync = null,
+        bool? ShaderCache = null);
+
+    /// <summary>各向异性过滤。AppControlled=删除设置；16x 为社区/文档推荐（现代卡开销极低）。</summary>
+    public static void ApplyAnisoLevel(string gameExe, AnisoLevel level)
+        => ApplyManaged(gameExe, (session, owner) =>
+        {
+            if (level == AnisoLevel.AppControlled)
+            {
+                session.DeleteSetting(owner, AnisoSelectorId);
+                session.DeleteSetting(owner, AnisoLevelId);
+                return;
+            }
+            session.SetSettingDword(owner, AnisoSelectorId, AnisoSelectorUser);
+            session.SetSettingDword(owner, AnisoLevelId, (uint)level);
+        });
+
+    /// <summary>垂直同步。竞技推荐 ForceOff；三重缓冲仅 OGL 有独立项，D3D 下与 VSync 一并关闭即可。</summary>
+    public static void ApplyVSyncMode(string gameExe, VSyncMode mode)
+        => ApplyManaged(gameExe, (session, owner) =>
+        {
+            if (mode == VSyncMode.AppControlled)
+            {
+                session.DeleteSetting(owner, VSyncModeId);
+                return;
+            }
+            session.SetSettingDword(
+                owner, VSyncModeId, mode == VSyncMode.ForceOn ? 0x47814940u : VSyncForceOff);
+        });
+
+    /// <summary>着色器磁盘缓存。null=删除；true=开（推荐，减少运行时编译卡顿）。</summary>
+    public static void ApplyShaderDiskCache(string gameExe, bool? enabled)
+        => ApplyManaged(gameExe, (session, owner) =>
+        {
+            if (enabled is null)
+                session.DeleteSetting(owner, ShaderDiskCacheId);
+            else
+                session.SetSettingDword(owner, ShaderDiskCacheId, enabled.Value ? ShaderCacheOn : 0u);
+        });
 
     /// <summary>
     /// 社区/教学高频「竞技 3D 预设」（2026-09-22 调研）：
-    /// 纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧。
+    /// 纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧 + AF16x + VSync 关 + 着色器缓存开。
     /// <paramref name="desktopHighEndGpu"/> 为 true（桌面非笔电高端卡，如 5070 Ti）时透明度升到 4x。
     /// </summary>
     public static void ApplyCompetitivePreset(string gameExe, bool desktopHighEndGpu)
@@ -157,6 +227,9 @@ public static class DisplayQualityService
         ApplyPowerMode(gameExe, PowerMode.PreferMax);
         ApplyTransparencyAa(gameExe, desktopHighEndGpu ? TransparencyAa.Supersample4x : TransparencyAa.Supersample2x);
         ApplyPreRenderLimit(gameExe, 1);
+        ApplyAnisoLevel(gameExe, AnisoLevel.Level16);
+        ApplyVSyncMode(gameExe, VSyncMode.ForceOff);
+        ApplyShaderDiskCache(gameExe, true);
     }
 
     public static DrsGameSettings GetDrsGameSettings(string gameExe)
@@ -188,7 +261,22 @@ public static class DisplayQualityService
             traa = TransparencyAa.Off;
         uint? prerender = session.TryGetSettingDword(owner, PreRenderLimitId, out var pr) && pr != 0
             ? pr : null;
-        return new DrsGameSettings(gameExe, tex, power, traa, prerender, restorable);
+        AnisoLevel? aniso = null;
+        if (session.TryGetSettingDword(owner, AnisoLevelId, out var af))
+            aniso = (AnisoLevel)af;
+        VSyncMode? vsync = null;
+        if (session.TryGetSettingDword(owner, VSyncModeId, out var vs))
+        {
+            vsync = vs switch
+            {
+                VSyncForceOff => VSyncMode.ForceOff,
+                0x47814940u => VSyncMode.ForceOn,
+                _ => VSyncMode.AppControlled,
+            };
+        }
+        bool? shaderCache = session.TryGetSettingDword(owner, ShaderDiskCacheId, out var sc)
+            ? sc != 0 : null;
+        return new DrsGameSettings(gameExe, tex, power, traa, prerender, restorable, aniso, vsync, shaderCache);
     }
 
     /// <summary>存在本工具写入前的原值备份（任意受管设置的可还原快照）。</summary>

@@ -35,7 +35,7 @@
 
             <!-- 页头 -->
             <StackPanel Margin="0,0,0,16">
-                <TextBlock Text="显示与画质" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.DisplayTitle}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="驱动层的按游戏画质设置：不修改游戏文件，随时一键还原"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
@@ -43,7 +43,7 @@
             <!-- 主体卡片 -->
             <Border Style="{StaticResource CardStyle}" Padding="20,18">
                 <StackPanel>
-                    <TextBlock Text="DLSS 超分模型覆盖（仅 NVIDIA RTX）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DlssCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="GameStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <StackPanel x:Name="SupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
@@ -98,10 +98,10 @@
                                    Margin="0,10,0,0" TextWrapping="Wrap"/>
 
                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                            <Button x:Name="ApplyButton" Content="应用覆盖"
+                            <Button x:Name="ApplyButton" Content="{DynamicResource Str.ApplyOverride}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="Apply_Click"/>
-                            <Button x:Name="RestoreButton" Content="还原默认"
+                            <Button x:Name="RestoreButton" Content="{DynamicResource Str.RestoreDefault}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="110" Click="Restore_Click"/>
                         </StackPanel>
@@ -118,7 +118,7 @@
             <!-- 数字振动：显示级饱和度，全桌面生效 -->
             <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="数字振动（N 卡 · 显示器全局）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="VibStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
@@ -152,7 +152,7 @@
             <!-- ICC 滤镜卡片：系统层色彩变换，A 卡/Intel 与整体桌面观感兜底 -->
             <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="ICC 滤镜（系统层 · 仅主显示器）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <StackPanel x:Name="IccSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
@@ -209,7 +209,7 @@
             <!-- M3：驱动 3D 设置（纹理/电源/透明度/低延迟） -->
             <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
                 <StackPanel>
-                    <TextBlock Text="驱动 3D 设置（按游戏 · N 卡）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DrsCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="DrsStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
@@ -229,6 +229,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="36"/>
                                 <RowDefinition Height="36"/>
                                 <RowDefinition Height="36"/>
                                 <RowDefinition Height="36"/>
@@ -278,6 +281,36 @@
                                 <ComboBoxItem Content="1 帧（竞技推荐）" Tag="1"/>
                                 <ComboBoxItem Content="2 帧（平衡）" Tag="2"/>
                                 <ComboBoxItem Content="3 帧" Tag="3"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="4" Text="各向异性过滤" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="AnisoCombo" Grid.Row="4" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="16x 对现代 N 卡开销极低、远景纹理明显更清晰（推荐）">
+                                <ComboBoxItem Content="应用程序控制" Tag=""/>
+                                <ComboBoxItem Content="16x（推荐）" Tag="16"/>
+                                <ComboBoxItem Content="8x" Tag="8"/>
+                                <ComboBoxItem Content="4x" Tag="4"/>
+                                <ComboBoxItem Content="2x" Tag="2"/>
+                                <ComboBoxItem Content="关闭" Tag="0"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="5" Text="垂直同步" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="VSyncCombo" Grid.Row="5" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="竞技推荐强制关（低延迟）；G-Sync 屏可在游戏内限帧。三重缓冲在 D3D 下无独立项，关 VSync 即可">
+                                <ComboBoxItem Content="应用程序控制" Tag=""/>
+                                <ComboBoxItem Content="强制关（推荐）" Tag="off"/>
+                                <ComboBoxItem Content="强制开" Tag="on"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="6" Text="着色器缓存" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="ShaderCacheCombo" Grid.Row="6" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="开启可减少运行时编译卡顿（推荐）">
+                                <ComboBoxItem Content="应用程序控制" Tag=""/>
+                                <ComboBoxItem Content="开启（推荐）" Tag="1"/>
+                                <ComboBoxItem Content="关闭" Tag="0"/>
                             </ComboBox>
                         </Grid>
 
