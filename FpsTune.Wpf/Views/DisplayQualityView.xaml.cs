@@ -25,11 +25,18 @@ public partial class DisplayQualityView : UserControl
         if (_busy)
             return;
 
+        RefreshDlss();
+        RefreshVibrance();
+        RefreshIcc();
+    }
+
+    private void RefreshDlss()
+    {
         if (!DisplayQualityService.FeatureEnabled)
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
             UnsupportedText.Visibility = Visibility.Visible;
-            UnsupportedText.Text = "DLSS 模型覆盖功能尚在稳定性验证中，本版本暂未启用。";
+            UnsupportedText.Text = "DLSS 模型覆盖功能已停用（FPS_ENABLE_DLSS=0）。";
             return;
         }
 
@@ -159,6 +166,16 @@ public partial class DisplayQualityView : UserControl
                 ? "已移除覆盖：DLSS 预设回到游戏内/驱动默认。进游戏生效。"
                 : $"已覆盖 DLSS 预设为 {PresetLabel((uint)preset.Value)}。进游戏生效；不满意可点「还原默认」。";
         }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            StateText.Text = "应用失败：写入 NVIDIA 配置需要管理员权限。系统设置未变。";
+            if (DialogService.Confirm(
+                    "需要管理员权限",
+                    "写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。\n\n" +
+                    "要以管理员身份重启并重试吗？",
+                    confirmText: "以管理员重启"))
+                AdminHelper.RestartAsAdministrator();
+        }
         catch (Exception ex)
         {
             StateText.Text = "应用失败：" + ex.Message + "。系统设置未变或已如实还原，可重试。";
@@ -189,9 +206,252 @@ public partial class DisplayQualityView : UserControl
                 ? "已还原：覆盖前的原值已恢复（或自建配置文件已删除）。进游戏生效。"
                 : "没有找到本工具的覆盖或还原备份，无需还原。";
         }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            StateText.Text = "还原失败：写入 NVIDIA 配置需要管理员权限。";
+            if (DialogService.Confirm(
+                    "需要管理员权限",
+                    "还原 NVIDIA 驱动配置需要管理员权限。\n\n要以管理员身份重启并重试吗？",
+                    confirmText: "以管理员重启"))
+                AdminHelper.RestartAsAdministrator();
+        }
         catch (Exception ex)
         {
             StateText.Text = "还原失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    // ---------- 数字振动（显示级，全桌面） ----------
+
+    private bool _vibSyncing;
+
+    private void RefreshVibrance()
+    {
+        try
+        {
+            var state = DigitalVibranceService.GetState();
+            if (!state.Supported)
+            {
+                VibSupportedPanel.Visibility = Visibility.Collapsed;
+                VibUnsupportedText.Visibility = Visibility.Visible;
+                VibUnsupportedText.Text = state.UnsupportedReason ?? "数字振动在当前环境不可用。";
+                return;
+            }
+
+            VibSupportedPanel.Visibility = Visibility.Visible;
+            VibUnsupportedText.Visibility = Visibility.Collapsed;
+
+            var percent = state.Max > state.Min
+                ? (int)Math.Round((state.Current - state.Min) * 100.0 / (state.Max - state.Min))
+                : 0;
+            _vibSyncing = true;
+            VibSlider.Value = percent;
+            VibPercentText.Text = percent + "%";
+            _vibSyncing = false;
+
+            VibApplyButton.IsEnabled = true;
+            VibRestoreButton.IsEnabled = state.Restorable;
+            VibStateText.Text = state.Restorable
+                ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
+                : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）";
+        }
+        catch (Exception ex)
+        {
+            VibSupportedPanel.Visibility = Visibility.Collapsed;
+            VibUnsupportedText.Visibility = Visibility.Visible;
+            VibUnsupportedText.Text = "读取数字振动状态失败：" + ex.Message;
+        }
+    }
+
+    private static int PercentOf(int level, VibranceState state)
+        => state.Max > state.Min
+            ? (int)Math.Round((level - state.Min) * 100.0 / (state.Max - state.Min))
+            : 0;
+
+    private void VibSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_vibSyncing)
+            return;
+        VibPercentText.Text = (int)VibSlider.Value + "%";
+    }
+
+    private async void VibApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var percent = (int)VibSlider.Value;
+        var confirmed = DialogService.Confirm(
+            "应用数字振动",
+            $"将把整块屏幕的色彩鲜艳度调到 {percent}%。\n\n" +
+            "· 这是显示全局设置：桌面、网页、游戏观感都会变化\n" +
+            "· 不是只在游戏内生效\n" +
+            "· 应用前会记住当前档位，可随时「还原原始」\n\n确定应用？",
+            confirmText: "应用");
+        if (!confirmed)
+            return;
+
+        _busy = true;
+        VibApplyButton.IsEnabled = false;
+        VibRestoreButton.IsEnabled = false;
+        VibStateText.Text = "正在写入…";
+        try
+        {
+            await Task.Run(() => DigitalVibranceService.SetPercent(percent));
+            VibStateText.Text = $"已应用：{percent}%。整屏即时生效；不满意点「还原原始」。";
+        }
+        catch (Exception ex)
+        {
+            VibStateText.Text = "应用失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    private async void VibRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        _busy = true;
+        VibApplyButton.IsEnabled = false;
+        VibRestoreButton.IsEnabled = false;
+        VibStateText.Text = "正在还原…";
+        try
+        {
+            var restored = await Task.Run(() => DigitalVibranceService.Restore());
+            VibStateText.Text = restored
+                ? "已还原：鲜艳度回到调整前的档位。"
+                : "没有找到需要还原的备份，无需还原。";
+        }
+        catch (Exception ex)
+        {
+            VibStateText.Text = "还原失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    // ---------- ICC 滤镜（第二张卡片，独立于 DLSS 的可用性） ----------
+
+    private void RefreshIcc()
+    {
+        try
+        {
+            var state = IccFilterService.GetState();
+            if (!state.Supported)
+            {
+                IccSupportedPanel.Visibility = Visibility.Collapsed;
+                IccUnsupportedText.Visibility = Visibility.Visible;
+                IccUnsupportedText.Text = state.UnsupportedReason ?? "ICC 滤镜在当前环境不可用。";
+                return;
+            }
+
+            IccSupportedPanel.Visibility = Visibility.Visible;
+            IccUnsupportedText.Visibility = Visibility.Collapsed;
+            IccCurrentText.Text = "当前生效：" + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
+
+            SetIccPresetCardsEnabled(true);
+            IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
+            IccRestoreButton.IsEnabled = state.Restorable;
+
+            if (state.Restorable)
+                IccStateText.Text = "已记录你的原始色彩配置，可一键还原。";
+            else if (state.CurrentProfileName is not null)
+                IccStateText.Text = "";
+        }
+        catch (Exception ex)
+        {
+            IccSupportedPanel.Visibility = Visibility.Collapsed;
+            IccUnsupportedText.Visibility = Visibility.Visible;
+            IccUnsupportedText.Text = "读取 ICC 状态失败：" + ex.Message;
+        }
+    }
+
+    private void SetIccPresetCardsEnabled(bool enabled)
+    {
+        foreach (var card in new RadioButton[] { IccPresetVivid, IccPresetShadowBoost, IccPresetDehaze, IccPresetStandard })
+            card.IsEnabled = enabled;
+    }
+
+    private IccFilterPreset? SelectedIccPreset()
+    {
+        if (IccPresetVivid.IsChecked == true) return IccFilterPreset.Vivid;
+        if (IccPresetShadowBoost.IsChecked == true) return IccFilterPreset.ShadowBoost;
+        if (IccPresetDehaze.IsChecked == true) return IccFilterPreset.Dehaze;
+        return null; // 「标准」卡片 = 还原语义，走 Restore
+    }
+
+    private async void IccApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var preset = SelectedIccPreset();
+        if (preset is null)
+        {
+            // 标准 = 还原原始
+            await IccRestoreCore();
+            return;
+        }
+
+        var confirmed = DialogService.Confirm(
+            "应用 ICC 滤镜",
+            "切换是系统全局的：整个桌面（含网页、视频、游戏）的观感都会变化。\n\n" +
+            "· 第一版只作用主显示器，多显示器暂不支持\n" +
+            "· 程序生成的 ICC 是简单曲线变换，效果弱于专业校色\n" +
+            "· 应用前会自动记录原始配置，随时可点「还原原始」恢复\n\n确定应用？",
+            confirmText: "应用");
+        if (!confirmed)
+            return;
+
+        _busy = true;
+        IccApplyButton.IsEnabled = false;
+        IccRestoreButton.IsEnabled = false;
+        IccStateText.Text = "正在应用预设…";
+        try
+        {
+            var name = await Task.Run(() => IccFilterService.Apply(preset.Value));
+            IccStateText.Text = $"已生效：{name}。系统全局切换即时可见；不满意点「还原原始」。";
+        }
+        catch (Exception ex)
+        {
+            IccStateText.Text = "应用失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    private async void IccRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        await IccRestoreCore();
+    }
+
+    private async Task IccRestoreCore()
+    {
+        _busy = true;
+        IccApplyButton.IsEnabled = false;
+        IccRestoreButton.IsEnabled = false;
+        IccStateText.Text = "正在还原…";
+        try
+        {
+            var restored = await Task.Run(() => IccFilterService.Restore());
+            IccStateText.Text = restored
+                ? "已还原：显示器的色彩配置已恢复为应用滤镜前的原样。"
+                : "没有找到需要还原的备份（尚未应用过滤镜），无需还原。";
+        }
+        catch (Exception ex)
+        {
+            IccStateText.Text = "还原失败：" + ex.Message;
         }
         finally
         {

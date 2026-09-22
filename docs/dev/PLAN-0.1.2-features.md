@@ -1,8 +1,9 @@
 # 0.1.2 功能开发计划 · 显示与画质（N 卡驱动设置 / DLSS / ICC 滤镜）
 
-> 状态：待实施（用户已定题，本文档为开工依据）
-> 前置阅读：`../ROADMAP.md`（五条红线）、`HANDOFF_PROMPT_2026-09-13.md`（仓库现状与协作纪律）
-> 基线：beta @ `ce62f90`，221/221 测试，.NET 10，v0.1.1-beta 已发布
+> 状态：**M1 完成**（DLSS 真机闭环 + 数字振动 DVC，注意数字振动是显示级不是 DRS）；M2 完成；M3 未开始。
+> 里程碑明细见 `docs/HANDOFF.md` §3（现状以那里为准，本文只保留开工依据与设计细节）。
+> 前置阅读：`../ROADMAP.md`（五条红线）、`../../AGENTS.md`（代理协作纪律）、`../HANDOFF.md`（仓库现状）
+> 原基线：beta @ `ce62f90`，221/221 测试，.NET 10，v0.1.1-beta 已发布；当前基线已推进到 248/248
 > **发版流程铁律：先本机构建 + 部署 D:\FpsTune 给用户过目，用户认可后才发 GitHub Release。**
 
 ---
@@ -85,6 +86,25 @@ profile 出现与消失（旁观证据）。游戏内主观画质对比由用户
 3. 切换：`AssociateColorProfileWithDeviceW` 关联目标 .icc；
 4. 还原：关联回备份的原始 profile（进入功能时用 DetectionService 既有读取逻辑取当前 profile 并持久化）。
    现有代码锚点：`Core/DetectionService.cs` 颜色配置检查（只读部分直接复用）。
+
+> **⚠️ 2026-09-14 真机探针修订（Windows 11 26200.9445，RTX 5070 Ti Laptop）**：
+> 上面第 3、4 步的原始机制在该系统上不可用，已按探针证据改为下述机制（实现见
+> `Services/IccSystemApi.cs` 注释）：
+> - `AssociateColorProfileWithDeviceW`：`\\.\DISPLAY1` 形式返回 FALSE；纯文件名 + `"DISPLAY1"`
+>   返回 TRUE，但实际写入的是**捕获设备（Capture）关联列表**，显示器 profile 不变——接口行为与文档不符；
+> - `WcsSetDefaultColorProfile`：各设备名形式均返回 TRUE 但静默无操作；
+> - `SetICMProfile`：返回 TRUE 但无操作；
+> - `ColorProfileGetDisplayList`：访问冲突（0xC0000005），不可用；
+> - **可用机制**：`ColorProfileSetDisplayDefaultAssociation(CURRENT_USER, CPT_ICM, CPST_NONE, LUID, sourceID)`
+>   —— 行为是把 profile 追加进 per-user 显示关联列表末尾，**默认 = 列表中最后一个有效 profile**
+>   （已用 Windows 颜色管理 UI 对照验证：UI「设为默认」同样把所选 profile 移到列表末尾）；
+> - **读端**：`GetICMProfile` 不反映真实默认（本机始终报 sRGB），生效 profile 以 per-user
+>   关联列表（HKCU `ICM\ProfileAssociations\Display\{4d36e96e…}\<监视器驱动键>`，MULTI_SZ）
+>   从末尾数第一个有效显示类（`mntr`/`RGB `）profile 为准；跳过的条目包括文件已删除的残留
+>   与非显示类（如打印机类 RSWOP.icm）。
+> - 主显示器 LUID/sourceID：`QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS)` 后用
+>   `DisplayConfigGetDeviceInfo(GET_SOURCE_NAME)` 把路径映射回 GDI 设备名核对；
+> - 探针全程自恢复；对照实验曾短暂把默认在 sRGB/BOE 间切换，实验后已按快照精确还原。
 
 ### 内置预设（程序化生成最小 ICC v2 profile：RGB 矩阵 + gamma/曲线 tag，运行时生成、不捆绑第三方文件）
 | 预设 | 曲线特征 | 适用 |

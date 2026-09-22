@@ -87,6 +87,33 @@ internal static class AtomicFile
         }
     }
 
+    /// <summary>二进制版本的原子写入，语义与 WriteAllText 一致（临时文件独占 + 原子替换）。</summary>
+    public static void WriteAllBytes(string path, byte[] bytes)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        var tmp = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllBytes(tmp, bytes);
+            File.Move(tmp, path, overwrite: true);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(tmp))
+                    File.Delete(tmp);
+            }
+            catch
+            {
+                // 原始写入异常优先；清理失败不应掩盖它。
+            }
+        }
+    }
+
     /// <summary>读取失败时把损坏文件留档为 .corrupt，便于用户找回线索而不是被静默覆盖。</summary>
     public static void PreserveCorrupt(string path)
     {
