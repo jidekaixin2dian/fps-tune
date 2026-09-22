@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
@@ -54,6 +54,34 @@ public static class HardwareInfoService
         var os = GetOsName();
         _cached = new HardwareInfo(cpu, gpu, ram, os, IsLaptop(), AdminHelper.IsAdministrator());
         return _cached;
+    }
+
+    /// <summary>是否桌面机（非笔记本）。笔电散热/功耗墙不适合 4x 透明度超级采样。</summary>
+    public static bool IsDesktop => !Get().IsLaptop;
+
+    /// <summary>
+    /// 是否桌面高端 N 卡（如 5070 Ti / 5080 / 5090 / 4080 / 4090 / 3090）。
+    /// 仅用于「透明度 4x」这类重开销推荐；笔电一律不升档。
+    /// </summary>
+    public static bool IsHighEndNvidia
+    {
+        get
+        {
+            if (!IsDesktop)
+                return false;
+            var gpu = Get().Gpu;
+            if (!gpu.Contains("GeForce", StringComparison.OrdinalIgnoreCase)
+                && !gpu.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)
+                && !gpu.Contains("RTX", StringComparison.OrdinalIgnoreCase))
+                return false;
+            return gpu.Contains("5090", StringComparison.OrdinalIgnoreCase)
+                || gpu.Contains("5080", StringComparison.OrdinalIgnoreCase)
+                || gpu.Contains("5070", StringComparison.OrdinalIgnoreCase)
+                || gpu.Contains("4090", StringComparison.OrdinalIgnoreCase)
+                || gpu.Contains("4080", StringComparison.OrdinalIgnoreCase)
+                || gpu.Contains("3090", StringComparison.OrdinalIgnoreCase)
+                || gpu.Contains("3080", StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     /// <summary>

@@ -180,12 +180,12 @@ public class DisplayQualityTests : IDisposable
         _api.AddProfile("三角洲行动", Exe);
         _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.TransparencyMultisampleId] = 4;
 
-        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample);
+        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample2x);
 
         var settings = _api.GetProfile("三角洲行动")!.Settings;
-        Assert.Equal(DisplayQualityService.TransparencySupersample4x, settings[DisplayQualityService.TransparencySupersampleId]);
+        Assert.Equal(DisplayQualityService.TransparencySupersample2x, settings[DisplayQualityService.TransparencySupersampleId]);
         Assert.False(settings.ContainsKey(DisplayQualityService.TransparencyMultisampleId));
-        Assert.Equal(TransparencyAa.Supersample, DisplayQualityService.GetDrsGameSettings(Exe).TransparencyAa);
+        Assert.Equal(TransparencyAa.Supersample2x, DisplayQualityService.GetDrsGameSettings(Exe).TransparencyAa);
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class DisplayQualityTests : IDisposable
     {
         _api.AddProfile("三角洲行动", Exe);
 
-        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample);
+        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample2x);
         DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Off);
 
         var settings = _api.GetProfile("三角洲行动")!.Settings;
@@ -236,6 +236,32 @@ public class DisplayQualityTests : IDisposable
         Assert.False(settings.ContainsKey(DisplayQualityService.DlssSrPresetId));
         Assert.False(settings.ContainsKey(DisplayQualityService.PowerModeId));
         Assert.False(DisplayQualityService.HasRestorableBackup(Exe));
+    }
+
+    [Fact]
+    public void M3_competitive_preset_writes_recommended_gear()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyCompetitivePreset(Exe, desktopHighEndGpu: false);
+
+        var s = DisplayQualityService.GetDrsGameSettings(Exe);
+        Assert.Equal(TextureFilterQuality.HighQuality, s.TextureQuality);
+        Assert.Equal(PowerMode.PreferMax, s.PowerMode);
+        Assert.Equal(TransparencyAa.Supersample2x, s.TransparencyAa);
+        Assert.Equal(1u, s.PreRenderLimit);
+        Assert.True(s.Restorable);
+    }
+
+    [Fact]
+    public void M3_competitive_preset_uses_4x_transparency_on_desktop_high_end()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyCompetitivePreset(Exe, desktopHighEndGpu: true);
+
+        var s = DisplayQualityService.GetDrsGameSettings(Exe);
+        Assert.Equal(TransparencyAa.Supersample4x, s.TransparencyAa);
     }
 
     private sealed class FakeNvdrsApi : INvdrsApi

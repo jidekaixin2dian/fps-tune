@@ -547,6 +547,56 @@ public partial class DisplayQualityView : UserControl
             _drsStatus = null;
     }
 
+    private async void DrsPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var path = AppState.GamePath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        // 桌面非笔电高端卡才推透明度 4x；默认 2x
+        var desktopHighEnd = HardwareInfoService.IsDesktop && HardwareInfoService.IsHighEndNvidia;
+        var traaLabel = desktopHighEnd ? "超级采样 4x（检测到桌面高端 N 卡）" : "超级采样 2x";
+        var confirmed = DialogService.Confirm(
+            "一键竞技推荐",
+            "将按社区高频组合写入当前游戏的 NVIDIA 驱动配置：\n\n" +
+            "· 纹理过滤 · 质量：高质量\n" +
+            "· 电源管理：最高性能优先\n" +
+            "· 平滑处理 · 透明度：" + traaLabel + "\n" +
+            "· 低延迟 · 预渲染帧：1 帧\n\n" +
+            "写入前自动备份，可一键「还原默认」。确定应用？",
+            confirmText: "应用");
+        if (!confirmed)
+            return;
+
+        _busy = true;
+        _drsStatus = null;
+        DrsApplyButton.IsEnabled = false;
+        DrsRestoreButton.IsEnabled = false;
+        DrsStateText.Text = "正在写入竞技推荐…";
+        try
+        {
+            var exeName = Path.GetFileName(path);
+            await Task.Run(() => DisplayQualityService.ApplyCompetitivePreset(exeName, desktopHighEnd));
+            _drsStatus = "已应用竞技推荐（高质量 + 最高性能 + " + traaLabel + " + 预渲染 1 帧）。";
+        }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            _drsStatus = "应用失败：写入 NVIDIA 配置需要管理员权限。";
+            if (DialogService.Confirm("需要管理员权限", "要以管理员身份重启并重试吗？", confirmText: "以管理员重启"))
+                AdminHelper.RestartAsAdministrator();
+        }
+        catch (Exception ex)
+        {
+            _drsStatus = "应用失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
     private async void DrsApply_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;

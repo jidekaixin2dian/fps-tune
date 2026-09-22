@@ -58,7 +58,16 @@
 
 ## 4. 本轮（2026-09-22）做了什么
 
-**P1 推进：ROADMAP 基线 + M3 服务/UI**
+**P1：M3 推荐档定稿 + agent-reach 调研**
+
+- 使用 agent-reach（Exa 网页搜索；小红书/OpenCLI 无登录态）交叉核对 NVIDIA 官方说明 + 攻略站/教学文。
+- **推荐策略（用户拍板 2026-09-22）**：
+  - 电源管理：**完整保留**，默认推「最高性能优先」
+  - 纹理过滤·质量：**优先推荐「高质量」**（现代 N 卡帧率影响小、远景清晰）
+  - 平滑处理·透明度：**默认推超级采样 2x**；**仅桌面非笔电高端卡（5070 Ti 级）才推 4x**
+  - 低延迟·预渲染帧：**评估为 1 帧**（≈驱动低延迟模式「开启」）；游戏内有 Reflex 则「应用程序控制」
+- 一键「竞技推荐」`ApplyCompetitivePreset`；`HardwareInfoService.IsDesktop` / `IsHighEndNvidia`。
+- 测试 263/263。
 
 - P1-3 完成：ROADMAP 基线改写为 0.1.2-beta。
 - P1-1 M3 实现：`QUALITY_ENHANCEMENTS` / `PREFERRED_PSTATE` / `AA_MODE_ALPHATOCOVERAGE`+`AA_MODE_REPLAY` /

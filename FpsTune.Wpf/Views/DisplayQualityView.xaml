@@ -213,8 +213,16 @@
                     <TextBlock x:Name="DrsStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
-                        <TextBlock Text="与 DLSS 覆盖写在同一游戏 profile 上，共用一键「还原默认」。SettingID 来自 NVIDIA 官方 NvApiDriverSettings.h。"
+                        <TextBlock Text="与 DLSS 覆盖写在同一游戏 profile 上，共用一键「还原默认」。SettingID 来自 NVIDIA 官方 NvApiDriverSettings.h。推荐档按社区高频教学（抖音/B 站/攻略站 2026-09 交叉）。"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <Button x:Name="DrsPresetButton" Content="一键竞技推荐"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="130" Margin="0,0,8,0" Click="DrsPreset_Click"
+                                    ToolTip="纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧；桌面高端卡自动升透明度 4x"/>
+                            <TextBlock Text="默认推：纹理高质量 · 透明度 2x · 预渲染 1 帧"
+                                       Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <Grid Margin="0,12,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="160"/>
@@ -229,39 +237,46 @@
 
                             <TextBlock Grid.Row="0" Text="纹理过滤 · 质量" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
                             <ComboBox x:Name="TexQualityCombo" Grid.Row="0" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="现代 N 卡上「高质量」对帧率影响很小、远景更清晰（推荐）">
                                 <ComboBoxItem Content="跟随驱动/游戏" Tag=""/>
+                                <ComboBoxItem Content="高质量（推荐）" Tag="4294967286"/>
                                 <ComboBoxItem Content="质量" Tag="0"/>
                                 <ComboBoxItem Content="性能" Tag="10"/>
                                 <ComboBoxItem Content="高性能" Tag="20"/>
-                                <ComboBoxItem Content="高质量" Tag="4294967286"/>
                             </ComboBox>
 
                             <TextBlock Grid.Row="1" Text="电源管理" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
                             <ComboBox x:Name="PowerModeCombo" Grid.Row="1" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="竞技推荐「最高性能优先」，避免对枪时降频">
                                 <ComboBoxItem Content="跟随驱动/游戏" Tag=""/>
-                                <ComboBoxItem Content="最高性能优先" Tag="1"/>
+                                <ComboBoxItem Content="最高性能优先（推荐）" Tag="1"/>
                                 <ComboBoxItem Content="自适应" Tag="0"/>
                                 <ComboBoxItem Content="由驱动控制" Tag="2"/>
+                                <ComboBoxItem Content="偏重稳定性能" Tag="3"/>
+                                <ComboBoxItem Content="最低功耗" Tag="4"/>
                                 <ComboBoxItem Content="最优电源" Tag="5"/>
                             </ComboBox>
 
                             <TextBlock Grid.Row="2" Text="平滑处理 · 透明度" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
                             <ComboBox x:Name="TransparencyCombo" Grid.Row="2" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="默认推荐超级采样 2x；桌面非笔电高端卡（如 5070 Ti）可用 4x">
                                 <ComboBoxItem Content="跟随驱动/游戏" Tag=""/>
-                                <ComboBoxItem Content="关闭" Tag="0"/>
+                                <ComboBoxItem Content="超级采样 2x（推荐）" Tag="2"/>
+                                <ComboBoxItem Content="超级采样 4x（桌面高端卡）" Tag="3"/>
                                 <ComboBoxItem Content="多重采样" Tag="1"/>
-                                <ComboBoxItem Content="超级采样 4x" Tag="2"/>
+                                <ComboBoxItem Content="关闭" Tag="0"/>
                             </ComboBox>
 
                             <TextBlock Grid.Row="3" Text="低延迟 · 预渲染帧" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
                             <ComboBox x:Name="PreRenderCombo" Grid.Row="3" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
+                                      ToolTip="1 帧输入延迟最低（竞技）；CPU 偏弱可 2；游戏内有 NVIDIA Reflex 时优先程序控制">
                                 <ComboBoxItem Content="应用程序控制" Tag=""/>
-                                <ComboBoxItem Content="1 帧（低延迟）" Tag="1"/>
-                                <ComboBoxItem Content="2 帧" Tag="2"/>
+                                <ComboBoxItem Content="1 帧（竞技推荐）" Tag="1"/>
+                                <ComboBoxItem Content="2 帧（平衡）" Tag="2"/>
                                 <ComboBoxItem Content="3 帧" Tag="3"/>
                             </ComboBox>
                         </Grid>
@@ -278,7 +293,7 @@
                                     MinWidth="110" Click="DrsRestore_Click"/>
                         </StackPanel>
 
-                        <TextBlock Text="说明：写入驱动 profile，不改游戏文件；应用前自动备份原值，点「还原默认」一键恢复（与 DLSS 覆盖一起还原）。纹理选「性能」、电源选「最高性能优先」是社区高频组合，效果因游戏而异。"
+                        <TextBlock Text="说明：写入驱动 profile，不改游戏文件；应用前自动备份原值，点「还原默认」一键恢复（与 DLSS 覆盖一起还原）。低延迟＝最大预渲染帧数 1（≈驱动低延迟模式「开启」的队列语义）；若游戏内有 NVIDIA Reflex，优先开游戏内 Reflex 且预渲染选「应用程序控制」。"
                                    Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 

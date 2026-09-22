@@ -44,13 +44,15 @@ public enum PowerMode : uint
 /// <summary>
 /// 平滑处理 - 透明度。官方拆成两项：
 /// 多重采样 = AA_MODE_ALPHATOCOVERAGE（Transparency Multisampling）；
-/// 超级采样 = AA_MODE_REPLAY 值 AA_MODE_REPLAY_TRANSPARENCY（Transparency Supersampling）。
+/// 超级采样 = AA_MODE_REPLAY（Transparency Supersampling）：2x=SAMPLES_TWO|0x03，4x=AA_MODE_REPLAY_TRANSPARENCY。
+/// 推荐：默认 2x（画质/开销平衡）；桌面非笔电高端卡（如 5070 Ti）才推 4x。
 /// </summary>
 public enum TransparencyAa
 {
     Off = 0,
     Multisample = 1,
-    Supersample = 2,
+    Supersample2x = 2,
+    Supersample4x = 3,
 }
 
 /// <summary>
@@ -71,8 +73,10 @@ public static class DisplayQualityService
     public const uint TransparencySupersampleId = 0x10D48A85; // AA_MODE_REPLAY_ID
     public const uint PreRenderLimitId = 0x007BA09E; // PRERENDERLIMIT_ID
 
-    /// <summary>官方 AA_MODE_REPLAY_TRANSPARENCY（4x 超级采样透明度）。</summary>
+    /// <summary>官方 AA_MODE_REPLAY_TRANSPARENCY（4x 超级采样透明度）= SAMPLES_FOUR|0x03。</summary>
     public const uint TransparencySupersample4x = 0x00000023;
+    /// <summary>2x 超级采样透明度 = SAMPLES_TWO|0x03（与官方 TRANSPARENCY 同 mode 位）。</summary>
+    public const uint TransparencySupersample2x = 0x00000013;
     public const uint TransparencyMultisampleOn = 0x00000004;
 
     internal const string ProfilePrefix = "FpsTune · ";
@@ -142,6 +146,19 @@ public static class DisplayQualityService
         uint? PreRenderLimit,
         bool Restorable);
 
+    /// <summary>
+    /// 社区/教学高频「竞技 3D 预设」（2026-09-22 调研）：
+    /// 纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧。
+    /// <paramref name="desktopHighEndGpu"/> 为 true（桌面非笔电高端卡，如 5070 Ti）时透明度升到 4x。
+    /// </summary>
+    public static void ApplyCompetitivePreset(string gameExe, bool desktopHighEndGpu)
+    {
+        ApplyTextureQuality(gameExe, TextureFilterQuality.HighQuality);
+        ApplyPowerMode(gameExe, PowerMode.PreferMax);
+        ApplyTransparencyAa(gameExe, desktopHighEndGpu ? TransparencyAa.Supersample4x : TransparencyAa.Supersample2x);
+        ApplyPreRenderLimit(gameExe, 1);
+    }
+
     public static DrsGameSettings GetDrsGameSettings(string gameExe)
     {
         using var api = CreateApi();
@@ -161,7 +178,10 @@ public static class DisplayQualityService
         var hasMulti = session.TryGetSettingDword(owner, TransparencyMultisampleId, out var multi);
         var hasSuper = session.TryGetSettingDword(owner, TransparencySupersampleId, out var super);
         if (hasSuper && (super & 0x0f) != 0)
-            traa = TransparencyAa.Supersample;
+        {
+            var samples = super & 0x70;
+            traa = samples >= 0x20 ? TransparencyAa.Supersample4x : TransparencyAa.Supersample2x;
+        }
         else if (hasMulti && multi != 0)
             traa = TransparencyAa.Multisample;
         else if (hasMulti || hasSuper)
@@ -184,7 +204,9 @@ public static class DisplayQualityService
         => ApplyManaged(gameExe, (session, owner) =>
             session.SetSettingDword(owner, PowerModeId, (uint)mode));
 
-    /// <summary>平滑处理 - 透明度（关闭 / 多重采样 / 超级采样 4x）。</summary>
+    /// <summary>
+    /// 平滑处理 - 透明度（关闭 / 多重采样 / 超级采样 2x 推荐 / 超级采样 4x 桌面高端卡）。
+    /// </summary>
     public static void ApplyTransparencyAa(string gameExe, TransparencyAa mode)
         => ApplyManaged(gameExe, (session, owner) =>
         {
@@ -202,10 +224,18 @@ public static class DisplayQualityService
                 return;
             }
             session.DeleteSetting(owner, TransparencyMultisampleId);
-            session.SetSettingDword(owner, TransparencySupersampleId, TransparencySupersample4x);
+            session.SetSettingDword(
+                owner,
+                TransparencySupersampleId,
+                mode == TransparencyAa.Supersample4x ? TransparencySupersample4x : TransparencySupersample2x);
         });
 
-    /// <summary>低延迟：最大预渲染帧数（官方 PRERENDERLIMIT）。null = 应用程序控制（还原语义）。</summary>
+    /// <summary>
+    /// 低延迟 · 最大预渲染帧数（官方 PRERENDERLIMIT）。
+    /// 评估（2026-09-22）：竞技 FPS 推荐 1 帧（≈驱动「低延迟模式：开启」的队列语义）；
+    /// CPU 偏弱可 2；若游戏内置 NVIDIA Reflex，优先游戏内 Reflex + 应用程序控制。
+    /// null = 应用程序控制（还原/跟随语义）。
+    /// </summary>
     public static void ApplyPreRenderLimit(string gameExe, uint? frames)
         => ApplyManaged(gameExe, (session, owner) =>
         {
