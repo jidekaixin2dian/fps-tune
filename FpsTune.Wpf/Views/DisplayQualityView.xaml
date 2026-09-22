@@ -57,31 +57,36 @@
                                     <TextBlock Text="不覆盖，由游戏内设置决定" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton x:Name="PresetLatest" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                            <RadioButton x:Name="PresetLatest" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
                                 <StackPanel>
                                     <TextBlock Text="最新" Style="{StaticResource PresetCardText}"/>
                                     <TextBlock Text="跟随驱动更新自动演进" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton x:Name="PresetM" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                            <RadioButton x:Name="PresetM" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
                                 <StackPanel>
                                     <TextBlock Text="M 预设" Style="{StaticResource PresetCardText}"/>
                                     <TextBlock Text="新一代模型 · 高端画质首选" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton x:Name="PresetK" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                            <RadioButton x:Name="PresetK" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
                                 <StackPanel>
                                     <TextBlock Text="K 预设" Style="{StaticResource PresetCardText}"/>
                                     <TextBlock Text="新一代模型 · 社区常用，稳定" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton x:Name="PresetJ" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                            <RadioButton x:Name="PresetJ" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
                                 <StackPanel>
                                     <TextBlock Text="J 预设" Style="{StaticResource PresetCardText}"/>
                                     <TextBlock Text="新一代模型 · 较早版本" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton x:Name="PresetE" GroupName="dlssPreset" Style="{StaticResource PresetCard}">
+                            <RadioButton x:Name="PresetE" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
                                 <StackPanel>
                                     <TextBlock Text="E 预设" Style="{StaticResource PresetCardText}"/>
                                     <TextBlock Text="旧一代 CNN 模型 · 复古画质" Style="{StaticResource PresetCardNote}"/>

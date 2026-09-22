@@ -13,6 +13,9 @@ namespace FpsTune.Wpf.Views;
 public partial class DisplayQualityView : UserControl
 {
     private bool _busy;
+    private string? _dlssStatus;
+    private string? _vibStatus;
+    private string? _iccStatus;
 
     public DisplayQualityView()
     {
@@ -69,15 +72,11 @@ public partial class DisplayQualityView : UserControl
         try
         {
             var state = DisplayQualityService.GetDlssState(exeName);
-            if (state.Covered)
-            {
-                StateText.Text = $"当前覆盖：{PresetLabel(state.PresetValue ?? 0)}"
-                    + (state.Restorable ? "（本工具写入，可还原）" : "（其他工具/驱动既有配置，应用时将自动备份原值）");
-            }
-            else
-            {
-                StateText.Text = "当前未覆盖（跟随游戏内设置）。";
-            }
+            SyncPresetCardSelection(state);
+            StateText.Text = _dlssStatus ?? (state.Covered
+                ? $"当前覆盖：{PresetLabel(state.PresetValue ?? 0)}"
+                    + (state.Restorable ? "（本工具写入，可还原）" : "（其他工具/驱动既有配置，应用时将自动备份原值）")
+                : "当前未覆盖（跟随游戏内设置）。");
             ApplyButton.IsEnabled = true;
             RestoreButton.IsEnabled = state.Covered || state.Restorable;
             SetPresetCardsEnabled(true);
@@ -110,6 +109,7 @@ public partial class DisplayQualityView : UserControl
     private void Preset_Checked(object sender, RoutedEventArgs e)
     {
         // 选中卡片即启用"应用覆盖"；不自动写驱动，统一由按钮执行
+        _dlssStatus = null;
         if (SupportedPanel.Visibility == Visibility.Visible && !_busy)
             ApplyButton.IsEnabled = true;
     }
@@ -155,6 +155,7 @@ public partial class DisplayQualityView : UserControl
         }
 
         _busy = true;
+        _dlssStatus = null;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
         StateText.Text = "正在写入驱动设置…";
@@ -162,13 +163,13 @@ public partial class DisplayQualityView : UserControl
         {
             var exeName = Path.GetFileName(path);
             await Task.Run(() => DisplayQualityService.ApplyDlssPreset(exeName, preset.Value));
-            StateText.Text = preset.Value == DlssPreset.FollowGame
+            _dlssStatus = preset.Value == DlssPreset.FollowGame
                 ? "已移除覆盖：DLSS 预设回到游戏内/驱动默认。进游戏生效。"
                 : $"已覆盖 DLSS 预设为 {PresetLabel((uint)preset.Value)}。进游戏生效；不满意可点「还原默认」。";
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            StateText.Text = "应用失败：写入 NVIDIA 配置需要管理员权限。系统设置未变。";
+            _dlssStatus = "应用失败：写入 NVIDIA 配置需要管理员权限。系统设置未变。";
             if (DialogService.Confirm(
                     "需要管理员权限",
                     "写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。\n\n" +
@@ -178,7 +179,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            StateText.Text = "应用失败：" + ex.Message + "。系统设置未变或已如实还原，可重试。";
+            _dlssStatus = "应用失败：" + ex.Message + "。系统设置未变或已如实还原，可重试。";
         }
         finally
         {
@@ -195,6 +196,7 @@ public partial class DisplayQualityView : UserControl
             return;
 
         _busy = true;
+        _dlssStatus = null;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
         StateText.Text = "正在还原…";
@@ -202,13 +204,13 @@ public partial class DisplayQualityView : UserControl
         {
             var exeName = Path.GetFileName(path);
             var removed = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
-            StateText.Text = removed
+            _dlssStatus = removed
                 ? "已还原：覆盖前的原值已恢复（或自建配置文件已删除）。进游戏生效。"
                 : "没有找到本工具的覆盖或还原备份，无需还原。";
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            StateText.Text = "还原失败：写入 NVIDIA 配置需要管理员权限。";
+            _dlssStatus = "还原失败：写入 NVIDIA 配置需要管理员权限。";
             if (DialogService.Confirm(
                     "需要管理员权限",
                     "还原 NVIDIA 驱动配置需要管理员权限。\n\n要以管理员身份重启并重试吗？",
@@ -217,7 +219,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            StateText.Text = "还原失败：" + ex.Message;
+            _dlssStatus = "还原失败：" + ex.Message;
         }
         finally
         {
@@ -256,9 +258,9 @@ public partial class DisplayQualityView : UserControl
 
             VibApplyButton.IsEnabled = true;
             VibRestoreButton.IsEnabled = state.Restorable;
-            VibStateText.Text = state.Restorable
+            VibStateText.Text = _vibStatus ?? (state.Restorable
                 ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
-                : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）";
+                : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）");
         }
         catch (Exception ex)
         {
@@ -295,17 +297,18 @@ public partial class DisplayQualityView : UserControl
             return;
 
         _busy = true;
+        _vibStatus = null;
         VibApplyButton.IsEnabled = false;
         VibRestoreButton.IsEnabled = false;
         VibStateText.Text = "正在写入…";
         try
         {
             await Task.Run(() => DigitalVibranceService.SetPercent(percent));
-            VibStateText.Text = $"已应用：{percent}%。整屏即时生效；不满意点「还原原始」。";
+            _vibStatus = $"已应用：{percent}%。整屏即时生效；不满意点「还原原始」。";
         }
         catch (Exception ex)
         {
-            VibStateText.Text = "应用失败：" + ex.Message;
+            _vibStatus = "应用失败：" + ex.Message;
         }
         finally
         {
@@ -318,19 +321,20 @@ public partial class DisplayQualityView : UserControl
     {
         if (_busy) return;
         _busy = true;
+        _vibStatus = null;
         VibApplyButton.IsEnabled = false;
         VibRestoreButton.IsEnabled = false;
         VibStateText.Text = "正在还原…";
         try
         {
             var restored = await Task.Run(() => DigitalVibranceService.Restore());
-            VibStateText.Text = restored
+            _vibStatus = restored
                 ? "已还原：鲜艳度回到调整前的档位。"
                 : "没有找到需要还原的备份，无需还原。";
         }
         catch (Exception ex)
         {
-            VibStateText.Text = "还原失败：" + ex.Message;
+            _vibStatus = "还原失败：" + ex.Message;
         }
         finally
         {
@@ -362,10 +366,9 @@ public partial class DisplayQualityView : UserControl
             IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
             IccRestoreButton.IsEnabled = state.Restorable;
 
-            if (state.Restorable)
-                IccStateText.Text = "已记录你的原始色彩配置，可一键还原。";
-            else if (state.CurrentProfileName is not null)
-                IccStateText.Text = "";
+            IccStateText.Text = _iccStatus ?? (state.Restorable
+                ? "已记录你的原始色彩配置，可一键还原。"
+                : "");
         }
         catch (Exception ex)
         {
@@ -411,17 +414,18 @@ public partial class DisplayQualityView : UserControl
             return;
 
         _busy = true;
+        _iccStatus = null;
         IccApplyButton.IsEnabled = false;
         IccRestoreButton.IsEnabled = false;
         IccStateText.Text = "正在应用预设…";
         try
         {
             var name = await Task.Run(() => IccFilterService.Apply(preset.Value));
-            IccStateText.Text = $"已生效：{name}。系统全局切换即时可见；不满意点「还原原始」。";
+            _iccStatus = $"已生效：{name}。系统全局切换即时可见；不满意点「还原原始」。";
         }
         catch (Exception ex)
         {
-            IccStateText.Text = "应用失败：" + ex.Message;
+            _iccStatus = "应用失败：" + ex.Message;
         }
         finally
         {
@@ -439,19 +443,20 @@ public partial class DisplayQualityView : UserControl
     private async Task IccRestoreCore()
     {
         _busy = true;
+        _iccStatus = null;
         IccApplyButton.IsEnabled = false;
         IccRestoreButton.IsEnabled = false;
         IccStateText.Text = "正在还原…";
         try
         {
             var restored = await Task.Run(() => IccFilterService.Restore());
-            IccStateText.Text = restored
+            _iccStatus = restored
                 ? "已还原：显示器的色彩配置已恢复为应用滤镜前的原样。"
                 : "没有找到需要还原的备份（尚未应用过滤镜），无需还原。";
         }
         catch (Exception ex)
         {
-            IccStateText.Text = "还原失败：" + ex.Message;
+            _iccStatus = "还原失败：" + ex.Message;
         }
         finally
         {
