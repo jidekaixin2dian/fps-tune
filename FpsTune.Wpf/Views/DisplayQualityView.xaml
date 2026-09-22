@@ -50,6 +50,13 @@
                         <TextBlock Text="覆盖预设（作用于当前定位的游戏；游戏内若自行选择超分设置，以本覆盖为准）"
                                    Style="{StaticResource MutedTextStyle}"/>
                         <UniformGrid Columns="3" Margin="0,10,0,0">
+                            <RadioButton x:Name="PresetK" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
+                                         Checked="Preset_Checked">
+                                <StackPanel>
+                                    <TextBlock Text="K 预设（推荐）" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="新一代模型 · 社区常用，稳定" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
                             <RadioButton x:Name="PresetFollowGame" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
                                          Checked="Preset_Checked">
                                 <StackPanel>
@@ -69,13 +76,6 @@
                                 <StackPanel>
                                     <TextBlock Text="M 预设" Style="{StaticResource PresetCardText}"/>
                                     <TextBlock Text="新一代模型 · 高端画质首选" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="PresetK" GroupName="dlssPreset" Style="{StaticResource PresetCard}"
-                                         Checked="Preset_Checked">
-                                <StackPanel>
-                                    <TextBlock Text="K 预设" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="新一代模型 · 社区常用，稳定" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
                             <RadioButton x:Name="PresetJ" GroupName="dlssPreset" Style="{StaticResource PresetCard}"

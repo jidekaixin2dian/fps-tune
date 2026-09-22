@@ -127,7 +127,7 @@ public partial class DisplayQualityView : UserControl
     {
         (uint)DlssPreset.Latest => "最新预设",
         (uint)DlssPreset.PresetM => "M 预设（新一代模型·高端）",
-        (uint)DlssPreset.PresetK => "K 预设（新一代模型）",
+        (uint)DlssPreset.PresetK => "K 预设（新一代模型·推荐）",
         (uint)DlssPreset.PresetJ => "J 预设（新一代模型）",
         (uint)DlssPreset.PresetE => "E 预设（旧一代 CNN 模型）",
         _ => $"预设 0x{value:X}"

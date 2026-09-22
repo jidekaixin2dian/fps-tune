@@ -37,10 +37,11 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
    说明行尾被翻成 CRLF —— 丢弃重来，别提交。
 6. **每轮收工必须更新 `AGENTS.md` 与 `docs/HANDOFF.md`，并立刻 `git commit`**（用户 2026-09-22 明确要求）。
    两份文档是下一个代理的唯一入口，不允许只改代码不改交接。
-7. **发布流程（用户 2026-09-22 明确要求，不可跳步）**：
-   **本地构建 → `git` 提交 → 把效果给用户看（截图 / 产物路径 / 关键改动摘要）→ 等用户拍板 → 才允许发布**
-   （`publish-release.ps1` / `build-installer.ps1` / `gh release create` 一律停在「已构建待拍板」）。
-   拍板前禁止上传 GitHub Release，禁止覆盖 `D:\FpsTune`。
+7. **发布/推送流程（用户 2026-09-22 明确要求，不可跳步）**：
+   **本地构建 → 把效果给用户看（截图 / 产物路径 / 关键改动摘要）→ 等用户拍板 → 才允许 git 提交推送与发版**
+   （`git push`、`publish-release.ps1` / `build-installer.ps1` / `gh release create` 一律停在「已构建待拍板」）。
+   拍板前禁止推送 `main`、禁止上传 GitHub Release、禁止覆盖 `D:\FpsTune`。
+   **git commit 本身允许**（保工作区），但 **push 必须拍板后**。
 8. 推送 `main` 前向用户确认节奏；禁止 force push / 改写 `main` 已推送历史。`legacy/1.x` 只读冻结，不接受修复。
 
 产品红线在 `docs/ROADMAP.md` §产品定位（安全闭环 / 零侵入 / 数据说话 / 全 FPS 通用 / 可信透明）。
