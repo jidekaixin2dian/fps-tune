@@ -12,7 +12,7 @@
 | 版本 | `VersionPrefix=0.1.2` + `VersionSuffix=beta`；**已发布 `v0.1.2-beta`**。下一版本号 `0.1.3` 留给 M3 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **255 / 255 通过**，`dotnet test -c Release` |
+| 测试基线 | **261 / 261 通过**，`dotnet test -c Release`（含 M3 驱动 3D 设置） |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示） |
 
 ## 第一步：确认基线，不要先改代码

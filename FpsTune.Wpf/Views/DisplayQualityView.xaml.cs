@@ -16,6 +16,8 @@ public partial class DisplayQualityView : UserControl
     private string? _dlssStatus;
     private string? _vibStatus;
     private string? _iccStatus;
+    private string? _drsStatus;
+    private bool _drsSyncing;
 
     public DisplayQualityView()
     {
@@ -31,6 +33,7 @@ public partial class DisplayQualityView : UserControl
         RefreshDlss();
         RefreshVibrance();
         RefreshIcc();
+        RefreshDrs();
     }
 
     private void RefreshDlss()
@@ -457,6 +460,173 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _iccStatus = "还原失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    // ---------- M3：驱动 3D（纹理/电源/透明度/预渲染） ----------
+
+    private void RefreshDrs()
+    {
+        if (!DisplayQualityService.FeatureEnabled)
+        {
+            DrsSupportedPanel.Visibility = Visibility.Collapsed;
+            DrsUnsupportedText.Visibility = Visibility.Visible;
+            DrsUnsupportedText.Text = "驱动设置功能已停用（FPS_ENABLE_DLSS=0）。";
+            return;
+        }
+        if (!DisplayQualityService.IsNvidiaSupported)
+        {
+            DrsSupportedPanel.Visibility = Visibility.Collapsed;
+            DrsUnsupportedText.Visibility = Visibility.Visible;
+            DrsUnsupportedText.Text = "未检测到 NVIDIA 显卡驱动，驱动 3D 设置不可用。";
+            return;
+        }
+
+        DrsSupportedPanel.Visibility = Visibility.Visible;
+        DrsUnsupportedText.Visibility = Visibility.Collapsed;
+
+        var path = AppState.GamePath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            DrsStateText.Text = "尚未定位游戏主程序。请先到「检测」页定位游戏。";
+            DrsApplyButton.IsEnabled = false;
+            DrsRestoreButton.IsEnabled = false;
+            return;
+        }
+
+        var exeName = Path.GetFileName(path);
+        try
+        {
+            var s = DisplayQualityService.GetDrsGameSettings(exeName);
+            _drsSyncing = true;
+            SelectComboByTag(TexQualityCombo, s.TextureQuality is { } t ? ((uint)t).ToString() : "");
+            SelectComboByTag(PowerModeCombo, s.PowerMode is { } p ? ((uint)p).ToString() : "");
+            SelectComboByTag(TransparencyCombo, s.TransparencyAa is { } a ? ((int)a).ToString() : "");
+            SelectComboByTag(PreRenderCombo, s.PreRenderLimit is { } pr ? pr.ToString() : "");
+            _drsSyncing = false;
+
+            DrsStateText.Text = _drsStatus ?? (s.Restorable
+                ? "已记录原值，可一键还原。"
+                : "当前未覆盖（跟随驱动/游戏默认）。选择后点「应用 3D 设置」。");
+            DrsApplyButton.IsEnabled = true;
+            DrsRestoreButton.IsEnabled = s.Restorable;
+        }
+        catch (Exception ex)
+        {
+            DrsStateText.Text = "读取驱动 3D 设置失败：" + ex.Message;
+            DrsApplyButton.IsEnabled = false;
+            DrsRestoreButton.IsEnabled = false;
+        }
+    }
+
+    private static void SelectComboByTag(System.Windows.Controls.ComboBox combo, string tag)
+    {
+        foreach (System.Windows.Controls.ComboBoxItem item in combo.Items)
+        {
+            if ((item.Tag as string) == tag)
+            {
+                combo.SelectedItem = item;
+                return;
+            }
+        }
+        if (combo.Items.Count > 0)
+            combo.SelectedIndex = 0;
+    }
+
+    private static string? ComboTag(System.Windows.Controls.ComboBox combo)
+        => (combo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+
+    private void Drs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_drsSyncing)
+            _drsStatus = null;
+    }
+
+    private async void DrsApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var path = AppState.GamePath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        var confirmed = DialogService.Confirm(
+            "应用驱动 3D 设置",
+            "将按所选值写入当前游戏的 NVIDIA 驱动配置。\n\n" +
+            "· 不修改游戏文件，可随时「还原默认」\n" +
+            "· 与 DLSS 覆盖共用备份，还原会一并恢复\n" +
+            "· 写入驱动需要管理员权限\n\n确定应用？",
+            confirmText: "应用");
+        if (!confirmed)
+            return;
+
+        _busy = true;
+        _drsStatus = null;
+        DrsApplyButton.IsEnabled = false;
+        DrsRestoreButton.IsEnabled = false;
+        DrsStateText.Text = "正在写入…";
+        try
+        {
+            var exeName = Path.GetFileName(path);
+            await Task.Run(() =>
+            {
+                var tex = ComboTag(TexQualityCombo);
+                if (!string.IsNullOrEmpty(tex))
+                    DisplayQualityService.ApplyTextureQuality(exeName, (TextureFilterQuality)uint.Parse(tex));
+                var power = ComboTag(PowerModeCombo);
+                if (!string.IsNullOrEmpty(power))
+                    DisplayQualityService.ApplyPowerMode(exeName, (PowerMode)uint.Parse(power));
+                var traa = ComboTag(TransparencyCombo);
+                if (!string.IsNullOrEmpty(traa))
+                    DisplayQualityService.ApplyTransparencyAa(exeName, (TransparencyAa)int.Parse(traa));
+                var pr = ComboTag(PreRenderCombo);
+                if (!string.IsNullOrEmpty(pr))
+                    DisplayQualityService.ApplyPreRenderLimit(exeName, uint.Parse(pr));
+                else
+                    DisplayQualityService.ApplyPreRenderLimit(exeName, null);
+            });
+            _drsStatus = "已应用 3D 设置。进游戏生效；不满意点「还原默认」。";
+        }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            _drsStatus = "应用失败：写入 NVIDIA 配置需要管理员权限。";
+            if (DialogService.Confirm("需要管理员权限", "要以管理员身份重启并重试吗？", confirmText: "以管理员重启"))
+                AdminHelper.RestartAsAdministrator();
+        }
+        catch (Exception ex)
+        {
+            _drsStatus = "应用失败：" + ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+            Refresh();
+        }
+    }
+
+    private async void DrsRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        _busy = true;
+        _drsStatus = null;
+        DrsApplyButton.IsEnabled = false;
+        DrsRestoreButton.IsEnabled = false;
+        DrsStateText.Text = "正在还原…";
+        try
+        {
+            var exeName = Path.GetFileName(AppState.GamePath!);
+            var restored = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
+            _drsStatus = restored
+                ? "已还原：3D 设置与 DLSS 覆盖一并回到原值。"
+                : "没有找到需要还原的备份。";
+        }
+        catch (Exception ex)
+        {
+            _drsStatus = "还原失败：" + ex.Message;
         }
         finally
         {

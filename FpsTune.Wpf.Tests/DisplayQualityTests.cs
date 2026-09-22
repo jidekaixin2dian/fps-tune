@@ -148,6 +148,96 @@ public class DisplayQualityTests : IDisposable
     }
 
     /// <summary>内存态 DRS：profile 集合 + 游戏 exe 登记表 + 设置字典。</summary>
+    // ---------- M3 二期：纹理质量 / 电源 / 透明度 AA / 预渲染帧 ----------
+
+    [Fact]
+    public void M3_texture_quality_writes_official_setting_and_is_readable()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyTextureQuality(Exe, TextureFilterQuality.Performance);
+
+        Assert.Equal(0x0au, _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.TextureQualityId]);
+        var s = DisplayQualityService.GetDrsGameSettings(Exe);
+        Assert.Equal(TextureFilterQuality.Performance, s.TextureQuality);
+        Assert.True(s.Restorable);
+    }
+
+    [Fact]
+    public void M3_power_mode_prefer_max_writes_official_pstate()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyPowerMode(Exe, PowerMode.PreferMax);
+
+        Assert.Equal(1u, _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.PowerModeId]);
+        Assert.Equal(PowerMode.PreferMax, DisplayQualityService.GetDrsGameSettings(Exe).PowerMode);
+    }
+
+    [Fact]
+    public void M3_transparency_aa_supersample_uses_replay_and_clears_multisample()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+        _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.TransparencyMultisampleId] = 4;
+
+        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample);
+
+        var settings = _api.GetProfile("三角洲行动")!.Settings;
+        Assert.Equal(DisplayQualityService.TransparencySupersample4x, settings[DisplayQualityService.TransparencySupersampleId]);
+        Assert.False(settings.ContainsKey(DisplayQualityService.TransparencyMultisampleId));
+        Assert.Equal(TransparencyAa.Supersample, DisplayQualityService.GetDrsGameSettings(Exe).TransparencyAa);
+    }
+
+    [Fact]
+    public void M3_transparency_aa_off_deletes_both_settings()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample);
+        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Off);
+
+        var settings = _api.GetProfile("三角洲行动")!.Settings;
+        // 显式关闭 = 写 0；删除（未覆盖）只发生在还原时
+        Assert.Equal(0u, settings[DisplayQualityService.TransparencyMultisampleId]);
+        Assert.Equal(0u, settings[DisplayQualityService.TransparencySupersampleId]);
+        Assert.Equal(TransparencyAa.Off, DisplayQualityService.GetDrsGameSettings(Exe).TransparencyAa);
+    }
+
+    [Fact]
+    public void M3_pre_render_limit_writes_prerenderlimit_and_null_clears()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+
+        DisplayQualityService.ApplyPreRenderLimit(Exe, 1);
+        Assert.Equal(1u, _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.PreRenderLimitId]);
+        Assert.Equal(1u, DisplayQualityService.GetDrsGameSettings(Exe).PreRenderLimit);
+
+        DisplayQualityService.ApplyPreRenderLimit(Exe, null);
+        Assert.False(_api.GetProfile("三角洲行动")!.Settings.ContainsKey(DisplayQualityService.PreRenderLimitId));
+        Assert.Null(DisplayQualityService.GetDrsGameSettings(Exe).PreRenderLimit);
+    }
+
+    [Fact]
+    public void M3_and_dlss_share_one_backup_and_restore_recovers_all()
+    {
+        _api.AddProfile("三角洲行动", Exe);
+        _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.TextureQualityId] = 0; // 原值
+
+        DisplayQualityService.ApplyTextureQuality(Exe, TextureFilterQuality.HighPerformance);
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        DisplayQualityService.ApplyPowerMode(Exe, PowerMode.PreferMax);
+
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+        DisplayQualityService.RemoveDlssOverride(Exe);
+
+        var settings = _api.GetProfile("三角洲行动")!.Settings;
+        // 原值写回；原本没有的设置被删
+        Assert.Equal(0u, settings[DisplayQualityService.TextureQualityId]);
+        Assert.False(settings.ContainsKey(DisplayQualityService.DlssSrPresetId));
+        Assert.False(settings.ContainsKey(DisplayQualityService.PowerModeId));
+        Assert.False(DisplayQualityService.HasRestorableBackup(Exe));
+    }
+
     private sealed class FakeNvdrsApi : INvdrsApi
     {
         private readonly Dictionary<string, FakeProfile> _profiles = new();

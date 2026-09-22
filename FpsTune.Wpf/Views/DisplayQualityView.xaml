@@ -206,6 +206,87 @@
                 </StackPanel>
             </Border>
 
+            <!-- M3：驱动 3D 设置（纹理/电源/透明度/低延迟） -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="驱动 3D 设置（按游戏 · N 卡）" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="DrsStateText" Text="正在读取…" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                    <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                        <TextBlock Text="与 DLSS 覆盖写在同一游戏 profile 上，共用一键「还原默认」。SettingID 来自 NVIDIA 官方 NvApiDriverSettings.h。"
+                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="36"/>
+                                <RowDefinition Height="36"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="纹理过滤 · 质量" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="TexQualityCombo" Grid.Row="0" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                <ComboBoxItem Content="跟随驱动/游戏" Tag=""/>
+                                <ComboBoxItem Content="质量" Tag="0"/>
+                                <ComboBoxItem Content="性能" Tag="10"/>
+                                <ComboBoxItem Content="高性能" Tag="20"/>
+                                <ComboBoxItem Content="高质量" Tag="4294967286"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="1" Text="电源管理" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="PowerModeCombo" Grid.Row="1" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                <ComboBoxItem Content="跟随驱动/游戏" Tag=""/>
+                                <ComboBoxItem Content="最高性能优先" Tag="1"/>
+                                <ComboBoxItem Content="自适应" Tag="0"/>
+                                <ComboBoxItem Content="由驱动控制" Tag="2"/>
+                                <ComboBoxItem Content="最优电源" Tag="5"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="2" Text="平滑处理 · 透明度" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="TransparencyCombo" Grid.Row="2" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                <ComboBoxItem Content="跟随驱动/游戏" Tag=""/>
+                                <ComboBoxItem Content="关闭" Tag="0"/>
+                                <ComboBoxItem Content="多重采样" Tag="1"/>
+                                <ComboBoxItem Content="超级采样 4x" Tag="2"/>
+                            </ComboBox>
+
+                            <TextBlock Grid.Row="3" Text="低延迟 · 预渲染帧" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="PreRenderCombo" Grid.Row="3" Grid.Column="1" Margin="8,2" MinWidth="220"
+                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged">
+                                <ComboBoxItem Content="应用程序控制" Tag=""/>
+                                <ComboBoxItem Content="1 帧（低延迟）" Tag="1"/>
+                                <ComboBoxItem Content="2 帧" Tag="2"/>
+                                <ComboBoxItem Content="3 帧" Tag="3"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <TextBlock x:Name="DrsResultText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="DrsApplyButton" Content="应用 3D 设置"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    MinWidth="110" Margin="0,0,8,0" Click="DrsApply_Click"/>
+                            <Button x:Name="DrsRestoreButton" Content="还原默认"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="110" Click="DrsRestore_Click"/>
+                        </StackPanel>
+
+                        <TextBlock Text="说明：写入驱动 profile，不改游戏文件；应用前自动备份原值，点「还原默认」一键恢复（与 DLSS 覆盖一起还原）。纹理选「性能」、电源选「最高性能优先」是社区高频组合，效果因游戏而异。"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="DrsUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
+                               Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

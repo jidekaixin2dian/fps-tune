@@ -52,13 +52,19 @@
 |---|---|---|
 | M1 | NVAPI DRS 基建 + DLSS 预设切换 + 数字振动 | **完成**：DLSS 真机闭环；数字振动显示级 DVC 真机读写/还原通过 |
 | M2 | ICC 滤镜 + 内置预设生成器（A 卡 / Intel 兜底） | **完成**：`IccFilterService` / `IccProfileGenerator` / `IccSystemApi` + `AtomicFile`，`IccFilterTests` 332 行 |
-| M3 | DRS 二期设置项（纹理过滤 / 电源管理 / 低延迟 / AA 透明度）+ 收尾 | **未开始** |
+| M3 | DRS 二期设置项（纹理过滤 / 电源管理 / 低延迟 / AA 透明度）+ 收尾 | **服务+UI+单测完成**（261/261）；SettingID 已对官方 NvApiDriverSettings.h；真机 apply→restore 待用户过目 |
 
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-22）做了什么
 
-**P0 收口 · 发布 v0.1.2-beta**
+**P1 推进：ROADMAP 基线 + M3 服务/UI**
+
+- P1-3 完成：ROADMAP 基线改写为 0.1.2-beta。
+- P1-1 M3 实现：`QUALITY_ENHANCEMENTS` / `PREFERRED_PSTATE` / `AA_MODE_ALPHATOCOVERAGE`+`AA_MODE_REPLAY` /
+  `PRERENDERLIMIT`（全部取自 NVIDIA/nvapi `NvApiDriverSettings.h`）。
+- 显示页新增「驱动 3D 设置」卡；与 DLSS 共用备份/还原。测试 261/261。
+- 待用户目检 M3 卡后，再谈发版（按拍板后发流程）。
 
 - P0-1 目检完成（`b7fe071`）；P0-2 用户取消；P0-3 口径统一（`8427593`）。
 - **P0-4 完成**：`4e6b728` 构建 → `gh release create v0.1.2-beta`（Setup + Portable + SHA256SUMS）。
