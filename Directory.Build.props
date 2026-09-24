@@ -6,7 +6,8 @@
     <!-- 0.1.4 = catalog 33 项名称/说明英译（P2-1）+ 优化页分类标签本地化；i18n 收尾 -->
     <!-- 0.1.5 = 显示页「驱动内手动设置清单」卡（P2-8，A 卡/Intel 手动调优指引 + 厂商识别） -->
     <!-- 0.1.6 = 启动画面 + 启动预热 + 「我的方案」弹窗化（用户反馈体验轮） -->
-    <VersionPrefix>0.1.6</VersionPrefix>
+    <!-- 0.1.7 = 显示页状态读取异步化 + 优化页列表虚拟化 + DRS 卡下拉框主题样式（用户反馈卡顿/样式轮） -->
+    <VersionPrefix>0.1.7</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
