@@ -315,6 +315,20 @@ public partial class DisplayQualityView : UserControl
         VibPercentText.Text = (int)VibSlider.Value + "%";
     }
 
+    /// <summary>
+    /// 「推荐」快捷置值：社区竞技取向区间 55–60 的中点（57.5 向下取整）。
+    /// 只移动滑块与百分比显示，**不直接写入** —— 仍须点「应用」走确认对话框才生效。
+    /// </summary>
+    private const int RecommendedVibrancePercent = 57;
+
+    private void VibRecommended_Click(object sender, RoutedEventArgs e)
+    {
+        _vibSyncing = true;
+        VibSlider.Value = RecommendedVibrancePercent;
+        VibPercentText.Text = RecommendedVibrancePercent + "%";
+        _vibSyncing = false;
+    }
+
     private async void VibApply_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;

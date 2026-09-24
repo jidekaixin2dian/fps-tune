@@ -276,6 +276,9 @@
     <s:String x:Key="Str.DlssNote">说明：覆盖写入本工具自建的驱动配置文件，删除即完全还原；不会触碰你或 NVIDIA App 自建的其他配置。画面差异需进游戏确认。</s:String>
     <s:String x:Key="Str.VibNote">作用于整块屏幕（桌面、网页、游戏都会变鲜艳），不是只在游戏内生效。主播常用 70–80%。</s:String>
     <s:String x:Key="Str.VibNote2">说明：调整前自动记住当前档位，点「还原原始」一键恢复。与 ICC 滤镜独立，可叠加。对色准敏感请用较低档位或保持默认。</s:String>
+    <s:String x:Key="Str.VibRecommendedSet">推荐 55–60%</s:String>
+    <s:String x:Key="Str.VibRecommendedNote">社区取向参考：竞技类（CS2 / VALORANT 等）常用 50–70%，主播观感常用 70–80%。「推荐」按钮把滑块置到 55–60 的中点，需再点「应用」才生效。</s:String>
+    <s:String x:Key="Str.TipVibRecommended">社区文章（2026-02-28）给出竞技类 50–70%、单机氛围类 60–80% 的取向。这是社区参考而非官方推荐，仅作起点，请按自己观感调整。</s:String>
     <s:String x:Key="Str.IccPresetLabel">预设（作用于主显示器，全桌面生效：含桌面、网页与游戏窗口）</s:String>
     <s:String x:Key="Str.IccVivid">FPS 鲜艳</s:String>
     <s:String x:Key="Str.IccVividDesc">微增饱和与对比，通用竞技</s:String>

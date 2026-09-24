@@ -137,8 +137,15 @@
                                     MinWidth="110" Margin="0,0,8,0" Click="VibApply_Click"/>
                             <Button x:Name="VibRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
                                     Style="{StaticResource SecondaryButtonStyle}"
-                                    MinWidth="110" Click="VibRestore_Click"/>
+                                    MinWidth="110" Margin="0,0,8,0" Click="VibRestore_Click"/>
+                            <Button x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="130" Click="VibRecommended_Click"
+                                    ToolTip="{DynamicResource Str.TipVibRecommended}"/>
                         </StackPanel>
+
+                        <TextBlock Text="{DynamicResource Str.VibRecommendedNote}"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
 
                         <TextBlock Text="{DynamicResource Str.VibNote2}"
                                    Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>

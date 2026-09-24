@@ -276,6 +276,9 @@
     <s:String x:Key="Str.DlssNote">Note: the override is written to a driver profile this tool creates, and deleting it restores everything. Profiles you or NVIDIA App created are never touched. You have to get in game to judge the visual difference.</s:String>
     <s:String x:Key="Str.VibNote">Applies to the whole screen (desktop, browser and games all become more vivid), not just in game. Streamers commonly use 70–80%.</s:String>
     <s:String x:Key="Str.VibNote2">Note: the current level is remembered before any change, and Restore original brings it back in one click. Independent of the ICC filter, and the two can be combined. If colour accuracy matters to you, use a lower level or keep the default.</s:String>
+    <s:String x:Key="Str.VibRecommendedSet">Recommended 55–60%</s:String>
+    <s:String x:Key="Str.VibRecommendedNote">Community reference: competitive titles (CS2 / VALORANT) commonly use 50–70%, streamers 70–80%. Recommended moves the slider to the middle of 55–60; click Apply to take effect.</s:String>
+    <s:String x:Key="Str.TipVibRecommended">Community articles (2026-02-28) suggest 50–70% for competitive titles and 60–80% for atmospheric ones. This is community guidance, not an official recommendation — a starting point only; adjust to your own eyes.</s:String>
     <s:String x:Key="Str.IccPresetLabel">Presets (applied to the primary monitor for the whole desktop: desktop, browser and game windows)</s:String>
     <s:String x:Key="Str.IccVivid">Vivid FPS</s:String>
     <s:String x:Key="Str.IccVividDesc">Slightly higher saturation and contrast, good for competitive play</s:String>
