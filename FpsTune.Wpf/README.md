@@ -6,10 +6,10 @@
 ## 当前结构
 
 - 左侧导航 + 右侧内容区
-- 检测 / 优化 / A/B 实验 / 朋友测试 / 备份日志
+- 概览 / 检测 / 优化 / 显示与画质 / 性能会话 / A/B 实验 / 备份日志 / 设置
 - 暗色 / 亮色 / 跟随系统
-- 外部脚本仅剩一枚：`tools/friend-test.ps1`（朋友测试记录），作为嵌入资源随包分发；
-  A/B 实验编排已迁入进程内 `ExperimentRunner`（CLI 动词 `-Experiment`）
+- **不再有外部 PowerShell 脚本**：A/B 实验编排在进程内 `ExperimentRunner`（CLI 动词 `-Experiment`）；
+  朋友测试模块已于 2026-09-25 整体移除（含 `tools/friend-test.ps1`、`ScriptLocator`、`PowerShellRunner`）
 
 ## 构建
 

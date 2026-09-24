@@ -9,7 +9,6 @@
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
     <s:String x:Key="Str.NavSession">Sessions</s:String>
     <s:String x:Key="Str.NavAb">A/B Test</s:String>
-    <s:String x:Key="Str.NavFriend">Friend Test</s:String>
     <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>
     <s:String x:Key="Str.NavSettings">Settings</s:String>
 
@@ -179,18 +178,6 @@
     <s:String x:Key="Str.PreparingItems">Preparing items…</s:String>
     <s:String x:Key="Str.ToggleHint">Toggles only select items. Review, then apply; a backup is taken before any change.</s:String>
     <s:String x:Key="Str.ReviewAndApply">Review and apply →</s:String>
-    <s:String x:Key="Str.FriendIntro">Produce a before/after record for a friend's machine, to make follow-ups and feedback collection easy.</s:String>
-    <s:String x:Key="Str.GenerateRecord">Generate record →</s:String>
-    <s:String x:Key="Str.OpenOutputDir">Open output folder</s:String>
-    <s:String x:Key="Str.BasicInfo">Basic info</s:String>
-    <s:String x:Key="Str.Nickname">Nickname</s:String>
-    <s:String x:Key="Str.SceneQualitySettings">Scene / quality / settings</s:String>
-    <s:String x:Key="Str.FpsBeforeAvg">Average FPS before</s:String>
-    <s:String x:Key="Str.FpsBeforeLow">1% low before</s:String>
-    <s:String x:Key="Str.FpsAfterAvg">Average FPS after</s:String>
-    <s:String x:Key="Str.FpsAfterLow">1% low after</s:String>
-    <s:String x:Key="Str.Remarks">Notes</s:String>
-    <s:String x:Key="Str.MarkdownPreview">Markdown preview</s:String>
     <s:String x:Key="Str.HomeTitle">System-level frame rate console</s:String>
     <s:String x:Key="Str.HomeSubtitle">Detect → explain → confirm → apply → restore · never touches game files · never injects · every change is reversible</s:String>
     <s:String x:Key="Str.StartDetect">Start detection →</s:String>
@@ -198,7 +185,6 @@
     <s:String x:Key="Str.HomeOptDesc">Presets and per-item toggles, system-level tuning, one-click restore</s:String>
     <s:String x:Key="Str.HomeSessionDesc">Samples CPU / memory / GPU / VRAM locally and builds summaries, insights and comparisons</s:String>
     <s:String x:Key="Str.HomeAbDesc">Baseline capture, candidate group comparison, keep-or-restore decisions</s:String>
-    <s:String x:Key="Str.HomeFriendDesc">Generates a before/after frame rate record</s:String>
     <s:String x:Key="Str.HomeBackupDesc">Backup files, restore all, logs and JSON output</s:String>
     <s:String x:Key="Str.SessionIntro">Start a local sampling run to record CPU / memory / GPU / VRAM curves and a summary. Data stays on this machine.</s:String>
     <s:String x:Key="Str.SamplingControl">Sampling control</s:String>

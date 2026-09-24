@@ -295,24 +295,6 @@ public class CoreLogicTests
         }
     }
 
-    // ---------- PowerShellRunner.Quote（参数安全引用）----------
-
-    [Fact]
-    public void Quote_leaves_safe_tokens_bare()
-        => Assert.Equal("abc-123_x.y", PowerShellRunner.Quote("abc-123_x.y"));
-
-    [Fact]
-    public void Quote_wraps_values_with_spaces()
-        => Assert.Equal("'C:/Games/Delta Force/game.exe'", PowerShellRunner.Quote("C:/Games/Delta Force/game.exe"));
-
-    [Fact]
-    public void Quote_escapes_embedded_single_quotes()
-        => Assert.Equal("'it''s'", PowerShellRunner.Quote("it's"));
-
-    [Fact]
-    public void Quote_handles_empty_string()
-        => Assert.Equal("''", PowerShellRunner.Quote(""));
-
     // ---------- ExperimentHistory（A/B 历史趋势解析）----------
 
     [Fact]

@@ -37,8 +37,6 @@ Services/OptimizationItemViewModel.cs	2
 Services/PerformanceSession.cs	25
 Services/PerformanceSessionService.cs	3
 Services/PerformanceSessionStore.cs	26
-Services/PowerShellRunner.cs	9
-Services/ScriptLocator.cs	12
 Services/SessionExporter.cs	5
 Services/StateStore.cs	2
 Services/TrayService.cs	8
@@ -48,7 +46,6 @@ Views/CatalogGroupLabelConverter.cs	1
 Views/ConsoleView.xaml.cs	9
 Views/DetectView.xaml.cs	22
 Views/DisplayQualityView.xaml.cs	56
-Views/FriendTestView.xaml.cs	3
 Views/HomeView.xaml.cs	4
 Views/OptimizeView.xaml.cs	40
 Views/SessionView.xaml.cs	45

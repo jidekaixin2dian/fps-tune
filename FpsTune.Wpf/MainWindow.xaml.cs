@@ -51,7 +51,6 @@ public partial class MainWindow : Window
             ["display"] = () => new DisplayQualityView(),
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
-            ["friend"] = () => new FriendTestView(),
             ["backup"] = () => new BackupLogView(),
             ["settings"] = () => new SettingsView(),
         };
@@ -82,8 +81,8 @@ public partial class MainWindow : Window
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
         Closing += (_, _) =>
         {
-            // 只取消本窗口 A/B 页面启动的脚本；PowerShellRunner 会结束其子进程树，
-            // 不按名称影响正式安装版或其他用户进程。RunningStep 留在磁盘时可在下次启动恢复。
+            // 只取消本窗口 A/B 页面启动的采样；不按名称影响正式安装版或其他用户进程。
+            // RunningStep 留在磁盘时可在下次启动恢复。
             if (_pageCache.TryGetValue("ab", out var page) && page is AbExperimentView ab)
                 ab.CancelPendingRun();
         };
@@ -256,7 +255,7 @@ public partial class MainWindow : Window
         {
             // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
             // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavFriend, NavBackup, NavSettings })
+            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavSettings })
             {
                 if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
                     radio.IsChecked = false;
@@ -327,7 +326,6 @@ public partial class MainWindow : Window
             case "opt": NavOpt.IsChecked = true; break;
             case "session": NavSession.IsChecked = true; break;
             case "ab": NavAb.IsChecked = true; break;
-            case "friend": NavFriend.IsChecked = true; break;
             case "backup": NavBackup.IsChecked = true; break;
             case "settings": NavSettings.IsChecked = true; break;
         }

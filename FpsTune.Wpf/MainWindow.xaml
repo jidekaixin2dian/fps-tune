@@ -126,10 +126,6 @@
                                             Tag="ab"
                                             Text="{DynamicResource Str.NavAb}"
                                             Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavFriend"
-                                            Tag="friend"
-                                            Text="{DynamicResource Str.NavFriend}"
-                                            Checked="Nav_Checked"/>
                         <controls:NavButton x:Name="NavBackup"
                                             Tag="backup"
                                             Text="{DynamicResource Str.NavBackup}"

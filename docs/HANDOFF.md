@@ -92,6 +92,18 @@
 
 ## 4. 本轮（2026-09-25）做了什么
 
+**朋友测试模块整体移除（用户要求）**
+
+- 删掉的**不只是界面**。`ScriptLocator`（脚本完整性/信任校验）与 `PowerShellRunner`
+  经核实**只被朋友测试页使用**，删模块后即成死代码，一并移除；
+  `tools/friend-test.ps1`、两个专测脚本信任边界的测试文件也一并删除。
+- 共删 7 个文件 + 清 14 个只属于该页的资源键；`FpsTune.Wpf` 现在**不再有外部 PowerShell 脚本**。
+- **保住一个共用类型**：`RunResult` 原先定义在 `PowerShellRunner.cs` 里，但引擎与多个视图都在用，
+  删文件时被连带删掉导致编译失败——已抽成独立的 `Services/RunResult.cs`。
+- 导航、首页卡片（并重排编号）、`csproj` 两处引用、README/README.en/WPF README、`TESTING.md`
+  （保留方式 A/B 与回传模板，只删脚本那节）同步更新；backlog 的 P2-9 与 GUI_PLAN 的 G2 置**作废**。
+- 未重跑基线前的构建：0 错误。
+
 **P2-3 完成：GUI_PLAN 盘点，只留真缺口**
 
 - 方法：对 `docs/dev/GUI_PLAN.md` 的每条承诺**逐条 grep 现界面与引擎**，确认"有没有真的做出来"，

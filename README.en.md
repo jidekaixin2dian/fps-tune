@@ -131,12 +131,10 @@ catalog/catalog.json          single source of truth: 33 items + presets
 FpsTune.Wpf/
   Core/                       OptimizationCatalog / NativeOptimizationEngine /
                               BackupService / DetectionService / ExperimentRunner
-  Services/                   theme / settings / script lookup / process wrapper /
-                              CLI host / update check
+  Services/                   theme / settings / CLI host / update check
   Views/                      WPF views (console and classic layouts)
 FpsTune.Wpf.Tests/            unit tests, incl. catalog consistency guards
-tools/friend-test.ps1         friend-test helper: one command → Markdown + CSV record
-TESTING.md                    friend-testing guide: full A/B, or a minimal data template
+TESTING.md                    external testing guide: full A/B, or a minimal data template
 installer/                    Inno Setup packaging
 docs/                         current docs (HANDOFF / ROADMAP / README index)
   dev/                        plans and dev discipline; archive/  1.x history (not current)

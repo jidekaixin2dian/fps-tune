@@ -126,28 +126,13 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            <Border Style="{StaticResource FeatureCardStyle}" Margin="0,6,6,0" Cursor="Hand" Tag="friend" MouseLeftButtonUp="Module_Click" Padding="16,13">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="46"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="05"
-                               FontFamily="{StaticResource FontMono}" FontSize="15"
-                               Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{DynamicResource Str.NavFriend}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="{DynamicResource Str.HomeFriendDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
             <Border Style="{StaticResource FeatureCardStyle}" Margin="6,6,0,0" Cursor="Hand" Tag="backup" MouseLeftButtonUp="Module_Click" Padding="16,13">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="46"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="06"
+                    <TextBlock Grid.Column="0" Text="05"
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">

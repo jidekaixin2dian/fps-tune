@@ -9,7 +9,6 @@
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
     <s:String x:Key="Str.NavSession">性能会话</s:String>
     <s:String x:Key="Str.NavAb">A/B 实验</s:String>
-    <s:String x:Key="Str.NavFriend">朋友测试</s:String>
     <s:String x:Key="Str.NavBackup">备份 / 日志</s:String>
     <s:String x:Key="Str.NavSettings">设置</s:String>
 
@@ -179,18 +178,6 @@
     <s:String x:Key="Str.PreparingItems">正在准备优化项…</s:String>
     <s:String x:Key="Str.ToggleHint">开关仅选择项目，审阅后执行；修改前自动备份。</s:String>
     <s:String x:Key="Str.ReviewAndApply">审阅并应用 →</s:String>
-    <s:String x:Key="Str.FriendIntro">为朋友的机器生成一份优化前后对照记录，便于回访与收集反馈</s:String>
-    <s:String x:Key="Str.GenerateRecord">生成记录表 →</s:String>
-    <s:String x:Key="Str.OpenOutputDir">打开输出目录</s:String>
-    <s:String x:Key="Str.BasicInfo">基础信息</s:String>
-    <s:String x:Key="Str.Nickname">昵称</s:String>
-    <s:String x:Key="Str.SceneQualitySettings">场景 / 画质 / 设置</s:String>
-    <s:String x:Key="Str.FpsBeforeAvg">优化前平均 FPS</s:String>
-    <s:String x:Key="Str.FpsBeforeLow">优化前 1% low</s:String>
-    <s:String x:Key="Str.FpsAfterAvg">优化后平均 FPS</s:String>
-    <s:String x:Key="Str.FpsAfterLow">优化后 1% low</s:String>
-    <s:String x:Key="Str.Remarks">备注</s:String>
-    <s:String x:Key="Str.MarkdownPreview">Markdown 预览</s:String>
     <s:String x:Key="Str.HomeTitle">系统层帧率优化控制台</s:String>
     <s:String x:Key="Str.HomeSubtitle">检测 → 解释 → 确认 → 执行 → 还原 · 不碰游戏文件 · 不注入进程 · 所有改动可还原</s:String>
     <s:String x:Key="Str.StartDetect">开始检测 →</s:String>
@@ -198,7 +185,6 @@
     <s:String x:Key="Str.HomeOptDesc">预设与逐项开关、系统层优化、一键还原</s:String>
     <s:String x:Key="Str.HomeSessionDesc">本地采样 CPU / 内存 / GPU / 显存，生成摘要、洞察与对比</s:String>
     <s:String x:Key="Str.HomeAbDesc">基线采样、候选组对比、保留或还原决策</s:String>
-    <s:String x:Key="Str.HomeFriendDesc">生成优化前后帧率对比记录表</s:String>
     <s:String x:Key="Str.HomeBackupDesc">备份文件、还原全部、日志和 JSON 输出</s:String>
     <s:String x:Key="Str.SessionIntro">开始一次本地采样，记录 CPU / 内存 / GPU / 显存曲线与摘要；数据只保存在本机</s:String>
     <s:String x:Key="Str.SamplingControl">采样控制</s:String>

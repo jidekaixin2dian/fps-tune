@@ -53,7 +53,7 @@ C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入�
 |---|---|
 | ![性能会话页](assets/screenshots/04-session.png) | ![A/B 实验页](assets/screenshots/05-ab-experiment.png) |
 
-另有：朋友测试（生成前后对照记录）、备份 / 日志（每次写入的审计）、
+另有：备份 / 日志（每次写入的审计）、
 设置（主题 / 托盘 / 全局热键 Ctrl+Alt+F / 按游戏自动应用方案）。
 支持深色、浅色与跟随系统，无边框自绘标题栏，首次启动有引导。
 
@@ -125,7 +125,6 @@ FpsTune.Wpf/
   Services/                   主题 / 设置 / 脚本定位 / 进程封装 / CLI 宿主 / 更新检查
   Views/                      WPF 视图（控制台与经典两套布局）
 FpsTune.Wpf.Tests/            单元测试（含 catalog 一致性守卫）
-tools/friend-test.ps1         朋友测试记录脚本（GUI 调用）
 installer/                    Inno Setup 打包
 docs/                         现状文档（HANDOFF / ROADMAP / README 索引）
   dev/                        计划与开发纪律；archive/  1.x 历史存档（不代表现状）

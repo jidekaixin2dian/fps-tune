@@ -288,18 +288,4 @@ public sealed class ExperimentWizardTests : IDisposable
         Assert.Contains("高于当前版本", error);
         Assert.Equal(before, File.ReadAllBytes(ExperimentWizardStore.WizardFile));
     }
-
-    [Fact]
-    public void PowerShell_failure_text_redacts_script_and_wrapper_paths()
-    {
-        var script = Path.Combine(_dir, "friend-test.ps1");
-        var wrapper = Path.Combine(Path.GetTempPath(), "delta-tune-wpf-tmp", "run.ps1");
-        var text = $"At {script}:4 char:1\nwrapper={wrapper}";
-
-        var safe = PowerShellRunner.SanitizeProcessText(text, script, wrapper);
-
-        Assert.DoesNotContain(script, safe, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain(wrapper, safe, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("<redacted-path>", safe);
-    }
 }
