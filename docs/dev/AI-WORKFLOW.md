@@ -140,6 +140,25 @@
 上面那个 bug 编译通过、273 条单测全绿，但一渲染就崩。
 **改动 XAML 后必须真正启动一次程序并观察它活着**（不能只看构建结果）。
 
+> **⚠️ 页面是懒加载的，只启动主窗口证明不了你改的那一页。**
+> `MainWindow` 的 `_pageFactories` 全是 `() => new XxxView()`，页面**只在导航到时才实例化**，
+> 默认停在"概览"。所以"启动后进程存活"只覆盖首页——改的是显示页 / 设置页等，
+> **必须真的切到那一页再观察**。
+>
+> 切页验证的一次性做法（用 UI Automation 点页签，实测可行）：
+> 1. 启动 exe 并等约 12 秒；
+> 2. 按 `ProcessIdProperty` 在 `AutomationElement.RootElement` 下取主窗口；
+> 3. 页签是自定义 `NavButton`，**在自动化树里没有 Name**，只能按位置取：
+>    在 `FindAll(Descendants, TrueCondition)` 结果里筛 `ControlType.RadioButton`
+>    且**相对窗口 Y ∈ 45..100** 的横条，按 **X 排序**，顺序即
+>    概览 / 检测 / 优化 / **显示与画质** / 会话 / A·B / 备份 / 设置（第 4 个是要点的那页）；
+> 4. `SetForegroundWindow` → `SetCursorPos` → `mouse_event(0x02 / 0x04)` 点击中心点；
+> 5. **再扫一次自动化树，用该页独有的文案确认真的渲染了**，同时核对
+>    `%LOCALAPPDATA%\FpsTune\logs\error.log` **字节数未变**（无新异常）。
+>
+> 注意：进程会随启动它的 shell 一起被回收，所以**启动 → 点击 → 复查必须在同一次调用内完成**。
+> 实测（2026-09-25）：该路径确认显示页 6 张卡片全部渲染、新按钮与说明文本出现、`error.log` 无新增。
+
 **3. 构建发布前必须先把所有改动提交完。**
 `publish-release.ps1` 要求 tracked tree 干净，构建期间新建/修改任何文件都会让它拒绝构建
 （已踩两次）。顺序永远是：**改完 → 测试 → commit → 再构建**。

@@ -68,6 +68,11 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 279
      **文档提交晚于构建是正常且允许的**，不要为此重建产物。
      判断方法：产物 `ProductVersion` 里的 SHA 就是该打标签的提交（`publish-release.ps1` 会打印它）。
 8. 推送 `main` 前向用户确认节奏；禁止 force push / 改写 `main` 已推送历史。`legacy/1.x` 只读冻结，不接受修复。
+9. **改完 XAML 必须真的让它渲染一次**，不能只看构建结果——编译与单测都抓不到 XAML 错误
+   （本仓库因 `Run.Text` 双向绑定启动闪退过一次）。**注意页面是懒加载的**
+   （`MainWindow._pageFactories` 是 `() => new XxxView()`，默认停在"概览"），
+   所以改显示页 / 设置页时"启动后进程存活"**没覆盖到你改的那一页**，
+   必须真切到那一页再观察。做法见 `docs/dev/AI-WORKFLOW.md` §四 第 2 条。
 
 产品红线在 `docs/ROADMAP.md` §产品定位（安全闭环 / 零侵入 / 数据说话 / 全 FPS 通用 / 可信透明）。
 **注意**：ROADMAP 的现状基线段落停在 v1.5.0，是历史存档；当前状态看 `docs/HANDOFF.md`。
@@ -87,6 +92,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 279
 | 0.1.x 功能设计依据 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3（**均已发布**） |
 | 待办总表（P0–P2） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；HANDOFF §5 与它对齐 |
 | P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | 已调研未实施；含硬约束与踩坑点 |
+| P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
 | 1.x 历史存档 | `docs/archive/` | **不代表现状**；路径/版本/依赖都可能过期 |
