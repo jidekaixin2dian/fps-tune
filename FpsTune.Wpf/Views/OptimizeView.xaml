@@ -37,6 +37,9 @@
   <Border Grid.Row="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,1" Padding="0,14" Margin="0,0,0,16">
    <DockPanel LastChildFill="True">
     <TextBlock Text="{DynamicResource Str.OptimizePresets}" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+    <Button DockPanel.Dock="Right" x:Name="ProfilesOpenButton" Content="{DynamicResource Str.MyProfiles}"
+            Style="{StaticResource GhostButtonStyle}" MinWidth="104" Height="38" Margin="12,0,0,0"
+            Click="ProfilesOpen_Click" ToolTip="{DynamicResource Str.ProfileManagerTip}"/>
     <UniformGrid Columns="4">
      <RadioButton x:Name="PresetBalanced" Content="{DynamicResource Str.PresetBalanced}" GroupName="preset" IsChecked="True" Style="{StaticResource PresetChoiceStyle}" ToolTip="{DynamicResource Str.TipBalanced}"/>
      <RadioButton x:Name="PresetSafeOnly" Content="{DynamicResource Str.PresetSafe}" GroupName="preset" Style="{StaticResource PresetChoiceStyle}" ToolTip="{DynamicResource Str.TipSafe}"/>
@@ -189,16 +192,16 @@
     <TextBlock x:Name="EmptyHint" Grid.Row="2" Text="{DynamicResource Str.NoMatchingItems}" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource MutedTextStyle}"/>
    </Grid>
    <Grid Grid.Column="2" Margin="0,0,0,0">
-    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0" Padding="18,0,0,12">
-     <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <Grid>
+      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
       <TextBlock Text="{DynamicResource Str.ItemDetailTitle}" Style="{StaticResource CardTitleStyle}"/>
 <FlowDocumentScrollViewer Grid.Row="1"
                                  x:Name="OutputBox"
                                  VerticalScrollBarVisibility="Auto"
                                  Background="Transparent">
                             <FlowDocument x:Name="OutputDoc" PagePadding="0" Background="Transparent"
-                                          FontFamily="{StaticResource FontBody}" FontSize="13">
+                                  FontFamily="{StaticResource FontBody}" FontSize="13">
                                 <Paragraph Foreground="{DynamicResource TextSecondaryBrush}">
                                     选择预设后点击“应用”。
                                 </Paragraph>
@@ -206,24 +209,6 @@
                         </FlowDocumentScrollViewer>
      </Grid>
     </Border>
-    <Expander Grid.Row="1" Header="{DynamicResource Str.MyProfiles}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" Padding="0,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
-     <StackPanel Margin="0,12,0,0">
-      <TextBlock Text="{DynamicResource Str.ProfileName}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,6"/>
-<TextBox x:Name="ProfileNameBox"
-                                 Style="{StaticResource InputTextBoxStyle}"
-                                 Height="34"
-                                 VerticalContentAlignment="Center" FontSize="13"/>
-                        <WrapPanel Margin="0,8,0,0">
-                            <Button Content="{DynamicResource Str.Save}" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileSave_Click"/>
-                            <Button Content="{DynamicResource Str.Load}" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileLoad_Click"/>
-                            <Button Content="{DynamicResource Str.Delete}" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileDelete_Click"/>
-                            <Button Content="{DynamicResource Str.Export}" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,4,4" Click="ProfileExport_Click"/>
-                            <Button Content="{DynamicResource Str.Import}" Style="{StaticResource GhostButtonStyle}" MinWidth="52" Margin="0,0,0,4" Click="ProfileImport_Click"/>
-                        </WrapPanel><TextBlock x:Name="ProfileHint"
-                                   Text="{DynamicResource Str.ProfileHint}"
-                                   Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
-     </StackPanel>
-    </Expander>
    </Grid>
   </Grid>
   <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0" Margin="0,16,0,0">

@@ -51,7 +51,7 @@ Views/ConsoleView.xaml.cs	9
 Views/DetectView.xaml.cs	22
 Views/DisplayQualityView.xaml.cs	56
 Views/HomeView.xaml.cs	4
-Views/OptimizeView.xaml.cs	40
+Views/OptimizeView.xaml.cs	22
 Views/SessionView.xaml.cs	45
 Views/SettingsView.xaml.cs	29
 Views/WeChatQrWindow.xaml	1

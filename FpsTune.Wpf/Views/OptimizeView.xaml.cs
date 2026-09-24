@@ -604,11 +604,18 @@ public partial class OptimizeView : UserControl
 
     // ---------- 配置方案 ----------
 
-    private string CurrentProfileName => ProfileNameBox.Text.Trim();
-
-    private void SetProfileHint(string text)
+    /// <summary>
+    /// 打开「我的方案」弹窗（列表式管理：载入/导出/删除行内完成，顶部保存当前勾选）。
+    /// 取代原先右栏 Expander 里的名称输入 + 五个小按钮——旧交互必须手输名字才能载入/删除。
+    /// </summary>
+    private void ProfilesOpen_Click(object sender, RoutedEventArgs e)
     {
-        ProfileHint.Text = text;
+        var dlg = new ProfileManagerWindow(
+            () => Items.Where(i => i.IsChecked).Select(i => i.Id).ToList())
+        { Owner = Window.GetWindow(this) };
+        dlg.ShowDialog();
+        if (dlg.LoadRequestedIds is not null)
+            ApplyProfileIds(dlg.LoadRequestedIds);
     }
 
     private void ApplyProfileIds(IEnumerable<string> ids)
@@ -624,121 +631,5 @@ public partial class OptimizeView : UserControl
         var selected = AppState.Items.Where(i => idSet.Contains(i.Id)).ToList();
         SetItemListDoc(Str.T("Str.ProfileLoaded"), $"{idSet.Count} 项", selected);
     }
+}
 
-    private void ProfileSave_Click(object sender, RoutedEventArgs e)
-    {
-        var name = CurrentProfileName;
-        if (name.Length == 0)
-        {
-            DialogService.Warning(Str.T("Str.Profiles"), Str.T("Str.EnterProfileName"));
-            return;
-        }
-        var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
-        if (ids.Count == 0)
-        {
-            DialogService.Warning(Str.T("Str.Profiles"), Str.T("Str.NoItemsSelected"));
-            return;
-        }
-
-        var profiles = ProfileStore.Load();
-        var existing = profiles.FirstOrDefault(p => p.Name == name);
-        if (existing is not null
-            && !DialogService.Confirm(Str.T("Str.Profiles"), $"方案「{name}」已存在，覆盖？", danger: true))
-            return;
-        profiles.RemoveAll(p => p.Name == name);
-        profiles.Add(new OptProfile(name, ids));
-        ProfileStore.Save(profiles);
-        SetProfileHint($"已保存「{name}」（{ids.Count} 项）");
-    }
-
-    private void ProfileLoad_Click(object sender, RoutedEventArgs e)
-    {
-        var name = CurrentProfileName;
-        var profiles = ProfileStore.Load();
-        var hit = profiles.FirstOrDefault(p => p.Name == name);
-        if (hit is null)
-        {
-            var names = profiles.Count == 0 ? "（尚无已保存方案）" : string.Join("、", profiles.Select(p => p.Name));
-            DialogService.Warning(Str.T("Str.Profiles"), $"未找到方案「{name}」。已有：{names}");
-            return;
-        }
-        if (hit.Ids is null || hit.Ids.Count == 0)
-        {
-            DialogService.Warning(Str.T("Str.Profiles"), $"方案「{name}」不包含任何优化项，可能是文件损坏，请删除后重建。");
-            return;
-        }
-        ApplyProfileIds(hit.Ids);
-        SetProfileHint($"已载入「{name}」（{hit.Ids.Count} 项）");
-    }
-
-    private void ProfileDelete_Click(object sender, RoutedEventArgs e)
-    {
-        var name = CurrentProfileName;
-        var profiles = ProfileStore.Load();
-        if (profiles.All(p => p.Name != name))
-        {
-            DialogService.Warning(Str.T("Str.Profiles"), $"未找到方案「{name}」。");
-            return;
-        }
-        if (!DialogService.Confirm(Str.T("Str.Profiles"), $"删除方案「{name}」？", danger: true))
-            return;
-        profiles.RemoveAll(p => p.Name == name);
-        ProfileStore.Save(profiles);
-        SetProfileHint($"已删除「{name}」");
-    }
-
-    private void ProfileExport_Click(object sender, RoutedEventArgs e)
-    {
-        var name = CurrentProfileName;
-        var hit = ProfileStore.Load().FirstOrDefault(p => p.Name == name);
-        if (hit is null)
-        {
-            DialogService.Warning(Str.T("Str.Profiles"), $"未找到方案「{name}」，无法导出。");
-            return;
-        }
-        var dlg = new Microsoft.Win32.SaveFileDialog
-        {
-            Title = Str.T("Str.ExportProfile"),
-            Filter = "FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json",
-            FileName = name + ".fpsprofile.json"
-        };
-        if (dlg.ShowDialog() != true)
-            return;
-        System.IO.File.WriteAllText(dlg.FileName,
-            System.Text.Json.JsonSerializer.Serialize(hit, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }),
-            Encoding.UTF8);
-        SetProfileHint($"已导出到 {dlg.FileName}");
-    }
-
-    private void ProfileImport_Click(object sender, RoutedEventArgs e)
-    {
-        var dlg = new Microsoft.Win32.OpenFileDialog
-        {
-            Title = Str.T("Str.ImportProfile"),
-            Filter = "FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json|所有文件 (*.*)|*.*"
-        };
-        if (dlg.ShowDialog() != true)
-            return;
-        try
-        {
-            var hit = System.Text.Json.JsonSerializer.Deserialize<OptProfile>(
-                System.IO.File.ReadAllText(dlg.FileName, Encoding.UTF8));
-            ProfileStore.ValidateImport(hit);
-            if (hit is null) return;
-            var profiles = ProfileStore.Load();
-            if (profiles.Any(p => p.Name == hit.Name)
-                && !DialogService.Confirm(Str.T("Str.Profiles"), $"方案「{hit.Name}」已存在，覆盖？", danger: true))
-                return;
-            profiles.RemoveAll(p => p.Name == hit.Name);
-            profiles.Add(hit);
-            if (!ProfileStore.TrySave(profiles, out var saveError))
-                throw new IOException("方案保存失败：" + saveError);
-            ProfileNameBox.Text = hit.Name;
-            ApplyProfileIds(hit.Ids);
-            SetProfileHint($"已导入「{hit.Name}」（{hit.Ids.Count} 项）");
-        }
-        catch (Exception ex)
-        {
-            DialogService.Warning(Str.T("Str.Profiles"), "导入失败：" + ex.Message);
-        }
-    }}
