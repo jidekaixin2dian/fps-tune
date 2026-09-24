@@ -4,7 +4,8 @@
     <!-- 版本号拆两段：VersionPrefix 必须是三段数字（发布/安装脚本与更新比较都消费它），
          VersionSuffix 是预发布标识（0.1 Beta 线），进 InformationalVersion/ProductVersion 展示 -->
     <!-- 0.1.4 = catalog 33 项名称/说明英译（P2-1）+ 优化页分类标签本地化；i18n 收尾 -->
-    <VersionPrefix>0.1.4</VersionPrefix>
+    <!-- 0.1.5 = 显示页「驱动内手动设置清单」卡（P2-8，A 卡/Intel 手动调优指引 + 厂商识别） -->
+    <VersionPrefix>0.1.5</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
