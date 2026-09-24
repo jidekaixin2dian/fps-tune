@@ -1,6 +1,7 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-25（本轮：红线口径同步 + 交接数字校准 + **P2-6 收口**）
+> 最后核对：2026-09-25（本轮：红线口径同步 + 交接数字校准 + P2-6 收口 + 代码健康度评估
+> + NVAPI 引导重构 + **push 与 0.1.4 重建**）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -8,7 +9,7 @@
 ## 1. 一句话现状
 
 主线是 0.1 Beta 线（现落在 **`main`**）。M1/M2/M3 功能与一键优化、i18n 已发 **`v0.1.3-beta`**；
-**`0.1.4-beta` 候选已构建、已部署本机，停在"待拍板"**（见 §2.1）。
+**`0.1.4-beta` 候选已按 `e3d0041` 重建、`main` 已 push 到远端，只差 `gh release create`（等用户拍板）**。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
@@ -17,12 +18,13 @@
 |---|---|
 | `Directory.Build.props` | `VersionPrefix=0.1.4` / `VersionSuffix=beta` |
 | 已发布 Release | **`v0.1.3-beta`**（2026-09-22，`29ed0ea`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.2-beta` |
-| 未发布的内容 | **`0.1.4-beta` 候选**：P2-1 catalog 英译 + 驱动版本建议卡片 + ICC 预设扩到 8 张 + 朋友测试模块整体移除。**已构建、已部署本机，未 push、未发 Release** |
+| 未发布的内容 | **`0.1.4-beta` 候选**：P2-1 catalog 英译 + 驱动版本建议卡片 + ICC 预设扩到 8 张 + 朋友测试模块移除 + 红线口径同步 + 数字振动推荐档位 + NVAPI 引导重构。**已按 `e3d0041` 构建（三资产齐全）、`main` 已 push；未发 Release** |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.4-beta`（发布候选，未发布）**；2026-09-25 由 `dist/folder-0.1.4/` 覆盖，逐文件一致（7/7）。上一版备份 `D:\FpsTune-backup-20260925`（= 已发布的 `0.1.3-beta`） |
+| 本机安装位 | `D:\FpsTune` = `0.1.4-beta`，但**内嵌 SHA 仍是 `627740f`，已落后于候选 `e3d0041`**（本轮未部署）。文件 6 个。备份 `D:\FpsTune-backup-20260925`（= 已发布的 `0.1.3-beta`） |
 | 测试基线 | 279 / 279（`dotnet test -c Release`；2026-09-25 复核，含 i18n 棘轮守卫） |
+| 编译警告 | **0**（2026-09-25 由 6 个清零；新增代码请守住这条，见 `CODE-HEALTH.md`） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
@@ -31,17 +33,22 @@
 | 位置 | 版本 | 状态 |
 |---|---|---|
 | GitHub 已发布 Release | `v0.1.3-beta` | 线上最新（`gh release list` 实测；**0.1.4 尚未发布**） |
-| **发布候选（未发布）** | **`0.1.4-beta`** | `dist/folder-0.1.4/`、`dist/single-file-0.1.4/FpsTune.exe`、`dist/FpsTune-Portable-0.1.4.zip`、`dist/installer/FpsTune-Setup-0.1.4.exe`、`dist/SHA256SUMS-v0.1.4.txt`（**3 行**）。**`ProductVersion` 内嵌 SHA = `627740f`**（实测，非旧记载的 `f09d944`） |
-| 本机安装位 `D:\FpsTune` | **`0.1.4-beta`（候选，未发布）** | 内嵌 SHA 同为 `627740f`，与 `dist/folder-0.1.4/` 一致；`-Version` 自报 `0.1.4-beta`；界面语言 `zh-CN` |
-| 源码 `main` | `0.1.4-beta` | HEAD = `7dbfc91`，**与 `origin/main` 同步**（`git rev-list --left-right --count` = `0 0`，**无未 push 提交**） |
-| 已发布 0.1.3 的本地资产 | — | **未被破坏**：`FpsTune-Portable-0.1.3.zip` 仍为 `4E055D2E…DEE6A`。bump 版本号正是为了避免"同号覆盖" |
+| **发布候选（未发布）** | **`0.1.4-beta`** | 官方脚本从 HEAD `e3d0041` 产出：`dist/folder-0.1.4/`（**6 个文件**）、`dist/single-file-0.1.4/FpsTune.exe`(63M)、`dist/FpsTune-Portable-0.1.4.zip`(948K)、`dist/installer/FpsTune-Setup-0.1.4.exe`(58M)、`dist/SHA256SUMS-v0.1.4.txt`（**3 行**）。`ProductVersion` = `0.1.4-beta+e3d00415c55…` |
+| 本机安装位 `D:\FpsTune` | `0.1.4-beta`（内嵌 SHA **`627740f`**） | **落后于候选**：本轮未部署（用户未要求）。文件 6 个 |
+| 源码 `main` | `0.1.4-beta` | 候选构建自 **`e3d0041`**；该提交**已 push**并与 `origin/main` 同步（本轮 `7dbfc91..e3d0041`）。**其后还有本轮收尾的文档提交（更新 `AGENTS.md` / `HANDOFF.md`）未 push** —— 用户只授权了"push 代码"，收尾文档按用户给定的顺序排在其后 |
+| 已发布 0.1.3 的本地资产 | — | **未被破坏**：`FpsTune-Portable-0.1.3.zip` 仍为 `4E055D2E…DEE6A`（重建前后实测一致） |
 | 备份 | — | `D:\FpsTune-backup-20260925` = 已发布的 `0.1.3-beta` |
 
-- **打标签口径（若将来发布 0.1.4）**：候选由 HEAD `627740f` 产出，故 `v0.1.4-beta` 应打在
-  **`627740f`** 上；其后的 `7dbfc91`（文档）不打标签。判断方法仍是读产物 `ProductVersion` 的 SHA。
-- **注意**：`dist/` 与 `D:\FpsTune` 的产物都停在 `627740f`。**其后的源码改动
-  （红线口径同步 + P2-6 数字振动推荐档位 + NVAPI 引导重构）尚未进产物** ——
-  要发版必须先按新 HEAD 重新构建，旧产物不能当发布资产。
+- **三资产实测哈希**（与 `SHA256SUMS-v0.1.4.txt` 逐项一致）：单文件 `91FF00D7…46F93` /
+  Portable zip `D26E13C2…0FBE2A` / Setup `46A46598…7D51B9`。
+  独立冒烟：两个 exe `-Version` → `0.1.4-beta`；单文件 `-Detect -Json` → 33 项。
+- **打标签口径（若发布 0.1.4）**：候选由 HEAD `e3d0041` 产出，故 `v0.1.4-beta` 应打在 **`e3d0041`**。
+  判断方法仍是读产物 `ProductVersion` 的 SHA。
+- **`SHA256SUMS-*.txt` 是 CRLF 行尾**（0.1.2 / 0.1.3 / 0.1.4 三份一致，脚本产物如此）：
+  Git Bash 里 `sha256sum -c` 会因 `\r` 报 "No such file"；**逐项比对哈希值**即可，
+  不要据此判定清单损坏（本轮已确认清单正确）。
+- **旧记载的候选 SHA（`f09d944`、`627740f`）均已过期**，以本表为准。
+  判断版本只看 `Directory.Build.props` 与产物 `ProductVersion` 的完整 SHA，不要拿版本号当依据。
 
 - **本机只有一份可运行副本**：开始菜单 `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\FPS 帧律.lnk`
   解析后指向 `D:\FpsTune\FpsTune.exe`（用 Python 解析 `.lnk` 得到；`WScript.Shell` COM 被安全策略拦）。
@@ -57,6 +64,9 @@
   覆盖前确认无进程占用（唯一在跑的 FpsTune 进程来自 `dist\folder-0.1.3`，不锁 `D:\FpsTune`）。
   覆盖后逐文件比对发布 Portable zip：**一致 7/7**，且无多余文件。用户目录 `%LOCALAPPDATA%\FpsTune`
   （配置 / 备份 / 日志）未受影响。
+- **folder 产物文件数会随版本变**：0.1.2 / 0.1.3 = **7 个**（含 `friend-test.ps1`），
+  0.1.4 = **6 个** —— 朋友测试模块整体移除后该脚本不再进产物。比对时**别把"少一个文件"当异常**，
+  要对照当时的产物清单（`dist/folder-<版本>/`）判断。
 - **`SHA256SUMS-*.txt` 的 `FpsTune.exe` 条目指的是「单文件版」**（`dist/single-file-<ver>/FpsTune.exe`），
   **不是** `dist/folder-<ver>/FpsTune.exe` 那个 apphost。两者哈希必然不同（0.1.3 实测：
   单文件 `F48781A4…` vs folder `8A87387B…`）。校验「安装位 / Portable 是否等于发布版」应比对
@@ -66,10 +76,12 @@
 
 **未决（需要用户拍板，别自作主张）**
 
-1. **`0.1.4-beta` 是否发 Release**：候选已在 `627740f` 构建并部署到 `D:\FpsTune`，按
-   `AGENTS.md` 第 7 条**停在"已构建待拍板"**。用户明确确认前**禁止 `git push` 与 `gh release create`**。
-   注意：本轮源码又有改动（见 §2.1 末尾），**发版前必须按新 HEAD 重新构建**，`627740f` 的旧产物不能当资产。
-2. 原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
+1. **`0.1.4-beta` 是否发 Release**：候选已按 `e3d0041` 重建（三资产齐全、哈希已核），
+   `main` 也已 push。**唯一剩下的动作是 `gh release create v0.1.4-beta`，等用户明确确认。**
+   发版时按 §2.1 的标签口径打在 `e3d0041`，并注意 Release Notes **不得含编造的 FPS/收益数字**。
+2. **是否把新候选部署到 `D:\FpsTune`**：本轮**未部署**（用户只要求 push + 构建），
+   所以安装位仍停在旧构建 `627740f`。用户要更新时再覆盖（见下方"升级做法"）。
+3. 原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
    （Setup + Portable + SHA256SUMS），与 README / README.en 下载表一致。
 
 **已决**
@@ -99,6 +111,23 @@
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-25 续）做了什么
+
+**⑥ push + 0.1.4 候选重建（本轮收尾，无代码改动）**
+
+- **push**：`7dbfc91..e3d0041` 已推 `origin/main`；`git rev-list --left-right --count` = `0 0`。
+- **重建 0.1.4 候选**（**版本号不变** —— 0.1.4 从未发布，bump 反而错）：
+  - `publish-release.ps1` 退出码 0；`ProductVersion` = `0.1.4-beta+e3d00415c55…`；
+    脚本自带独立冒烟通过（两个 exe `-Version` → `0.1.4-beta`、单文件 `-Detect -Json` → 33 项）。
+  - **`build-installer.ps1` 是单独一步**：`publish-release.ps1` **不产安装包**（本轮差点漏掉）。
+    两步都跑完才有齐三资产：单文件 63M / Portable zip 948K / Setup 58M。
+  - 三资产哈希与 `SHA256SUMS-v0.1.4.txt`（3 行）**逐项一致**；已发布 0.1.3 资产未被波及
+    （`4E055D2E…DEE6A` 重建前后实测一致）。
+  - 已知现象复现：`finally` 清理 `dist/publish-tmp-0.1.4`（424 项）被沙箱拦（
+    `SAFE_DELETE_BULK_CONFIRM_REQUIRED`），需手动 `rm -rf`；**重跑前也要先手动清 0.1.4 输出**
+    （脚本开头的清理没有 `-ErrorAction`，被拦会直接失败）。
+- **修正一处过期数字**：folder 产物 0.1.3 = **7** 个文件、0.1.4 = **6** 个
+  （`friend-test.ps1` 随朋友测试模块移除，不再进产物）。§2 与"升级做法"已按实测改写。
+- **未做**：部署 `D:\FpsTune`（用户未要求）→ 安装位仍停在旧构建 `627740f`。
 
 **⑤ 代码健康度评估 + NVAPI 引导重构（`13c74b2`）**
 
@@ -483,8 +512,10 @@
 5. **P2-7 国际化**：已按用户决定**暂停**（剩余 1000 处记在 `I18nBaseline.txt`）。
 6. **P2-9** 已作废（朋友测试模块已整体移除）。
 
-> **`0.1.4-beta` 仍停在"已构建待拍板"**（见 §2.1）。本轮源码又有改动，
-> 若决定发版，**必须先按新 HEAD 重建产物**，再走 `AGENTS.md` 第 7 条的第 7–8 步。
+> **`0.1.4-beta` 已按 `e3d0041` 重建（三资产齐全、哈希已核）、`e3d0041` 已 push**：
+> 只差 `gh release create v0.1.4-beta` 这一步（等用户拍板，见 §2.1 与"未决"）。
+> 安装位 `D:\FpsTune` 仍是旧构建 `627740f`，用户要更新时再覆盖。
+> **另有 1 个收尾文档提交未 push**（见 §2.1 的"源码 `main`"行）。
 
 ## 6. 维护本文的规则
 

@@ -9,7 +9,7 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（33 个可还原优化项） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.1.4` + `VersionSuffix=beta`；**已构建待拍板 `v0.1.4-beta`（未发布）**，线上最新 `v0.1.3-beta` |
+| 版本 | `VersionPrefix=0.1.4` + `VersionSuffix=beta`；**候选已按 `e3d0041` 构建（三资产齐全）、`main` 已 push，只差 `gh release create`**；线上最新 `v0.1.3-beta` |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **279 / 279 通过**，`dotnet test -c Release`（含 M3 / 一键优化 / i18n / catalog 英译） |
@@ -54,6 +54,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 279
      "把效果给用户看"的手段。这与"未拍板不得发版"**不冲突**。
    - **`publish-release.ps1` / `build-installer.ps1` 是构建脚本，不是发布动作**——它们只写 `dist/`，
      不联网、不上传，**拍板前可以跑**。真正需要拍板的是 **`gh release create` 与 `git push`**。
+   - **三资产要跑两个脚本**：`publish-release.ps1` 只产单文件 exe + Portable zip + `SHA256SUMS`，
+     **不产安装包**；`dist/installer/FpsTune-Setup-<版本>.exe` 由 **`build-installer.ps1` 单独产出**。
+     两者都跑完才凑齐 Setup + Portable + SHA256SUMS。
    - `publish-release.ps1` 要求 **tracked tree 干净**，并把 HEAD 的完整 SHA 嵌进
      `InformationalVersion`——所以**必须先 commit 再构建**；早于最终提交的产物不能当发布资产。
    - **改版本号是"做好"的一部分**：`VersionPrefix` 若与已发布版本相同，重建会**覆盖 `dist/` 里
@@ -133,7 +136,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 279
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
 | 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
-| 覆盖 `D:\FpsTune` | 那是**本机安装位**（实测 `0.1.4-beta`，2026-09-25 部署候选），不是源码；覆盖前必须用户点头 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `627740f`，**已落后于候选 `e3d0041`**），不是源码；覆盖前必须用户点头 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
@@ -144,7 +147,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 279
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（实测 0.1.4-beta），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（0.1.4-beta @ 627740f，已落后于候选），开始菜单 .lnk 也指向它；只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 
