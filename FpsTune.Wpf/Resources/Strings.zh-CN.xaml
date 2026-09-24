@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=System.Runtime">
 
@@ -80,4 +80,51 @@
     <s:String x:Key="Str.Cancel">取消</s:String>
     <s:String x:Key="Str.Detect">检测</s:String>
     <s:String x:Key="Str.LocateGame">定位游戏</s:String>
+
+    <!-- 检测页 / 优化页（2026-09-25 转换） -->
+    <s:String x:Key="Str.LoadToOptimize">加载到优化页</s:String>
+    <s:String x:Key="Str.Copy">复制</s:String>
+    <s:String x:Key="Str.CopyAll">复制全部</s:String>
+    <s:String x:Key="Str.RunDetect">运行检测</s:String>
+    <s:String x:Key="Str.Rescan">重新扫描</s:String>
+    <s:String x:Key="Str.CpuUsage">CPU 占用</s:String>
+    <s:String x:Key="Str.GpuUsage">GPU 占用</s:String>
+    <s:String x:Key="Str.ItemsOverview">优化项概览</s:String>
+    <s:String x:Key="Str.MemoryUsage">内存占用</s:String>
+    <s:String x:Key="Str.Memory">内存</s:String>
+    <s:String x:Key="Str.ReadOnlyCheckup">只读体检</s:String>
+    <s:String x:Key="Str.DetectIntro">只读查看硬件、游戏与各项当前状态，不会修改任何系统设置</s:String>
+    <s:String x:Key="Str.LiveMonitor">实时监控</s:String>
+    <s:String x:Key="Str.CurrentGame">当前游戏</s:String>
+    <s:String x:Key="Str.VramDedicated">显存占用（专用）</s:String>
+    <s:String x:Key="Str.VramUsage">显存占用</s:String>
+    <s:String x:Key="Str.DetectDetails">检测详情</s:String>
+    <s:String x:Key="Str.SampleEverySecond">每秒采样 · 只读性能数据</s:String>
+    <s:String x:Key="Str.GamePath">游戏路径</s:String>
+    <s:String x:Key="Str.ClickRunDetect">点击“运行检测”开始。</s:String>
+    <s:String x:Key="Str.System">系统</s:String>
+    <s:String x:Key="Str.Save">保存</s:String>
+    <s:String x:Key="Str.Delete">删除</s:String>
+    <s:String x:Key="Str.Import">导入</s:String>
+    <s:String x:Key="Str.Export">导出</s:String>
+    <s:String x:Key="Str.ClearCurrent">清空当前</s:String>
+    <s:String x:Key="Str.Load">载入</s:String>
+    <s:String x:Key="Str.SelectCurrent">选中当前</s:String>
+    <s:String x:Key="Str.MyProfiles">我的配置方案</s:String>
+    <s:String x:Key="Str.ItemsTitle">优化项</s:String>
+    <s:String x:Key="Str.OptimizePresets">优化预设</s:String>
+    <s:String x:Key="Str.PendingZero">待应用 0 项</s:String>
+    <s:String x:Key="Str.ConsentText">我已了解所选项目的作用与副作用，同意执行</s:String>
+    <s:String x:Key="Str.SearchItems">搜索名称或说明</s:String>
+    <s:String x:Key="Str.ProfileName">方案名称</s:String>
+    <s:String x:Key="Str.NoMatchingItems">没有匹配的优化项，请调整搜索或分类。</s:String>
+    <s:String x:Key="Str.Admin">管理员</s:String>
+    <s:String x:Key="Str.OptimizeTitle">系统优化</s:String>
+    <s:String x:Key="Str.ProfileHint">输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享</s:String>
+    <s:String x:Key="Str.NeedsReboot">需重启</s:String>
+    <s:String x:Key="Str.ItemDetailTitle">项目详情 / 执行记录</s:String>
+    <s:String x:Key="Str.TipFull">包含服务和电源设置，请审阅副作用</s:String>
+    <s:String x:Key="Str.TipSafe">只选择五项保守设置</s:String>
+    <s:String x:Key="Str.TipBalanced">排除影响较大的服务与电源项目</s:String>
+    <s:String x:Key="Str.SideEffectLabel">副作用：</s:String>
 </ResourceDictionary>

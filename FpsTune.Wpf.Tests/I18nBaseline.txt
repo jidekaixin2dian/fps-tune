@@ -51,7 +51,6 @@ Views/BackupLogView.xaml.cs	11
 Views/CatalogGroupLabelConverter.cs	1
 Views/ConsoleView.xaml	23
 Views/ConsoleView.xaml.cs	25
-Views/DetectView.xaml	26
 Views/DetectView.xaml.cs	50
 Views/DisplayQualityView.xaml	86
 Views/DisplayQualityView.xaml.cs	111
@@ -59,7 +58,6 @@ Views/FriendTestView.xaml	13
 Views/FriendTestView.xaml.cs	5
 Views/HomeView.xaml	16
 Views/HomeView.xaml.cs	15
-Views/OptimizeView.xaml	29
 Views/OptimizeView.xaml.cs	94
 Views/SessionView.xaml	20
 Views/SessionView.xaml.cs	83

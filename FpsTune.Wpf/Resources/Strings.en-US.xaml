@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=System.Runtime">
 
@@ -80,4 +80,51 @@
     <s:String x:Key="Str.Cancel">Cancel</s:String>
     <s:String x:Key="Str.Detect">Detect</s:String>
     <s:String x:Key="Str.LocateGame">Locate game</s:String>
+
+    <!-- Detect / Optimize pages (converted 2026-09-25) -->
+    <s:String x:Key="Str.LoadToOptimize">Load into Optimize</s:String>
+    <s:String x:Key="Str.Copy">Copy</s:String>
+    <s:String x:Key="Str.CopyAll">Copy all</s:String>
+    <s:String x:Key="Str.RunDetect">Run detection</s:String>
+    <s:String x:Key="Str.Rescan">Rescan</s:String>
+    <s:String x:Key="Str.CpuUsage">CPU usage</s:String>
+    <s:String x:Key="Str.GpuUsage">GPU usage</s:String>
+    <s:String x:Key="Str.ItemsOverview">Optimization overview</s:String>
+    <s:String x:Key="Str.MemoryUsage">Memory usage</s:String>
+    <s:String x:Key="Str.Memory">Memory</s:String>
+    <s:String x:Key="Str.ReadOnlyCheckup">Read-only checkup</s:String>
+    <s:String x:Key="Str.DetectIntro">Read-only view of hardware, the game and each item. No system setting is changed.</s:String>
+    <s:String x:Key="Str.LiveMonitor">Live monitoring</s:String>
+    <s:String x:Key="Str.CurrentGame">Current game</s:String>
+    <s:String x:Key="Str.VramDedicated">VRAM usage (dedicated)</s:String>
+    <s:String x:Key="Str.VramUsage">VRAM usage</s:String>
+    <s:String x:Key="Str.DetectDetails">Detection details</s:String>
+    <s:String x:Key="Str.SampleEverySecond">Sampled every second · read-only performance data</s:String>
+    <s:String x:Key="Str.GamePath">Game path</s:String>
+    <s:String x:Key="Str.ClickRunDetect">Click &quot;Run detection&quot; to start.</s:String>
+    <s:String x:Key="Str.System">System</s:String>
+    <s:String x:Key="Str.Save">Save</s:String>
+    <s:String x:Key="Str.Delete">Delete</s:String>
+    <s:String x:Key="Str.Import">Import</s:String>
+    <s:String x:Key="Str.Export">Export</s:String>
+    <s:String x:Key="Str.ClearCurrent">Clear current</s:String>
+    <s:String x:Key="Str.Load">Load</s:String>
+    <s:String x:Key="Str.SelectCurrent">Select current</s:String>
+    <s:String x:Key="Str.MyProfiles">My profiles</s:String>
+    <s:String x:Key="Str.ItemsTitle">Optimization items</s:String>
+    <s:String x:Key="Str.OptimizePresets">Presets</s:String>
+    <s:String x:Key="Str.PendingZero">0 items pending</s:String>
+    <s:String x:Key="Str.ConsentText">I understand what the selected items do and their side effects, and I agree to proceed</s:String>
+    <s:String x:Key="Str.SearchItems">Search name or description</s:String>
+    <s:String x:Key="Str.ProfileName">Profile name</s:String>
+    <s:String x:Key="Str.NoMatchingItems">No items match. Adjust the search or category.</s:String>
+    <s:String x:Key="Str.Admin">Administrator</s:String>
+    <s:String x:Key="Str.OptimizeTitle">System optimization</s:String>
+    <s:String x:Key="Str.ProfileHint">Type a name to save the current selection; load applies it by name; export/import is for sharing</s:String>
+    <s:String x:Key="Str.NeedsReboot">Restart required</s:String>
+    <s:String x:Key="Str.ItemDetailTitle">Item details / run log</s:String>
+    <s:String x:Key="Str.TipFull">Includes service and power settings — review the side effects</s:String>
+    <s:String x:Key="Str.TipSafe">Selects only the five conservative settings</s:String>
+    <s:String x:Key="Str.TipBalanced">Excludes the service and power items with larger impact</s:String>
+    <s:String x:Key="Str.SideEffectLabel">Side effect: </s:String>
 </ResourceDictionary>
