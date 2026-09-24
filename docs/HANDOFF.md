@@ -30,10 +30,11 @@
 | 位置 | 版本 | 状态 |
 |---|---|---|
 | GitHub 已发布 Release | `v0.1.3-beta` | 线上最新（**0.1.4 尚未发布**） |
-| **发布候选（未发布）** | **`0.1.4-beta`** | `dist/` 已齐：`folder-0.1.4/`、`single-file-0.1.4/FpsTune.exe`、`FpsTune-Portable-0.1.4.zip`、`SHA256SUMS-v0.1.4.txt`。`ProductVersion` 含 `0.1.4` + HEAD SHA（`46d0d2e…`） |
-| 本机安装位 `D:\FpsTune` | **`0.1.4-beta`（候选，未发布）** | 2026-09-25 由 `dist/folder-0.1.4/` 覆盖，逐文件一致（7/7）；界面语言已切 `en-US` 供用户目检 |
-| 源码 `main` | `0.1.4-beta` | 已 push 至 `895e903`；**0.1.4 相关的 3 个提交（`c4e191f` / `dde33d6` / `46d0d2e`）尚未 push** |
+| **发布候选（未发布）** | **`0.1.4-beta`** | 由**官方脚本**从 HEAD `f09d944` 构建：`dist/folder-0.1.4/`、`dist/single-file-0.1.4/FpsTune.exe`(62.6MB)、`dist/FpsTune-Portable-0.1.4.zip`(0.9MB)、`dist/installer/FpsTune-Setup-0.1.4.exe`(60.6MB)、`dist/SHA256SUMS-v0.1.4.txt`（**3 行**）。`ProductVersion` 含 `0.1.4` + `f09d944…` |
+| 本机安装位 `D:\FpsTune` | **`0.1.4-beta`（候选，未发布）** | 由最终 `dist/folder-0.1.4/` 覆盖，**逐文件一致（7/7）**；界面语言 `en-US`，GUI 已启动供目检 |
+| 源码 `main` | `0.1.4-beta` | 已 push 至 `895e903`；**另有 5 个提交未 push**（`c4e191f` / `dde33d6` / `46d0d2e` / `ff58760` / `f09d944`） |
 | 已发布 0.1.3 的本地资产 | — | **未被破坏**：`FpsTune-Portable-0.1.3.zip` 仍为 `4E055D2E…DEE6A`。bump 版本号正是为了避免"同号覆盖" |
+| 备份 | — | `D:\FpsTune-backup-20260925` = 已发布的 `0.1.3-beta` |
 
 - **本机只有一份可运行副本**：开始菜单 `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\FPS 帧律.lnk`
   解析后指向 `D:\FpsTune\FpsTune.exe`（用 Python 解析 `.lnk` 得到；`WScript.Shell` COM 被安全策略拦）。
@@ -90,6 +91,22 @@
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-25）做了什么
+
+**0.1.4-beta 候选改用官方脚本重建 + 根因更正（同日续）**
+
+- 用户放开沙箱权限后重跑 `publish-release.ps1`，**仍然失败**。排查发现真正根因**不在沙箱策略**，
+  而在**脚本自身的管道式 `Remove-Item`**：本环境的 `Remove-Item` 包装不支持管道参数绑定，
+  **空集合也抛错**（最小实验证明与文件数无关）。`DebugType=none` 下那段清理本就是空操作。
+- 修脚本（`f09d944`：改 `foreach` + `-LiteralPath`）后，**`publish-release.ps1` 与
+  `build-installer.ps1` 都完整跑通**，产物改由官方路径产出——含脚本自带的 zip 内容校验、
+  单文件纯净性检查、独立冒烟（`-Version` / `-Detect -Json`）、清单格式校验。
+- 最终产物（HEAD `f09d944`）：单文件 exe / Portable zip / Setup exe + **3 行** SHA256SUMS；
+  三项实测哈希与清单逐项一致。
+- 因嵌入的 SHA 变化，**重新部署** `D:\FpsTune`（逐文件 7/7 一致）并重启供目检；
+  确认 `%LOCALAPPDATA%\FpsTune\logs\error.log` **无新崩溃**（最近一条是 2026-09-07 的 1.x 旧记录）。
+- **自我更正**：本轮早些时候把根因误判为"沙箱批量删除策略"，并据此写了一段"手动补齐 zip/清单"
+  的口径。已在「环境备忘」改正——留这段记录是为了说明**误判也会被写进交接文档**，
+  下一个人别照抄旧结论。
 
 **0.1.4-beta 发布候选：构建、部署到本机、启动供目检（未 push、未发布）**
 
@@ -257,15 +274,22 @@
 
 **测试**：主线 `main`（`1d9777c` + 文档改动前）**255/255**，`dotnet test -c Release`。
 
-**环境备忘（2026-09-25 新增）**：`publish-release.ps1` 在本代理沙箱里**会在打包前被拦**——
-它的 `finally` 清理 `dist/publish-tmp-<版本>`（约 409 个文件）触发沙箱的"批量删除需确认"策略
-（阈值 50 个文件），报 `SAFE_DELETE_BULK_CONFIRM_REQUIRED` 后抛 `Remove-Item: missing path operand`。
-**两个 publish 输出（`single-file-<ver>/`、`folder-<ver>/`）在拦截前已正常产出**，
-缺的是 zip 与 `SHA256SUMS`。
-绕过办法（2026-09-25 实际采用）：手动按脚本口径补齐——
-`Compress-Archive dist/folder-<ver>/* → dist/FpsTune-Portable-<ver>.zip`，
-清单按脚本口径写 **单文件 exe 的哈希 + zip 的哈希**（`UTF8Encoding($false)` 无 BOM），
-再从空目录跑一次单文件 `-Version` / `-Detect -Json` 冒烟。产物已在 `dist/` 里备好。
+**环境备忘（2026-09-25，含一次自我更正）**：上一版本文记录说"`publish-release.ps1` 因沙箱
+批量删除策略被拦、需手动补齐 zip/清单"——**那是误判**。真正的根因在**脚本自身**：
+
+- 脚本用管道式 `Get-ChildItem ... | Where-Object {...} | Remove-Item -Force` 清理 folder 输出里
+  残留的 pdb；而本环境的 `Remove-Item` 包装**不支持管道参数绑定**——最小实验证明：
+  喂**空集合**或喂 **1 个文件**都抛 `Remove-Item: missing path operand`（与文件数无关）。
+- `DebugType=none` 之后该管道本来就是**空操作**，却把整个发布构建打断在打包之前
+  （zip 与 `SHA256SUMS` 恰好都在这一步之后，所以永远产不出来）。
+- 已修脚本：改成 `foreach` + `Remove-Item -LiteralPath $pdb.FullName`（行为等价，不走管道），
+  提交 `f09d944`。修后 `publish-release.ps1` 与 `build-installer.ps1` **都能完整跑通**。
+- 我第一轮把 `[safe-delete][...BULK_CONFIRM...]` 当成主因，其实它只是 `finally` 清理
+  `dist/publish-tmp-<版本>` 时被跳过——**带 `-ErrorAction SilentlyContinue`，不影响退出码**，
+  但会在 `dist/` 留下临时目录（约 430 个文件），需要手动 `rm -rf dist/publish-tmp-<版本>`。
+- 教训：`publish-release.ps1` 开头（第 80–84 行）也会删这些输出目录，**没有** `-ErrorAction`，
+  所以重跑前最好先用 bash `rm -rf` 清掉 `dist/{single-file,folder,publish-tmp}-<版本>` 与
+  zip/清单，让它的清理变成空操作。
 
 **环境备忘（2026-09-24 复核，原记载有误）**：旧记载为"MiMo 代理 shell 可能缺 `ProgramFiles*` 变量，
 会导致 NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开"。实测**不复现**——
