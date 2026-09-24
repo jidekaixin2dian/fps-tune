@@ -392,6 +392,10 @@ public partial class DisplayQualityView : UserControl
         if (IccPresetVivid.IsChecked == true) return IccFilterPreset.Vivid;
         if (IccPresetShadowBoost.IsChecked == true) return IccFilterPreset.ShadowBoost;
         if (IccPresetDehaze.IsChecked == true) return IccFilterPreset.Dehaze;
+        if (IccPresetNightGuard.IsChecked == true) return IccFilterPreset.NightGuard;
+        if (IccPresetWarm.IsChecked == true) return IccFilterPreset.Warm;
+        if (IccPresetCool.IsChecked == true) return IccFilterPreset.Cool;
+        if (IccPresetSoft.IsChecked == true) return IccFilterPreset.Soft;
         return null; // 「标准」卡片 = 还原语义，走 Restore
     }
 

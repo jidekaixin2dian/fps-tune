@@ -545,4 +545,13 @@
     <s:String x:Key="Str.CannotOpenLink">无法打开链接。</s:String>
     <s:String x:Key="Str.InstallerHashMismatch">安装包 SHA256 校验不匹配</s:String>
     <s:String x:Key="Str.ManifestMissingEntry">SHA256 清单缺少当前安装包记录</s:String>
+    <!-- ICC 滤镜新增预设（2026-09-25） -->
+    <s:String x:Key="Str.IccNight">夜战护眼</s:String>
+    <s:String x:Key="Str.IccNightDesc">明显降蓝 + 暗部微抬，夜间或长时间使用</s:String>
+    <s:String x:Key="Str.IccWarm">暖色</s:String>
+    <s:String x:Key="Str.IccWarmDesc">中度降蓝 + 对比微升，偏暖观感</s:String>
+    <s:String x:Key="Str.IccCool">冷色清晰</s:String>
+    <s:String x:Key="Str.IccCoolDesc">偏冷色调 + 对比提升</s:String>
+    <s:String x:Key="Str.IccSoft">柔和</s:String>
+    <s:String x:Key="Str.IccSoftDesc">降饱和 + 对比微降，久看不累</s:String>
 </ResourceDictionary>

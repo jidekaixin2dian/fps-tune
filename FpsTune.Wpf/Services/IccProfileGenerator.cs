@@ -9,6 +9,10 @@ public enum IccFilterPreset
     Vivid = 0,       // FPS 鲜艳：微增饱和与对比
     ShadowBoost = 1, // 暗部增强：阴影段 gamma 上抬
     Dehaze = 2,      // 去雾：S 型对比曲线 + 微降蓝
+    NightGuard = 3,  // 夜战护眼：明显降蓝 + 暗部微抬（夜间/长时间）
+    Warm = 4,        // 暖色：中度降蓝 + 对比微升
+    Cool = 5,        // 冷色清晰：微升蓝 + 对比升
+    Soft = 6,        // 柔和：降饱和 + 对比微降（久看不累）
 }
 
 /// <summary>
@@ -50,6 +54,32 @@ public static class IccProfileGenerator
         {
             Curve = ContrastCurve(0.85),
             BXyz = ScaleB(StdBXyz, 1.04),
+        },
+        // 夜战护眼：蓝列 Z 明显放大（屏幕明显降蓝）+ 暗部微抬，夜间/长时间用
+        IccFilterPreset.NightGuard => new("FpsTune-NightGuard.icc", "FPS 帧律 · 夜战护眼（降蓝 + 暗部微抬）")
+        {
+            Curve = ShadowLiftCurve(0.12),
+            BXyz = ScaleB(StdBXyz, 1.10),
+        },
+        // 暖色：蓝列中度放大 + 对比微升，偏暖观感
+        IccFilterPreset.Warm => new("FpsTune-Warm.icc", "FPS 帧律 · 暖色（中度降蓝 + 对比微升）")
+        {
+            Curve = ContrastCurve(1.06),
+            BXyz = ScaleB(StdBXyz, 1.07),
+        },
+        // 冷色清晰：蓝列 Z 略缩（屏幕偏冷）+ 对比升
+        IccFilterPreset.Cool => new("FpsTune-Cool.icc", "FPS 帧律 · 冷色清晰（偏冷 + 对比升）")
+        {
+            Curve = ContrastCurve(1.10),
+            BXyz = ScaleB(StdBXyz, 0.96),
+        },
+        // 柔和：矩阵列向白点收拢（降饱和）+ 对比微降，久看不累
+        IccFilterPreset.Soft => new("FpsTune-Soft.icc", "FPS 帧律 · 柔和（降饱和 + 对比微降）")
+        {
+            RXyz = PullAway(StdRXyz, StdWXyz, 0.92),
+            GXyz = PullAway(StdGXyz, StdWXyz, 0.92),
+            BXyz = PullAway(StdBXyz, StdWXyz, 0.92),
+            Curve = ContrastCurve(0.94),
         },
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };

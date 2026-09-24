@@ -30,7 +30,7 @@ Services/ExperimentRunner.cs	42
 Services/ExperimentWizard.cs	17
 Services/GpuCounterMath.cs	1
 Services/IccFilterService.cs	18
-Services/IccProfileGenerator.cs	3
+Services/IccProfileGenerator.cs	7
 Services/MetricsSampler.cs	11
 Services/NvidiaDrs.cs	19
 Services/OptimizationItemViewModel.cs	2

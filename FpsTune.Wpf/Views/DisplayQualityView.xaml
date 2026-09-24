@@ -177,6 +177,30 @@
                                     <TextBlock Text="{DynamicResource Str.IccDehazeDesc}" Style="{StaticResource PresetCardNote}"/>
                                 </StackPanel>
                             </RadioButton>
+                            <RadioButton x:Name="IccPresetNightGuard" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="{DynamicResource Str.IccNight}" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="{DynamicResource Str.IccNightDesc}" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="IccPresetWarm" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="{DynamicResource Str.IccWarm}" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="{DynamicResource Str.IccWarmDesc}" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="IccPresetCool" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="{DynamicResource Str.IccCool}" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="{DynamicResource Str.IccCoolDesc}" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="IccPresetSoft" GroupName="iccPreset" Style="{StaticResource PresetCard}">
+                                <StackPanel>
+                                    <TextBlock Text="{DynamicResource Str.IccSoft}" Style="{StaticResource PresetCardText}"/>
+                                    <TextBlock Text="{DynamicResource Str.IccSoftDesc}" Style="{StaticResource PresetCardNote}"/>
+                                </StackPanel>
+                            </RadioButton>
                             <RadioButton x:Name="IccPresetStandard" GroupName="iccPreset" Style="{StaticResource PresetCard}">
                                 <StackPanel>
                                     <TextBlock Text="{DynamicResource Str.IccStandard}" Style="{StaticResource PresetCardText}"/>
