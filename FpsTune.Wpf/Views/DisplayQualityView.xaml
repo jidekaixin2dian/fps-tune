@@ -275,7 +275,7 @@
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Text="{DynamicResource Str.DrsTextureFilter}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="TexQualityCombo" Grid.Row="0" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="TexQualityCombo" Grid.Row="0" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipTextureFilter}">
                                 <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
@@ -286,7 +286,7 @@
                             </ComboBox>
 
                             <TextBlock Grid.Row="1" Text="{DynamicResource Str.DrsPowerManagement}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="PowerModeCombo" Grid.Row="1" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="PowerModeCombo" Grid.Row="1" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipPowerManagement}">
                                 <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
@@ -299,7 +299,7 @@
                             </ComboBox>
 
                             <TextBlock Grid.Row="2" Text="{DynamicResource Str.DrsTransparencyAA}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="TransparencyCombo" Grid.Row="2" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="TransparencyCombo" Grid.Row="2" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipTransparencyAA}">
                                 <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
@@ -310,7 +310,7 @@
                             </ComboBox>
 
                             <TextBlock Grid.Row="3" Text="{DynamicResource Str.DrsLowLatency}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="PreRenderCombo" Grid.Row="3" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="PreRenderCombo" Grid.Row="3" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipLowLatency}">
                                 <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
@@ -320,7 +320,7 @@
                             </ComboBox>
 
                             <TextBlock Grid.Row="4" Text="{DynamicResource Str.DrsAnisotropic}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="AnisoCombo" Grid.Row="4" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="AnisoCombo" Grid.Row="4" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipAnisotropic}">
                                 <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
@@ -332,7 +332,7 @@
                             </ComboBox>
 
                             <TextBlock Grid.Row="5" Text="{DynamicResource Str.DrsVSync}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="VSyncCombo" Grid.Row="5" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="VSyncCombo" Grid.Row="5" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipVSync}">
                                 <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
@@ -341,7 +341,7 @@
                             </ComboBox>
 
                             <TextBlock Grid.Row="6" Text="{DynamicResource Str.DrsShaderCache}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="ShaderCacheCombo" Grid.Row="6" Grid.Column="1" Margin="8,2" MinWidth="220"
+                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="ShaderCacheCombo" Grid.Row="6" Grid.Column="1" Margin="8,2" MinWidth="220"
                                       HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
                                       ToolTip="{DynamicResource Str.TipShaderCache}">
                                 <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
