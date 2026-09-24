@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using System.Windows.Threading;
 
@@ -31,28 +32,58 @@ public partial class App : Application
         LangService.Load();
         LangService.Apply(LangService.Current);
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
-        LegacyMigrations.EnsureRun();
-        // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话
-        try
-        {
-            PerformanceSessionStore.RecoverInterruptedSession();
-            PerformanceSessionStore.EnforceRetention();
-        }
-        catch
-        {
-            // 恢复失败不阻塞启动
-        }
+        // 主题在启动画面显示前就位，保证 splash 第一帧就是正确配色
+        ThemeManager.Initialize();
+        ThemeManager.SetMode(
+            string.IsNullOrWhiteSpace(SettingsService.Current.ThemeMode) ? "dark" : SettingsService.Current.ThemeMode);
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-        base.OnStartup(e);
-        var mainWindow = new MainWindow();
-        MainWindow = mainWindow;
-        mainWindow.IsVisibleChanged += (_, _) =>
+
+        // 启动画面：先于主窗显示，让"整个软件完全加载出来之前"有可见反馈。
+        // 主窗的构建（XAML 解析 + 首页实例化）在 splash 首帧渲染之后进行（ApplicationIdle 排在 Render 之后）。
+        var splash = new Views.SplashWindow();
+        splash.Show();
+
+        // 预热硬件信息：WMI 查询较慢，后台先取好并落缓存，首页加载时直接命中
+        _ = Task.Run(() =>
         {
-            if (mainWindow.IsVisible) LiveMetrics.Start(); else _liveMetrics?.Stop();
-        };
-        mainWindow.Show();
-        _autoProfileService = new AutoProfileService();
-        _autoProfileService.Start();
+            try { HardwareInfoService.Get(); }
+            catch
+            {
+                // 预热失败不阻塞启动；页面自会按原路径重试
+            }
+        });
+
+        base.OnStartup(e);
+        Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+        {
+            LegacyMigrations.EnsureRun();
+            // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话
+            try
+            {
+                PerformanceSessionStore.RecoverInterruptedSession();
+                PerformanceSessionStore.EnforceRetention();
+            }
+            catch
+            {
+                // 恢复失败不阻塞启动
+            }
+
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+            mainWindow.IsVisibleChanged += (_, _) =>
+            {
+                if (mainWindow.IsVisible) LiveMetrics.Start(); else _liveMetrics?.Stop();
+            };
+            // 主窗完成首帧渲染即视为"完全加载"，启动画面淡出；Closed 兜底防泄漏
+            mainWindow.ContentRendered += (_, _) => splash.CloseWithFade();
+            mainWindow.Closed += (_, _) =>
+            {
+                try { splash.Close(); } catch { /* 已关闭则忽略 */ }
+            };
+            mainWindow.Show();
+            _autoProfileService = new AutoProfileService();
+            _autoProfileService.Start();
+        }));
     }
 
     protected override void OnExit(ExitEventArgs e)

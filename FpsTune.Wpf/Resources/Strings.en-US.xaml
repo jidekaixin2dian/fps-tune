@@ -589,4 +589,24 @@
     <s:String x:Key="Str.ManualIntelNote">These are orientation notes, not an official Intel recommendation; names and locations vary by machine and driver version.</s:String>
     <s:String x:Key="Str.ManualUnknownBody">Could not identify the GPU vendor. Open your GPU's own control panel to see what's adjustable; for on-screen look, the "ICC filter" card on this page is a vendor-neutral fallback.</s:String>
     <s:String x:Key="Str.ManualFooter">This checklist is read-only guidance: it only explains where settings are and what they do — the tool never changes them, and no frame-rate gains are promised. Compiled from vendor documentation and community consensus (verified 2026-09); not an official recommendation.</s:String>
+
+    <!-- Splash screen -->
+    <s:String x:Key="Str.SplashLoading">Loading…</s:String>
+    <s:String x:Key="Str.SplashTagline">Game-agnostic · system-level frame-rate tuning for Windows</s:String>
+
+    <!-- My profiles (manager dialog) -->
+    <s:String x:Key="Str.ProfileManagerTip">Manage saved profiles: load, export, delete, or save the current selection</s:String>
+    <s:String x:Key="Str.ProfileSaveCurrent">Save the current selection as a profile</s:String>
+    <s:String x:Key="Str.ProfileSavedList">Saved profiles</s:String>
+    <s:String x:Key="Str.ProfilesEmpty">No saved profiles yet. Select some items first, then enter a name above and save.</s:String>
+    <s:String x:Key="Str.ProfileItemsCount">{0} items</s:String>
+    <s:String x:Key="Str.ProfileCurrentSelection">{0} items selected</s:String>
+    <s:String x:Key="Str.ProfileOverwriteConfirm">Profile "{0}" already exists. Overwrite?</s:String>
+    <s:String x:Key="Str.ProfileDeleteConfirm">Delete profile "{0}"?</s:String>
+    <s:String x:Key="Str.ProfileNotFound">Profile "{0}" not found; the list has been refreshed.</s:String>
+    <s:String x:Key="Str.ProfileBroken">Profile "{0}" contains no optimization items; it may be corrupted. Delete and recreate it.</s:String>
+    <s:String x:Key="Str.ProfileSaveFailed">Failed to save profiles: {0}</s:String>
+    <s:String x:Key="Str.ProfileImportFailed">Import failed: {0}</s:String>
+    <s:String x:Key="Str.ProfileFileFilter">FPS Frame Tuner profile (*.fpsprofile.json)|*.fpsprofile.json</s:String>
+    <s:String x:Key="Str.ProfileImportFilter">FPS Frame Tuner profile (*.fpsprofile.json)|*.fpsprofile.json|All files (*.*)|*.*</s:String>
 </ResourceDictionary>

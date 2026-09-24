@@ -40,7 +40,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        SettingsService.Load();
 
         _pageFactories = new Dictionary<string, Func<UserControl>>
         {
@@ -74,7 +73,6 @@ public partial class MainWindow : Window
         var theme = SettingsService.Current.ThemeMode;
         if (string.IsNullOrWhiteSpace(theme))
             theme = "dark";
-        ThemeManager.Initialize();
         ThemeManager.SetMode(theme);
 
         StateChanged += OnStateChanged;

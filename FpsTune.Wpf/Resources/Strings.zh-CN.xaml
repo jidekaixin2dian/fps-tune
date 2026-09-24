@@ -589,4 +589,24 @@
     <s:String x:Key="Str.ManualIntelNote">以上是取向说明，不是 Intel 官方推荐；名称与位置随机型与驱动版本可能不同。</s:String>
     <s:String x:Key="Str.ManualUnknownBody">未能识别显卡厂商。可打开显卡自带的控制面板查看可调项；画面取向可先用本页「ICC 滤镜」兜底。</s:String>
     <s:String x:Key="Str.ManualFooter">本清单为只读指引：只说明设置位置与取向，不代替你修改设置，也不承诺帧数收益。依据厂商官方文档与社区共识整理（2026-09 查证），非官方推荐。</s:String>
+
+    <!-- 启动画面 -->
+    <s:String x:Key="Str.SplashLoading">正在加载…</s:String>
+    <s:String x:Key="Str.SplashTagline">通用 FPS · Windows 系统层帧率优化工具</s:String>
+
+    <!-- 我的方案（弹窗管理） -->
+    <s:String x:Key="Str.ProfileManagerTip">管理已保存的方案：载入、导出、删除，或保存当前勾选</s:String>
+    <s:String x:Key="Str.ProfileSaveCurrent">保存当前勾选为方案</s:String>
+    <s:String x:Key="Str.ProfileSavedList">已保存方案</s:String>
+    <s:String x:Key="Str.ProfilesEmpty">还没有已保存的方案。先勾选优化项，再在上方输入名称保存。</s:String>
+    <s:String x:Key="Str.ProfileItemsCount">{0} 项</s:String>
+    <s:String x:Key="Str.ProfileCurrentSelection">当前已勾选 {0} 项</s:String>
+    <s:String x:Key="Str.ProfileOverwriteConfirm">方案「{0}」已存在，覆盖？</s:String>
+    <s:String x:Key="Str.ProfileDeleteConfirm">删除方案「{0}」？</s:String>
+    <s:String x:Key="Str.ProfileNotFound">未找到方案「{0}」，列表已刷新。</s:String>
+    <s:String x:Key="Str.ProfileBroken">方案「{0}」不包含任何优化项，可能是文件损坏，请删除后重建。</s:String>
+    <s:String x:Key="Str.ProfileSaveFailed">方案保存失败：{0}</s:String>
+    <s:String x:Key="Str.ProfileImportFailed">导入失败：{0}</s:String>
+    <s:String x:Key="Str.ProfileFileFilter">FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json</s:String>
+    <s:String x:Key="Str.ProfileImportFilter">FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json|所有文件 (*.*)|*.*</s:String>
 </ResourceDictionary>
