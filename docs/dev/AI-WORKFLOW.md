@@ -104,7 +104,36 @@
 
 ---
 
-## 四、相关文档索引
+## 四、界面文案与国际化（硬要求）
+
+**新增任何用户可见文案，必须走资源键，不许硬编码中文。**
+
+| 位置 | 写法 |
+|---|---|
+| XAML | `Text="{DynamicResource Str.Xxx}"` —— 用 `DynamicResource`，切语言才会即时生效 |
+| C# code-behind | `Str.T("Str.Xxx")`（`Services/Str.cs`）；带参数用 `Str.T("Str.Xxx", a, b)` |
+| 资源字典 | `Resources/Strings.zh-CN.xaml` **与** `Strings.en-US.xaml` **都要加键，键集必须完全一致** |
+
+- **`Str.T` 缺失键会显示成 `!Str.Xxx!`**——这是故意的：漏配要立刻在界面上显形，
+  而不是变成"莫名空白"。
+- **不要翻译同时充当标识符的值**。典型例子：catalog 的 `group`（"键鼠"等）**同时是筛选键**
+  （XAML chip 的 `Tag` 与 `vm.Group` 直接比较），只能做显示层映射，见 `Core/CatalogGroups.cs`。
+- 需要"中文 / 英文二选一"而不适合进字典时（如按 id 从 catalog 取值），用 `Str.Pick(zh, en)`。
+
+**守卫测试**（`FpsTune.Wpf.Tests/I18nGuardTests.cs`）：
+
+| 测试 | 作用 |
+|---|---|
+| `No_new_hardcoded_chinese_in_ui` | **棘轮**。基线在 `FpsTune.Wpf.Tests/I18nBaseline.txt`；**新增硬编码中文立即失败**。转换掉一批后把基线数字调低（清零的行删掉），棘轮会一直往下咬 |
+| `Both_language_dictionaries_have_the_same_keys` | 两个字典键集必须一致，防漏配 |
+| `Every_referenced_resource_key_exists_in_both_dictionaries` | 防拼写错误（引用了一个不存在的键） |
+
+> **历史（2026-09-25 审计）**：界面当时共 **1609 处硬编码中文、分布在 65 个文件**，
+> 而 P1-2 当年只接了 35 处资源键，却在交接文档里记为"国际化完成"。
+> 更糟的是 code-behind **连取资源的辅助都没有**，所以 C# 里的文案根本无从本地化——
+> 这才是"中英混排"长期存在的结构性根因。`Services/Str.cs` 与上述守卫即为修复。
+
+## 五、相关文档索引
 
 | 文档 | 用途 |
 |---|---|
