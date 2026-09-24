@@ -42,6 +42,7 @@
 | `PLAN-backlog.md` | **待办总表（P0–P2）** —— 开工先看这份 |
 | `PLAN-0.1.2-features.md` | 0.1.x 功能设计依据：M1/M2/M3 的开工依据与设计细节 |
 | `PLAN-P2-1-catalog-i18n.md` | P2-1（catalog 说明文本英译）的架构调研与推荐改法 |
+| `PLAN-P2-6-hot-options.md` | P2-6（热门优化项）的调研结论与红线预审：哪几项已落地、哪几项不做及理由 |
 | `GUI_PLAN.md` | GUI 阶段规划（P2-3 的盘点对象） |
 | `GUI_DESIGN_PROMPT.md` / `UI_VISION_CHECKLIST.md` | 界面设计提示词与视觉检查清单 |
 
