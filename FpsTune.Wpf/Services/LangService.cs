@@ -63,6 +63,13 @@ public static class LangService
         }
     }
 
+    /// <summary>
+    /// 测试专用：只改内存中的当前语言，**不落盘**。
+    /// 生产代码请用 <see cref="Apply"/> / <see cref="Save"/>；
+    /// 单测不得依赖、也不得污染本机 %LOCALAPPDATA%\FpsTune\lang.txt。
+    /// </summary>
+    internal static void SetCurrentForTest(string lang) => Current = lang == EnUs ? EnUs : ZhCn;
+
     /// <summary>切换界面语言并立刻刷新 DynamicResource 文案。</summary>
     public static void Apply(string lang)
     {

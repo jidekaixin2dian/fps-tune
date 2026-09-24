@@ -457,7 +457,7 @@ public partial class OptimizeView : UserControl
             {
                 lastGroup = item.Group;
                 var gp = NewPara(3);
-                gp.Inlines.Add(R("— " + item.Group + " —", "TextMutedBrush", size: 11));
+                gp.Inlines.Add(R("— " + CatalogGroups.Display(item.Group) + " —", "TextMutedBrush", size: 11));
                 OutputDoc.Blocks.Add(gp);
             }
             var line = NewPara(3);
@@ -536,7 +536,7 @@ public partial class OptimizeView : UserControl
                 {
                     lastGroup = meta?.Group;
                     var gp = NewPara(3);
-                    gp.Inlines.Add(R("— " + (lastGroup ?? "其他") + " —", "TextMutedBrush", size: 11));
+                    gp.Inlines.Add(R("— " + CatalogGroups.Display(lastGroup ?? "其他") + " —", "TextMutedBrush", size: 11));
                     OutputDoc.Blocks.Add(gp);
                 }
 

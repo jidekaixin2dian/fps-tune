@@ -33,7 +33,7 @@
     <s:String x:Key="Str.LanguageLabel">Language</s:String>
     <s:String x:Key="Str.LanguageZh">简体中文</s:String>
     <s:String x:Key="Str.LanguageEn">English</s:String>
-    <s:String x:Key="Str.LanguageNote">Applies immediately. Item descriptions stay Chinese. Default is Chinese.</s:String>
+    <s:String x:Key="Str.LanguageNote">Applies immediately. Item names and descriptions follow the selected language, falling back to Chinese where no translation exists. Default is Chinese.</s:String>
 
     <!-- Optimize -->
     <s:String x:Key="Str.OptIntro">Pick a preset, review, then apply. All changes are backed up.</s:String>
@@ -65,6 +65,15 @@
     <s:String x:Key="Str.FollowGame">Follow in-game</s:String>
     <s:String x:Key="Str.PresetLatest">Latest</s:String>
     <s:String x:Key="Str.Reading">Loading…</s:String>
+
+    <!-- Optimize page category labels. The catalog `group` value stays Chinese (filtering uses it);
+         this is display-only. See Core/CatalogGroups.cs -->
+    <s:String x:Key="Str.GroupAll">All</s:String>
+    <s:String x:Key="Str.GroupKeyboardMouse">Keyboard &amp; mouse</s:String>
+    <s:String x:Key="Str.GroupGraphics">Graphics</s:String>
+    <s:String x:Key="Str.GroupNetwork">Network</s:String>
+    <s:String x:Key="Str.GroupPower">Power</s:String>
+    <s:String x:Key="Str.GroupSystem">System &amp; scheduling</s:String>
 
     <!-- Common -->
     <s:String x:Key="Str.Ok">OK</s:String>

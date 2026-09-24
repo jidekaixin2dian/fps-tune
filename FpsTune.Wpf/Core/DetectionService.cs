@@ -25,12 +25,14 @@ public static class DetectionService
         var items = ItemCatalog.All.Select(def =>
         {
             var state = GetItemState(def, gamePath);
+            // 键名与顺序是 CLI -Json 的机器协议，不得增删或改名；
+            // 只有「值」随界面语言变化（CLI 恒为 zh-CN，见 OptimizationItemDefinition.Pick）。
             return new
             {
                 id = def.Id,
-                name = def.Name,
-                desc = def.Description,
-                sideEffect = def.SideEffect,
+                name = def.DisplayName,
+                desc = def.DisplayDescription,
+                sideEffect = def.DisplaySideEffect,
                 admin = def.Admin,
                 @default = def.Default,
                 reboot = def.Reboot,

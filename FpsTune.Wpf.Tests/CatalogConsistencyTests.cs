@@ -33,6 +33,19 @@ public class CatalogConsistencyTests
         return path;
     }
 
+    /// <summary>
+    /// 剥掉**整行**注释（`//`、`///`、`/*`、`*`），用于「某 API 只应在某处调用」这类源码守卫——
+    /// 否则文档注释里提到 API 名就会被误判成调用（本守卫首次运行时正是这样误报的）。
+    /// 局限：不处理与代码同行的块注释；本仓库没有这种写法。
+    /// </summary>
+    private static string StripCommentLines(string source)
+        => string.Join("\n", source
+            .Split('\n')
+            .Select(line => line.TrimStart())
+            .Where(line => !line.StartsWith("//", StringComparison.Ordinal)
+                           && !line.StartsWith("*", StringComparison.Ordinal)
+                           && !line.StartsWith("/*", StringComparison.Ordinal)));
+
     private static (List<string> ids, Dictionary<string, bool> reboot) LoadCatalog()
     {
         var json = File.ReadAllText(RepoFile("catalog", "catalog.json"));
@@ -269,5 +282,128 @@ public class CatalogConsistencyTests
             if (Directory.Exists(tmp))
                 Directory.Delete(tmp, recursive: true);
         }
+    }
+
+    // ---------- catalog 文案国际化（P2-1，见 docs/dev/PLAN-P2-1-catalog-i18n.md） ----------
+
+    [Fact]
+    public void Every_catalog_item_has_complete_english_text_free_of_chinese()
+    {
+        // 纯数据守卫：直接读 catalog JSON、不经 LangService，因此与当前界面语言无关，
+        // 不会与并行测试类里改语言的用例竞态。
+        var json = File.ReadAllText(RepoFile("catalog", "catalog.json"));
+        using var doc = JsonDocument.Parse(json);
+        var cjk = new Regex(@"[\u4e00-\u9fff\u3040-\u30ff]");
+        var problems = new List<string>();
+
+        foreach (var it in doc.RootElement.GetProperty("items").EnumerateArray())
+        {
+            var id = it.GetProperty("id").GetString()!;
+            foreach (var (zhKey, enKey) in new[]
+                     {
+                         ("name", "nameEn"),
+                         ("description", "descriptionEn"),
+                         ("sideEffect", "sideEffectEn"),
+                     })
+            {
+                if (!it.TryGetProperty(enKey, out var enNode))
+                {
+                    problems.Add($"{id}: 缺少 {enKey}");
+                    continue;
+                }
+
+                var zh = (it.GetProperty(zhKey).GetString() ?? "").Trim();
+                var en = (enNode.GetString() ?? "").Trim();
+
+                // 中文非空 ⇒ 英文必须非空；中文为空 ⇒ 英文也应留空（不给空白项凭空加戏）
+                if (zh.Length > 0 && en.Length == 0)
+                    problems.Add($"{id}: {zhKey} 有中文但 {enKey} 为空");
+                if (zh.Length == 0 && en.Length > 0)
+                    problems.Add($"{id}: {zhKey} 为空但 {enKey} 非空");
+                if (cjk.IsMatch(en))
+                    problems.Add($"{id}: {enKey} 含中日韩字符 -> {en}");
+            }
+        }
+
+        Assert.True(problems.Count == 0,
+            $"catalog 英文文案不完整（共 {problems.Count} 处）：\n" + string.Join("\n", problems));
+    }
+
+    [Fact]
+    public void Catalog_item_text_follows_the_ui_language()
+    {
+        var original = FpsTune.Wpf.Services.LangService.Current;
+        try
+        {
+            var def = OptimizationCatalog.Items.Single(x => x.Id == "mouse-accel-off");
+
+            FpsTune.Wpf.Services.LangService.SetCurrentForTest(FpsTune.Wpf.Services.LangService.EnUs);
+            Assert.Equal("Disable mouse acceleration", def.DisplayName);
+            Assert.StartsWith("Turns off Windows pointer precision", def.DisplayDescription);
+
+            FpsTune.Wpf.Services.LangService.SetCurrentForTest(FpsTune.Wpf.Services.LangService.ZhCn);
+            Assert.Equal("关闭鼠标加速", def.DisplayName);
+            Assert.StartsWith("关闭 Windows 指针精度增强", def.DisplayDescription);
+        }
+        finally
+        {
+            FpsTune.Wpf.Services.LangService.SetCurrentForTest(original);
+        }
+    }
+
+    [Fact]
+    public void Missing_english_text_falls_back_to_chinese_instead_of_showing_blank()
+    {
+        var original = FpsTune.Wpf.Services.LangService.Current;
+        try
+        {
+            FpsTune.Wpf.Services.LangService.SetCurrentForTest(FpsTune.Wpf.Services.LangService.EnUs);
+
+            // 完全没有英文：必须回退中文，不能显示空白
+            var bare = new OptimizationItemDefinition(
+                "x", "中文名", "中文说明", "中文副作用", false, false, false, "registry", "键鼠");
+            Assert.Equal("中文名", bare.DisplayName);
+            Assert.Equal("中文说明", bare.DisplayDescription);
+            Assert.Equal("中文副作用", bare.DisplaySideEffect);
+
+            // 英文是空白串（而非 null）：同样必须回退
+            var blank = bare with { NameEn = "   ", DescriptionEn = "", SideEffectEn = " " };
+            Assert.Equal("中文名", blank.DisplayName);
+            Assert.Equal("中文说明", blank.DisplayDescription);
+            Assert.Equal("中文副作用", blank.DisplaySideEffect);
+        }
+        finally
+        {
+            FpsTune.Wpf.Services.LangService.SetCurrentForTest(original);
+        }
+    }
+
+    [Fact]
+    public void Cli_startup_path_never_loads_the_ui_language()
+    {
+        // 架构不变量：CLI 分支必须在 LangService.Load() 之前 return，
+        // 否则 `-Detect -Json` 的输出会随用户的语言设置变化，而它是机器协议、必须稳定。
+        // 背景见 docs/dev/PLAN-P2-1-catalog-i18n.md。
+        var app = StripCommentLines(File.ReadAllText(RepoFile("FpsTune.Wpf", "App.xaml.cs"), Encoding.UTF8));
+        var cliDispatch = app.IndexOf("CliHost.Run(e.Args)", StringComparison.Ordinal);
+        var loadLang = app.IndexOf("LangService.Load()", StringComparison.Ordinal);
+
+        Assert.True(cliDispatch >= 0, "App.xaml.cs 里找不到 CLI 分发点，请同步更新本守卫");
+        Assert.True(loadLang >= 0, "App.xaml.cs 里找不到 LangService.Load()，请同步更新本守卫");
+        Assert.True(cliDispatch < loadLang,
+            "CLI 分支必须先于 LangService.Load() 返回，否则 -Json 输出会随界面语言变化");
+
+        // 且不得有第二处 Load()——那会绕过上面的顺序保证。剥注释后再匹配，避免误报。
+        var root = Path.Combine(RepoRoot(), "FpsTune.Wpf");
+        var offenders = Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+            .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
+                        && !p.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            .Where(p => Path.GetFileName(p) != "App.xaml.cs")
+            .Where(p => Regex.IsMatch(StripCommentLines(File.ReadAllText(p)), @"LangService\s*\.\s*Load\s*\("))
+            .Select(Path.GetFileName)
+            .ToList();
+
+        Assert.True(offenders.Count == 0,
+            "LangService.Load() 只应在 App.xaml.cs 的 GUI 分支调用，却发现: " + string.Join(", ", offenders));
     }
 }

@@ -1,8 +1,10 @@
 # P2-1 · catalog 说明文本英译（架构调研与改法）
 
-> 状态：**调研完成，尚未实施**。本文记录 2026-09-25 的代码调研结论，实施前先读一遍。
+> 状态：**已实施**（2026-09-25）。本文是这条线的设计依据与改法记录。
 > 待办总表见 `docs/dev/PLAN-backlog.md` 的 P2-1。
 > 验收：**英文 locale 下优化项说明无中文，中文原文不变。**
+>
+> 实施结果见文末「实施记录」——**其中有 3 处与原计划的偏差，动手改这块前先读**。
 
 ## 目标
 
@@ -113,3 +115,61 @@ private static string Pick(string zh, string? en)
 2. 再接模型与 `BuildDetectJson`（补守卫测试 2 / 3 / 4）。
 3. 最后做 group 显示层与设置页文案（纯 UI，无守卫测试，需人工目检英文界面）。
 4. 收工按 `AGENTS.md` 更新 `AGENTS.md` + `docs/HANDOFF.md` + `PLAN-backlog.md` 并提交。
+
+---
+
+## 实施记录（2026-09-25）
+
+### 改了什么
+
+| 改动 | 文件 |
+|---|---|
+| 33 项各加 `nameEn` / `descriptionEn` / `sideEffectEn`；键顺序统一为 id → name → description → sideEffect → admin → default → reboot → kind → group | `catalog/catalog.json` |
+| record 末尾加 3 个可选参数 + `DisplayName` / `DisplayDescription` / `DisplaySideEffect`（英文缺失回退中文） | `Core/OptimizationItemDefinition.cs` |
+| `name` / `desc` / `sideEffect` 三个键的**值**改用 `Display*`（**键名与顺序不变**） | `Core/DetectionService.cs` |
+| 分组**显示标签**映射（中文键 → 英文标签） | `Core/CatalogGroups.cs`（新） |
+| 分组键 → 显示标签的 `IValueConverter` | `Views/CatalogGroupLabelConverter.cs`（新） |
+| 筛选 chip 的 `Content` 改 `DynamicResource`（**`Tag` 仍是中文键**）；GroupStyle 标题走转换器；两处手绘分组标题走 `CatalogGroups.Display` | `Views/OptimizeView.xaml` / `.xaml.cs` |
+| 6 个分组文案键；`Str.LanguageNote` 措辞更正（原写"优化项说明仍为中文"，实施后已不成立） | `Resources/Strings.zh-CN.xaml` / `Strings.en-US.xaml` |
+| 不落盘的测试钩子 `SetCurrentForTest`（避免单测污染本机 `lang.txt`） | `Services/LangService.cs` |
+| 4 条守卫测试 | `FpsTune.Wpf.Tests/CatalogConsistencyTests.cs` |
+
+### 与原计划的 3 处偏差
+
+1. **分组标签做了，但 `OptimizeView` 的其余页面文案仍是中文。**
+   调研中发现该页 chrome（标题「系统优化」、预设名「均衡推荐」「保守优化」等）**从未做过本地化**
+   —— 那属于 P1-2 的遗留范围，已拆成新的待办 **P2-7**。
+   所以英文界面下：**条目名称/说明/分组标签是英文，页面 chrome 仍是中文**。这是有意分步，不是漏做。
+2. **分组标题字体由等宽改为正文**（`FontMono` → `FontBody`）：英文标签是短语
+   （"Keyboard & mouse"），等宽下观感不对。
+3. **多了一条原计划外的架构守卫** `Cli_startup_path_never_loads_the_ui_language`，
+   锁定「CLI 分支必须先于 `LangService.Load()`」这一不变量。
+   它**首次运行时误报了自己**——正则匹配到了本文档提到的 `LangService.Load()` 字样所在的
+   文档注释。修法是先 `StripCommentLines` 剥掉整行注释再匹配。
+
+### 验证（原始输出）
+
+```
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
+-> 已通过! - 失败: 0，通过: 270，已跳过: 0，总计: 270，持续时间: 45 s
+```
+
+端到端验证 CLI 机器协议未变（把 `%LOCALAPPDATA%\FpsTune\lang.txt` 临时设为 `en-US` 后跑 `-Detect -Json`）：
+
+```
+lang.txt = zh-CN  ->  name: 关闭鼠标加速
+lang.txt = en-US  ->  name: 关闭鼠标加速   ← 仍是中文，符合设计预期
+item 键 = ['id','name','desc','sideEffect','admin','default','reboot','optimized','current','group']
+键结构与改动前一致: True
+```
+
+`catalog.json` 数据自检（脚本 `work/validate-catalog.py`，不入库）：
+33 项 × 3 字段完整、英文无中日韩字符、空白项一致、无 BOM；
+admin 22 / reboot 13 / balanced 27 / safe-only 5 —— 与 README 口径一致。
+
+### 未验证
+
+- **英文界面下的 GUI 人工目检**（需要人在场看窗口）。单元测试覆盖了语言取值路径，
+  但 XAML 的 `DynamicResource` 渲染、分组标题与筛选 chip 的实际观感未经肉眼确认。
+  切语言后需**重新检测**才会刷新条目列表（见上文"语言切换后的刷新"）。
+
