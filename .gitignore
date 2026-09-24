@@ -28,5 +28,8 @@ test-result*.txt
 # 本地 AI 交接文档，不入库
 HANDOFF_PROMPT*.md
 
+# 本地 AI 代理的工作数据（记忆/技能/会话态），不入库
+.workbuddy-ai/
+
 # 本地探针/验证工程（驱动层实验用，结论沉淀进代码与 docs/，工程本身不入库）
 work/
