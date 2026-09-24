@@ -1,6 +1,6 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-24（本轮：环境变量"缺失"根因复核 + 环境事实文档化 P2-5）
+> 最后核对：2026-09-24（本轮：环境变量"缺失"根因复核 + 环境事实文档化 P2-5 + 版本同步状态核对）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -25,13 +25,35 @@
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
-**版本号回退带来的一个坑，必须知道**：本机重建后 `-Version` 会自报 `0.1.1-beta`，与已发布的
-`v0.1.1-beta` **同号但内容更多**。区分两者只能看 `InformationalVersion` 里的完整 SHA，不要拿版本号当依据。
-`D:\FpsTune` 那份 0.1.2-beta 安装位保持原样，不回滚。
+### 2.1 版本与同步状态核对（2026-09-24 实测，取代旧的"版本号回退坑"记载）
+
+| 位置 | 版本 | 同步状态 |
+|---|---|---|
+| GitHub 已发布 Release | `v0.1.3-beta` | **已是最新，无需同步** |
+| 本机安装位 `D:\FpsTune` | `0.1.2-beta` | **落后一版**（`-Version` 自报 `0.1.2-beta`）；升级需用户点头 → P1-4 |
+| 本机 `dist/` 里的 0.1.3 产物 | `0.1.3-beta` | 与发布产物**逐字节一致**：`FpsTune-Portable-0.1.3.zip` 实测 SHA256 = `4E055D2E9AF56F1A7995662764B881F0CB289FCAA66BD8B3CA1F14B4B47DEE6A`，与发布页 `SHA256SUMS-v0.1.3.txt` 相同 |
+| 源码 `main` | `0.1.3-beta` | 树 = `v0.1.3-beta` 的代码，**无代码分歧**；另有纯文档/杂项提交未 push |
+
+- **本机只有一份可运行副本**：开始菜单 `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\FPS 帧律.lnk`
+  解析后指向 `D:\FpsTune\FpsTune.exe`（用 Python 解析 `.lnk` 得到；`WScript.Shell` COM 被安全策略拦）。
+  `%LOCALAPPDATA%\FpsTune` 是**配置/备份目录**（`lang.txt` / `settings.json` / `backup` / `logs` / `sessions`），
+  **不是安装**。另有更早的备份 `D:\FpsTune-backup-20260922`（exe 日期 2026-09-14）。
+- **本地源码与 GitHub 无分歧**（用户 2026-09-24 追问后实测）：本轮改动前本地 `HEAD` 与 `origin/main`
+  同为 `c28e94f`；`git rev-list --left-right --count origin/main...HEAD` = `0 1`（远端无本地缺失的提交）；
+  `git fetch` 后亦无新提交（只带回两个 tag）。本轮改动均叠加在此之上。
+- 旧的"本机重建后 `-Version` 自报 `0.1.1-beta`、与已发布版同号不同内容"记载**已失效**
+  （`VersionPrefix` 现为 `0.1.3`）。保留其教训：**判断版本只看 `Directory.Build.props` 与
+  `InformationalVersion` 的完整 SHA，不要拿版本号当依据。**
+- `D:\FpsTune` 那份 0.1.2-beta 安装位**尚未回滚也未升级**，保持原样待拍板。
 
 **未决（需要用户拍板，别自作主张）**
 
-1. 无。原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
+1. **是否 push `main`**：`main` 领先 `origin/main`（2 个纯文档/杂项提交 + 本轮 HANDOFF/AGENTS 更新），
+   按纪律停在本机，等用户拍板。**push 不会产生新 Release**（`v0.1.3-beta` 已存在）。
+2. **是否把 `D:\FpsTune` 升到 `0.1.3-beta`**（即 P1-4）：覆盖前必须用户点头。
+   建议做法：先整目录备份为 `D:\FpsTune-backup-20260924`，再用 `dist/folder-0.1.3/` 覆盖——
+   **不跑安装器、不碰注册表**，可整目录回退。
+3. 原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
    （Setup + Portable + SHA256SUMS），与 README / README.en 下载表一致。
 
 **已决**
@@ -73,6 +95,13 @@
 - 顺手修掉几处自相矛盾 / 过期：`AGENTS.md` 基线注释 255→266；本文 §2 的
   `VersionPrefix=0.1.2`→`0.1.3`、测试基线 255→266、`未发布的内容`；`CONTRIBUTING.md` 里
   "国际化全未做"改为"框架文案已完成、catalog 说明待译"。
+- 追加提交 `c95ba7a`：`.gitignore` 忽略 `.workbuddy-ai/`（本地 AI 代理工作数据；按仓库
+  "本地 AI 文档不入库"的既有约定）。
+- **版本同步状态核对（用户追问后实测，结论写入 §2.1）**：GitHub 已发布的 `v0.1.3-beta` 就是最新，
+  **无需同步**；落后的只有本机安装位 `D:\FpsTune`（`0.1.2-beta`）；本机 `dist/` 的 0.1.3 产物与
+  发布产物逐字节一致（SHA256 相同）。并核实**本地源码与 GitHub 无分歧**。
+- 为用户启动 `dist/folder-0.1.3/FpsTune.exe` 目检 0.1.3（独立便携版，**不碰 `D:\FpsTune`**），
+  `-Version` 自报 `0.1.3-beta`。**用户尚未拍板**是否 push 与是否升级本机安装位。
 
 ### 历史轮次（2026-09-22 及更早）
 
