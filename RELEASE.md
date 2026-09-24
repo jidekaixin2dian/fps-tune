@@ -3,7 +3,7 @@
 版本号唯一来源：`Directory.Build.props` 的 `<VersionPrefix>`（三段数字，程序集 / 安装器 /
 CLI 自报版本共用）+ `<VersionSuffix>`（预发布标识，只进 `InformationalVersion` / `ProductVersion` 展示）。
 下文 `<ver>` 指 `VersionPrefix`。已发布最新：`v0.1.3-beta`，上一版 `v0.1.2-beta`；
-**`0.1.6-beta`（`8eaec90`，内容 ⊇ 0.1.5 / 0.1.4）等旧候选已构建、等拍板发 Release**（状态细节看 `docs/HANDOFF.md` §2.1）。
+**`0.1.7-beta`（`fab34e7`，内容 ⊇ 全部旧候选）等候选已构建、部署本机、等拍板发 Release**（状态细节看 `docs/HANDOFF.md` §2.1）。
 > 历史注记：1.x 版本线（v1.6.2 及之前）已在 `170a8bd` 重置为 0.1 Beta 线，旧版本号只出现在历史与 `docs/` 存档里。
 
 发布必须从最终提交开始。`publish-release.ps1` 读取干净工作树的

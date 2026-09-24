@@ -9,7 +9,7 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（33 个可还原优化项） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.1.6` + `VersionSuffix=beta`；**0.1.6 候选已按 `8eaec90` 构建（三资产齐全、哈希已核）并部署到 `D:\FpsTune` 供目检**；`dist/` 另保留 0.1.5 / 0.1.4 旧候选；**0.1.6 内容包含前两者，推荐发它**；线上最新 `v0.1.3-beta` |
+| 版本 | `VersionPrefix=0.1.7` + `VersionSuffix=beta`；**0.1.7 候选已按 `fab34e7` 构建（三资产齐全、哈希已核）并部署到 `D:\FpsTune` 供目检**；`dist/` 另保留 0.1.6 / 0.1.5 / 0.1.4 旧候选；**0.1.7 内容包含全部旧候选，推荐发它**；线上最新 `v0.1.3-beta`；**`main` 已 push（用户 2026-09-25 授权）** |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **301 / 301 通过**，`dotnet test -c Release`（含 P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译） |
@@ -136,7 +136,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 301
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
 | 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
-| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `8eaec90` = 0.1.6 候选，部署流程见硬纪律第 7 条），不是源码 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `fab34e7` = 0.1.7 候选，部署流程见硬纪律第 7 条），不是源码 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
@@ -147,7 +147,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 301
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（0.1.6-beta @ 8eaec90；备份 -20260925-46a3 / -0627 / -20260925 为更早版本），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（0.1.7-beta @ fab34e7；备份 -fab3 / -46a3 / -0627 / -20260925 为更早版本），开始菜单 .lnk 也指向它；只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 
