@@ -554,4 +554,13 @@
     <s:String x:Key="Str.IccCoolDesc">偏冷色调 + 对比提升</s:String>
     <s:String x:Key="Str.IccSoft">柔和</s:String>
     <s:String x:Key="Str.IccSoftDesc">降饱和 + 对比微降，久看不累</s:String>
+    <!-- 驱动版本建议（只读；不下载不安装） -->
+    <s:String x:Key="Str.DriverCard">驱动版本建议</s:String>
+    <s:String x:Key="Str.DriverGpuLabel">当前显卡：</s:String>
+    <s:String x:Key="Str.DriverSeriesLabel">系列：</s:String>
+    <s:String x:Key="Str.DriverStableLabel">稳定首选：</s:String>
+    <s:String x:Key="Str.DriverAltLabel">备选：</s:String>
+    <s:String x:Key="Str.DriverNoStable">暂无公认稳定版</s:String>
+    <s:String x:Key="Str.DriverNoAdvice">未能识别为 NVIDIA 显卡，暂无驱动版本建议。</s:String>
+    <s:String x:Key="Str.DriverSource">来源：社区共识（什么值得买 2026-01-23），非官方推荐；版本会随时间变化，请以 NVIDIA 官网为准。本工具不下载也不安装驱动。</s:String>
 </ResourceDictionary>

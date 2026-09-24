@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using FpsTune.Wpf.Core;
@@ -34,6 +35,35 @@ public partial class DisplayQualityView : UserControl
         RefreshVibrance();
         RefreshIcc();
         RefreshDrs();
+        RefreshDriverAdvice();
+    }
+
+    /// <summary>
+    /// 驱动版本建议：只读信息。
+    /// **本工具不下载、不安装任何驱动**（红线）——这里只给版本号与来源，引导用户自己去官网。
+    /// </summary>
+    private void RefreshDriverAdvice()
+    {
+        var gpu = HardwareInfoService.Get().Gpu;
+        var advice = GpuDriverAdvisor.For(gpu);
+
+        DriverAdviceSourceText.Text = Str.T("Str.DriverSource");
+
+        if (advice is null)
+        {
+            DriverAdviceText.Text = Str.T("Str.DriverNoAdvice");
+            return;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine(Str.T("Str.DriverGpuLabel") + gpu);
+        sb.AppendLine(Str.T("Str.DriverSeriesLabel") + advice.Series);
+        sb.AppendLine(Str.T("Str.DriverStableLabel") +
+                      (string.IsNullOrEmpty(advice.Stable) ? Str.T("Str.DriverNoStable") : advice.Stable));
+        if (!string.IsNullOrWhiteSpace(advice.Alternatives))
+            sb.AppendLine(Str.T("Str.DriverAltLabel") + advice.Alternatives);
+        sb.Append(advice.Note);
+        DriverAdviceText.Text = sb.ToString().TrimEnd();
     }
 
     private void RefreshDlss()

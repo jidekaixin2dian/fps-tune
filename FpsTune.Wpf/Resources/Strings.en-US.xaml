@@ -554,4 +554,13 @@
     <s:String x:Key="Str.IccCoolDesc">Cooler tint with higher contrast</s:String>
     <s:String x:Key="Str.IccSoft">Soft</s:String>
     <s:String x:Key="Str.IccSoftDesc">Lower saturation and slightly lower contrast, easier on the eyes</s:String>
+    <!-- Driver version advice (read-only; never downloads or installs) -->
+    <s:String x:Key="Str.DriverCard">Recommended driver version</s:String>
+    <s:String x:Key="Str.DriverGpuLabel">GPU: </s:String>
+    <s:String x:Key="Str.DriverSeriesLabel">Series: </s:String>
+    <s:String x:Key="Str.DriverStableLabel">Recommended stable: </s:String>
+    <s:String x:Key="Str.DriverAltLabel">Alternatives: </s:String>
+    <s:String x:Key="Str.DriverNoStable">no community-agreed stable version yet</s:String>
+    <s:String x:Key="Str.DriverNoAdvice">Not recognised as an NVIDIA GPU, so there is no driver version advice.</s:String>
+    <s:String x:Key="Str.DriverSource">Source: community consensus (SMZDM, 2026-01-23) — not an official recommendation. Versions change over time, so always check NVIDIA's own site. This tool never downloads or installs drivers.</s:String>
 </ResourceDictionary>
