@@ -21,7 +21,7 @@
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
 | 本机安装位 | `D:\FpsTune` = **`0.1.4-beta`（发布候选，未发布）**；2026-09-25 由 `dist/folder-0.1.4/` 覆盖，逐文件一致（7/7）。上一版备份 `D:\FpsTune-backup-20260925`（= 已发布的 `0.1.3-beta`） |
-| 测试基线 | 270 / 270（`dotnet test -c Release`；2026-09-25 复核） |
+| 测试基线 | 273 / 273（`dotnet test -c Release`；2026-09-25 复核，含 i18n 棘轮守卫） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
@@ -91,6 +91,23 @@
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-25）做了什么
+
+**界面国际化根因修复（用户截图反馈"英文下大量中文仍在"）**
+
+- **根因**（审计得出，**不是**字体或资源加载问题）：界面共 **1609 处硬编码中文、分布在 65 个文件**。
+  XAML 13 个文件里 319 处只接了 35 个资源键；C# 55 个文件里 1340 处，而
+  **code-behind 连取资源的辅助方法都没有** —— C# 文案根本无从本地化。
+  P1-2 当年只接了 35 处，却在交接文档里记为"国际化完成"。
+- **结构修复**：新增 `Services/Str.cs`（`Str.T` / `Str.T(key,args)` / `Str.Pick`；
+  缺失键显示 `!key!` 让漏配显形）；新增 `FpsTune.Wpf.Tests/I18nGuardTests.cs` 三条守卫，
+  其中 `No_new_hardcoded_chinese_in_ui` 是**棘轮**（基线 `I18nBaseline.txt`，**只许减少不许增加**）
+  —— 这就是"不让后面再出现同样问题"的那道闸。写法与守卫见 `docs/dev/AI-WORKFLOW.md` §四。
+- **已转换**：**检测页与优化页 XAML 全量清零**（55 处，两文件已移出基线），棘轮基线 1609 → 1554。
+  两处 `StringFormat=副作用：{0}` 改为内联 `<Run>`：`Binding.StringFormat` **不是依赖属性**
+  （`Binding` 派生自 `MarkupExtension`），用不了 `DynamicResource`。
+- **未完成（重要）**：其余 **1554 处**，含 3 个截图页里的**设置页**、以及**全部 code-behind 文案**。
+  基线文件 `FpsTune.Wpf.Tests/I18nBaseline.txt` 就是**待办清单**（按数量降序看）。
+  **建议按页推进**：设置页 → 概览页 → 控制台 → 其余页面。
 
 **0.1.4-beta 候选改用官方脚本重建 + 根因更正（同日续）**
 
