@@ -120,6 +120,30 @@
   （XAML chip 的 `Tag` 与 `vm.Group` 直接比较），只能做显示层映射，见 `Core/CatalogGroups.cs`。
 - 需要"中文 / 英文二选一"而不适合进字典时（如按 id 从 catalog 取值），用 `Str.Pick(zh, en)`。
 
+### ⚠️ 两个已踩过的坑（必须知道）
+
+**1. `Run.Text` 默认是「双向绑定」。**
+把 `Text="{Binding ..., StringFormat=前缀：{0}}"` 拆成 `<Run>` 时，**必须显式写 `Mode=OneWay`**：
+
+```xml
+<!-- 错：Run.Text 默认 TwoWay，绑到只读属性会在渲染时抛异常，程序启动即闪退 -->
+<Run Text="{Binding SideEffect}"/>
+<!-- 对 -->
+<Run Text="{Binding SideEffect, Mode=OneWay}"/>
+```
+
+`StringFormat` 用不了 `DynamicResource`（`Binding` 派生自 `MarkupExtension`，`StringFormat` 不是依赖属性），
+所以前缀随语言切换只能靠 `<Run>` —— 而 `<Run>` 又有上面这个坑。
+守卫：`FpsTune.Wpf.Tests/XamlGuardTests.cs` 会挡住漏写 `Mode` 的写法。
+
+**2. 编译与单测都发现不了 XAML 绑定错误。**
+上面那个 bug 编译通过、273 条单测全绿，但一渲染就崩。
+**改动 XAML 后必须真正启动一次程序并观察它活着**（不能只看构建结果）。
+
+**3. 构建发布前必须先把所有改动提交完。**
+`publish-release.ps1` 要求 tracked tree 干净，构建期间新建/修改任何文件都会让它拒绝构建
+（已踩两次）。顺序永远是：**改完 → 测试 → commit → 再构建**。
+
 **守卫测试**（`FpsTune.Wpf.Tests/I18nGuardTests.cs`）：
 
 | 测试 | 作用 |
