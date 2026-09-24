@@ -150,7 +150,7 @@
                                                    TextTrimming="CharacterEllipsis" ToolTip="{Binding SideEffect}"
                                                    Margin="0,2,0,0"
                                                    Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}">
-                                            <Run Text="{DynamicResource Str.SideEffectLabel}"/><Run Text="{Binding SideEffect}"/>
+                                            <Run Text="{DynamicResource Str.SideEffectLabel}"/><Run Text="{Binding SideEffect, Mode=OneWay}"/>
                                         </TextBlock>
                                     <WrapPanel><Border
                                             Margin="0,6,8,0"

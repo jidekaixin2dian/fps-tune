@@ -220,9 +220,9 @@
                                                    FontWeight="SemiBold"/>
                                         <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="13">
                                             <Run Text="{DynamicResource Str.LabelProcess}"/>
-                                            <Run Text="{Binding ProcessName}" FontFamily="{StaticResource FontMono}"/>
+                                            <Run Text="{Binding ProcessName, Mode=OneWay}" FontFamily="{StaticResource FontMono}"/>
                                             <Run Text="{DynamicResource Str.LabelProfile}"/>
-                                            <Run Text="{Binding ProfileName}"/>
+                                            <Run Text="{Binding ProfileName, Mode=OneWay}"/>
                                         </TextBlock>
                                         <TextBlock Text="{Binding ExePath}"
                                                    Foreground="{DynamicResource TextMutedBrush}"

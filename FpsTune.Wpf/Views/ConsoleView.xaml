@@ -100,7 +100,7 @@
                             <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
                             <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
-                                       Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect}"/></TextBlock>
+                                       Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
                         </StackPanel>
                         <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
                                    Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
