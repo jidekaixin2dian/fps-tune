@@ -106,6 +106,8 @@
                              BorderThickness="0"
                              ItemContainerStyle="{StaticResource CardListItemStyle}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling"
                              ItemsSource="{Binding ItemsView, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <ListBox.GroupStyle>
                             <GroupStyle>

@@ -26,17 +26,83 @@ public partial class DisplayQualityView : UserControl
         Loaded += (_, _) => Refresh();
     }
 
+    private int _refreshGen;
+
     private void Refresh()
     {
         if (_busy)
             return;
 
-        RefreshDlss();
-        RefreshVibrance();
-        RefreshIcc();
-        RefreshDrs();
+        var gen = ++_refreshGen;
         RefreshDriverAdvice();
         RefreshManualChecklist();
+        // NVAPI / ICC / 注册表读取全部移到线程池：点击切页不再被同步 IO 卡住。
+        // 快速切页会并发两轮只读快照，无害；gen 保证只有最新一轮的结果落到界面。
+        _ = RefreshStatesAsync(gen);
+    }
+
+    /// <summary>一次状态刷新的后台读取结果：全部服务调用在 ComputeSnapshot 里完成，UI 更新统一在 ApplySnapshot。</summary>
+    private sealed record StateSnapshot(
+        bool FeatureEnabled,
+        bool NvidiaSupported,
+        bool HasGame,
+        string? GameLabel,
+        string? GameExe,
+        DisplayQualityService.DlssState? Dlss, string? DlssError,
+        VibranceState? Vib, string? VibError,
+        IccFilterService.IccState? Icc, string? IccError,
+        DisplayQualityService.DrsGameSettings? Drs, string? DrsError);
+
+    private static StateSnapshot ComputeSnapshot()
+    {
+        var feature = DisplayQualityService.FeatureEnabled;
+        var nvidia = feature && DisplayQualityService.IsNvidiaSupported;
+        var path = AppState.GamePath;
+        var hasGame = !string.IsNullOrWhiteSpace(path) && File.Exists(path);
+        string? label = null, exe = null;
+
+        var dlss = default(DisplayQualityService.DlssState);
+        var dlssError = default(string);
+        var drs = default(DisplayQualityService.DrsGameSettings);
+        var drsError = default(string);
+        if (nvidia && hasGame)
+        {
+            exe = Path.GetFileName(path);
+            label = GamePathService.LabelFor(path!);
+            try { dlss = DisplayQualityService.GetDlssState(exe); }
+            catch (Exception ex) { dlssError = ex.Message; }
+            try { drs = DisplayQualityService.GetDrsGameSettings(exe); }
+            catch (Exception ex) { drsError = ex.Message; }
+        }
+
+        var vib = default(VibranceState);
+        var vibError = default(string);
+        try { vib = DigitalVibranceService.GetState(); }
+        catch (Exception ex) { vibError = ex.Message; }
+
+        var icc = default(IccFilterService.IccState);
+        var iccError = default(string);
+        try { icc = IccFilterService.GetState(); }
+        catch (Exception ex) { iccError = ex.Message; }
+
+        return new StateSnapshot(feature, nvidia, hasGame, label, exe,
+            dlss, dlssError, vib, vibError, icc, iccError, drs, drsError);
+    }
+
+    private async Task RefreshStatesAsync(int gen)
+    {
+        var snap = await Task.Run(ComputeSnapshot);
+        if (gen != _refreshGen)
+            return; // 期间发生了更新的刷新，旧结果作废
+        ApplySnapshot(snap);
+    }
+
+    private void ApplySnapshot(StateSnapshot s)
+    {
+        ApplyDlssState(s);
+        ApplyVibState(s);
+        ApplyIccState(s);
+        ApplyDrsState(s);
     }
 
     /// <summary>
@@ -83,9 +149,9 @@ public partial class DisplayQualityView : UserControl
         ManualUnknownText.Visibility = vendor == GpuVendorKind.Unknown ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void RefreshDlss()
+    private void ApplyDlssState(StateSnapshot s)
     {
-        if (!DisplayQualityService.FeatureEnabled)
+        if (!s.FeatureEnabled)
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
             UnsupportedText.Visibility = Visibility.Visible;
@@ -93,7 +159,7 @@ public partial class DisplayQualityView : UserControl
             return;
         }
 
-        if (!DisplayQualityService.IsNvidiaSupported)
+        if (!s.NvidiaSupported)
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
             UnsupportedText.Visibility = Visibility.Visible;
@@ -104,8 +170,7 @@ public partial class DisplayQualityView : UserControl
         SupportedPanel.Visibility = Visibility.Visible;
         UnsupportedText.Visibility = Visibility.Collapsed;
 
-        var path = AppState.GamePath;
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        if (!s.HasGame)
         {
             GameStateText.Text = Str.T("Str.LocateGameFirstThenReturn");
             ApplyButton.IsEnabled = false;
@@ -115,28 +180,25 @@ public partial class DisplayQualityView : UserControl
             return;
         }
 
-        var label = GamePathService.LabelFor(path);
-        var exeName = Path.GetFileName(path);
-        GameStateText.Text = $"当前游戏：{label}（{exeName}）";
+        GameStateText.Text = $"当前游戏：{s.GameLabel}（{s.GameExe}）";
 
-        try
+        if (s.DlssError is not null)
         {
-            var state = DisplayQualityService.GetDlssState(exeName);
-            SyncPresetCardSelection(state);
-            StateText.Text = _dlssStatus ?? (state.Covered
-                ? $"当前覆盖：{PresetLabel(state.PresetValue ?? 0)}"
-                    + (state.Restorable ? "（本工具写入，可还原）" : "（其他工具/驱动既有配置，应用时将自动备份原值）")
-                : Str.T("Str.NotOverriddenInGame"));
-            ApplyButton.IsEnabled = true;
-            RestoreButton.IsEnabled = state.Covered || state.Restorable;
-            SetPresetCardsEnabled(true);
-        }
-        catch (Exception ex)
-        {
-            StateText.Text = "读取覆盖状态失败：" + ex.Message;
+            StateText.Text = "读取覆盖状态失败：" + s.DlssError;
             ApplyButton.IsEnabled = false;
             RestoreButton.IsEnabled = false;
+            return;
         }
+
+        var state = s.Dlss!;
+        SyncPresetCardSelection(state);
+        StateText.Text = _dlssStatus ?? (state.Covered
+            ? $"当前覆盖：{PresetLabel(state.PresetValue ?? 0)}"
+                + (state.Restorable ? "（本工具写入，可还原）" : "（其他工具/驱动既有配置，应用时将自动备份原值）")
+            : Str.T("Str.NotOverriddenInGame"));
+        ApplyButton.IsEnabled = true;
+        RestoreButton.IsEnabled = state.Covered || state.Restorable;
+        SetPresetCardsEnabled(true);
     }
 
     private void SyncPresetCardSelection(DisplayQualityService.DlssState state)
@@ -282,42 +344,41 @@ public partial class DisplayQualityView : UserControl
 
     private bool _vibSyncing;
 
-    private void RefreshVibrance()
+    private void ApplyVibState(StateSnapshot s)
     {
-        try
-        {
-            var state = DigitalVibranceService.GetState();
-            if (!state.Supported)
-            {
-                VibSupportedPanel.Visibility = Visibility.Collapsed;
-                VibUnsupportedText.Visibility = Visibility.Visible;
-                VibUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.VibranceUnavailable");
-                return;
-            }
-
-            VibSupportedPanel.Visibility = Visibility.Visible;
-            VibUnsupportedText.Visibility = Visibility.Collapsed;
-
-            var percent = state.Max > state.Min
-                ? (int)Math.Round((state.Current - state.Min) * 100.0 / (state.Max - state.Min))
-                : 0;
-            _vibSyncing = true;
-            VibSlider.Value = percent;
-            VibPercentText.Text = percent + "%";
-            _vibSyncing = false;
-
-            VibApplyButton.IsEnabled = true;
-            VibRestoreButton.IsEnabled = state.Restorable;
-            VibStateText.Text = _vibStatus ?? (state.Restorable
-                ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
-                : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）");
-        }
-        catch (Exception ex)
+        if (s.VibError is not null)
         {
             VibSupportedPanel.Visibility = Visibility.Collapsed;
             VibUnsupportedText.Visibility = Visibility.Visible;
-            VibUnsupportedText.Text = "读取数字振动状态失败：" + ex.Message;
+            VibUnsupportedText.Text = "读取数字振动状态失败：" + s.VibError;
+            return;
         }
+
+        var state = s.Vib!;
+        if (!state.Supported)
+        {
+            VibSupportedPanel.Visibility = Visibility.Collapsed;
+            VibUnsupportedText.Visibility = Visibility.Visible;
+            VibUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.VibranceUnavailable");
+            return;
+        }
+
+        VibSupportedPanel.Visibility = Visibility.Visible;
+        VibUnsupportedText.Visibility = Visibility.Collapsed;
+
+        var percent = state.Max > state.Min
+            ? (int)Math.Round((state.Current - state.Min) * 100.0 / (state.Max - state.Min))
+            : 0;
+        _vibSyncing = true;
+        VibSlider.Value = percent;
+        VibPercentText.Text = percent + "%";
+        _vibSyncing = false;
+
+        VibApplyButton.IsEnabled = true;
+        VibRestoreButton.IsEnabled = state.Restorable;
+        VibStateText.Text = _vibStatus ?? (state.Restorable
+            ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
+            : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）");
     }
 
     private static int PercentOf(int level, VibranceState state)
@@ -409,37 +470,36 @@ public partial class DisplayQualityView : UserControl
 
     // ---------- ICC 滤镜（第二张卡片，独立于 DLSS 的可用性） ----------
 
-    private void RefreshIcc()
+    private void ApplyIccState(StateSnapshot s)
     {
-        try
-        {
-            var state = IccFilterService.GetState();
-            if (!state.Supported)
-            {
-                IccSupportedPanel.Visibility = Visibility.Collapsed;
-                IccUnsupportedText.Visibility = Visibility.Visible;
-                IccUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.IccUnavailable");
-                return;
-            }
-
-            IccSupportedPanel.Visibility = Visibility.Visible;
-            IccUnsupportedText.Visibility = Visibility.Collapsed;
-            IccCurrentText.Text = Str.T("Str.CurrentlyActive") + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
-
-            SetIccPresetCardsEnabled(true);
-            IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
-            IccRestoreButton.IsEnabled = state.Restorable;
-
-            IccStateText.Text = _iccStatus ?? (state.Restorable
-                ? Str.T("Str.IccOriginalSaved")
-                : "");
-        }
-        catch (Exception ex)
+        if (s.IccError is not null)
         {
             IccSupportedPanel.Visibility = Visibility.Collapsed;
             IccUnsupportedText.Visibility = Visibility.Visible;
-            IccUnsupportedText.Text = "读取 ICC 状态失败：" + ex.Message;
+            IccUnsupportedText.Text = "读取 ICC 状态失败：" + s.IccError;
+            return;
         }
+
+        var state = s.Icc!;
+        if (!state.Supported)
+        {
+            IccSupportedPanel.Visibility = Visibility.Collapsed;
+            IccUnsupportedText.Visibility = Visibility.Visible;
+            IccUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.IccUnavailable");
+            return;
+        }
+
+        IccSupportedPanel.Visibility = Visibility.Visible;
+        IccUnsupportedText.Visibility = Visibility.Collapsed;
+        IccCurrentText.Text = Str.T("Str.CurrentlyActive") + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
+
+        SetIccPresetCardsEnabled(true);
+        IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
+        IccRestoreButton.IsEnabled = state.Restorable;
+
+        IccStateText.Text = _iccStatus ?? (state.Restorable
+            ? Str.T("Str.IccOriginalSaved")
+            : "");
     }
 
     private void SetIccPresetCardsEnabled(bool enabled)
@@ -535,16 +595,16 @@ public partial class DisplayQualityView : UserControl
 
     // ---------- M3：驱动 3D（纹理/电源/透明度/预渲染） ----------
 
-    private void RefreshDrs()
+    private void ApplyDrsState(StateSnapshot s)
     {
-        if (!DisplayQualityService.FeatureEnabled)
+        if (!s.FeatureEnabled)
         {
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
             DrsUnsupportedText.Visibility = Visibility.Visible;
             DrsUnsupportedText.Text = Str.T("Str.DrsDisabled");
             return;
         }
-        if (!DisplayQualityService.IsNvidiaSupported)
+        if (!s.NvidiaSupported)
         {
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
             DrsUnsupportedText.Visibility = Visibility.Visible;
@@ -555,8 +615,7 @@ public partial class DisplayQualityView : UserControl
         DrsSupportedPanel.Visibility = Visibility.Visible;
         DrsUnsupportedText.Visibility = Visibility.Collapsed;
 
-        var path = AppState.GamePath;
-        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        if (!s.HasGame)
         {
             DrsStateText.Text = Str.T("Str.LocateGameFirst");
             DrsApplyButton.IsEnabled = false;
@@ -564,44 +623,42 @@ public partial class DisplayQualityView : UserControl
             return;
         }
 
-        var exeName = Path.GetFileName(path);
-        try
+        if (s.DrsError is not null)
         {
-            var s = DisplayQualityService.GetDrsGameSettings(exeName);
-            _drsSyncing = true;
-            SelectComboByTag(TexQualityCombo, s.TextureQuality is { } t ? ((uint)t).ToString() : "");
-            SelectComboByTag(PowerModeCombo, s.PowerMode is { } p ? ((uint)p).ToString() : "");
-            SelectComboByTag(TransparencyCombo, s.TransparencyAa is { } a ? ((int)a).ToString() : "");
-            SelectComboByTag(PreRenderCombo, s.PreRenderLimit is { } pr ? pr.ToString() : "");
-            SelectComboByTag(AnisoCombo, s.Aniso is null or AnisoLevel.AppControlled
-                ? ""
-                : ((uint)s.Aniso.Value).ToString());
-            SelectComboByTag(VSyncCombo, s.VSync switch
-            {
-                VSyncMode.ForceOff => "off",
-                VSyncMode.ForceOn => "on",
-                _ => "",
-            });
-            SelectComboByTag(ShaderCacheCombo, s.ShaderCache switch
-            {
-                true => "1",
-                false => "0",
-                null => "",
-            });
-            _drsSyncing = false;
-
-            DrsStateText.Text = _drsStatus ?? (s.Restorable
-                ? Str.T("Str.OriginalSaved")
-                : Str.T("Str.NotOverriddenDriver"));
-            DrsApplyButton.IsEnabled = true;
-            DrsRestoreButton.IsEnabled = s.Restorable;
-        }
-        catch (Exception ex)
-        {
-            DrsStateText.Text = "读取驱动 3D 设置失败：" + ex.Message;
+            DrsStateText.Text = "读取驱动 3D 设置失败：" + s.DrsError;
             DrsApplyButton.IsEnabled = false;
             DrsRestoreButton.IsEnabled = false;
+            return;
         }
+
+        var state = s.Drs!;
+        _drsSyncing = true;
+        SelectComboByTag(TexQualityCombo, state.TextureQuality is { } t ? ((uint)t).ToString() : "");
+        SelectComboByTag(PowerModeCombo, state.PowerMode is { } p ? ((uint)p).ToString() : "");
+        SelectComboByTag(TransparencyCombo, state.TransparencyAa is { } a ? ((int)a).ToString() : "");
+        SelectComboByTag(PreRenderCombo, state.PreRenderLimit is { } pr ? pr.ToString() : "");
+        SelectComboByTag(AnisoCombo, state.Aniso is null or AnisoLevel.AppControlled
+            ? ""
+            : ((uint)state.Aniso.Value).ToString());
+        SelectComboByTag(VSyncCombo, state.VSync switch
+        {
+            VSyncMode.ForceOff => "off",
+            VSyncMode.ForceOn => "on",
+            _ => "",
+        });
+        SelectComboByTag(ShaderCacheCombo, state.ShaderCache switch
+        {
+            true => "1",
+            false => "0",
+            null => "",
+        });
+        _drsSyncing = false;
+
+        DrsStateText.Text = _drsStatus ?? (state.Restorable
+            ? Str.T("Str.OriginalSaved")
+            : Str.T("Str.NotOverriddenDriver"));
+        DrsApplyButton.IsEnabled = true;
+        DrsRestoreButton.IsEnabled = state.Restorable;
     }
 
     private static void SelectComboByTag(System.Windows.Controls.ComboBox combo, string tag)
