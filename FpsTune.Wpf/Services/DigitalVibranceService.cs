@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using static FpsTune.Wpf.Services.NvapiNative;
 
 namespace FpsTune.Wpf.Services;
 
@@ -113,14 +114,13 @@ public static class DigitalVibranceService
 /// <summary>真实 DVC 实现（NvAPI_GetDVCInfo / SetDVCLevel）。</summary>
 internal sealed class NvDvcApi : INvibranceApi
 {
-    private const uint IdInitialize = 0x0150e828;
+    // 接口 ID（官方 NVIDIA/nvapi nvapi_interface.h）
+    // NvAPI_Initialize 的 ID 与 NVAPI 成功状态码在 NvapiNative（DRS 与数字振动共用）
     private const uint IdEnumNvidiaDisplayHandle = 0x9abdd40d;
     private const uint IdGetDvcInfo = 0x4085de45;
     private const uint IdGetDvcInfoEx = 0x0e45002d;
     private const uint IdSetDvcLevel = 0x172409b4;
     private const uint IdSetDvcLevelEx = 0x4a82c2b1;
-
-    private const int StatusOk = 0;
 
     private static readonly object Gate = new();
     private static NvDvcApi? _shared;
@@ -138,7 +138,7 @@ internal sealed class NvDvcApi : INvibranceApi
     }
 
     private string? _lastError;
-    private NvapiInitializeDelegate? _initialize;
+    private InitializeDelegate? _initialize;
     private EnumNvidiaDisplayHandleDelegate? _enumDisplay;
     private GetDvcInfoDelegate? _getDvcInfo;
     private GetDvcInfoExDelegate? _getDvcInfoEx;
@@ -159,36 +159,47 @@ internal sealed class NvDvcApi : INvibranceApi
                 return true;
             try
             {
-                var dll = NativeLibrary.Load(IntPtr.Size == 4 ? "nvapi.dll" : "nvapi64.dll");
-                var query = Marshal.GetDelegateForFunctionPointer<NvapiQueryInterfaceDelegate>(
-                    NativeLibrary.GetExport(dll, "nvapi_QueryInterface"));
-                T Resolve<T>(uint id) where T : Delegate
+                if (!TryLoad(out var query, out var loadError))
                 {
-                    var ptr = query(id);
-                    if (ptr == IntPtr.Zero)
-                        throw new InvalidOperationException($"NVAPI 接口 {id:X8} 不可用");
-                    return Marshal.GetDelegateForFunctionPointer<T>(ptr);
+                    _lastError = loadError;
+                    return false;
                 }
 
-                _initialize = Resolve<NvapiInitializeDelegate>(IdInitialize);
-                _enumDisplay = Resolve<EnumNvidiaDisplayHandleDelegate>(IdEnumNvidiaDisplayHandle);
+                // 与 NvidiaDrs 同样：先全部解析到局部变量，**初始化成功后才落字段**，
+                // 避免中途失败留下"_initialize 已非空、其余为 null"的半初始化状态
+                // （那会让下一次 TryInitialize 误判为已初始化）。
+                var initialize = query.Resolve<InitializeDelegate>(IdInitialize);
+                var enumDisplay = query.Resolve<EnumNvidiaDisplayHandleDelegate>(IdEnumNvidiaDisplayHandle);
+
                 // Ex 可返回 default/min/max；旧版只有 current/min/max。结构尺寸必须与接口匹配。
+                // Ex 与旧接口是互斥的能力探测：取不到 Ex 才回退，探测失败属预期，故吞掉异常。
+                GetDvcInfoExDelegate? getDvcInfoEx = null;
+                SetDvcLevelExDelegate? setDvcLevelEx = null;
+                GetDvcInfoDelegate? getDvcInfo = null;
+                SetDvcLevelDelegate? setDvcLevel = null;
                 try
                 {
-                    _getDvcInfoEx = Resolve<GetDvcInfoExDelegate>(IdGetDvcInfoEx);
-                    _setDvcLevelEx = Resolve<SetDvcLevelExDelegate>(IdSetDvcLevelEx);
+                    getDvcInfoEx = query.Resolve<GetDvcInfoExDelegate>(IdGetDvcInfoEx);
+                    setDvcLevelEx = query.Resolve<SetDvcLevelExDelegate>(IdSetDvcLevelEx);
                 }
                 catch
                 {
-                    _getDvcInfo = Resolve<GetDvcInfoDelegate>(IdGetDvcInfo);
-                    _setDvcLevel = Resolve<SetDvcLevelDelegate>(IdSetDvcLevel);
+                    getDvcInfo = query.Resolve<GetDvcInfoDelegate>(IdGetDvcInfo);
+                    setDvcLevel = query.Resolve<SetDvcLevelDelegate>(IdSetDvcLevel);
                 }
 
-                if (_initialize() != StatusOk)
+                if (initialize() != StatusOk)
                 {
                     _lastError = "NVAPI 初始化失败";
                     return false;
                 }
+
+                _initialize = initialize;
+                _enumDisplay = enumDisplay;
+                _getDvcInfoEx = getDvcInfoEx;
+                _setDvcLevelEx = setDvcLevelEx;
+                _getDvcInfo = getDvcInfo;
+                _setDvcLevel = setDvcLevel;
                 return true;
             }
             catch (Exception ex)
@@ -294,11 +305,7 @@ internal sealed class NvDvcApi : INvibranceApi
         };
     }
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate IntPtr NvapiQueryInterfaceDelegate(uint id);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int NvapiInitializeDelegate();
+    // 说明：QueryInterface / NvAPI_Initialize 的委托与接口 ID 在 NvapiNative（与 DRS 共用），此处只留 DVC 专属部分。
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int EnumNvidiaDisplayHandleDelegate(uint index, ref IntPtr handle);

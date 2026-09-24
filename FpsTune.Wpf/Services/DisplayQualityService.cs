@@ -341,11 +341,13 @@ public static class DisplayQualityService
             throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
         using var session = api.OpenSession();
 
-        var owner = session.FindApplicationOwner(gameExe);
+        // 先找登记了该游戏的 profile；找不到才自建（ProfilePrefix 前缀）。
+        // 写成 `found ?? CreateProfile(...)` 而不是先赋值再 if 覆盖：让编译器能确定 owner 非空，
+        // 也避免"先赋可能为 null 的值、再在条件分支里覆盖"这种需要人肉推断的写法。
+        var found = session.FindApplicationOwner(gameExe);
         var isFirstWrite = ReadBackup(gameExe) is null;
-        var ownProfile = owner is null;
-        if (ownProfile)
-            owner = session.CreateProfile(ProfilePrefix + gameExe, gameExe);
+        var ownProfile = found is null;
+        var owner = found ?? session.CreateProfile(ProfilePrefix + gameExe, gameExe);
 
         List<SettingBackup>? pendingBackup = null;
         if (isFirstWrite)

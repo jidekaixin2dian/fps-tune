@@ -501,8 +501,14 @@ public static class ExperimentRunner
         return candidates.FirstOrDefault(File.Exists);
     }
 
-    private static Process? FindGameProcess(string gameName)
+    /// <summary>
+    /// 按进程名找游戏进程。GameName 可空（未定位游戏时为 null），
+    /// 而 <c>Process.GetProcessesByName(null)</c> 会抛 ArgumentNullException，故这里先挡掉。
+    /// </summary>
+    private static Process? FindGameProcess(string? gameName)
     {
+        if (string.IsNullOrWhiteSpace(gameName))
+            return null;
         var p = Process.GetProcessesByName(gameName).FirstOrDefault()
                 ?? Process.GetProcessesByName(gameName.Replace("-Win64-Shipping", "")).FirstOrDefault();
         return p;
@@ -514,7 +520,14 @@ public static class ExperimentRunner
         var pm = FindPresentMon(options);
         if (pm is null)
             return false;
-        var game = FindGameProcess(options.GameName);
+
+        // PresentMon 必须拿到进程名或 PID。GameName 可空（未定位游戏时为 null），
+        // 这里取成非空局部变量再往下用：既挡掉空值，也让下面的参数数组推断为 string[]
+        // 而不是 string?[]（否则 RunProcessAsync 处会报 CS8620）。
+        var gameName = options.GameName;
+        if (string.IsNullOrWhiteSpace(gameName))
+            return false;
+        var game = FindGameProcess(gameName);
         if (game is null)
             return false;
 
@@ -523,11 +536,11 @@ public static class ExperimentRunner
         // 使用独立 session 名，避免与 NVIDIA FrameView 服务已启动的默认 "PresentMon" 会话冲突。
         var attempts = new[]
         {
-            new[] { "--session_name", "FpsTune", "--process_name", options.GameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
+            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
             new[] { "--session_name", "FpsTune", "--process_id", game.Id.ToString(), "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
-            new[] { "--session_name", "FpsTune", "--process_name", options.GameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
+            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
             new[] { "--session_name", "FpsTune", "--process_id", game.Id.ToString(), "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
-            new[] { "--process-name", options.GameName, "--duration", seconds.ToString(), "--output-file", csvOut },
+            new[] { "--process-name", gameName, "--duration", seconds.ToString(), "--output-file", csvOut },
             new[] { "--process", game.Id.ToString(), "--duration", seconds.ToString(), "--output_file", csvOut },
         };
 

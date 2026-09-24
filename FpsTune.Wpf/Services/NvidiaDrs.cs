@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text;
+using static FpsTune.Wpf.Services.NvapiNative;
 
 namespace FpsTune.Wpf.Services;
 
@@ -66,7 +67,7 @@ internal sealed class NvdrsException : Exception
 internal sealed class NvdrsApi : INvdrsApi
 {
     // 接口 ID（官方 NVIDIA/nvapi nvapi_interface.h；Set/Get/Delete 优先社区在用的新 ID，旧 ID 回退）
-    private const uint IdInitialize = 0x0150e828;
+    // NvAPI_Initialize 的 ID 与 NVAPI 成功状态码在 NvapiNative（DRS 与数字振动共用）
     private const uint IdGetErrorMessage = 0x6c2d048c;
     private const uint IdDrsCreateSession = 0x0694d52e;
     private const uint IdDrsDestroySession = 0xdad9cff8;
@@ -80,8 +81,7 @@ internal sealed class NvdrsApi : INvdrsApi
     private const uint IdDrsGetSetting = 0xea99498d;           // 旧回退 0x73bf8338
     private const uint IdDrsDeleteProfileSetting = 0xd20d29df; // 旧回退 0xe4a26362
 
-    // NVAPI 状态码（官方 NvAPI_Status）
-    private const int StatusOk = 0;
+    // NVAPI 状态码（官方 NvAPI_Status）；成功码 StatusOk 在 NvapiNative
     internal const int StatusSettingNotFound = -160;
     private const int StatusProfileNotFound = -163;
     private const int StatusExecutableNotFound = -166;
@@ -104,9 +104,8 @@ internal sealed class NvdrsApi : INvdrsApi
         }
     }
 
-    private IntPtr _nvapiDll;
     private string? _lastError;
-    private NvapiInitializeDelegate? _initialize;
+    private InitializeDelegate? _initialize;
     private DrsCreateSessionDelegate? _createSession;
     private DrsDestroySessionDelegate? _destroySession;
     private DrsLoadSettingsDelegate? _loadSettings;
@@ -124,7 +123,7 @@ internal sealed class NvdrsApi : INvdrsApi
 
     public string? LastError => _lastError;
 
-    // NVAPI 库进程级常驻，不需要卸载（显式 Unload 反而与驱动全局状态竞态）
+    // NVAPI 库由 NvapiNative 加载，进程级常驻、不需要卸载（显式 Unload 反而与驱动全局状态竞态）
     public void Dispose() { }
 
     public bool TryInitialize()
@@ -135,47 +134,55 @@ internal sealed class NvdrsApi : INvdrsApi
                 return true;
             try
             {
-                _nvapiDll = LoadLibrary(IntPtr.Size == 4 ? "nvapi.dll" : "nvapi64.dll");
-                if (_nvapiDll == IntPtr.Zero)
+                if (!TryLoad(out var query, out var loadError))
                 {
-                    _lastError = "未找到 NVIDIA 驱动库（nvapi64.dll），本机可能不是 NVIDIA 显卡。";
+                    _lastError = loadError;
                     return false;
                 }
-                var query = (NvapiQueryInterfaceDelegate)Marshal.GetDelegateForFunctionPointer(
-                    GetProcAddress(_nvapiDll, "nvapi_QueryInterface"), typeof(NvapiQueryInterfaceDelegate));
-                T Resolve<T>(uint primaryId, uint? fallbackId) where T : class
-                {
-                    var ptr = query(primaryId);
-                    if (ptr == IntPtr.Zero && fallbackId is { } fallback)
-                        ptr = query(fallback);
-                    if (ptr == IntPtr.Zero)
-                        throw new InvalidOperationException($"NVAPI 接口 {primaryId:X8} 不可用");
-                    return Marshal.GetDelegateForFunctionPointer(ptr, typeof(T)) as T
-                        ?? throw new InvalidOperationException($"NVAPI 接口 {primaryId:X8} 签名解析失败");
-                }
 
-                _initialize = Resolve<NvapiInitializeDelegate>(IdInitialize, null);
-                _createSession = Resolve<DrsCreateSessionDelegate>(IdDrsCreateSession, null);
-                _destroySession = Resolve<DrsDestroySessionDelegate>(IdDrsDestroySession, null);
-                _loadSettings = Resolve<DrsLoadSettingsDelegate>(IdDrsLoadSettings, null);
-                _saveSettings = Resolve<DrsSaveSettingsDelegate>(IdDrsSaveSettings, null);
-                _createProfile = Resolve<DrsCreateProfileDelegate>(IdDrsCreateProfile, null);
-                _deleteProfile = Resolve<DrsDeleteProfileDelegate>(IdDrsDeleteProfile, null);
-                _findApplicationByName = Resolve<DrsFindApplicationByNameDelegate>(IdDrsFindApplicationByName, null);
-                _createApplication = Resolve<DrsCreateApplicationDelegate>(IdDrsCreateApplication, null);
-                _setSetting = Resolve<DrsSetSettingDelegate>(IdDrsSetSetting, 0x577dd202);
-                _getSetting = Resolve<DrsGetSettingDelegate>(IdDrsGetSetting, 0x73bf8338);
-                _deleteProfileSetting = Resolve<DrsDeleteProfileSettingDelegate>(IdDrsDeleteProfileSetting, 0xe4a26362);
-                _getErrorMessage = Resolve<DrsGetErrorMessageDelegate>(IdGetErrorMessage, null);
+                // 先把所有接口解析到**局部变量**，全部成功后才落到字段。
+                // 若边解析边落字段，中途 Resolve 抛异常会留下"_initialize 已非空、其余仍是 null"
+                // 的半初始化状态；下一次 TryInitialize 会因 `_initialize is not null` 误判为已初始化，
+                // 随后在 OpenSession 里撞空引用。
+                var initialize = query.Resolve<InitializeDelegate>(IdInitialize);
+                var createSession = query.Resolve<DrsCreateSessionDelegate>(IdDrsCreateSession);
+                var destroySession = query.Resolve<DrsDestroySessionDelegate>(IdDrsDestroySession);
+                var loadSettings = query.Resolve<DrsLoadSettingsDelegate>(IdDrsLoadSettings);
+                var saveSettings = query.Resolve<DrsSaveSettingsDelegate>(IdDrsSaveSettings);
+                var createProfile = query.Resolve<DrsCreateProfileDelegate>(IdDrsCreateProfile);
+                var deleteProfile = query.Resolve<DrsDeleteProfileDelegate>(IdDrsDeleteProfile);
+                var findApplicationByName = query.Resolve<DrsFindApplicationByNameDelegate>(IdDrsFindApplicationByName);
+                var createApplication = query.Resolve<DrsCreateApplicationDelegate>(IdDrsCreateApplication);
+                var setSetting = query.Resolve<DrsSetSettingDelegate>(IdDrsSetSetting, 0x577dd202);
+                var getSetting = query.Resolve<DrsGetSettingDelegate>(IdDrsGetSetting, 0x73bf8338);
+                var deleteProfileSetting = query.Resolve<DrsDeleteProfileSettingDelegate>(IdDrsDeleteProfileSetting, 0xe4a26362);
+                var getErrorMessage = query.Resolve<DrsGetErrorMessageDelegate>(IdGetErrorMessage);
 
-                var status = _initialize();
+                // NvAPI_Initialize 失败同样**不落字段**：TryInitialize 返回 false 就代表"不可用"，
+                // 调用方（ApplyManaged / IsNvidiaSupported）据此走错误分支；
+                // 此时 _initialize 保持 null，OpenSession 会给出"NVAPI 未初始化"的明确提示。
+                var status = initialize();
                 if (status != StatusOk)
                 {
-                    _lastError = ErrorMessage(status) is { Length: > 0 } detail
+                    _lastError = ErrorMessage(getErrorMessage, status) is { Length: > 0 } detail
                         ? $"NVAPI 初始化失败：{detail}（状态码 {status}）"
                         : $"NVAPI 初始化失败（状态码 {status}）";
                     return false;
                 }
+
+                _initialize = initialize;
+                _createSession = createSession;
+                _destroySession = destroySession;
+                _loadSettings = loadSettings;
+                _saveSettings = saveSettings;
+                _createProfile = createProfile;
+                _deleteProfile = deleteProfile;
+                _findApplicationByName = findApplicationByName;
+                _createApplication = createApplication;
+                _setSetting = setSetting;
+                _getSetting = getSetting;
+                _deleteProfileSetting = deleteProfileSetting;
+                _getErrorMessage = getErrorMessage;
                 return true;
             }
             catch (Exception ex)
@@ -190,14 +197,19 @@ internal sealed class NvdrsApi : INvdrsApi
     {
         lock (Gate)
         {
-            if (_initialize is null)
+            // 12 个委托由 TryInitialize 一次性写入（要么全有、要么全无）。这里做一次显式快照：
+            // 既让编译器确定非空（避免"检查一个字段、使用另一个字段"的推断），
+            // 也把"未初始化"的报错集中在一处。
+            var createSession = _createSession;
+            var loadSettings = _loadSettings;
+            if (_initialize is null || createSession is null || loadSettings is null)
                 throw new NvdrsException(-5, LastError ?? "NVAPI 未初始化");
 
             var session = IntPtr.Zero;
             try
             {
-                Check(_createSession(ref session), "打开驱动设置会话");
-                Check(_loadSettings(session), "加载驱动设置");
+                Check(createSession(ref session), "打开驱动设置会话");
+                Check(loadSettings(session), "加载驱动设置");
                 return new SessionImpl(this, session);
             }
             catch
@@ -213,21 +225,23 @@ internal sealed class NvdrsApi : INvdrsApi
     {
         if (status == StatusOk)
             return;
-        var detail = _getErrorMessage is null ? null : ErrorMessage(status);
+        var detail = ErrorMessage(_getErrorMessage, status);
         throw new NvdrsException(status,
             detail is { Length: > 0 }
                 ? $"{what}失败：{detail}（NVAPI {status}）"
                 : $"{what}失败（NVAPI 状态码 {status}）");
     }
 
-    private string? ErrorMessage(int status)
+    private static string? ErrorMessage(DrsGetErrorMessageDelegate? getErrorMessage, int status)
     {
+        if (getErrorMessage is null)
+            return null;
         // NvAPI_ShortString 是 ANSI char[64]，不是 UTF-16
         var buffer = new byte[64];
         var pinned = GCHandle.Alloc(buffer, GCHandleType.Pinned);
         try
         {
-            _getErrorMessage!(status, pinned.AddrOfPinnedObject());
+            getErrorMessage(status, pinned.AddrOfPinnedObject());
             var text = Marshal.PtrToStringAnsi(pinned.AddrOfPinnedObject());
             return string.IsNullOrWhiteSpace(text) ? null : text;
         }
@@ -261,7 +275,7 @@ internal sealed class NvdrsApi : INvdrsApi
             if (status == StatusExecutableNotFound || status == StatusProfileNotFound)
                 return null;
             api.Check(status, $"查找登记了 {exeName} 的配置文件");
-            return new ProfileImpl(session, profileHandle);
+            return new ProfileImpl(profileHandle);
         }
 
         public INvdrsProfile CreateProfile(string name, string gameExe)
@@ -284,7 +298,7 @@ internal sealed class NvdrsApi : INvdrsApi
                 bitvector1 = 0,
             };
             api.Check(api._createApplication!(session, handle, ref application), $"登记游戏主程序 {gameExe}");
-            return new ProfileImpl(session, handle);
+            return new ProfileImpl(handle);
         }
 
         public bool TryGetSettingDword(INvdrsProfile profile, uint settingId, out uint value)
@@ -340,7 +354,8 @@ internal sealed class NvdrsApi : INvdrsApi
         public void Save() => api.Check(api._saveSettings!(session), "保存驱动设置");
     }
 
-    private sealed class ProfileImpl(IntPtr session, IntPtr ptr) : INvdrsProfile
+    /// <summary>会话内 profile 的轻量包装：只持有原生句柄。仅由 <see cref="SessionImpl"/> 创建。</summary>
+    private sealed class ProfileImpl(IntPtr ptr) : INvdrsProfile
     {
         public IntPtr Handle => ptr;
     }
@@ -416,12 +431,7 @@ internal sealed class NvdrsApi : INvdrsApi
     }
 
     #region NVAPI 委托（与 nvidiaProfileInspector NvapiDrsWrapper 一致；Cdecl）
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate IntPtr NvapiQueryInterfaceDelegate(uint id);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int NvapiInitializeDelegate();
+    // 说明：QueryInterface / NvAPI_Initialize 的委托与接口 ID 在 NvapiNative（与数字振动共用），此处只留 DRS 专属部分。
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int DrsCreateSessionDelegate(ref IntPtr session);
@@ -465,10 +475,4 @@ internal sealed class NvdrsApi : INvdrsApi
     private delegate int DrsGetErrorMessageDelegate(int status, IntPtr message);
 
     #endregion
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
-    private static extern IntPtr LoadLibrary(string name);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
-    private static extern IntPtr GetProcAddress(IntPtr module, string name);
 }

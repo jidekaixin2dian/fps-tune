@@ -2,6 +2,8 @@
 # 只许减少，不许增加——新增硬编码中文会让 No_new_hardcoded_chinese_in_ui 失败。
 # 转换掉文案后请把数字调低；清零的行直接删除。
 # 重新生成：删掉本文件后跑一次测试。
+# 把既有文案**搬到新文件**（重构）时：新文件补一行、旧文件相应减掉，总数只许降不许升——
+# 那不是"新增界面文案"，别误判成棘轮违规。
 App.xaml.cs	3
 Core/BackupService.Capture.cs	2
 Core/BackupService.Journal.cs	8
@@ -23,7 +25,7 @@ Services/AutoProfileService.cs	33
 Services/CliHost.cs	49
 Services/DiagnosticReportExporter.cs	81
 Services/DialogService.cs	4
-Services/DigitalVibranceService.cs	9
+Services/DigitalVibranceService.cs	8
 Services/DisplayQualityService.cs	10
 Services/ExperimentHistory.cs	2
 Services/ExperimentRunner.cs	42
@@ -33,7 +35,8 @@ Services/GpuDriverAdvisor.cs	7
 Services/IccFilterService.cs	18
 Services/IccProfileGenerator.cs	7
 Services/MetricsSampler.cs	11
-Services/NvidiaDrs.cs	19
+Services/NvapiNative.cs	2
+Services/NvidiaDrs.cs	16
 Services/OptimizationItemViewModel.cs	2
 Services/PerformanceSession.cs	25
 Services/PerformanceSessionService.cs	3
