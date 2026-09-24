@@ -21,7 +21,7 @@
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
 | 本机安装位 | `D:\FpsTune` = **`0.1.3-beta`**（2026-09-24 由 `dist/folder-0.1.3/` 覆盖，逐文件与发布 Portable 一致） |
-| 测试基线 | 266 / 266（`dotnet test -c Release`；2026-09-24 复核） |
+| 测试基线 | 270 / 270（`dotnet test -c Release`；2026-09-25 复核） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
@@ -87,7 +87,27 @@
 
 ## 4. 本轮（2026-09-25）做了什么
 
-**文档与工作区整理 + P2-1 英译改法调研（未实施）**
+**P2-1 实施：catalog 33 项说明英译（+ 优化页分组标签）**
+
+- `catalog/catalog.json` 33 项各加 `nameEn` / `descriptionEn` / `sideEffectEn`，键顺序统一为
+  id → name → description → sideEffect → admin → default → reboot → kind → group。
+  数据自检：字段完整、英文无中日韩字符、空白项一致、**无 BOM**；
+  admin 22 / reboot 13 / balanced 27 / safe-only 5 —— 与 README 口径一致。
+- `OptimizationItemDefinition` 加 3 个可选参数与 `Display*` 解析属性
+  （英文缺失**回退中文**，绝不显示空白）；`BuildDetectJson` 只改**值**、不改**键**。
+- **CLI 机器协议不变**（端到端验证）：把 `lang.txt` 临时设为 `en-US` 后跑 `-Detect -Json`，
+  输出**仍是中文**；item 键结构逐项与改动前一致。
+- 分组**显示标签**走新的 `Core/CatalogGroups.cs` + `Views/CatalogGroupLabelConverter.cs`；
+  筛选 chip 的 `Tag` 仍是中文键 → **分类筛选行为不变**。
+- 新增 4 条守卫测试（英文完整性/无中日韩字符、语言跟随、缺失回退、CLI 启动路径不加载语言）。
+  其中架构守卫**首次运行误报了自己**（正则匹配到文档注释里提到的 API 名），已加
+  `StripCommentLines` 剥注释行修掉。
+- 测试基线 266 → **270**。
+- **偏差（有意分步）**：`OptimizeView` 的页面 chrome（标题「系统优化」、预设名等）**从未本地化**，
+  属 P1-2 遗留，已拆成新待办 **P2-7**；故英文界面下该页仍是中英混排。
+- **未验证**：英文界面下的 GUI 人工目检（需人在场看窗口）。
+
+**文档与工作区整理（同日早些时候）**
 
 - **文档分层**：`docs/` 根下只留现状文档（`HANDOFF.md` / `ROADMAP.md` / 新增 `README.md` 索引）；
   9 份 1.x 期工作记录用 `git mv` 移入 **`docs/archive/`**（历史保留），并新增
@@ -225,9 +245,8 @@
 
 **完整待办总表见 `docs/dev/PLAN-backlog.md`（P0–P2）。** P0 与 P1 已全部收口，摘要：
 
-1. **P2-1** catalog 33 项的 `name` / `description` / `sideEffect` 英文翻译 —— i18n 收尾；
-   英文 locale 下目前会露出中文。**当前性价比最高的一项**，改法调研已完成，
-   **动手前先读 `docs/dev/PLAN-P2-1-catalog-i18n.md`**（含硬约束与踩坑点）。
+1. **P2-7** `OptimizeView` 页面 chrome 本地化 —— P2-1 的收尾；做完英文界面才不再中英混排。
+   **当前性价比最高的一项。**
 2. **P2-3** 盘点 `docs/dev/GUI_PLAN.md` 与现界面的差异，只留真缺口（先盘点再动手）。
 3. **P2-6** 热门优化项逐项落地（调研已做一轮，每项须先过红线预审）。
 4. **P2-2 / P2-4** A/B 报告可引用导出、M4+ 更多 DRS / 显示项（红线要求先证明收益）。

@@ -60,6 +60,6 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 ## 好的起点
 
 `good first issue` 标签下的任务通常不需要读完整引擎。当前最缺的一块是**界面文案国际化的收尾**：
-框架文案（导航 / 设置 / 一键优化 / 显示页）已走 `DynamicResource` 双语，
-但 `catalog/catalog.json` 里 33 项优化项的 `name` / `description` / `sideEffect` 仍是中文，
-英文 locale 下会露出中文。如果你想做，先开一个 issue 说明思路，避免白干。
+框架文案、`catalog.json` 33 项的名称与说明、优化页的分类标签都已双语，
+但 `OptimizeView` 的页面 chrome（标题、预设名、按钮）仍硬编码中文 —— 见待办 **P2-7**
+（`docs/dev/PLAN-backlog.md`）。如果你想做，先开一个 issue 说明思路，避免白干。

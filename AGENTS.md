@@ -12,7 +12,7 @@
 | 版本 | `VersionPrefix=0.1.3` + `VersionSuffix=beta`；发版中 `v0.1.3-beta`。上一版 `v0.1.2-beta` |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **266 / 266 通过**，`dotnet test -c Release`（含 M3 / 一键优化 / i18n） |
+| 测试基线 | **270 / 270 通过**，`dotnet test -c Release`（含 M3 / 一键优化 / i18n / catalog 英译） |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示） |
 
 ## 第一步：确认基线，不要先改代码
@@ -20,7 +20,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 266 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 270 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
