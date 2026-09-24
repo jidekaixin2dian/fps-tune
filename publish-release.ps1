@@ -185,9 +185,13 @@ try {
 
     Write-Host 'Creating portable zip...'
     # DebugType=none 后 folder 输出本应无 pdb; 此清理属双保险。
-    Get-ChildItem -LiteralPath $folderOut -Recurse -File |
-        Where-Object { $_.Extension -eq '.pdb' } |
-        Remove-Item -Force -ErrorAction SilentlyContinue
+    # 用显式 foreach + -LiteralPath，**不要**写成 `... | Remove-Item`：
+    # 管道形式在带 Remove-Item 包装的环境（安全删除垫片等）里会因拿不到路径而抛
+    # "missing path operand"——而这里通常就是空集合，一个空操作会把整个发布构建打断。
+    foreach ($pdb in @(Get-ChildItem -LiteralPath $folderOut -Recurse -File |
+            Where-Object { $_.Extension -eq '.pdb' })) {
+        Remove-Item -LiteralPath $pdb.FullName -Force -ErrorAction SilentlyContinue
+    }
     Compress-Archive -Path (Join-Path $folderOut '*') -DestinationPath $zip -CompressionLevel Optimal
     if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { throw 'portable zip was not created' }
 
