@@ -158,6 +158,20 @@
 >
 > 注意：进程会随启动它的 shell 一起被回收，所以**启动 → 点击 → 复查必须在同一次调用内完成**。
 > 实测（2026-09-25）：该路径确认显示页 6 张卡片全部渲染、新按钮与说明文本出现、`error.log` 无新增。
+>
+> **UIA 验证的四个坑（0.1.6 轮实测补充，方案弹窗验证时全踩了一遍）：**
+> 1. **物理鼠标点击不可靠**（窗口不在前台时第一下变成激活窗口）。改用控件模式：
+>    按钮 `InvokePattern.Invoke()`、单选页签 `SelectionItemPattern.Select()`、
+>    文本框 `ValuePattern.SetValue()`——不依赖前台与坐标。
+> 2. **`ShowInTaskbar=False` 的工具窗（`AppDialogWindow`、`ProfileManagerWindow`）不出现在
+>    `RootElement` 的子查询里**，而且 `AppDialogWindow` 的窗口 Title 恒为应用名
+>    （"配置方案"等只是内容标题）。定位方法：`EnumWindows` 按 pid+标题取 HWND →
+>    `AutomationElement.FromHandle()`；小确认框可再加"高度 < 500"区分。
+> 3. **PowerShell 脚本必须带 UTF-8 BOM**，否则中文断言按 ANSI 解析全乱码、字符串字面量
+>   直接把脚本语法弄坏（`printf '\xef\xbb\xbf' > out; cat script >> out`）。
+> 4. `FlowDocument`（详情区 OutputDoc）里的文字**不会出现在 UIA 的 Name 属性里**，
+>    别拿它当渲染断言；要看"方案已载入"这类 doc 反馈，改查可观察状态
+>   （如"自定义"预设钮的 `IsSelected`）或直接截图目检。
 
 **3. 构建发布前必须先把所有改动提交完。**
 `publish-release.ps1` 要求 tracked tree 干净，构建期间新建/修改任何文件都会让它拒绝构建

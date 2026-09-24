@@ -1,6 +1,7 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-25（本轮：**P2-8 驱动内手动设置清单** + 0.1.5 候选构建与部署）
+> 最后核对：2026-09-25（本轮：**启动画面 + 启动预热 + 「我的方案」弹窗化**（用户反馈体验轮）
+> ；此前：P2-8 驱动内手动设置清单 + 0.1.5 候选）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -8,46 +9,46 @@
 ## 1. 一句话现状
 
 主线是 0.1 Beta 线（现落在 **`main`**）。M1/M2/M3 功能与一键优化、i18n 已发 **`v0.1.3-beta`**；
-**0.1.5-beta 候选（P2-8）已按 `46a3776` 构建、部署到 `D:\FpsTune` 并启动给用户目检，等拍板后再 push / 发 Release**；
-另 **0.1.4-beta 候选（`e3d0041`）也仍等拍板**（两套候选资产都在 `dist/`，发哪套由用户定）。
+**0.1.6-beta 候选（P2-8 + 启动体验/方案弹窗）已按 `8eaec90` 构建、部署到 `D:\FpsTune` 并启动给用户目检，等拍板后再 push / 发 Release**；
+`dist/` 里另有 0.1.5 / 0.1.4 两套旧候选完整保留。**发 0.1.6 即包含前两套全部内容**。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.5` / `VersionSuffix=beta` |
+| `Directory.Build.props` | `VersionPrefix=0.1.6` / `VersionSuffix=beta` |
 | 已发布 Release | **`v0.1.3-beta`**（2026-09-22，`29ed0ea`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.2-beta` |
-| 未发布的内容 | **`0.1.5-beta` 候选（最新）**：P2-8 驱动内手动设置清单。**已按 `46a3776` 构建（三资产齐全、哈希已核）、已部署 `D:\FpsTune` 供目检；未发 Release**<br>**`0.1.4-beta` 候选（更早）**：P2-1 catalog 英译 + 驱动版本建议卡片 + ICC 预设扩到 8 张 + 朋友测试模块移除 + 红线口径同步 + 数字振动推荐档位 + NVAPI 引导重构。**已按 `e3d0041` 构建，三资产仍在 `dist/`；未发 Release**。若发 0.1.4，标签打 `e3d0041`；若发 0.1.5（内含 0.1.4 全部内容 + P2-8），标签打 `46a3776` |
+| 未发布的内容 | **`0.1.6-beta` 候选（最新）**：P2-8 手动设置清单 + 启动画面/启动预热 + 「我的方案」弹窗化。**已按 `8eaec90` 构建（三资产齐全、哈希已核）、已部署 `D:\FpsTune` 供目检；未发 Release**<br>旧候选 **0.1.5-beta（`46a3776`，= P2-8）** 与 **0.1.4-beta（`e3d0041`）** 三资产仍完整保留在 `dist/`。**0.1.6 ⊇ 0.1.5 ⊇ 0.1.4 内容**，发 0.1.6 即可，标签打 `8eaec90` |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.5-beta` 内嵌 SHA `46a3776`**（本轮已部署并启动目检）。文件 6 个，与 `dist/folder-0.1.5/` 清单一致。备份：`D:\FpsTune-backup-20260925-0627`（= 旧构建 `627740f`）、`D:\FpsTune-backup-20260925`（= 已发布的 `0.1.3-beta`） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.6-beta` 内嵌 SHA `8eaec90`**（本轮已部署并启动目检）。文件 6 个，与 `dist/folder-0.1.6/` 清单一致。备份链：`-20260925-46a3`（= 0.1.5 旧装）、`-20260925-0627`（= `627740f`）、`-20260925`（= 已发布 0.1.3） |
 | 测试基线 | 301 / 301（`dotnet test -c Release`；2026-09-25 复核，含 P2-8 厂商识别 20 用例与资源键守卫） |
 | 编译警告 | **0**（2026-09-25 由 6 个清零；新增代码请守住这条，见 `CODE-HEALTH.md`） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
-### 2.1 版本与同步状态核对（2026-09-25 实测，P2-8 轮更新）
+### 2.1 版本与同步状态核对（2026-09-25 实测，0.1.6 轮更新）
 
 | 位置 | 版本 | 状态 |
 |---|---|---|
-| GitHub 已发布 Release | `v0.1.3-beta` | 线上最新（**0.1.4 / 0.1.5 均未发布**） |
-| **发布候选（未发布，最新）** | **`0.1.5-beta`** | 官方脚本从 HEAD `46a3776` 产出：`dist/folder-0.1.5/`（**6 个文件**）、`dist/single-file-0.1.5/FpsTune.exe`(62.7M)、`dist/FpsTune-Portable-0.1.5.zip`(0.9M)、`dist/installer/FpsTune-Setup-0.1.5.exe`、`dist/SHA256SUMS-v0.1.5.txt`（**3 行**）。`ProductVersion` = `0.1.5-beta+46a3776…`。已部署 `D:\FpsTune` 并启动目检 |
-| 发布候选（未发布，更早） | `0.1.4-beta` | 三资产仍按 `e3d0041` 完整保留在 `dist/`（folder 6 文件 / single 63M / zip 948K / Setup 58M / 3 行清单）。**未被 0.1.5 构建波及** |
-| 本机安装位 `D:\FpsTune` | `0.1.5-beta`（内嵌 SHA **`46a3776`**） | **本轮已部署**：`dist/folder-0.1.5/*` 整目录覆盖，文件清单双向一致（6/6），`catalog.json` 哈希一致。启动 15 秒存活、`error.log` 字节数不变 |
-| 源码 `main` | `0.1.5-beta` | **本地领先 `origin/main` 3 个提交未 push**（`4bef7b3` 上轮收尾文档、`74d4eea` P2-8、`46a3776` bump 版本）+ 本轮收尾文档提交。**push 等用户拍板** |
-| 已发布 0.1.3 的本地资产 | — | **未被破坏**：`FpsTune-Portable-0.1.3.zip` 哈希未复核但 `dist/` 的 0.1.3 目录本轮未触碰 |
-| 备份 | — | `D:\FpsTune-backup-20260925-0627` = 旧构建 `627740f`（本轮部署前所备）；`D:\FpsTune-backup-20260925` = 已发布的 `0.1.3-beta` |
+| GitHub 已发布 Release | `v0.1.3-beta` | 线上最新（**0.1.4 / 0.1.5 / 0.1.6 均未发布**） |
+| **发布候选（未发布，最新）** | **`0.1.6-beta`** | 官方脚本从 HEAD `8eaec90` 产出：`dist/folder-0.1.6/`（6 个文件）、`dist/single-file-0.1.6/FpsTune.exe`(62.7M)、`dist/FpsTune-Portable-0.1.6.zip`(0.9M)、`dist/installer/FpsTune-Setup-0.1.6.exe`、`dist/SHA256SUMS-v0.1.6.txt`（3 行）。`ProductVersion` = `0.1.6-beta+8eaec90…`。已部署 `D:\FpsTune` 并启动目检 |
+| 发布候选（未发布，旧） | `0.1.5-beta`（`46a3776`）/ `0.1.4-beta`（`e3d0041`） | 三资产完整保留在 `dist/`，未被 0.1.6 构建波及；内容均被 0.1.6 包含 |
+| 本机安装位 `D:\FpsTune` | `0.1.6-beta`（内嵌 SHA **`8eaec90`**） | **本轮已部署**：整目录覆盖，文件清单双向一致（6/6），`catalog.json` 哈希一致；启动 15 秒存活、`error.log` 字节数不变 |
+| 源码 `main` | `0.1.6-beta` | **本地领先 `origin/main` 8+ 个提交未 push**（上轮 3 个 + 本轮 splash `6d422dd`、方案弹窗 `b2feb23`、bump `8ea6ed7`、.gitignore `8eaec90` + 收尾文档）。**push 等用户拍板** |
+| 备份 | — | `D:\FpsTune-backup-20260925-46a3` = 0.1.5（本轮部署前所备）；`-20260925-0627` = `627740f`；`-20260925` = 已发布 0.1.3 |
 
-- **0.1.5 三资产实测哈希**（与 `SHA256SUMS-v0.1.5.txt` 逐项一致）：单文件
-  `A3A1A423…0CA2A` / Portable zip `4D90C816…E0618` / Setup `964791F9…58D6`。
-  脚本自带冒烟通过（两个 exe `-Version` → `0.1.5-beta`；单文件 `-Detect -Json` OK）。
-- **打标签口径（若发布 0.1.5）**：候选由 HEAD `46a3776` 产出，故 `v0.1.5-beta` 应打在 **`46a3776`**
-  （= P2-8 代码提交 `74d4eea` 之后的版本号提交）。判断方法仍是读产物 `ProductVersion` 的 SHA。
-- **打标签口径（若发布 0.1.4）**：候选由 HEAD `e3d0041` 产出，`v0.1.4-beta` 应打在 **`e3d0041`**。
-- **0.1.4 的三资产哈希**（历史核对记录）：单文件 `91FF00D7…46F93` /
-  Portable zip `D26E13C2…0FBE2A` / Setup `46A46598…7D51B9`。
+- **0.1.6 三资产实测哈希**（与 `SHA256SUMS-v0.1.6.txt` 逐项一致）：单文件
+  `91889E46…EBF0` / Portable zip `1D06CE58…ECBF2` / Setup `14C06DB1…D4454`。
+  脚本自带冒烟通过（`-Version` / `-Detect -Json`）。
+- **打标签口径（若发布 0.1.6）**：候选由 HEAD `8eaec90` 产出，`v0.1.6-beta` 打在 **`8eaec90`**。
+  判断方法仍是读产物 `ProductVersion` 的 SHA。
+- **`8eaec90` 本身是 .gitignore 提交**（忽略宿主生成的 `.zcodeignore`，它曾让发布脚本的
+  "tracked tree 干净"检查拒绝构建）；其前是 bump `8ea6ed7` 与两个功能提交。
+- 0.1.5 候选哈希：单文件 `A3A1A423…0CA2A` / zip `4D90C816…E0618` / Setup `964791F9…58D6`。
+- 0.1.4 候选哈希：单文件 `91FF00D7…46F93` / zip `D26E13C2…0FBE2A` / Setup `46A46598…7D51B9`。
 - **`SHA256SUMS-*.txt` 是 CRLF 行尾**（0.1.2 / 0.1.3 / 0.1.4 三份一致，脚本产物如此）：
   Git Bash 里 `sha256sum -c` 会因 `\r` 报 "No such file"；**逐项比对哈希值**即可，
   不要据此判定清单损坏（本轮已确认清单正确）。
@@ -80,11 +81,10 @@
 
 **未决（需要用户拍板，别自作主张）**
 
-1. **发哪套候选、何时发**：`dist/` 里现在有两套完整候选——**0.1.5-beta**（P2-8，含 0.1.4 全部内容，
-   标签口径 `46a3776`）与 **0.1.4-beta**（P2-1 等，标签口径 `e3d0041`）。若发 0.1.5 则 0.1.4 无需单独发
-   （内容被包含）。**唯一剩下的动作是 `gh release create`，等用户明确确认**；
+1. **发版**：`dist/` 里现有多套候选，**0.1.6-beta（`8eaec90`）内容 ⊇ 0.1.5 ⊇ 0.1.4，推荐发 0.1.6**；
+   旧两套资产仅作保留。**唯一剩下的动作是 `gh release create`，等用户明确确认**；
    Release Notes **不得含编造的 FPS/收益数字**。
-2. **是否 push `main`**：本地领先 `origin/main` 3+ 个提交（见 §2.1），**等用户拍板后一起 push**。
+2. **是否 push `main`**：本地领先 `origin/main` 8+ 个提交（见 §2.1），**等用户拍板后一起 push**。
 3. 原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
    （Setup + Portable + SHA256SUMS），与 README / README.en 下载表一致。
 
@@ -116,7 +116,40 @@
 
 ## 4. 本轮（2026-09-25 续）做了什么
 
-**⑦ P2-8 驱动内手动设置清单 + 0.1.5 候选构建与部署（本轮）**
+**⑧ 启动画面 + 启动预热 + 「我的方案」弹窗化（本轮，用户点名的体验轮）**
+
+- **背景**：用户提出三件事——性能优化（"只做看得见的页面加载"）、完全加载前的加载动画、
+  自定义方案界面改成弹窗式。**排查结论**：页面懒加载**早已存在**（`MainWindow._pageFactories`
+  按导航创建并缓存，WMI 等重活也已在后台线程），真正的体验缺口是**启动期零反馈**和方案交互本身。
+- **启动画面（`6d422dd`）**：新增 `Views/SplashWindow`（应用名 + 标语 + 四点呼吸动画 + 版本号）。
+  `App.OnStartup` 重排：设置/语言/**主题**先行 → splash 显示 → 后台 Task 预热
+  `HardwareInfoService`（WMI 慢查询提前跑，首页 Loaded 命中缓存）→ **ApplicationIdle 队列**
+  里再构建主窗（排在 Render 之后，splash 必先画出首帧）→ 主窗 `ContentRendered` 后 180ms
+  淡出关闭（低配直接关），`Closed` 兜底。顺带删掉 MainWindow 构造里重复的
+  `SettingsService.Load()` 与 `ThemeManager.Initialize()`。
+- **方案弹窗（`b2feb23`）**：新增 `Views/ProfileManagerWindow`，替换右栏 Expander 旧交互
+  （旧交互只有名称输入 + 5 个小按钮，载入/删除必须手输名字、看不到已有方案）。弹窗内：
+  已保存方案列表（名称 + 项数）、每行载入/导出/删除一键完成、顶部保存当前勾选（回车提交）、
+  底部导入；空态有引导文案；Esc 关闭；载入经 `LoadRequestedIds` 带回优化页。
+  预设行末尾加「我的配置方案」入口按钮；右栏详情面板随之占满全高。
+  删除 5 个旧 handler 后 i18n 棘轮基线 `Views/OptimizeView.xaml.cs` **40 → 22**；
+  新文案全走资源键（中英各 +16）。
+- **验证**：`dotnet test -c Release` **301/301**、0 警告；UIA 实测 splash 时序
+  （t=300ms splash+主窗并存、t=450ms splash 淡出）并**截图目检**；方案弹窗**全流程**：
+  打开 → 保存（行"测试方案 · 27 项"出现）→ 删除（危险确认文案正确、确认后空态回来）→
+  载入（弹窗带结果关闭、"自定义"预设选中、详情区"方案已载入 27 项"）→ 关闭，
+  全程 `error.log` 不变；测试数据已清理（`profiles.json` 删除还原）。
+- **新经验（已录入 `AI-WORKFLOW.md` §四）**：`ShowInTaskbar=False` 的 WPF 工具窗
+  （AppDialogWindow / ProfileManagerWindow）**不出现在 UIA Root 子查询里**，
+  验证脚本要用 `EnumWindows + AutomationElement.FromHandle` 定位；物理鼠标点击
+  不可靠，改用 `InvokePattern` / `SelectionItemPattern`；PS 脚本必须带 UTF-8 BOM。
+- **候选与部署**：bump 0.1.6（`8ea6ed7`）；`.zcodeignore`（宿主生成）曾让发布脚本的
+  干净检查拒绝构建，按 `.workbuddy-ai/` 先例加入 `.gitignore`（`8eaec90`）；重建后
+  三哈希与清单逐项一致；部署 `D:\FpsTune`（备份 `-20260925-46a3`）并启动给用户。
+- **未做（等拍板）**：`git push`（本地领先 8+ 提交）、`gh release create`（推荐发 0.1.6，
+  内容包含 0.1.5 / 0.1.4）。
+
+**⑦ P2-8 驱动内手动设置清单 + 0.1.5 候选构建与部署（上一轮）**
 
 - **P2-8 实现（`74d4eea`）**：GUI_PLAN G1「按厂商生成驱动内手动设置清单」落地为显示页第 6 张卡：
   - `Services/GpuVendor.cs`：按 WMI 显卡名粗判厂商（NVIDIA/AMD/Intel/Unknown），
@@ -546,9 +579,9 @@
 4. **P2-7 国际化**：已按用户决定**暂停**（剩余 1000 处记在 `I18nBaseline.txt`）。
 5. **P2-9** 已作废（朋友测试模块已整体移除）。
 
-> **候选与拍板**：`dist/` 里 0.1.5-beta（`46a3776`，含 P2-8）与 0.1.4-beta（`e3d0041`）两套候选
-> 都齐三资产；0.1.5 已部署 `D:\FpsTune` 并启动给用户目检。**push 与 `gh release create` 都等用户拍板**
-> （见 §2.1 与"未决"；0.1.5 内含 0.1.4 全部内容，发 0.1.5 则 0.1.4 不必单发）。
+> **候选与拍板**：`dist/` 里 0.1.6（`8eaec90`，内容最全）/ 0.1.5 / 0.1.4 三套候选都齐三资产；
+> 0.1.6 已部署 `D:\FpsTune` 并启动给用户目检。**push 与 `gh release create` 都等用户拍板**
+> （见 §2.1 与"未决"；0.1.6 ⊇ 0.1.5 ⊇ 0.1.4，发 0.1.6 即可）。
 
 ## 6. 维护本文的规则
 
