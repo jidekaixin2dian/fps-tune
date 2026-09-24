@@ -58,7 +58,7 @@ asks for consent and verifies SHA-256 first.
 |---|---|
 | ![Sessions](assets/screenshots/04-session.png) | ![A/B experiment](assets/screenshots/05-ab-experiment.png) |
 
-Also included: friend testing (before/after record), backups & logs (audit of every write),
+Also included: backups & logs (audit of every write),
 settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles).
 Dark, light and system themes; borderless custom title bar; first-run guided setup.
 
