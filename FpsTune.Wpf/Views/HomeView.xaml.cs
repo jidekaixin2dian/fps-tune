@@ -33,25 +33,25 @@ public partial class HomeView : UserControl
     public void RefreshContacts()
     {
         var s = SettingsService.Current;
-        var wechat = "请点击查看二维码";
-        var qq = string.IsNullOrWhiteSpace(s.QQ) ? "待设置" : s.QQ;
-        var douyin = string.IsNullOrWhiteSpace(s.Douyin) ? "待设置" : s.Douyin;
+        var wechat = Str.T("Str.ClickToSeeQr");
+        var qq = string.IsNullOrWhiteSpace(s.QQ) ? Str.T("Str.StatusToSet") : s.QQ;
+        var douyin = string.IsNullOrWhiteSpace(s.Douyin) ? Str.T("Str.StatusToSet") : s.Douyin;
 
         var qqLink = s.QQLink;
         if ((string.IsNullOrWhiteSpace(qqLink) || qqLink.Contains("wpa.qq.com") || qqLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(s.QQ))
             qqLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(s.QQ);
 
         ContactPanel.Children.Clear();
-        ContactPanel.Children.Add(MakeContact("微信", wechat, ""));
+        ContactPanel.Children.Add(MakeContact(Str.T("Str.WeChat"), wechat, ""));
         ContactPanel.Children.Add(MakeContact("QQ", qq, qqLink));
         ContactPanel.Children.Add(MakeContact("抖音", douyin, s.DouyinLink));
 
         if (!string.IsNullOrWhiteSpace(s.Email))
-            ContactPanel.Children.Add(MakeContact("邮箱", s.Email, ""));
+            ContactPanel.Children.Add(MakeContact(Str.T("Str.Email"), s.Email, ""));
 
         ContactPanel.Children.Add(new TextBlock
         {
-            Text = "仅接受合作/反馈",
+            Text = Str.T("Str.WeChatPurpose"),
             Margin = new Thickness(0, 0, 0, 0),
             FontSize = 11,
             Opacity = 0.7,
@@ -77,7 +77,7 @@ public partial class HomeView : UserControl
 
     private static void OpenContact(string label, string value, string link)
     {
-        if (label == "微信" && string.IsNullOrWhiteSpace(link))
+        if (label == Str.T("Str.WeChat") && string.IsNullOrWhiteSpace(link))
         {
             var owner = Application.Current.Windows
                 .OfType<Window>()
@@ -101,15 +101,15 @@ public partial class HomeView : UserControl
             }
             catch
             {
-                DialogService.Warning("FPS 帧律", "无法打开链接。");
+                DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.CannotOpenLink"));
             }
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(value) && value != "待设置")
+        if (!string.IsNullOrWhiteSpace(value) && value != Str.T("Str.StatusToSet"))
         {
             Clipboard.SetText(value);
-            DialogService.Info("FPS 帧律", $"已复制：{value}");
+            DialogService.Info(Str.T("Str.AppName"), $"已复制：{value}");
         }
     }
 

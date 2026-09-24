@@ -31,12 +31,12 @@ public partial class ConsoleView : UserControl
         GameReadyTitle.Text = GameLocated
             ? $"{GamePathService.LabelFor(AppState.GamePath!)} · 开局准备"
             : "开局准备";
-        GameReadyText.Text = _locating ? "正在定位并更新检测…" : !GameReady
-            ? GameLocated ? "已选择游戏 · 请更新检测，获取当前目标的基础建议。" : "先定位游戏主程序，再获取对应的基础建议。"
+        GameReadyText.Text = _locating ? Str.T("Str.LocatingAndDetecting") : !GameReady
+            ? GameLocated ? Str.T("Str.GameSelectedRefreshDetect") : Str.T("Str.LocateGameForAdvice")
             : count > 0 ? $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。"
-            : "基础设置已达标 · 可记录一局负载，保留优化前后对照。";
-        GameReadyText.ToolTip = AppState.GamePath ?? "尚未选择游戏";
-        LocateDeltaButton.Content = GameLocated && !GameReady ? "更新检测" : "定位游戏";
+            : Str.T("Str.BasicsOk");
+        GameReadyText.ToolTip = AppState.GamePath ?? Str.T("Str.NoGameSelected");
+        LocateDeltaButton.Content = GameLocated && !GameReady ? Str.T("Str.RefreshDetect") : "定位游戏";
         PrepareDeltaButton.IsEnabled = GameReady && count > 0 && !_refreshing && !_locating;
         PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
     }
@@ -57,7 +57,7 @@ public partial class ConsoleView : UserControl
             {
                 var picker = new Microsoft.Win32.OpenFileDialog
                 {
-                    Title = "选择游戏主程序（不是启动器；主程序通常带 -Win64-Shipping 或位于 Binaries 目录）",
+                    Title = Str.T("Str.PickGameExeHint"),
                     Filter = "游戏主程序|*.exe", CheckFileExists = true
                 };
                 if (picker.ShowDialog(main) != true) return;
@@ -65,16 +65,16 @@ public partial class ConsoleView : UserControl
             }
             if (!System.IO.File.Exists(path) || !string.Equals(System.IO.Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase))
             {
-                DialogService.Warning("请选择游戏主程序", "需要选择游戏本体的主程序 exe，不能选择启动器或安装程序。");
+                DialogService.Warning("请选择游戏主程序", Str.T("Str.MustPickGameExe"));
                 return;
             }
             StateStore.SaveGamePath(path);
             if (!string.Equals(StateStore.LoadGamePath(), path, StringComparison.OrdinalIgnoreCase))
-                throw new System.IO.IOException("游戏路径未能保存，请检查本地设置目录权限。");
+                throw new System.IO.IOException(Str.T("Str.GamePathSaveFailed"));
             AppState.GamePath = path;
             await RefreshDataAsync();
         }
-        catch (Exception ex) { DialogService.Warning("游戏定位未完成", ex.Message); }
+        catch (Exception ex) { DialogService.Warning(Str.T("Str.GameLocateIncomplete"), ex.Message); }
         finally { _locating = false; LocateDeltaButton.IsEnabled = true; UpdatePreparation(); }
     }
 
@@ -149,7 +149,7 @@ public partial class ConsoleView : UserControl
         var available = value is { } n && double.IsFinite(n);
         text.Text = available ? $"{value:0}%" : "—";
         meter.Value = available ? Math.Clamp(value!.Value, 0, 100) : 0;
-        text.ToolTip = available ? "实时本地采样" : _sampler?.UnavailableReasons.GetValueOrDefault(key) ?? "正在读取指标";
+        text.ToolTip = available ? Str.T("Str.LiveLocalSampling") : _sampler?.UnavailableReasons.GetValueOrDefault(key) ?? Str.T("Str.LoadingMetrics");
     }
 
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshDataAsync();
@@ -160,12 +160,12 @@ public partial class ConsoleView : UserControl
         _refreshing = true;
         RefreshButton.IsEnabled = false;
         ReviewButton.IsEnabled = false;
-        StateText.Text = "正在后台检测，仍可切换页面…";
+        StateText.Text = Str.T("Str.DetectingBackground");
         try
         {
             var ok = await main.RefreshDetectionAsync();
             RebuildRows();
-            StateText.Text = ok ? "检测已更新。开关仅选择项目，审阅后执行；修改前自动备份。" : "检测未完成，可重新检测或前往检测页查看原因。";
+            StateText.Text = ok ? Str.T("Str.DetectUpdatedHint") : Str.T("Str.DetectIncompleteRetry");
         }
         finally
         {
@@ -218,7 +218,7 @@ public partial class ConsoleView : UserControl
     {
         UpdatePreparation();
         var count = _rows.Count(r => r.Item.IsChecked);
-        SelectionText.Text = _rows.Count == 0 ? "尚无检测结果" : $"已选择 {count} 项 / 共 {_rows.Count} 项";
+        SelectionText.Text = _rows.Count == 0 ? Str.T("Str.NoDetectResult") : $"已选择 {count} 项 / 共 {_rows.Count} 项";
         ReviewButton.IsEnabled = count > 0 && !_refreshing;
     }
 

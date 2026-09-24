@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -158,7 +158,7 @@ public partial class SettingsView : UserControl
         var text = GamePathBox.Text.Trim();
         if (text.Length > 0 && (!File.Exists(text) || !text.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)))
         {
-            GamePathHint.Text = "路径无效或不是 .exe，未保存";
+            GamePathHint.Text = Str.T("Str.InvalidPathNotExe");
             GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["WarningBrush"];
             return;
         }
@@ -172,12 +172,12 @@ public partial class SettingsView : UserControl
         var saved = StateStore.LoadGamePath();
         if (saved is null)
         {
-            GamePathHint.Text = "未指定，使用自动检测";
+            GamePathHint.Text = Str.T("Str.NotSpecifiedAuto");
             GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["TextMutedBrush"];
         }
         else
         {
-            GamePathHint.Text = File.Exists(saved) ? "已指定（点击空白处保存修改）" : "已指定，但文件不存在";
+            GamePathHint.Text = File.Exists(saved) ? Str.T("Str.SpecifiedClickToSave") : Str.T("Str.SpecifiedMissing");
             GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["OkBrush"];
         }
     }
@@ -186,7 +186,7 @@ public partial class SettingsView : UserControl
     {
         var dlg = new OpenFileDialog
         {
-            Title = "选择游戏 EXE",
+            Title = Str.T("Str.SelectGameExe"),
             Filter = "可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*"
         };
         if (dlg.ShowDialog() != true)
@@ -284,7 +284,7 @@ public partial class SettingsView : UserControl
 
     private async Task RefreshAutoProfileDataAsync()
     {
-        SetAutoProfileStatus("正在后台扫描游戏与配置方案...");
+        SetAutoProfileStatus(Str.T("Str.ScanningGamesBackground"));
         var oldCandidatePath = (GameCandidateCombo.SelectedItem as GamePathService.GameCandidate)?.ExePath;
         var oldProfileName = (ProfileCombo.SelectedItem as OptProfile)?.Name;
 
@@ -319,20 +319,20 @@ public partial class SettingsView : UserControl
     {
         if (GameCandidateCombo.SelectedItem is not GamePathService.GameCandidate candidate)
         {
-            SetAutoProfileStatus("请先选择已扫描的游戏候选。", warning: true);
+            SetAutoProfileStatus(Str.T("Str.SelectScannedGameFirst"), warning: true);
             return;
         }
         if (ProfileCombo.SelectedItem is not OptProfile profile
             || string.IsNullOrWhiteSpace(profile.Name))
         {
-            SetAutoProfileStatus("请先选择已保存的配置方案。", warning: true);
+            SetAutoProfileStatus(Str.T("Str.SelectProfileFirst"), warning: true);
             return;
         }
 
         var processName = AutoProfileBinding.NormalizeProcessName(candidate.ExePath);
         if (processName.Length == 0)
         {
-            SetAutoProfileStatus("无法从候选路径确定进程名，未添加。", warning: true);
+            SetAutoProfileStatus(Str.T("Str.CannotDeriveProcessName"), warning: true);
             return;
         }
         if (_autoBindings.Any(x => string.Equals(
@@ -374,7 +374,7 @@ public partial class SettingsView : UserControl
         binding.Enabled = (sender as CheckBox)?.IsChecked == true;
         if (TrySaveAutoBindings(out var error))
         {
-            SetAutoProfileStatus(binding.Enabled ? "已启用绑定" : "已停用绑定");
+            SetAutoProfileStatus(binding.Enabled ? Str.T("Str.BindingEnabled") : Str.T("Str.BindingDisabled"));
             return;
         }
 
@@ -415,18 +415,17 @@ public partial class SettingsView : UserControl
     private void RefreshActivity()
     {
         UpdateActivityScanLine();
-        var filter = ActivityFilter.SelectedItem is ComboBoxItem { Content: string content } ? content : "全部";
+        var filter = ActivityFilter.SelectedItem is ComboBoxItem { Content: string content } ? content : Str.T("Str.GroupAll");
         var events = AutoProfileActivityStore.Load();
-        if (filter != "全部")
+        if (filter != Str.T("Str.GroupAll"))
         {
-            var kind = filter switch
-            {
-                "已应用" => AutoProfileActivityStore.KindApplied,
-                "跳过" => AutoProfileActivityStore.KindSkipped,
-                "失败" => AutoProfileActivityStore.KindFailed,
-                "匹配" => AutoProfileActivityStore.KindMatch,
-                _ => null
-            };
+            // 注意：这里原来是用中文字面量做 switch 模式（`"已应用" => ...`）。
+            // 模式必须是编译期常量，而 Str.T(...) 是方法调用，不能做模式——所以改成条件表达式。
+            var kind = filter == Str.T("Str.ActivityApplied") ? AutoProfileActivityStore.KindApplied
+                : filter == Str.T("Str.ActivitySkipped") ? AutoProfileActivityStore.KindSkipped
+                : filter == Str.T("Str.ActivityFailed") ? AutoProfileActivityStore.KindFailed
+                : filter == Str.T("Str.ActivityMatched") ? AutoProfileActivityStore.KindMatch
+                : null;
             if (kind is not null)
                 events = events.Where(ev => ev.Kind == kind).ToList();
         }
@@ -459,7 +458,7 @@ public partial class SettingsView : UserControl
 
     private void ClearActivity_Click(object sender, RoutedEventArgs e)
     {
-        if (!DialogService.Confirm("清除活动记录", "确定清除全部自动 Profile 活动记录？", danger: true, confirmText: "清除"))
+        if (!DialogService.Confirm(Str.T("Str.ClearActivityLog"), Str.T("Str.ConfirmClearActivity"), danger: true, confirmText: Str.T("Str.Clear")))
             return;
         AutoProfileActivityStore.Clear();
         RefreshActivity();
@@ -476,7 +475,7 @@ public partial class SettingsView : UserControl
         try
         {
             SettingsService.Save(settings);
-            SetAutoProfileStatus(settings.AutoProfileEnabled ? "自动应用已开启" : "自动应用已关闭");
+            SetAutoProfileStatus(settings.AutoProfileEnabled ? Str.T("Str.AutoApplyOn") : Str.T("Str.AutoApplyOff"));
         }
         catch (Exception ex)
         {
@@ -522,13 +521,13 @@ public partial class SettingsView : UserControl
         var isAdmin = AdminHelper.IsAdministrator();
         if (isAdmin)
         {
-            AdminStatusText.Text = "当前已是管理员";
+            AdminStatusText.Text = Str.T("Str.AlreadyAdmin");
             AdminStatusText.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["OkBrush"];
             AdminRestartButton.Visibility = Visibility.Collapsed;
         }
         else
         {
-            AdminStatusText.Text = "当前不是管理员，部分优化项可能失败";
+            AdminStatusText.Text = Str.T("Str.NotAdminPartial");
         }
     }
 
@@ -544,7 +543,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning("打开目录", "打开失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.OpenFolder"), "打开失败：" + ex.Message);
         }
     }
 
@@ -577,11 +576,11 @@ public partial class SettingsView : UserControl
             var path = DiagnosticReportExporter.Export();
             if (path is null)
                 return;
-            DialogService.Info("诊断报告", "已导出:\n" + path + "\n\n报告不含联系方式等个人信息, 可直接发给开发者协助排障。");
+            DialogService.Info(Str.T("Str.DiagnosticReport"), "已导出:\n" + path + "\n\n报告不含联系方式等个人信息, 可直接发给开发者协助排障。");
         }
         catch (Exception ex)
         {
-            DialogService.Warning("诊断报告", "导出失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.DiagnosticReport"), "导出失败：" + ex.Message);
         }
     }
 
@@ -599,19 +598,19 @@ public partial class SettingsView : UserControl
     private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         CheckUpdateButton.IsEnabled = false;
-        UpdateStatusText.Text = "正在检查更新...";
+        UpdateStatusText.Text = Str.T("Str.CheckingUpdate");
         try
         {
             var info = await UpdateService.CheckAsync();
             if (info is null)
             {
-                UpdateStatusText.Text = "无法连接更新服务（GitHub 可能暂不可达），可稍后重试";
+                UpdateStatusText.Text = Str.T("Str.UpdateUnreachable");
                 return;
             }
 
             if (!UpdateService.IsNewer(info.Version, UpdateService.CurrentVersion))
             {
-                UpdateStatusText.Text = "当前已是最新版本";
+                UpdateStatusText.Text = Str.T("Str.AlreadyLatest");
                 return;
             }
 
@@ -623,10 +622,10 @@ public partial class SettingsView : UserControl
 
             UpdateStatusText.Text = $"发现新版本 {info.Version}";
             var go = DialogService.Confirm(
-                "FPS 帧律",
+                Str.T("Str.AppName"),
                 $"发现新版本 {info.Version}（当前 v{UpdateService.CurrentVersion}）。\n\n" +
-                "是否立即下载并静默安装？安装完成后软件会自动关闭并完成升级。",
-                confirmText: "立即更新");
+                Str.T("Str.ConfirmUpdate"),
+                confirmText: Str.T("Str.UpdateNow"));
             if (!go)
             {
                 UpdateStatusText.Text = $"已跳过 {info.Version}，可随时在 GitHub 主页手动下载";
@@ -648,15 +647,15 @@ public partial class SettingsView : UserControl
                     Dispatcher.Invoke(() => UpdateStatusText.Text = $"下载中 {percent}%");
                 });
 
-                UpdateStatusText.Text = "正在下载 SHA256 清单...";
+                UpdateStatusText.Text = Str.T("Str.DownloadingManifest");
                 await UpdateService.DownloadAsync(info.ChecksumUrl, checksumTmp, null);
                 var manifest = await File.ReadAllTextAsync(checksumTmp);
                 if (!UpdateService.TryReadSha256(manifest, Path.GetFileName(tmp), out var expectedHash))
-                    throw new InvalidOperationException("SHA256 清单缺少当前安装包记录");
+                    throw new InvalidOperationException(Str.T("Str.ManifestMissingEntry"));
                 if (!UpdateService.VerifySha256(tmp, expectedHash))
-                    throw new InvalidOperationException("安装包 SHA256 校验不匹配");
+                    throw new InvalidOperationException(Str.T("Str.InstallerHashMismatch"));
 
-                UpdateStatusText.Text = "校验通过，正在启动安装...";
+                UpdateStatusText.Text = Str.T("Str.VerifyOkInstalling");
                 var dir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
                 var installer = Process.Start(new ProcessStartInfo(tmp)
                 {
@@ -664,7 +663,7 @@ public partial class SettingsView : UserControl
                     Arguments = $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"{dir}\""
                 });
                 if (installer is null)
-                    throw new InvalidOperationException("无法启动安装程序");
+                    throw new InvalidOperationException(Str.T("Str.CannotStartInstaller"));
                 started = true;
                 await Task.Delay(1200);
                 Application.Current.Shutdown();

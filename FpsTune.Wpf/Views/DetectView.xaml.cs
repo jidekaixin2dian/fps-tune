@@ -118,7 +118,7 @@ public partial class DetectView : UserControl
         }
         else
         {
-            VramNowText.Text = "不可用";
+            VramNowText.Text = Str.T("Str.Unavailable");
             VramNoteText.Text = _sampler?.UnavailableReasons.TryGetValue("vram", out var reason) == true
                 ? reason
                 : "未提供 GPU Adapter Memory 计数器";
@@ -153,7 +153,7 @@ public partial class DetectView : UserControl
             return;
         _suppressGameSwitch = true;
         GameSwitcher.Items.Clear();
-        GameSwitcher.Items.Add(new ComboBoxItem { Content = "扫描中…", IsEnabled = false });
+        GameSwitcher.Items.Add(new ComboBoxItem { Content = Str.T("Str.Scanning"), IsEnabled = false });
         GameSwitcher.SelectedIndex = 0;
         _suppressGameSwitch = false;
 
@@ -178,8 +178,8 @@ public partial class DetectView : UserControl
         foreach (var g in games)
             GameSwitcher.Items.Add(new ComboBoxItem { Content = g.Name, Tag = g.ExePath, ToolTip = g.ExePath });
         if (games.Count == 0)
-            GameSwitcher.Items.Add(new ComboBoxItem { Content = "未检测到已安装游戏", IsEnabled = false });
-        GameSwitcher.Items.Add(new ComboBoxItem { Content = "手动指定…", Tag = "manual" });
+            GameSwitcher.Items.Add(new ComboBoxItem { Content = Str.T("Str.NoInstalledGame"), IsEnabled = false });
+        GameSwitcher.Items.Add(new ComboBoxItem { Content = Str.T("Str.ManualSpecify"), Tag = "manual" });
 
         var current = StateStore.LoadGamePath() ?? AppState.GamePath;
         var idx = -1;
@@ -222,7 +222,7 @@ public partial class DetectView : UserControl
             return;
         if (ci.Tag as string == "manual")
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Title = "选择游戏主程序", Filter = "可执行文件 (*.exe)|*.exe" };
+            var dlg = new Microsoft.Win32.OpenFileDialog { Title = Str.T("Str.SelectGameMainExe"), Filter = "可执行文件 (*.exe)|*.exe" };
             if (dlg.ShowDialog() == true)
                 ApplyGame(dlg.FileName);
             else
@@ -246,7 +246,7 @@ public partial class DetectView : UserControl
     {
         var path = StateStore.LoadGamePath() ?? AppState.GamePath;
         GamePathText.Text = string.IsNullOrWhiteSpace(path)
-            ? "未检测到已安装游戏，可在下方切换或手动指定"
+            ? Str.T("Str.NoInstalledGameHint")
             : path;
     }
 
@@ -264,7 +264,7 @@ public partial class DetectView : UserControl
 
         RunButton.IsEnabled = false;
         LoadButton.IsEnabled = false;
-        OutputBox.Text = "正在检测...";
+        OutputBox.Text = Str.T("Str.Detecting");
 
         try
         {
@@ -278,7 +278,7 @@ public partial class DetectView : UserControl
             var root = JsonNode.Parse(result.Output)?.AsObject();
             if (root is null)
             {
-                OutputBox.Text = "无法解析检测 JSON。";
+                OutputBox.Text = Str.T("Str.CannotParseDetectJson");
                 return false;
             }
 
@@ -308,7 +308,7 @@ public partial class DetectView : UserControl
 
         _hasSavedState = true;
         ApplyDetectData(root, showDetails: false);
-        OutputBox.Text = "已加载上次扫描结果。点击“运行检测”可重新扫描。";
+        OutputBox.Text = Str.T("Str.LoadedLastScan");
     }
 
     private void ApplyDetectData(JsonObject root, bool showDetails)
@@ -322,8 +322,8 @@ public partial class DetectView : UserControl
             var ramNode = hardware["ramGB"];
             RamText.Text = ramNode is null ? "--" : ramNode.ToString() + " GB";
             OsText.Text = hardware["os"]?.GetValue<string>() ?? "--";
-            LaptopText.Text = hardware["isLaptop"]?.GetValue<bool>() == true ? "笔记本" : "台式机";
-            AdminText.Text = hardware["isAdmin"]?.GetValue<bool>() == true ? "管理员" : "普通用户";
+            LaptopText.Text = hardware["isLaptop"]?.GetValue<bool>() == true ? Str.T("Str.Laptop") : Str.T("Str.Desktop");
+            AdminText.Text = hardware["isAdmin"]?.GetValue<bool>() == true ? Str.T("Str.Admin") : Str.T("Str.NormalUser");
         }
 
         AppState.GamePath = root["gamePath"]?.GetValue<string>();
@@ -396,12 +396,12 @@ public partial class DetectView : UserControl
                 sb.AppendLine($"      副作用：{item.SideEffect}");
             if (!string.IsNullOrWhiteSpace(item.Current))
                 sb.AppendLine($"      当前：{item.Current}");
-            var req = (item.RequiresAdmin ? "管理员" : "普通用户") +
+            var req = (item.RequiresAdmin ? Str.T("Str.Admin") : Str.T("Str.NormalUser")) +
                       (item.RequiresReboot ? "，需重启" : "");
             sb.AppendLine($"      要求：{req}");
             sb.AppendLine();
         }
-        sb.AppendLine("详细原始 JSON 不在此显示，可在备份/日志页查看。");
+        sb.AppendLine(Str.T("Str.RawJsonElsewhere"));
         OutputBox.Text = sb.ToString();
     }
 
@@ -409,7 +409,7 @@ public partial class DetectView : UserControl
     {
         if (AppState.DetectJson is null)
         {
-            DialogService.Info("提示", "请先在检测页运行一次检测。");
+            DialogService.Info("提示", Str.T("Str.RunDetectFirst"));
             return;
         }
 
@@ -424,11 +424,11 @@ public partial class DetectView : UserControl
         if (!string.IsNullOrWhiteSpace(AppState.GamePath))
         {
             Clipboard.SetText(AppState.GamePath);
-            DialogService.Info("游戏路径", "已将游戏路径复制到剪贴板。");
+            DialogService.Info(Str.T("Str.GamePath"), Str.T("Str.CopiedGamePath"));
         }
         else
         {
-            DialogService.Info("游戏路径", "当前没有可复制的游戏路径，请先运行检测。");
+            DialogService.Info(Str.T("Str.GamePath"), Str.T("Str.NoGamePathToCopy"));
         }
     }
 
@@ -437,7 +437,7 @@ public partial class DetectView : UserControl
         if (!string.IsNullOrWhiteSpace(OutputBox.Text))
         {
             Clipboard.SetText(OutputBox.Text);
-            DialogService.Info("检测详情", "已将检测详情复制到剪贴板。");
+            DialogService.Info(Str.T("Str.DetectDetails"), Str.T("Str.CopiedDetails"));
         }
     }
 
@@ -475,7 +475,7 @@ public partial class DetectView : UserControl
         {
             return new[]
             {
-                new CheckItemViewModel("体检", "待检测", GetStatusBrush(string.Empty))
+                new CheckItemViewModel("体检", Str.T("Str.StatusNotDetected"), GetStatusBrush(string.Empty))
             };
         }
 
@@ -484,9 +484,9 @@ public partial class DetectView : UserControl
             var name = node?["name"]?.GetValue<string>() ?? "体检项";
             var status = node?["status"]?.GetValue<string>() ?? string.Empty;
             var message = node?["message"]?.GetValue<string>() ?? string.Empty;
-            var statusLabel = status switch { "ok" => "正常", "attention" => "待检查", "danger" => "异常", _ => status };
+            var statusLabel = status switch { "ok" => Str.T("Str.StatusOk"), "attention" => Str.T("Str.StatusPending"), "danger" => Str.T("Str.StatusError"), _ => status };
             var summary = string.IsNullOrWhiteSpace(status) && string.IsNullOrWhiteSpace(message)
-                ? "待检测"
+                ? Str.T("Str.StatusNotDetected")
                 : $"● {statusLabel}  {message}".Trim();
             return new CheckItemViewModel(name, summary, GetStatusBrush(status));
         }).ToList();

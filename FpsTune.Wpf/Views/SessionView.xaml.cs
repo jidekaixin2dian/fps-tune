@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -37,10 +37,10 @@ public partial class SessionView : UserControl
         {
             var game = !string.IsNullOrWhiteSpace(AppState.GamePath)
                 ? GamePathService.LabelFor(AppState.GamePath)
-                : "对照";
+                : Str.T("Str.Comparison");
             SessionNameBox.Text = $"{game} · 对照记录 {DateTime.Now:MM-dd HH:mm}";
         }
-        _preparationHint = "在相同地图、画质和帧率上限下记录相近时长。点击开始后手动进入游戏；这里记录负载，不测量 FPS。";
+        _preparationHint = Str.T("Str.RecordMatchHint");
         UpdateRunState();
         SessionNameBox.Focus();
     }
@@ -93,13 +93,13 @@ public partial class SessionView : UserControl
         if (Service.IsRunning)
         {
             var unavailable = Service.CurrentUnavailableReasons;
-            var missing = unavailable.Count == 0 ? "无" : string.Join("；", unavailable.Keys);
+            var missing = unavailable.Count == 0 ? Str.T("Str.None") : string.Join("；", unavailable.Keys);
             RunStateText.Text = $"采样中：{Service.SessionName} · 已运行 {FormatDuration(Service.Elapsed)} · " +
                                 $"样本 {Service.RunningBuffer.Count} · 间隔 {PerformanceSessionService.CurrentInterval.TotalSeconds:0.#} 秒 · 缺失指标：{missing}";
         }
         else
         {
-            RunStateText.Text = _preparationHint ?? "就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。";
+            RunStateText.Text = _preparationHint ?? Str.T("Str.SessionReady");
         }
     }
 
@@ -120,9 +120,9 @@ public partial class SessionView : UserControl
         sample ??= Service.LatestSample;
         if (sample is null)
             return;
-        CpuNowText.Text = sample.CpuPercent is { } c ? $"{c:0}%" : "不可用";
-        MemNowText.Text = sample.MemoryPercent is { } m ? $"{m:0}%" : "不可用";
-        GpuNowText.Text = sample.GpuPercent is { } g ? $"{g:0}%" : "不可用";
+        CpuNowText.Text = sample.CpuPercent is { } c ? $"{c:0}%" : Str.T("Str.Unavailable");
+        MemNowText.Text = sample.MemoryPercent is { } m ? $"{m:0}%" : Str.T("Str.Unavailable");
+        GpuNowText.Text = sample.GpuPercent is { } g ? $"{g:0}%" : Str.T("Str.Unavailable");
 
         if (sample.VramUsedBytes is { } used)
         {
@@ -136,7 +136,7 @@ public partial class SessionView : UserControl
         }
         else
         {
-            VramNowText.Text = "不可用";
+            VramNowText.Text = Str.T("Str.Unavailable");
             VramTotalText.Text = Service.CurrentUnavailableReasons.TryGetValue("vram", out var reason)
                 ? reason
                 : "";
@@ -192,7 +192,7 @@ public partial class SessionView : UserControl
     }
 
     /// <summary>
-    /// 上次的活动快照本版本解释不了（更新版本写入或已损坏）时，让用户明确选择"改名留档"再开始：
+    /// 上次的活动快照本版本解释不了（更新版本写入或已损坏）时，让用户明确选择Str.T("Str.ArchiveRename")再开始：
     /// 既不丢数据，也不会把会话功能永久锁死。
     /// </summary>
     private bool TryArchiveUnreadableSession(string name)
@@ -204,7 +204,7 @@ public partial class SessionView : UserControl
             "性能会话",
             "上次未完成的会话快照无法被当前版本读取（通常来自更新的版本，或文件已损坏）。\n\n" +
             "可以把它改名留档（不删除、不参与统计），然后立即开始新会话。\n\n要现在归档吗？",
-            confirmText: "归档并开始");
+            confirmText: Str.T("Str.ArchiveAndStart"));
         if (!go)
             return false;
 
@@ -235,7 +235,7 @@ public partial class SessionView : UserControl
     {
         if (!Service.IsRunning)
             return;
-        if (!DialogService.Confirm("取消会话", "确定取消当前会话？已采集的数据将被丢弃。", danger: true, confirmText: "取消会话"))
+        if (!DialogService.Confirm(Str.T("Str.CancelSession"), Str.T("Str.ConfirmCancelSession"), danger: true, confirmText: Str.T("Str.CancelSession")))
             return;
         try
         {
@@ -246,7 +246,7 @@ public partial class SessionView : UserControl
         {
             RefreshAll();
             DialogService.Warning(
-                "取消失败",
+                Str.T("Str.CancelFailed"),
                 "未能安全写入取消标记，会话快照仍保留，未将本次会话视为已取消。请重试或先检查本地磁盘。\n\n" + ex.Message);
         }
     }
@@ -300,7 +300,7 @@ public partial class SessionView : UserControl
                 s.Id,
                 s.Name,
                 $"{s.StartedAt:yyyy-MM-dd HH:mm} · {FormatDuration(sum.Duration)} · {sum.SampleCount} 样本",
-                avgParts.Count > 0 ? string.Join(" · ", avgParts) : "有效样本不足",
+                avgParts.Count > 0 ? string.Join(" · ", avgParts) : Str.T("Str.NotEnoughSamples"),
                 s.StartedAt);
         }).ToList();
     }
@@ -328,7 +328,7 @@ public partial class SessionView : UserControl
             return;
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
-            Title = "导出会话 JSON",
+            Title = Str.T("Str.ExportSessionJson"),
             Filter = "JSON (*.json)|*.json",
             FileName = $"FpsTune-会话-{SanitizeFileName(session.Name)}-{session.StartedAt:yyyyMMdd-HHmmss}.json"
         };
@@ -337,11 +337,11 @@ public partial class SessionView : UserControl
         try
         {
             SessionExporter.ExportJson(session, dlg.FileName);
-            DialogService.Info("导出完成", "JSON 已保存到所选位置。文件内容不含路径与用户名。");
+            DialogService.Info(Str.T("Str.ExportDone"), "JSON 已保存到所选位置。文件内容不含路径与用户名。");
         }
         catch (Exception ex)
         {
-            DialogService.Warning("导出失败", "JSON 导出失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.ExportFailed"), "JSON 导出失败：" + ex.Message);
         }
     }
 
@@ -352,7 +352,7 @@ public partial class SessionView : UserControl
             return;
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
-            Title = "导出会话 CSV",
+            Title = Str.T("Str.ExportSessionCsv"),
             Filter = "CSV (*.csv)|*.csv",
             FileName = $"FpsTune-会话-{SanitizeFileName(session.Name)}-{session.StartedAt:yyyyMMdd-HHmmss}.csv"
         };
@@ -361,11 +361,11 @@ public partial class SessionView : UserControl
         try
         {
             SessionExporter.ExportCsv(session, dlg.FileName);
-            DialogService.Info("导出完成", "CSV 已保存到所选位置。缺失样本为空单元格。");
+            DialogService.Info(Str.T("Str.ExportDone"), "CSV 已保存到所选位置。缺失样本为空单元格。");
         }
         catch (Exception ex)
         {
-            DialogService.Warning("导出失败", "CSV 导出失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.ExportFailed"), "CSV 导出失败：" + ex.Message);
         }
     }
 
@@ -375,9 +375,9 @@ public partial class SessionView : UserControl
         if (selected.Count == 0)
             return;
         if (!DialogService.Confirm(
-                "删除会话",
+                Str.T("Str.DeleteSession"),
                 $"确定删除所选 {selected.Count} 个会话？此操作只删除这些会话文件，不影响其他数据。",
-                danger: true, confirmText: "删除"))
+                danger: true, confirmText: Str.T("Str.Delete")))
             return;
         foreach (var vm in selected)
             PerformanceSessionStore.Delete(vm.Id);
@@ -389,7 +389,7 @@ public partial class SessionView : UserControl
         var selected = HistoryList.SelectedItems.OfType<SessionListVm>().ToList();
         if (selected.Count != 1)
         {
-            DialogService.Info("性能会话", "请先在历史列表中选择恰好一个会话。");
+            DialogService.Info("性能会话", Str.T("Str.SelectExactlyOneSession"));
             return null;
         }
         return _sessions.FirstOrDefault(s => s.Id == selected[0].Id);
@@ -419,7 +419,7 @@ public partial class SessionView : UserControl
                 ? $"时间范围 {ws:HH:mm:ss} - {we:HH:mm:ss}"
                 : "") +
             (f.MissingSignals.Count > 0
-                ? (f.WindowStart is { } ? " · " : "") + "缺失信号：" + string.Join("、", f.MissingSignals)
+                ? (f.WindowStart is { } ? " · " : "") + Str.T("Str.MissingSignal") + string.Join("、", f.MissingSignals)
                 : ""),
             KindLabel(f.Kind))).ToList();
     }
@@ -428,10 +428,10 @@ public partial class SessionView : UserControl
     {
         "CpuPressure" or "CpuLoad" => "CPU",
         "GpuSaturated" => "GPU",
-        "VramPressure" or "VramLoad" or "VramUnknownTotal" => "显存",
-        "MemoryPressure" => "内存",
-        "MissingSignal" => "信号缺失",
-        _ => "结论"
+        "VramPressure" or "VramLoad" or "VramUnknownTotal" => Str.T("Str.Vram"),
+        "MemoryPressure" => Str.T("Str.Memory"),
+        "MissingSignal" => Str.T("Str.SignalMissing"),
+        _ => Str.T("Str.Verdict")
     };
 
     private sealed record InsightVm(
@@ -458,7 +458,7 @@ public partial class SessionView : UserControl
     {
         if (CompareA.SelectedItem is not CompareSourceVm va || CompareB.SelectedItem is not CompareSourceVm vb)
         {
-            CompareHint.Text = "选择两个会话进行并排比较。";
+            CompareHint.Text = Str.T("Str.SelectTwoSessions");
             CompareRows.ItemsSource = null;
             return;
         }
@@ -469,7 +469,7 @@ public partial class SessionView : UserControl
             return;
         if (a.Id == b.Id)
         {
-            CompareHint.Text = "两个选择是同一个会话，无法比较。请选择不同的会话。";
+            CompareHint.Text = Str.T("Str.SameSessionCannotCompare");
             CompareRows.ItemsSource = null;
             return;
         }
@@ -480,8 +480,8 @@ public partial class SessionView : UserControl
 
         var rows = new List<CompareRowVm>
         {
-            Row("时长", FormatDuration(sa.Duration), FormatDuration(sb.Duration), null),
-            Row("样本数", sa.SampleCount.ToString(), sb.SampleCount.ToString(), null)
+            Row(Str.T("Str.Duration"), FormatDuration(sa.Duration), FormatDuration(sb.Duration), null),
+            Row(Str.T("Str.SampleCount"), sa.SampleCount.ToString(), sb.SampleCount.ToString(), null)
         };
         rows.Add(PercentRow("CPU 平均 %", sa.Cpu?.Avg, sb.Cpu?.Avg));
         rows.Add(PercentRow("CPU 95 位 %", sa.Cpu?.HighP95, sb.Cpu?.HighP95));
@@ -490,9 +490,9 @@ public partial class SessionView : UserControl
         rows.Add(PercentRow("GPU 95 位 %", sa.Gpu?.HighP95, sb.Gpu?.HighP95));
         rows.Add(new CompareRowVm(
             "显存平均 MiB",
-            sa.VramAvgMib?.ToString("0") ?? "不可用",
-            sb.VramAvgMib?.ToString("0") ?? "不可用",
-            sa.VramAvgMib is { } x && sb.VramAvgMib is { } y ? $"{y - x:+0;-0;0} MiB" : "不可用"));
+            sa.VramAvgMib?.ToString("0") ?? Str.T("Str.Unavailable"),
+            sb.VramAvgMib?.ToString("0") ?? Str.T("Str.Unavailable"),
+            sa.VramAvgMib is { } x && sb.VramAvgMib is { } y ? $"{y - x:+0;-0;0} MiB" : Str.T("Str.Unavailable")));
         CompareRows.ItemsSource = rows;
     }
 
@@ -502,9 +502,9 @@ public partial class SessionView : UserControl
     private static CompareRowVm PercentRow(string metric, double? a, double? b)
         => new(
             metric,
-            a is { } av ? av.ToString("0.#") : "不可用",
-            b is { } bv ? bv.ToString("0.#") : "不可用",
-            a is { } av2 && b is { } bv2 ? $"{bv2 - av2:+0.#;-0.#;0}" : "不可用");
+            a is { } av ? av.ToString("0.#") : Str.T("Str.Unavailable"),
+            b is { } bv ? bv.ToString("0.#") : Str.T("Str.Unavailable"),
+            a is { } av2 && b is { } bv2 ? $"{bv2 - av2:+0.#;-0.#;0}" : Str.T("Str.Unavailable"));
 
     private sealed record CompareRowVm(string Metric, string AVal, string BVal, string Delta);
 

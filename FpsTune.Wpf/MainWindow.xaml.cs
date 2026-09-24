@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         var ver = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         TitleVersionText.Text = ver;
         SidebarVersionText.Text = ver;
-        AdminStatusText.Text = AdminHelper.IsAdministrator() ? "管理员模式" : "普通用户";
+        AdminStatusText.Text = AdminHelper.IsAdministrator() ? Str.T("Str.AdminMode") : Str.T("Str.NormalUser");
         UpdateOverviewModeLabel();
 
         var theme = SettingsService.Current.ThemeMode;
@@ -196,7 +196,7 @@ public partial class MainWindow : Window
     private void UpdateOverviewModeLabel()
     {
         var classic = SettingsService.Current.OverviewMode == "classic";
-        OverviewModeButton.Content = classic ? "切换控制台界面" : "切换经典界面";
+        OverviewModeButton.Content = classic ? Str.T("Str.SwitchConsole") : Str.T("Str.ClassicMode");
         TitleBar.SetResourceReference(Panel.BackgroundProperty, classic ? "SidebarBackgroundBrush" : "ConsoleBackgroundBrush");
         TabBar.SetResourceReference(Panel.BackgroundProperty, classic ? "SidebarBackgroundBrush" : "ConsoleBackgroundBrush");
     }
@@ -238,14 +238,14 @@ public partial class MainWindow : Window
             var ok = await detect.RunOnboardingDetectionAsync();
             if (!ok)
             {
-                DialogService.Warning("检测并优化", "检测未完成。请检查检测页的报错信息后重试。");
+                DialogService.Warning(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectIncomplete"));
                 return;
             }
         }
 
         // 第二步：检测完成后引导用户进入优化页。
         ShowOptimizePage();
-        DialogService.Info("检测并优化", "检测已完成。请选择左侧预设或勾选需要的优化项，确认后点击“应用”。");
+        DialogService.Info(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectDoneHint"));
     }
 
     private void Nav_Checked(object sender, RoutedEventArgs e)

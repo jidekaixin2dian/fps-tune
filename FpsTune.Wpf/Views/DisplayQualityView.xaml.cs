@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using FpsTune.Wpf.Core;
@@ -42,7 +42,7 @@ public partial class DisplayQualityView : UserControl
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
             UnsupportedText.Visibility = Visibility.Visible;
-            UnsupportedText.Text = "DLSS 模型覆盖功能已停用（FPS_ENABLE_DLSS=0）。";
+            UnsupportedText.Text = Str.T("Str.DlssDisabled");
             return;
         }
 
@@ -50,7 +50,7 @@ public partial class DisplayQualityView : UserControl
         {
             SupportedPanel.Visibility = Visibility.Collapsed;
             UnsupportedText.Visibility = Visibility.Visible;
-            UnsupportedText.Text = "未检测到 NVIDIA 显卡驱动，DLSS 覆盖不可用。";
+            UnsupportedText.Text = Str.T("Str.NoNvidiaForDlss");
             return;
         }
 
@@ -60,7 +60,7 @@ public partial class DisplayQualityView : UserControl
         var path = AppState.GamePath;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            GameStateText.Text = "尚未定位游戏主程序。请先到「检测」页定位游戏，再回到本页设置。";
+            GameStateText.Text = Str.T("Str.LocateGameFirstThenReturn");
             ApplyButton.IsEnabled = false;
             RestoreButton.IsEnabled = false;
             SetPresetCardsEnabled(false);
@@ -79,7 +79,7 @@ public partial class DisplayQualityView : UserControl
             StateText.Text = _dlssStatus ?? (state.Covered
                 ? $"当前覆盖：{PresetLabel(state.PresetValue ?? 0)}"
                     + (state.Restorable ? "（本工具写入，可还原）" : "（其他工具/驱动既有配置，应用时将自动备份原值）")
-                : "当前未覆盖（跟随游戏内设置）。");
+                : Str.T("Str.NotOverriddenInGame"));
             ApplyButton.IsEnabled = true;
             RestoreButton.IsEnabled = state.Covered || state.Restorable;
             SetPresetCardsEnabled(true);
@@ -111,7 +111,7 @@ public partial class DisplayQualityView : UserControl
 
     private void Preset_Checked(object sender, RoutedEventArgs e)
     {
-        // 选中卡片即启用"应用覆盖"；不自动写驱动，统一由按钮执行
+        // 选中卡片即启用Str.T("Str.ApplyOverride")；不自动写驱动，统一由按钮执行
         _dlssStatus = null;
         if (SupportedPanel.Visibility == Visibility.Visible && !_busy)
             ApplyButton.IsEnabled = true;
@@ -125,7 +125,7 @@ public partial class DisplayQualityView : UserControl
 
     private static string PresetLabel(uint value) => value switch
     {
-        (uint)DlssPreset.Latest => "最新预设",
+        (uint)DlssPreset.Latest => Str.T("Str.LatestPreset"),
         (uint)DlssPreset.PresetM => "M 预设（新一代模型·高端）",
         (uint)DlssPreset.PresetK => "K 预设（新一代模型·推荐）",
         (uint)DlssPreset.PresetJ => "J 预设（新一代模型）",
@@ -153,7 +153,7 @@ public partial class DisplayQualityView : UserControl
         var preset = SelectedPreset();
         if (preset is null)
         {
-            DialogService.Warning("显示与画质", "请先选择一个预设。");
+            DialogService.Warning("显示与画质", Str.T("Str.SelectPresetFirst"));
             return;
         }
 
@@ -161,23 +161,23 @@ public partial class DisplayQualityView : UserControl
         _dlssStatus = null;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
-        StateText.Text = "正在写入驱动设置…";
+        StateText.Text = Str.T("Str.WritingDrs");
         try
         {
             var exeName = Path.GetFileName(path);
             await Task.Run(() => DisplayQualityService.ApplyDlssPreset(exeName, preset.Value));
             _dlssStatus = preset.Value == DlssPreset.FollowGame
-                ? "已移除覆盖：DLSS 预设回到游戏内/驱动默认。进游戏生效。"
+                ? Str.T("Str.OverrideRemoved")
                 : $"已覆盖 DLSS 预设为 {PresetLabel((uint)preset.Value)}。进游戏生效；不满意可点「还原默认」。";
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _dlssStatus = "应用失败：写入 NVIDIA 配置需要管理员权限。系统设置未变。";
+            _dlssStatus = Str.T("Str.ApplyFailedNeedAdminUnchanged");
             if (DialogService.Confirm(
-                    "需要管理员权限",
+                    Str.T("Str.NeedsAdmin"),
                     "写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。\n\n" +
-                    "要以管理员身份重启并重试吗？",
-                    confirmText: "以管理员重启"))
+                    Str.T("Str.ConfirmRestartAdminRetry"),
+                    confirmText: Str.T("Str.RestartAsAdminShort")))
                 AdminHelper.RestartAsAdministrator();
         }
         catch (Exception ex)
@@ -202,22 +202,22 @@ public partial class DisplayQualityView : UserControl
         _dlssStatus = null;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
-        StateText.Text = "正在还原…";
+        StateText.Text = Str.T("Str.Restoring2");
         try
         {
             var exeName = Path.GetFileName(path);
             var removed = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
             _dlssStatus = removed
-                ? "已还原：覆盖前的原值已恢复（或自建配置文件已删除）。进游戏生效。"
-                : "没有找到本工具的覆盖或还原备份，无需还原。";
+                ? Str.T("Str.OverrideRestored")
+                : Str.T("Str.NothingToRestoreOverride");
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _dlssStatus = "还原失败：写入 NVIDIA 配置需要管理员权限。";
+            _dlssStatus = Str.T("Str.RestoreFailedNeedAdmin");
             if (DialogService.Confirm(
-                    "需要管理员权限",
+                    Str.T("Str.NeedsAdmin"),
                     "还原 NVIDIA 驱动配置需要管理员权限。\n\n要以管理员身份重启并重试吗？",
-                    confirmText: "以管理员重启"))
+                    confirmText: Str.T("Str.RestartAsAdminShort")))
                 AdminHelper.RestartAsAdministrator();
         }
         catch (Exception ex)
@@ -244,7 +244,7 @@ public partial class DisplayQualityView : UserControl
             {
                 VibSupportedPanel.Visibility = Visibility.Collapsed;
                 VibUnsupportedText.Visibility = Visibility.Visible;
-                VibUnsupportedText.Text = state.UnsupportedReason ?? "数字振动在当前环境不可用。";
+                VibUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.VibranceUnavailable");
                 return;
             }
 
@@ -290,7 +290,7 @@ public partial class DisplayQualityView : UserControl
         if (_busy) return;
         var percent = (int)VibSlider.Value;
         var confirmed = DialogService.Confirm(
-            "应用数字振动",
+            Str.T("Str.ApplyVibrance"),
             $"将把整块屏幕的色彩鲜艳度调到 {percent}%。\n\n" +
             "· 这是显示全局设置：桌面、网页、游戏观感都会变化\n" +
             "· 不是只在游戏内生效\n" +
@@ -303,7 +303,7 @@ public partial class DisplayQualityView : UserControl
         _vibStatus = null;
         VibApplyButton.IsEnabled = false;
         VibRestoreButton.IsEnabled = false;
-        VibStateText.Text = "正在写入…";
+        VibStateText.Text = Str.T("Str.Writing");
         try
         {
             await Task.Run(() => DigitalVibranceService.SetPercent(percent));
@@ -327,13 +327,13 @@ public partial class DisplayQualityView : UserControl
         _vibStatus = null;
         VibApplyButton.IsEnabled = false;
         VibRestoreButton.IsEnabled = false;
-        VibStateText.Text = "正在还原…";
+        VibStateText.Text = Str.T("Str.Restoring2");
         try
         {
             var restored = await Task.Run(() => DigitalVibranceService.Restore());
             _vibStatus = restored
-                ? "已还原：鲜艳度回到调整前的档位。"
-                : "没有找到需要还原的备份，无需还原。";
+                ? Str.T("Str.VibranceRestored")
+                : Str.T("Str.NothingToRestore2");
         }
         catch (Exception ex)
         {
@@ -357,20 +357,20 @@ public partial class DisplayQualityView : UserControl
             {
                 IccSupportedPanel.Visibility = Visibility.Collapsed;
                 IccUnsupportedText.Visibility = Visibility.Visible;
-                IccUnsupportedText.Text = state.UnsupportedReason ?? "ICC 滤镜在当前环境不可用。";
+                IccUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.IccUnavailable");
                 return;
             }
 
             IccSupportedPanel.Visibility = Visibility.Visible;
             IccUnsupportedText.Visibility = Visibility.Collapsed;
-            IccCurrentText.Text = "当前生效：" + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
+            IccCurrentText.Text = Str.T("Str.CurrentlyActive") + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
 
             SetIccPresetCardsEnabled(true);
             IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
             IccRestoreButton.IsEnabled = state.Restorable;
 
             IccStateText.Text = _iccStatus ?? (state.Restorable
-                ? "已记录你的原始色彩配置，可一键还原。"
+                ? Str.T("Str.IccOriginalSaved")
                 : "");
         }
         catch (Exception ex)
@@ -407,7 +407,7 @@ public partial class DisplayQualityView : UserControl
         }
 
         var confirmed = DialogService.Confirm(
-            "应用 ICC 滤镜",
+            Str.T("Str.ApplyIcc"),
             "切换是系统全局的：整个桌面（含网页、视频、游戏）的观感都会变化。\n\n" +
             "· 第一版只作用主显示器，多显示器暂不支持\n" +
             "· 程序生成的 ICC 是简单曲线变换，效果弱于专业校色\n" +
@@ -420,7 +420,7 @@ public partial class DisplayQualityView : UserControl
         _iccStatus = null;
         IccApplyButton.IsEnabled = false;
         IccRestoreButton.IsEnabled = false;
-        IccStateText.Text = "正在应用预设…";
+        IccStateText.Text = Str.T("Str.ApplyingPreset");
         try
         {
             var name = await Task.Run(() => IccFilterService.Apply(preset.Value));
@@ -449,13 +449,13 @@ public partial class DisplayQualityView : UserControl
         _iccStatus = null;
         IccApplyButton.IsEnabled = false;
         IccRestoreButton.IsEnabled = false;
-        IccStateText.Text = "正在还原…";
+        IccStateText.Text = Str.T("Str.Restoring2");
         try
         {
             var restored = await Task.Run(() => IccFilterService.Restore());
             _iccStatus = restored
-                ? "已还原：显示器的色彩配置已恢复为应用滤镜前的原样。"
-                : "没有找到需要还原的备份（尚未应用过滤镜），无需还原。";
+                ? Str.T("Str.IccRestored")
+                : Str.T("Str.NothingToRestoreFilter");
         }
         catch (Exception ex)
         {
@@ -476,14 +476,14 @@ public partial class DisplayQualityView : UserControl
         {
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
             DrsUnsupportedText.Visibility = Visibility.Visible;
-            DrsUnsupportedText.Text = "驱动设置功能已停用（FPS_ENABLE_DLSS=0）。";
+            DrsUnsupportedText.Text = Str.T("Str.DrsDisabled");
             return;
         }
         if (!DisplayQualityService.IsNvidiaSupported)
         {
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
             DrsUnsupportedText.Visibility = Visibility.Visible;
-            DrsUnsupportedText.Text = "未检测到 NVIDIA 显卡驱动，驱动 3D 设置不可用。";
+            DrsUnsupportedText.Text = Str.T("Str.NoNvidiaForDrs");
             return;
         }
 
@@ -493,7 +493,7 @@ public partial class DisplayQualityView : UserControl
         var path = AppState.GamePath;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            DrsStateText.Text = "尚未定位游戏主程序。请先到「检测」页定位游戏。";
+            DrsStateText.Text = Str.T("Str.LocateGameFirst");
             DrsApplyButton.IsEnabled = false;
             DrsRestoreButton.IsEnabled = false;
             return;
@@ -526,8 +526,8 @@ public partial class DisplayQualityView : UserControl
             _drsSyncing = false;
 
             DrsStateText.Text = _drsStatus ?? (s.Restorable
-                ? "已记录原值，可一键还原。"
-                : "当前未覆盖（跟随驱动/游戏默认）。选择后点「应用 3D 设置」。");
+                ? Str.T("Str.OriginalSaved")
+                : Str.T("Str.NotOverriddenDriver"));
             DrsApplyButton.IsEnabled = true;
             DrsRestoreButton.IsEnabled = s.Restorable;
         }
@@ -571,9 +571,9 @@ public partial class DisplayQualityView : UserControl
 
         // 桌面非笔电高端卡才推透明度 4x；默认 2x
         var desktopHighEnd = HardwareInfoService.IsDesktop && HardwareInfoService.IsHighEndNvidia;
-        var traaLabel = desktopHighEnd ? "超级采样 4x（检测到桌面高端 N 卡）" : "超级采样 2x";
+        var traaLabel = desktopHighEnd ? Str.T("Str.Supersample4x") : Str.T("Str.Supersample2x");
         var confirmed = DialogService.Confirm(
-            "一键竞技推荐",
+            Str.T("Str.OneClickEsports"),
             "将按社区高频组合写入当前游戏的 NVIDIA 驱动配置：\n\n" +
             "· 纹理过滤 · 质量：高质量\n" +
             "· 电源管理：最高性能优先\n" +
@@ -588,7 +588,7 @@ public partial class DisplayQualityView : UserControl
         _drsStatus = null;
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
-        DrsStateText.Text = "正在写入竞技推荐…";
+        DrsStateText.Text = Str.T("Str.WritingEsports");
         try
         {
             var exeName = Path.GetFileName(path);
@@ -597,8 +597,8 @@ public partial class DisplayQualityView : UserControl
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _drsStatus = "应用失败：写入 NVIDIA 配置需要管理员权限。";
-            if (DialogService.Confirm("需要管理员权限", "要以管理员身份重启并重试吗？", confirmText: "以管理员重启"))
+            _drsStatus = Str.T("Str.ApplyFailedNeedAdmin");
+            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.ConfirmRestartAdminRetry"), confirmText: Str.T("Str.RestartAsAdminShort")))
                 AdminHelper.RestartAsAdministrator();
         }
         catch (Exception ex)
@@ -620,7 +620,7 @@ public partial class DisplayQualityView : UserControl
             return;
 
         var confirmed = DialogService.Confirm(
-            "应用驱动 3D 设置",
+            Str.T("Str.ApplyDrsFull"),
             "将按所选值写入当前游戏的 NVIDIA 驱动配置。\n\n" +
             "· 不修改游戏文件，可随时「还原默认」\n" +
             "· 与 DLSS 覆盖共用备份，还原会一并恢复\n" +
@@ -633,7 +633,7 @@ public partial class DisplayQualityView : UserControl
         _drsStatus = null;
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
-        DrsStateText.Text = "正在写入…";
+        DrsStateText.Text = Str.T("Str.Writing");
         try
         {
             var exeName = Path.GetFileName(path);
@@ -673,12 +673,12 @@ public partial class DisplayQualityView : UserControl
                     _ => null,
                 });
             });
-            _drsStatus = "已应用 3D 设置。进游戏生效；不满意点「还原默认」。";
+            _drsStatus = Str.T("Str.DrsApplied");
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _drsStatus = "应用失败：写入 NVIDIA 配置需要管理员权限。";
-            if (DialogService.Confirm("需要管理员权限", "要以管理员身份重启并重试吗？", confirmText: "以管理员重启"))
+            _drsStatus = Str.T("Str.ApplyFailedNeedAdmin");
+            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.ConfirmRestartAdminRetry"), confirmText: Str.T("Str.RestartAsAdminShort")))
                 AdminHelper.RestartAsAdministrator();
         }
         catch (Exception ex)
@@ -699,14 +699,14 @@ public partial class DisplayQualityView : UserControl
         _drsStatus = null;
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
-        DrsStateText.Text = "正在还原…";
+        DrsStateText.Text = Str.T("Str.Restoring2");
         try
         {
             var exeName = Path.GetFileName(AppState.GamePath!);
             var restored = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
             _drsStatus = restored
-                ? "已还原：3D 设置与 DLSS 覆盖一并回到原值。"
-                : "没有找到需要还原的备份。";
+                ? Str.T("Str.DrsRestored")
+                : Str.T("Str.NothingToRestore");
         }
         catch (Exception ex)
         {

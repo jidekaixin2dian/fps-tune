@@ -11,13 +11,13 @@ public partial class WeChatQrWindow : Window
         InitializeComponent();
         var s = SettingsService.Current;
         if (!string.IsNullOrWhiteSpace(s.WeChat))
-            WeChatIdText.Text = "微信号：" + s.WeChat;
+            WeChatIdText.Text = Str.T("Str.WeChatIdLabel") + s.WeChat;
     }
 
     private void CopyWeChat_Click(object sender, RoutedEventArgs e)
     {
         Clipboard.SetText(SettingsService.Current.WeChat);
-        DialogService.Info("FPS 帧律", "微信号已复制。");
+        DialogService.Info(Str.T("Str.AppName"), Str.T("Str.WeChatIdCopied"));
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)

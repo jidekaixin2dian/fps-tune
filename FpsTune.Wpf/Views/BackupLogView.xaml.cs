@@ -29,16 +29,16 @@ public partial class BackupLogView : UserControl
 
     private async void ListBackup_Click(object sender, RoutedEventArgs e)
     {
-        StatusText.Text = "正在读取可还原项...";
+        StatusText.Text = Str.T("Str.LoadingRestorables");
         await Run(OptimizationEngine.ListRestoreAsync);
     }
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
     {
-        if (!DialogService.Confirm("还原确认", "确定要还原全部已备份的项目吗？", danger: true))
+        if (!DialogService.Confirm(Str.T("Str.RestoreConfirm"), Str.T("Str.ConfirmRestoreAll"), danger: true))
             return;
 
-        StatusText.Text = "正在还原...";
+        StatusText.Text = Str.T("Str.Restoring");
         await Run(OptimizationEngine.RestoreAsync);
     }
 
@@ -46,14 +46,14 @@ public partial class BackupLogView : UserControl
     {
         ListBackupButton.IsEnabled = false;
         RestoreAllButton.IsEnabled = false;
-        LogBox.Text = "正在执行...";
+        LogBox.Text = Str.T("Str.Executing");
         try
         {
             var result = await action();
             LogBox.Text = result.Success
                 ? result.Output
                 : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}\n\nSTDERR:\n{result.Error}";
-            StatusText.Text = result.Success ? "操作完成" : "操作失败";
+            StatusText.Text = result.Success ? Str.T("Str.OperationDone") : Str.T("Str.OperationFailed");
         }
         catch (Exception ex)
         {
@@ -89,7 +89,7 @@ public partial class BackupLogView : UserControl
         if (dialog.ShowDialog() == true)
         {
             System.IO.File.WriteAllText(dialog.FileName, LogBox.Text);
-            DialogService.Info("FPS 帧律", "日志已导出。");
+            DialogService.Info(Str.T("Str.AppName"), Str.T("Str.LogExported"));
         }
     }
 }

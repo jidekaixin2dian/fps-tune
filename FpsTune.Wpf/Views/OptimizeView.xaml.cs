@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
@@ -160,7 +160,7 @@ public partial class OptimizeView : UserControl
         _loadedFromState = AppState.Items.Count > 0;
         if (!_loadedFromState)
         {
-            SetPlain("暂无优化项，请先在检测页运行检测。");
+            SetPlain(Str.T("Str.NoItemsRunDetect"));
             return;
         }
 
@@ -194,7 +194,7 @@ public partial class OptimizeView : UserControl
     {
         if (AppState.Items.Count == 0)
         {
-            SetPlain("暂无优化项，请先在检测页运行检测。");
+            SetPlain(Str.T("Str.NoItemsRunDetect"));
             return;
         }
 
@@ -226,10 +226,10 @@ public partial class OptimizeView : UserControl
         }
 
         var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
-        var label = presetName == "full" ? "全部项目" : presetName == "safe-only" ? "保守优化" : "均衡推荐";
+        var label = presetName == "full" ? Str.T("Str.PresetFull") : presetName == "safe-only" ? Str.T("Str.PresetSafe") : Str.T("Str.PresetBalanced");
         SetPlain($"{label} · {selected.Count} 项\n\n" +
             "开关表示待应用的选择，不代表当前系统状态。手动调整会切换为自定义。\n\n" +
-            "点击项目查看当前状态与副作用。确认后在底部应用，执行结果也会显示在这里。");
+            Str.T("Str.ItemDetailHint"));
     }
 
     private void ShowSelectedItem()
@@ -255,7 +255,7 @@ public partial class OptimizeView : UserControl
     {
         if (ConsentCheck.IsChecked != true)
         {
-            DialogService.Warning("未确认", "请先勾选同意说明，再执行一键优化。");
+            DialogService.Warning("未确认", Str.T("Str.ConsentOneClick"));
             return;
         }
 
@@ -264,9 +264,9 @@ public partial class OptimizeView : UserControl
             && !AdminHelper.IsAdministrator())
         {
             var elevate = DialogService.Confirm(
-                "需要管理员权限",
+                Str.T("Str.NeedsAdmin"),
                 "一键优化的均衡档包含电源计划等需要管理员权限的项目。\n\n" +
-                "要以管理员身份重启并继续吗？",
+                Str.T("Str.ConfirmRestartAdmin"),
                 danger: false);
             if (elevate)
                 AdminHelper.RestartAsAdministrator();
@@ -274,20 +274,20 @@ public partial class OptimizeView : UserControl
         }
 
         var confirmed = DialogService.Confirm(
-            "一键优化",
+            Str.T("Str.OneClick"),
             "将一次应用：\n\n" +
             "① 均衡档系统层（含电源计划→卓越性能、游戏强制高性能 GPU）\n" +
             "② DLSS K 模型\n" +
             "③ 显卡 3D（1070 Ti 档）：纹理高质量 · 电源最高性能优先 · 透明度 2x · 预渲染 1 帧\n\n" +
-            "全部写入前自动备份，可「还原全部」。确定开始？",
-            confirmText: "开始");
+            Str.T("Str.ConfirmAllBackedUp"),
+            confirmText: Str.T("Str.Start"));
         if (!confirmed)
             return;
 
         OneClickButton.IsEnabled = false;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
-        SetPlain("正在一键优化...", "AccentBrush");
+        SetPlain(Str.T("Str.RunningOneClick"), "AccentBrush");
         try
         {
             var result = await OneClickOptimizer.ApplyAsync();
@@ -309,7 +309,7 @@ public partial class OptimizeView : UserControl
     {
         if (ConsentCheck.IsChecked != true)
         {
-            DialogService.Warning("未确认", "请先勾选同意说明，再执行应用。");
+            DialogService.Warning("未确认", Str.T("Str.ConsentApply"));
             return;
         }
 
@@ -320,10 +320,10 @@ public partial class OptimizeView : UserControl
             && !AdminHelper.IsAdministrator())
         {
             var elevate = DialogService.Confirm(
-                "需要管理员权限",
+                Str.T("Str.NeedsAdmin"),
                 "所选优化项中包含需要管理员权限的项目，而当前程序不是以管理员身份运行的。\n\n" +
                 "要以管理员身份重启并继续应用吗？\n\n" +
-                "如果只想修改无需管理员的项目，可以切换到 safe-only 预设。",
+                Str.T("Str.SwitchToSafeOnly"),
                 danger: false);
             if (elevate)
                 AdminHelper.RestartAsAdministrator();
@@ -332,13 +332,13 @@ public partial class OptimizeView : UserControl
 
         if (PresetCustom.IsChecked == true && Items.All(i => !i.IsChecked))
         {
-            DialogService.Info("提示", "请勾选至少一个优化项。");
+            DialogService.Info("提示", Str.T("Str.SelectAtLeastOneItem"));
             return;
         }
 
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
-        SetPlain("正在应用...", "AccentBrush");
+        SetPlain(Str.T("Str.Applying"), "AccentBrush");
 
         try
         {
@@ -372,17 +372,17 @@ public partial class OptimizeView : UserControl
         var backupCount = BackupService.ListBackups().Count;
         if (backupCount == 0)
         {
-            DialogService.Info("还原确认", "当前没有可还原的备份。");
+            DialogService.Info(Str.T("Str.RestoreConfirm"), Str.T("Str.NoRestorableBackups"));
             return;
         }
-        if (!DialogService.Confirm("还原确认",
+        if (!DialogService.Confirm(Str.T("Str.RestoreConfirm"),
                 $"共找到 {backupCount} 个备份文件，将把它们记录的全部系统改动逐项恢复为原值。\n\n确定继续吗？",
                 danger: true))
             return;
 
         RestoreButton.IsEnabled = false;
         ApplyButton.IsEnabled = false;
-        SetPlain("正在还原...", "AccentBrush");
+        SetPlain(Str.T("Str.Restoring"), "AccentBrush");
 
         try
         {
@@ -486,14 +486,14 @@ public partial class OptimizeView : UserControl
         }
 
         if (!string.IsNullOrWhiteSpace(vm.Description))
-            Line("说明", vm.Description);
+            Line(Str.T("Str.Description"), vm.Description);
         if (!string.IsNullOrWhiteSpace(vm.SideEffect))
-            Line("副作用", vm.SideEffect, "WarningBrush");
+            Line(Str.T("Str.SideEffect"), vm.SideEffect, "WarningBrush");
         if (!string.IsNullOrWhiteSpace(vm.Current))
-            Line("当前", vm.Current);
-        Line("状态", vm.StatusText, vm.Optimized ? "OkBrush" : "TextSecondaryBrush");
-        var req = (vm.RequiresAdmin ? "管理员" : "普通用户") + (vm.RequiresReboot ? "，需重启" : "");
-        Line("要求", req);
+            Line(Str.T("Str.Current"), vm.Current);
+        Line(Str.T("Str.Status"), vm.StatusText, vm.Optimized ? "OkBrush" : "TextSecondaryBrush");
+        var req = (vm.RequiresAdmin ? Str.T("Str.Admin") : Str.T("Str.NormalUser")) + (vm.RequiresReboot ? "，需重启" : "");
+        Line(Str.T("Str.Requirement"), req);
     }
 
     private void SetApplyResult(RunResult result)
@@ -502,7 +502,7 @@ public partial class OptimizeView : UserControl
         {
             ResetDoc();
             var head = NewPara(6);
-            head.Inlines.Add(R("执行失败 ", "DangerBrush", bold: true, size: 14));
+            head.Inlines.Add(R(Str.T("Str.ExecFailedSp"), "DangerBrush", bold: true, size: 14));
             head.Inlines.Add(R($"exit={result.ExitCode}", "TextMutedBrush", mono: true));
             OutputDoc.Blocks.Add(head);
             SetRawMonospace(string.Concat(
@@ -515,7 +515,7 @@ public partial class OptimizeView : UserControl
         {
             var root = System.Text.Json.Nodes.JsonNode.Parse(result.Output);
             if (root?["results"] is not System.Text.Json.Nodes.JsonArray results)
-                throw new InvalidOperationException("非结构化结果");
+                throw new InvalidOperationException(Str.T("Str.UnstructuredResult"));
 
             ResetDoc();
             var head = NewPara(8);
@@ -536,12 +536,12 @@ public partial class OptimizeView : UserControl
                 {
                     lastGroup = meta?.Group;
                     var gp = NewPara(3);
-                    gp.Inlines.Add(R("— " + CatalogGroups.Display(lastGroup ?? "其他") + " —", "TextMutedBrush", size: 11));
+                    gp.Inlines.Add(R("— " + CatalogGroups.Display(lastGroup ?? Str.T("Str.Other")) + " —", "TextMutedBrush", size: 11));
                     OutputDoc.Blocks.Add(gp);
                 }
 
                 var line = NewPara(3);
-                line.Inlines.Add(R(skipped ? "跳过 " : ok ? "成功 " : "失败 ",
+                line.Inlines.Add(R(skipped ? "跳过 " : ok ? Str.T("Str.SucceededSp") : Str.T("Str.FailedSp"),
                     skipped ? "TextMutedBrush" : ok ? "OkBrush" : "DangerBrush", bold: true));
                 line.Inlines.Add(R(id, "AccentBrush", mono: true));
                 line.Inlines.Add(R("  " + name, "TextPrimaryBrush"));
@@ -554,7 +554,7 @@ public partial class OptimizeView : UserControl
             if (!string.IsNullOrWhiteSpace(summary))
             {
                 var sp = NewPara(4);
-                sp.Inlines.Add(R("汇总  ", "TextMutedBrush"));
+                sp.Inlines.Add(R(Str.T("Str.SummarySp"), "TextMutedBrush"));
                 sp.Inlines.Add(R(summary, "TextSecondaryBrush"));
                 OutputDoc.Blocks.Add(sp);
             }
@@ -563,7 +563,7 @@ public partial class OptimizeView : UserControl
             if (!string.IsNullOrWhiteSpace(backup))
             {
                 var bp = NewPara(4);
-                bp.Inlines.Add(R("备份  ", "TextMutedBrush"));
+                bp.Inlines.Add(R(Str.T("Str.BackupSp"), "TextMutedBrush"));
                 bp.Inlines.Add(R(backup, "TextSecondaryBrush", mono: true, size: 11));
                 OutputDoc.Blocks.Add(bp);
             }
@@ -572,15 +572,15 @@ public partial class OptimizeView : UserControl
             {
                 var ids = reboot.Select(r2 => r2?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
                 var rp = NewPara(0);
-                rp.Inlines.Add(R("需重启  ", "WarningBrush", bold: true));
+                rp.Inlines.Add(R(Str.T("Str.NeedsRebootSp"), "WarningBrush", bold: true));
                 rp.Inlines.Add(R(string.Join("、", ids), "WarningBrush"));
                 OutputDoc.Blocks.Add(rp);
             }
 
             // 最小化在托盘时也第一时间知道执行结果
             TrayService.NotifyComplete(
-                "FPS 帧律 · 执行完成",
-                string.IsNullOrWhiteSpace(summary) ? "系统优化执行完成，改动已自动备份，可随时还原。" : summary);
+                Str.T("Str.AppNameDone"),
+                string.IsNullOrWhiteSpace(summary) ? Str.T("Str.OptimizeDone") : summary);
         }
         catch
         {
@@ -622,7 +622,7 @@ public partial class OptimizeView : UserControl
             vm.IsChecked = idSet.Contains(vm.Id);
 
         var selected = AppState.Items.Where(i => idSet.Contains(i.Id)).ToList();
-        SetItemListDoc("方案已载入", $"{idSet.Count} 项", selected);
+        SetItemListDoc(Str.T("Str.ProfileLoaded"), $"{idSet.Count} 项", selected);
     }
 
     private void ProfileSave_Click(object sender, RoutedEventArgs e)
@@ -630,20 +630,20 @@ public partial class OptimizeView : UserControl
         var name = CurrentProfileName;
         if (name.Length == 0)
         {
-            DialogService.Warning("配置方案", "请先在输入框填写方案名称。");
+            DialogService.Warning(Str.T("Str.Profiles"), Str.T("Str.EnterProfileName"));
             return;
         }
         var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
         if (ids.Count == 0)
         {
-            DialogService.Warning("配置方案", "当前没有勾选任何优化项。");
+            DialogService.Warning(Str.T("Str.Profiles"), Str.T("Str.NoItemsSelected"));
             return;
         }
 
         var profiles = ProfileStore.Load();
         var existing = profiles.FirstOrDefault(p => p.Name == name);
         if (existing is not null
-            && !DialogService.Confirm("配置方案", $"方案「{name}」已存在，覆盖？", danger: true))
+            && !DialogService.Confirm(Str.T("Str.Profiles"), $"方案「{name}」已存在，覆盖？", danger: true))
             return;
         profiles.RemoveAll(p => p.Name == name);
         profiles.Add(new OptProfile(name, ids));
@@ -659,12 +659,12 @@ public partial class OptimizeView : UserControl
         if (hit is null)
         {
             var names = profiles.Count == 0 ? "（尚无已保存方案）" : string.Join("、", profiles.Select(p => p.Name));
-            DialogService.Warning("配置方案", $"未找到方案「{name}」。已有：{names}");
+            DialogService.Warning(Str.T("Str.Profiles"), $"未找到方案「{name}」。已有：{names}");
             return;
         }
         if (hit.Ids is null || hit.Ids.Count == 0)
         {
-            DialogService.Warning("配置方案", $"方案「{name}」不包含任何优化项，可能是文件损坏，请删除后重建。");
+            DialogService.Warning(Str.T("Str.Profiles"), $"方案「{name}」不包含任何优化项，可能是文件损坏，请删除后重建。");
             return;
         }
         ApplyProfileIds(hit.Ids);
@@ -677,10 +677,10 @@ public partial class OptimizeView : UserControl
         var profiles = ProfileStore.Load();
         if (profiles.All(p => p.Name != name))
         {
-            DialogService.Warning("配置方案", $"未找到方案「{name}」。");
+            DialogService.Warning(Str.T("Str.Profiles"), $"未找到方案「{name}」。");
             return;
         }
-        if (!DialogService.Confirm("配置方案", $"删除方案「{name}」？", danger: true))
+        if (!DialogService.Confirm(Str.T("Str.Profiles"), $"删除方案「{name}」？", danger: true))
             return;
         profiles.RemoveAll(p => p.Name == name);
         ProfileStore.Save(profiles);
@@ -693,12 +693,12 @@ public partial class OptimizeView : UserControl
         var hit = ProfileStore.Load().FirstOrDefault(p => p.Name == name);
         if (hit is null)
         {
-            DialogService.Warning("配置方案", $"未找到方案「{name}」，无法导出。");
+            DialogService.Warning(Str.T("Str.Profiles"), $"未找到方案「{name}」，无法导出。");
             return;
         }
         var dlg = new Microsoft.Win32.SaveFileDialog
         {
-            Title = "导出配置方案",
+            Title = Str.T("Str.ExportProfile"),
             Filter = "FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json",
             FileName = name + ".fpsprofile.json"
         };
@@ -714,7 +714,7 @@ public partial class OptimizeView : UserControl
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
-            Title = "导入配置方案",
+            Title = Str.T("Str.ImportProfile"),
             Filter = "FPS 帧律方案 (*.fpsprofile.json)|*.fpsprofile.json|所有文件 (*.*)|*.*"
         };
         if (dlg.ShowDialog() != true)
@@ -727,7 +727,7 @@ public partial class OptimizeView : UserControl
             if (hit is null) return;
             var profiles = ProfileStore.Load();
             if (profiles.Any(p => p.Name == hit.Name)
-                && !DialogService.Confirm("配置方案", $"方案「{hit.Name}」已存在，覆盖？", danger: true))
+                && !DialogService.Confirm(Str.T("Str.Profiles"), $"方案「{hit.Name}」已存在，覆盖？", danger: true))
                 return;
             profiles.RemoveAll(p => p.Name == hit.Name);
             profiles.Add(hit);
@@ -739,6 +739,6 @@ public partial class OptimizeView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning("配置方案", "导入失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.Profiles"), "导入失败：" + ex.Message);
         }
     }}

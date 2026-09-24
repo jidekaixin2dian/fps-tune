@@ -37,7 +37,7 @@ public partial class FriendTestView : UserControl
     {
         if (string.IsNullOrWhiteSpace(SceneBox.Text))
         {
-            DialogService.Info("提示", "请填写场景/画质/设置。");
+            DialogService.Info("提示", Str.T("Str.FillSceneQuality"));
             return;
         }
 
@@ -57,7 +57,7 @@ public partial class FriendTestView : UserControl
 
         GenerateButton.IsEnabled = false;
         OpenOutputButton.IsEnabled = false;
-        PreviewBox.Text = "正在生成记录表...";
+        PreviewBox.Text = Str.T("Str.GeneratingRecord");
 
         try
         {
