@@ -10,7 +10,7 @@ namespace FpsTune.Wpf.Core;
 /// ② DLSS K 模型（社区常用）
 /// ③ 显卡 3D 按 **1070 Ti 档**（非 5070 Ti 桌面 4x 档）：纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1
 /// ④ 电源方案随均衡档 power-ultimate 一并应用
-/// 不伪装显卡型号（红线二）；「1070 Ti」指 3D 设置档位标签。
+/// 「1070 Ti」指 3D 设置档位标签，不是显卡型号。
 /// </summary>
 public static class OneClickOptimizer
 {

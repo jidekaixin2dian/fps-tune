@@ -257,7 +257,7 @@
     <s:String x:Key="Str.ExportDiagnostics">Export diagnostic report</s:String>
     <s:String x:Key="Str.SectionAbout">About</s:String>
     <s:String x:Key="Str.AboutLine1">FPS Tune is a system-level frame rate optimizer for Windows, aimed at all FPS games.</s:String>
-    <s:String x:Key="Str.AboutLine2">It only adjusts Windows system-level settings: it does not modify game files, inject into processes, interact with anti-cheat, disable boot virtualization or spoof the GPU. Every change is backed up before it is written and can be restored in one click.</s:String>
+    <s:String x:Key="Str.AboutLine2">It only adjusts Windows system-level settings: it does not modify game files, inject into processes, interact with anti-cheat or disable boot virtualization. Every change is backed up before it is written and can be restored in one click.</s:String>
     <s:String x:Key="Str.CheckUpdate">Check for updates</s:String>
     <s:String x:Key="Str.GitHubHome">GitHub page</s:String>
     <s:String x:Key="Str.NotChecked">Not checked</s:String>

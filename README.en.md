@@ -25,8 +25,8 @@ Version line 0.1 Beta: usable today, still converging; breaking changes are call
 |---|---|
 | Edits registry / power plans / service start types / boot config | Touches any file inside a game folder |
 | Backs up the original value first (including "did not exist") | Injects into processes, reads game memory |
-| Locates the game EXE for path-level adaptation | Interacts with anti-cheat, spoofs hardware |
-| Samples on your machine, conclusions from measurement | Toggles virtualization-based security, fakes GPU IDs |
+| Locates the game EXE for path-level adaptation | Interacts with anti-cheat |
+| Samples on your machine, conclusions from measurement | Toggles virtualization-based security |
 | Restores per item or all at once | Sends telemetry, downloads anything unasked |
 
 Not game-specific — works for *Delta Force*, *Counter-Strike 2*, *VALORANT*, *APEX*, *PUBG*,
