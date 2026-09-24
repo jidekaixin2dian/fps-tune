@@ -61,6 +61,12 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 270
      所以有实质改动要发版时，先 bump 版本号并 commit，再构建。
    - 部署前确认 `D:\FpsTune` 无进程占用；覆盖失败要如实报告，不要静默跳过。
    - 用户如明确说"不用备份"就整目录覆盖；否则先备份为 `D:\FpsTune-backup-YYYYMMDD`。
+   - **打标签口径（容易搞错，务必按此）**：`v<版本>-beta` 打在**产出该次构建的那个提交**上
+     （= 版本号提交 / 最后一次代码提交），**记录发布的文档提交排在其后、不打标签**。
+     实例：`v0.1.3-beta` 在 `29ed0ea`（版本提交），其后的 `c28e94f`（"记录已发布"）不在标签上。
+     所以 `RELEASE.md` 说的「最终提交」指**代码最终提交**，不是仓库 HEAD——
+     **文档提交晚于构建是正常且允许的**，不要为此重建产物。
+     判断方法：产物 `ProductVersion` 里的 SHA 就是该打标签的提交（`publish-release.ps1` 会打印它）。
 8. 推送 `main` 前向用户确认节奏；禁止 force push / 改写 `main` 已推送历史。`legacy/1.x` 只读冻结，不接受修复。
 
 产品红线在 `docs/ROADMAP.md` §产品定位（安全闭环 / 零侵入 / 数据说话 / 全 FPS 通用 / 可信透明）。
