@@ -11,18 +11,18 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="朋友测试" Style="{StaticResource SectionLabelStyle}"/>
-                <TextBlock Text="为朋友的机器生成一份优化前后对照记录，便于回访与收集反馈"
+                <TextBlock Text="{DynamicResource Str.NavFriend}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.FriendIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Button x:Name="GenerateButton"
-                        Content="生成记录表 →"
+                        Content="{DynamicResource Str.GenerateRecord}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         MinWidth="130" Margin="0,0,10,0"
                         Click="GenerateButton_Click"/>
                 <Button x:Name="OpenOutputButton"
-                        Content="打开输出目录"
+                        Content="{DynamicResource Str.OpenOutputDir}"
                         Style="{StaticResource SecondaryButtonStyle}"
                         MinWidth="120"
                         Click="OpenOutputButton_Click"/>
@@ -40,11 +40,11 @@
             <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                 <ScrollViewer x:Name="FormScroll" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="基础信息" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="昵称" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                        <TextBlock Text="{DynamicResource Str.BasicInfo}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.Nickname}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                         <TextBox x:Name="NameBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
 
-                        <TextBlock Text="场景 / 画质 / 设置" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                        <TextBlock Text="{DynamicResource Str.SceneQualitySettings}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                         <TextBox x:Name="SceneBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
 
                         <Grid>
@@ -54,11 +54,11 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="优化前平均 FPS" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                                <TextBlock Text="{DynamicResource Str.FpsBeforeAvg}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                                 <TextBox x:Name="BeforeAvgBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="优化前 1% low" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                                <TextBlock Text="{DynamicResource Str.FpsBeforeLow}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                                 <TextBox x:Name="BeforeP1Box" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
                             </StackPanel>
                         </Grid>
@@ -70,16 +70,16 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="优化后平均 FPS" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                                <TextBlock Text="{DynamicResource Str.FpsAfterAvg}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                                 <TextBox x:Name="AfterAvgBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="优化后 1% low" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                                <TextBlock Text="{DynamicResource Str.FpsAfterLow}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                                 <TextBox x:Name="AfterP1Box" Style="{StaticResource InputTextBoxStyle}" Margin="0,4,0,14"/>
                             </StackPanel>
                         </Grid>
 
-                        <TextBlock Text="备注" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
+                        <TextBlock Text="{DynamicResource Str.Remarks}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                         <!-- 多行输入框: 滚到边时把滚轮还给外层表单滚动, 由 code-behind 处理 -->
                         <TextBox x:Name="NotesBox"
                                  Style="{StaticResource InputTextBoxStyle}"
@@ -99,7 +99,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Markdown 预览" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Grid.Row="0" Text="{DynamicResource Str.MarkdownPreview}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBox Grid.Row="1"
                              x:Name="PreviewBox"
                              Style="{StaticResource MonoTextBoxStyle}"

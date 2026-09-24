@@ -1,7 +1,7 @@
 ﻿<Window x:Class="FpsTune.Wpf.Views.WeChatQrWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="微信二维码"
+        Title="{DynamicResource Str.WeChatQrTitle}"
         Width="340"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -29,7 +29,7 @@
         <StackPanel>
             <Grid Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="微信二维码"
+                    <TextBlock Text="{DynamicResource Str.WeChatQrTitle}"
                                FontSize="15" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="WeChatNameText"
@@ -57,18 +57,18 @@
             </Border>
 
             <TextBlock x:Name="WeChatIdText"
-                       Text="微信号：jiaxindeyang"
+                       Text="{DynamicResource Str.WeChatId}"
                        FontSize="12"
                        FontFamily="{StaticResource FontMono}"
                        Foreground="{DynamicResource TextMutedBrush}"
                        Margin="0,14,0,2"
                        HorizontalAlignment="Center"/>
-            <TextBlock Text="仅接受合作/反馈"
+            <TextBlock Text="{DynamicResource Str.WeChatPurpose}"
                        FontSize="11"
                        Foreground="{DynamicResource TextMutedBrush}"
                        Margin="0,0,0,14"
                        HorizontalAlignment="Center"/>
-            <Button Content="复制微信号"
+            <Button Content="{DynamicResource Str.CopyWeChatId}"
                     Style="{StaticResource PrimaryButtonStyle}"
                     MinWidth="132"
                     HorizontalAlignment="Center"

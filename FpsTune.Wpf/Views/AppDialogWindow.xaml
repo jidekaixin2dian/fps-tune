@@ -1,7 +1,7 @@
 ﻿<Window x:Class="FpsTune.Wpf.Views.AppDialogWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="FPS 帧律"
+        Title="{DynamicResource Str.AppName}"
         Width="420"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -48,12 +48,12 @@
                 </Border>
                 <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock x:Name="TitleTextBlock"
-                               Text="提示"
+                               Text="{DynamicResource Str.Prompt}"
                                FontSize="15"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="SubTextBlock"
-                               Text="FPS 帧律"
+                               Text="{DynamicResource Str.AppName}"
                                FontSize="11"
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,2,0,0"/>
@@ -72,13 +72,13 @@
                         HorizontalAlignment="Right"
                         Margin="0,22,0,0">
                 <Button x:Name="CancelButton"
-                        Content="取消"
+                        Content="{DynamicResource Str.Cancel}"
                         Style="{StaticResource SecondaryButtonStyle}"
                         MinWidth="88"
                         Margin="0,0,10,0"
                         Click="CancelButton_Click"/>
                 <Button x:Name="ConfirmButton"
-                        Content="确定"
+                        Content="{DynamicResource Str.Ok}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         MinWidth="88"
                         Click="ConfirmButton_Click"/>

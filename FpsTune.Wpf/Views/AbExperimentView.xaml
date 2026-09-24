@@ -18,18 +18,18 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="A/B 实验" Style="{StaticResource SectionLabelStyle}"/>
-                <TextBlock Text="向导式实验：先采基线，再依次测试三个候选组，每步可关联一次性能会话，结论只来自实际采样"
+                <TextBlock Text="{DynamicResource Str.NavAb}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.AbIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
              <Button x:Name="OpenDirButton"
-                     Content="打开实验目录"
+                     Content="{DynamicResource Str.OpenExperimentDir}"
                      Style="{StaticResource SecondaryButtonStyle}"
                      HorizontalAlignment="Right" VerticalAlignment="Bottom"
                      MinWidth="130"
                      Click="OpenDirButton_Click"/>
              <Button x:Name="CancelRunButton"
-                     Content="取消当前步骤"
+                     Content="{DynamicResource Str.CancelCurrentStep}"
                      Style="{StaticResource GhostButtonStyle}"
                      HorizontalAlignment="Right" VerticalAlignment="Bottom"
                      MinWidth="110" Margin="0,0,142,0"
@@ -40,7 +40,7 @@
         <!-- 向导步骤 -->
         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="实验向导 · WIZARD（每步在同一游戏场景内进行）" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.AbWizardTitle}" Style="{StaticResource CardTitleStyle}"/>
                 <ItemsControl x:Name="WizardStepsList" Margin="0,2,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -85,7 +85,7 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                                         <StackPanel Orientation="Horizontal" Margin="15,6,0,0">
-                                            <TextBlock Text="关联性能会话：" FontSize="11" VerticalAlignment="Center"
+                                            <TextBlock Text="{DynamicResource Str.LinkSession}" FontSize="11" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                             <ComboBox ItemsSource="{Binding SessionOptions}"
                                                       SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
@@ -119,7 +119,7 @@
                 <Ellipse Width="7" Height="7" Fill="{DynamicResource AccentBrush}"
                          HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <TextBlock x:Name="StatusText"
-                           Text="就绪。点击上方步骤开始采样。"
+                           Text="{DynamicResource Str.AbReady}"
                            FontSize="12.5"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource TextPrimaryBrush}"
@@ -142,7 +142,7 @@
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
-                        <TextBlock Text="平均 FPS" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.AvgFps}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="AvgFpsText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Margin="0,5,0,0"/>
                     </StackPanel>
                 </Border>
@@ -160,19 +160,19 @@
                 </Border>
                 <Border Grid.Column="3" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
-                        <TextBlock Text="卡顿" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.Stutter}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="StutterText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Foreground="{DynamicResource WarningBrush}" Margin="0,5,0,0"/>
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="4" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
-                        <TextBlock Text="波动 CV" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.CvJitter}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="CvText" Text="--" Style="{StaticResource StatValueStyle}" FontSize="19" Foreground="{DynamicResource AccentBrush}" Margin="0,5,0,0"/>
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="5" Padding="12,10">
                     <StackPanel>
-                        <TextBlock Text="结论" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.Verdict}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="DecisionText" Text="--" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource OkBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
@@ -187,24 +187,24 @@
                     <RowDefinition Height="210"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock Text="历史趋势" Style="{StaticResource CardTitleStyle}" Margin="0"/>
+                    <TextBlock Text="{DynamicResource Str.HistoryTrend}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="平均 FPS" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
+                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
                         <TextBlock Text="1% LOW" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                        <Button Content="刷新" Style="{StaticResource GhostButtonStyle}"
+                        <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Click="RefreshHistory_Click"/>
                     </StackPanel>
                 </Grid>
                 <Grid Grid.Row="1">
                     <Canvas x:Name="HistoryCanvas"/>
                     <TextBlock x:Name="HistoryEmptyText"
-                               Text="暂无历史数据。完成一次基线采样或候选组测试后，这里会画出均值与 1% low 的对比曲线。"
+                               Text="{DynamicResource Str.NoHistoryData}"
                                FontSize="12"
                                Foreground="{DynamicResource TextMutedBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -220,7 +220,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="原始输出" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Grid.Row="0" Text="{DynamicResource Str.RawOutput}" Style="{StaticResource CardTitleStyle}"/>
                 <!-- 根滚动布局下给固定高度, 内部自带滚动; 滚到边由 code-behind 还给页面 -->
                 <TextBox Grid.Row="1"
                          x:Name="RawBox"
@@ -228,7 +228,7 @@
                          IsReadOnly="True"
                          Height="150"
                          PreviewMouseWheel="RawBoxWheelToRoot"
-                         Text="等待采样..."/>
+                         Text="{DynamicResource Str.WaitingForSample}"/>
             </Grid>
         </Border>
     </Grid>

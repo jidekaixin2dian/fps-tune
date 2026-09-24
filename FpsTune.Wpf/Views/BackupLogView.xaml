@@ -12,20 +12,20 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="备份 / 日志" Style="{StaticResource SectionLabelStyle}"/>
-                <TextBlock Text="每一次系统改动的原值都在这里，随时逐项还原"
+                <TextBlock Text="{DynamicResource Str.NavBackup}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.BackupIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                <Button x:Name="ListBackupButton" Content="列出可还原项"
+                <Button x:Name="ListBackupButton" Content="{DynamicResource Str.ListRestorable}"
                         Style="{StaticResource SecondaryButtonStyle}"
                         MinWidth="126" Margin="0,0,8,0"
                         Click="ListBackup_Click"/>
-                <Button x:Name="RestoreAllButton" Content="还原全部"
+                <Button x:Name="RestoreAllButton" Content="{DynamicResource Str.RestoreAll}"
                         Style="{StaticResource DangerButtonStyle}"
                         MinWidth="106" Margin="0,0,8,0"
                         Click="RestoreAll_Click"/>
-                <Button Content="导出日志 →"
+                <Button Content="{DynamicResource Str.ExportLog}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         MinWidth="106"
                         Click="ExportLog_Click"/>
@@ -43,12 +43,12 @@
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="备份目录" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.BackupDir}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="BackupDirText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
                                FontFamily="{StaticResource FontMono}" FontSize="11"
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
-                    <Button Content="打开 →"
+                    <Button Content="{DynamicResource Str.OpenArrow}"
                             Style="{StaticResource GhostButtonStyle}"
                             MinWidth="60" Height="26" Padding="8,0"
                             HorizontalAlignment="Left" Margin="0,8,0,0"
@@ -57,12 +57,12 @@
             </Border>
             <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="GUI 临时目录" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.GuiTempDir}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="TempDirText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
                                FontFamily="{StaticResource FontMono}" FontSize="11"
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
-                    <Button Content="打开 →"
+                    <Button Content="{DynamicResource Str.OpenArrow}"
                             Style="{StaticResource GhostButtonStyle}"
                             MinWidth="60" Height="26" Padding="8,0"
                             HorizontalAlignment="Left" Margin="0,8,0,0"
@@ -71,8 +71,8 @@
             </Border>
             <Border Grid.Column="4" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="当前状态" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="StatusText" Text="等待操作"
+                    <TextBlock Text="{DynamicResource Str.CurrentStatus}" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock x:Name="StatusText" Text="{DynamicResource Str.WaitingAction}"
                                Foreground="{DynamicResource AccentBrush}"
                                FontFamily="{StaticResource FontMono}"
                                FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,0"/>
@@ -87,12 +87,12 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="日志 / JSON 输出" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Grid.Row="0" Text="{DynamicResource Str.LogJsonOutput}" Style="{StaticResource CardTitleStyle}"/>
                 <TextBox Grid.Row="1"
                          x:Name="LogBox"
                          Style="{StaticResource MonoTextBoxStyle}"
                          IsReadOnly="True"
-                         Text="点击上方按钮查看输出。"/>
+                         Text="{DynamicResource Str.ClickAboveForOutput}"/>
             </Grid>
         </Border>
     </Grid>

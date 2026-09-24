@@ -53,7 +53,7 @@ public partial class SettingsView : UserControl
         _suppressUiEvents = true;
         AutostartCheck.IsChecked = ReadAutostart();
         _suppressUiEvents = false;
-        VersionText.Text = "版本：v" + UpdateService.DisplayVersion;
+        VersionText.Text = Str.T("Str.VersionLabel") + UpdateService.DisplayVersion;
         RefreshAdminStatus();
     }
 

@@ -20,14 +20,14 @@
         <Border Grid.Row="0" Padding="28,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
             <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel Margin="0,0,20,0">
-                    <TextBlock x:Name="GameReadyTitle" Text="开局准备" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="GameReadyText" Text="定位游戏后，审阅基础设置并记录一局负载。" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="LocateDeltaButton" Content="定位游戏" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
-                    <Button x:Name="PrepareDeltaButton" Content="基础建议" Style="{StaticResource PrimaryButtonStyle}" MinWidth="104" Height="36" Margin="0,0,8,0" Click="PrepareDelta_Click" ToolTip="审阅游戏模式、后台录制和游戏显卡偏好；不会立即修改系统"/>
-                    <Button Content="记录一局" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="DeltaSession_Click" ToolTip="记录 CPU、GPU、内存负载，不等同于 FPS 测量"/>
-                    <Button Content="备份还原" Style="{StaticResource GhostButtonStyle}" MinWidth="88" Height="36" Click="DeltaRestore_Click"/>
+                    <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
+                    <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="104" Height="36" Margin="0,0,8,0" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.TipBasicAdvice}"/>
+                    <Button Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
+                    <Button Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" MinWidth="88" Height="36" Click="DeltaRestore_Click"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -41,7 +41,7 @@
             </Border>
             <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1">
                 <StackPanel>
-                    <TextBlock Text="内存" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
                     <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
                 </StackPanel>
@@ -55,7 +55,7 @@
             </Border>
             <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                 <StackPanel>
-                    <TextBlock Text="已达标项目" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>
                     <ProgressBar x:Name="TunedMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
                 </StackPanel>
@@ -64,17 +64,17 @@
         <Grid Grid.Row="2" Margin="28,0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="230"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="选择方案" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
-                <RadioButton x:Name="BalancedPreset" Content="均衡" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
-                <RadioButton Content="保守" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
-                <RadioButton x:Name="CustomPreset" Content="自定义" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
+                <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
+                <RadioButton x:Name="BalancedPreset" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
+                <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
+                <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
             </StackPanel>
             <TextBox x:Name="SearchBox" Grid.Column="2" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
-                     ToolTip="按中文名称搜索优化项" AutomationProperties.Name="搜索优化项" TextChanged="Search_TextChanged"/>
-            <TextBlock Grid.Column="2" Text="搜索优化项" Margin="11,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource TextMutedBrush}">
+                     ToolTip="{DynamicResource Str.TipSearchItems}" AutomationProperties.Name="{DynamicResource Str.SearchItemsShort}" TextChanged="Search_TextChanged"/>
+            <TextBlock Grid.Column="2" Text="{DynamicResource Str.SearchItemsShort}" Margin="11,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource TextMutedBrush}">
                 <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
             </TextBlock>
-            <Button Grid.Column="3" x:Name="RefreshButton" Content="重新检测" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
+            <Button Grid.Column="3" x:Name="RefreshButton" Content="{DynamicResource Str.Redetect}" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
         </Grid>
         <ListBox x:Name="ItemList" Grid.Row="3" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -98,17 +98,17 @@
                         <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
                         <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
                             <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
-                            <TextBlock Text="{Binding Item.SideEffect, StringFormat=注意：{0}}" Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
+                            <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
-                                       Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"/>
+                                       Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect}"/></TextBlock>
                         </StackPanel>
-                        <TextBlock Grid.Column="3" Text="需管理员" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
+                        <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
                                    Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="12" VerticalAlignment="Center">
                             <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                         </TextBlock>
                         <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
-                                  ToolTip="选择此项，审阅后再应用" AutomationProperties.Name="{Binding Item.Name, StringFormat=选择：{0}}"/>
+                                  ToolTip="{DynamicResource Str.TipSelectItem}" AutomationProperties.Name="{Binding Item.Name}"/>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -117,10 +117,10 @@
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock x:Name="SelectionText" Text="正在准备优化项…" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="StateText" Text="开关仅选择项目，审阅后执行；修改前自动备份。" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
-                <Button Grid.Column="1" x:Name="ReviewButton" Content="审阅并应用 →" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
+                <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
             </Grid>
         </Border>
     </Grid>

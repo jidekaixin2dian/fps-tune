@@ -16,8 +16,8 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="性能会话" Style="{StaticResource SectionLabelStyle}"/>
-                <TextBlock Text="开始一次本地采样，记录 CPU / 内存 / GPU / 显存曲线与摘要；数据只保存在本机"
+                <TextBlock Text="{DynamicResource Str.NavSession}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.SessionIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
         </Grid>
@@ -25,7 +25,7 @@
         <!-- 采样控制 -->
         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="采样控制" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.SamplingControl}" Style="{StaticResource CardTitleStyle}"/>
                 <Grid Margin="0,2,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -36,22 +36,22 @@
                              VerticalContentAlignment="Center"
                              MaxLength="60"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
-                        <Button x:Name="StartButton" Content="开始会话"
+                        <Button x:Name="StartButton" Content="{DynamicResource Str.StartSession}"
                                 Style="{StaticResource PrimaryButtonStyle}"
                                 MinWidth="110" Margin="0,0,8,0"
                                 Click="Start_Click"/>
-                        <Button x:Name="StopButton" Content="停止并保存"
+                        <Button x:Name="StopButton" Content="{DynamicResource Str.StopAndSave}"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 MinWidth="110" Margin="0,0,8,0" IsEnabled="False"
                                 Click="Stop_Click"/>
-                        <Button x:Name="CancelButton" Content="取消"
+                        <Button x:Name="CancelButton" Content="{DynamicResource Str.Cancel}"
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="64" IsEnabled="False"
                                 Click="Cancel_Click"/>
                     </StackPanel>
                 </Grid>
                 <TextBlock x:Name="RunStateText"
-                           Text="就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。"
+                           Text="{DynamicResource Str.SessionReady}"
                            Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap"
                            Margin="0,10,0,0"/>
             </StackPanel>
@@ -79,7 +79,7 @@
                 <Border Grid.Column="1" Padding="14,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
                         <Grid>
-                            <TextBlock Text="内存" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="MemNowText" Text="--" Style="{StaticResource StatValueStyle}"
                                        FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
@@ -99,7 +99,7 @@
                 <Border Grid.Column="3" Padding="14,12" ToolTipService.ShowOnDisabled="True">
                     <StackPanel>
                         <Grid>
-                            <TextBlock Text="显存（专用）" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock Text="{DynamicResource Str.VramDedicatedShort}" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="VramNowText" Text="--" Style="{StaticResource StatValueStyle}"
                                        FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
@@ -113,10 +113,10 @@
         <!-- 性能洞察 -->
         <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock Text="性能洞察" Style="{StaticResource CardTitleStyle}"/>
-                <TextBlock Text="以下为启发式判断：仅描述采样期间信号的相关性，不代表因果，也不预测 FPS 提升。"
+                <TextBlock Text="{DynamicResource Str.PerformanceInsights}" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.InsightsDisclaimer}"
                            Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,0"/>
-                <TextBlock x:Name="InsightTargetText" Text="选择历史会话或完成一次采样后显示。"
+                <TextBlock x:Name="InsightTargetText" Text="{DynamicResource Str.SelectSessionHint}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
                 <ItemsControl x:Name="InsightList" Margin="0,10,0,0">
                     <ItemsControl.ItemTemplate>
@@ -167,17 +167,17 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,10,10">
-                    <TextBlock Text="历史会话" Style="{StaticResource CardTitleStyle}" Margin="0"/>
+                    <TextBlock Text="{DynamicResource Str.HistorySessions}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="刷新" Style="{StaticResource GhostButtonStyle}"
+                        <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Margin="0,0,8,0" Click="Refresh_Click"/>
-                        <Button x:Name="ExportJsonButton" Content="导出 JSON"
+                        <Button x:Name="ExportJsonButton" Content="{DynamicResource Str.ExportJson}"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 MinWidth="92" Margin="0,0,8,0" IsEnabled="False" Click="ExportJson_Click"/>
-                        <Button x:Name="ExportCsvButton" Content="导出 CSV"
+                        <Button x:Name="ExportCsvButton" Content="{DynamicResource Str.ExportCsv}"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 MinWidth="92" Margin="0,0,8,0" IsEnabled="False" Click="ExportCsv_Click"/>
-                        <Button x:Name="DeleteButton" Content="删除所选"
+                        <Button x:Name="DeleteButton" Content="{DynamicResource Str.DeleteSelected}"
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="76" IsEnabled="False" Click="Delete_Click"/>
                     </StackPanel>
@@ -210,7 +210,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <TextBlock x:Name="HistoryEmptyText" Grid.Row="1"
-                           Text="还没有保存的会话。开始一次采样并停止后，会话会保存在本机数据目录。"
+                           Text="{DynamicResource Str.NoSessionsYet}"
                            FontSize="12" Foreground="{DynamicResource TextMutedBrush}"
                            HorizontalAlignment="Center" Margin="0,18,0,18" TextWrapping="Wrap" MaxWidth="460"
                            TextAlignment="Center"/>
@@ -220,7 +220,7 @@
         <!-- 并排比较 -->
         <Border Grid.Row="5" Style="{StaticResource CardStyle}">
             <StackPanel>
-                <TextBlock Text="会话比较" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.SessionCompare}" Style="{StaticResource CardTitleStyle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                     <ComboBox x:Name="CompareA" Style="{StaticResource SelectComboBoxStyle}"
                               MinHeight="34" Width="240" MaxWidth="240" Margin="0,0,10,0"
@@ -243,7 +243,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
-                <TextBlock x:Name="CompareHint" Text="选择两个会话进行并排比较。" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,8,0,0"/>
+                <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,8,0,0"/>
                 <ItemsControl x:Name="CompareRows" Margin="0,10,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>

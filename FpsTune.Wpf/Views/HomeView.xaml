@@ -12,7 +12,7 @@
 
         <!-- 页头：mono 标签 + 联系方式（联系条目由 code-behind 动态填充） -->
         <Grid Grid.Row="0" Margin="0,0,0,6">
-            <TextBlock Text="概览"
+            <TextBlock Text="{DynamicResource Str.NavHome}"
                        Style="{StaticResource SectionLabelStyle}"
                        VerticalAlignment="Center"/>
             <StackPanel x:Name="ContactPanel"
@@ -28,11 +28,11 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
-                <TextBlock Text="系统层帧率优化控制台"
+                <TextBlock Text="{DynamicResource Str.HomeTitle}"
                            FontSize="26" FontWeight="SemiBold"
                            FontFamily="{StaticResource FontDisplay}"
                            Foreground="{DynamicResource TextPrimaryBrush}"/>
-                <TextBlock Text="检测 → 解释 → 确认 → 执行 → 还原 · 不碰游戏文件 · 不注入进程 · 所有改动可还原"
+                <TextBlock Text="{DynamicResource Str.HomeSubtitle}"
                            FontSize="12.5"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,8,0,0"/>
@@ -55,7 +55,7 @@
             </StackPanel>
             <Button x:Name="StartOptimizeButton"
                     Grid.Column="1"
-                    Content="开始检测 →"
+                    Content="{DynamicResource Str.StartDetect}"
                     Style="{StaticResource PrimaryButtonStyle}"
                     MinWidth="132"
                     VerticalAlignment="Center"
@@ -76,8 +76,8 @@
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="检测" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="硬件信息、游戏路径、体检和优化项状态，只读不改" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.NavDetect}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Str.HomeDetectDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -91,8 +91,8 @@
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="优化" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock x:Name="OptCardSummary" Text="预设与逐项开关、系统层优化、一键还原" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.NavOpt}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock x:Name="OptCardSummary" Text="{DynamicResource Str.HomeOptDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -106,8 +106,8 @@
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="性能会话" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="本地采样 CPU / 内存 / GPU / 显存，生成摘要、洞察与对比" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.NavSession}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Str.HomeSessionDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -121,8 +121,8 @@
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="A/B 实验" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="基线采样、候选组对比、保留或还原决策" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.NavAb}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Str.HomeAbDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -136,8 +136,8 @@
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="朋友测试" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="生成优化前后帧率对比记录表" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.NavFriend}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Str.HomeFriendDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -151,8 +151,8 @@
                                FontFamily="{StaticResource FontMono}" FontSize="15"
                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top"/>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="备份 / 日志" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="备份文件、还原全部、日志和 JSON 输出" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.NavBackup}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Str.HomeBackupDesc}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
