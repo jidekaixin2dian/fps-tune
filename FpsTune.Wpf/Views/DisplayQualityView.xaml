@@ -29,6 +29,11 @@
             <Setter Property="Margin" Value="0,3,0,0"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+        <!-- 手动清单条目：继承全局 MutedTextStyle，统一行距与换行 -->
+        <Style x:Key="ManualItem" TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
+            <Setter Property="Margin" Value="0,6,0,0"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,22,28,24" MaxWidth="1060" HorizontalAlignment="Left">
@@ -374,6 +379,51 @@
                                Margin="0,10,0,0" TextWrapping="Wrap"/>
                     <TextBlock x:Name="DriverAdviceSourceText" Text="" Style="{StaticResource MutedTextStyle}"
                                Margin="0,10,0,0" TextWrapping="Wrap" FontSize="11.5"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 驱动内手动设置清单（P2-8）：按厂商生成，只读指引，不代改任何设置 -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Str.ManualCard}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.ManualIntro}"
+                               Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="ManualGpuText" Text="" Style="{StaticResource MutedTextStyle}"
+                               Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                    <!-- N 卡：驱动 3D 设置卡已自动化，无需手动清单 -->
+                    <TextBlock x:Name="ManualNvidiaText" Text="{DynamicResource Str.ManualNvidiaBody}"
+                               Style="{StaticResource ManualItem}" Visibility="Collapsed"/>
+
+                    <!-- A 卡：Adrenalin 手动清单 -->
+                    <StackPanel x:Name="ManualAmdPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                        <TextBlock Text="{DynamicResource Str.ManualAmdEntry}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem1}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem2}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem3}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem4}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem5}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem6}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdItem7}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualAmdNote}" Style="{StaticResource ManualItem}" FontSize="11.5"/>
+                    </StackPanel>
+
+                    <!-- Intel：Graphics Software 手动清单 -->
+                    <StackPanel x:Name="ManualIntelPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                        <TextBlock Text="{DynamicResource Str.ManualIntelEntry}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualIntelItem1}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualIntelItem2}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualIntelItem3}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualIntelItem4}" Style="{StaticResource ManualItem}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualIntelNote}" Style="{StaticResource ManualItem}" FontSize="11.5"/>
+                    </StackPanel>
+
+                    <!-- 识别不出厂商：明说，指向 ICC 兜底 -->
+                    <TextBlock x:Name="ManualUnknownText" Text="{DynamicResource Str.ManualUnknownBody}"
+                               Style="{StaticResource ManualItem}" Visibility="Collapsed"/>
+
+                    <TextBlock Text="{DynamicResource Str.ManualFooter}"
+                               Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="11.5"/>
                 </StackPanel>
             </Border>
 

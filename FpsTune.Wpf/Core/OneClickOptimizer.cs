@@ -69,7 +69,7 @@ public static class OneClickOptimizer
         {
             sb.AppendLine();
             sb.AppendLine("== 显卡 3D（1070 Ti 档）==");
-            sb.AppendLine("[跳过] 未检测到 NVIDIA 驱动（A 卡/Intel 请用显示页 ICC 滤镜）。");
+            sb.AppendLine("[跳过] 未检测到 NVIDIA 驱动（A 卡/Intel 可看显示页「驱动内手动设置清单」+ ICC 滤镜）。");
             return new RunResult(exit, sb.ToString(), "");
         }
 

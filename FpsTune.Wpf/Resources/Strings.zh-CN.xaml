@@ -566,4 +566,27 @@
     <s:String x:Key="Str.DriverNoStable">暂无公认稳定版</s:String>
     <s:String x:Key="Str.DriverNoAdvice">未能识别为 NVIDIA 显卡，暂无驱动版本建议。</s:String>
     <s:String x:Key="Str.DriverSource">来源：社区共识（什么值得买 2026-01-23），非官方推荐；版本会随时间变化，请以 NVIDIA 官网为准。本工具不下载也不安装驱动。</s:String>
+
+    <!-- 驱动内手动设置清单（按厂商生成；只读指引，不代改设置、不承诺帧数） -->
+    <s:String x:Key="Str.ManualCard">驱动内手动设置清单</s:String>
+    <s:String x:Key="Str.ManualIntro">下面这些设置在显卡驱动自己的控制面板里，由你手动调；本工具不代改（只读指引）。按你的显卡厂商看对应部分即可。</s:String>
+    <s:String x:Key="Str.ManualGpuLabel">当前显卡：</s:String>
+    <s:String x:Key="Str.ManualNvidiaBody">N 卡无需手动逐项调：纹理过滤、电源管理、低延迟、垂直同步、各向异性、着色器缓存等驱动 3D 设置，已可由本页上方「驱动 3D 设置」卡自动写入并还原。</s:String>
+    <s:String x:Key="Str.ManualAmdEntry">入口：AMD Software：Adrenalin 版 →「游戏 → 图形」是全局设置；每个游戏还能在其配置文件里单独设置（优先于全局）。</s:String>
+    <s:String x:Key="Str.ManualAmdItem1">Radeon™ Anti-Lag：竞技类建议开，降低输入延迟；Anti-Lag 2 只在支持它的游戏里出现。</s:String>
+    <s:String x:Key="Str.ManualAmdItem2">等待垂直刷新（垂直同步）：无撕裂困扰选「关闭，除非应用程序指定」；怕撕裂选「始终开启」。开 FreeSync 后撕裂会被明显缓解，两者按喜好组合。</s:String>
+    <s:String x:Key="Str.ManualAmdItem3">AMD FreeSync：显示器支持就开（先在显示器自己的菜单里启用）。</s:String>
+    <s:String x:Key="Str.ManualAmdItem4">Radeon™ Chill：按帧率上限省电的取向，追求帧率或低延迟时关。</s:String>
+    <s:String x:Key="Str.ManualAmdItem5">Radeon™ 增强同步：帧率明显高于刷新率时的可选折中，代价是可能撕裂；不确定就关。</s:String>
+    <s:String x:Key="Str.ManualAmdItem6">Radeon™ 图像锐化：口味项，开销小，按喜好调。</s:String>
+    <s:String x:Key="Str.ManualAmdItem7">各向异性过滤 / 纹理过滤质量：现代显卡保持默认即可，很少成为瓶颈。</s:String>
+    <s:String x:Key="Str.ManualAmdNote">以上是取向说明，不是 AMD 官方推荐；名称与位置随驱动版本可能不同，以你机器上的 Adrenalin 界面为准。</s:String>
+    <s:String x:Key="Str.ManualIntelEntry">入口：Intel® Graphics Software（2024 起逐步替代 Arc Control / 核显控制中心，界面名称随驱动版本有差异）。</s:String>
+    <s:String x:Key="Str.ManualIntelItem1">驱动保持更新：Intel 对 Arc®/Xe 的游戏优化随驱动发布频繁，升级驱动常比逐项调设置更有效（以官网发布说明为准）。</s:String>
+    <s:String x:Key="Str.ManualIntelItem2">Smooth Sync（平滑同步）：用轻微模糊掩盖撕裂的折中，延迟比垂直同步低；在意清晰度就别开，部分 DX11 游戏可能不生效。</s:String>
+    <s:String x:Key="Str.ManualIntelItem3">电源：核显 / 移动端优先把 Windows 电源模式与驱动电源页都设为性能取向（插电时尤其）。</s:String>
+    <s:String x:Key="Str.ManualIntelItem4">核显性能依赖系统内存带宽：双通道内存是基本前提，单通道先补这个。</s:String>
+    <s:String x:Key="Str.ManualIntelNote">以上是取向说明，不是 Intel 官方推荐；名称与位置随机型与驱动版本可能不同。</s:String>
+    <s:String x:Key="Str.ManualUnknownBody">未能识别显卡厂商。可打开显卡自带的控制面板查看可调项；画面取向可先用本页「ICC 滤镜」兜底。</s:String>
+    <s:String x:Key="Str.ManualFooter">本清单为只读指引：只说明设置位置与取向，不代替你修改设置，也不承诺帧数收益。依据厂商官方文档与社区共识整理（2026-09 查证），非官方推荐。</s:String>
 </ResourceDictionary>

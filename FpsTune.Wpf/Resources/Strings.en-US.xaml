@@ -566,4 +566,27 @@
     <s:String x:Key="Str.DriverNoStable">no community-agreed stable version yet</s:String>
     <s:String x:Key="Str.DriverNoAdvice">Not recognised as an NVIDIA GPU, so there is no driver version advice.</s:String>
     <s:String x:Key="Str.DriverSource">Source: community consensus (SMZDM, 2026-01-23) — not an official recommendation. Versions change over time, so always check NVIDIA's own site. This tool never downloads or installs drivers.</s:String>
+
+    <!-- In-driver manual settings checklist (per vendor; read-only guidance) -->
+    <s:String x:Key="Str.ManualCard">In-driver manual settings checklist</s:String>
+    <s:String x:Key="Str.ManualIntro">These settings live in your GPU driver's own control panel and you change them by hand; this tool never modifies them (read-only guidance). Read the section for your GPU vendor.</s:String>
+    <s:String x:Key="Str.ManualGpuLabel">Current GPU: </s:String>
+    <s:String x:Key="Str.ManualNvidiaBody">No manual checklist needed for NVIDIA: the driver 3D settings (texture filtering, power management, low latency, VSync, anisotropic filtering, shader cache) can already be written and restored by the "Driver 3D settings" card above.</s:String>
+    <s:String x:Key="Str.ManualAmdEntry">Where: AMD Software: Adrenalin Edition → "Gaming → Graphics" holds global settings; each game has its own profile that overrides the globals.</s:String>
+    <s:String x:Key="Str.ManualAmdItem1">Radeon™ Anti-Lag: recommended on for competitive play to cut input lag; Anti-Lag 2 only appears in games that support it.</s:String>
+    <s:String x:Key="Str.ManualAmdItem2">Wait for Vertical Refresh (VSync): "Off, unless application specifies" if tearing doesn't bother you; "Always on" if it does. With FreeSync enabled, tearing is largely masked either way — combine to taste.</s:String>
+    <s:String x:Key="Str.ManualAmdItem3">AMD FreeSync: enable it if your monitor supports it (turn it on in the monitor's own menu first).</s:String>
+    <s:String x:Key="Str.ManualAmdItem4">Radeon™ Chill: a power-saving frame cap; turn it off when chasing frame rate or low latency.</s:String>
+    <s:String x:Key="Str.ManualAmdItem5">Radeon™ Enhanced Sync: an optional middle ground when FPS far exceeds the refresh rate, at the cost of possible tearing; when in doubt, leave it off.</s:String>
+    <s:String x:Key="Str.ManualAmdItem6">Radeon™ Image Sharpening: a taste option with small overhead — adjust to your liking.</s:String>
+    <s:String x:Key="Str.ManualAmdItem7">Anisotropic Filtering / Texture Filtering Quality: modern GPUs can just keep the defaults; rarely a bottleneck.</s:String>
+    <s:String x:Key="Str.ManualAmdNote">These are orientation notes, not an official AMD recommendation; names and locations may vary with driver versions — your installed Adrenalin UI is authoritative.</s:String>
+    <s:String x:Key="Str.ManualIntelEntry">Where: Intel® Graphics Software (replacing Arc Control / the older command center since 2024; UI names vary by driver version).</s:String>
+    <s:String x:Key="Str.ManualIntelItem1">Keep the driver up to date: Intel ships frequent gaming optimizations for Arc®/Xe in driver releases; updating often beats tweaking individual settings (see the official release notes).</s:String>
+    <s:String x:Key="Str.ManualIntelItem2">Smooth Sync: a middle ground that hides tearing with a slight blur, at lower latency than V-Sync; skip it if clarity matters more, and it may not work in some DX11 games.</s:String>
+    <s:String x:Key="Str.ManualIntelItem3">Power: for integrated / mobile GPUs, set both the Windows power mode and the driver's power page toward performance (especially on AC power).</s:String>
+    <s:String x:Key="Str.ManualIntelItem4">iGPU performance depends on system memory bandwidth: dual-channel memory is the baseline — fix that first if you're on a single stick.</s:String>
+    <s:String x:Key="Str.ManualIntelNote">These are orientation notes, not an official Intel recommendation; names and locations vary by machine and driver version.</s:String>
+    <s:String x:Key="Str.ManualUnknownBody">Could not identify the GPU vendor. Open your GPU's own control panel to see what's adjustable; for on-screen look, the "ICC filter" card on this page is a vendor-neutral fallback.</s:String>
+    <s:String x:Key="Str.ManualFooter">This checklist is read-only guidance: it only explains where settings are and what they do — the tool never changes them, and no frame-rate gains are promised. Compiled from vendor documentation and community consensus (verified 2026-09); not an official recommendation.</s:String>
 </ResourceDictionary>

@@ -36,6 +36,7 @@ public partial class DisplayQualityView : UserControl
         RefreshIcc();
         RefreshDrs();
         RefreshDriverAdvice();
+        RefreshManualChecklist();
     }
 
     /// <summary>
@@ -64,6 +65,22 @@ public partial class DisplayQualityView : UserControl
             sb.AppendLine(Str.T("Str.DriverAltLabel") + advice.Alternatives);
         sb.Append(advice.Note);
         DriverAdviceText.Text = sb.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// 驱动内手动设置清单（P2-8）：按显卡厂商切换卡片内容，纯只读指引。
+    /// 认不出厂商就明说（Unknown 分支），不猜——与 <see cref="GpuDriverAdvisor"/> 同一口径。
+    /// </summary>
+    private void RefreshManualChecklist()
+    {
+        var gpu = HardwareInfoService.Get().Gpu;
+        ManualGpuText.Text = Str.T("Str.ManualGpuLabel") + gpu;
+
+        var vendor = GpuVendor.Of(gpu);
+        ManualAmdPanel.Visibility = vendor == GpuVendorKind.Amd ? Visibility.Visible : Visibility.Collapsed;
+        ManualIntelPanel.Visibility = vendor == GpuVendorKind.Intel ? Visibility.Visible : Visibility.Collapsed;
+        ManualNvidiaText.Visibility = vendor == GpuVendorKind.Nvidia ? Visibility.Visible : Visibility.Collapsed;
+        ManualUnknownText.Visibility = vendor == GpuVendorKind.Unknown ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void RefreshDlss()
