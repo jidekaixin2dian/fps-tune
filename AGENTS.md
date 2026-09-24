@@ -49,20 +49,30 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 266
 
 ## 哪些文件是权威
 
+> **不确定某份文档是"现状"还是"历史存档"，先查 `docs/README.md`（文档总索引）。**
+
 | 想查 | 看这里 | 陷阱 |
 |---|---|---|
+| **文档总索引** | `docs/README.md` | 按角色给出「先读什么」；现状 vs 存档分界 |
 | 优化项与预设 | `catalog/catalog.json` | 唯一数据源；GUI/CLI 都读它 |
 | 版本号 | `Directory.Build.props` | 不是 csproj，也不是 README |
 | 发版流程 | `RELEASE.md` | 必须从干净最终提交构建 |
-| 当前状态 / 待办 | `docs/HANDOFF.md` | 比 `docs/ROADMAP.md` 新 |
-| 0.1.2 功能计划 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3 |
+| 当前状态 / 待办 | `docs/HANDOFF.md` | 比 `docs/ROADMAP.md` 新；**现状数字以它为准** |
+| 产品方向 / 五条红线 | `docs/ROADMAP.md` | 现状基线段落已校准，但数字仍以 HANDOFF 为准 |
+| 0.1.x 功能设计依据 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3（**均已发布**） |
 | 待办总表（P0–P2） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；HANDOFF §5 与它对齐 |
+| P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | 已调研未实施；含硬约束与踩坑点 |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
+| 1.x 历史存档 | `docs/archive/` | **不代表现状**；路径/版本/依赖都可能过期 |
 
-`docs/` 下带版本号的文档（`RELEASE-v1.6.2.md`、`REVIEW-1.6.1.md`、`OPTIMIZE-CONSOLE-REVIEW.md` 等）
-是 **1.x 版本线的存档**，其中"需要 .NET 8"之类的表述已过时，不要当作现状。
+`docs/` 根下只放**现状文档**（`HANDOFF.md` / `ROADMAP.md` / `README.md` 索引）。
+
+`docs/` 根下只放**现状文档**（`HANDOFF.md` / `ROADMAP.md` / `README.md` 索引）。
+1.x 版本线的存档（`RELEASE-v1.6.2.md`、`REVIEW-1.6.1.md`、`OPTIMIZE-CONSOLE-REVIEW.md` 等）
+已移入 **`docs/archive/`**，其中"需要 .NET 8"之类的表述已过时，不要当作现状。
 1.x 代码在分支 **`legacy/1.x`**（= tag `v1.6.2`），**停止维护**；不要往那条分支修 bug 或发版。
+**文档总索引见 `docs/README.md`**——不确定某份文档是现状还是存档，先查那里。
 
 ## 环境事实
 

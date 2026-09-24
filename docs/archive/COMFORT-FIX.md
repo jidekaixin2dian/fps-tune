@@ -18,4 +18,4 @@
 - 完整回归测试 185 / 185 通过。
 - 独立 STA 验证使用真实 App 资源与 OptimizeView：首次分组加载、移动当前位置、重复加载、更新快照和保留自定义勾选全部通过。
 - 本地验证代码和结果保留在 review-output/optimize-probe，测试日志位于 review-output/console-refresh/comfort.trx。
-- 生图按本轮请求重试两次，两次均连接失败，无候选图片产生，也未替换现有图标。可直接使用 docs/ICON-PROMPT.md 中的提示词。
+- 生图按本轮请求重试两次，两次均连接失败，无候选图片产生，也未替换现有图标。可直接使用同目录 `ICON-PROMPT.md` 中的提示词。

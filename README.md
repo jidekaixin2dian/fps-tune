@@ -127,7 +127,8 @@ FpsTune.Wpf/
 FpsTune.Wpf.Tests/            单元测试（含 catalog 一致性守卫）
 tools/friend-test.ps1         朋友测试记录脚本（GUI 调用）
 installer/                    Inno Setup 打包
-docs/                         路线图与设计 / 评审记录
+docs/                         现状文档（HANDOFF / ROADMAP / README 索引）
+  dev/                        计划与开发纪律；archive/  1.x 历史存档（不代表现状）
 ```
 
 GUI 与 CLI 共用同一份 C# 引擎与数据，加载即校验。
@@ -156,7 +157,12 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 .\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json   # 无副作用冒烟
 ```
 
-发版流程见 `RELEASE.md`，产品方向与红线见 `docs/ROADMAP.md`。
+文档入口：
+- **`docs/README.md`** —— 文档总索引：现状文档 vs 1.x 历史存档，按角色给出"先读什么"
+- `AGENTS.md` —— 接手开发的 AI 代理入口（硬纪律、危险操作清单、工作区地图）
+- `CONTRIBUTING.md` —— 人类贡献者最短路径
+- `RELEASE.md` —— 发版流程；`docs/ROADMAP.md` —— 产品方向与五条红线
+
 Issues 开放：报 bug、提优化项、指出某项解释不清，都欢迎。
 
 ## 许可

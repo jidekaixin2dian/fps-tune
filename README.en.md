@@ -138,7 +138,8 @@ FpsTune.Wpf.Tests/            unit tests, incl. catalog consistency guards
 tools/friend-test.ps1         friend-test helper: one command → Markdown + CSV record
 TESTING.md                    friend-testing guide: full A/B, or a minimal data template
 installer/                    Inno Setup packaging
-docs/                         roadmap and design/review notes
+docs/                         current docs (HANDOFF / ROADMAP / README index)
+  dev/                        plans and dev discipline; archive/  1.x history (not current)
 ```
 
 GUI and CLI share one C# engine and one dataset, validated at load time.
@@ -169,7 +170,11 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 .\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json   # side-effect-free smoke test
 ```
 
-Release procedure: `RELEASE.md`. Product direction and red lines: `docs/ROADMAP.md`.
+Where to read next:
+- **`docs/README.md`** — documentation index: current docs vs the 1.x archive, with a "read this first" table per role
+- `AGENTS.md` — entry point for AI agents working on this repo (hard rules, dangerous-operation list, workspace map)
+- `CONTRIBUTING.md` — shortest path for human contributors
+- `RELEASE.md` — release procedure; `docs/ROADMAP.md` — product direction and the five red lines
 Issues are open — bug reports, new optimization items and "this explanation is unclear" are all welcome.
 
 ## License
