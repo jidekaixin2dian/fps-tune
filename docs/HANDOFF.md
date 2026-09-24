@@ -20,19 +20,20 @@
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.3-beta`**（2026-09-24 由 `dist/folder-0.1.3/` 覆盖，逐文件与发布 Portable 一致） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.4-beta`（发布候选，未发布）**；2026-09-25 由 `dist/folder-0.1.4/` 覆盖，逐文件一致（7/7）。上一版备份 `D:\FpsTune-backup-20260925`（= 已发布的 `0.1.3-beta`） |
 | 测试基线 | 270 / 270（`dotnet test -c Release`；2026-09-25 复核） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
 ### 2.1 版本与同步状态核对（2026-09-24 实测，取代旧的"版本号回退坑"记载）
 
-| 位置 | 版本 | 同步状态 |
+| 位置 | 版本 | 状态 |
 |---|---|---|
-| GitHub 已发布 Release | `v0.1.3-beta` | **已是最新** |
-| 本机安装位 `D:\FpsTune` | **`0.1.3-beta`** | **2026-09-24 已升级**（用户拍板，明确"不用备份"）：用 `dist/folder-0.1.3/` 整目录覆盖，`-Version` 自报 `0.1.3-beta`；7 个文件与发布 Portable zip **逐文件一致（7/7）**，无多余文件 |
-| 本机 `dist/` 里的 0.1.3 产物 | `0.1.3-beta` | 与发布产物**逐字节一致**：Portable zip = `4E055D2E…DEE6A`、Setup = `3A7FE39F…0469`、单文件 exe = `F48781A4…CE2A`，三项均与发布页 `SHA256SUMS-v0.1.3.txt` 相同 |
-| 源码 `main` | `0.1.3-beta` | **已 push，与 `origin/main` 同步** |
+| GitHub 已发布 Release | `v0.1.3-beta` | 线上最新（**0.1.4 尚未发布**） |
+| **发布候选（未发布）** | **`0.1.4-beta`** | `dist/` 已齐：`folder-0.1.4/`、`single-file-0.1.4/FpsTune.exe`、`FpsTune-Portable-0.1.4.zip`、`SHA256SUMS-v0.1.4.txt`。`ProductVersion` 含 `0.1.4` + HEAD SHA（`46d0d2e…`） |
+| 本机安装位 `D:\FpsTune` | **`0.1.4-beta`（候选，未发布）** | 2026-09-25 由 `dist/folder-0.1.4/` 覆盖，逐文件一致（7/7）；界面语言已切 `en-US` 供用户目检 |
+| 源码 `main` | `0.1.4-beta` | 已 push 至 `895e903`；**0.1.4 相关的 3 个提交（`c4e191f` / `dde33d6` / `46d0d2e`）尚未 push** |
+| 已发布 0.1.3 的本地资产 | — | **未被破坏**：`FpsTune-Portable-0.1.3.zip` 仍为 `4E055D2E…DEE6A`。bump 版本号正是为了避免"同号覆盖" |
 
 - **本机只有一份可运行副本**：开始菜单 `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\FPS 帧律.lnk`
   解析后指向 `D:\FpsTune\FpsTune.exe`（用 Python 解析 `.lnk` 得到；`WScript.Shell` COM 被安全策略拦）。
@@ -89,6 +90,23 @@
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-25）做了什么
+
+**0.1.4-beta 发布候选：构建、部署到本机、启动供目检（未 push、未发布）**
+
+- **统一发布流程口径**（用户指出原表述会误导）：原 `AGENTS.md` 与本文对"commit 在拍板前还是
+  拍板后"说法**相反**，且都写"拍板前禁止覆盖 `D:\FpsTune`"——而用户口径里"部署到本地"
+  恰恰是第 3 步。已改为 `AGENTS.md` 硬纪律第 7 条的 **8 步表格**为唯一权威，其它文档指向它
+  （`c4e191f`）。随后发现该表又把 `publish-release.ps1` 误列为"拍板后"——它其实是**构建脚本**
+  （只写 `dist/`，不联网、不上传），已修正并补两条实打实的约束（`dde33d6`）。
+- **版本号 0.1.3 → 0.1.4**（`46d0d2e`）：不 bump 就重建会覆盖 `dist/` 里同名的**已发布 0.1.3 资产**，
+  造成"同号不同内容"。已验证 `FpsTune-Portable-0.1.3.zip` 哈希未变（仍为 `4E055D2E…`）。
+- **构建**：`publish-release.ps1` 产出 `single-file-0.1.4/` 与 `folder-0.1.4/`，但**在打包前被
+  沙箱批量删除策略拦住**（见「环境备忘」）。按脚本口径手动补齐 `FpsTune-Portable-0.1.4.zip`
+  与 `SHA256SUMS-v0.1.4.txt`，并跑独立冒烟：单文件 `-Version` → `0.1.4-beta`，
+  `-Detect -Json` → 33 项 OK。
+- **部署**：先备份 `D:\FpsTune` → `D:\FpsTune-backup-20260925`（= 已发布的 `0.1.3-beta`），
+  再把 `dist/folder-0.1.4/` 整目录覆盖过去，**逐文件一致（7/7）**。界面语言切 `en-US` 后启动供目检。
+- **待用户拍板**：push 那 3 个提交 → `gh release create v0.1.4-beta`。
 
 **P2-1 实施：catalog 33 项说明英译（+ 优化页分组标签）**
 
@@ -238,6 +256,16 @@
 - 真机：读 min=0/max=100/default=50；set 75%→75；还原回原档；桌面已恢复 50。
 
 **测试**：主线 `main`（`1d9777c` + 文档改动前）**255/255**，`dotnet test -c Release`。
+
+**环境备忘（2026-09-25 新增）**：`publish-release.ps1` 在本代理沙箱里**会在打包前被拦**——
+它的 `finally` 清理 `dist/publish-tmp-<版本>`（约 409 个文件）触发沙箱的"批量删除需确认"策略
+（阈值 50 个文件），报 `SAFE_DELETE_BULK_CONFIRM_REQUIRED` 后抛 `Remove-Item: missing path operand`。
+**两个 publish 输出（`single-file-<ver>/`、`folder-<ver>/`）在拦截前已正常产出**，
+缺的是 zip 与 `SHA256SUMS`。
+绕过办法（2026-09-25 实际采用）：手动按脚本口径补齐——
+`Compress-Archive dist/folder-<ver>/* → dist/FpsTune-Portable-<ver>.zip`，
+清单按脚本口径写 **单文件 exe 的哈希 + zip 的哈希**（`UTF8Encoding($false)` 无 BOM），
+再从空目录跑一次单文件 `-Version` / `-Detect -Json` 冒烟。产物已在 `dist/` 里备好。
 
 **环境备忘（2026-09-24 复核，原记载有误）**：旧记载为"MiMo 代理 shell 可能缺 `ProgramFiles*` 变量，
 会导致 NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开"。实测**不复现**——

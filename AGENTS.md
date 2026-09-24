@@ -103,6 +103,11 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 270
 - **GitHub Actions 可用**（`build` + `smoke`，push 到 `main` / 开 PR 时触发）。但 CI 在 `windows-latest`
   runner 上跑，比本机更容易撞上文件占用类瞬时失败——改完先本机全量绿，再看 CI；不要把 CI 的一次红
   直接归因于自己的提交，先比对是不是同两条已知用例。
+- **`publish-release.ps1` 在本代理沙箱里会在打包前被拦**：它 `finally` 清理
+  `dist/publish-tmp-<版本>`（约 409 个文件）会触发沙箱的"批量删除需确认"策略（阈值 50），
+  报 `SAFE_DELETE_BULK_CONFIRM_REQUIRED`。**两个 publish 输出（`single-file-<ver>/`、
+  `folder-<ver>/`）在拦截前已正常产出**，缺的是 zip 与 `SHA256SUMS`——按
+  `docs/HANDOFF.md`「环境备忘」的手动口径补齐即可（含无 BOM 的清单写法）。
 - `gh` CLI 已登录，仓库为 `jidekaixin2dian/fps-tune`（公开）。
 - Inno Setup 6 存在，路径由 `build-installer.ps1 -CheckOnly` 探测。
 
