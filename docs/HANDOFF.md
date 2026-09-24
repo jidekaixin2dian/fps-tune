@@ -1,6 +1,6 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-22（本轮：0.1 Beta 升 `main` 主线 + 待办总表 `PLAN-backlog.md`）
+> 最后核对：2026-09-24（本轮：环境变量"缺失"根因复核 + 环境事实文档化 P2-5）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -14,14 +14,14 @@
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.2` / `VersionSuffix=beta` |
+| `Directory.Build.props` | `VersionPrefix=0.1.3` / `VersionSuffix=beta` |
 | 已发布 Release | **`v0.1.3-beta`**（2026-09-22，`29ed0ea`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.2-beta` |
-| 未发布的内容 | M3（DRS 二期）未开始 |
+| 未发布的内容 | 无（`v0.1.3-beta` 已含 M1/M2/M3 + 一键优化 + i18n 框架文案；catalog 说明翻译见 P2-1） |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.2-beta+4e6b728`**（2026-09-22，官方 Portable；旧目录备份 `D:\FpsTune-backup-20260922`） |
-| 测试基线 | 255 / 255（`dotnet test -c Release`；含 DLSS 与数字振动回归） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.2-beta`**（2026-09-22 构建，实测 `deps.json`）；**落后已发布的 `v0.1.3-beta` 一版**，升级需用户点头（P1-4） |
+| 测试基线 | 266 / 266（`dotnet test -c Release`；2026-09-24 复核） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
 
@@ -55,7 +55,26 @@
 
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
-## 4. 本轮（2026-09-22）做了什么
+## 4. 本轮（2026-09-24）做了什么
+
+**环境变量"缺失"根因复核 + 环境事实文档化（P2-5）**
+
+- 用户反馈"每次环境变量都缺失"。复核结论：**变量一个都没丢**。MSYS2 运行时
+  （`winsup/cygwin/environ.cc` 的 `renv_arr[]`）在进程启动时经 `win32env_to_cygenv()` → `ucenv()`
+  把 `ProgramFiles` / `CommonProgramFiles` / `ComSpec` / `SystemRoot` / `SystemDrive` / `windir`
+  这 6 个名字**改写成全大写**；bash 变量名区分大小写，`$ProgramFiles` 才取到空值。
+  不在表里的 `ProgramFiles(x86)` / `ProgramW6432` / `ProgramData` 保持原样（实测吻合，因为不匹配
+  表里带 `=` 的条目）。
+- 实测**证伪旧记载**：不做任何 env 修补时 `dotnet restore --force` 退出码 0、
+  `dotnet test -c Release` **266/266 通过**。仓库内仅 2 处引用该变量
+  （`build-installer.ps1` 的 PowerShell、`NativeSystem.cs` 的 .NET API），两者均大小写不敏感。
+- 落地 P2-5：`docs/dev/AI-WORKFLOW.md` 新增「环境变量」一节（含 `renv_arr[]` 清单与正确用法），
+  `CONTRIBUTING.md` 加同一条目；`AGENTS.md` 环境事实段同步。
+- 顺手修掉几处自相矛盾 / 过期：`AGENTS.md` 基线注释 255→266；本文 §2 的
+  `VersionPrefix=0.1.2`→`0.1.3`、测试基线 255→266、`未发布的内容`；`CONTRIBUTING.md` 里
+  "国际化全未做"改为"框架文案已完成、catalog 说明待译"。
+
+### 历史轮次（2026-09-22 及更早）
 
 **P1-2 国际化 + P2-6 热门项（2026-09-22）**
 
@@ -136,16 +155,21 @@
 
 **测试**：主线 `main`（`1d9777c` + 文档改动前）**255/255**，`dotnet test -c Release`。
 
-**环境备忘（非仓库缺陷）**：MiMo 代理 shell 可能缺 `ProgramFiles*` 变量，会导致
-NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开。
+**环境备忘（2026-09-24 复核，原记载有误）**：旧记载为"MiMo 代理 shell 可能缺 `ProgramFiles*` 变量，
+会导致 NuGet `Path.Combine` 炸掉；命令里补上即可。换 git bash 绕不开"。实测**不复现**——
+变量没丢，只是 MSYS2 把名字转成了大写（详见本文 §4 本轮要点与
+`docs/dev/AI-WORKFLOW.md` §环境变量）。**不要再给命令补 env**，那是无效动作。
 
 ## 5. 下一步建议（按性价比排序）
 
 **完整待办总表见 `docs/dev/PLAN-backlog.md`（P0–P2）。** 摘要：
 
-1. **P1-4** 将 `D:\FpsTune` 升到 0.1.2 发布构建（覆盖前需你点头）。
-2. **P1-1** M3 / **P1-2** 国际化 / **P1-3** ROADMAP 基线刷新。
-3. 若要可引用 A/B 数字，再跑真机 `-Experiment`（P0-2 已取消，可作 P2）。
+1. **P1-4** 将 `D:\FpsTune` 从实测的 `0.1.2-beta` 升到 `v0.1.3-beta` 发布构建（覆盖前需你点头）。
+2. **P2-1** catalog 33 项的 `name` / `description` / `sideEffect` 英文翻译 —— i18n 收尾；
+   英文 locale 下目前会露出中文。
+3. **P2-3** 盘点 `docs/dev/GUI_PLAN.md` 与现界面的差异，只留真缺口（先盘点再动手）。
+4. **P2-2 / P2-4** A/B 报告可引用导出、M4+ 更多 DRS / 显示项（红线要求先证明收益）。
+5. 若要可引用 A/B 数字，再跑真机 `-Experiment`（P0-2 已取消，可作 P2）。
 
 ## 6. 维护本文的规则
 

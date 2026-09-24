@@ -20,7 +20,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 266 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
@@ -67,6 +67,10 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
 ## 环境事实
 
 - 本机 SDK `10.0.401`，WindowsDesktop 运行时 `10.0.12`。
+- **Git Bash 里 Windows 系统变量名是全大写的，这不是变量缺失**：`$ProgramFiles` 为空、
+  `${PROGRAMFILES}` 才有值。MSYS2 运行时故意把一小批变量名改成大写（`renv_arr[]`，
+  2026-09-24 复核确认）。**构建与测试不依赖这些变量**——`dotnet build` / `dotnet test`
+  直接跑即可，不要给命令补 env。详见 `docs/dev/AI-WORKFLOW.md` §环境变量。
 - **GitHub Actions 可用**（`build` + `smoke`，push 到 `main` / 开 PR 时触发）。但 CI 在 `windows-latest`
   runner 上跑，比本机更容易撞上文件占用类瞬时失败——改完先本机全量绿，再看 CI；不要把 CI 的一次红
   直接归因于自己的提交，先比对是不是同两条已知用例。
@@ -79,7 +83,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
 | 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
-| 覆盖 `D:\FpsTune` | 那是**本机安装位**（当前 0.1.2-beta），不是源码；覆盖前必须用户点头 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（实测 `0.1.2-beta`，2026-09-22 构建），不是源码；覆盖前必须用户点头 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
@@ -90,7 +94,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 255
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机安装位（0.1.2-beta 构建），只读，别当源码
+D:\FpsTune                                         ← 本机安装位（实测 0.1.2-beta 构建），只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 

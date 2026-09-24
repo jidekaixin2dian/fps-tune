@@ -52,6 +52,37 @@
 - **自动化覆盖不到的路径要如实标注**，并给用户一个可执行的人工验证步骤（需要真机/游戏/提权会话的尤其如此）。
 - 文档、`.gitignore` 这类改动不影响编译与测试时，可不必重跑，但要在提交信息里说明"已确认无测试读取这些文件"。
 
+### 环境变量：Git Bash 里 Windows 系统变量名是全大写的
+
+在 Git Bash / MSYS2 里，`$ProgramFiles`、`$SystemRoot` 取到的是**空值**，但
+`${PROGRAMFILES}`、`$SYSTEMROOT` 有值。**这不是环境坏了，也不是变量丢了**——别去"补变量"。
+
+- **根因**：MSYS2 运行时（`winsup/cygwin/environ.cc`）在进程启动时走
+  `win32env_to_cygenv()` → `ucenv()`，按一张硬编码表 `renv_arr[]` 把下列 Windows 变量名
+  **改写为全大写**：`PROGRAMFILES` / `COMMONPROGRAMFILES` / `COMSPEC` / `SYSTEMDRIVE` /
+  `SYSTEMROOT` / `WINDIR` / `PATH` / `TEMP` / `TMP`（MSYS 下另有 `MSYSTEM`）。
+  源码注释原文："Minimal list of Windows vars which must be converted to uppercase.
+  Either for POSIX compatibility of for backward compatibility with existing applications."
+  匹配是大小写不敏感的（`strncasematch`），命中后把名字 `strncpy` 成大写形式。
+- **不在表里的名字不受影响**：`ProgramFiles(x86)` / `ProgramW6432` / `CommonProgramFiles(x86)` /
+  `CommonProgramW6432` / `ProgramData` 都保持原样（2026-09-24 实测确认，原因就是它们不匹配表里
+  带 `=` 的条目）。
+- **bash 变量名区分大小写**，所以 `$ProgramFiles` 取不到；PowerShell 的 `$env:ProgramFiles` 与
+  .NET 的 `Environment.GetEnvironmentVariable` 都是大小写不敏感的，**完全不受影响**。
+- **结论：不需要给任何命令补 env。** 2026-09-24 实测：不做任何修补时
+  `dotnet restore --force` 退出码 0、`dotnet test -c Release` **266/266 通过**。
+  仓库内只有两处引用该变量——`build-installer.ps1`（PowerShell）与
+  `FpsTune.Wpf/Core/NativeSystem.cs`（.NET API），两者都不受影响。
+- **只有在 bash 里显式读这些变量时才需要处理**。用大写名，或显式归一化：
+
+  ```bash
+  echo "${PROGRAMFILES}"          # C:\Program Files
+  export ProgramFiles="${PROGRAMFILES}"   # 需要小写名时（少见）
+  ```
+
+  带括号的名字（`ProgramFiles(x86)`）在 bash 里无法用 `$` 直接引用，也不建议 `eval` 硬凑；
+  真要取就用 PowerShell 的 `${env:ProgramFiles(x86)}` 或 .NET API。
+
 ---
 
 ## 三、代码与写法的既有约定（摘要，完整背景见交接文档）

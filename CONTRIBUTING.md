@@ -16,6 +16,13 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 
 跑起来：`.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe`
 
+### 如果你用 Git Bash：变量名是全大写的
+
+`$ProgramFiles` 在 Git Bash 里是空的，`${PROGRAMFILES}` 才有值——MSYS2 会把一小批 Windows
+变量名改成全大写。**这不是变量缺失，也完全不影响构建**：`dotnet build` / `dotnet test`
+直接跑即可，不需要给命令补任何环境变量。
+完整清单与原因见 `docs/dev/AI-WORKFLOW.md` 的「环境变量」一节。
+
 ## 开发时唯一要小心的地方
 
 这个程序会真的改系统设置。开发与验证请遵守：
@@ -52,5 +59,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
 
 ## 好的起点
 
-`good first issue` 标签下的任务通常不需要读完整引擎。当前最缺的一块是界面文案的
-国际化（现在全部硬编码中文），如果你想做，先开一个 issue 说明思路，避免白干。
+`good first issue` 标签下的任务通常不需要读完整引擎。当前最缺的一块是**界面文案国际化的收尾**：
+框架文案（导航 / 设置 / 一键优化 / 显示页）已走 `DynamicResource` 双语，
+但 `catalog/catalog.json` 里 33 项优化项的 `name` / `description` / `sideEffect` 仍是中文，
+英文 locale 下会露出中文。如果你想做，先开一个 issue 说明思路，避免白干。
