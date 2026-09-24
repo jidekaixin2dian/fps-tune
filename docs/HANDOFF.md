@@ -40,8 +40,8 @@
 - **打标签口径（若将来发布 0.1.4）**：候选由 HEAD `627740f` 产出，故 `v0.1.4-beta` 应打在
   **`627740f`** 上；其后的 `7dbfc91`（文档）不打标签。判断方法仍是读产物 `ProductVersion` 的 SHA。
 - **注意**：`dist/` 与 `D:\FpsTune` 的产物都停在 `627740f`。**其后的源码改动
-  （红线口径同步 + P2-6 数字振动推荐档位）尚未进产物** —— 要发版必须先按新 HEAD 重新构建，
-  旧产物不能当发布资产。
+  （红线口径同步 + P2-6 数字振动推荐档位 + NVAPI 引导重构）尚未进产物** ——
+  要发版必须先按新 HEAD 重新构建，旧产物不能当发布资产。
 
 - **本机只有一份可运行副本**：开始菜单 `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\FPS 帧律.lnk`
   解析后指向 `D:\FpsTune\FpsTune.exe`（用 Python 解析 `.lnk` 得到；`WScript.Shell` COM 被安全策略拦）。
@@ -99,6 +99,33 @@
 > PLAN 文档头部仍写"状态：待实施"，与事实不符（M2 已完成），本轮已就地更正为按里程碑标注。
 
 ## 4. 本轮（2026-09-25 续）做了什么
+
+**⑤ 代码健康度评估 + NVAPI 引导重构（`13c74b2`）**
+
+- **评估结论**：工作区干净（未跟踪未忽略文件 **0**、tracked 仅 168 个）；代码**不是屎山**——
+  590 个方法长度**中位数 14 行**、仅 29 个 ≥60 行、无 `TODO`/`HACK`、无吞异常、编译 0 警告。
+  底数与债务清单落盘 → **`docs/dev/CODE-HEALTH.md`**（接手先看这份，**别重新量**）。
+- **修掉的真隐患**（都是顺着编译警告查出来的，不是"消警告"）：
+  1. **半初始化**：`NvidiaDrs.TryInitialize` / `NvDvcApi.TryInitialize` 原先边解析边落字段，
+     中途失败会留下"_initialize 非空、其余为 null"；下一次 `TryInitialize` 因
+     `_initialize is not null` 误判为已初始化，随后 `OpenSession` 撞空引用。
+     改为"全部解析到局部变量、`NvAPI_Initialize` 成功后才落字段"。
+  2. `FindGameProcess` 收 `string?`：`GameName` 可空，而 `Process.GetProcessesByName(null)`
+     会抛 `ArgumentNullException`。
+  3. `ProfileImpl` 的 `session` 是死参数（已删，2 处调用点同步）。
+- **去重**：NVAPI 引导原先在 DRS 与数字振动各写一遍，且**两套机制已经分歧**
+  （`LoadLibrary`/`GetProcAddress` vs `NativeLibrary.Load`/`GetExport`），委托与
+  `IdInitialize`/`StatusOk` 也各声明一份 → 统一到 **`Services/NvapiNative.cs`**。
+- **警告 6 → 0**；测试仍 **279/279**；真机验证两条只读 NVAPI 路径
+  （DVC 读 = 「当前 50%…」、DRS 读 = 「当前未覆盖…」）都正常，`error.log` 字节数未变。
+- **未验证（如实说明）**：DRS 的**写入**路径需管理员且会改真实驱动配置（危险操作清单），
+  未在本机执行；该路径只改了 owner 取法，由单测
+  `Apply_creates_own_profile_when_game_is_not_registered_anywhere` 覆盖。
+- 顺带把工作区里仅有的 2 个 CRLF 文件（`DisplayQualityService.cs`、`I18nBaseline.txt`）
+  归一为 LF（全仓库 tracked 文件 `w/crlf` 计数 = 0）。
+- i18n 棘轮基线按"文案搬家"调整：新增 `Services/NvapiNative.cs 2`，
+  `NvidiaDrs 19→16`、`DigitalVibranceService 9→8`，**总数 987 → 985（净减少）**；
+  基线头部已写明这条规则，免得下次误判成棘轮违规。
 
 **① 红线口径同步：从「零侵入」移除「不伪装硬件」（`505e146`）**
 

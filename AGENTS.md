@@ -94,6 +94,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 279
 | P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | 已调研未实施；含硬约束与踩坑点 |
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
+| 代码健康度底数 | `docs/dev/CODE-HEALTH.md` | 体积/方法长度/警告数/已知债务；**接手先看，别重新量** |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
 | 1.x 历史存档 | `docs/archive/` | **不代表现状**；路径/版本/依赖都可能过期 |
 
