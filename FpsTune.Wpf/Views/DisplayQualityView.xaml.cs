@@ -105,6 +105,32 @@ public partial class DisplayQualityView : UserControl
         ApplyDrsState(s);
     }
 
+    // ---------- 页签状态徽标：不点进去也能看到各组当前状态 ----------
+
+    /// <summary>设置页签徽标；text 为 null 时隐藏徽标（尚未读到状态）。</summary>
+    private static void SetBadge(TextBlock status, Border badge, string? text)
+    {
+        if (text is null)
+        {
+            badge.Visibility = Visibility.Collapsed;
+            return;
+        }
+        status.Text = text;
+        badge.Visibility = Visibility.Visible;
+    }
+
+    private void SetGameChip(string? label, string? exe)
+    {
+        if (label is null)
+        {
+            GameChip.Visibility = Visibility.Collapsed;
+            return;
+        }
+        GameChipText.Text = Str.T("Str.CurrentGame") + "：" + label;
+        GameChip.ToolTip = exe;
+        GameChip.Visibility = Visibility.Visible;
+    }
+
     /// <summary>
     /// 驱动版本建议：只读信息。
     /// **本工具不下载、不安装任何驱动**（红线）——这里只给版本号与来源，引导用户自己去官网。
@@ -115,6 +141,8 @@ public partial class DisplayQualityView : UserControl
         var advice = GpuDriverAdvisor.For(gpu);
 
         DriverAdviceSourceText.Text = Str.T("Str.DriverSource");
+        SetBadge(TabStatusAdvice, TabBadgeAdvice,
+            string.IsNullOrWhiteSpace(advice?.Series) ? "—" : advice.Series);
 
         if (advice is null)
         {
@@ -191,21 +219,23 @@ public partial class DisplayQualityView : UserControl
 
         if (!s.HasGame)
         {
-            GameStateText.Text = Str.T("Str.LocateGameFirstThenReturn");
+            SetGameChip(null, null);
             ApplyButton.IsEnabled = false;
             RestoreButton.IsEnabled = false;
             SetPresetCardsEnabled(false);
-            StateText.Text = "";
+            StateText.Text = Str.T("Str.LocateGameFirstThenReturn");
+            SetBadge(TabStatusDlss, TabBadgeDlss, "—");
             return;
         }
 
-        GameStateText.Text = $"当前游戏：{s.GameLabel}（{s.GameExe}）";
+        SetGameChip(s.GameLabel, s.GameExe);
 
         if (s.DlssError is not null)
         {
             StateText.Text = "读取覆盖状态失败：" + s.DlssError;
             ApplyButton.IsEnabled = false;
             RestoreButton.IsEnabled = false;
+            SetBadge(TabStatusDlss, TabBadgeDlss, "—");
             return;
         }
 
@@ -218,7 +248,21 @@ public partial class DisplayQualityView : UserControl
         ApplyButton.IsEnabled = true;
         RestoreButton.IsEnabled = state.Covered || state.Restorable;
         SetPresetCardsEnabled(true);
+        SetBadge(TabStatusDlss, TabBadgeDlss,
+            state.Covered ? DlssPresetBadge(state.PresetValue) : Str.T("Str.FollowGame"));
     }
+
+    /// <summary>页签徽标用短预设名：字母 / 最新 / 原始十六进制。</summary>
+    private static string DlssPresetBadge(uint? value) => value switch
+    {
+        (uint)DlssPreset.Latest => Str.T("Str.LatestPreset"),
+        (uint)DlssPreset.PresetK => "K",
+        (uint)DlssPreset.PresetM => "M",
+        (uint)DlssPreset.PresetJ => "J",
+        (uint)DlssPreset.PresetE => "E",
+        { } v => $"0x{v:X}",
+        null => "—",
+    };
 
     private void SyncPresetCardSelection(DisplayQualityService.DlssState state)
     {
@@ -370,6 +414,7 @@ public partial class DisplayQualityView : UserControl
             VibSupportedPanel.Visibility = Visibility.Collapsed;
             VibUnsupportedText.Visibility = Visibility.Visible;
             VibUnsupportedText.Text = "读取数字振动状态失败：" + s.VibError;
+            SetBadge(TabStatusVib, TabBadgeVib, "—");
             return;
         }
 
@@ -379,6 +424,7 @@ public partial class DisplayQualityView : UserControl
             VibSupportedPanel.Visibility = Visibility.Collapsed;
             VibUnsupportedText.Visibility = Visibility.Visible;
             VibUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.VibranceUnavailable");
+            SetBadge(TabStatusVib, TabBadgeVib, "—");
             return;
         }
 
@@ -398,6 +444,7 @@ public partial class DisplayQualityView : UserControl
         VibStateText.Text = _vibStatus ?? (state.Restorable
             ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
             : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）");
+        SetBadge(TabStatusVib, TabBadgeVib, $"{percent}%");
     }
 
     private static int PercentOf(int level, VibranceState state)
@@ -496,6 +543,7 @@ public partial class DisplayQualityView : UserControl
             IccSupportedPanel.Visibility = Visibility.Collapsed;
             IccUnsupportedText.Visibility = Visibility.Visible;
             IccUnsupportedText.Text = "读取 ICC 状态失败：" + s.IccError;
+            SetBadge(TabStatusIcc, TabBadgeIcc, "—");
             return;
         }
 
@@ -505,6 +553,7 @@ public partial class DisplayQualityView : UserControl
             IccSupportedPanel.Visibility = Visibility.Collapsed;
             IccUnsupportedText.Visibility = Visibility.Visible;
             IccUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.IccUnavailable");
+            SetBadge(TabStatusIcc, TabBadgeIcc, "—");
             return;
         }
 
@@ -519,6 +568,15 @@ public partial class DisplayQualityView : UserControl
         IccStateText.Text = _iccStatus ?? (state.Restorable
             ? Str.T("Str.IccOriginalSaved")
             : "");
+        SetBadge(TabStatusIcc, TabBadgeIcc, ShortProfileName(state.CurrentProfileName));
+    }
+
+    /// <summary>页签徽标用短 profile 名：超长截断，避免页签被撑开。</summary>
+    private static string ShortProfileName(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return "—";
+        return name.Length <= 16 ? name : name[..13] + "…";
     }
 
     private void SetIccPresetCardsEnabled(bool enabled)
@@ -643,6 +701,7 @@ public partial class DisplayQualityView : UserControl
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
             DrsUnsupportedText.Visibility = Visibility.Visible;
             DrsUnsupportedText.Text = Str.T("Str.DrsDisabled");
+            SetBadge(TabStatusDrs, TabBadgeDrs, "—");
             return;
         }
         if (!s.NvidiaSupported)
@@ -650,6 +709,7 @@ public partial class DisplayQualityView : UserControl
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
             DrsUnsupportedText.Visibility = Visibility.Visible;
             DrsUnsupportedText.Text = Str.T("Str.NoNvidiaForDrs");
+            SetBadge(TabStatusDrs, TabBadgeDrs, "—");
             return;
         }
 
@@ -661,6 +721,7 @@ public partial class DisplayQualityView : UserControl
             DrsStateText.Text = Str.T("Str.LocateGameFirst");
             DrsApplyButton.IsEnabled = false;
             DrsRestoreButton.IsEnabled = false;
+            SetBadge(TabStatusDrs, TabBadgeDrs, "—");
             return;
         }
 
@@ -669,6 +730,7 @@ public partial class DisplayQualityView : UserControl
             DrsStateText.Text = "读取驱动 3D 设置失败：" + s.DrsError;
             DrsApplyButton.IsEnabled = false;
             DrsRestoreButton.IsEnabled = false;
+            SetBadge(TabStatusDrs, TabBadgeDrs, "—");
             return;
         }
 
@@ -700,6 +762,17 @@ public partial class DisplayQualityView : UserControl
             : Str.T("Str.NotOverriddenDriver"));
         DrsApplyButton.IsEnabled = true;
         DrsRestoreButton.IsEnabled = state.Restorable;
+
+        var customCount = 0;
+        if (state.TextureQuality is not null) customCount++;
+        if (state.PowerMode is not null) customCount++;
+        if (state.TransparencyAa is not null) customCount++;
+        if (state.PreRenderLimit is not null) customCount++;
+        if (state.Aniso is { } and not AnisoLevel.AppControlled) customCount++;
+        if (state.VSync is not VSyncMode.AppControlled) customCount++;
+        if (state.ShaderCache is not null) customCount++;
+        SetBadge(TabStatusDrs, TabBadgeDrs,
+            customCount > 0 ? Str.T("Str.BadgeCustomCount", customCount) : Str.T("Str.BadgeDefault"));
     }
 
     private static void SelectComboByTag(System.Windows.Controls.ComboBox combo, string tag)

@@ -19,7 +19,6 @@ public partial class DetectView : UserControl
     private MetricsSampler? _sampler;
     private bool _suppressGameSwitch;
     private Window? _hostWindow;
-    private MetricSample? _latestSample;
 
     public DetectView()
     {
@@ -31,7 +30,6 @@ public partial class DetectView : UserControl
             {
                 _ = RunDetectionAsync();
             }
-            ApplyDisplayMode();
             StartMonitor();
             StartGameScan();
             if ((_hostWindow = Window.GetWindow(this)) is { } window)
@@ -74,39 +72,21 @@ public partial class DetectView : UserControl
         _sampler = null;
     }
 
-    internal void ApplyDisplayMode()
-    {
-        var classic = SettingsService.Current.OverviewMode == "classic";
-        Tag = classic ? "classic" : "console";
-        SetResourceReference(BackgroundProperty, classic ? "AppBackgroundBrush" : "ConsoleBackgroundBrush");
-        ClassicMonitorPanel.Visibility = classic ? Visibility.Visible : Visibility.Collapsed;
-        ConsoleMonitorPanel.Visibility = classic ? Visibility.Collapsed : Visibility.Visible;
-        if (_latestSample is { } sample) Sampler_Sampled(sample);
-    }
-
     private void Sampler_Sampled(MetricSample sample)
     {
-        _latestSample = sample;
-        if (ClassicMonitorPanel.Visibility == Visibility.Visible)
-        {
-            var cpu = _sampler?.Buffer.Select(s => s.CpuPercent ?? double.NaN).ToList();
-            var mem = _sampler?.Buffer.Select(s => s.MemoryPercent ?? double.NaN).ToList();
-            var gpu = _sampler?.Buffer.Select(s => s.GpuPercent ?? double.NaN).ToList();
-            var vramRatio = BuildVramSeries();
+        var cpu = _sampler?.Buffer.Select(s => s.CpuPercent ?? double.NaN).ToList();
+        var mem = _sampler?.Buffer.Select(s => s.MemoryPercent ?? double.NaN).ToList();
+        var gpu = _sampler?.Buffer.Select(s => s.GpuPercent ?? double.NaN).ToList();
+        var vramRatio = BuildVramSeries();
 
-            if (cpu is not null) MiniChart.Draw(CpuChart, cpu, "AccentBrush");
-            if (mem is not null) MiniChart.Draw(MemChart, mem, "PrimaryBrush");
-            if (gpu is not null) MiniChart.Draw(GpuChart, gpu, "OkBrush");
-            if (vramRatio is not null) MiniChart.Draw(VramChart, vramRatio, "WarningBrush");
-        }
-        CpuNowText.Text = ConsoleCpuText.Text = Fmt(sample.CpuPercent);
-        MemNowText.Text = ConsoleMemText.Text = Fmt(sample.MemoryPercent);
-        GpuNowText.Text = ConsoleGpuText.Text = Fmt(sample.GpuPercent);
-        static double Meter(double? value) => value is { } v && double.IsFinite(v) ? Math.Clamp(v, 0, 100) : 0;
-        ConsoleCpuMeter.Value = Meter(sample.CpuPercent);
-        ConsoleMemMeter.Value = Meter(sample.MemoryPercent);
-        ConsoleGpuMeter.Value = Meter(sample.GpuPercent);
-        ConsoleVramMeter.Value = sample.VramTotalBytes is > 0 ? Meter(sample.VramUsedBytes / sample.VramTotalBytes * 100) : 0;
+        if (cpu is not null) MiniChart.Draw(CpuChart, cpu, "AccentBrush");
+        if (mem is not null) MiniChart.Draw(MemChart, mem, "PrimaryBrush");
+        if (gpu is not null) MiniChart.Draw(GpuChart, gpu, "OkBrush");
+        if (vramRatio is not null) MiniChart.Draw(VramChart, vramRatio, "WarningBrush");
+
+        CpuNowText.Text = Fmt(sample.CpuPercent);
+        MemNowText.Text = Fmt(sample.MemoryPercent);
+        GpuNowText.Text = Fmt(sample.GpuPercent);
         if (sample.VramUsedBytes is { } used)
         {
             VramNowText.Text = sample.VramTotalBytes is { } total && total > 0
@@ -123,8 +103,6 @@ public partial class DetectView : UserControl
                 ? reason
                 : "未提供 GPU Adapter Memory 计数器";
         }
-        ConsoleVramText.Text = VramNowText.Text;
-        ConsoleVramText.ToolTip = VramNoteText.Text;
     }
 
     /// <summary>显存序列：容量可得时为占比 0-100，否则为窗口内相对水位。</summary>

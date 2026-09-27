@@ -3,15 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
-        <Style x:Key="DetectCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="console">
-                    <Setter Property="CornerRadius" Value="0"/>
-                    <Setter Property="Background" Value="{DynamicResource ConsoleBackgroundBrush}"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+        <!-- 0.1.12：检测页不再有 console/classic 双皮肤——全仓库统一卡片语言 -->
     </UserControl.Resources>
     <!-- 页面根滚动: 概览列表/JSON框会把滚轮事件吞在自己身上,
          由 code-behind 的 PreviewMouseWheel 转发保证整页可滚 -->
@@ -48,7 +40,7 @@
         </Grid>
 
         <!-- 硬件：发丝分隔的通栏 -->
-        <Border Grid.Row="1" Style="{StaticResource DetectCardStyle}" Padding="0" Margin="0,0,0,12">
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -104,7 +96,7 @@
         </Border>
 
         <!-- 实时监控 -->
-        <Border Grid.Row="2" Style="{StaticResource DetectCardStyle}" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
                 <Grid Margin="0,0,0,8">
                     <TextBlock Text="{DynamicResource Str.LiveMonitor}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
@@ -115,7 +107,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.CpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="CpuNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="12" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
                         </Grid>
                         <Canvas x:Name="CpuChart" Height="72"/>
                     </StackPanel>
@@ -123,7 +115,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.MemoryUsage}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="MemNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="12" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
                         </Grid>
                         <Canvas x:Name="MemChart" Height="72"/>
                     </StackPanel>
@@ -131,7 +123,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.GpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="GpuNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="12" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource OkBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource OkBrush}"/>
                         </Grid>
                         <Canvas x:Name="GpuChart" Height="72"/>
                     </StackPanel>
@@ -139,43 +131,13 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.VramDedicated}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="VramNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="12" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
                         </Grid>
                         <Canvas x:Name="VramChart" Height="72"/>
                         <TextBlock x:Name="VramNoteText" Text="" FontSize="10" Margin="0,3,0,0"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
-                </UniformGrid>
-                <UniformGrid x:Name="ConsoleMonitorPanel" Columns="4" Visibility="Collapsed">
-                    <Border Padding="14,10,20,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                        <StackPanel>
-                            <TextBlock Text="{DynamicResource Str.CpuUsage}" Style="{StaticResource SectionLabelStyle}"/>
-                            <TextBlock x:Name="ConsoleCpuText" Text="—" FontSize="32" Margin="0,12,0,16" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource AccentBrush}"/>
-                            <ProgressBar x:Name="ConsoleCpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Padding="14,10,20,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                        <StackPanel>
-                            <TextBlock Text="{DynamicResource Str.MemoryUsage}" Style="{StaticResource SectionLabelStyle}"/>
-                            <TextBlock x:Name="ConsoleMemText" Text="—" FontSize="32" Margin="0,12,0,16" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
-                            <ProgressBar x:Name="ConsoleMemMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Padding="14,10,20,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                        <StackPanel>
-                            <TextBlock Text="{DynamicResource Str.GpuUsage}" Style="{StaticResource SectionLabelStyle}"/>
-                            <TextBlock x:Name="ConsoleGpuText" Text="—" FontSize="32" Margin="0,12,0,16" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource OkBrush}"/>
-                            <ProgressBar x:Name="ConsoleGpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Padding="14,10,20,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,0">
-                        <StackPanel>
-                            <TextBlock Text="{DynamicResource Str.VramUsage}" Style="{StaticResource SectionLabelStyle}"/>
-                            <TextBlock x:Name="ConsoleVramText" Text="—" FontSize="32" Margin="0,12,0,16" Style="{StaticResource StatValueStyle}" Foreground="{DynamicResource WarningBrush}"/>
-                            <ProgressBar x:Name="ConsoleVramMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource WarningBrush}"/>
-                        </StackPanel>
-                    </Border>
                 </UniformGrid>
             </StackPanel>
         </Border>
@@ -188,7 +150,7 @@
                 <ColumnDefinition Width="9*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Style="{StaticResource DetectCardStyle}">
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <Grid>
                         <TextBlock Text="{DynamicResource Str.GamePath}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center" Margin="0"/>
@@ -221,7 +183,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="2" Style="{StaticResource DetectCardStyle}">
+            <Border Grid.Column="2" Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.ReadOnlyCheckup}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,8"/>
                     <ItemsControl x:Name="CheckList"
@@ -252,7 +214,7 @@
         </Grid>
 
         <!-- 优化项概览 -->
-        <Border Grid.Row="4" Style="{StaticResource DetectCardStyle}" Margin="0,0,0,12" MinHeight="220" Padding="14,14,4,14">
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,12" MinHeight="220" Padding="14,14,4,14">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -322,7 +284,7 @@
         </Border>
 
         <!-- 详情 -->
-        <Border Grid.Row="5" Style="{StaticResource DetectCardStyle}" Height="170">
+        <Border Grid.Row="5" Style="{StaticResource CardStyle}" Height="170">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

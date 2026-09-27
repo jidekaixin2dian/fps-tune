@@ -207,7 +207,7 @@
     <s:String x:Key="Str.WeChatPurpose">Cooperation and feedback only</s:String>
     <s:String x:Key="Str.CopyWeChatId">Copy WeChat ID</s:String>
     <s:String x:Key="Str.AppNameShort">Tune</s:String>
-    <s:String x:Key="Str.TipDisplayMode">Switches the display mode of the overview and detect pages; your choice is remembered</s:String>
+    <s:String x:Key="Str.TipDisplayMode">Switches the overview page display mode; your choice is remembered</s:String>
     <s:String x:Key="Str.SettingsIntro">Pick a category to adjust. Settings are saved automatically.</s:String>
     <s:String x:Key="Str.ThemeDarkShort">Dark</s:String>
     <s:String x:Key="Str.ThemeDarkDesc">Near-black background · cyan accent</s:String>
@@ -217,7 +217,7 @@
     <s:String x:Key="Str.ThemeSystemDesc">Follows the Windows appearance automatically</s:String>
     <s:String x:Key="Str.LowSpecMode">Low-spec mode (fewer animations, live sampling every 3 s)</s:String>
     <s:String x:Key="Str.DisplayMode">Interface mode</s:String>
-    <s:String x:Key="Str.DisplayModeDesc">The console shows detection data as numbers and progress bars; the classic UI keeps the original overview and charts.</s:String>
+    <s:String x:Key="Str.DisplayModeDesc">Switches the overview layout: the compact console is a one-page action list; the classic overview uses module cards and charts.</s:String>
     <s:String x:Key="Str.CompactConsole">Compact console</s:String>
     <s:String x:Key="Str.ClassicOverview">Classic overview</s:String>
     <s:String x:Key="Str.SectionStartup">Startup</s:String>
@@ -592,6 +592,9 @@
 
     <!-- Splash screen -->
     <s:String x:Key="Str.SplashLoading">Loading…</s:String>
+    <s:String x:Key="Str.SplashPhasePrepare">Preparing…</s:String>
+    <s:String x:Key="Str.SplashPhaseRestore">Restoring local state…</s:String>
+    <s:String x:Key="Str.SplashPhaseBuild">Building interface…</s:String>
     <s:String x:Key="Str.SplashTagline">Game-agnostic · system-level frame-rate tuning for Windows</s:String>
 
     <!-- My profiles (manager dialog) -->
@@ -635,6 +638,9 @@
     <s:String x:Key="Str.TabIcc">ICC filter</s:String>
     <s:String x:Key="Str.TabDrs">Driver 3D</s:String>
     <s:String x:Key="Str.TabAdvice">Advice &amp; checklist</s:String>
+    <s:String x:Key="Str.BadgeDefault">Default</s:String>
+    <s:String x:Key="Str.BadgeCustomCount">{}{0} set</s:String>
+    <s:String x:Key="Str.NoGameLocated">No game located</s:String>
 
     <!-- A/B page PresentMon pre-check (P2-12) -->
     <s:String x:Key="Str.PmChecking">Checking PresentMon…</s:String>

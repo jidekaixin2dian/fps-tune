@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
-        <!-- 预设卡片：与设置页的 SettingsChoice 同语言，两行内容（名称 + 说明） -->
+        <!-- 预设卡片：与优化页 PresetChoice 同语言，两行内容（名称 + 说明） -->
         <Style x:Key="PresetCard" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
@@ -34,7 +34,8 @@
             <Setter Property="Margin" Value="0,6,0,0"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
-        <!-- 二级页签（P2-13 反馈：页面卡片太多滚动太长，按组切换） -->
+        <!-- 二级页签（P2-13 反馈：卡片太多滚动太长，按组切换）。
+             0.1.12：页签带状态徽标——不点进去也能看到每组的当前状态 -->
         <Style x:Key="SubTabStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="13.5"/>
@@ -52,38 +53,106 @@
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
+        <!-- 页签状态徽标：未选中 = accent 字浅底；选中（accent 实底页签）= 深字透明底保证对比 -->
+        <Style x:Key="TabBadgeStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="{StaticResource RadiusChip}"/>
+            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="TabBadgeTextStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- 驱动 3D 字段组：上标签下控件，两列网格用 -->
+        <Style x:Key="DrsFieldLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource SectionLabelStyle}">
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28,22,28,24" MaxWidth="1060" HorizontalAlignment="Center">
+        <StackPanel Margin="28,22,28,24">
 
-            <!-- 页头 -->
-            <StackPanel Margin="0,0,0,14">
-                <TextBlock Text="{DynamicResource Str.DisplayTitle}" Style="{StaticResource SectionLabelStyle}"/>
-                <TextBlock Text="{DynamicResource Str.DisplayIntro}"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
-            </StackPanel>
+            <!-- 页头：左标题说明，右当前游戏（DLSS / 驱动 3D 共用的上下文） -->
+            <Grid Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Str.DisplayTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DisplayIntro}"
+                               Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+                </StackPanel>
+                <Border x:Name="GameChip" Style="{StaticResource ChipStyle}"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Padding="10,4" Visibility="Collapsed">
+                    <TextBlock x:Name="GameChipText" Text=""
+                               FontFamily="{StaticResource FontMono}" FontSize="11"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </Border>
+            </Grid>
 
-            <!-- 二级页签：一次只看一组卡片，避免长滚动 -->
+            <!-- 二级页签：一次只看一组卡片，避免长滚动；徽标显示各组当前状态 -->
             <WrapPanel Margin="0,0,0,14">
-                <RadioButton x:Name="SubTabDlss" Content="{DynamicResource Str.TabDlss}" GroupName="dqSub"
-                             IsChecked="True" Style="{StaticResource SubTabStyle}" Tag="dlss" Checked="SubTab_Checked"/>
-                <RadioButton Content="{DynamicResource Str.TabVib}" GroupName="dqSub"
-                             Style="{StaticResource SubTabStyle}" Tag="vib" Checked="SubTab_Checked"/>
-                <RadioButton Content="{DynamicResource Str.TabIcc}" GroupName="dqSub"
-                             Style="{StaticResource SubTabStyle}" Tag="icc" Checked="SubTab_Checked"/>
-                <RadioButton Content="{DynamicResource Str.TabDrs}" GroupName="dqSub"
-                             Style="{StaticResource SubTabStyle}" Tag="drs" Checked="SubTab_Checked"/>
-                <RadioButton Content="{DynamicResource Str.TabAdvice}" GroupName="dqSub"
-                             Style="{StaticResource SubTabStyle}" Tag="advice" Checked="SubTab_Checked"/>
+                <RadioButton x:Name="SubTabDlss" AutomationProperties.Name="{DynamicResource Str.TabDlss}" GroupName="dqSub"
+                             IsChecked="True" Style="{StaticResource SubTabStyle}" Tag="dlss" Checked="SubTab_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.TabDlss}" VerticalAlignment="Center"/>
+                        <Border x:Name="TabBadgeDlss" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
+                            <TextBlock x:Name="TabStatusDlss" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
+                        </Border>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabVib}" Style="{StaticResource SubTabStyle}" Tag="vib" Checked="SubTab_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.TabVib}" VerticalAlignment="Center"/>
+                        <Border x:Name="TabBadgeVib" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
+                            <TextBlock x:Name="TabStatusVib" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
+                        </Border>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabIcc}" Style="{StaticResource SubTabStyle}" Tag="icc" Checked="SubTab_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.TabIcc}" VerticalAlignment="Center"/>
+                        <Border x:Name="TabBadgeIcc" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
+                            <TextBlock x:Name="TabStatusIcc" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
+                        </Border>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabDrs}" Style="{StaticResource SubTabStyle}" Tag="drs" Checked="SubTab_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.TabDrs}" VerticalAlignment="Center"/>
+                        <Border x:Name="TabBadgeDrs" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
+                            <TextBlock x:Name="TabStatusDrs" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
+                        </Border>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabAdvice}" Style="{StaticResource SubTabStyle}" Tag="advice" Checked="SubTab_Checked">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{DynamicResource Str.TabAdvice}" VerticalAlignment="Center"/>
+                        <Border x:Name="TabBadgeAdvice" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
+                            <TextBlock x:Name="TabStatusAdvice" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
+                        </Border>
+                    </StackPanel>
+                </RadioButton>
             </WrapPanel>
 
             <!-- 主体卡片 -->
-            <Border x:Name="CardDlss" Style="{StaticResource CardStyle}" Padding="20,18">
+            <Border x:Name="CardDlss" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.DlssCard}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock x:Name="GameStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
-                    <StackPanel x:Name="SupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                    <StackPanel x:Name="SupportedPanel" Visibility="Collapsed" Margin="0,12,0,0">
                         <TextBlock Text="{DynamicResource Str.DlssOverrideNote}"
                                    Style="{StaticResource MutedTextStyle}"/>
                         <UniformGrid Columns="3" Margin="0,10,0,0">
@@ -153,32 +222,41 @@
             </Border>
 
             <!-- 数字振动：显示级饱和度，全桌面生效 -->
-            <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock x:Name="VibStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
-                    <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                    <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed" Margin="0,12,0,0">
                         <TextBlock Text="{DynamicResource Str.VibNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <DockPanel Margin="0,12,0,0">
-                            <TextBlock DockPanel.Dock="Right" x:Name="VibPercentText" Text="—"
-                                       Style="{StaticResource MutedTextStyle}" MinWidth="48" TextAlignment="Right"/>
-                            <Slider x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
-                                    IsSnapToTickEnabled="False" ValueChanged="VibSlider_Changed"/>
-                        </DockPanel>
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="72"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" x:Name="VibPercentText" Text="—"
+                                       FontFamily="{StaticResource FontMono}" FontSize="26" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBrush}"
+                                       VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
+                                    IsSnapToTickEnabled="False" ValueChanged="VibSlider_Changed"
+                                    VerticalAlignment="Center" Margin="10,0,14,0"/>
+                            <Button Grid.Column="2" x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="120" VerticalAlignment="Center" Click="VibRecommended_Click"
+                                    ToolTip="{DynamicResource Str.TipVibRecommended}"/>
+                        </Grid>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <TextBlock x:Name="VibStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                             <Button x:Name="VibApplyButton" Content="{DynamicResource Str.Apply}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="VibApply_Click"/>
                             <Button x:Name="VibRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
                                     Style="{StaticResource SecondaryButtonStyle}"
-                                    MinWidth="110" Margin="0,0,8,0" Click="VibRestore_Click"/>
-                            <Button x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    MinWidth="130" Click="VibRecommended_Click"
-                                    ToolTip="{DynamicResource Str.TipVibRecommended}"/>
+                                    MinWidth="110" Click="VibRestore_Click"/>
                         </StackPanel>
 
                         <TextBlock Text="{DynamicResource Str.VibRecommendedNote}"
@@ -194,7 +272,7 @@
             </Border>
 
             <!-- ICC 滤镜卡片：系统层色彩变换，A 卡/Intel 与整体桌面观感兜底 -->
-            <Border x:Name="CardIcc" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0" Visibility="Collapsed">
+            <Border x:Name="CardIcc" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -278,124 +356,136 @@
                 </StackPanel>
             </Border>
 
-            <!-- M3：驱动 3D 设置（纹理/电源/透明度/低延迟） -->
-            <Border x:Name="CardDrs" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0" Visibility="Collapsed">
+            <!-- M3：驱动 3D 设置（纹理/电源/透明度/低延迟/各向异性/垂直同步/着色器缓存）
+                 0.1.12：两列字段网格，用足全宽；一键竞技推荐保持在卡头右侧 -->
+            <Border x:Name="CardDrs" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.DrsCard}" Style="{StaticResource CardTitleStyle}"/>
+                    <Grid>
+                        <TextBlock Text="{DynamicResource Str.DrsCard}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center" Margin="0"/>
+                        <Button x:Name="DrsPresetButton" Content="{DynamicResource Str.OneClickEsports}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                MinWidth="130" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Click="DrsPreset_Click"
+                                ToolTip="{DynamicResource Str.TipOneClickEsports}"/>
+                    </Grid>
                     <TextBlock x:Name="DrsStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
                         <TextBlock Text="{DynamicResource Str.DrsNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <Button x:Name="DrsPresetButton" Content="{DynamicResource Str.OneClickEsports}"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    MinWidth="130" Margin="0,0,8,0" Click="DrsPreset_Click"
-                                    ToolTip="{DynamicResource Str.TipOneClickEsports}"/>
-                            <TextBlock Text="{DynamicResource Str.DrsDefaultHint}"
-                                       Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <Grid Margin="0,12,0,0">
+                        <Grid Margin="0,14,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="160"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="28"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"/>
-                                <RowDefinition Height="36"/>
-                                <RowDefinition Height="36"/>
-                                <RowDefinition Height="36"/>
-                                <RowDefinition Height="36"/>
-                                <RowDefinition Height="36"/>
-                                <RowDefinition Height="36"/>
-                            </Grid.RowDefinitions>
+                            <Grid Grid.Column="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="42"/>
+                                    <RowDefinition Height="42"/>
+                                    <RowDefinition Height="42"/>
+                                    <RowDefinition Height="42"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="{DynamicResource Str.DrsTextureFilter}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="TexQualityCombo" Grid.Row="0" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipTextureFilter}">
+                                    <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.TextureHighQuality}" Tag="4294967286"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.TextureQuality}" Tag="0"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.TexturePerformance}" Tag="10"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.TextureHighPerformance}" Tag="20"/>
+                                </ComboBox>
 
-                            <TextBlock Grid.Row="0" Text="{DynamicResource Str.DrsTextureFilter}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="TexQualityCombo" Grid.Row="0" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipTextureFilter}">
-                                <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.TextureHighQuality}" Tag="4294967286"/>
-                                <ComboBoxItem Content="{DynamicResource Str.TextureQuality}" Tag="0"/>
-                                <ComboBoxItem Content="{DynamicResource Str.TexturePerformance}" Tag="10"/>
-                                <ComboBoxItem Content="{DynamicResource Str.TextureHighPerformance}" Tag="20"/>
-                            </ComboBox>
+                                <TextBlock Grid.Row="1" Text="{DynamicResource Str.DrsPowerManagement}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="PowerModeCombo" Grid.Row="1" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipPowerManagement}">
+                                    <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.PowerPreferMax}" Tag="1"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.PowerAdaptive}" Tag="0"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.PowerDriverControlled}" Tag="2"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.PowerStablePerf}" Tag="3"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.PowerLowestConsumption}" Tag="4"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.PowerOptimal}" Tag="5"/>
+                                </ComboBox>
 
-                            <TextBlock Grid.Row="1" Text="{DynamicResource Str.DrsPowerManagement}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="PowerModeCombo" Grid.Row="1" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipPowerManagement}">
-                                <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.PowerPreferMax}" Tag="1"/>
-                                <ComboBoxItem Content="{DynamicResource Str.PowerAdaptive}" Tag="0"/>
-                                <ComboBoxItem Content="{DynamicResource Str.PowerDriverControlled}" Tag="2"/>
-                                <ComboBoxItem Content="{DynamicResource Str.PowerStablePerf}" Tag="3"/>
-                                <ComboBoxItem Content="{DynamicResource Str.PowerLowestConsumption}" Tag="4"/>
-                                <ComboBoxItem Content="{DynamicResource Str.PowerOptimal}" Tag="5"/>
-                            </ComboBox>
+                                <TextBlock Grid.Row="2" Text="{DynamicResource Str.DrsTransparencyAA}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="TransparencyCombo" Grid.Row="2" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipTransparencyAA}">
+                                    <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.AaSuper2x}" Tag="2"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.AaSuper4x}" Tag="3"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.AaMultisample}" Tag="1"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Off}" Tag="0"/>
+                                </ComboBox>
 
-                            <TextBlock Grid.Row="2" Text="{DynamicResource Str.DrsTransparencyAA}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="TransparencyCombo" Grid.Row="2" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipTransparencyAA}">
-                                <ComboBoxItem Content="{DynamicResource Str.FollowDriverGame}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.AaSuper2x}" Tag="2"/>
-                                <ComboBoxItem Content="{DynamicResource Str.AaSuper4x}" Tag="3"/>
-                                <ComboBoxItem Content="{DynamicResource Str.AaMultisample}" Tag="1"/>
-                                <ComboBoxItem Content="{DynamicResource Str.Off}" Tag="0"/>
-                            </ComboBox>
+                                <TextBlock Grid.Row="3" Text="{DynamicResource Str.DrsLowLatency}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="PreRenderCombo" Grid.Row="3" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipLowLatency}">
+                                    <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Prerender1}" Tag="1"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Prerender2}" Tag="2"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Prerender3}" Tag="3"/>
+                                </ComboBox>
+                            </Grid>
 
-                            <TextBlock Grid.Row="3" Text="{DynamicResource Str.DrsLowLatency}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="PreRenderCombo" Grid.Row="3" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipLowLatency}">
-                                <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.Prerender1}" Tag="1"/>
-                                <ComboBoxItem Content="{DynamicResource Str.Prerender2}" Tag="2"/>
-                                <ComboBoxItem Content="{DynamicResource Str.Prerender3}" Tag="3"/>
-                            </ComboBox>
+                            <Grid Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="42"/>
+                                    <RowDefinition Height="42"/>
+                                    <RowDefinition Height="42"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="{DynamicResource Str.DrsAnisotropic}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="AnisoCombo" Grid.Row="0" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipAnisotropic}">
+                                    <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Af16x}" Tag="16"/>
+                                    <ComboBoxItem Content="8x" Tag="8"/>
+                                    <ComboBoxItem Content="4x" Tag="4"/>
+                                    <ComboBoxItem Content="2x" Tag="2"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Off}" Tag="0"/>
+                                </ComboBox>
 
-                            <TextBlock Grid.Row="4" Text="{DynamicResource Str.DrsAnisotropic}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="AnisoCombo" Grid.Row="4" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipAnisotropic}">
-                                <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.Af16x}" Tag="16"/>
-                                <ComboBoxItem Content="8x" Tag="8"/>
-                                <ComboBoxItem Content="4x" Tag="4"/>
-                                <ComboBoxItem Content="2x" Tag="2"/>
-                                <ComboBoxItem Content="{DynamicResource Str.Off}" Tag="0"/>
-                            </ComboBox>
+                                <TextBlock Grid.Row="1" Text="{DynamicResource Str.DrsVSync}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="VSyncCombo" Grid.Row="1" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipVSync}">
+                                    <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.VSyncForceOff}" Tag="off"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.VSyncForceOn}" Tag="on"/>
+                                </ComboBox>
 
-                            <TextBlock Grid.Row="5" Text="{DynamicResource Str.DrsVSync}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="VSyncCombo" Grid.Row="5" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipVSync}">
-                                <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.VSyncForceOff}" Tag="off"/>
-                                <ComboBoxItem Content="{DynamicResource Str.VSyncForceOn}" Tag="on"/>
-                            </ComboBox>
-
-                            <TextBlock Grid.Row="6" Text="{DynamicResource Str.DrsShaderCache}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
-                            <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="ShaderCacheCombo" Grid.Row="6" Grid.Column="1" Margin="8,2" MinWidth="220"
-                                      HorizontalAlignment="Left" SelectionChanged="Drs_SelectionChanged"
-                                      ToolTip="{DynamicResource Str.TipShaderCache}">
-                                <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
-                                <ComboBoxItem Content="{DynamicResource Str.OnRecommended}" Tag="1"/>
-                                <ComboBoxItem Content="{DynamicResource Str.Off}" Tag="0"/>
-                            </ComboBox>
+                                <TextBlock Grid.Row="2" Text="{DynamicResource Str.DrsShaderCache}" Style="{StaticResource DrsFieldLabelStyle}" VerticalAlignment="Center"/>
+                                <ComboBox Style="{StaticResource SelectComboBoxStyle}" x:Name="ShaderCacheCombo" Grid.Row="2" Grid.Column="1" Margin="8,2,0,2"
+                                          HorizontalAlignment="Stretch" SelectionChanged="Drs_SelectionChanged"
+                                          ToolTip="{DynamicResource Str.TipShaderCache}">
+                                    <ComboBoxItem Content="{DynamicResource Str.AppControlled}" Tag=""/>
+                                    <ComboBoxItem Content="{DynamicResource Str.OnRecommended}" Tag="1"/>
+                                    <ComboBoxItem Content="{DynamicResource Str.Off}" Tag="0"/>
+                                </ComboBox>
+                            </Grid>
                         </Grid>
 
-                        <TextBlock x:Name="DrsResultText" Text="" Style="{StaticResource MutedTextStyle}"
-                                   Margin="0,10,0,0" TextWrapping="Wrap"/>
-
-                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                             <Button x:Name="DrsApplyButton" Content="{DynamicResource Str.ApplyDrs}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="DrsApply_Click"/>
                             <Button x:Name="DrsRestoreButton" Content="{DynamicResource Str.RestoreDefault}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="110" Click="DrsRestore_Click"/>
+                            <TextBlock Text="{DynamicResource Str.DrsDefaultHint}"
+                                       Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
 
                         <TextBlock Text="{DynamicResource Str.DrsNote2}"
@@ -407,64 +497,70 @@
                 </StackPanel>
             </Border>
 
-            <!-- 建议与清单：两张信息卡归入同一页签 -->
-            <StackPanel x:Name="CardAdvice" Visibility="Collapsed">
-            <!-- 驱动版本建议：只读信息，本工具不下载也不安装驱动 -->
-            <Border x:Name="CardAdviceD1" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.DriverCard}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock x:Name="DriverAdviceText" Text="" Style="{StaticResource MutedTextStyle}"
-                               Margin="0,10,0,0" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="DriverAdviceSourceText" Text="" Style="{StaticResource MutedTextStyle}"
-                               Margin="0,10,0,0" TextWrapping="Wrap" FontSize="11.5"/>
-                </StackPanel>
-            </Border>
+            <!-- 建议与清单：两张信息卡归入同一页签；0.1.12 全宽下并排两列 -->
+            <Grid x:Name="CardAdvice" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="11*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="9*"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- 驱动内手动设置清单（P2-8）：按厂商生成，只读指引，不代改任何设置 -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
-                <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.ManualCard}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock Text="{DynamicResource Str.ManualIntro}"
-                               Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
-                    <TextBlock x:Name="ManualGpuText" Text="" Style="{StaticResource MutedTextStyle}"
-                               Margin="0,10,0,0" TextWrapping="Wrap"/>
-
-                    <!-- N 卡：驱动 3D 设置卡已自动化，无需手动清单 -->
-                    <TextBlock x:Name="ManualNvidiaText" Text="{DynamicResource Str.ManualNvidiaBody}"
-                               Style="{StaticResource ManualItem}" Visibility="Collapsed"/>
-
-                    <!-- A 卡：Adrenalin 手动清单 -->
-                    <StackPanel x:Name="ManualAmdPanel" Visibility="Collapsed" Margin="0,4,0,0">
-                        <TextBlock Text="{DynamicResource Str.ManualAmdEntry}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem1}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem2}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem3}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem4}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem5}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem6}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdItem7}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualAmdNote}" Style="{StaticResource ManualItem}" FontSize="11.5"/>
+                <!-- 驱动版本建议：只读信息，本工具不下载也不安装驱动 -->
+                <Border x:Name="CardAdviceD1" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="20,18">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.DriverCard}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock x:Name="DriverAdviceText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="DriverAdviceSourceText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap" FontSize="11.5"/>
                     </StackPanel>
+                </Border>
 
-                    <!-- Intel：Graphics Software 手动清单 -->
-                    <StackPanel x:Name="ManualIntelPanel" Visibility="Collapsed" Margin="0,4,0,0">
-                        <TextBlock Text="{DynamicResource Str.ManualIntelEntry}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualIntelItem1}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualIntelItem2}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualIntelItem3}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualIntelItem4}" Style="{StaticResource ManualItem}"/>
-                        <TextBlock Text="{DynamicResource Str.ManualIntelNote}" Style="{StaticResource ManualItem}" FontSize="11.5"/>
+                <!-- 驱动内手动设置清单（P2-8）：按厂商生成，只读指引，不代改任何设置 -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="20,18">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.ManualCard}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.ManualIntro}"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="ManualGpuText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                        <!-- N 卡：驱动 3D 设置卡已自动化，无需手动清单 -->
+                        <TextBlock x:Name="ManualNvidiaText" Text="{DynamicResource Str.ManualNvidiaBody}"
+                                   Style="{StaticResource ManualItem}" Visibility="Collapsed"/>
+
+                        <!-- A 卡：Adrenalin 手动清单 -->
+                        <StackPanel x:Name="ManualAmdPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                            <TextBlock Text="{DynamicResource Str.ManualAmdEntry}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem1}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem2}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem3}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem4}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem5}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem6}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdItem7}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdNote}" Style="{StaticResource ManualItem}" FontSize="11.5"/>
+                        </StackPanel>
+
+                        <!-- Intel：Graphics Software 手动清单 -->
+                        <StackPanel x:Name="ManualIntelPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                            <TextBlock Text="{DynamicResource Str.ManualIntelEntry}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualIntelItem1}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualIntelItem2}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualIntelItem3}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualIntelItem4}" Style="{StaticResource ManualItem}"/>
+                            <TextBlock Text="{DynamicResource Str.ManualIntelNote}" Style="{StaticResource ManualItem}" FontSize="11.5"/>
+                        </StackPanel>
+
+                        <!-- 识别不出厂商：明说，指向 ICC 兜底 -->
+                        <TextBlock x:Name="ManualUnknownText" Text="{DynamicResource Str.ManualUnknownBody}"
+                                   Style="{StaticResource ManualItem}" Visibility="Collapsed"/>
+
+                        <TextBlock Text="{DynamicResource Str.ManualFooter}"
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="11.5"/>
                     </StackPanel>
-
-                    <!-- 识别不出厂商：明说，指向 ICC 兜底 -->
-                    <TextBlock x:Name="ManualUnknownText" Text="{DynamicResource Str.ManualUnknownBody}"
-                               Style="{StaticResource ManualItem}" Visibility="Collapsed"/>
-
-                    <TextBlock Text="{DynamicResource Str.ManualFooter}"
-                               Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="11.5"/>
-                </StackPanel>
-            </Border>
-            </StackPanel>
+                </Border>
+            </Grid>
 
         </StackPanel>
     </ScrollViewer>

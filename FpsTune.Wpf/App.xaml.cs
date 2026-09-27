@@ -56,6 +56,7 @@ public partial class App : Application
         base.OnStartup(e);
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
         {
+            splash.SetPhase(48, Str.T("Str.SplashPhaseRestore"));
             LegacyMigrations.EnsureRun();
             // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话
             try
@@ -68,6 +69,7 @@ public partial class App : Application
                 // 恢复失败不阻塞启动
             }
 
+            splash.SetPhase(80, Str.T("Str.SplashPhaseBuild"));
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
             mainWindow.IsVisibleChanged += (_, _) =>

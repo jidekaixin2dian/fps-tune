@@ -207,7 +207,7 @@
     <s:String x:Key="Str.WeChatPurpose">仅接受合作/反馈</s:String>
     <s:String x:Key="Str.CopyWeChatId">复制微信号</s:String>
     <s:String x:Key="Str.AppNameShort">帧律</s:String>
-    <s:String x:Key="Str.TipDisplayMode">切换概览与检测页的显示模式，自动记住选择</s:String>
+    <s:String x:Key="Str.TipDisplayMode">切换概览页的显示模式，自动记住选择</s:String>
     <s:String x:Key="Str.SettingsIntro">选择一个分类即可调整，设置自动保存。</s:String>
     <s:String x:Key="Str.ThemeDarkShort">深色</s:String>
     <s:String x:Key="Str.ThemeDarkDesc">近黑背景 · 青色强调</s:String>
@@ -217,7 +217,7 @@
     <s:String x:Key="Str.ThemeSystemDesc">随 Windows 外观自动变化</s:String>
     <s:String x:Key="Str.LowSpecMode">低配模式（减少动画，实时采样改为每 3 秒一次）</s:String>
     <s:String x:Key="Str.DisplayMode">界面模式</s:String>
-    <s:String x:Key="Str.DisplayModeDesc">控制台用数字和进度条显示检测数据；经典界面保留原有概览和曲线。</s:String>
+    <s:String x:Key="Str.DisplayModeDesc">切换概览页形态：紧凑控制台为一页式操作清单，经典概览为模块卡片与曲线。</s:String>
     <s:String x:Key="Str.CompactConsole">紧凑控制台</s:String>
     <s:String x:Key="Str.ClassicOverview">经典概览</s:String>
     <s:String x:Key="Str.SectionStartup">启动</s:String>
@@ -592,6 +592,9 @@
 
     <!-- 启动画面 -->
     <s:String x:Key="Str.SplashLoading">正在加载…</s:String>
+    <s:String x:Key="Str.SplashPhasePrepare">正在准备…</s:String>
+    <s:String x:Key="Str.SplashPhaseRestore">正在恢复本地状态…</s:String>
+    <s:String x:Key="Str.SplashPhaseBuild">正在构建界面…</s:String>
     <s:String x:Key="Str.SplashTagline">通用 FPS · Windows 系统层帧率优化工具</s:String>
 
     <!-- 我的方案（弹窗管理） -->
@@ -635,6 +638,9 @@
     <s:String x:Key="Str.TabIcc">ICC 滤镜</s:String>
     <s:String x:Key="Str.TabDrs">驱动 3D</s:String>
     <s:String x:Key="Str.TabAdvice">建议与清单</s:String>
+    <s:String x:Key="Str.BadgeDefault">默认</s:String>
+    <s:String x:Key="Str.BadgeCustomCount">{}{0} 项</s:String>
+    <s:String x:Key="Str.NoGameLocated">未定位游戏</s:String>
 
     <!-- A/B 页 PresentMon 前置探测（P2-12） -->
     <s:String x:Key="Str.PmChecking">正在检查 PresentMon…</s:String>

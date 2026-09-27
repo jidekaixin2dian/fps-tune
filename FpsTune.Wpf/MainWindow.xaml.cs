@@ -207,7 +207,6 @@ public partial class MainWindow : Window
         try { SettingsService.Save(SettingsService.Current); }
         catch (Exception ex) { DialogService.Warning("界面模式", "本次切换已生效，但无法保存偏好：" + ex.Message); }
         UpdateOverviewModeLabel();
-        if (_pageCache.TryGetValue("detect", out var detect) && detect is DetectView view) view.ApplyDisplayMode();
         if (NavHome.IsChecked == true) SwitchPage(GetPage("home"));
         if (_pageCache.TryGetValue("settings", out var settings) && settings is SettingsView settingsView) settingsView.RefreshDisplayMode();
     }
