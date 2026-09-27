@@ -21,6 +21,15 @@
                 <TextBlock Text="{DynamicResource Str.NavAb}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="{DynamicResource Str.AbIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+                <!-- P2-12：PresentMon 前置可用性（只读探测；缺失时给官方命令，不代为安装） -->
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <TextBlock x:Name="PresentMonStatusText" Text="{DynamicResource Str.PmChecking}"
+                               Style="{StaticResource MutedTextStyle}" FontFamily="{StaticResource FontMono}"
+                               FontSize="12" VerticalAlignment="Center"/>
+                    <Button x:Name="PmCopyButton" Content="{DynamicResource Str.PmCopyCmd}"
+                            Style="{StaticResource GhostButtonStyle}" MinWidth="84" Height="26" Padding="8,0"
+                            Margin="10,0,0,0" Visibility="Collapsed" Click="PmCopyButton_Click"/>
+                </StackPanel>
             </StackPanel>
              <Button x:Name="OpenDirButton"
                      Content="{DynamicResource Str.OpenExperimentDir}"

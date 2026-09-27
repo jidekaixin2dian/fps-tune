@@ -635,4 +635,11 @@
     <s:String x:Key="Str.TabIcc">ICC filter</s:String>
     <s:String x:Key="Str.TabDrs">Driver 3D</s:String>
     <s:String x:Key="Str.TabAdvice">Advice &amp; checklist</s:String>
+
+    <!-- A/B page PresentMon pre-check (P2-12) -->
+    <s:String x:Key="Str.PmChecking">Checking PresentMon…</s:String>
+    <s:String x:Key="Str.PmReady">PresentMon ready: {0} (auto sampling available)</s:String>
+    <s:String x:Key="Str.PmMissing">PresentMon not found — A/B auto sampling unavailable. Official install command:</s:String>
+    <s:String x:Key="Str.PmCopyCmd">Copy command</s:String>
+    <s:String x:Key="Str.PmCopied">Copied</s:String>
 </ResourceDictionary>

@@ -485,9 +485,12 @@ public static class ExperimentRunner
     }
 
     private static string? FindPresentMon(Options options)
+        => FindPresentMon(options.PresentMonPath);
+
+    private static string? FindPresentMon(string? explicitPath)
     {
-        if (options.PresentMonPath is { Length: > 0 } && File.Exists(options.PresentMonPath))
-            return options.PresentMonPath;
+        if (explicitPath is { Length: > 0 } && File.Exists(explicitPath))
+            return explicitPath;
 
         var candidates = new List<string>();
         var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
@@ -500,6 +503,12 @@ public static class ExperimentRunner
         candidates.Add(@"C:\Program Files (x86)\NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe");
         return candidates.FirstOrDefault(File.Exists);
     }
+
+    /// <summary>
+    /// P2-12：A/B 页前置探测 PresentMon 是否可用（只读查找，不安装、不启动）。
+    /// 与自动采样同一套查找口径：显式路径 → PATH → WinGet Links → FrameViewSDK。
+    /// </summary>
+    public static string? ProbePresentMon() => FindPresentMon(new Options());
 
     /// <summary>
     /// 按进程名找游戏进程。GameName 可空（未定位游戏时为 null），

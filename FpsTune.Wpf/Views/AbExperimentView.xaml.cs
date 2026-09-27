@@ -26,7 +26,45 @@ public partial class AbExperimentView : UserControl
     public AbExperimentView()
     {
         InitializeComponent();
-        Loaded += (_, _) => ReloadWizard();
+        Loaded += (_, _) =>
+        {
+            ReloadWizard();
+            _ = RefreshPresentMonAsync();
+        };
+    }
+
+    // ---------- PresentMon 前置探测（P2-12） ----------
+
+    /// <summary>官方安装命令；与自动采样失败时的提示保持同一 id。</summary>
+    private const string PresentMonInstallCmd = "winget install Intel.PresentMon.Console";
+
+    /// <summary>进入页面即前置探测 PresentMon（只读查找）：缺了就地给官方命令，本工具不代为安装。</summary>
+    private async Task RefreshPresentMonAsync()
+    {
+        var path = await Task.Run(ExperimentRunner.ProbePresentMon);
+        if (path is not null)
+        {
+            PresentMonStatusText.Text = Str.T("Str.PmReady", Path.GetFileName(path));
+            PmCopyButton.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            PresentMonStatusText.Text = Str.T("Str.PmMissing");
+            PmCopyButton.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void PmCopyButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Clipboard.SetText(PresentMonInstallCmd);
+            PmCopyButton.Content = Str.T("Str.PmCopied");
+        }
+        catch
+        {
+            // 剪贴板偶发被占用：静默即可，命令文本仍完整显示在状态行里
+        }
     }
 
     // ---------- 向导状态 ----------

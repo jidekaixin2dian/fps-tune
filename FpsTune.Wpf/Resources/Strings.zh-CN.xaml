@@ -635,4 +635,11 @@
     <s:String x:Key="Str.TabIcc">ICC 滤镜</s:String>
     <s:String x:Key="Str.TabDrs">驱动 3D</s:String>
     <s:String x:Key="Str.TabAdvice">建议与清单</s:String>
+
+    <!-- A/B 页 PresentMon 前置探测（P2-12） -->
+    <s:String x:Key="Str.PmChecking">正在检查 PresentMon…</s:String>
+    <s:String x:Key="Str.PmReady">PresentMon 已就绪：{0}（自动采样可用）</s:String>
+    <s:String x:Key="Str.PmMissing">未检测到 PresentMon——A/B 自动采样不可用。官方安装命令：</s:String>
+    <s:String x:Key="Str.PmCopyCmd">复制命令</s:String>
+    <s:String x:Key="Str.PmCopied">已复制</s:String>
 </ResourceDictionary>
