@@ -58,14 +58,18 @@ asks for consent and verifies SHA-256 first.
 |---|---|
 | ![Sessions](assets/screenshots/04-session.png) | ![A/B experiment](assets/screenshots/05-ab-experiment.png) |
 
-Also included: **display & quality** (sub-tabbed: DLSS preset override / digital vibrance / ICC
-filter — including applying your own `.icc` / `.icm` calibration file — / per-game driver 3D
-settings / a vendor-specific in-driver manual checklist / driver version advice, all read-only
-guidance and reversible), backups & logs (audit of every write plus a backup-file status list so
-consumed `.restored` files are obvious), a PresentMon pre-check on the A/B page (gives the official
-install command when missing — the tool never installs it for you), and settings (theme / tray /
-global hotkey Ctrl+Alt+F / per-game auto-apply profiles).
-Dark, light and system themes; borderless custom title bar; splash screen; first-run guided setup.
+Also included: **display & quality** (four tabs: DLSS preset override / vibrance & ICC — a
+digital-vibrance slider plus applying your own `.icc` / `.icm` calibration file / per-game driver
+3D settings / advice & checklist — a vendor-specific in-driver manual checklist and driver version
+advice; each tab shows a live status badge so you can see every group's state without opening it,
+all read-only guidance and reversible), backups & logs (audit of every write plus a backup-file
+status list so consumed `.restored` files are obvious), a PresentMon pre-check on the A/B page
+(gives the official install command when missing — the tool never installs it for you), and
+settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles).
+Dark, light and system themes; borderless custom title bar; a splash screen with real startup-phase
+progress; the classic overview offers a first-run "detect → optimize" guide, while the console overview
+gives one-click basic advice (game mode / background recording / GPU preference — three
+game-agnostic settings).
 
 ## Quick start
 
@@ -137,7 +141,7 @@ FpsTune.Wpf/
   Core/                       OptimizationCatalog / NativeOptimizationEngine /
                               BackupService / DetectionService / ExperimentRunner
   Services/                   theme / settings / CLI host / update check
-  Views/                      WPF views (console and classic layouts)
+  Views/                      WPF views (overview page has two forms: console / classic)
 FpsTune.Wpf.Tests/            unit tests, incl. catalog consistency guards
 TESTING.md                    external testing guide: full A/B, or a minimal data template
 installer/                    Inno Setup packaging

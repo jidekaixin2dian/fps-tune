@@ -53,13 +53,15 @@ C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入�
 |---|---|
 | ![性能会话页](assets/screenshots/04-session.png) | ![A/B 实验页](assets/screenshots/05-ab-experiment.png) |
 
-另有：**显示与画质**（二级页签分组：DLSS 预设覆盖 / 数字振动 / ICC 滤镜——含应用你自己的
-`.icc` / `.icm` 校色文件——/ 驱动 3D 按游戏写入 / 按厂商生成的驱动内手动设置清单 /
-驱动版本建议，全部只读指引可还原）、备份 / 日志（每次写入的审计 + 备份文件状态列表，
-已消费的 `.restored` 一目了然）、A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，
-不代为安装）、设置（主题 / 托盘 / 全局热键 Ctrl+Alt+F / 按游戏自动应用方案）、
-启动画面与空闲预热的加载体验。
-支持深色、浅色与跟随系统，无边框自绘标题栏，首次启动有引导。
+另有：**显示与画质**（四个页签：DLSS 预设覆盖 / 振动与 ICC——数字振动滑条 + 应用你自己的
+`.icc` / `.icm` 校色文件 / 驱动 3D 按游戏写入 / 建议与清单——按厂商生成的驱动内手动设置
+清单与驱动版本建议；页签带当前状态徽标，不点进去也能看到每组状态，全部只读指引可还原）、
+备份 / 日志（每次写入的审计 + 备份文件状态列表，已消费的 `.restored` 一目了然）、
+A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，不代为安装）、
+设置（主题 / 托盘 / 全局热键 Ctrl+Alt+F / 按游戏自动应用方案）、
+带真实阶段进度的启动画面与空闲预热。
+支持深色、浅色与跟随系统，无边框自绘标题栏；经典概览在首次启动提供「检测 → 优化」引导，
+控制台概览则是一键采纳「基础建议」（游戏模式 / 后台录制 / 显卡偏好三项，不挑游戏）。
 
 ## 快速开始
 
@@ -127,7 +129,7 @@ FpsTune.Wpf/
   Core/                       OptimizationCatalog / NativeOptimizationEngine /
                               BackupService / DetectionService / ExperimentRunner
   Services/                   主题 / 设置 / 脚本定位 / 进程封装 / CLI 宿主 / 更新检查
-  Views/                      WPF 视图（控制台与经典两套布局）
+  Views/                      WPF 视图（概览页两种形态：紧凑控制台 / 经典概览）
 FpsTune.Wpf.Tests/            单元测试（含 catalog 一致性守卫）
 installer/                    Inno Setup 打包
 docs/                         现状文档（HANDOFF / ROADMAP / README 索引）
