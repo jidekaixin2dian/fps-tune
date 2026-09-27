@@ -13,7 +13,7 @@
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **308 / 308 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译） |
-| 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示） |
+| 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-28.md`） |
 
 ## 第一步：确认基线，不要先改代码
 
@@ -32,7 +32,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 308
 1. **任何已验证的改动立刻提交**，不允许把验证过的东西长期留在工作区。
 2. 一个改动一个提交；大动作前先 `chore: checkpoint before <下一步>` 存档。
 3. 提交信息用中文三段式：标题 + 为什么 + 怎么验的。
-4. 跑全量测试并**贴原始输出**，不要只说"测试通过"。
+4. 跑全量测试并**贴原始输出**，不要只说"测试通过"。核对"编译 0 警告"必须
+   `dotnet build -c Release --no-incremental`——**增量构建在工程已最新时跳过 csc，摘要照报
+   "0 个警告"**（2 处 CS8604 曾被这样掩盖三轮，2026-09-28 才暴露修复，见 `AI-WORKFLOW.md` §二）。
 5. 行尾：仓库统一 LF（`.gitattributes` 强制）。`git diff --stat` 出现大量"增删对称"的文件
    说明行尾被翻成 CRLF —— 丢弃重来，别提交。
 6. **每轮收工必须更新 `AGENTS.md` 与 `docs/HANDOFF.md`，并立刻 `git commit`**（用户 2026-09-22 明确要求）。
