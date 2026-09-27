@@ -1,6 +1,6 @@
 # 代码与工作区健康度（现状底数）
 
-> 最后核对：2026-09-25（全量实测，命令与数字都可复现）
+> 最后核对：2026-09-27（0.1.11 候选时点全量实测，命令与数字都可复现）
 > 用途：接手时**先看这一份**，不要重新量一遍。数字过期就改这份，别另起文档。
 > 相关：`docs/dev/AI-WORKFLOW.md`（纪律）、`docs/dev/PLAN-backlog.md`（待办）
 
@@ -14,40 +14,38 @@ View code-behind；**没有** TODO/HACK 堆积、**没有**吞异常、**编译 
 
 | 目录 | 体积 | 说明 |
 |---|---|---|
-| `dist/` | **370 M** | 构建产物，**已在 `.gitignore`**（0.1.2/0.1.3/0.1.4 三版） |
+| `dist/` | **1.3 G** | 构建产物，**已在 `.gitignore`**（0.1.2~0.1.11 共九版资产，含三份 Setup） |
 | `FpsTune.Wpf/` | 20 M | 含 `bin/`+`obj/`（已忽略）；源码本身很小 |
 | `FpsTune.Wpf.Tests/` | 7.7 M | 同上 |
 | `work/` | 6.0 M | 驱动层探针与一次性脚本，**已忽略**（AGENTS.md 禁止删） |
 | 其余 | < 400 K | `assets` / `docs` / `catalog` / 根脚本 |
 
-- **tracked 文件仅 168 个**；`.git` 16 M。
+- **tracked 文件 179 个**（2026-09-27 实测）；`.git` 随历史增长。
 - **未跟踪且未被忽略的文件 = 0**（`git status --porcelain -uall` 为空）——
   即"工作区干净"是字面意义上的干净，没有游离文件。
 - 结论：**体积不构成问题**。`dist/` 占 370 M 是历史发布产物，可随时重生成；
-  真要瘦身只需删旧版本目录（属可删范围），但保留 0.1.3 资产有核对价值，暂不删。
+  真要瘦身可删已被后续版本包含的旧候选（0.1.4~0.1.10 与 0.1.2，属可删范围，约 1 G）；已发布 v0.1.7 与当前 0.1.11 资产建议保留。是否清理由用户决定。
 
 ## 2. 代码度量（`FpsTune.Wpf`，排除 `obj`/`bin`）
 
 | 指标 | 值 | 判读 |
 |---|---|---|
-| 生产代码 | **22,985 行**（`.cs` + `.xaml`） | 规模小，单人可通读 |
-| 测试代码 | 4,797 行 / 279 条 | 比例健康 |
-| 方法总数 | 590 | — |
+| 生产代码 | **24,195 行**（`.cs` + `.xaml`） | 规模小，单人可通读 |
+| 测试代码 | 5,149 行 / 308 条 | 比例健康 |
+| 方法总数 | 590（0.1.4 时点实测；0.1.11 未重测，见 P3-8） | — |
 | **方法长度中位数** | **14 行** | 健康（面条代码的中位数会很高） |
-| 方法 ≥ 60 行 | 29 个（4.9%） | 可接受 |
-| 方法 ≥ 100 行 | 7 个 | 见 §3.2 |
-| 最长方法 | 180 行（`ExperimentRunner.RunTestGroupAsync`） | 线性编排，见 §3.2 |
+| 方法 ≥ 60 行 | 29 个（4.9%，0.1.4 时点实测） | 可接受 |
+| 方法 ≥ 100 行 | 7 个（0.1.4 时点实测） | 见 §3.2 |
+| 最长方法 | 180 行（`ExperimentRunner.RunTestGroupAsync`，0.1.4 时点实测） | 线性编排，见 §3.2 |
 | 编译警告 | **0**（2026-09-25 由 6 个清零） | 底线：**新增代码必须 0 警告** |
 | `TODO` / `HACK` / `FIXME` | **0** | — |
 | 空 `catch` 吞异常 | **0** | 唯一的能力探测 `catch` 已注明理由 |
 
-最大文件（前 6）：`App.xaml` 822（资源字典，非逻辑）、`PerformanceSessionStore.cs` 804、
-`DisplayQualityView.xaml.cs` 769、`ExperimentRunner.cs` 763、`OptimizeView.xaml.cs` 744、
-`AbExperimentView.xaml.cs` 725。
+最大文件（前 6，2026-09-27 实测）：`DisplayQualityView.xaml.cs` 884（含异步快照与二级页签逻辑）、`App.xaml` 822（资源字典，非逻辑）、`PerformanceSessionStore.cs` 804、`ExperimentRunner.cs` 785（含 PresentMon 探测）、`AbExperimentView.xaml.cs` 763、`SettingsView.xaml.cs` 699。`OptimizeView.xaml.cs` 已从 744 降到 ~640（方案弹窗化移走了五个 handler）。
 
 ## 3. 已知债务（按值得做的顺序）
 
-### 3.1 i18n：985 处硬编码中文 / 51 个文件 —— **用户已决定暂停**
+### 3.1 i18n：965 处硬编码中文 / 51 个文件 —— **用户已决定暂停**
 
 - 基线 `FpsTune.Wpf.Tests/I18nBaseline.txt` 就是待办清单（按数量降序看）。
 - **不要主动重启**；重启条件与做法见 `PLAN-backlog.md` 的 P2-7。
@@ -67,9 +65,9 @@ View code-behind；**没有** TODO/HACK 堆积、**没有**吞异常、**编译 
 
 | 文件 | 行数 | 里面混着的非 UI 逻辑 |
 |---|---|---|
-| `DisplayQualityView.xaml.cs` | 769 | 4 张卡片各自的 Refresh/Apply/Restore 编排（本身较薄，但重复的"确认框 + busy 守卫"模式出现 8 次） |
-| `OptimizeView.xaml.cs` | 744 | **FlowDocument 构建约 200 行**（`NewPara`/`R`/`SetPlain`/`SetItemListDoc`/`SetItemDetail`/`SetApplyResult`/`SetRawMonospace`） |
-| `AbExperimentView.xaml.cs` | 725 | **JSON 解析与报告组装**（`TryReadRequiredMetric`/`TryComposeReportFile`/`TryGet`）+ 图表绘制约 120 行（绘制属视图职责，可不动） |
+| `DisplayQualityView.xaml.cs` | 884 | 6 张卡片的读取/应用/还原编排；0.1.9 起状态读取已抽成异步快照（ComputeSnapshot/ApplySnapshot），重复的"确认框 + busy 守卫"模式仍出现多次 |
+| `OptimizeView.xaml.cs` | ~640 | **FlowDocument 构建约 200 行**（`NewPara`/`R`/`SetPlain`/`SetItemListDoc`/`SetItemDetail`/`SetApplyResult`/`SetRawMonospace`）；方案弹窗化后已变瘦 |
+| `AbExperimentView.xaml.cs` | 763 | **JSON 解析与报告组装**（`TryReadRequiredMetric`/`TryComposeReportFile`/`TryGet`）+ 图表绘制约 120 行（绘制属视图职责，可不动）+ P2-12 PresentMon 状态条 |
 
 - 可提取的：`OptimizeView` 的文档渲染 → 独立渲染类；`AbExperimentView` 的 JSON/报告组装 → Service。
 - **为什么没直接做**：这会改动 3 个页面的结构，属于设计变更而非机械重构；
