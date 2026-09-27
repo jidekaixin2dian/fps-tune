@@ -54,7 +54,7 @@
         </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28,22,28,24" MaxWidth="1060" HorizontalAlignment="Left">
+        <StackPanel Margin="28,22,28,24" MaxWidth="1060" HorizontalAlignment="Center">
 
             <!-- 页头 -->
             <StackPanel Margin="0,0,0,14">
