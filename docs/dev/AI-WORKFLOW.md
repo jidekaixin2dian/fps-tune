@@ -55,6 +55,10 @@
   - 目录/状态类用 `PerformanceSessionStore.OverrideDir`、`AutoProfileActivityStore.OverrideDir`、`DiagnosticReportExporter.BaseDirOverride`；
   - 脚本类用 `-Simulate` 并把 `LOCALAPPDATA` 指到临时目录；
   - **会改静态注入点的测试类必须挂 `[Collection("BackupService serial")]`**，否则并行互相踩。
+- **核对"编译 0 警告"基线必须全量重编译**：`dotnet build -c Release --no-incremental`
+  后再数警告。增量构建在工程已是最新时会**跳过 csc**，摘要照报"0 个警告"——
+  2026-09-25 的 0 警告记录因此失真：同日 06:47 `718a1be` 引入 2 处 CS8604，
+  之后每轮增量构建都假报 0，直到 2026-09-28 全量重编译才暴露并修复（`ccb883b`）。
 - **修 bug 先想"哪条测试能抓住它"**，没有就补一条防回归测试；新增行为同理。
 - **自动化覆盖不到的路径要如实标注**，并给用户一个可执行的人工验证步骤（需要真机/游戏/提权会话的尤其如此）。
 - 文档、`.gitignore` 这类改动不影响编译与测试时，可不必重跑，但要在提交信息里说明"已确认无测试读取这些文件"。
