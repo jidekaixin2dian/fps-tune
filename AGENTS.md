@@ -9,7 +9,7 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（33 个可还原优化项） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.1.11` + `VersionSuffix=beta`；**0.1.11 候选（P2-11 + P2-10 + 二级页签 + P2-12 PresentMon 前置探测 + 居中 + 空闲预热 + splash 重设计）已按 `712a1a3` 构建并部署 `D:\FpsTune` 供目检**；线上最新 **`v0.1.7-beta`**（2026-09-27 发布，标签 `fab34e7`）；**push / 发 Release 等用户点名** |
+| 版本 | `VersionPrefix=0.1.12` + `VersionSuffix=beta`；**0.1.12 候选（全仓统一卡片骨架 + 显示页全宽大改 + splash 真阶段进度 + 排查修复）已按 `307908b` 构建并部署 `D:\FpsTune` 供目检**（0.1.11 候选作废，内容全含于 0.1.12）；线上最新 **`v0.1.7-beta`**（2026-09-27 发布，标签 `fab34e7`）；**push / 发 Release 等用户点名** |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **308 / 308 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译） |
@@ -149,7 +149,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 308
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（0.1.11-beta @ 712a1a3；备份 -2df6 / -4439 / -647f-2 / -647f / -fab3 / -46a3 / -0627 / -20260925 为更早版本），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（0.1.12-beta @ 307908b；备份 -712a = 0.1.11、-2df6 / -4439 / -647f-2 / -647f / -fab3 / -46a3 / -0627 / -20260925 为更早版本），开始菜单 .lnk 也指向它；只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 
