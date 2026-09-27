@@ -83,6 +83,14 @@ public partial class App : Application
             mainWindow.Show();
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();
+
+            // 空闲预热重页（优化/显示）：构建挪出点击关键路径，首点即开。
+            // 失败不影响使用——首次导航仍会按原路径懒加载。
+            Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+            {
+                try { mainWindow.WarmHeavyPages(); }
+                catch { /* 预热失败不阻塞 */ }
+            }));
         }));
     }
 
