@@ -628,4 +628,11 @@
     <s:String x:Key="Str.IccFileNotDisplay">The selected file is not a usable display ICC profile (mntr/RGB display class required).</s:String>
     <s:String x:Key="Str.IccApplied">Applied: {0}. The change is system-wide and takes effect immediately; use "Restore original" if unsatisfied.</s:String>
     <s:String x:Key="Str.IccApplyFailed">Apply failed: {0}</s:String>
+
+    <!-- Display page sub-tabs -->
+    <s:String x:Key="Str.TabDlss">DLSS presets</s:String>
+    <s:String x:Key="Str.TabVib">Digital vibrance</s:String>
+    <s:String x:Key="Str.TabIcc">ICC filter</s:String>
+    <s:String x:Key="Str.TabDrs">Driver 3D</s:String>
+    <s:String x:Key="Str.TabAdvice">Advice &amp; checklist</s:String>
 </ResourceDictionary>

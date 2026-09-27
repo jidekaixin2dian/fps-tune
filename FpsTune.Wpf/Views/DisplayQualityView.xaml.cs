@@ -149,6 +149,25 @@ public partial class DisplayQualityView : UserControl
         ManualUnknownText.Visibility = vendor == GpuVendorKind.Unknown ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    /// <summary>
+    /// 二级页签（用户反馈：卡片太多滚动太长）：一次只显示一组卡片。
+    /// 页面实例被缓存，页签选择在会话内自然保持；XAML 已静态设置首签可见。
+    /// </summary>
+    private void SubTab_Checked(object sender, RoutedEventArgs e)
+    {
+        // InitializeComponent 期间首个页签的 Checked 会提前触发，此时后面的卡片还没解析出来
+        if (CardDlss is null || CardAdvice is null)
+            return;
+        if (sender is not RadioButton { Tag: string key })
+            return;
+
+        CardDlss.Visibility = key == "dlss" ? Visibility.Visible : Visibility.Collapsed;
+        CardVib.Visibility = key == "vib" ? Visibility.Visible : Visibility.Collapsed;
+        CardIcc.Visibility = key == "icc" ? Visibility.Visible : Visibility.Collapsed;
+        CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;
+        CardAdvice.Visibility = key == "advice" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void ApplyDlssState(StateSnapshot s)
     {
         if (!s.FeatureEnabled)

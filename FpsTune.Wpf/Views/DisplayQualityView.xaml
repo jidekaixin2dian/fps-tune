@@ -34,19 +34,51 @@
             <Setter Property="Margin" Value="0,6,0,0"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+        <!-- 二级页签（P2-13 反馈：页面卡片太多滚动太长，按组切换） -->
+        <Style x:Key="SubTabStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="13.5"/>
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Margin" Value="0,0,8,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+                <Border x:Name="Tab" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="4" Padding="14,6">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Tab" Property="Background" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,22,28,24" MaxWidth="1060" HorizontalAlignment="Left">
 
             <!-- 页头 -->
-            <StackPanel Margin="0,0,0,16">
+            <StackPanel Margin="0,0,0,14">
                 <TextBlock Text="{DynamicResource Str.DisplayTitle}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="{DynamicResource Str.DisplayIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
 
+            <!-- 二级页签：一次只看一组卡片，避免长滚动 -->
+            <WrapPanel Margin="0,0,0,14">
+                <RadioButton x:Name="SubTabDlss" Content="{DynamicResource Str.TabDlss}" GroupName="dqSub"
+                             IsChecked="True" Style="{StaticResource SubTabStyle}" Tag="dlss" Checked="SubTab_Checked"/>
+                <RadioButton Content="{DynamicResource Str.TabVib}" GroupName="dqSub"
+                             Style="{StaticResource SubTabStyle}" Tag="vib" Checked="SubTab_Checked"/>
+                <RadioButton Content="{DynamicResource Str.TabIcc}" GroupName="dqSub"
+                             Style="{StaticResource SubTabStyle}" Tag="icc" Checked="SubTab_Checked"/>
+                <RadioButton Content="{DynamicResource Str.TabDrs}" GroupName="dqSub"
+                             Style="{StaticResource SubTabStyle}" Tag="drs" Checked="SubTab_Checked"/>
+                <RadioButton Content="{DynamicResource Str.TabAdvice}" GroupName="dqSub"
+                             Style="{StaticResource SubTabStyle}" Tag="advice" Checked="SubTab_Checked"/>
+            </WrapPanel>
+
             <!-- 主体卡片 -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,18">
+            <Border x:Name="CardDlss" Style="{StaticResource CardStyle}" Padding="20,18">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.DlssCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="GameStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -121,7 +153,7 @@
             </Border>
 
             <!-- 数字振动：显示级饱和度，全桌面生效 -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+            <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="VibStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -162,7 +194,7 @@
             </Border>
 
             <!-- ICC 滤镜卡片：系统层色彩变换，A 卡/Intel 与整体桌面观感兜底 -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+            <Border x:Name="CardIcc" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -247,7 +279,7 @@
             </Border>
 
             <!-- M3：驱动 3D 设置（纹理/电源/透明度/低延迟） -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+            <Border x:Name="CardDrs" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.DrsCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="DrsStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -375,8 +407,10 @@
                 </StackPanel>
             </Border>
 
+            <!-- 建议与清单：两张信息卡归入同一页签 -->
+            <StackPanel x:Name="CardAdvice" Visibility="Collapsed">
             <!-- 驱动版本建议：只读信息，本工具不下载也不安装驱动 -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
+            <Border x:Name="CardAdviceD1" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,16,0,0">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.DriverCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="DriverAdviceText" Text="" Style="{StaticResource MutedTextStyle}"
@@ -430,6 +464,7 @@
                                Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap" FontSize="11.5"/>
                 </StackPanel>
             </Border>
+            </StackPanel>
 
         </StackPanel>
     </ScrollViewer>

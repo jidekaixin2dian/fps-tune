@@ -628,4 +628,11 @@
     <s:String x:Key="Str.IccFileNotDisplay">所选文件不是可用的显示器 ICC 配置文件（需要 mntr/RGB 显示类）。</s:String>
     <s:String x:Key="Str.IccApplied">已生效：{0}。系统全局切换即时可见；不满意点「还原原始」。</s:String>
     <s:String x:Key="Str.IccApplyFailed">应用失败：{0}</s:String>
+
+    <!-- 显示页二级页签 -->
+    <s:String x:Key="Str.TabDlss">DLSS 预设</s:String>
+    <s:String x:Key="Str.TabVib">数字振动</s:String>
+    <s:String x:Key="Str.TabIcc">ICC 滤镜</s:String>
+    <s:String x:Key="Str.TabDrs">驱动 3D</s:String>
+    <s:String x:Key="Str.TabAdvice">建议与清单</s:String>
 </ResourceDictionary>
