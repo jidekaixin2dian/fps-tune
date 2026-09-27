@@ -1,7 +1,6 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-25（本轮：**显示/优化页点击卡顿修复 + DRS 卡下拉框主题样式**（用户反馈）
-> ；此前：启动画面 + 方案弹窗、P2-8、0.1.5/0.1.6 候选）
+> 最后核对：2026-09-25（本轮：**P2-11 备份页文件状态列表** + v0.1.7-beta 发版）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
@@ -9,21 +8,21 @@
 ## 1. 一句话现状
 
 主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.7-beta`**（2026-09-25，标签 `fab34e7`，Setup + Portable + SHA256SUMS）；
-`main` 已与远端同步；`dist/` 里 0.1.6 及更早的旧候选资产仅作保留。
+**0.1.8-beta 候选（P2-11）已按 `647fef6` 构建、部署到 `D:\FpsTune` 并启动给用户目检**，push 与发 Release 等用户点名。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.7` / `VersionSuffix=beta` |
-| 已发布 Release | **`v0.1.7-beta`**（2026-09-25，标签打在 `fab34e7`，pre-release；资产 = Setup + Portable + SHA256SUMS，**不含单文件**）。上一版 `v0.1.3-beta` |
-| 未发布的内容 | 无——`dist/` 里的 0.1.6 / 0.1.5 / 0.1.4 旧候选资产仅作保留，内容全部包含在已发布的 0.1.7 中 |
-| `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复）。**已与 `origin/main` 同步（用户 2026-09-25 授权 push）** |
+| `Directory.Build.props` | `VersionPrefix=0.1.8` / `VersionSuffix=beta` |
+| 已发布 Release | **`v0.1.7-beta`**（2026-09-25，标签打在 `fab34e7`，pre-release；资产 = Setup + Portable + SHA256SUMS，**不含单文件**） |
+| 未发布的内容 | **`0.1.8-beta` 候选**：P2-11 备份页文件状态列表。**已按 `647fef6` 构建（三资产齐全、哈希已核）、已部署 `D:\FpsTune` 供目检**；若发布，标签打 `647fef6` |
+| `main` | **技术主线（0.1 Beta）**。**本地领先 `origin/main` 3 个提交未 push**（P2-11 `37bca4d`、bump `647fef6`、收尾文档）——**push 等用户点名** |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.7-beta` 内嵌 SHA `fab34e7`**（本轮已部署并启动目检）。文件 6 个，与 `dist/folder-0.1.7/` 清单一致。备份链：`-20260925-fab3`（= 0.1.7 部署前）、`-46a3`（0.1.5）、`-0627`（`627740f`）、`-20260925`（已发布 0.1.3） |
-| 测试基线 | 301 / 301（`dotnet test -c Release`；2026-09-25 复核） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.8-beta` 内嵌 SHA `647fef6`**（本轮已部署并启动目检）。文件 6 个，与 `dist/folder-0.1.8/` 清单一致。备份链：`-647f`（0.1.7 部署前）、`-fab3`（0.1.7 候选）、`-46a3`、`-0627`、`-20260925`（= 已发布 0.1.3） |
+| 测试基线 | 304 / 304（`dotnet test -c Release`；2026-09-25 复核，含 BackupStatusTests 3 条） |
 | 编译警告 | **0**（2026-09-25 由 6 个清零；新增代码请守住这条，见 `CODE-HEALTH.md`） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
@@ -113,7 +112,31 @@
 
 ## 4. 本轮（2026-09-25 续）做了什么
 
-**⑩ 发版 v0.1.7-beta（用户拍板"发"）**
+**⑪ P2-11 备份页文件状态列表（本轮）+ 发版 v0.1.7-beta**
+
+- **发版（用户拍板"发"）**：`v0.1.7-beta` 已上线（标签 `fab34e7`，三资产，无单文件）。
+  核验：标签 peeled SHA ✓、API 资产字节数与本地逐项一致 ✓、清单文件回读一致 ✓；
+  **如实说明**：大文件回读下载两次 `unexpected EOF`（本地网络），未做全量回读哈希。
+  **坑**：`gh release create --target` 传**短 SHA** 报 422（target_commitish invalid），换完整 SHA 即可。
+- **P2-11（`37bca4d`）**：GUI_PLAN 缺口 G4。还原成功后备份文件被改名为 `.json.restored`
+  保留审计，但备份页只列 `.json`——用户看不出哪些已用掉。
+  - 引擎新增 `BackupService.ListBackupStatuses()`：枚举备份目录（**含 .json.restored**），
+    按 ListBackups 同款口径识别，逐文件统计待还原/已消费记录数，解析失败标无效；
+    读取间隙被重命名的文件跳过；纯只读。
+  - 备份页新增「备份文件」卡：文件名 + 最后写入时间 + 状态徽标
+    （**待还原 N 项**=靛青 / **已用于还原 N 项** / **无法读取**=红 / 空备份）；
+    页面进入与"列出可还原项/还原全部"后自动刷新，另有"刷新"按钮。
+  - 新增 Str.* 资源键 7 对（中英）；BackupLogView code-behind 无新增硬编码中文。
+- **验证**：304/304（BackupStatusTests 3 条：计数 / 排序 / 真实 Capture→RestoreAll
+  消费路径，走 `BackupDirOverride` 临时目录）；UIA 真渲染——真实备份目录恰好两种状态
+  并存（`csharp-backup-20260912….json.restored` = "已用于还原 1 项"、
+  `backup-20260824….json` = "待还原 5 项"），徽标配色正确、无 `!Str.*` 缺键、
+  `error.log` 不变，截图目检通过。
+- **0.1.8 候选与部署**：bump `647fef6` → 三哈希与清单逐项一致 → 部署 `D:\FpsTune`
+  （备份 `-647f`）→ 启动 GUI 给用户。
+- **未做（等用户点名）**：`git push`（本地领先 3 提交）、`gh release create v0.1.8-beta`。
+
+**⑩ 发版 v0.1.7-beta（上一轮）**
 
 - `gh release create v0.1.7-beta --target fab34e7`：标签按口径打在**产出构建的提交**（HEAD 的
   文档提交不占标签）。**第一次 422（target_commitish invalid）——短 SHA 不被 API 接受，换完整 SHA 成功**。
@@ -609,8 +632,9 @@
 4. **P2-7 国际化**：已按用户决定**暂停**（剩余 1000 处记在 `I18nBaseline.txt`）。
 5. **P2-9** 已作废（朋友测试模块已整体移除）。
 
-> **发版状态**：`v0.1.7-beta` 已发布（2026-09-25，标签 `fab34e7`）；`main` 已 push。
-> 下一优先级 **P2-11**（备份页展示 `.restored` 消费记录），完整待办见 `docs/dev/PLAN-backlog.md`。
+> **发版状态**：`v0.1.7-beta` 已发布；**0.1.8 候选（`647fef6`，P2-11）已构建部署待拍板**。
+> `main` 本地领先 3 提交未 push（等用户点名）。下一优先级 **P2-10**（ICC 自选 `.icc`/`.icm`），
+> 完整待办见 `docs/dev/PLAN-backlog.md`。
 
 ## 6. 维护本文的规则
 
