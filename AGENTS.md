@@ -78,7 +78,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 308
    必须真切到那一页再观察。做法见 `docs/dev/AI-WORKFLOW.md` §四 第 2 条。
 
 产品红线在 `docs/ROADMAP.md` §产品定位（安全闭环 / 零侵入 / 数据说话 / 全 FPS 通用 / 可信透明）。
-**注意**：ROADMAP 的现状基线段落停在 v1.5.0，是历史存档；当前状态看 `docs/HANDOFF.md`。
+**注意**：ROADMAP 的现状基线段落已随 0.1.x 演进校准（最近一次 2026-09-25）；现状数字仍以 `docs/HANDOFF.md` 为准。
 
 ## 哪些文件是权威
 
@@ -93,7 +93,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 308
 | 当前状态 / 待办 | `docs/HANDOFF.md` | 比 `docs/ROADMAP.md` 新；**现状数字以它为准** |
 | 产品方向 / 五条红线 | `docs/ROADMAP.md` | 现状基线段落已校准，但数字仍以 HANDOFF 为准 |
 | 0.1.x 功能设计依据 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3（**均已发布**） |
-| 待办总表（P0–P2） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；HANDOFF §5 与它对齐 |
+| 待办总表（P0–P2 + P3 规划） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；HANDOFF §5 与它对齐 |
 | P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | 已调研未实施；含硬约束与踩坑点 |
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
@@ -126,7 +126,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 308
 - 重跑 `publish-release.ps1` 前，先用 bash `rm -rf` 清掉
   `dist/{single-file,folder,publish-tmp}-<版本>` 与 zip/清单：脚本开头的清理**没有**
   `-ErrorAction`，一旦被拦会直接失败。它 `finally` 里的 `publish-tmp` 清理则会被跳过
-  （不影响退出码），需要手动清理。详见 `docs/HANDOFF.md`「环境备忘」。
+  （不影响退出码），需要手动清理。详见 `docs/HANDOFF.md` §2.1 与 `docs/archive/HANDOFF-轮次存档-20260925.md`（环境备忘）。
 - `gh` CLI 已登录，仓库为 `jidekaixin2dian/fps-tune`（公开）。
 - Inno Setup 6 存在，路径由 `build-installer.ps1 -CheckOnly` 探测。
 
