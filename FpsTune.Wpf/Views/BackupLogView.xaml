@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -80,8 +81,74 @@
             </Border>
         </Grid>
 
+        <!-- 备份文件列表：区分"还能还原"与"已消费的 .restored 审计文件"（P2-11） -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="{DynamicResource Str.BackupFilesCard}" Style="{StaticResource CardTitleStyle}"/>
+                    <Button Content="{DynamicResource Str.Refresh}"
+                            Style="{StaticResource GhostButtonStyle}"
+                            MinWidth="60" Height="26" Padding="8,0"
+                            HorizontalAlignment="Right"
+                            Click="RefreshBackupList_Click"/>
+                </Grid>
+                <TextBlock Grid.Row="1" x:Name="BackupEmptyHint"
+                           Text="{DynamicResource Str.BackupNoFiles}"
+                           Style="{StaticResource MutedTextStyle}"
+                           Visibility="Collapsed" Margin="0,4,0,4"/>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" MaxHeight="190" Margin="0,2,0,0">
+                    <ItemsControl x:Name="BackupFileList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="2,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding FileName}"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       FontFamily="{StaticResource FontMono}" FontSize="12"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding FileName}"/>
+                                            <TextBlock Text="{Binding LastWriteText}"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       FontSize="11" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border" BasedOn="{StaticResource ChipStyle}">
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="pending">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Kind}" Value="invalid">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding StateText}"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       FontSize="12"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
         <!-- 日志 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}">
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

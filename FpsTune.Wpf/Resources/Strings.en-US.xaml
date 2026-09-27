@@ -609,4 +609,13 @@
     <s:String x:Key="Str.ProfileImportFailed">Import failed: {0}</s:String>
     <s:String x:Key="Str.ProfileFileFilter">FPS Frame Tuner profile (*.fpsprofile.json)|*.fpsprofile.json</s:String>
     <s:String x:Key="Str.ProfileImportFilter">FPS Frame Tuner profile (*.fpsprofile.json)|*.fpsprofile.json|All files (*.*)|*.*</s:String>
+
+    <!-- Backup page: file status list (P2-11) -->
+    <s:String x:Key="Str.BackupFilesCard">Backup files</s:String>
+    <s:String x:Key="Str.BackupNoFiles">No backup files yet; one is created automatically when you apply optimizations.</s:String>
+    <s:String x:Key="Str.BackupPendingN">{0} items pending restore</s:String>
+    <s:String x:Key="Str.BackupConsumedN">{0} items restored (consumed)</s:String>
+    <s:String x:Key="Str.BackupFileEmpty">Empty backup</s:String>
+    <s:String x:Key="Str.BackupInvalidFile">Unreadable (possibly corrupted)</s:String>
+    <s:String x:Key="Str.BackupListFailed">Failed to list backups: </s:String>
 </ResourceDictionary>

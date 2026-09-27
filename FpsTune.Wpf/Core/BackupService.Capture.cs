@@ -85,6 +85,65 @@ public static partial class BackupService
             .ToList();
     }
 
+    /// <summary>备份文件的状态行：待还原 / 已消费（.restored 审计）/ 无法读取。</summary>
+    public sealed record BackupFileStatus(
+        string FileName,
+        DateTime LastWrite,
+        int PendingCount,
+        int RestoredCount,
+        bool Valid);
+
+    /// <summary>
+    /// 枚举备份目录里的全部 C# 备份，**含已消费的 .json.restored 审计文件**，
+    /// 供备份页展示"哪些还能还原、哪些已经用掉"（P2-11）。只读，不改任何文件。
+    /// </summary>
+    public static IReadOnlyList<BackupFileStatus> ListBackupStatuses()
+    {
+        Directory.CreateDirectory(BackupDir);
+        var result = new List<BackupFileStatus>();
+        foreach (var file in Directory.EnumerateFiles(BackupDir, "*"))
+        {
+            var name = Path.GetFileName(file);
+            var isJson = name.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
+            var isConsumed = name.EndsWith(".json.restored", StringComparison.OrdinalIgnoreCase);
+            if (!isJson && !isConsumed)
+                continue;
+            // 与 ListBackups 同一识别口径：C# 前缀直接认，legacy 前缀用 JSON 数组守卫
+            if (!IsCSharpBackupFile(file))
+                continue;
+
+            DateTime lastWrite;
+            int pending = 0, restored = 0;
+            var valid = true;
+            try
+            {
+                lastWrite = File.GetLastWriteTime(file);
+                var records = JsonSerializer.Deserialize<List<BackupRecord>>(
+                    File.ReadAllText(file, Encoding.UTF8));
+                if (records is null)
+                {
+                    valid = false;
+                }
+                else
+                {
+                    pending = records.Count(r => !r.Restored);
+                    restored = records.Count - pending;
+                }
+            }
+            catch (FileNotFoundException) { continue; }   // 读取间隙被还原流程重命名，直接跳过
+            catch (DirectoryNotFoundException) { continue; }
+            catch (Exception)
+            {
+                valid = false;
+                lastWrite = File.GetLastWriteTime(file);
+            }
+
+            result.Add(new BackupFileStatus(name, lastWrite, pending, restored, valid));
+        }
+
+        return result.OrderByDescending(s => s.LastWrite).ToList();
+    }
+
     // 新旧格式均只认 C# 自己的前缀；旧的通用前缀再用 JSON 数组守卫，避免误读 PowerShell 文档。
     internal static bool IsCSharpBackupFile(string file)
     {
