@@ -2,7 +2,7 @@
 
 > 最后核对：2026-09-25（本轮：**P2-12 PresentMon 前置探测 + 显示页居中 + 空闲预热重页
 > + splash 重设计**（用户 /goal 轮，含 P3 清单落盘与 README/ROADMAP 公开文档更新））
-> 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`
+> 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`（当前：`HANDOFF_PROMPT_2026-09-27.md`）
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
 
