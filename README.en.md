@@ -58,9 +58,14 @@ asks for consent and verifies SHA-256 first.
 |---|---|
 | ![Sessions](assets/screenshots/04-session.png) | ![A/B experiment](assets/screenshots/05-ab-experiment.png) |
 
-Also included: backups & logs (audit of every write),
-settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles).
-Dark, light and system themes; borderless custom title bar; first-run guided setup.
+Also included: **display & quality** (sub-tabbed: DLSS preset override / digital vibrance / ICC
+filter — including applying your own `.icc` / `.icm` calibration file — / per-game driver 3D
+settings / a vendor-specific in-driver manual checklist / driver version advice, all read-only
+guidance and reversible), backups & logs (audit of every write plus a backup-file status list so
+consumed `.restored` files are obvious), a PresentMon pre-check on the A/B page (gives the official
+install command when missing — the tool never installs it for you), and settings (theme / tray /
+global hotkey Ctrl+Alt+F / per-game auto-apply profiles).
+Dark, light and system themes; borderless custom title bar; splash screen; first-run guided setup.
 
 ## Quick start
 
