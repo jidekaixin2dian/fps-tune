@@ -636,7 +636,8 @@
     <s:String x:Key="Str.TabDlss">DLSS 预设</s:String>
     <s:String x:Key="Str.TabVib">数字振动</s:String>
     <s:String x:Key="Str.TabIcc">ICC 滤镜</s:String>
-    <s:String x:Key="Str.TabDrs">驱动 3D</s:String>
+        <s:String x:Key="Str.TabVibIcc">振动与 ICC</s:String>
+<s:String x:Key="Str.TabDrs">驱动 3D</s:String>
     <s:String x:Key="Str.TabAdvice">建议与清单</s:String>
     <s:String x:Key="Str.BadgeDefault">默认</s:String>
     <s:String x:Key="Str.BadgeCustomCount">{}{0} 项</s:String>

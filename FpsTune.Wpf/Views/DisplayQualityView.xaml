@@ -82,6 +82,62 @@
         <Style x:Key="DrsFieldLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource SectionLabelStyle}">
             <Setter Property="Margin" Value="0,0,0,5"/>
         </Style>
+        <!-- 调节滑条（用户反馈默认 Slider 太粗笨）：细轨道 + 小圆点拇指 + accent 已选段 -->
+        <Style x:Key="TuneSliderStyle" TargetType="Slider">
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="IsMoveToPointEnabled" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Background="Transparent">
+                            <!-- 轨道底：显式 MinWidth 防止无内容 Border 期望宽度为 0 把滑条压成拇指宽 -->
+                            <Border Height="4" MinWidth="80" CornerRadius="2"
+                                    Background="{DynamicResource BorderBrush}"
+                                    VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <!-- 已选段：accent 细条填满 decrease 区 -->
+                                    <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Grid Background="Transparent" Height="4" VerticalAlignment="Center">
+                                                    <Border Height="4" CornerRadius="2"
+                                                            Background="{DynamicResource AccentBrush}"
+                                                            VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Focusable="False" Opacity="0"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="16" Height="16" Focusable="False">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Grid Background="Transparent">
+                                                    <Ellipse x:Name="Dot" Width="14" Height="14"
+                                                             Fill="{DynamicResource AccentBrush}"
+                                                             Stroke="{DynamicResource AppBackdropBrush}"
+                                                             StrokeThickness="2"/>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource PrimaryHoverBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,22,28,24">
@@ -102,7 +158,7 @@
                 </Border>
             </Grid>
 
-            <!-- 二级页签：一次只看一组卡片，避免长滚动；徽标显示各组当前状态 -->
+            <!-- 二级页签（用户反馈：数字振动与 ICC 合并一签）：一次只看一组卡片，徽标显示当前状态 -->
             <WrapPanel Margin="0,0,0,14">
                 <RadioButton x:Name="SubTabDlss" AutomationProperties.Name="{DynamicResource Str.TabDlss}" GroupName="dqSub"
                              IsChecked="True" Style="{StaticResource SubTabStyle}" Tag="dlss" Checked="SubTab_Checked">
@@ -113,17 +169,12 @@
                         </Border>
                     </StackPanel>
                 </RadioButton>
-                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabVib}" Style="{StaticResource SubTabStyle}" Tag="vib" Checked="SubTab_Checked">
+                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabVibIcc}" Style="{StaticResource SubTabStyle}" Tag="vibicc" Checked="SubTab_Checked">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{DynamicResource Str.TabVib}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{DynamicResource Str.TabVibIcc}" VerticalAlignment="Center"/>
                         <Border x:Name="TabBadgeVib" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
                             <TextBlock x:Name="TabStatusVib" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
                         </Border>
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabIcc}" Style="{StaticResource SubTabStyle}" Tag="icc" Checked="SubTab_Checked">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{DynamicResource Str.TabIcc}" VerticalAlignment="Center"/>
                         <Border x:Name="TabBadgeIcc" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
                             <TextBlock x:Name="TabStatusIcc" Text="" Style="{StaticResource TabBadgeTextStyle}"/>
                         </Border>
@@ -221,27 +272,29 @@
                 </StackPanel>
             </Border>
 
-            <!-- 数字振动：显示级饱和度，全桌面生效 -->
+            <!-- 振动与 ICC（用户反馈合并一签）：一卡两分区，细线分隔 -->
             <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
+                    <!-- 分区一：数字振动（显示级饱和度，全桌面生效） -->
                     <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}"/>
 
                     <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed" Margin="0,12,0,0">
                         <TextBlock Text="{DynamicResource Str.VibNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <Grid Margin="0,16,0,0">
+                        <Grid Margin="0,16,0,0" HorizontalAlignment="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="72"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="300"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" x:Name="VibPercentText" Text="—"
                                        FontFamily="{StaticResource FontMono}" FontSize="26" FontWeight="Bold"
                                        Foreground="{DynamicResource AccentBrush}"
-                                       VerticalAlignment="Center"/>
+                                       VerticalAlignment="Center" MinWidth="64"/>
                             <Slider Grid.Column="1" x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
                                     IsSnapToTickEnabled="False" ValueChanged="VibSlider_Changed"
-                                    VerticalAlignment="Center" Margin="10,0,14,0"/>
+                                    Style="{StaticResource TuneSliderStyle}"
+                                    VerticalAlignment="Center" Margin="14,0,18,0"/>
                             <Button Grid.Column="2" x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="120" VerticalAlignment="Center" Click="VibRecommended_Click"
@@ -268,12 +321,10 @@
 
                     <TextBlock x:Name="VibUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
                                Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
-                </StackPanel>
-            </Border>
 
-            <!-- ICC 滤镜卡片：系统层色彩变换，A 卡/Intel 与整体桌面观感兜底 -->
-            <Border x:Name="CardIcc" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
-                <StackPanel>
+                    <!-- 分区二：ICC 滤镜（系统层色彩变换，A 卡/Intel 与整体桌面观感兜底） -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
+                            Margin="0,18,0,16"/>
                     <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 

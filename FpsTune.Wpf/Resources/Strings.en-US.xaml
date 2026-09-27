@@ -636,7 +636,8 @@
     <s:String x:Key="Str.TabDlss">DLSS presets</s:String>
     <s:String x:Key="Str.TabVib">Digital vibrance</s:String>
     <s:String x:Key="Str.TabIcc">ICC filter</s:String>
-    <s:String x:Key="Str.TabDrs">Driver 3D</s:String>
+        <s:String x:Key="Str.TabVibIcc">Vibrance &amp; ICC</s:String>
+<s:String x:Key="Str.TabDrs">Driver 3D</s:String>
     <s:String x:Key="Str.TabAdvice">Advice &amp; checklist</s:String>
     <s:String x:Key="Str.BadgeDefault">Default</s:String>
     <s:String x:Key="Str.BadgeCustomCount">{}{0} set</s:String>

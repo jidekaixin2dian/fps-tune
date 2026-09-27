@@ -190,8 +190,7 @@ public partial class DisplayQualityView : UserControl
             return;
 
         CardDlss.Visibility = key == "dlss" ? Visibility.Visible : Visibility.Collapsed;
-        CardVib.Visibility = key == "vib" ? Visibility.Visible : Visibility.Collapsed;
-        CardIcc.Visibility = key == "icc" ? Visibility.Visible : Visibility.Collapsed;
+        CardVib.Visibility = key == "vibicc" ? Visibility.Visible : Visibility.Collapsed;
         CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;
         CardAdvice.Visibility = key == "advice" ? Visibility.Visible : Visibility.Collapsed;
     }
