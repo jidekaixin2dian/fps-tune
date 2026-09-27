@@ -145,7 +145,17 @@
 > 默认停在"概览"。所以"启动后进程存活"只覆盖首页——改的是显示页 / 设置页等，
 > **必须真的切到那一页再观察**。
 >
-> 切页验证的一次性做法（用 UI Automation 点页签，实测可行）：
+> **标准做法（P3-2 已固化）：跑 `tools/uia-verify.ps1`**——它封装了下面全部要点：
+> 启动（可 `-WatchSplash` 观察启动画面时序）→ `-NavIndex N` 切页（页签按位置定位）
+> → `-ExpectText '文本1,文本2'` / `-AbsentText` 断言（**自动轮询 6 秒**，容忍 UIA 树
+> 长全的延迟）→ `-LatencyTarget` 测点击→可见毫秒 → `-Shot` 截图 → `error.log` 字节数核对
+> → 输出 `RESULT: PASS/FAIL`（退出码 0/1，Agent 可直接解析）。
+> 复杂流程（弹窗、逐签断言、方案保存）可点源它当函数库：`. .\tools\uia-verify.ps1` 后用
+> `Start-App / Wait-MainWindow / Get-NavTabs / Invoke-Button / Find-ToolWindow / Texts-Of`。
+> 注意：断言轮询解决的是"UIA 树没长全"，不是元素真不存在——`-AbsentText` 判断仍需在
+> 轮询超时后的最终状态上做，勿用它验证"瞬时应不存在"。
+>
+> 手工原理（脚本背后做的事，排查脚本自身问题时读）：
 > 1. 启动 exe 并等约 12 秒；
 > 2. 按 `ProcessIdProperty` 在 `AutomationElement.RootElement` 下取主窗口；
 > 3. 页签是自定义 `NavButton`，**在自动化树里没有 Name**，只能按位置取：
