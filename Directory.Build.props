@@ -9,7 +9,8 @@
     <!-- 0.1.7 = 显示页状态读取异步化 + 优化页列表虚拟化 + DRS 卡下拉框主题样式（用户反馈卡顿/样式轮） -->
     <!-- 0.1.8 = 备份页文件状态列表（P2-11：标出已消费的 .restored 审计记录） -->
     <!-- 0.1.9 = ICC 自选 .icc/.icm 文件（P2-10 / GUI_PLAN G3） -->
-    <VersionPrefix>0.1.9</VersionPrefix>
+    <!-- 0.1.10 = 显示页二级页签（用户反馈：卡片多、滚动长） -->
+    <VersionPrefix>0.1.10</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
