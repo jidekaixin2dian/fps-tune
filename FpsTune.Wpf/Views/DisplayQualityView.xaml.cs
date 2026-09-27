@@ -69,9 +69,9 @@ public partial class DisplayQualityView : UserControl
         {
             exe = Path.GetFileName(path);
             label = GamePathService.LabelFor(path!);
-            try { dlss = DisplayQualityService.GetDlssState(exe); }
+            try { dlss = DisplayQualityService.GetDlssState(exe!); }
             catch (Exception ex) { dlssError = ex.Message; }
-            try { drs = DisplayQualityService.GetDrsGameSettings(exe); }
+            try { drs = DisplayQualityService.GetDrsGameSettings(exe!); }
             catch (Exception ex) { drsError = ex.Message; }
         }
 
