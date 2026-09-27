@@ -374,6 +374,12 @@
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
+                    <ProgressBar x:Name="UpdateProgressBar"
+                                 Style="{StaticResource ThinMeterStyle}"
+                                 Foreground="{DynamicResource AccentBrush}"
+                                 Maximum="100"
+                                 Visibility="Collapsed"
+                                 Margin="0,10,0,0"/>
                     <TextBlock Text="{DynamicResource Str.ContactNote}"
                                Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
                 </StackPanel>

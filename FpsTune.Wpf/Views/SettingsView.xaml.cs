@@ -638,13 +638,18 @@ public partial class SettingsView : UserControl
             var lastPct = -1;
             try
             {
+                Dispatcher.Invoke(() => UpdateProgressBar.Visibility = Visibility.Visible);
                 await UpdateService.DownloadAsync(info.InstallerUrl, tmp, pct =>
                 {
                     var percent = (int)pct;
                     if (percent == lastPct)
                         return;
                     lastPct = percent;
-                    Dispatcher.Invoke(() => UpdateStatusText.Text = $"下载中 {percent}%");
+                    Dispatcher.Invoke(() =>
+                    {
+                        UpdateStatusText.Text = $"下载中 {percent}%";
+                        UpdateProgressBar.Value = percent;
+                    });
                 });
 
                 UpdateStatusText.Text = Str.T("Str.DownloadingManifest");
@@ -681,6 +686,7 @@ public partial class SettingsView : UserControl
         }
         finally
         {
+            UpdateProgressBar.Visibility = Visibility.Collapsed;
             CheckUpdateButton.IsEnabled = true;
         }
     }
