@@ -2,7 +2,7 @@
 
 版本号唯一来源：`Directory.Build.props` 的 `<VersionPrefix>`（三段数字，程序集 / 安装器 /
 CLI 自报版本共用）+ `<VersionSuffix>`（预发布标识，只进 `InformationalVersion` / `ProductVersion` 展示）。
-下文 `<ver>` 指 `VersionPrefix`。已发布最新：**`v0.1.7-beta`**（2026-09-25，标签 `fab34e7`），上一版 `v0.1.3-beta`；`0.1.9-beta`（`443ad5d`）候选已构建部署、等拍板；
+下文 `<ver>` 指 `VersionPrefix`。已发布最新：**`v0.1.7-beta`**（2026-09-25，标签 `fab34e7`），上一版 `v0.1.3-beta`；`0.1.10-beta`（`2df66b3`）候选已构建部署、等拍板；
 发版状态细节看 `docs/HANDOFF.md` §2.1。
 > 历史注记：1.x 版本线（v1.6.2 及之前）已在 `170a8bd` 重置为 0.1 Beta 线，旧版本号只出现在历史与 `docs/` 存档里。
 
