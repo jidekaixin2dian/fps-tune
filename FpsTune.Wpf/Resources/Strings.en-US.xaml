@@ -163,6 +163,8 @@
     <s:String x:Key="Str.ConsoleIntro">Locate the game, review the basic settings, then record one match's load.</s:String>
     <s:String x:Key="Str.BasicAdvice">Basic advice</s:String>
     <s:String x:Key="Str.TipBasicAdvice">Review Game Mode, background recording and the game's GPU preference. Nothing is changed immediately.</s:String>
+    <s:String x:Key="Str.FirstRunAdviceIntro">First run: this starts with a read-only check-up (no settings are changed), then takes you to review these {0} items.</s:String>
+    <s:String x:Key="Str.TipBasicAdviceFirst">On first use this runs a read-only check-up first, then opens the optimize page for review</s:String>
     <s:String x:Key="Str.RecordMatch">Record a match</s:String>
     <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load. This is not an FPS measurement.</s:String>
     <s:String x:Key="Str.BackupRestore">Backup / restore</s:String>

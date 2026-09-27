@@ -163,6 +163,8 @@
     <s:String x:Key="Str.ConsoleIntro">定位游戏后，审阅基础设置并记录一局负载。</s:String>
     <s:String x:Key="Str.BasicAdvice">基础建议</s:String>
     <s:String x:Key="Str.TipBasicAdvice">审阅游戏模式、后台录制和游戏显卡偏好；不会立即修改系统</s:String>
+    <s:String x:Key="Str.FirstRunAdviceIntro">首次使用：点「基础建议」会先做一次只读体检（不修改任何设置），再带你审阅这 {0} 项。</s:String>
+    <s:String x:Key="Str.TipBasicAdviceFirst">首次使用会先跑一次只读体检建立基线，再进入优化页审阅</s:String>
     <s:String x:Key="Str.RecordMatch">记录一局</s:String>
     <s:String x:Key="Str.TipRecordMatch">记录 CPU、GPU、内存负载，不等同于 FPS 测量</s:String>
     <s:String x:Key="Str.BackupRestore">备份还原</s:String>

@@ -28,17 +28,21 @@ public partial class ConsoleView : UserControl
     private void UpdatePreparation()
     {
         var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
+        var firstRun = !StateStore.HasSeenOnboarding;
         GameReadyTitle.Text = GameLocated
             ? $"{GamePathService.LabelFor(AppState.GamePath!)} · 开局准备"
             : "开局准备";
         GameReadyText.Text = _locating ? Str.T("Str.LocatingAndDetecting") : !GameReady
             ? GameLocated ? Str.T("Str.GameSelectedRefreshDetect") : Str.T("Str.LocateGameForAdvice")
-            : count > 0 ? $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。"
+            : count > 0 ? (firstRun
+                ? Str.T("Str.FirstRunAdviceIntro", count)
+                : $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。")
             : Str.T("Str.BasicsOk");
         GameReadyText.ToolTip = AppState.GamePath ?? Str.T("Str.NoGameSelected");
         LocateDeltaButton.Content = GameLocated && !GameReady ? Str.T("Str.RefreshDetect") : "定位游戏";
         PrepareDeltaButton.IsEnabled = GameReady && count > 0 && !_refreshing && !_locating;
         PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
+        PrepareDeltaButton.ToolTip = Str.T(firstRun ? "Str.TipBasicAdviceFirst" : "Str.TipBasicAdvice");
     }
 
     private async void LocateDelta_Click(object sender, RoutedEventArgs e)
@@ -82,8 +86,14 @@ public partial class ConsoleView : UserControl
     {
         UpdatePreparation();
         if (!PrepareDeltaButton.IsEnabled) return;
-        if (Window.GetWindow(this) is MainWindow main)
-            main.ReviewSelection(DeltaPreparation.PendingItems(AppState.Items, GameReady));
+        if (Window.GetWindow(this) is not MainWindow main) return;
+
+        var ids = DeltaPreparation.PendingItems(AppState.Items, GameReady);
+        if (StateStore.HasSeenOnboarding)
+            main.ReviewSelection(ids);
+        else
+            // P3-9：首次先做一次只读体检（控制台概览此前直接跳优化、跳过了检测页）
+            _ = main.ReviewSelectionWithIntroAsync(ids);
     }
 
     private void DeltaSession_Click(object sender, RoutedEventArgs e)

@@ -225,6 +225,26 @@ public partial class MainWindow : Window
         ((OptimizeView)GetPage("opt")).SelectForReview(ids);
     }
 
+    /// <summary>
+    /// 控制台概览首次「基础建议」（P3-9）：先到检测页做一次只读体检建立信任与基线，
+    /// 成功后再带着建议项进优化页审阅。检测失败不标记引导已见——下次点击仍会先体检。
+    /// </summary>
+    internal async Task ReviewSelectionWithIntroAsync(IReadOnlyList<string> ids)
+    {
+        NavigateTo("detect");
+        if (GetPage("detect") is DetectView detect)
+        {
+            var ok = await detect.RunOnboardingDetectionAsync();
+            if (!ok)
+            {
+                DialogService.Warning(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectIncomplete"));
+                return;
+            }
+        }
+        StateStore.MarkOnboardingSeen();
+        ReviewSelection(ids);
+    }
+
     public async Task RunOnboardingAsync()
     {
         // 第一步：先去检测页完成一次检测。
