@@ -8,9 +8,8 @@
 
 ## 1. 一句话现状
 
-主线是 0.1 Beta 线（现落在 **`main`**）。M1/M2/M3 功能与一键优化、i18n 已发 **`v0.1.3-beta`**；
-**0.1.7-beta 候选（P2-8 + 启动体验/方案弹窗 + 卡顿修复/下拉框样式）已按 `fab34e7` 构建、部署到 `D:\FpsTune` 并启动给用户目检，等拍板后再发 Release**（**`main` 已按用户指示 push**）。
-`dist/` 里另有 0.1.6 / 0.1.5 / 0.1.4 三套旧候选完整保留。**发 0.1.7 即包含全部内容**。
+主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.7-beta`**（2026-09-25，标签 `fab34e7`，Setup + Portable + SHA256SUMS）；
+`main` 已与远端同步；`dist/` 里 0.1.6 及更早的旧候选资产仅作保留。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
@@ -18,8 +17,8 @@
 | 项 | 值 |
 |---|---|
 | `Directory.Build.props` | `VersionPrefix=0.1.7` / `VersionSuffix=beta` |
-| 已发布 Release | **`v0.1.3-beta`**（2026-09-22，`29ed0ea`）；资产 = Setup + Portable + SHA256SUMS。上一版 `v0.1.2-beta` |
-| 未发布的内容 | **`0.1.7-beta` 候选（最新）**：P2-8 手动设置清单 + 启动画面/方案弹窗 + 卡顿修复/下拉框样式。**已按 `fab34e7` 构建（三资产齐全、哈希已核）、已部署 `D:\FpsTune` 供目检；未发 Release**<br>旧候选 **0.1.6（`8eaec90`）/ 0.1.5（`46a3776`）/ 0.1.4（`e3d0041`）** 三资产仍完整保留在 `dist/`。**0.1.7 ⊇ 全部旧候选内容**，发 0.1.7 即可，标签打 `fab34e7` |
+| 已发布 Release | **`v0.1.7-beta`**（2026-09-25，标签打在 `fab34e7`，pre-release；资产 = Setup + Portable + SHA256SUMS，**不含单文件**）。上一版 `v0.1.3-beta` |
+| 未发布的内容 | 无——`dist/` 里的 0.1.6 / 0.1.5 / 0.1.4 旧候选资产仅作保留，内容全部包含在已发布的 0.1.7 中 |
 | `main` | **技术主线（0.1 Beta）**。树 = 原 `beta` 全部内容（含 ICC / DVC / 脚本校验根因修复）。**已与 `origin/main` 同步（用户 2026-09-25 授权 push）** |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
@@ -33,7 +32,7 @@
 
 | 位置 | 版本 | 状态 |
 |---|---|---|
-| GitHub 已发布 Release | `v0.1.3-beta` | 线上最新（**0.1.4 ~ 0.1.7 均未发布**） |
+| GitHub 已发布 Release | **`v0.1.7-beta`** | 线上最新（`gh release view` 实测；标签 peeled SHA = `fab34e7` ✓）。资产三件：`FpsTune-Setup-0.1.7.exe`(60642090 B) / `FpsTune-Portable-0.1.7.zip`(968804 B) / `SHA256SUMS-v0.1.7.txt`(264 B)，与本地产物**字节数逐项一致**；清单文件回读内容一致。**回读下载两次遇 unexpected EOF（本地网络），未做全量大文件回读哈希——以字节数 + 官方清单回读为准** |
 | **发布候选（未发布，最新）** | **`0.1.7-beta`** | 官方脚本从 HEAD `fab34e7` 产出：`dist/folder-0.1.7/`（6 个文件）、`dist/single-file-0.1.7/FpsTune.exe`(62.7M)、`dist/FpsTune-Portable-0.1.7.zip`(0.9M)、`dist/installer/FpsTune-Setup-0.1.7.exe`、`dist/SHA256SUMS-v0.1.7.txt`（3 行）。`ProductVersion` = `0.1.7-beta+fab34e7…`。已部署 `D:\FpsTune` 并启动目检 |
 | 发布候选（未发布，旧） | `0.1.6`（`8eaec90`）/ `0.1.5`（`46a3776`）/ `0.1.4`（`e3d0041`） | 三资产完整保留在 `dist/`，未被后续构建波及；内容均被 0.1.7 包含 |
 | 本机安装位 `D:\FpsTune` | `0.1.7-beta`（内嵌 SHA **`fab34e7`**） | **本轮已部署**：整目录覆盖，文件清单双向一致（6/6）；启动 15 秒存活、`error.log` 字节数不变 |
@@ -81,10 +80,8 @@
 
 **未决（需要用户拍板，别自作主张）**
 
-1. **发版**：`dist/` 里现有多套候选，**0.1.7-beta（`fab34e7`）内容 ⊇ 全部旧候选，推荐发 0.1.7**；
-   旧资产仅作保留。**唯一剩下的动作是 `gh release create`，等用户明确确认**；
-   Release Notes **不得含编造的 FPS/收益数字**。
-2. `main` **已按用户指示 push**（2026-09-25），本地与远端同步；后续 push 仍需按节奏确认。
+1. （已清空）0.1.7 已发布；后续发版按发布流程走新一轮。
+2. `main` **已 push**（2026-09-25 两次授权），本地与远端同步；后续 push 仍需按节奏确认。
 3. 原「单文件 exe 口径」已决：公开 Release **不提供单文件**，`RELEASE.md` §4 已改为三资产
    （Setup + Portable + SHA256SUMS），与 README / README.en 下载表一致。
 
@@ -116,7 +113,18 @@
 
 ## 4. 本轮（2026-09-25 续）做了什么
 
-**⑨ 显示/优化页点击卡顿修复 + DRS 卡下拉框样式（本轮，用户反馈）+ push**
+**⑩ 发版 v0.1.7-beta（用户拍板"发"）**
+
+- `gh release create v0.1.7-beta --target fab34e7`：标签按口径打在**产出构建的提交**（HEAD 的
+  文档提交不占标签）。**第一次 422（target_commitish invalid）——短 SHA 不被 API 接受，换完整 SHA 成功**。
+- 资产三件（Setup 60642090 B / Portable 968804 B / 清单 264 B），**不含单文件**（公开口径）；
+  Release Notes 覆盖 0.1.4→0.1.7 全部内容（自 v0.1.3 以来），无编造数字。
+- **核验**：标签 peeled SHA = `fab34e7` ✓；API 资产字节数与本地逐项一致 ✓；
+  `SHA256SUMS-v0.1.7.txt` 从 GitHub 回读，内容与本地清单一致（即资产哈希以官方清单为准）✓。
+  **如实说明**：Setup/Portable 两个大文件的回读下载两次 `unexpected EOF`（本地网络），未做全量回读哈希。
+- Release 链接：https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.1.7-beta
+
+**⑨ 显示/优化页点击卡顿修复 + DRS 卡下拉框样式（上一轮）+ push**
 
 - **卡顿定位**：显示页**每次**进入（`Loaded` 每次触发）都在 UI 线程同步跑 DLSS / 数字振动 /
   ICC / DRS 七项的 NVAPI + 注册表读取——`必卡`的直接原因；优化页带分组的 ListBox 默认
@@ -601,9 +609,8 @@
 4. **P2-7 国际化**：已按用户决定**暂停**（剩余 1000 处记在 `I18nBaseline.txt`）。
 5. **P2-9** 已作废（朋友测试模块已整体移除）。
 
-> **候选与拍板**：0.1.7（`fab34e7`，内容最全）已构建并部署 `D:\FpsTune` 给用户目检；
-> 0.1.6 / 0.1.5 / 0.1.4 旧候选仍在 `dist/`。**`main` 已 push（用户授权），发 Release 等用户拍板**
-> （0.1.7 ⊇ 全部旧候选，发 0.1.7 即可）。
+> **发版状态**：`v0.1.7-beta` 已发布（2026-09-25，标签 `fab34e7`）；`main` 已 push。
+> 下一优先级 **P2-11**（备份页展示 `.restored` 消费记录），完整待办见 `docs/dev/PLAN-backlog.md`。
 
 ## 6. 维护本文的规则
 
