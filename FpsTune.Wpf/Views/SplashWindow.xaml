@@ -4,7 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{DynamicResource Str.AppName}"
         Width="460"
-        Height="280"
+        Height="300"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         TextOptions.TextFormattingMode="Display"
@@ -21,7 +21,7 @@
             BorderBrush="{DynamicResource BorderHoverBrush}"
             BorderThickness="1"
             CornerRadius="{StaticResource RadiusCard}"
-            Padding="34,30">
+            Padding="36,30">
         <Border.Effect>
             <DropShadowEffect BlurRadius="30"
                               ShadowDepth="5"
@@ -38,48 +38,44 @@
             </Grid.RowDefinitions>
 
             <!-- 品牌区 -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Border Width="44" Height="44"
-                        CornerRadius="{StaticResource RadiusControl}"
+            <StackPanel HorizontalAlignment="Center">
+                <Border Width="56" Height="56"
+                        HorizontalAlignment="Center"
+                        CornerRadius="14"
                         Background="{DynamicResource AccentSoftBrush}"
                         BorderBrush="{DynamicResource AccentBrush}"
-                        BorderThickness="1"
-                        VerticalAlignment="Center">
+                        BorderThickness="1.5">
                     <TextBlock Text="&#xE9D9;"
                                FontFamily="Segoe MDL2 Assets"
-                               FontSize="22"
+                               FontSize="28"
                                Foreground="{DynamicResource AccentBrush}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Border>
-                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="{DynamicResource Str.AppName}"
-                               FontSize="21"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{DynamicResource Str.SplashTagline}"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               Margin="0,3,0,0"/>
-                </StackPanel>
+                <TextBlock Text="{DynamicResource Str.AppName}"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,14,0,0"/>
+                <TextBlock Text="{DynamicResource Str.SplashTagline}"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,0"/>
             </StackPanel>
 
-            <!-- 加载动画：四个圆点依次呼吸 -->
-            <StackPanel x:Name="DotsPanel" Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
-                <StackPanel.Resources>
-                    <Style TargetType="Ellipse">
-                        <Setter Property="Width" Value="9"/>
-                        <Setter Property="Height" Value="9"/>
-                        <Setter Property="Margin" Value="6,0"/>
-                        <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
-                        <Setter Property="Opacity" Value="0.25"/>
-                    </Style>
-                </StackPanel.Resources>
-                <Ellipse x:Name="Dot1"/>
-                <Ellipse x:Name="Dot2"/>
-                <Ellipse x:Name="Dot3"/>
-                <Ellipse x:Name="Dot4"/>
-            </StackPanel>
+            <!-- 旋转圆环加载指示（accent 弧线 + 弱化轨道） -->
+            <Grid Grid.Row="2" Width="44" Height="44" HorizontalAlignment="Center" Margin="0,0,0,16">
+                <Ellipse Stroke="{DynamicResource BorderBrush}" StrokeThickness="4"/>
+                <Ellipse x:Name="SpinnerArc" Stroke="{DynamicResource AccentBrush}" StrokeThickness="4"
+                         StrokeDashArray="11 21" StrokeDashCap="Round"
+                         StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                    <Ellipse.RenderTransform>
+                        <RotateTransform x:Name="SpinnerRotate" CenterX="22" CenterY="22"/>
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+            </Grid>
 
             <TextBlock x:Name="LoadingText" Grid.Row="3"
                        Text="{DynamicResource Str.SplashLoading}"
@@ -92,7 +88,7 @@
                        FontSize="11"
                        Foreground="{DynamicResource TextMutedBrush}"
                        HorizontalAlignment="Center"
-                       Margin="0,8,0,0"/>
+                       Margin="0,10,0,0"/>
         </Grid>
     </Border>
 </Window>

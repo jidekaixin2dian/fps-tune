@@ -17,22 +17,17 @@ public partial class SplashWindow : Window
     {
         InitializeComponent();
         VersionText.Text = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
-        StartDotAnimation();
+        StartSpinner();
     }
 
-    private void StartDotAnimation()
+    private void StartSpinner()
     {
-        var dots = new[] { Dot1, Dot2, Dot3, Dot4 };
-        for (var i = 0; i < dots.Length; i++)
+        // 圆环弧线匀速旋转：经典 spinner，比呼吸圆点更清晰
+        var spin = new DoubleAnimation(0, 360, TimeSpan.FromMilliseconds(900))
         {
-            var anim = new DoubleAnimation(0.25, 1, TimeSpan.FromMilliseconds(420))
-            {
-                AutoReverse = true,
-                RepeatBehavior = RepeatBehavior.Forever,
-                BeginTime = TimeSpan.FromMilliseconds(i * 140),
-            };
-            dots[i].BeginAnimation(OpacityProperty, anim);
-        }
+            RepeatBehavior = RepeatBehavior.Forever,
+        };
+        SpinnerRotate.BeginAnimation(RotateTransform.AngleProperty, spin);
     }
 
     /// <summary>主窗就绪后调用：短淡出再关闭，避免生硬跳变。</summary>
