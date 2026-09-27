@@ -32,11 +32,17 @@ View code-behind；**没有** TODO/HACK 堆积、**没有**吞异常、**编译 
 |---|---|---|
 | 生产代码 | **24,195 行**（`.cs` + `.xaml`） | 规模小，单人可通读 |
 | 测试代码 | 5,149 行 / 308 条 | 比例健康 |
-| 方法总数 | 590（0.1.4 时点实测；0.1.11 未重测，见 P3-8） | — |
-| **方法长度中位数** | **14 行** | 健康（面条代码的中位数会很高） |
-| 方法 ≥ 60 行 | 29 个（4.9%，0.1.4 时点实测） | 可接受 |
-| 方法 ≥ 100 行 | 7 个（0.1.4 时点实测） | 见 §3.2 |
-| 最长方法 | 180 行（`ExperimentRunner.RunTestGroupAsync`，0.1.4 时点实测） | 线性编排，见 §3.2 |
+| 方法总数 | **784**（`tools/methlen.py` 口径；0.1.4 同口径 755，规模稳定） | — |
+| **方法长度中位数** | **12 行**（0.1.4 同口径 12，持平） | 健康（面条代码的中位数会很高） |
+| 方法 ≥ 60 行 | 35 个（4.5%；0.1.4 同口径 34） | 可接受 |
+| 方法 ≥ 100 行 | 9 个（0.1.4 同口径 9） | 见 §3.2 |
+| 最长方法 | **248 行**（`BackupService.Restore.RestoreAllCore`，线性编排 + 守卫式早返回） | 线性编排，见 §3.2 |
+
+> **口径更正（2026-09-28，P3-8）**：旧记录（590 / 14 / 29 / 7 / max 180）出自带缺陷的一次性
+> 逐行正则脚本——要求完整单行签名 + 返回类型、不数构造函数与表达式体、朴素大括号计数，
+> 因此**漏掉 `RestoreAllCore`(248 行) 等跨行签名方法，"最长方法 180"当时就是错的**。
+> 新口径脚本 `tools/methlen.py` 已用 0.1.4 树校准（7 个点名方法长度逐一精确复现），
+> 此后引用方法级数字一律以它为准。
 | 编译警告 | **0**（2026-09-28 全量重编译 `--no-incremental` 实测；09-25 清零后 `718a1be` 曾引入 2 处 CS8604 被增量构建掩盖，`ccb883b` 修复） | 底线：**新增代码必须 0 警告**，且核对基线必须全量重编译（增量构建跳过 csc 时假报 0，见 `AI-WORKFLOW.md` §二） |
 | `TODO` / `HACK` / `FIXME` | **0** | — |
 | 空 `catch` 吞异常 | **0** | 唯一的能力探测 `catch` 已注明理由 |
@@ -52,11 +58,12 @@ View code-behind；**没有** TODO/HACK 堆积、**没有**吞异常、**编译 
 - 底线：**新代码不要新增硬编码中文**（棘轮会直接失败）。
   > 例外：把既有文案**搬到新文件**时按"新文件补行、旧文件减掉"改基线，总数只许降不许升。
 
-### 3.2 30 个 ≥60 行的方法 —— **多数不必拆**
+### 3.2 35 个 ≥60 行的方法 —— **多数不必拆**
 
-逐个人工看过最长的几个（`RunTestGroupAsync` 180、`BackupService.Capture.CreateBackupRecords`
-167、`DiagnosticReportExporter.AddMarkdownSummary` 154、`CliHost.ParseOptions` 125、
-`AutoProfileService.PollAsync` 115、`AbExperimentView.ApplyStepResult` 108、
+逐个人工看过最长的几个（`BackupService.Restore.RestoreAllCore` 248——旧脚本漏测、
+2026-09-28 已补看，同为线性编排 + 守卫式早返回、`RunTestGroupAsync` 180、
+`BackupService.Capture.CreateBackupRecords` 167、`DiagnosticReportExporter.AddMarkdownSummary` 154、
+`CliHost.ParseOptions` 125、`AutoProfileService.PollAsync` 115、`AbExperimentView.ApplyStepResult` 108、
 `PerformanceSessionService.Stop` 103），形态都是
 **"线性编排 + 守卫式早返回"**（编号步骤 / 参数分派 / 表格化输出），不是嵌套面条。
 **为拆而拆只会制造更多跨方法状态传递。** 只有将来某段真的长出多层嵌套再动。
