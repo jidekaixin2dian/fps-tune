@@ -618,4 +618,14 @@
     <s:String x:Key="Str.BackupFileEmpty">空备份</s:String>
     <s:String x:Key="Str.BackupInvalidFile">无法读取（可能已损坏）</s:String>
     <s:String x:Key="Str.BackupListFailed">读取备份列表失败：</s:String>
+
+    <!-- ICC 自选文件（P2-10） -->
+    <s:String x:Key="Str.IccApplyFromFile">从文件应用…</s:String>
+    <s:String x:Key="Str.IccApplyFromFileTip">应用你自己的校色文件（.icc / .icm），同样可一键还原</s:String>
+    <s:String x:Key="Str.IccFileFilter">ICC 配置文件 (*.icc;*.icm)|*.icc;*.icm|所有文件 (*.*)|*.*</s:String>
+    <s:String x:Key="Str.IccFileMissing">所选文件不存在。</s:String>
+    <s:String x:Key="Str.IccFileExtUnsupported">只支持 .icc / .icm 配置文件。</s:String>
+    <s:String x:Key="Str.IccFileNotDisplay">所选文件不是可用的显示器 ICC 配置文件（需要 mntr/RGB 显示类）。</s:String>
+    <s:String x:Key="Str.IccApplied">已生效：{0}。系统全局切换即时可见；不满意点「还原原始」。</s:String>
+    <s:String x:Key="Str.IccApplyFailed">应用失败：{0}</s:String>
 </ResourceDictionary>

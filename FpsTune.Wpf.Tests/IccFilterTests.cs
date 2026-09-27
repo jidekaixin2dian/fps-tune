@@ -250,6 +250,107 @@ public class IccFilterServiceTests : IDisposable
         return null;
     }
 
+    // ---------- P2-10：用户自选 .icc / .icm 文件 ----------
+
+    /// <summary>造一个"用户的校色文件"：用真实生成器产出（mntr/RGB，可过 IsDisplayProfile）。</summary>
+    private static string WriteUserFile(string dir, string name, IccFilterPreset preset)
+    {
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, name);
+        File.WriteAllBytes(path, IccProfileGenerator.Build(IccProfileGenerator.ParamsFor(preset)));
+        return path;
+    }
+
+    [Fact]
+    public void ApplyFromFile_installs_custom_profile_with_backup_and_restore()
+    {
+        var original = _api.InstallDisplayProfile("sRGB.icm");
+        _api.AssociationList.AddRange(new[] { "sRGB.icm" });
+        var userFile = WriteUserFile(Path.Combine(_backupDir, "src"), "我的校色.icc", IccFilterPreset.Warm);
+
+        var name = IccFilterService.ApplyFromFile(userFile);
+
+        // 自定义文件以 FpsTune-Custom- 前缀 + 内容哈希命名，且已装入色彩目录并生效
+        Assert.StartsWith(IccFilterService.CustomProfilePrefix, name);
+        Assert.EndsWith(".icc", name);
+        Assert.Contains(name, _api.InstalledProfiles);
+        Assert.Equal(name, LastValid());
+
+        var state = IccFilterService.GetState();
+        Assert.True(state.Restorable);
+        Assert.Equal(name, state.CurrentProfileName);
+
+        // 还原 = 精确写回备份的原始列表（自定义条目被清掉）
+        Assert.True(IccFilterService.Restore());
+        Assert.Equal(new[] { "sRGB.icm" }, _api.AssociationList);
+        Assert.Equal(original, LastValid());
+        Assert.False(IccFilterService.GetState().Restorable);
+    }
+
+    [Fact]
+    public void ApplyFromFile_is_idempotent_for_identical_content()
+    {
+        _api.InstallDisplayProfile("sRGB.icm");
+        _api.AssociationList.AddRange(new[] { "sRGB.icm" });
+        var userFile = WriteUserFile(Path.Combine(_backupDir, "src"), "same.icm", IccFilterPreset.Cool);
+
+        var first = IccFilterService.ApplyFromFile(userFile);
+        var second = IccFilterService.ApplyFromFile(userFile);
+
+        // 同内容文件 → 同名安装（内容哈希命名），不会生成第二份副本
+        Assert.Equal(first, second);
+        Assert.Single(_api.InstalledProfiles, n => n.StartsWith(IccFilterService.CustomProfilePrefix, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Drift_check_tolerates_own_custom_profiles()
+    {
+        _api.InstallDisplayProfile("sRGB.icm");
+        _api.AssociationList.AddRange(new[] { "sRGB.icm" });
+        var fileA = WriteUserFile(Path.Combine(_backupDir, "src"), "a.icc", IccFilterPreset.Vivid);
+        var fileB = WriteUserFile(Path.Combine(_backupDir, "src"), "b.icc", IccFilterPreset.Warm);
+
+        IccFilterService.ApplyFromFile(fileA);
+        // 第一次自定义应用之后再换文件/换预设，都不是"外部修改"
+        var second = IccFilterService.ApplyFromFile(fileB);
+        Assert.Equal(second, LastValid());
+        IccFilterService.Apply(IccFilterPreset.Dehaze);
+        Assert.Equal("FpsTune-Dehaze.icc", LastValid());
+    }
+
+    [Fact]
+    public void ApplyFromFile_validates_source_honestly()
+    {
+        _api.InstallDisplayProfile("sRGB.icm");
+        _api.AssociationList.AddRange(new[] { "sRGB.icm" });
+        var src = Path.Combine(_backupDir, "src");
+        Directory.CreateDirectory(src);
+
+        // 文件不存在
+        var missing = Assert.Throws<InvalidOperationException>(
+            () => IccFilterService.ApplyFromFile(Path.Combine(src, "nope.icc")));
+        Assert.Contains("IccFileMissing", missing.Message);
+
+        // 扩展名不支持
+        var txt = Path.Combine(src, "not-a-profile.txt");
+        File.WriteAllText(txt, "hello");
+        var ext = Assert.Throws<InvalidOperationException>(() => IccFilterService.ApplyFromFile(txt));
+        Assert.Contains("IccFileExtUnsupported", ext.Message);
+
+        // 内容不是显示器 profile（设备类被改写成 prtr/CMYK）
+        var bytes = IccProfileGenerator.Build(IccProfileGenerator.ParamsFor(IccFilterPreset.Vivid));
+        System.Text.Encoding.ASCII.GetBytes("prtr").CopyTo(bytes, 12);
+        System.Text.Encoding.ASCII.GetBytes("CMYK").CopyTo(bytes, 16);
+        var printerLike = Path.Combine(src, "printer.icc");
+        File.WriteAllBytes(printerLike, bytes);
+        var notDisplay = Assert.Throws<InvalidOperationException>(() => IccFilterService.ApplyFromFile(printerLike));
+        Assert.Contains("IccFileNotDisplay", notDisplay.Message);
+
+        // 以上任一失败都不应触发切换或备份
+        Assert.Equal(new[] { "sRGB.icm" }, _api.AssociationList);
+        Assert.False(IccFilterService.GetState().Restorable);
+    }
+
     /// <summary>内存态 ICC 系统层：色彩目录用临时目录，SetDisplayDefault 模拟真实行为（追加到列表末尾）。</summary>
     private sealed class FakeIccApi : IIccSystemApi
     {

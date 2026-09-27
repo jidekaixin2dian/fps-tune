@@ -531,6 +531,27 @@ public partial class DisplayQualityView : UserControl
             return;
         }
 
+        await IccApplyCore(() => IccFilterService.Apply(preset.Value));
+    }
+
+    /// <summary>P2-10：用户自选 .icc / .icm 文件。与预设共用确认与应用流程。</summary>
+    private void IccApplyFromFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = Str.T("Str.IccApplyFromFile"),
+            Filter = Str.T("Str.IccFileFilter")
+        };
+        if (dialog.ShowDialog() != true)
+            return;
+        var path = dialog.FileName;
+        _ = IccApplyCore(() => IccFilterService.ApplyFromFile(path));
+    }
+
+    /// <summary>预设与用户文件共用的应用流程：确认 → 写入 → 状态反馈（同一套全局生效警示）。</summary>
+    private async Task IccApplyCore(Func<string> apply)
+    {
         var confirmed = DialogService.Confirm(
             Str.T("Str.ApplyIcc"),
             "切换是系统全局的：整个桌面（含网页、视频、游戏）的观感都会变化。\n\n" +
@@ -544,16 +565,17 @@ public partial class DisplayQualityView : UserControl
         _busy = true;
         _iccStatus = null;
         IccApplyButton.IsEnabled = false;
+        IccApplyFileButton.IsEnabled = false;
         IccRestoreButton.IsEnabled = false;
         IccStateText.Text = Str.T("Str.ApplyingPreset");
         try
         {
-            var name = await Task.Run(() => IccFilterService.Apply(preset.Value));
-            _iccStatus = $"已生效：{name}。系统全局切换即时可见；不满意点「还原原始」。";
+            var name = await Task.Run(apply);
+            _iccStatus = Str.T("Str.IccApplied", Path.GetFileName(name));
         }
         catch (Exception ex)
         {
-            _iccStatus = "应用失败：" + ex.Message;
+            _iccStatus = Str.T("Str.IccApplyFailed", ex.Message);
         }
         finally
         {

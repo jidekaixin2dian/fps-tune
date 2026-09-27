@@ -104,16 +104,53 @@ public static class IccFilterService
             HasBackup());
     }
 
+    /// <summary>本工具从用户文件安装的自定义 profile 统一用此前缀（漂移检查据此放行）。</summary>
+    internal const string CustomProfilePrefix = "FpsTune-Custom-";
+
     /// <summary>应用预设。成功返回生效的 profile 文件名；失败抛异常，系统状态只可能停在已验证的位置。</summary>
     public static string Apply(IccFilterPreset preset)
     {
         var api = CreateApi();
+        var (display, colorDir) = RequireDisplayAndColorDir(api);
+        string presetName = EnsurePresetInstalled(api, preset, colorDir);
+        return AssociateWithBackup(api, display, colorDir, presetName);
+    }
+
+    /// <summary>
+    /// 应用用户自选的 .icc / .icm 文件（P2-10）。与预设走同一套备份/漂移保护/验证，
+    /// 自定义文件以内容哈希命名安装进系统色彩目录，可随时「还原原始」。
+    /// </summary>
+    public static string ApplyFromFile(string sourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+            throw new InvalidOperationException(Str.T("Str.IccFileMissing"));
+        var ext = Path.GetExtension(sourcePath);
+        if (!ext.Equals(".icc", StringComparison.OrdinalIgnoreCase)
+            && !ext.Equals(".icm", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(Str.T("Str.IccFileExtUnsupported"));
+        // 与预设同一条"可用显示 profile"判定口径：设备类 mntr + RGB 色彩空间
+        if (!IccProfileFile.IsDisplayProfile(sourcePath))
+            throw new InvalidOperationException(Str.T("Str.IccFileNotDisplay"));
+
+        var api = CreateApi();
+        var (display, colorDir) = RequireDisplayAndColorDir(api);
+        string name = EnsureCustomInstalled(api, sourcePath, colorDir);
+        return AssociateWithBackup(api, display, colorDir, name);
+    }
+
+    private static (IccDisplayInfo Display, string ColorDir) RequireDisplayAndColorDir(IIccSystemApi api)
+    {
         if (!api.TryGetPrimaryDisplay(out var display))
             throw new InvalidOperationException("无法定位主显示器，ICC 滤镜第一版只作用主显示器。");
         if (!display.UsePerUserProfiles)
             throw new InvalidOperationException("当前显示器使用系统级色彩关联，本版本暂不支持切换。");
         var colorDir = api.TryGetColorDirectory() ?? throw new InvalidOperationException("无法读取系统色彩目录。");
+        return (display, colorDir);
+    }
 
+    /// <summary>备份/漂移保护 → 关联 → 读回验证。profileName 必须已安装在色彩目录内。</summary>
+    private static string AssociateWithBackup(IIccSystemApi api, IccDisplayInfo display, string colorDir, string profileName)
+    {
         var list = api.ReadAssociationList(display);
         var currentDefault = EffectiveDefault(api, display, colorDir);
         if (currentDefault is null)
@@ -127,8 +164,8 @@ public static class IccFilterService
         }
         else
         {
-            // 已有备份：只允许"备份列表 + 本工具预设追加"的漂移；之外的变化如实拒绝
-            if (!IsBackupPlusOwnPresets(list, backup, colorDir))
+            // 已有备份：只允许"备份列表 + 本工具安装的 profile"的漂移；之外的变化如实拒绝
+            if (!IsBackupPlusOwnProfiles(list, backup, colorDir))
                 throw new InvalidOperationException(
                     "检测到显示器色彩配置在本工具之外被修改过。为避免覆盖你的设置，本次未切换；请先点「还原原始」，再重新应用预设。");
             if (backup.AssociationSubKey != display.AssociationSubKey)
@@ -136,19 +173,35 @@ public static class IccFilterService
                     "主显示器与备份时不一致，已拒绝切换。请先点「还原原始」后再试。");
         }
 
-        string presetName = EnsurePresetInstalled(api, preset, colorDir);
-
-        if (!api.SetDisplayDefaultAssociation(display, presetName))
+        if (!api.SetDisplayDefaultAssociation(display, profileName))
             throw new InvalidOperationException("系统拒绝了 profile 切换请求（未生效）。");
 
         // 验证：读回关联列表，最后一个有效 profile 必须是刚设置的预设
         var after = api.ReadAssociationList(display);
         var verified = EffectiveDefault(api, display, colorDir);
-        if (verified != presetName)
+        if (verified != profileName)
             throw new InvalidOperationException(
                 $"切换后验证失败：当前生效 profile 仍是 {verified ?? "<无>"}，系统设置未达成。");
 
-        return presetName;
+        return profileName;
+    }
+
+    /// <summary>把用户选中的 profile 复制留档并安装进系统色彩目录（幂等）。返回色彩目录内的文件名。</summary>
+    private static string EnsureCustomInstalled(IIccSystemApi api, string sourcePath, string colorDir)
+    {
+        byte[] bytes = File.ReadAllBytes(sourcePath);
+        var hash8 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes))[..8];
+        string name = $"{CustomProfilePrefix}{hash8}{Path.GetExtension(sourcePath)}";
+        string installedPath = Path.Combine(colorDir, name);
+        if (IccProfileFile.IsDisplayProfile(installedPath))
+            return name;
+
+        string localPath = Path.Combine(BackupDir(), "custom", name);
+        Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
+        AtomicFile.WriteAllBytes(localPath, bytes);
+
+        InstallIntoColorDir(api, localPath, installedPath);
+        return name;
     }
 
     /// <summary>还原为备份的原始 profile。返回是否执行了还原；无备份时返回 false（如实无事发生）。</summary>
@@ -193,11 +246,17 @@ public static class IccFilterService
         Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
         AtomicFile.WriteAllBytes(localPath, bytes);
 
+        InstallIntoColorDir(api, localPath, installedPath);
+        return @params.FileName;
+    }
+
+    /// <summary>安装进系统色彩目录并验证可用（预设与用户文件共用；失败抛异常）。</summary>
+    private static void InstallIntoColorDir(IIccSystemApi api, string localPath, string installedPath)
+    {
         if (!api.InstallColorProfile(localPath))
             throw new InvalidOperationException("安装 profile 到系统色彩目录失败。");
         if (!IccProfileFile.IsDisplayProfile(installedPath))
             throw new InvalidOperationException("安装后未在系统色彩目录找到 profile。");
-        return @params.FileName;
     }
 
     /// <summary>生效默认 = per-user 关联列表中从末尾数第一个有效显示类 profile。</summary>
@@ -213,14 +272,16 @@ public static class IccFilterService
         return null;
     }
 
-    /// <summary>当前列表是否 = 备份列表 + 本工具预设名（顺序与数量漂移都算外部修改）。</summary>
-    private static bool IsBackupPlusOwnPresets(string[] list, Backup backup, string colorDir)
+    /// <summary>当前列表是否 = 备份列表 + 本工具安装的 profile（预设或用户文件；顺序与数量漂移都算外部修改）。</summary>
+    private static bool IsBackupPlusOwnProfiles(string[] list, Backup backup, string colorDir)
     {
         var ownNames = AllPresetFileNames();
         var trimmed = new List<string>(list.Length);
         foreach (var n in list)
         {
             if (ownNames.Contains(n, StringComparer.OrdinalIgnoreCase))
+                continue;
+            if (n.StartsWith(CustomProfilePrefix, StringComparison.OrdinalIgnoreCase))
                 continue;
             trimmed.Add(n);
         }

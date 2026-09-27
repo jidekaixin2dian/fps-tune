@@ -618,4 +618,14 @@
     <s:String x:Key="Str.BackupFileEmpty">Empty backup</s:String>
     <s:String x:Key="Str.BackupInvalidFile">Unreadable (possibly corrupted)</s:String>
     <s:String x:Key="Str.BackupListFailed">Failed to list backups: </s:String>
+
+    <!-- ICC custom file (P2-10) -->
+    <s:String x:Key="Str.IccApplyFromFile">Apply from file…</s:String>
+    <s:String x:Key="Str.IccApplyFromFileTip">Apply your own color profile (.icc / .icm); still restorable in one click</s:String>
+    <s:String x:Key="Str.IccFileFilter">ICC profile (*.icc;*.icm)|*.icc;*.icm|All files (*.*)|*.*</s:String>
+    <s:String x:Key="Str.IccFileMissing">The selected file does not exist.</s:String>
+    <s:String x:Key="Str.IccFileExtUnsupported">Only .icc / .icm profile files are supported.</s:String>
+    <s:String x:Key="Str.IccFileNotDisplay">The selected file is not a usable display ICC profile (mntr/RGB display class required).</s:String>
+    <s:String x:Key="Str.IccApplied">Applied: {0}. The change is system-wide and takes effect immediately; use "Restore original" if unsatisfied.</s:String>
+    <s:String x:Key="Str.IccApplyFailed">Apply failed: {0}</s:String>
 </ResourceDictionary>

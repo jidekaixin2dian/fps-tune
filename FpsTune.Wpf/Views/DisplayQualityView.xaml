@@ -228,6 +228,10 @@
                             <Button x:Name="IccApplyButton" Content="{DynamicResource Str.ApplyPreset}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="IccApply_Click"/>
+                            <Button x:Name="IccApplyFileButton" Content="{DynamicResource Str.IccApplyFromFile}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="120" Margin="0,0,8,0" Click="IccApplyFromFile_Click"
+                                    ToolTip="{DynamicResource Str.IccApplyFromFileTip}"/>
                             <Button x:Name="IccRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="110" Click="IccRestore_Click"/>
