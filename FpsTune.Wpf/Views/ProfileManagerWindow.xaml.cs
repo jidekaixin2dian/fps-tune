@@ -125,9 +125,16 @@ public partial class ProfileManagerWindow : Window
         };
         if (dlg.ShowDialog() != true)
             return;
-        File.WriteAllText(dlg.FileName,
-            JsonSerializer.Serialize(hit, new JsonSerializerOptions { WriteIndented = true }),
-            Encoding.UTF8);
+        try
+        {
+            File.WriteAllText(dlg.FileName,
+                JsonSerializer.Serialize(hit, new JsonSerializerOptions { WriteIndented = true }),
+                Encoding.UTF8);
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.Profiles"), Str.T("Str.ExportProfileFailed") + ex.Message);
+        }
     }
 
     private void DeleteRow_Click(object sender, RoutedEventArgs e)

@@ -379,9 +379,23 @@ public partial class SessionView : UserControl
                 $"确定删除所选 {selected.Count} 个会话？此操作只删除这些会话文件，不影响其他数据。",
                 danger: true, confirmText: Str.T("Str.Delete")))
             return;
+        var failed = new List<string>();
         foreach (var vm in selected)
-            PerformanceSessionStore.Delete(vm.Id);
+        {
+            try
+            {
+                PerformanceSessionStore.Delete(vm.Id);
+            }
+            catch (Exception ex)
+            {
+                failed.Add($"{vm.Name} ({ex.Message})");
+            }
+        }
         RefreshAll();
+        if (failed.Count > 0)
+            DialogService.Warning(
+                Str.T("Str.DeleteSession"),
+                Str.T("Str.SessionDeleteFailed") + string.Join("; ", failed));
     }
 
     private PerformanceSession? GetSingleSelectedSession()

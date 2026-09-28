@@ -177,8 +177,10 @@ public partial class SettingsView : UserControl
         }
         else
         {
-            GamePathHint.Text = File.Exists(saved) ? Str.T("Str.SpecifiedClickToSave") : Str.T("Str.SpecifiedMissing");
-            GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["OkBrush"];
+            // 文件不存在是警示状态，不能用成功色（此前恒为绿色，警示信息被配色误导）
+            var exists = File.Exists(saved);
+            GamePathHint.Text = exists ? Str.T("Str.SpecifiedClickToSave") : Str.T("Str.SpecifiedMissing");
+            GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources[exists ? "OkBrush" : "WarningBrush"];
         }
     }
 
@@ -592,6 +594,7 @@ public partial class SettingsView : UserControl
         }
         catch
         {
+            DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.CannotOpenLink"));
         }
     }
 

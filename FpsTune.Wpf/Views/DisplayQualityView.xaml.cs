@@ -580,7 +580,12 @@ public partial class DisplayQualityView : UserControl
 
     private void SetIccPresetCardsEnabled(bool enabled)
     {
-        foreach (var card in new RadioButton[] { IccPresetVivid, IccPresetShadowBoost, IccPresetDehaze, IccPresetStandard })
+        // 8 张预设卡全量启停（原只列 4 张，其余靠默认值兜底，语义不完整）
+        foreach (var card in new RadioButton[]
+        {
+            IccPresetVivid, IccPresetShadowBoost, IccPresetDehaze, IccPresetNightGuard,
+            IccPresetWarm, IccPresetCool, IccPresetSoft, IccPresetStandard
+        })
             card.IsEnabled = enabled;
     }
 
