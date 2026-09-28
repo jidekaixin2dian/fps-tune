@@ -502,6 +502,8 @@
     <s:String x:Key="Str.DetectIncompleteRetry">检测未完成，可重新检测或前往检测页查看原因。</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">暂无优化项，请先在检测页运行检测。</s:String>
     <s:String x:Key="Str.LoadedLastScan">已加载上次扫描结果。点击“运行检测”可重新扫描。</s:String>
+    <s:String x:Key="Str.LastDetectLabel">上次检测：{0} · 耗时 {1:0.0} 秒</s:String>
+    <s:String x:Key="Str.NeverDetected">尚未检测过——点「运行检测」开始（全程只读，不会修改任何系统设置）</s:String>
     <s:String x:Key="Str.CopiedDetails">已将检测详情复制到剪贴板。</s:String>
     <s:String x:Key="Str.CopiedGamePath">已将游戏路径复制到剪贴板。</s:String>
     <s:String x:Key="Str.CannotParseDetectJson">无法解析检测 JSON。</s:String>

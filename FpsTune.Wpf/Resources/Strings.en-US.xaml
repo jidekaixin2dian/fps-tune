@@ -502,6 +502,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DetectIncompleteRetry">Detection did not finish. Run it again or open the Detect page to see why.</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">No items yet. Run detection on the Detect page first.</s:String>
     <s:String x:Key="Str.LoadedLastScan">Loaded the previous scan. Click Run detection to scan again.</s:String>
+    <s:String x:Key="Str.LastDetectLabel">Last detection: {0} · took {1:0.0}s</s:String>
+    <s:String x:Key="Str.NeverDetected">Not detected yet — click "Run detection" to start (read-only, no system settings are changed)</s:String>
     <s:String x:Key="Str.CopiedDetails">Detection details copied to the clipboard.</s:String>
     <s:String x:Key="Str.CopiedGamePath">Game path copied to the clipboard.</s:String>
     <s:String x:Key="Str.CannotParseDetectJson">Could not parse the detection JSON.</s:String>

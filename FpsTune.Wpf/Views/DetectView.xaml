@@ -24,6 +24,10 @@
                 <TextBlock Text="{DynamicResource Str.NavDetect}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="{DynamicResource Str.DetectIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+                <!-- P3-4：上次检测时间与耗时（进入页面即可见，不必先看输出框） -->
+                <TextBlock x:Name="LastDetectText" Text=""
+                           Style="{StaticResource MutedTextStyle}" FontFamily="{StaticResource FontMono}"
+                           FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Button x:Name="RunButton"

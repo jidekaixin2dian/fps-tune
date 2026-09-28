@@ -24,6 +24,7 @@ public partial class DetectView : UserControl
     {
         InitializeComponent();
         LoadSavedState();
+        RefreshLastDetectText();
         Loaded += (_, _) =>
         {
             if (!_hasSavedState)
@@ -243,13 +244,17 @@ public partial class DetectView : UserControl
         RunButton.IsEnabled = false;
         LoadButton.IsEnabled = false;
         OutputBox.Text = Str.T("Str.Detecting");
+        LastDetectText.Text = Str.T("Str.Detecting");
 
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             var result = await OptimizationEngine.DetectAsync();
+            sw.Stop();
             if (!result.Success)
             {
                 OutputBox.Text = result.Error + Environment.NewLine + result.Output;
+                RefreshLastDetectText();   // 失败不记录，恢复显示上一次的成功结果
                 return false;
             }
 
@@ -257,11 +262,14 @@ public partial class DetectView : UserControl
             if (root is null)
             {
                 OutputBox.Text = Str.T("Str.CannotParseDetectJson");
+                RefreshLastDetectText();
                 return false;
             }
 
             StateStore.SaveDetect(root);
+            StateStore.SaveDetectMeta(DateTime.Now, sw.ElapsedMilliseconds);
             ApplyDetectData(root, showDetails: true);
+            RefreshLastDetectText();
             _hasSavedState = true;
             return true;
         }
@@ -287,6 +295,17 @@ public partial class DetectView : UserControl
         _hasSavedState = true;
         ApplyDetectData(root, showDetails: false);
         OutputBox.Text = Str.T("Str.LoadedLastScan");
+    }
+
+    /// <summary>P3-4：页头状态行——上次检测的完成时间与耗时（未检测过时给出动作指引）。</summary>
+    private void RefreshLastDetectText()
+    {
+        var meta = StateStore.LoadDetectMeta();
+        LastDetectText.Text = meta is null
+            ? Str.T("Str.NeverDetected")
+            : Str.T("Str.LastDetectLabel",
+                meta.At.ToString("yyyy-MM-dd HH:mm"),
+                meta.ElapsedMs / 1000.0);
     }
 
     private void ApplyDetectData(JsonObject root, bool showDetails)

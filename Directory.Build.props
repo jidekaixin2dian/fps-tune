@@ -16,7 +16,8 @@
     <!-- 0.1.14 = 系统性审计修复（更新检查对全 pre-release 失效根因修复 + 还原管理员预检 +
          导出/删除/打开目录守卫 + 设置页外观卡顺序 + 会话比较表头 + 对话框 Enter + AB 图重绘）
          + splash 等首页数据就绪才放行（用户反馈） -->
-    <VersionPrefix>0.1.14</VersionPrefix>
+    <!-- 0.1.15 = P3-4 检测页前置状态条（进入即显示上次检测时间与耗时） -->
+    <VersionPrefix>0.1.15</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

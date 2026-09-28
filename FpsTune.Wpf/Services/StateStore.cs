@@ -49,6 +49,44 @@ public static class StateStore
         }
     }
 
+    // ---------- 检测元数据（P3-4：检测页前置状态条） ----------
+
+    private static string DetectMetaFile => Path.Combine(BaseDir, "last-detect.meta.json");
+
+    /// <summary>上次检测的完成时刻与耗时。独立文件存储——引擎输出（last-detect.json）是
+    /// CLI `-Detect -Json` 的同一结构，有测试逐字节依赖，不能往里加键。</summary>
+    public sealed record DetectMeta(DateTime At, long ElapsedMs);
+
+    public static void SaveDetectMeta(DateTime at, long elapsedMs)
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            AtomicFile.WriteAllText(
+                DetectMetaFile,
+                JsonSerializer.Serialize(new DetectMeta(at, elapsedMs)),
+                new UTF8Encoding(false));
+        }
+        catch
+        {
+            // 元数据写入失败不影响检测本身；状态条退回"未记录"显示。
+        }
+    }
+
+    public static DetectMeta? LoadDetectMeta()
+    {
+        try
+        {
+            if (!File.Exists(DetectMetaFile))
+                return null;
+            return JsonSerializer.Deserialize<DetectMeta>(File.ReadAllText(DetectMetaFile, Encoding.UTF8));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static string GamePathFile => Path.Combine(BaseDir, "game-path.txt");
 
     /// <summary>保存用户在设置里手动指定的游戏 EXE 路径（优先于自动检测）。</summary>
