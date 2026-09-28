@@ -1,14 +1,14 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-29（本轮：**`v0.1.14-beta` 已发布**——构建/部署/push/Release 四步全完成）
-> 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`（当前：`HANDOFF_PROMPT_2026-09-28.md`）
+> 最后核对：2026-09-29（本轮 ㉓：**`v0.1.16-beta` 已发布**——push/Release/三资产/核验全链路完成 + 深度自查修复）
+> 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`（当前：`HANDOFF_PROMPT_2026-09-29.md`）
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
 
 ## 1. 一句话现状
 
-主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.14-beta`**（2026-09-29，标签 `41540c3`）；**0.1.16-beta 候选（P3-4 检测页状态条 + 概览卡片化 + 字体一致性）已按 `11398ea` 构建、部署 `D:\FpsTune` 并启动目检**，发版等用户拍板。
-`main` **已 push 并与 origin 同步**。审计报告在 `review-output/AUDIT-2026-09-28.md`（不入库）。
+主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.16-beta`**（2026-09-29，标签 `11398ea`，内容 = P3-4 检测页状态条 + 概览卡片化 + 字体一致性）。自查修复 `2cc2af4`（检测异常路径状态行 + DetectMeta 测试）已提交**未 push、未部署**，随下个候选走。
+`main` 已 push 至 `e6959e9`（发版轮），**本地领先 1 个提交**（`2cc2af4` 自查修复，push 随下次用户指令）。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
@@ -16,13 +16,13 @@
 | 项 | 值 |
 |---|---|
 | `Directory.Build.props` | `VersionPrefix=0.1.16` / `VersionSuffix=beta` |
-| 已发布 Release | **`v0.1.14-beta`**（2026-09-29 发布，标签 peeled SHA = `41540c3e9d5a2d51f88ffe0570895448388b7395` ✓，pre-release；三资产字节数与本地逐项一致：Setup 60650713 / Portable 978499 / 清单 266；Notes 中文渲染正常、无占位符）。上一版 `v0.1.13-beta`（`0b23141`） |
-| 发布候选（未发布） | **`0.1.16-beta`**：P3-4 检测页状态条 + 概览卡片化（用户批准布局）+ 字体一致性（21 处中文文本去等宽）。已按 `11398ea` 构建（三资产哈希已核）、已部署 `D:\FpsTune` 供目检；若发布，标签打 `11398ea` |
-| `main` | origin 同步至 `8b48519`（0.1.14 收尾）；本地领先 **4 个提交**（P3-4 + 两轮文档 + 卡片化），push 随发版拍板进行 |
+| 已发布 Release | **`v0.1.16-beta`**（2026-09-29 发布，标签 = `11398ea13bcea5fc2e8950b73c64c9986b865927` ✓，pre-release；三资产字节数与本地逐项一致：Setup 60650801 / Portable 979803 / 清单 266 ✓，清单哈希复核一致 ✓；Notes 格式对齐 0.1.14）。上一版 `v0.1.14-beta`（`41540c3`） |
+| 发布候选（未发布） | （无——`2cc2af4` 为一行防御路径修复 + 3 条测试，刻意不占版本号；下个实质改动 bump 0.1.17 时一并带上） |
+| `main` | origin 同步至 `e6959e9`（0.1.16 发版收尾）；本地领先 **1 个提交**（`2cc2af4` 检测异常路径修复 + DetectMeta 测试） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.16-beta` 内嵌 SHA `11398ea`**（本轮已部署并启动目检）。文件清单与 `dist/folder-0.1.16/` 双向一致。备份链已于 2026-09-29 经用户拍板清理：**仅存 `-2f97`（0.1.15 候选，当前版本的回滚点）**，其余 15 个旧备份（0.1.14 及更早）已删除 |
-| 测试基线 | 317 / 317（`dotnet test -c Release`；2026-09-28 复核，含审计修复新增 9 条用例） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.16-beta` 内嵌 SHA `11398ea`**（= 已发布版本；`2cc2af4` 的一行修复**未部署**，随下个候选）。文件清单与 `dist/folder-0.1.16/` 双向一致。备份链已于 2026-09-29 经用户拍板清理：**仅存 `-2f97`（0.1.15 候选，当前版本的回滚点）**，其余 15 个旧备份（0.1.14 及更早）已删除 |
+| 测试基线 | 320 / 320（`dotnet test -c Release`；2026-09-29 复核，含 DetectMeta 存取/容错 3 条新用例） |
 | 编译警告 | **0**（2026-09-28 `--no-incremental` 全量重编译复核；**增量构建会假报 0**，核对必须全量，见 `AI-WORKFLOW.md` §二） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
 | catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
@@ -35,7 +35,32 @@
 **M1 / M2 / M3 全部完成并已发布**（M1 NVAPI+DLSS+数字振动、M2 ICC 滤镜与生成器、
 M3 DRS 二期五项——均随 0.1.3 及此前版本上线）。细节见 PLAN 文档与 git 历史，本节不再维护表格。
 
-## 4. 最近几轮做了什么（㉒ = 2026-09-29；⑯及更早见归档）
+## 4. 最近几轮做了什么（㉓ = 2026-09-29；⑯及更早见归档）
+
+**㉓ v0.1.16-beta 发布 + 深度自查（2026-09-29，本轮）**
+
+用户指令「按 HANDOFF_PROMPT 开发」+ 拍板：批准发版、本轮做深度自查（dist 旧资产清理经查**已在
+`e6959e9` 轮完成**，交接提示第 3 条已失效）。
+
+- **发版**：push `8b48519..e6959e9`（7 提交）→ `gh release create v0.1.16-beta --target
+  11398ea13bcea5fc2e8950b73c64c9986b865927 --prerelease` + 三资产（Portable / Setup / SHA256SUMS，
+  与 0.1.14 同口径——单文件 exe 只进清单不上架）。**核验**：标签 target 完整 SHA ✓、pre-release ✓、
+  三资产字节数与本地逐项一致（60650801 / 979803 / 266）✓、清单哈希对本地资产复核一致 ✓。
+  Notes 格式对齐 0.1.14（存 `/tmp/release-notes-0.1.16.md`，未留 work/ 副本）。
+- **深度自查**（聚焦 0.1.16 两个代码提交 `2f9712f` / `11398ea`）：
+  - **修复（`2cc2af4`）**：检测抛异常时 catch 分支漏调 `RefreshLastDetectText()`，页头状态行
+    卡「正在检测...」不恢复（成功/失败分支都恢复了，异常分支漏）。一行修复。
+  - **补测试**：StateStore 增 `internal BaseDirOverride`（套 DiagnosticReportExporter 模式，
+    生产不变）+ 新增 `DetectMetaTests` 3 条（存取往返含无 BOM 与不触碰 last-detect.json、
+    无文件 null、损坏容错 null）——P3-4 的 DetectMeta 此前零测试覆盖。
+  - **核实无需改**：DetectView 其余 5 处 FontMono 均纯 ASCII/数字；卡片化 6 个 XAML 小 diff
+    均干净移除 FontFamily（含 DisplayQualityView 从 `TabBadgeTextStyle` 删 Setter——该样式
+    渲染中文徽标，正确）；ConsoleView code-behind 未被卡片化改动。
+  - **记录的既有债务（不动）**：`ConsoleView.UpdatePreparation` 等处硬编码中文（`e7af578` 起，
+    P2-7 暂缓背景下已知）；`_ = main.ReviewSelectionWithIntroAsync(ids)` fire-and-forget 异常未观测。
+- **验证**：320/320（+3）；`--no-incremental` 0 警告 0 错误。无 XAML 改动，无需重新渲染目检。
+- **未做**：`2cc2af4` 未 push（发版拍板只覆盖当时 7 提交）、未构建未部署——一行防御路径修复
+  不占版本号，随下个候选走；`D:\FpsTune` 仍是 `11398ea`（与已发布版本一致，无缺口）。
 
 **㉑ P3-4 检测页前置状态条（2026-09-29，接手轮）**
 

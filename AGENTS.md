@@ -9,10 +9,10 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（33 个可还原优化项） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.1.16` + `VersionSuffix=beta`；**0.1.16 候选（概览卡片化 + 字体一致性 + P3-4 状态条）已按 `11398ea` 构建并部署 `D:\FpsTune` 待拍板**；线上最新 **`v0.1.14-beta`**（标签 `41540c3`）；**push / 发 Release 等用户点名** |
+| 版本 | `VersionPrefix=0.1.16` + `VersionSuffix=beta`；**线上最新 `v0.1.16-beta`**（2026-09-29 发布，标签 `11398ea`，内容 = P3-4 + 概览卡片化 + 字体一致性）；本地 `2cc2af4`（检测异常路径修复 + DetectMeta 测试）未 push 未部署，随下个候选（bump 0.1.17）走 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **317 / 317 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译、审计修复防回归 9 条） |
+| 测试基线 | **320 / 320 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译、审计修复防回归 9 条、DetectMeta 存取/容错 3 条） |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-29.md`） |
 
 ## 第一步：确认基线，不要先改代码
@@ -20,7 +20,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 317 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 320 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
@@ -149,7 +149,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 317
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（0.1.16-beta 候选 @ 11398ea，实测 ProductVersion 确认；唯一回滚备份 -2f97 = 0.1.15 候选，2026-09-29 用户拍板清理了其余 15 个旧备份），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（0.1.16-beta 已发布版 @ 11398ea，实测 ProductVersion 确认；唯一回滚备份 -2f97 = 0.1.15 候选，2026-09-29 用户拍板清理了其余 15 个旧备份），开始菜单 .lnk 也指向它；只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 
