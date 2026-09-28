@@ -35,3 +35,6 @@ HANDOFF_PROMPT*.md
 work/
 .zcodeignore
 __pycache__/
+
+# 评审产出（本地产出，不入库）
+review-output/
