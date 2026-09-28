@@ -29,10 +29,33 @@ public class CoreLogicTests
     [Fact]
     public void IsNewer_returns_false_on_unparseable_input()
     {
-        Assert.False(UpdateService.IsNewer("v1.2.3", "1.0.0"));
+        // 归一化后仍无法解析的输入才判定为 false；v 前缀与 -beta 后缀是合法 tag 形态
         Assert.False(UpdateService.IsNewer("", "1.0.0"));
         Assert.False(UpdateService.IsNewer("abc", "1.0.0"));
+        Assert.False(UpdateService.IsNewer("1.2", "1.0.0"));
     }
+
+    // 防回归（2026-09-28 审计 L1）：本项目发布全为 pre-release，tag 形如 v0.1.14-beta——
+    // 归一化必须剥离 -beta 后缀，否则更新检查对全 prerelease 的仓库恒失效。
+    [Theory]
+    [InlineData("v0.1.14-beta", "0.1.14")]
+    [InlineData("v0.1.13-beta", "0.1.13")]
+    [InlineData("0.1.13", "0.1.13")]
+    [InlineData("v1.2.3", "1.2.3")]
+    public void TryNormalizeVersion_strips_prerelease_suffix(string raw, string expected)
+    {
+        Assert.True(UpdateService.TryNormalizeVersion(raw, out var actual));
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("0.1.14-beta", "0.1.13", true)]
+    [InlineData("0.1.13-beta", "0.1.13", false)]
+    [InlineData("0.1.9-beta", "0.1.13", false)]
+    [InlineData("v0.1.14-beta", "0.1.13", true)]
+    [InlineData("v1.2.3", "1.0.0", true)]
+    public void IsNewer_compares_after_stripping_prerelease(string latest, string current, bool expected)
+        => Assert.Equal(expected, UpdateService.IsNewer(latest, current));
 
     [Fact]
     public void UpdateService_reads_only_the_exact_sha256_manifest_entry()

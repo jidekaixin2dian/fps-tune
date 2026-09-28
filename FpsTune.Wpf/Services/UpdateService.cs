@@ -14,8 +14,11 @@ public sealed record UpdateInfo(
 
 public static class UpdateService
 {
-    private const string ReleaseApi =
-        "https://api.github.com/repos/jidekaixin2dian/fps-tune/releases/latest";
+    // 列表端点而非 /releases/latest：后者只返回「非 prerelease」的最新版，
+    // 而本项目全部发布都标记为 pre-release，latest 恒 404——更新检查因此永久失效。
+    // 列表按创建时间倒序，取第一个版本号可解析的条目（含 prerelease）。
+    private const string ReleasesApi =
+        "https://api.github.com/repos/jidekaixin2dian/fps-tune/releases?per_page=10";
 
     /// <summary>数字版本（三段），供机器协议、更新比较使用。</summary>
     public static string CurrentVersion =>
@@ -44,27 +47,32 @@ public static class UpdateService
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
-            using var response = await client.GetAsync(ReleaseApi);
+            using var response = await client.GetAsync(ReleasesApi);
             if (!response.IsSuccessStatusCode)
                 return null;
 
             await using var stream = await response.Content.ReadAsStreamAsync();
             using var doc = await JsonDocument.ParseAsync(stream);
-            var root = doc.RootElement;
-
-            var tag = root.TryGetProperty("tag_name", out var tagEl) ? tagEl.GetString() : null;
-            var notes = root.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() : "";
-            var htmlUrl = root.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() : null;
-
-            if (!TryNormalizeVersion(tag, out var version) || string.IsNullOrWhiteSpace(htmlUrl))
+            if (doc.RootElement.ValueKind != JsonValueKind.Array)
                 return null;
 
-            return new UpdateInfo(
-                version,
-                htmlUrl,
-                notes ?? "",
-                FindAssetUrl(root, InstallerAssetName(version)),
-                FindAssetUrl(root, ChecksumAssetName(version)));
+            foreach (var entry in doc.RootElement.EnumerateArray())
+            {
+                var tag = entry.TryGetProperty("tag_name", out var tagEl) ? tagEl.GetString() : null;
+                var notes = entry.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() : "";
+                var htmlUrl = entry.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() : null;
+
+                if (!TryNormalizeVersion(tag, out var version) || string.IsNullOrWhiteSpace(htmlUrl))
+                    continue;
+
+                return new UpdateInfo(
+                    version,
+                    htmlUrl,
+                    notes ?? "",
+                    FindAssetUrl(entry, InstallerAssetName(version)),
+                    FindAssetUrl(entry, ChecksumAssetName(version)));
+            }
+            return null;
         }
         catch
         {
@@ -74,11 +82,13 @@ public static class UpdateService
 
     public static bool IsNewer(string latest, string current)
     {
+        // 两侧都先归一化（剥离 v 前缀与 -beta 等预发布后缀），否则
+        // "0.1.14-beta" 这类 tag 会让 Version.Parse 抛异常、比较恒为 false。
+        if (!TryNormalizeVersion(latest, out var l) || !TryNormalizeVersion(current, out var c))
+            return false;
         try
         {
-            var l = Version.Parse(latest);
-            var c = Version.Parse(current);
-            return l > c;
+            return Version.Parse(l) > Version.Parse(c);
         }
         catch
         {
@@ -93,16 +103,21 @@ public static class UpdateService
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
-            using var response = await client.GetAsync(ReleaseApi);
+            using var response = await client.GetAsync(ReleasesApi);
             if (!response.IsSuccessStatusCode)
                 return null;
 
             using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-            var root = doc.RootElement;
-            var tag = root.TryGetProperty("tag_name", out var tagEl) ? tagEl.GetString() : null;
-            if (!TryNormalizeVersion(tag, out var version))
+            if (doc.RootElement.ValueKind != JsonValueKind.Array)
                 return null;
-            return FindAssetUrl(root, InstallerAssetName(version));
+
+            foreach (var entry in doc.RootElement.EnumerateArray())
+            {
+                var tag = entry.TryGetProperty("tag_name", out var tagEl) ? tagEl.GetString() : null;
+                if (!TryNormalizeVersion(tag, out var version))
+                    continue;
+                return FindAssetUrl(entry, InstallerAssetName(version));
+            }
         }
         catch
         {
@@ -123,6 +138,10 @@ public static class UpdateService
         var text = raw.Trim();
         if (text.StartsWith('v') || text.StartsWith('V'))
             text = text[1..];
+        // 预发布后缀（v0.1.13-beta）只用于标签，不参与数值比较
+        var dash = text.IndexOf('-');
+        if (dash > 0)
+            text = text[..dash];
 
         var parts = text.Split('.');
         if (parts.Length != 3 || parts.Any(part =>
@@ -229,6 +248,8 @@ public static class UpdateService
     public static async Task DownloadAsync(string url, string targetFile, Action<double>? progress)
     {
         using var client = new HttpClient();
+        // 默认 100 秒超时对 60MB 安装包的慢网下载不够；进度条已提供反馈，下载不设总时限
+        client.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
         client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
         using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
