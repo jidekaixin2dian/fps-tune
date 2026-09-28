@@ -149,7 +149,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 317
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（0.1.14-beta 候选 @ 41540c3；备份 -0b23 = 0.1.13 发布版、-5c21 = 0.1.12 发布版、-fb3b = 0.1.12 二版、-3079 = 首版、-712a = 0.1.11、-2df6 / -4439 / -647f-2 / -647f / -fab3 / -46a3 / -0627 / -20260925 为更早版本），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（0.1.16-beta 候选 @ 11398ea，实测 ProductVersion 确认；唯一回滚备份 -2f97 = 0.1.15 候选，2026-09-29 用户拍板清理了其余 15 个旧备份），开始菜单 .lnk 也指向它；只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 
