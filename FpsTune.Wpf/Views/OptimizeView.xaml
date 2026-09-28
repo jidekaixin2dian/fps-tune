@@ -158,7 +158,7 @@
                                             Visibility="{Binding RequiresAdmin, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="{DynamicResource Str.Admin}"
                                                    Foreground="{DynamicResource WarningBrush}"
-                                                   FontSize="12" FontFamily="{StaticResource FontMono}"/>
+                                                   FontSize="12"/>
                                     </Border>
                                     <Border
                                             Margin="0,6,8,0"
@@ -168,7 +168,7 @@
                                             Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="{DynamicResource Str.NeedsReboot}"
                                                    Foreground="{DynamicResource AccentBrush}"
-                                                   FontSize="12" FontFamily="{StaticResource FontMono}"/>
+                                                   FontSize="12"/>
                                     </Border>
                                     </WrapPanel></StackPanel>
                                     <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" Margin="8,0">

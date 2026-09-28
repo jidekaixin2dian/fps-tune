@@ -26,7 +26,7 @@
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
                 <!-- P3-4：上次检测时间与耗时（进入页面即可见，不必先看输出框） -->
                 <TextBlock x:Name="LastDetectText" Text=""
-                           Style="{StaticResource MutedTextStyle}" FontFamily="{StaticResource FontMono}"
+                           Style="{StaticResource MutedTextStyle}"
                            FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
@@ -88,10 +88,10 @@
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Border Style="{StaticResource ChipStyle}" Margin="0,0,6,0">
-                                <TextBlock x:Name="LaptopText" Text="--" FontSize="10.5" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="LaptopText" Text="--" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
                             <Border Style="{StaticResource ChipStyle}">
-                                <TextBlock x:Name="AdminText" Text="--" FontSize="10.5" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="AdminText" Text="--" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
                         </StackPanel>
                     </StackPanel>
@@ -267,7 +267,7 @@
                                         Margin="10,0,0,0"
                                         Style="{StaticResource ChipStyle}"
                                         VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding StatusText}" FontSize="10.5" FontFamily="{StaticResource FontMono}">
+                                    <TextBlock Text="{Binding StatusText}" FontSize="10.5">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>

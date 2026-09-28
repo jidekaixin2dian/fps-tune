@@ -69,7 +69,6 @@
             </Style.Triggers>
         </Style>
         <Style x:Key="TabBadgeTextStyle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
             <Setter Property="FontSize" Value="10.5"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Style.Triggers>
@@ -153,7 +152,7 @@
                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         Padding="10,4" Visibility="Collapsed">
                     <TextBlock x:Name="GameChipText" Text=""
-                               FontFamily="{StaticResource FontMono}" FontSize="11"
+                               FontSize="11"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </Border>
             </Grid>

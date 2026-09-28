@@ -290,7 +290,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <Border Style="{StaticResource ChipStyle}" VerticalAlignment="Top">
-                                        <TextBlock Text="{Binding KindText}" FontSize="10.5" FontFamily="{StaticResource FontMono}"
+                                        <TextBlock Text="{Binding KindText}" FontSize="10.5"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </Border>
                                     <TextBlock Grid.Column="1" Text="{Binding TimeText}" FontSize="13" FontFamily="{StaticResource FontMono}"

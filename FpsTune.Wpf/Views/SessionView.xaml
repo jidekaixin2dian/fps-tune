@@ -143,13 +143,13 @@
                                         </Ellipse>
                                         <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding KindLabel}" FontSize="10" FontFamily="{StaticResource FontMono}" Margin="10,0,0,0"
+                                        <TextBlock Text="{Binding KindLabel}" FontSize="10" Margin="10,0,0,0"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextMutedBrush}"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding Detail}" TextWrapping="Wrap" Margin="15,6,0,0"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="{Binding WindowText}" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="15,4,0,0"
+                                    <TextBlock Text="{Binding WindowText}" FontSize="11" Margin="15,4,0,0"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
                             </Border>
@@ -199,10 +199,10 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding MetaText}" FontSize="11" FontFamily="{StaticResource FontMono}"
+                                    <TextBlock Text="{Binding MetaText}" FontSize="11"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="11" FontFamily="{StaticResource FontMono}"
+                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="11"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
@@ -253,9 +253,9 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Text="{DynamicResource Str.CompareHeaderMetric}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="11" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="11" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="11" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
                 </Grid>
                 <ItemsControl x:Name="CompareRows" Margin="0,4,0,0">
                     <ItemsControl.ItemTemplate>

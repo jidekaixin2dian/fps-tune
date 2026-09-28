@@ -24,7 +24,7 @@
                 <!-- P2-12：PresentMon 前置可用性（只读探测；缺失时给官方命令，不代为安装） -->
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <TextBlock x:Name="PresentMonStatusText" Text="{DynamicResource Str.PmChecking}"
-                               Style="{StaticResource MutedTextStyle}" FontFamily="{StaticResource FontMono}"
+                               Style="{StaticResource MutedTextStyle}"
                                FontSize="12" VerticalAlignment="Center"/>
                     <Button x:Name="PmCopyButton" Content="{DynamicResource Str.PmCopyCmd}"
                             Style="{StaticResource GhostButtonStyle}" MinWidth="84" Height="26" Padding="8,0"
@@ -86,7 +86,7 @@
                                             </Ellipse>
                                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="10,0,0,0"
+                                            <TextBlock Text="{Binding StatusText}" FontSize="11" Margin="10,0,0,0"
                                                        VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
@@ -200,7 +200,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
+                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="11" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>

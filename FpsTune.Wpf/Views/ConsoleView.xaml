@@ -3,25 +3,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource ConsoleBackgroundBrush}"
              FontFamily="{StaticResource FontBody}">
+    <!-- 0.1.16：卡片化（用户批准的布局提案）——开局准备卡 / 指标通栏卡 / 优化项卡（含底部动作条），
+         组件与色值沿用全站卡片语言（CardStyle + 发丝分隔），与检测/会话等页一致 -->
     <UserControl.Resources>
         <Style x:Key="MetricNumber" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">
-            <Setter Property="FontSize" Value="36"/>
-            <Setter Property="Margin" Value="0,12,0,17"/>
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="Margin" Value="0,10,0,15"/>
         </Style>
     </UserControl.Resources>
-    <Grid>
+    <Grid Margin="28,14,28,18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="132"/>
-            <RowDefinition Height="60"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="64"/>
         </Grid.RowDefinitions>
-        <Border Grid.Row="0" Padding="28,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <StackPanel Margin="0,0,20,0">
-                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
+
+        <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
+        <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12.5" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
@@ -31,96 +37,125 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <UniformGrid Grid.Row="1" Columns="4">
-            <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1">
-                <StackPanel>
-                    <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="CpuText" Text="—" Style="{StaticResource MetricNumber}"/>
-                    <ProgressBar x:Name="CpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
-                </StackPanel>
-            </Border>
-            <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1">
-                <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
-                    <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
-                </StackPanel>
-            </Border>
-            <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,1">
-                <StackPanel>
-                    <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="GpuText" Text="—" Style="{StaticResource MetricNumber}"/>
-                    <ProgressBar x:Name="GpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
-                </StackPanel>
-            </Border>
-            <Border Padding="28,24,28,20" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
-                    <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>
-                    <ProgressBar x:Name="TunedMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
-                </StackPanel>
-            </Border>
-        </UniformGrid>
-        <Grid Grid.Row="2" Margin="28,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="230"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
-                <RadioButton x:Name="BalancedPreset" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
-                <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
-                <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
-            </StackPanel>
-            <TextBox x:Name="SearchBox" Grid.Column="2" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
-                     ToolTip="{DynamicResource Str.TipSearchItems}" AutomationProperties.Name="{DynamicResource Str.SearchItemsShort}" TextChanged="Search_TextChanged"/>
-            <TextBlock Grid.Column="2" Text="{DynamicResource Str.SearchItemsShort}" Margin="11,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource TextMutedBrush}">
-                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-            </TextBlock>
-            <Button Grid.Column="3" x:Name="RefreshButton" Content="{DynamicResource Str.Redetect}" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
-        </Grid>
-        <ListBox x:Name="ItemList" Grid.Row="3" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                 VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" SelectionMode="Single">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem" BasedOn="{StaticResource CardListItemStyle}">
-                    <Setter Property="Padding" Value="28,15"/>
-                    <Setter Property="MinHeight" Value="68"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                </Style>
-            </ListBox.ItemContainerStyle>
-            <ListBox.ItemTemplate>
-                <DataTemplate>
+
+        <!-- 卡 2：指标通栏（发丝分隔四格，与检测页硬件条同构） -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
+            <UniformGrid Columns="4">
+                <Border Padding="24,20,24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="CpuText" Text="—" Style="{StaticResource MetricNumber}"/>
+                        <ProgressBar x:Name="CpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Padding="24,20,24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
+                        <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Padding="24,20,24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <StackPanel>
+                        <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="GpuText" Text="—" Style="{StaticResource MetricNumber}"/>
+                        <ProgressBar x:Name="GpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Padding="24,20,24,16">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>
+                        <ProgressBar x:Name="TunedMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+        </Border>
+
+        <!-- 卡 3：优化项（方案 + 搜索 + 发丝行列表 + 底部动作条） -->
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="18,14,18,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="230"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
+                        <RadioButton x:Name="BalancedPreset" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
+                        <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
+                        <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
+                    </StackPanel>
+                    <Grid Grid.Column="2">
+                        <TextBox x:Name="SearchBox" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
+                                 ToolTip="{DynamicResource Str.TipSearchItems}" AutomationProperties.Name="{DynamicResource Str.SearchItemsShort}" TextChanged="Search_TextChanged"/>
+                        <TextBlock Text="{DynamicResource Str.SearchItemsShort}" Margin="11,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource TextMutedBrush}">
+                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <Button Grid.Column="3" x:Name="RefreshButton" Content="{DynamicResource Str.Redetect}" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
+                </Grid>
+
+                <ListBox x:Name="ItemList" Grid.Row="1" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" SelectionMode="Single">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource CardListItemStyle}">
+                            <Setter Property="Padding" Value="18,13"/>
+                            <Setter Property="MinHeight" Value="64"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="38"/><ColumnDefinition Width="245"/><ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="94"/><ColumnDefinition Width="78"/><ColumnDefinition Width="48"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Number}" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
+                                    <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
+                                    <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
+                                               Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
+                                </StackPanel>
+                                <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
+                                           Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="12" VerticalAlignment="Center">
+                                    <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                </TextBlock>
+                                <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                          ToolTip="{DynamicResource Str.TipSelectItem}" AutomationProperties.Name="{Binding Item.Name}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="18,12">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="38"/><ColumnDefinition Width="245"/><ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="94"/><ColumnDefinition Width="78"/><ColumnDefinition Width="48"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Number}" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
-                            <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
-                            <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
-                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
-                                       Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                        <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
-                                   Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="12" VerticalAlignment="Center">
-                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-                        </TextBlock>
-                        <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
-                                  ToolTip="{DynamicResource Str.TipSelectItem}" AutomationProperties.Name="{Binding Item.Name}"/>
+                        <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
                     </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <Border Grid.Row="4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="28,12">
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
-                <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
+                </Border>
             </Grid>
         </Border>
     </Grid>

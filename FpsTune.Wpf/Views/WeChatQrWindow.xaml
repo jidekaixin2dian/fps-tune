@@ -59,7 +59,6 @@
             <TextBlock x:Name="WeChatIdText"
                        Text="{DynamicResource Str.WeChatId}"
                        FontSize="12"
-                       FontFamily="{StaticResource FontMono}"
                        Foreground="{DynamicResource TextMutedBrush}"
                        Margin="0,14,0,2"
                        HorizontalAlignment="Center"/>
