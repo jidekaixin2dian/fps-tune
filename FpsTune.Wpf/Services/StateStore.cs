@@ -7,7 +7,10 @@ namespace FpsTune.Wpf.Services;
 
 public static class StateStore
 {
-    private static string BaseDir => Path.Combine(
+    /// <summary>仅供测试重定向状态目录（套 DiagnosticReportExporter.BaseDirOverride 模式）。</summary>
+    internal static string? BaseDirOverride { get; set; }
+
+    private static string BaseDir => BaseDirOverride ?? Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "FpsTune");
 
