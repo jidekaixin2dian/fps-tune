@@ -96,7 +96,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 317
 | 产品方向 / 五条红线 | `docs/ROADMAP.md` | 现状基线段落已校准，但数字仍以 HANDOFF 为准 |
 | 0.1.x 功能设计依据 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3（**均已发布**） |
 | 待办总表（P0–P2 + P3 规划） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；HANDOFF §5 与它对齐 |
-| P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | 已调研未实施；含硬约束与踩坑点 |
+| P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | **已完成**（0.1.4）；文档留作架构参考与踩坑记录 |
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 代码健康度底数 | `docs/dev/CODE-HEALTH.md` | 体积/方法长度/警告数/已知债务；**接手先看，别重新量** |
