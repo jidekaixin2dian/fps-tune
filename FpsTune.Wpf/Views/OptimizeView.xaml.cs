@@ -375,6 +375,19 @@ public partial class OptimizeView : UserControl
             DialogService.Info(Str.T("Str.RestoreConfirm"), Str.T("Str.NoRestorableBackups"));
             return;
         }
+        // 与「应用」同款预检：待还原记录含电源/服务/HKLM 时需要管理员，
+        // 否则非管理员用户会拿到逐项失败的结果。
+        if (!AdminHelper.IsAdministrator() && BackupService.RestoreNeedsAdmin())
+        {
+            var elevate = DialogService.Confirm(
+                Str.T("Str.NeedsAdmin"),
+                Str.T("Str.RestoreNeedsAdminBody"),
+                confirmText: Str.T("Str.RestartAsAdminShort"),
+                danger: false);
+            if (elevate)
+                AdminHelper.RestartAsAdministrator();
+            return;
+        }
         if (!DialogService.Confirm(Str.T("Str.RestoreConfirm"),
                 $"共找到 {backupCount} 个备份文件，将把它们记录的全部系统改动逐项恢复为原值。\n\n确定继续吗？",
                 danger: true))

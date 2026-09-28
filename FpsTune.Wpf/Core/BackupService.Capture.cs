@@ -144,6 +144,39 @@ public static partial class BackupService
         return result.OrderByDescending(s => s.LastWrite).ToList();
     }
 
+    /// <summary>
+    /// 待还原备份中是否含有需要管理员权限的记录（电源/服务/HKLM 注册表）。
+    /// 供 GUI 还原入口做提权预检，与「应用」路径一致。只读；单个文件解析失败时跳过，
+    /// 不阻塞判断（该文件在还原时自有失败反馈）。
+    /// </summary>
+    public static bool RestoreNeedsAdmin()
+    {
+        foreach (var file in ListBackups())
+        {
+            List<BackupRecord>? records;
+            try
+            {
+                records = JsonSerializer.Deserialize<List<BackupRecord>>(
+                    File.ReadAllText(file, Encoding.UTF8));
+            }
+            catch
+            {
+                continue;
+            }
+            if (records is null)
+                continue;
+            foreach (var record in records)
+            {
+                if (record.Restored)
+                    continue;
+                if (!string.Equals(record.Kind, "registry", StringComparison.Ordinal)
+                    || string.Equals(record.Hive, "LocalMachine", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+        return false;
+    }
+
     // 新旧格式均只认 C# 自己的前缀；旧的通用前缀再用 JSON 数组守卫，避免误读 PowerShell 文档。
     internal static bool IsCSharpBackupFile(string file)
     {

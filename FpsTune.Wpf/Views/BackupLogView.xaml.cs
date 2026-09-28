@@ -81,6 +81,18 @@ public partial class BackupLogView : UserControl
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
     {
+        // 与优化页还原同款预检：待还原记录含电源/服务/HKLM 时需要管理员。
+        if (!AdminHelper.IsAdministrator() && BackupService.RestoreNeedsAdmin())
+        {
+            var elevate = DialogService.Confirm(
+                Str.T("Str.NeedsAdmin"),
+                Str.T("Str.RestoreNeedsAdminBody"),
+                confirmText: Str.T("Str.RestartAsAdminShort"),
+                danger: false);
+            if (elevate)
+                AdminHelper.RestartAsAdministrator();
+            return;
+        }
         if (!DialogService.Confirm(Str.T("Str.RestoreConfirm"), Str.T("Str.ConfirmRestoreAll"), danger: true))
             return;
 
@@ -115,15 +127,24 @@ public partial class BackupLogView : UserControl
     }
 
     private void OpenBackup_Click(object sender, RoutedEventArgs e)
-    {
-        Directory.CreateDirectory(_backupDir);
-        Process.Start("explorer.exe", $"\"{_backupDir}\"");
-    }
+        => OpenInExplorer(_backupDir);
 
     private void OpenTemp_Click(object sender, RoutedEventArgs e)
+        => OpenInExplorer(_tempDir);
+
+    // 与 SettingsView.OpenInExplorer 同款：UseShellExecute + 失败给上下文提示，
+    // 而不是抛给全局异常框。
+    private static void OpenInExplorer(string path)
     {
-        Directory.CreateDirectory(_tempDir);
-        Process.Start("explorer.exe", $"\"{_tempDir}\"");
+        try
+        {
+            Directory.CreateDirectory(path);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{path}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.OpenFolder"), Str.T("Str.OpenFolderFailed") + ex.Message);
+        }
     }
 
     private void ExportLog_Click(object sender, RoutedEventArgs e)
@@ -133,10 +154,16 @@ public partial class BackupLogView : UserControl
             Filter = "日志文件 (*.txt)|*.txt|所有文件 (*.*)|*.*",
             FileName = "fps-tune-log.txt"
         };
-        if (dialog.ShowDialog() == true)
+        if (dialog.ShowDialog() != true)
+            return;
+        try
         {
             System.IO.File.WriteAllText(dialog.FileName, LogBox.Text);
             DialogService.Info(Str.T("Str.AppName"), Str.T("Str.LogExported"));
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.ExportLogFailed") + ex.Message);
         }
     }
 }

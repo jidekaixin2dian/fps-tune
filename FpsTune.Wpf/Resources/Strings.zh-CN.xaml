@@ -376,6 +376,9 @@
     <s:String x:Key="Str.ArchiveRename">改名留档</s:String>
     <s:String x:Key="Str.ArchiveAndStart">归档并开始</s:String>
     <s:String x:Key="Str.RestoreConfirm">还原确认</s:String>
+    <s:String x:Key="Str.RestoreNeedsAdminBody">待还原的备份中包含电源计划、服务或系统注册表等需要管理员权限的改动，而当前程序不是以管理员身份运行的，直接还原会逐项失败。
+
+要以管理员身份重启后再执行还原吗？</s:String>
     <s:String x:Key="Str.ClearActivityLog">清除活动记录</s:String>
     <s:String x:Key="Str.OpenFolder">打开目录</s:String>
     <s:String x:Key="Str.ApplyVibrance">应用数字振动</s:String>
@@ -651,4 +654,16 @@
     <s:String x:Key="Str.PmMissing">未检测到 PresentMon——A/B 自动采样不可用。官方安装命令：</s:String>
     <s:String x:Key="Str.PmCopyCmd">复制命令</s:String>
     <s:String x:Key="Str.PmCopied">已复制</s:String>
+
+    <!-- 2026-09-28 审计修复：导出/删除/打开目录的失败提示 -->
+    <s:String x:Key="Str.ExportLogFailed">导出日志失败：</s:String>
+    <s:String x:Key="Str.ExportProfileFailed">导出方案失败：</s:String>
+    <s:String x:Key="Str.OpenFolderFailed">打开失败：</s:String>
+    <s:String x:Key="Str.SessionDeleteFailed">部分会话删除失败：</s:String>
+
+    <!-- 会话并排比较表头 -->
+    <s:String x:Key="Str.CompareHeaderMetric">指标</s:String>
+    <s:String x:Key="Str.CompareHeaderSessionA">A</s:String>
+    <s:String x:Key="Str.CompareHeaderSessionB">B</s:String>
+    <s:String x:Key="Str.CompareHeaderDelta">差值 B−A</s:String>
 </ResourceDictionary>

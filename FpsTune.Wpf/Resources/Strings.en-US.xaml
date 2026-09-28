@@ -376,6 +376,9 @@
     <s:String x:Key="Str.ArchiveRename">Rename and archive</s:String>
     <s:String x:Key="Str.ArchiveAndStart">Archive and start</s:String>
     <s:String x:Key="Str.RestoreConfirm">Confirm restore</s:String>
+    <s:String x:Key="Str.RestoreNeedsAdminBody">The pending backups include power plans, services, or system registry changes that require administrator rights, but the app is not running as administrator. Restoring now would fail item by item.
+
+Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ClearActivityLog">Clear activity log</s:String>
     <s:String x:Key="Str.OpenFolder">Open folder</s:String>
     <s:String x:Key="Str.ApplyVibrance">Apply digital vibrance</s:String>
@@ -651,4 +654,16 @@
     <s:String x:Key="Str.PmMissing">PresentMon not found — A/B auto sampling unavailable. Official install command:</s:String>
     <s:String x:Key="Str.PmCopyCmd">Copy command</s:String>
     <s:String x:Key="Str.PmCopied">Copied</s:String>
+
+    <!-- 2026-09-28 audit fixes: export/delete/open-folder failure messages -->
+    <s:String x:Key="Str.ExportLogFailed">Failed to export log: </s:String>
+    <s:String x:Key="Str.ExportProfileFailed">Failed to export profile: </s:String>
+    <s:String x:Key="Str.OpenFolderFailed">Failed to open: </s:String>
+    <s:String x:Key="Str.SessionDeleteFailed">Some sessions could not be deleted: </s:String>
+
+    <!-- Session side-by-side compare table header -->
+    <s:String x:Key="Str.CompareHeaderMetric">Metric</s:String>
+    <s:String x:Key="Str.CompareHeaderSessionA">A</s:String>
+    <s:String x:Key="Str.CompareHeaderSessionB">B</s:String>
+    <s:String x:Key="Str.CompareHeaderDelta">Δ B−A</s:String>
 </ResourceDictionary>
