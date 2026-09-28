@@ -125,6 +125,19 @@ public partial class ConsoleView : UserControl
         StartMonitor();
         RebuildRows();
         if (AppState.Items.Count == 0) await RefreshDataAsync();
+        // 首页数据就绪信号（splash 放行条件之一）：行列表与检测状态落定；
+        // 与首个实时样本汇合后才上报，避免进入界面仍是一片 "—"。
+        _rowsSettled = true;
+        TryNotifyHomeDataReady();
+    }
+
+    private bool _metricsSeen;
+    private bool _rowsSettled;
+
+    private void TryNotifyHomeDataReady()
+    {
+        if (_metricsSeen && _rowsSettled && _owner is MainWindow main)
+            main.NotifyHomeDataReady();
     }
 
     private void OwnerVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -149,6 +162,8 @@ public partial class ConsoleView : UserControl
 
     private void ShowMetrics(MetricSample sample)
     {
+        _metricsSeen = true;
+        TryNotifyHomeDataReady();
         ShowMetric(CpuText, CpuMeter, sample.CpuPercent, "cpu");
         ShowMetric(MemoryText, MemoryMeter, sample.MemoryPercent, "mem");
         ShowMetric(GpuText, GpuMeter, sample.GpuPercent, "gpu");

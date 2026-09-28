@@ -21,8 +21,21 @@ public partial class HomeView : UserControl
         HardwareSummaryText.Text = "--";
         Loaded += async (_, _) =>
         {
-            var hw = await Task.Run(Core.HardwareInfoService.Get);
-            HardwareSummaryText.Text = $"{hw.Cpu}  |  {hw.Gpu}  |  {hw.RamGB:0.#} GB";
+            try
+            {
+                var hw = await Task.Run(Core.HardwareInfoService.Get);
+                HardwareSummaryText.Text = $"{hw.Cpu}  |  {hw.Gpu}  |  {hw.RamGB:0.#} GB";
+            }
+            catch
+            {
+                // 硬件信息读取失败保留占位文本，不阻塞进入界面（原无守卫，异常会弹全局错误框）
+            }
+            finally
+            {
+                // 首页数据就绪信号：App 等它决定 splash 何时放行
+                if (Window.GetWindow(this) is MainWindow main)
+                    main.NotifyHomeDataReady();
+            }
         };
 
         // 新手引导入口只在首次打开时显示。

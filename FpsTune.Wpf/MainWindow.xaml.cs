@@ -37,6 +37,15 @@ public partial class MainWindow : Window
     [DllImport("user32.dll")]
     private static extern bool UnregisterHotKey(nint hwnd, int id);
 
+    /// <summary>
+    /// 首页（控制台/经典概览）首批数据就绪信号：App 用它决定 splash 何时放行。
+    /// 首帧渲染 ≠ 数据就绪——控制台概览首启会跑后台检测、经典概览要等 WMI 硬件信息，
+    /// 首帧时页面仍是占位内容。页面对应工作完成后调用 <see cref="NotifyHomeDataReady"/>。
+    /// </summary>
+    public event EventHandler? HomeDataReady;
+
+    internal void NotifyHomeDataReady() => HomeDataReady?.Invoke(this, EventArgs.Empty);
+
     public MainWindow()
     {
         InitializeComponent();

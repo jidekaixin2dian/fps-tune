@@ -600,6 +600,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SplashPhasePrepare">Preparing…</s:String>
     <s:String x:Key="Str.SplashPhaseRestore">Restoring local state…</s:String>
     <s:String x:Key="Str.SplashPhaseBuild">Building interface…</s:String>
+    <s:String x:Key="Str.SplashPhaseData">Loading overview data…</s:String>
     <s:String x:Key="Str.SplashTagline">Game-agnostic · system-level frame-rate tuning for Windows</s:String>
 
     <!-- My profiles (manager dialog) -->

@@ -600,6 +600,7 @@
     <s:String x:Key="Str.SplashPhasePrepare">正在准备…</s:String>
     <s:String x:Key="Str.SplashPhaseRestore">正在恢复本地状态…</s:String>
     <s:String x:Key="Str.SplashPhaseBuild">正在构建界面…</s:String>
+    <s:String x:Key="Str.SplashPhaseData">正在加载首页数据…</s:String>
     <s:String x:Key="Str.SplashTagline">通用 FPS · Windows 系统层帧率优化工具</s:String>
 
     <!-- 我的方案（弹窗管理） -->
