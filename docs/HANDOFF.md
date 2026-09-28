@@ -1,17 +1,15 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-29（本轮：**0.1.14 候选已构建 + 部署 D:\FpsTune + GUI 目检中 +
-> main 已 push；Release 上传等用户拍板**）
+> 最后核对：2026-09-29（本轮：**`v0.1.14-beta` 已发布**——构建/部署/push/Release 四步全完成）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`（当前：`HANDOFF_PROMPT_2026-09-28.md`）
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
 
 ## 1. 一句话现状
 
-主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.13-beta`**（2026-09-28，标签 `0b23141`，pre-release）；
-**`0.1.14-beta` 候选（`41540c3`）已构建、部署 `D:\FpsTune`、GUI 已启动供目检**，内容 = 审计修复轮 + splash 门控；
-**Release 上传（`gh release create v0.1.14-beta --target 41540c3e…`）等用户拍板**。
-`main` **已 push 并与 origin 同步**（`6e14413..41540c3` + 文档提交，用户 2026-09-29 明确指令）。
+主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.14-beta`**（2026-09-29，标签 `41540c3`，pre-release，三资产已核），
+内容 = 审计修复轮（⑱：更新检查失效根因修复 + 还原预检 + 健壮性/易用修复）+ splash 门控（⑲）；
+本机安装位与源码均在该构建上。`main` **已 push 并与 origin 同步**。审计报告在 `review-output/AUDIT-2026-09-28.md`（不入库）。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
@@ -19,8 +17,8 @@
 | 项 | 值 |
 |---|---|
 | `Directory.Build.props` | `VersionPrefix=0.1.14` / `VersionSuffix=beta` |
-| 已发布 Release | **`v0.1.13-beta`**（2026-09-28 发布，标签 `0b23141`，pre-release）。上一版 `v0.1.12-beta`（`5c21ea4`） |
-| 发布候选（未发布） | **`0.1.14-beta`**：`publish-release.ps1` + `build-installer.ps1` 从 HEAD `41540c3` 产出，三资产齐全（Setup 60650713 B / Portable 978499 B / 清单 174 B），**哈希与清单逐项核对一致**（exe `CE004E9E…F13` / zip `B3F0C0AC…E51` / Setup `34419CE6…B1`）；产物 `ProductVersion = 0.1.14-beta+41540c3e…`。**若发布，标签打 `41540c3e9d5a2d51f88ffe0570895448388b7395`**（= 版本号提交，其后文档提交不打标签） |
+| 已发布 Release | **`v0.1.14-beta`**（2026-09-29 发布，标签 peeled SHA = `41540c3e9d5a2d51f88ffe0570895448388b7395` ✓，pre-release；三资产字节数与本地逐项一致：Setup 60650713 / Portable 978499 / 清单 266；Notes 中文渲染正常、无占位符）。上一版 `v0.1.13-beta`（`0b23141`） |
+| 发布候选（未发布） | （无） |
 | `main` | **已 push 并与 origin 同步**（2026-09-29 用户指令；`6e14413..41540c3` + 文档提交） |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
@@ -128,8 +126,12 @@
   （AI-WORKFLOW 已有此教训，本轮再次踩中）——**改用 `Start-Process explorer.exe -ArgumentList <exe>`
   借用户 shell 启动即跨会话存活**（pid 30592 实测两次复查存活）。
 - **push**：用户明确指令，`6e14413..41540c3`（10 提交）已上行，本地与 origin 同步。
-- **未做**：`gh release create`（等用户目检拍板；目标 `41540c3e9d5a2d51f88ffe0570895448388b7395`，
-  pre-release，三资产按 `RELEASE.md` §4）。
+- **已发布（用户拍板「release」）**：`gh release create v0.1.14-beta --target 41540c3e… --prerelease`
+  + 三资产（Notes 文件 `work/release-notes-0.1.14.md`，格式对齐 0.1.13）。**核验**：标签 peeled SHA =
+  `41540c3e9d5a2d51f88ffe0570895448388b7395` ✓、三资产字节数与本地逐项一致（Setup 60650713 /
+  Portable 978499 / 清单 266——174 是 build-installer 重写加 Setup 行之前的旧读数）✓、pre-release 标记 ✓。
+  **人工验证点（留给用户）**：设置页「检查更新」应报"已是最新"（0.1.14 是最新预发布，更新检查修复的首个真机验证）。
+- **未做**：（无——构建/部署/push/Release 全链路完成。）
 
 **⑱⑲ = 2026-09-28**（审计修复轮 + splash 门控，见下）
 
@@ -277,15 +279,14 @@
 
 **完整待办总表见 `docs/dev/PLAN-backlog.md`（P0–P2 已全部收口，后续排期在其「P3 · 后续改动清单」）。** 摘要：
 
-1. **0.1.14 候选待拍板**：用户目检 GUI 后说「发」→ `gh release create v0.1.14-beta --target 41540c3e9d5a2d51f88ffe0570895448388b7395 --prerelease` + 传三资产（按 `RELEASE.md` §4）。
-2. **P3-4 检测页前置状态条**：发版决策后的下一轮候选首项（套用 P2-12 模式，改动面小）。
+1. **发版已完成**：`v0.1.14-beta` 于 2026-09-29 发布（标签 `41540c3`，三资产已核）；下一轮开工先 bump `VersionPrefix` 再改代码。
+2. **P3-4 检测页前置状态条**：下一轮候选首项（套用 P2-12 模式，改动面小）。
 3. **收尾杂项**：`dist` 里 0.1.11 候选资产（约 85M）与更早备份可清理（动手前问）。
 4. **概览页（ConsoleView）是否一并卡片化**：有意保留仪表盘形态，等用户表态。
 5. **P2-7 国际化**：已按用户决定**暂停**（剩余 1000 处记在 `I18nBaseline.txt`，重启需用户点名）。
 6. **P2-2 / P2-4**：依赖真实 A/B 数据（用户已取消 P0-2）→ **暂缓**。
 
-> **发版状态**：`v0.1.13-beta` 已发布；`0.1.14-beta` 候选已构建 + 部署 + GUI 目检中，`main` 已 push；
-> **仅剩 Release 上传等拍板**。
+> **发版状态**：`v0.1.14-beta` 已发布；`main` 与 origin 同步；无未决候选。
 
 ## 6. 维护本文的规则
 
