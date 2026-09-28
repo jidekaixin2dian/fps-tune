@@ -129,20 +129,11 @@
                                 <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="4,8,14,14">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="70"/>
-                                        <ColumnDefinition Width="0"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               Text="{Binding Id}" Visibility="Collapsed"
-                                               FontFamily="{StaticResource FontMono}"
-                                               FontSize="13"
-                                               Foreground="{DynamicResource AccentBrush}"
-                                               Margin="0,0,12,0"
-                                               VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                                    FontWeight="SemiBold" FontSize="15"
@@ -180,10 +171,10 @@
                                                    FontSize="12" FontFamily="{StaticResource FontMono}"/>
                                     </Border>
                                     </WrapPanel></StackPanel>
-                                    <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" Margin="8,0">
+                                    <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" Margin="8,0">
                                         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                     </TextBlock>
-                                    <CheckBox Grid.Column="4"
+                                    <CheckBox Grid.Column="2"
                                               Style="{StaticResource ToggleSwitchStyle}"
                                               IsChecked="{Binding IsChecked}" Click="ItemToggle_Click" AutomationProperties.Name="{Binding Name}"
                                               VerticalAlignment="Center"

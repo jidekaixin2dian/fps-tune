@@ -12,9 +12,15 @@ public partial class AppDialogWindow : Window
         InitializeComponent();
         KeyDown += (_, e) =>
         {
+            // 标准对话框键盘习惯：Esc=取消，Enter=主按钮（确认/知道了）
             if (e.Key == Key.Escape)
             {
                 DialogResult = false;
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                DialogResult = true;
                 e.Handled = true;
             }
         };

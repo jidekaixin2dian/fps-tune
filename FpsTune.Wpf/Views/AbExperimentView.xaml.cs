@@ -22,10 +22,18 @@ public partial class AbExperimentView : UserControl
     private bool _running;
     private bool _cancelRequested;
     private CancellationTokenSource? _runCancellation;
+    // 最近一次历史数据：画布拿到实际尺寸后（首入页 Loaded 早于布局）与窗口变化时重绘。
+    // 与 MiniChart 的 SizeChanged 重绘同款机制；此前首入页恒按 320px 兜底宽绘制。
+    private List<ExperimentRun>? _historyRuns;
 
     public AbExperimentView()
     {
         InitializeComponent();
+        HistoryCanvas.SizeChanged += (_, _) =>
+        {
+            if (_historyRuns is { Count: > 0 } runs)
+                DrawChart(runs);
+        };
         Loaded += (_, _) =>
         {
             ReloadWizard();
@@ -591,8 +599,15 @@ public partial class AbExperimentView : UserControl
         var dir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "FpsTune", "experiment");
-        Directory.CreateDirectory(dir);
-        Process.Start("explorer.exe", $"\"{dir}\"");
+        try
+        {
+            Directory.CreateDirectory(dir);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{dir}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.OpenFolder"), Str.T("Str.OpenFolderFailed") + ex.Message);
+        }
     }
 
     // ---------- 历史趋势图 ----------
@@ -600,6 +615,7 @@ public partial class AbExperimentView : UserControl
     private void RefreshHistory()
     {
         var runs = ExperimentHistory.Load();
+        _historyRuns = runs;
         if (runs.Count == 0)
         {
             HistoryCanvas.Children.Clear();

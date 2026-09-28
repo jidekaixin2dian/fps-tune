@@ -244,7 +244,20 @@
                     </ComboBox>
                 </StackPanel>
                 <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,8,0,0"/>
-                <ItemsControl x:Name="CompareRows" Margin="0,10,0,0">
+                <!-- 表头：四列含义不再依赖上方提示文本反推 -->
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{DynamicResource Str.CompareHeaderMetric}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="11" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="11" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="11" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}"/>
+                </Grid>
+                <ItemsControl x:Name="CompareRows" Margin="0,4,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,4">
