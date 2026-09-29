@@ -693,4 +693,10 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.OpenIssue">Open GitHub issue</s:String>
     <s:String x:Key="Str.IssueTitle">Feedback: FPS Tune v{0}</s:String>
     <s:String x:Key="Str.IssueBody">Version: v{0}&#10;OS: {1}&#10;Running as admin: {2}&#10;&#10;### Problem&#10;&#10;&#10;### Steps to reproduce&#10;&#10;&#10;(A diagnostic report was exported locally; attach at your own discretion.)</s:String>
+    <s:String x:Key="Str.SessionFps">Frame rate</s:String>
+    <s:String x:Key="Str.FpsUnavailableShort">FPS not recorded: {0}</s:String>
+    <s:String x:Key="Str.FpsDetail">avg {0} FPS · 1% low {1} · p99 {2} ms · {3} stutters · {4} frames</s:String>
+    <s:String x:Key="Str.FpsReasonNoPresentMon">PresentMon not found (install the official PresentMon to record frame rate)</s:String>
+    <s:String x:Key="Str.FpsReasonNoGameProcess">No game process detected when recording started</s:String>
+    <s:String x:Key="Str.FpsReasonParseFailed">PresentMon output could not be parsed</s:String>
 </ResourceDictionary>

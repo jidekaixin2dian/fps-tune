@@ -614,7 +614,8 @@ public static class ExperimentRunner
         }
     }
 
-    /// <summary>解析 PresentMon CSV → 帧统计（JsonObject 或含 error 键）。兼容 v1/v2 列名。internal 供测试。</summary>
+    /// <summary>解析 PresentMon CSV → 帧统计（JsonObject 或含 error 键）。兼容 v1/v2 列名。internal 供测试。
+    /// 0.2.0 C-E：解析逻辑抽到 FrameTimeStats 共用（实验与会话同口径），此处只做 JSON 映射与中文文案。</summary>
     internal static JsonObject? ParsePresentMonCsv(string csvPath)
     {
         if (!File.Exists(csvPath))
@@ -628,54 +629,32 @@ public static class ExperimentRunner
         {
             return null;
         }
-        if (lines.Length < 2)
+
+        var parsed = FrameTimeStats.Parse(lines);
+        if (parsed.Frame is { } frame)
+        {
+            return new JsonObject
+            {
+                ["samples"] = frame.Samples,
+                ["avgFps"] = frame.AvgFps,
+                ["p1Low"] = frame.P1Low,
+                ["p99Ms"] = frame.P99Ms,
+                ["stutters"] = frame.Stutters,
+            };
+        }
+        // TooFewLines 沿用旧行为：返回 null（上层报"无法解析 CSV"，文案已在基线内）。
+        if (parsed.Error is not { } err || err == FrameParseError.TooFewLines)
             return null;
-
-        var header = lines[0].Split(',');
-        var col = -1;
-        foreach (var candidate in new[] { "msBetweenPresents", "frame_time", "FPS", "fps" })
-        {
-            col = Array.FindIndex(header, h => h.Trim().Equals(candidate, StringComparison.OrdinalIgnoreCase));
-            if (col >= 0)
-                break;
-        }
-        if (col < 0)
-        {
-            var stat = new JsonObject { ["error"] = "无法识别 CSV 列名，找到的表头: " + string.Join(", ", header) };
-            return stat;
-        }
-
-        var frameTimes = new List<double>();
-        for (var i = 1; i < lines.Length; i++)
-        {
-            var line = lines[i];
-            if (line.Length == 0)
-                continue;
-            var fields = line.Split(',');
-            if (col >= fields.Length)
-                continue;
-            if (double.TryParse(fields[col], NumberStyles.Float, CultureInfo.InvariantCulture, out var n) && n > 0)
-                frameTimes.Add(n);
-        }
-        if (frameTimes.Count < 30)
-            return new JsonObject { ["error"] = $"有效帧样本不足（{frameTimes.Count}）" };
-
-        var sorted = frameTimes.Order().ToList();
-        var p99Ms = sorted[Math.Min((int)Math.Floor(sorted.Count * 0.99), sorted.Count - 1)];
-        var avgMs = frameTimes.Average();
-        var avgFps = 1000.0 / avgMs;
-        var p1Fps = 1000.0 / p99Ms;
-        var stutters = sorted.Count(v => v > 50);
-
-        return new JsonObject
-        {
-            ["samples"] = frameTimes.Count,
-            ["avgFps"] = Math.Round(avgFps, 2),
-            ["p1Low"] = Math.Round(p1Fps, 2),
-            ["p99Ms"] = Math.Round(p99Ms, 2),
-            ["stutters"] = stutters,
-        };
+        return new JsonObject { ["error"] = DescribeFrameParseError(err, parsed) };
     }
+
+    private static string DescribeFrameParseError(FrameParseError err, FrameParseResult parsed) => err switch
+    {
+        FrameParseError.UnknownColumns => "无法识别 CSV 列名，找到的表头: " + string.Join(", ", parsed.Header),
+        FrameParseError.TooFewFrames => $"有效帧样本不足（{parsed.FrameCount}）",
+        // 枚举只有三个值且上方已覆盖全部已知项；到达此处说明枚举被扩展而映射漏写。
+        _ => throw new UnreachableException(nameof(DescribeFrameParseError)),
+    };
 
     // ------------------------------------------------------------------
     // 统计与决策（公式与旧脚本一致）

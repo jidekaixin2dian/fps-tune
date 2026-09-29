@@ -16,6 +16,7 @@ public sealed class PerformanceSessionService : IDisposable
     public const int AutosaveEverySamples = 60;
 
     private MetricsSampler? _sampler;
+    private SessionFpsRecorder? _fpsRecorder;
     private string _name = "";
     private DateTime _startedAt;
     private int _sampleCount;
@@ -39,6 +40,9 @@ public sealed class PerformanceSessionService : IDisposable
     /// <summary>运行中最近一次各指标不可用原因（空字典 = 全部可用）。</summary>
     public IReadOnlyDictionary<string, string> CurrentUnavailableReasons
         => _sampler?.UnavailableReasons ?? new Dictionary<string, string>();
+
+    /// <summary>0.2.0 C-E：运行中 FPS 采集的不可用原因资源键（null = FPS 正在记录）。</summary>
+    public string? CurrentFpsUnavailableReasonKey => _fpsRecorder?.UnavailableReasonKey;
 
     /// <summary>运行中已缓冲的样本（只读快照语义，UI 线程使用）。</summary>
     public IReadOnlyList<MetricSample> RunningBuffer => _sampler?.Buffer ?? Array.Empty<MetricSample>();
@@ -69,6 +73,9 @@ public sealed class PerformanceSessionService : IDisposable
             _sampleCount = 0;
             _sampler = new MetricsSampler(CurrentInterval, CurrentBufferCapacity);
             _sampler.Sampled += OnSample;
+            // 0.2.0 C-E：会话期间同步跑 PresentMon（可选能力，失败降级并记录原因键）。
+            _fpsRecorder = new SessionFpsRecorder();
+            _fpsRecorder.Start(AppState.GamePath);
             IsRunning = true;
             _sampler.Start();
             StateChanged?.Invoke();
@@ -99,10 +106,17 @@ public sealed class PerformanceSessionService : IDisposable
             // Stop the timer before taking the final snapshot. This keeps the
             // sampler from ticking while persistence is in progress.
             sampler?.Stop();
+            SessionFpsStats? fps = null;
+            string? fpsNote = null;
+            if (_fpsRecorder is not null)
+            {
+                fps = _fpsRecorder.Stop();
+                fpsNote = fps is null ? _fpsRecorder.UnavailableReasonKey : null;
+            }
             if (sampler is not null)
             {
                 sampler.Sampled -= OnSample;
-                session = ToSession(DateTime.Now);
+                session = ToSession(DateTime.Now, fps, fpsNote);
             }
         }
         catch (Exception ex)
@@ -116,6 +130,7 @@ public sealed class PerformanceSessionService : IDisposable
             IsRunning = false;
             sampler?.Dispose();
             _sampler = null;
+            _fpsRecorder = null;
             LatestSample = null;
         }
 
@@ -215,7 +230,7 @@ public sealed class PerformanceSessionService : IDisposable
         ReleaseActiveOwner();
     }
 
-    private PerformanceSession ToSession(DateTime endedAt)
+    private PerformanceSession ToSession(DateTime endedAt, SessionFpsStats? fps = null, string? fpsNote = null)
     {
         var buffer = _sampler?.Buffer ?? Array.Empty<MetricSample>();
         var points = new List<SessionSamplePoint>(buffer.Count);
@@ -239,7 +254,9 @@ public sealed class PerformanceSessionService : IDisposable
             PerformanceSessionStore.CurrentSchemaVersion,
             CurrentInterval.TotalSeconds,
             points,
-            vramTotalMib);
+            vramTotalMib,
+            fps,
+            fpsNote);
     }
 
     private void OnSample(MetricSample sample)
@@ -248,7 +265,12 @@ public sealed class PerformanceSessionService : IDisposable
         _sampleCount++;
         if (_sampleCount % AutosaveEverySamples == 0 && _sampler is not null)
         {
-            var snapshot = ToSession(DateTime.Now) with { Id = "active-snapshot" };
+            // 快照不带 FPS（终值在 Stop 时统一解析）；FPS 不可用原因随快照落库，恢复会话可明示。
+            var snapshot = ToSession(DateTime.Now) with
+            {
+                Id = "active-snapshot",
+                FpsNote = _fpsRecorder?.UnavailableReasonKey,
+            };
             PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
         }
         Sampled?.Invoke(sample);

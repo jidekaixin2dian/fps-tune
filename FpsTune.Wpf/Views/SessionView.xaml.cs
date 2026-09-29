@@ -96,6 +96,8 @@ public partial class SessionView : UserControl
             var missing = unavailable.Count == 0 ? Str.T("Str.None") : string.Join("；", unavailable.Keys);
             RunStateText.Text = $"采样中：{Service.SessionName} · 已运行 {FormatDuration(Service.Elapsed)} · " +
                                 $"样本 {Service.RunningBuffer.Count} · 间隔 {PerformanceSessionService.CurrentInterval.TotalSeconds:0.#} 秒 · 缺失指标：{missing}";
+            if (Service.CurrentFpsUnavailableReasonKey is { } fpsKey)
+                RunStateText.Text += " · " + Str.T("Str.FpsUnavailableShort", Str.T(fpsKey));
         }
         else
         {
@@ -296,6 +298,7 @@ public partial class SessionView : UserControl
             if (sum.Mem is { } m) avgParts.Add($"内存 {m.Avg}%");
             if (sum.Gpu is { } g) avgParts.Add($"GPU {g.Avg}%");
             if (sum.VramAvgMib is { } v) avgParts.Add($"显存 {v:0} MiB");
+            if (s.Fps is { } fps) avgParts.Add($"FPS {fps.AvgFps:0}");
             return new SessionListVm(
                 s.Id,
                 s.Name,
@@ -422,7 +425,26 @@ public partial class SessionView : UserControl
         var summary = SessionStatistics.Summarize(session);
         var end = session.EndedAt
                   ?? (session.Samples.Count > 0 ? session.Samples[^1].T : session.StartedAt);
-        var findings = SessionInsights.Evaluate(summary, session.StartedAt, end);
+        var findings = SessionInsights.Evaluate(summary, session.StartedAt, end).ToList();
+
+        // 0.2.0 C-E：FPS 结论置顶（有数报数，没数明示原因，不静默）。
+        if (session.Fps is { } fps)
+        {
+            findings.Insert(0, new InsightFinding(
+                "Fps", "info",
+                Str.T("Str.SessionFps"),
+                Str.T("Str.FpsDetail", fps.AvgFps, fps.P1Low, fps.P99Ms, fps.Stutters, fps.Samples),
+                null, null, Array.Empty<string>()));
+        }
+        else if (session.FpsNote is { } noteKey)
+        {
+            findings.Insert(0, new InsightFinding(
+                "FpsNote", "attention",
+                Str.T("Str.SessionFps"),
+                Str.T("Str.FpsUnavailableShort", Str.T(noteKey)),
+                null, null, Array.Empty<string>()));
+        }
+
         InsightTargetText.Text = $"依据会话「{session.Name}」（{session.StartedAt:MM-dd HH:mm} 起，{summary.SampleCount} 个样本）";
         InsightList.ItemsSource = findings.Select(f => new InsightVm(
             f.Kind,
@@ -442,6 +464,7 @@ public partial class SessionView : UserControl
     {
         "CpuPressure" or "CpuLoad" => "CPU",
         "GpuSaturated" => "GPU",
+        "Fps" or "FpsNote" => Str.T("Str.SessionFps"),
         "VramPressure" or "VramLoad" or "VramUnknownTotal" => Str.T("Str.Vram"),
         "MemoryPressure" => Str.T("Str.Memory"),
         "MissingSignal" => Str.T("Str.SignalMissing"),

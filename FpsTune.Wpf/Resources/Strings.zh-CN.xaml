@@ -693,4 +693,10 @@
     <s:String x:Key="Str.OpenIssue">打开 GitHub issue</s:String>
     <s:String x:Key="Str.IssueTitle">反馈：FPS Tune v{0}</s:String>
     <s:String x:Key="Str.IssueBody">版本: v{0}&#10;系统: {1}&#10;管理员运行: {2}&#10;&#10;### 问题描述&#10;&#10;&#10;### 复现步骤&#10;&#10;&#10;（诊断包已在本机导出，是否附上请自行确认隐私）</s:String>
+    <s:String x:Key="Str.SessionFps">帧率</s:String>
+    <s:String x:Key="Str.FpsUnavailableShort">FPS 未记录：{0}</s:String>
+    <s:String x:Key="Str.FpsDetail">平均 {0} FPS · 1% low {1} · p99 {2} ms · 卡顿 {3} 次 · {4} 帧</s:String>
+    <s:String x:Key="Str.FpsReasonNoPresentMon">未找到 PresentMon（安装官方 PresentMon 后可记录帧率）</s:String>
+    <s:String x:Key="Str.FpsReasonNoGameProcess">开始记录时未检测到游戏进程</s:String>
+    <s:String x:Key="Str.FpsReasonParseFailed">PresentMon 采样解析失败</s:String>
 </ResourceDictionary>

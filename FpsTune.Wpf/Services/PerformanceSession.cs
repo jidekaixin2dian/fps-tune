@@ -22,7 +22,9 @@ public sealed record PerformanceSession(
     int SchemaVersion,
     double IntervalSeconds,
     IReadOnlyList<SessionSamplePoint> Samples,
-    double? VramTotalMib = null);
+    double? VramTotalMib = null,
+    SessionFpsStats? Fps = null,
+    string? FpsNote = null);
 
 /// <summary>单指标的摘要统计。</summary>
 public sealed record MetricStats(int Count, double Avg, double Peak, double LowP5, double HighP95);
