@@ -18,7 +18,8 @@
          + splash 等首页数据就绪才放行（用户反馈） -->
     <!-- 0.1.15 = P3-4 检测页前置状态条（进入即显示上次检测时间与耗时） -->
     <!-- 0.1.16 = 概览页卡片化（用户批准的布局提案）+ 字体一致性修复（含中文文本不再套等宽字体） -->
-    <VersionPrefix>0.1.16</VersionPrefix>
+    <!-- 0.1.17 = 检测异常路径页头状态行卡「正在检测…」修复 + DetectMeta 存取/容错测试（㉓ 自查轮） -->
+    <VersionPrefix>0.1.17</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
