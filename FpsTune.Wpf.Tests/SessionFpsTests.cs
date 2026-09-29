@@ -132,6 +132,33 @@ public sealed class SessionFpsTests
         Assert.Equal("frames=5", rec.ParseError);
     }
 
+    [Theory]
+    [InlineData(50, 60, 95, 97, "gpu")]      // GPU 95 位 97 且平均 95 → GPU 受限
+    [InlineData(70, 95, 45, 50, "cpu")]      // GPU 平均 45 有余量 + CPU 95 位 95 → CPU 受限
+    [InlineData(50, 70, 70, 80, "balanced")] // 双侧均未达阈值
+    [InlineData(65, 92, 85, 92, "balanced")] // GPU 95 位 92 未到 95 线、CPU 侧 GPU 有余量不成立 → 未判定
+    public void ClassifyBottleneck_applies_documented_thresholds(
+        double cpuAvg, double cpuP95, double gpuAvg, double gpuP95, string expected)
+    {
+        var summary = new SessionSummary
+        {
+            SampleCount = 100,
+            Duration = TimeSpan.FromMinutes(5),
+            Cpu = new MetricStats(100, cpuAvg, 100, cpuAvg - 10, cpuP95),
+            Gpu = new MetricStats(100, gpuAvg, 100, gpuAvg - 10, gpuP95),
+        };
+        Assert.Equal(expected, SessionInsights.ClassifyBottleneck(summary)!.Kind);
+    }
+
+    [Fact]
+    public void ClassifyBottleneck_returns_null_when_signal_missing()
+    {
+        var noGpu = new SessionSummary { SampleCount = 10, Duration = TimeSpan.FromMinutes(1), Cpu = new MetricStats(10, 50, 60, 40, 55) };
+        Assert.Null(SessionInsights.ClassifyBottleneck(noGpu));
+        var noCpu = new SessionSummary { SampleCount = 10, Duration = TimeSpan.FromMinutes(1), Gpu = new MetricStats(10, 50, 60, 40, 55) };
+        Assert.Null(SessionInsights.ClassifyBottleneck(noCpu));
+    }
+
     private sealed class FakeProcess : Process
     {
     }

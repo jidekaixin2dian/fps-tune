@@ -445,6 +445,19 @@ public partial class SessionView : UserControl
                 null, null, Array.Empty<string>()));
         }
 
+        // 0.2.0 C-A：瓶颈判定（启发式阈值，文案声明不代表因果）。
+        if (SessionInsights.ClassifyBottleneck(summary) is { } bn)
+        {
+            var (level, detail) = bn.Kind switch
+            {
+                "gpu" => ("attention", Str.T("Str.BottleneckGpu", bn.GpuAvg, bn.GpuHighP95)),
+                "cpu" => ("attention", Str.T("Str.BottleneckCpu", bn.GpuAvg, bn.CpuHighP95)),
+                _ => ("info", Str.T("Str.BottleneckBalanced", bn.GpuAvg, bn.CpuHighP95)),
+            };
+            findings.Insert(0, new InsightFinding(
+                "Bottleneck", level, Str.T("Str.BottleneckTitle"), detail, null, null, Array.Empty<string>()));
+        }
+
         InsightTargetText.Text = $"依据会话「{session.Name}」（{session.StartedAt:MM-dd HH:mm} 起，{summary.SampleCount} 个样本）";
         InsightList.ItemsSource = findings.Select(f => new InsightVm(
             f.Kind,
@@ -465,6 +478,7 @@ public partial class SessionView : UserControl
         "CpuPressure" or "CpuLoad" => "CPU",
         "GpuSaturated" => "GPU",
         "Fps" or "FpsNote" => Str.T("Str.SessionFps"),
+        "Bottleneck" => Str.T("Str.BottleneckTitle"),
         "VramPressure" or "VramLoad" or "VramUnknownTotal" => Str.T("Str.Vram"),
         "MemoryPressure" => Str.T("Str.Memory"),
         "MissingSignal" => Str.T("Str.SignalMissing"),

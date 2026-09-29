@@ -699,4 +699,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FpsReasonNoPresentMon">PresentMon not found (install the official PresentMon to record frame rate)</s:String>
     <s:String x:Key="Str.FpsReasonNoGameProcess">No game process detected when recording started</s:String>
     <s:String x:Key="Str.FpsReasonParseFailed">PresentMon output could not be parsed</s:String>
+    <s:String x:Key="Str.BottleneckTitle">Bottleneck</s:String>
+    <s:String x:Key="Str.BottleneckGpu">GPU-bound — GPU averaged {0}% with a 95th percentile of {1}%, near saturation. Raising quality-related caps usually won't add FPS in this state; look on the GPU side first (driver 3D settings, quality presets). Heuristic, not causal.</s:String>
+    <s:String x:Key="Str.BottleneckCpu">CPU-bound — GPU averaged {0}% with headroom while CPU 95th percentile is elevated ({1}%). Look on the CPU side first (background load, scheduling items). Heuristic, not causal.</s:String>
+    <s:String x:Key="Str.BottleneckBalanced">No single-sided bottleneck — GPU averaged {0}% and CPU 95th percentile is {1}%; neither threshold was reached. This doesn't mean there's no optimization headroom. Heuristic, not causal.</s:String>
 </ResourceDictionary>

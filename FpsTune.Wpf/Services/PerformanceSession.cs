@@ -115,6 +115,21 @@ public static class SessionInsights
     public static List<InsightFinding> Evaluate(SessionSummary summary)
         => Evaluate(summary, DateTime.MinValue, DateTime.MinValue);
 
+    /// <summary>单侧瓶颈判定阈值：GPU 95 位 ≥95 且平均 ≥85 视为 GPU 受限；GPU 有余量（平均 ≤60）
+    /// 而 CPU 95 位 ≥90 且平均 ≥65 视为 CPU 受限；其余为未呈现单侧瓶颈。CPU 或 GPU 缺失返回 null。</summary>
+    public static BottleneckVerdict? ClassifyBottleneck(SessionSummary summary)
+    {
+        if (summary.Cpu is not { } cpu || summary.Gpu is not { } gpu)
+            return null;
+        var kind = gpu.HighP95 >= 95 && gpu.Avg >= 85 ? "gpu"
+            : gpu.Avg <= 60 && cpu.HighP95 >= 90 && cpu.Avg >= 65 ? "cpu"
+            : "balanced";
+        return new BottleneckVerdict(kind, cpu.Avg, cpu.HighP95, gpu.Avg, gpu.HighP95);
+    }
+
+    public sealed record BottleneckVerdict(
+        string Kind, double CpuAvg, double CpuHighP95, double GpuAvg, double GpuHighP95);
+
     public static List<InsightFinding> Evaluate(SessionSummary summary, DateTime windowStart, DateTime windowEnd)
     {
         var findings = new List<InsightFinding>();
