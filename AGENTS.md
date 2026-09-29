@@ -12,7 +12,7 @@
 | 版本 | `VersionPrefix=0.1.18` + `VersionSuffix=beta`；**线上最新 `v0.1.18-beta`**（2026-09-29 发布，标签 `1f840db`，内容 = P3-10 catalog 扩展三项，catalog 36 项）；无未发布候选 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **320 / 320 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译、审计修复防回归 9 条、DetectMeta 存取/容错 3 条） |
+| 测试基线 | **337 / 337 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫、M3 / 一键优化 / i18n / catalog 英译、审计修复防回归 9 条、DetectMeta 3 条、SessionFps/瓶颈判定 9 条、VerdictStore 5 条） |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-29.md`） |
 
 ## 第一步：确认基线，不要先改代码
@@ -20,7 +20,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 320 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 337 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
