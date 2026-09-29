@@ -703,4 +703,8 @@
     <s:String x:Key="Str.BottleneckGpu">GPU 侧受限——GPU 平均 {0}%、95 位 {1}%，接近满载；此时提高画质相关限制通常不再增加帧率，优先在 GPU 侧找方向（驱动 3D 设置、画质档位）。启发式判断，不代表因果。</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU 侧受限——GPU 平均 {0}% 尚有余量，而 CPU 95 位占用 {1}% 偏高。优先关注 CPU 侧（后台占用、调度类优化项）；此为启发式判断，不代表因果。</s:String>
     <s:String x:Key="Str.BottleneckBalanced">未呈现单侧瓶颈——GPU 平均 {0}%、CPU 95 位 {1}%，两側均未达阈值；这不代表没有优化空间。启发式判断，不代表因果。</s:String>
+    <s:String x:Key="Str.CustomItemsRequired">自定义实测需要提供至少一个优化项（Options.Items）。</s:String>
+    <s:String x:Key="Str.CustomUnknownItems">未知优化项：{0}</s:String>
+    <s:String x:Key="Str.CustomRebootItems">以下优化项需要重启才能生效，不能参与会话内实测（重启后基线已失效，对比不成立）：{0}</s:String>
+    <s:String x:Key="Str.CustomGroupName">自定义实测（{0} 项）</s:String>
 </ResourceDictionary>

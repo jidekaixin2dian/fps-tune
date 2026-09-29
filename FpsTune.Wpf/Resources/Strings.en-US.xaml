@@ -703,4 +703,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.BottleneckGpu">GPU-bound — GPU averaged {0}% with a 95th percentile of {1}%, near saturation. Raising quality-related caps usually won't add FPS in this state; look on the GPU side first (driver 3D settings, quality presets). Heuristic, not causal.</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU-bound — GPU averaged {0}% with headroom while CPU 95th percentile is elevated ({1}%). Look on the CPU side first (background load, scheduling items). Heuristic, not causal.</s:String>
     <s:String x:Key="Str.BottleneckBalanced">No single-sided bottleneck — GPU averaged {0}% and CPU 95th percentile is {1}%; neither threshold was reached. This doesn't mean there's no optimization headroom. Heuristic, not causal.</s:String>
+    <s:String x:Key="Str.CustomItemsRequired">Custom A/B requires at least one optimization item (Options.Items).</s:String>
+    <s:String x:Key="Str.CustomUnknownItems">Unknown optimization items: {0}</s:String>
+    <s:String x:Key="Str.CustomRebootItems">These items require a restart and cannot join an in-session A/B (a restart invalidates the baseline): {0}</s:String>
+    <s:String x:Key="Str.CustomGroupName">Custom A/B ({0} item(s))</s:String>
 </ResourceDictionary>

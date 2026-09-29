@@ -43,7 +43,8 @@ public static class ExperimentRunner
         int DurationSec = 90,
         string? CsvPath = null,
         string? PresentMonPath = null,
-        string? GameName = null);
+        string? GameName = null,
+        IReadOnlyList<string>? Items = null);
 
     /// <summary>
     /// 执行一个实验步骤。step 取值：baseline / report / group-1 / group-2 / group-3。
@@ -66,6 +67,8 @@ public static class ExperimentRunner
             "baseline" => ("baseline", null),
             "report" => ("report", null),
             var g when Groups.Any(x => x.Id == g) => ("test", g),
+            // 0.2.0 M1：自定义实测组——Options.Items 提供项集合（整套实测主模式 / 单项深测 size-1）
+            "custom" => ("test", "custom"),
             _ => ("unknown", null),
         };
         if (mode == "unknown")
@@ -155,7 +158,24 @@ public static class ExperimentRunner
 
     private static async Task<JsonObject> RunTestGroupAsync(string groupId, Options options, CancellationToken ct)
     {
-        var group = Groups.First(g => g.Id == groupId);
+        // 0.2.0 M1：已知组沿用硬编码清单；"custom" 组从 Options.Items 取项集合。
+        var known = Groups.FirstOrDefault(g => g.Id == groupId);
+        var isKnownGroup = known.Id is not null;
+        var itemIds = isKnownGroup ? known.Items : (options.Items?.ToArray() ?? []);
+        if (!isKnownGroup)
+        {
+            if (itemIds.Length == 0)
+                return Fail("test", Str.T("Str.CustomItemsRequired"));
+            var unknown = itemIds.Where(id => ItemCatalog.All.All(x => x.Id != id)).ToList();
+            if (unknown.Count > 0)
+                return Fail("test", Str.T("Str.CustomUnknownItems", string.Join(", ", unknown)));
+            var rebootIds = itemIds
+                .Where(id => ItemCatalog.All.First(x => x.Id == id).Reboot)
+                .ToList();
+            if (rebootIds.Count > 0)
+                return Fail("test", Str.T("Str.CustomRebootItems", string.Join(", ", rebootIds)));
+        }
+        var groupName = isKnownGroup ? known.Name : Str.T("Str.CustomGroupName", itemIds.Length);
 
         var state = ReadState();
         var baselineSummary = state?["baseline"]?["summary"] as JsonObject;
@@ -185,10 +205,10 @@ public static class ExperimentRunner
 
         // 1) 应用候选组（真实模式），记下"本次应用写下的快照"与"真正被改动的项"
         string? appliedBackup = null;
-        var changedIds = group.Items.ToList();
+        var changedIds = itemIds.ToList();
         if (!options.Simulate)
         {
-            var applied = await ApplyGroupAsync(group.Items, ct);
+            var applied = await ApplyGroupAsync(itemIds, ct);
             if (!applied.Ok)
                 return Fail("test", "应用候选组未完成：" + applied.Error);
             appliedBackup = applied.BackupFile;
@@ -242,6 +262,32 @@ public static class ExperimentRunner
         var decision = DecideKeep(baselineSummary, summary);
         var kept = decision.Keep;
 
+        // 0.2.0 M1：判定沉淀——真实模式（非 Simulate）的每次实验结论入册 verdicts.json；
+        // 模拟数据绝不入册（红线「数据说话」）。写入失败静默，不阻塞实验流程。
+        if (!options.Simulate && baselineSummary["avgFps"] is { } baseAvgNode && baseAvgNode.GetValue<double>() > 0)
+        {
+            var baseAvg = baseAvgNode.GetValue<double>();
+            var testAvg = summary["avgFps"]!.GetValue<double>();
+            VerdictStore.Upsert(new VerdictStore.VerdictEntry(
+                VerdictStore.MakeKey(itemIds),
+                Kind: itemIds.Length == 1 ? "item" : "bundle",
+                Items: itemIds,
+                GroupId: groupId,
+                Game: Path.GetFileNameWithoutExtension(AppState.GamePath ?? ""),
+                AvgFpsBase: baseAvg,
+                AvgFpsTest: testAvg,
+                P1LowBase: baselineSummary["p1Low"]!.GetValue<double>(),
+                P1LowTest: summary["p1Low"]!.GetValue<double>(),
+                StuttersBase: baselineSummary["stutters"]!.GetValue<int>(),
+                StuttersTest: summary["stutters"]!.GetValue<int>(),
+                Stable: baselineSummary["stable"]!.GetValue<bool>(),
+                Keep: kept,
+                DeltaPct: Math.Round((testAvg - baseAvg) / baseAvg * 100, 2),
+                At: DateTime.Now,
+                DurationSec: options.DurationSec,
+                Mode: samples.Mode));
+        }
+
         // 4) 无效 → 自动还原（只还原本步骤真正改过、且记录在本次快照里的项）
         //    若本组在测试前就已达标，本次没有任何"原值"可还原，绝不能谎报"已还原"。
         var reverted = false;
@@ -283,9 +329,9 @@ public static class ExperimentRunner
             reason += " ⚠ " + revertError;
         groups.Add(new JsonObject
         {
-            ["id"] = group.Id,
-            ["name"] = group.Name,
-            ["items"] = new JsonArray(group.Items.Select(i => JsonValue.Create(i)).ToArray()),
+            ["id"] = groupId,
+            ["name"] = groupName,
+            ["items"] = new JsonArray(itemIds.Select(i => JsonValue.Create(i)).ToArray()),
             ["appliedAt"] = DateTime.Now.ToString("o"),
             ["summary"] = summary.DeepClone(),
             ["keep"] = kept,
@@ -305,8 +351,8 @@ public static class ExperimentRunner
         {
             ["time"] = DateTime.Now.ToString("o"),
             ["kind"] = "test",
-            ["id"] = group.Id,
-            ["name"] = group.Name,
+            ["id"] = groupId,
+            ["name"] = groupName,
             ["summary"] = summary.DeepClone(),
             ["keep"] = kept,
             ["reverted"] = reverted,
@@ -320,9 +366,9 @@ public static class ExperimentRunner
             ["version"] = UpdateService.CurrentVersion,
             ["mode"] = "test",
             ["ok"] = true,
-            ["group"] = group.Id,
-            ["groupName"] = group.Name,
-            ["items"] = new JsonArray(group.Items.Select(i => JsonValue.Create(i)).ToArray()),
+            ["group"] = groupId,
+            ["groupName"] = groupName,
+            ["items"] = new JsonArray(itemIds.Select(i => JsonValue.Create(i)).ToArray()),
             ["baseline"] = baselineSummary.DeepClone(),
             ["groupSummary"] = summary,
             ["keep"] = kept,
@@ -330,7 +376,7 @@ public static class ExperimentRunner
             ["revertError"] = revertError,
             ["reason"] = reason,
             ["samplerMode"] = samples.Mode,
-            ["message"] = $"{group.Name}（{group.Id}）测试完成：{verdict}。{reason}",
+            ["message"] = $"{groupName}（{groupId}）测试完成：{verdict}。{reason}",
         };
     }
 
