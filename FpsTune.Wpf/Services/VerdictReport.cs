@@ -14,7 +14,7 @@ public static class VerdictReport
         var sb = new StringBuilder();
         sb.AppendLine($"# {Str.T("Str.ReportTitle")} — FPS Tune v{UpdateService.CurrentVersion}");
         sb.AppendLine();
-        sb.AppendLine(Str.T("Str.ReportGenerated", DateTime.Now.ToString("yyyy-MM-dd HH:mm")));
+        sb.AppendLine(Str.T("Str.VerdictReportGenerated", DateTime.Now.ToString("yyyy-MM-dd HH:mm")));
         sb.AppendLine();
         sb.AppendLine($"## {Str.T("Str.ReportConditions")}");
         sb.AppendLine();

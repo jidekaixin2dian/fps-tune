@@ -729,7 +729,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReportKeep">Kept</s:String>
     <s:String x:Key="Str.ReportRevert">Reverted</s:String>
     <s:String x:Key="Str.ReportTitle">FPS Tune measurement report</s:String>
-    <s:String x:Key="Str.ReportGenerated">Generated {0} (from local measurements only; no predictions or extrapolations)</s:String>
+    <s:String x:Key="Str.VerdictReportGenerated">Generated {0} (from local measurements only; no predictions or extrapolations)</s:String>
     <s:String x:Key="Str.ReportConditions">Test conditions</s:String>
     <s:String x:Key="Str.ReportCondGame">Game</s:String>
     <s:String x:Key="Str.ReportCondSample">Sampling</s:String>

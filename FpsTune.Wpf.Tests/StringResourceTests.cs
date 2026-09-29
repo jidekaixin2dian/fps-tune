@@ -44,6 +44,24 @@ public class StringResourceTests
                .Select(m => m.Groups[1].Value));
 
     [Fact]
+    public void No_duplicate_keys_within_a_dictionary()
+    {
+        // 0.2.0-beta.1 教训：同字典内重复键不报编译错，但 WPF 启动加载合并字典时
+        // 直接 XamlParseException 崩溃（Str.ReportGenerated 撞诊断报告旧键踩中过）。
+        foreach (var locale in new[] { "zh-CN", "en-US" })
+        {
+            var matches = KeyDecl.Matches(
+                File.ReadAllText(Path.Combine(RepoRoot(), "FpsTune.Wpf", "Resources", $"Strings.{locale}.xaml")));
+            var dupes = matches.Select(m => m.Groups[1].Value)
+                .GroupBy(k => k, StringComparer.Ordinal)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+            Assert.True(dupes.Count == 0, $"Strings.{locale}.xaml 存在重复键（启动即崩）：{string.Join(", ", dupes)}");
+        }
+    }
+
+    [Fact]
     public void Key_sets_match_between_locales()
     {
         var zh = ReadKeys("zh-CN");

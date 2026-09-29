@@ -729,7 +729,7 @@
     <s:String x:Key="Str.ReportKeep">保留</s:String>
     <s:String x:Key="Str.ReportRevert">已还原</s:String>
     <s:String x:Key="Str.ReportTitle">FPS Tune 实测报告</s:String>
-    <s:String x:Key="Str.ReportGenerated">生成时间：{0}（数据来自本机实测，不包含预测或外推）</s:String>
+    <s:String x:Key="Str.VerdictReportGenerated">生成时间：{0}（数据来自本机实测，不包含预测或外推）</s:String>
     <s:String x:Key="Str.ReportConditions">测试条件</s:String>
     <s:String x:Key="Str.ReportCondGame">游戏</s:String>
     <s:String x:Key="Str.ReportCondSample">采样</s:String>
