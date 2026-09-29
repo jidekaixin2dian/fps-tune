@@ -1,31 +1,31 @@
 # HANDOFF · 项目交接现状
 
-> 最后核对：2026-09-29（本轮 ㉓：**`v0.1.16-beta` 已发布**——push/Release/三资产/核验全链路完成 + 深度自查修复）
+> 最后核对：2026-09-29（本轮 ㉔：**`v0.1.17-beta` 已发布** + P3-10 catalog 扩展三项落地，0.1.18 候选已部署待拍板）
 > 本文是**入库的长期交接文档**。单轮工作的临时提示词写进根目录 `HANDOFF_PROMPT_YYYY-MM-DD.md`（当前：`HANDOFF_PROMPT_2026-09-29.md`）
 > （已被 `.gitignore` 排除），那种文件只活一轮，不要往这里抄。
 > 接手请先读 `AGENTS.md`，再读本文。
 
 ## 1. 一句话现状
 
-主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.16-beta`**（2026-09-29，标签 `11398ea`，内容 = P3-4 检测页状态条 + 概览卡片化 + 字体一致性）。自查修复 `2cc2af4`（检测异常路径状态行 + DetectMeta 测试）已提交**未 push、未部署**，随下个候选走。
-`main` 已 push 至 `e6959e9`（发版轮），**本地领先 1 个提交**（`2cc2af4` 自查修复，push 随下次用户指令）。
+主线是 0.1 Beta 线（现落在 **`main`**）。**最新已发布 `v0.1.17-beta`**（2026-09-29，标签 `00f6b23`，内容 = 检测异常路径修复）。**0.1.18-beta 候选（P3-10 catalog 扩展三项）已按 `1f840db` 构建、部署 `D:\FpsTune` 并 UIA/CLI 真机验证**，发版等用户拍板。
+`main` 已 push 至 `1f840db`（0.1.18 bump 提交）。
 1.x 线**已停止维护**，冻结点 `legacy/1.x`（= `v1.6.2`）。
 
 ## 2. 版本与分支
 
 | 项 | 值 |
 |---|---|
-| `Directory.Build.props` | `VersionPrefix=0.1.16` / `VersionSuffix=beta` |
-| 已发布 Release | **`v0.1.16-beta`**（2026-09-29 发布，标签 = `11398ea13bcea5fc2e8950b73c64c9986b865927` ✓，pre-release；三资产字节数与本地逐项一致：Setup 60650801 / Portable 979803 / 清单 266 ✓，清单哈希复核一致 ✓；Notes 格式对齐 0.1.14）。上一版 `v0.1.14-beta`（`41540c3`） |
-| 发布候选（未发布） | （无——`2cc2af4` 为一行防御路径修复 + 3 条测试，刻意不占版本号；下个实质改动 bump 0.1.17 时一并带上） |
-| `main` | origin 同步至 `e6959e9`（0.1.16 发版收尾）；本地领先 **1 个提交**（`2cc2af4` 检测异常路径修复 + DetectMeta 测试） |
+| `Directory.Build.props` | `VersionPrefix=0.1.18` / `VersionSuffix=beta` |
+| 已发布 Release | **`v0.1.17-beta`**（2026-09-29 发布，标签 = `00f6b235c4143a9e123c24ab34848757276f9ee5` ✓，pre-release；三资产字节数与本地逐项一致：Setup 60651342 / Portable 979856 / 清单 266 ✓）。上一版 `v0.1.16-beta`（`11398ea`） |
+| 发布候选（未发布） | **`0.1.18-beta`**：P3-10 catalog 扩展三项（鼠标缓冲扩容 / PCIe ASPM 关闭 / 网卡节能关闭，用户批准落地；C2 全局定时器分辨率不做）。已按 `1f840db` 构建（三资产哈希已核）、已部署 `D:\FpsTune`；若发布，标签打 `1f840db` |
+| `main` | origin 同步至 `1f840db`（0.1.18 bump）；本地与 origin 一致 |
 | `beta` | 原开发线；内容已并入 `main`（merge `1d9777c`），不再单独演进 |
 | `legacy/1.x` | **1.x 冻结分支** = tag `v1.6.2`；停止维护，不修不发 |
-| 本机安装位 | `D:\FpsTune` = **`0.1.16-beta` 内嵌 SHA `11398ea`**（= 已发布版本；`2cc2af4` 的一行修复**未部署**，随下个候选）。文件清单与 `dist/folder-0.1.16/` 双向一致。备份链已于 2026-09-29 经用户拍板清理：**仅存 `-2f97`（0.1.15 候选，当前版本的回滚点）**，其余 15 个旧备份（0.1.14 及更早）已删除 |
-| 测试基线 | 320 / 320（`dotnet test -c Release`；2026-09-29 复核，含 DetectMeta 存取/容错 3 条新用例） |
+| 本机安装位 | `D:\FpsTune` = **`0.1.18-beta` 内嵌 SHA `1f840db`**（候选；UIA 优化页断言 + CLI `-Detect -Json` 真机验证通过）。回滚点备份：`-00f6`（0.1.17）、`-1139`（0.1.16）、`-2f97`（0.1.15） |
+| 测试基线 | 320 / 320（`dotnet test -c Release`；2026-09-29 复核，含 DetectMeta 3 条 + catalog 36 项计数/重启快照更新） |
 | 编译警告 | **0**（2026-09-28 `--no-incremental` 全量重编译复核；**增量构建会假报 0**，核对必须全量，见 `AI-WORKFLOW.md` §二） |
 | CI | GitHub Actions **可用**（`build` + `smoke`，push 到 main 与 PR 触发） |
-| catalog | 33 项；22 项需管理员、13 项需重启；预设 balanced(27) / safe-only |
+| catalog | 36 项（P3-10 扩展 3 项）；25 项需管理员、16 项需重启；预设 balanced(29) / safe-only |
 
 
 > **历史核对记录**：0.1.7 及更早的版本/哈希/同步逐项核对（含 0.1.4~0.1.7 三资产哈希、CRLF 清单坑、升级做法）已随 §2.1 整体归档至 [docs/archive/HANDOFF-轮次存档-20260925.md](archive/HANDOFF-轮次存档-20260925.md)（2026-09-29；该节曾停留在 0.1.7 时点、与现状冲突）。
@@ -35,9 +35,39 @@
 **M1 / M2 / M3 全部完成并已发布**（M1 NVAPI+DLSS+数字振动、M2 ICC 滤镜与生成器、
 M3 DRS 二期五项——均随 0.1.3 及此前版本上线）。细节见 PLAN 文档与 git 历史，本节不再维护表格。
 
-## 4. 最近几轮做了什么（㉓ = 2026-09-29；⑯及更早见归档）
+## 4. 最近几轮做了什么（㉔ = 2026-09-29；⑯及更早见归档）
 
-**㉓ v0.1.16-beta 发布 + 深度自查（2026-09-29，本轮）**
+**㉔ v0.1.17-beta 发布 + P3-10 catalog 扩展三项（2026-09-29，本轮）**
+
+用户指令「push + Release 一下 + 继续开发」。v0.1.16 当天刚发布，新内容只有自查修复 → 发 `v0.1.17-beta`；
+继续开发按交接提示默认方向做优化项扩展调研（`PLAN-P3-10`），用户从 4 候选批准 3 项落地。
+
+- **v0.1.17 发版**：bump `00f6b23` → 两脚本产三资产（哈希逐项核）→ 部署 `D:\FpsTune`
+  （0.1.16 快照存 `-1139`）→ push + `gh release create v0.1.17-beta --target 00f6b23… --prerelease`
+  + 三资产 → 标签/资产字节数核验 ✓。内容 = 检测异常路径修复 + DetectMeta 测试。
+- **P3-10 调研**（`5e7215c`）：agent-reach（Exa）核官方文档——4 候选（鼠标缓冲 / 全局定时器
+  分辨率 / PCIe ASPM / 网卡节能）+ 6 项评估为不做（Spectre 缓解、VBS、HPET、Defender 排除、
+  LargeSystemCache、MSI 模式），结论入册 `docs/dev/PLAN-P3-10-catalog-expansion.md` 防重查。
+  用户拍板：**C1/C3/C4 落地，C2 不做**。
+- **三项落地（`9f3e796`）**：catalog 33→36；引擎/备份/还原/校验/检测五个挂钩点全补——
+  新备份 Kind `power-aspm`（只还原实际读到的原 AC 值，与 power-tuning 同口径）+ `OldAspmValue`
+  字段（Validation 两处防线同步）；nic 逐物理网卡多条 registry 记录（`Characteristics` 位过滤
+  虚拟网卡、`PnPCapabilities` 按位或 0x18、白名单校验自动通过）；检测状态函数与 Apply 过滤口径一致。
+  新代码文案全部走 `Str.T` 新增 16 对中英键——**App.xaml 静态合并 zh-CN 字典，CLI 取值稳定**；
+  I18n 棘轮不增反减（Restore 顺手 -1）。
+- **0.1.18 候选与部署**：bump `1f840db` → 三资产哈希核 → 部署 `D:\FpsTune`（0.1.17 快照存 `-00f6`）
+  → explorer 启动。**验证**：320/320；`--no-incremental` 0 警告；UIA 优化页——`鼠标缓冲区扩容`
+  直接可见、PCIe/网卡两项经搜索框过滤后断言渲染 PASS（列表虚拟化，视口外行不进 UIA 树，
+  直接断言会假阴性）、MISSING_KEYS 无；error.log 350335 不变。
+- **真机发现（如实记录）**：CLI 非管理员下 `nic-power-save-off` 检测读 Class 子键被拒
+  （"Requested registry access is not allowed."）——错误被优雅捕获如实显示，与 `gpu-pstate-lock`
+  读 GPU 驱动键（可读）口径不同是 ACL 事实；GUI 提权运行下正常。`pcie-aspm-off` 本机实测
+  ASPM 已为 0（报达标）。
+- **文档口径同步**：README/README.en/ROADMAP/AGENTS/HANDOFF 的 33 项/22 管理员/13 重启/
+  balanced(27) 全部改为 36/25/16/29。
+- **未做（等用户拍板）**：发 `v0.1.18-beta`（标签 `1f840db`）。
+
+**㉓ v0.1.16-beta 发布 + 深度自查（2026-09-29）**
 
 用户指令「按 HANDOFF_PROMPT 开发」+ 拍板：批准发版、本轮做深度自查（dist 旧资产清理经查**已在
 `e6959e9` 轮完成**，交接提示第 3 条已失效）。

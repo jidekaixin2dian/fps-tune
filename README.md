@@ -5,7 +5,7 @@
 面向 Windows 玩家的**系统层**帧率调校台：检测 → 解释 → 确认 → 执行 → 还原，全流程可逆、结论可验证。
 C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入口）。
 
-![概览页：实时负载与 33 项优化状态](assets/screenshots/01-overview.png)
+![概览页：实时负载与 36 项优化状态](assets/screenshots/01-overview.png)
 
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
@@ -85,7 +85,7 @@ A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，不代�
 ```
 
 需要管理员的项在非提权终端里会明确报错（exe 以 asInvoker 运行，不自动弹 UAC）。
-33 项中 22 项需要管理员、13 项需要重启才完全生效；「均衡」预设含 27 项。
+36 项中 25 项需要管理员、16 项需要重启才完全生效；「均衡」预设含 29 项。
 
 ### AI Agent
 
@@ -119,12 +119,12 @@ A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，不代�
 
 市面上同类工具采用专有 EULA，禁止修改与再分发，改了什么也不透明。
 本项目以公开的功能清单为参考，代码与文档全部自写（clean-room），MIT 宽松许可，
-33 个优化项与预设统一定义在 `catalog/catalog.json`——你可以直接读完它到底改哪些键值。
+36 个优化项与预设统一定义在 `catalog/catalog.json`——你可以直接读完它到底改哪些键值。
 
 ## 架构
 
 ```
-catalog/catalog.json          优化项与预设的唯一数据源（33 项 + 均衡/保守预设）
+catalog/catalog.json          优化项与预设的唯一数据源（36 项 + 均衡/保守预设）
 FpsTune.Wpf/
   Core/                       OptimizationCatalog / NativeOptimizationEngine /
                               BackupService / DetectionService / ExperimentRunner

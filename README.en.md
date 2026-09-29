@@ -9,7 +9,7 @@ C# WPF + .NET 10; `FpsTune.exe` doubles as a headless CLI (command line / AI-age
 > The UI is currently Chinese-only. The CLI, catalog and this README are readable without it —
 > and an English locale is a standing "good first issue".
 
-![Overview: live load plus the state of all 33 items](assets/screenshots/01-overview.png)
+![Overview: live load plus the state of all 36 items](assets/screenshots/01-overview.png)
 
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
@@ -93,7 +93,7 @@ Passing arguments puts `FpsTune.exe` into headless mode (no window, stdout, exit
 ```
 
 Items that need admin rights fail loudly in a non-elevated terminal (the exe runs as asInvoker and
-never auto-prompts UAC). Of the 33 items, 22 require admin and 13 need a reboot to fully apply;
+never auto-prompts UAC). Of the 36 items, 25 require admin and 16 need a reboot to fully apply;
 the `balanced` preset contains 27.
 
 ### AI agent
@@ -130,13 +130,13 @@ driver and in-game settings, and controversial items ship unchecked by default.
 
 Closed-source tools in this space ship proprietary EULAs that forbid modification and
 redistribution, and don't disclose what they change. This project was written from scratch against
-the *public feature list* only, is MIT licensed, and puts all 33 items and presets in
+the *public feature list* only, is MIT licensed, and puts all 36 items and presets in
 `catalog/catalog.json` — you can read exactly which keys get touched.
 
 ## Architecture
 
 ```
-catalog/catalog.json          single source of truth: 33 items + presets
+catalog/catalog.json          single source of truth: 36 items + presets
 FpsTune.Wpf/
   Core/                       OptimizationCatalog / NativeOptimizationEngine /
                               BackupService / DetectionService / ExperimentRunner
