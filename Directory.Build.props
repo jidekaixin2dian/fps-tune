@@ -20,7 +20,9 @@
     <!-- 0.1.16 = 概览页卡片化（用户批准的布局提案）+ 字体一致性修复（含中文文本不再套等宽字体） -->
     <!-- 0.1.17 = 检测异常路径页头状态行卡「正在检测…」修复 + DetectMeta 存取/容错测试（㉓ 自查轮） -->
     <!-- 0.1.18 = P3-10 catalog 扩展三项（鼠标缓冲扩容 / PCIe ASPM 关闭 / 网卡节能关闭，用户批准落地） -->
-    <VersionPrefix>0.1.18</VersionPrefix>
+    <!-- 0.2.0-beta.1 = M1 实测闭环（自定义实测 + 判定沉淀 + 徽标 + 报告导出）+ C-A 瓶颈判定 +
+         C-E 会话 FPS + C-C 一键反馈流（beta.1 全量内容，范围见 PLAN-0.2.0 v3） -->
+    <VersionPrefix>0.2.0</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
