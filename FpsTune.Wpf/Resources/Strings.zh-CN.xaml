@@ -685,4 +685,12 @@
     <s:String x:Key="Str.NicDetectNone">未发现物理网卡</s:String>
     <s:String x:Key="Str.NicDetectStatus">已关闭 {0}/{1} 块网卡节能</s:String>
     <s:String x:Key="Str.NicDetectError">读取网卡节能状态失败：{0}</s:String>
+    <s:String x:Key="Str.Yes">是</s:String>
+    <s:String x:Key="Str.No">否</s:String>
+    <s:String x:Key="Str.DiagExportedBody">已导出：&#10;{0}&#10;&#10;报告不含联系方式等个人信息，可直接发给开发者协助排障。</s:String>
+    <s:String x:Key="Str.DiagExportFailed">导出失败：{0}</s:String>
+    <s:String x:Key="Str.DiagAskIssue">要在 GitHub 新建 issue 并预填环境摘要吗？（是否附上诊断包请自行确认）</s:String>
+    <s:String x:Key="Str.OpenIssue">打开 GitHub issue</s:String>
+    <s:String x:Key="Str.IssueTitle">反馈：FPS Tune v{0}</s:String>
+    <s:String x:Key="Str.IssueBody">版本: v{0}&#10;系统: {1}&#10;管理员运行: {2}&#10;&#10;### 问题描述&#10;&#10;&#10;### 复现步骤&#10;&#10;&#10;（诊断包已在本机导出，是否附上请自行确认隐私）</s:String>
 </ResourceDictionary>

@@ -573,16 +573,42 @@ public partial class SettingsView : UserControl
 
     private void ExportDiagnostics_Click(object sender, RoutedEventArgs e)
     {
+        string? path;
         try
         {
-            var path = DiagnosticReportExporter.Export();
+            path = DiagnosticReportExporter.Export();
             if (path is null)
                 return;
-            DialogService.Info(Str.T("Str.DiagnosticReport"), "已导出:\n" + path + "\n\n报告不含联系方式等个人信息, 可直接发给开发者协助排障。");
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.DiagnosticReport"), "导出失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.DiagnosticReport"), Str.T("Str.DiagExportFailed", ex.Message));
+            return;
+        }
+
+        // 0.2.0 C-C：导出后可直接带着预填环境摘要去提 issue（是否附上诊断包由用户自行决定）。
+        var askIssue = DialogService.Confirm(
+            Str.T("Str.DiagnosticReport"),
+            Str.T("Str.DiagExportedBody", path) + "\n\n" + Str.T("Str.DiagAskIssue"),
+            confirmText: Str.T("Str.OpenIssue"));
+        if (!askIssue)
+            return;
+
+        try
+        {
+            var title = Str.T("Str.IssueTitle", UpdateService.CurrentVersion);
+            var body = Str.T("Str.IssueBody",
+                UpdateService.CurrentVersion,
+                Environment.OSVersion.VersionString,
+                AdminHelper.IsAdministrator() ? Str.T("Str.Yes") : Str.T("Str.No"));
+            var url = "https://github.com/jidekaixin2dian/fps-tune/issues/new"
+                      + "?title=" + Uri.EscapeDataString(title)
+                      + "&body=" + Uri.EscapeDataString(body);
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch
+        {
+            DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.CannotOpenLink"));
         }
     }
 

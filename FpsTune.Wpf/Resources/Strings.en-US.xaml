@@ -685,4 +685,12 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.NicDetectNone">No physical network adapter found</s:String>
     <s:String x:Key="Str.NicDetectStatus">Power saving off on {0}/{1} network adapter(s)</s:String>
     <s:String x:Key="Str.NicDetectError">Failed to read adapter power state: {0}</s:String>
+    <s:String x:Key="Str.Yes">Yes</s:String>
+    <s:String x:Key="Str.No">No</s:String>
+    <s:String x:Key="Str.DiagExportedBody">Exported to:&#10;{0}&#10;&#10;The report contains no personal contact info; you can send it to the developer for troubleshooting.</s:String>
+    <s:String x:Key="Str.DiagExportFailed">Export failed: {0}</s:String>
+    <s:String x:Key="Str.DiagAskIssue">Open a GitHub issue with a prefilled environment summary? (Attach the diagnostic file at your own discretion.)</s:String>
+    <s:String x:Key="Str.OpenIssue">Open GitHub issue</s:String>
+    <s:String x:Key="Str.IssueTitle">Feedback: FPS Tune v{0}</s:String>
+    <s:String x:Key="Str.IssueBody">Version: v{0}&#10;OS: {1}&#10;Running as admin: {2}&#10;&#10;### Problem&#10;&#10;&#10;### Steps to reproduce&#10;&#10;&#10;(A diagnostic report was exported locally; attach at your own discretion.)</s:String>
 </ResourceDictionary>
