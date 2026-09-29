@@ -97,6 +97,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 320
 | 0.1.x 功能设计依据 | `docs/dev/PLAN-0.1.2-features.md` | 里程碑 M1/M2/M3（**均已发布**） |
 | 现行排期（P3 清单 + 暂停项） | `docs/dev/PLAN-backlog.md` | **开工先看这份**；P0–P2 原文在 `docs/archive/PLAN-backlog-P0-P2-存档-20260929.md`；HANDOFF §5 与它对齐 |
 | P2-1 英译改法 | `docs/dev/PLAN-P2-1-catalog-i18n.md` | **已完成**（0.1.4）；文档留作架构参考与踩坑记录 |
+| **0.2.0 迭代规划（已拍板 M1+M2+M4）** | `docs/dev/PLAN-0.2.0-迭代规划.md` | **当前主线**；里程碑范围、红线约束、明确不做 |
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 代码健康度底数 | `docs/dev/CODE-HEALTH.md` | 体积/方法长度/警告数/已知债务；**接手先看，别重新量** |
