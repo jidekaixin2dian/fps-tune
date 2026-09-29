@@ -31,6 +31,20 @@
       "group": "键鼠"
     },
     {
+      "id": "mouse-latency",
+      "name": "鼠标缓冲区扩容",
+      "nameEn": "Enlarge the mouse buffer",
+      "description": "鼠标类设备驱动缓冲从 20 提升到 50，高轮询率鼠标高频移动下降低输入延迟与丢事件。重启生效。",
+      "descriptionEn": "Raises the mouse class driver buffer from 20 to 50, cutting input latency and dropped motion events for high-polling-rate mice. Requires a restart.",
+      "sideEffect": "内存占用几乎不变；个别老外设驱动理论兼容面变窄，可还原。",
+      "sideEffectEn": "Memory use is essentially unchanged. A few older peripheral drivers may be marginally less compatible. Reversible.",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry",
+      "group": "键鼠"
+    },
+    {
       "id": "keyboard-repeat",
       "name": "键盘重复提速",
       "nameEn": "Speed up key repeat",
@@ -171,6 +185,20 @@
       "group": "网络"
     },
     {
+      "id": "nic-power-save-off",
+      "name": "关闭网卡节能",
+      "nameEn": "Disable network adapter power saving",
+      "description": "逐块取消物理网卡的\"允许计算机关闭此设备以节约电源\"，避免系统闲置时休眠网卡造成的联机延迟抖动与瞬间掉线。",
+      "descriptionEn": "Clears \"Allow the computer to turn off this device to save power\" on every physical network adapter, preventing idle-time adapter sleep that causes online latency spikes and momentary disconnects.",
+      "sideEffect": "网卡空闲功耗略增；网卡驱动更新后该设置可能被重置（检测页会重新提示）；可还原。",
+      "sideEffectEn": "Slightly higher idle power draw. A network driver update may reset this setting (the detection page will flag it again). Reversible.",
+      "admin": true,
+      "default": false,
+      "reboot": true,
+      "kind": "registry",
+      "group": "网络"
+    },
+    {
       "id": "power-ultimate",
       "name": "电源计划 → 卓越性能",
       "nameEn": "Power plan → Ultimate Performance",
@@ -192,6 +220,20 @@
       "descriptionEn": "Unhides and adjusts two performance-affecting power parameters: disables USB 3 link power saving, and sets the processor performance boost mode to Aggressive.",
       "sideEffect": "功耗略升；不支持的 CPU 平台自动跳过，不报错。",
       "sideEffectEn": "Slightly higher power draw. Automatically skipped without error on unsupported CPU platforms.",
+      "admin": true,
+      "default": true,
+      "reboot": true,
+      "kind": "power",
+      "group": "电源"
+    },
+    {
+      "id": "pcie-aspm-off",
+      "name": "关闭 PCIe 链路省电(ASPM)",
+      "nameEn": "Disable PCIe link state power management (ASPM)",
+      "description": "把电源计划里隐藏的 PCIe 链路状态电源管理设为关闭（ASPM=None），消除链路空闲进出低功耗态带来的微卡顿，GPU 与硬盘响应更一致。",
+      "descriptionEn": "Sets the hidden power plan setting PCIe Link State Power Management to Off (ASPM=None), removing micro-stutter from links entering and exiting low-power idle states for more consistent GPU and storage response.",
+      "sideEffect": "整机功耗略升，笔记本电池续航变短；可还原。",
+      "sideEffectEn": "Slightly higher overall power draw and shorter battery life on laptops. Reversible.",
       "admin": true,
       "default": true,
       "reboot": true,
@@ -473,7 +515,8 @@
         "hibernate-off",
         "power-tuning",
         "keyboard-latency",
-        "keyboard-repeat"
+        "keyboard-repeat",
+        "mouse-latency"
       ]
     },
     "safe-only": {

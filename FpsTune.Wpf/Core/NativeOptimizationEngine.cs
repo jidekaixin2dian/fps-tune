@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using FpsTune.Wpf.Services;
 using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
@@ -130,6 +131,8 @@ public static class NativeOptimizationEngine
                 return ApplyMouseAccelOff();
             case "keyboard-latency":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", 50, RegistryValueKind.DWord, "键盘缓冲区已扩容到 50");
+            case "mouse-latency":
+                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", 50, RegistryValueKind.DWord, Str.T("Str.MouseBufferEnlarged"));
             case "keyboard-repeat":
                 return ApplyHkcuStringTweaks(@"Control Panel\Keyboard",
                     new[] { ("KeyboardDelay", "0"), ("KeyboardSpeed", "31") },
@@ -143,6 +146,8 @@ public static class NativeOptimizationEngine
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", 1, RegistryValueKind.DWord, "已禁用 USB 选择性暂停");
             case "net-nagle-off":
                 return ApplyNagleOff();
+            case "nic-power-save-off":
+                return ApplyNicPowerSaveOff();
             case "visual-fx-perf":
                 return RegistrySetIfDifferent(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", 2, RegistryValueKind.DWord, "视觉效果已切换为最佳性能");
             case "delivery-opt-off":
@@ -184,6 +189,8 @@ public static class NativeOptimizationEngine
                 return ApplyPowerUltimate();
             case "power-tuning":
                 return ApplyPowerTuning();
+            case "pcie-aspm-off":
+                return ApplyPcieAspmOff();
             case "game-priority":
                 return ApplyGamePriority(gamePath);
             case "gpu-pstate-lock":
@@ -398,6 +405,63 @@ public static class NativeOptimizationEngine
         var message = $"已调整：{string.Join("、", applied)}";
         if (skipped.Count > 0)
             message += $"；平台不支持已跳过：{string.Join("、", skipped)}";
+        return (true, true, false, message);
+    }
+
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPcieAspmOff()
+    {
+        // SUB_PCIEXPRESS\ASPM = 0（None）。GUID 来自 Microsoft Learn《Link state power management》。
+        const string subPciExpress = "501a4d13-42af-4429-9fd1-a8218c268e20";
+        const string aspm = "ee12f906-d277-404b-b6da-e5fa1a576df5";
+
+        var applied = new List<string>();
+        var skipped = new List<string>();
+        var failures = new List<string>();
+        TrySetPowerIndex(subPciExpress, aspm, "0", "PCIe", applied, skipped, failures);
+
+        if (failures.Count > 0)
+            return (false, false, false, Str.T("Str.PcieAspmFail", string.Join("; ", failures)));
+        if (applied.Count == 0)
+            return (true, false, true, Str.T("Str.PowerSkippedUnsupported", string.Join("; ", skipped)));
+
+        var apply = NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT");
+        if (!apply.Success)
+            return (false, false, false, Str.T("Str.PowerApplyFail", NativeDetail(apply)));
+        return (true, true, false, Str.T("Str.PcieAspmOffDone"));
+    }
+
+    // {4d36e972-...} = 网卡类设备。Characteristics 位 0x1（NCF_VIRTUAL）= 虚拟适配器，跳过；
+    // PnPCapabilities 位 0x18 置位 = 取消「允许计算机关闭此设备以节约电源」。不同驱动资料混用
+    // 0x18/0x24，因此已有值时按位或叠加，不破坏其它位；还原按备份的原值（或删除新建值）。
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyNicPowerSaveOff()
+    {
+        const string classPath = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}";
+        using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+        using var classKey = baseKey.OpenSubKey(classPath, writable: true);
+        if (classKey is null)
+            return (false, false, false, Str.T("Str.NicRegOpenFail"));
+
+        var changed = new List<string>();
+        var already = 0;
+        foreach (var sub in classKey.GetSubKeyNames())
+        {
+            using var key = classKey.OpenSubKey(sub, writable: true);
+            if (key is null) continue;
+            if (key.GetValue("Characteristics") is int caps && (caps & 0x1) != 0) continue;
+            if (key.GetValue("DriverDesc") is not string desc) continue;
+            var current = key.GetValue("PnPCapabilities");
+            if (current is int v && (v & 0x18) == 0x18) { already++; continue; }
+            key.SetValue("PnPCapabilities", current is int w ? w | 0x18 : 0x18, RegistryValueKind.DWord);
+            changed.Add(desc);
+        }
+
+        if (changed.Count == 0)
+            return (true, false, true, already > 0
+                ? Str.T("Str.NicAllAlready", already)
+                : Str.T("Str.NicNoneFound"));
+        var message = Str.T("Str.NicOffDone", changed.Count);
+        if (already > 0)
+            message += Str.T("Str.NicAlreadyPart", already);
         return (true, true, false, message);
     }
 

@@ -363,6 +363,7 @@ public static class DetectionService
             "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", "1"),
             "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", "0"),
             "keyboard-latency" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", "50"),
+            "mouse-latency" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", "50"),
             "menu-delay-off" => (RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", "0"),
             "usb-power-save-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", "1"),
             "visual-fx-perf" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", "2"),
@@ -385,6 +386,8 @@ public static class DetectionService
             "dvr-off" => GetDvrOffState(),
             "power-ultimate" => GetPowerUltimateState(),
             "power-tuning" => GetPowerTuningState(),
+            "pcie-aspm-off" => GetPcieAspmState(),
+            "nic-power-save-off" => GetNicPowerSaveState(),
             "sysmain-off" => GetServiceState("SysMain"),
             "wsearch-off" => GetServiceState("WSearch"),
             "hibernate-off" => GetHibernateState(),
@@ -481,6 +484,48 @@ public static class DetectionService
 
         var optimized = usb == 0 && boost == 2;
         return (optimized, $"USB3={usb}, 提升={boost}");
+    }
+
+    private static (bool Optimized, string Current) GetPcieAspmState()
+    {
+        var aspm = GetPowerSettingIndex(
+            "501a4d13-42af-4429-9fd1-a8218c268e20",
+            "ee12f906-d277-404b-b6da-e5fa1a576df5");
+        if (aspm is null)
+            return (false, Str.T("Str.AspmReadFail"));
+        return (aspm == 0, $"ASPM={aspm}");
+    }
+
+    // 与 ApplyNicPowerSaveOff / CaptureNicPowerSaveBackups 同口径：物理网卡全部含 0x18 位才算达标。
+    private static (bool Optimized, string Current) GetNicPowerSaveState()
+    {
+        const string classPath = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}";
+        try
+        {
+            using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+            using var classKey = baseKey.OpenSubKey(classPath);
+            if (classKey is null)
+                return (false, Str.T("Str.NicDetectReadFail"));
+            var physical = 0;
+            var off = 0;
+            foreach (var sub in classKey.GetSubKeyNames())
+            {
+                using var key = classKey.OpenSubKey(sub);
+                if (key is null) continue;
+                if (key.GetValue("Characteristics") is int caps && (caps & 0x1) != 0) continue;
+                if (key.GetValue("DriverDesc") is not string) continue;
+                physical++;
+                if (key.GetValue("PnPCapabilities") is int v && (v & 0x18) == 0x18)
+                    off++;
+            }
+            if (physical == 0)
+                return (false, Str.T("Str.NicDetectNone"));
+            return (off == physical, Str.T("Str.NicDetectStatus", off, physical));
+        }
+        catch (Exception ex)
+        {
+            return (false, Str.T("Str.NicDetectError", ex.Message));
+        }
     }
 
     private static int? GetPowerSettingIndex(string subgroup, string setting)

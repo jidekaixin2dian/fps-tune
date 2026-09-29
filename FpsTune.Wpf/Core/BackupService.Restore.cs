@@ -372,6 +372,9 @@ public static partial class BackupService
             case "power-tuning":
                 RestorePowerTuning(r);
                 break;
+            case "power-aspm":
+                RestorePowerAspm(r);
+                break;
             case "hibernate":
                 RestoreHibernate(r);
                 break;
@@ -461,7 +464,17 @@ public static partial class BackupService
             SetAcValue("54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7", r.OldBoostValue.Value);
         EnsureNativeSuccess(
             NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT"),
-            "重新应用电源计划");
+            Str.T("Str.ReapplyPowerPlan"));
+    }
+
+    private static void RestorePowerAspm(BackupRecord r)
+    {
+        // 与 RestorePowerTuning 同口径：只还原备份里实际读到的原值，读不到就跳过。
+        if (r.OldAspmValue.HasValue)
+            SetAcValue("501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5", r.OldAspmValue.Value);
+        EnsureNativeSuccess(
+            NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT"),
+            Str.T("Str.ReapplyPowerPlan"));
     }
 
     private static void SetAcValue(string subgroup, string setting, int value)

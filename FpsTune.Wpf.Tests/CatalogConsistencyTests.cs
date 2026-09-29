@@ -64,10 +64,10 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
-    public void Catalog_has_33_unique_items()
+    public void Catalog_has_36_unique_items()
     {
         var (ids, _) = LoadCatalog();
-        Assert.Equal(33, ids.Count);
+        Assert.Equal(36, ids.Count);
     }
 
     [Fact]
@@ -129,7 +129,9 @@ public class CatalogConsistencyTests
             "power-tuning", "hags", "mpo-off", "sysmain-off", "wsearch-off",
             "hibernate-off", "paging-exec", "mem-compress-off",
             "gpu-pstate-lock", "dyntick-off",
-            "keyboard-latency", "usb-power-save-off", "net-nagle-off"
+            "keyboard-latency", "usb-power-save-off", "net-nagle-off",
+            // P3-10 扩展三项（catalog 36 项起）
+            "mouse-latency", "pcie-aspm-off", "nic-power-save-off"
         };
         var (_, reboot) = LoadCatalog();
         var actual = reboot.Where(kv => kv.Value).Select(kv => kv.Key).ToHashSet();

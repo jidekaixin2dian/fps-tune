@@ -54,6 +54,9 @@ public static partial class BackupService
             case "power-tuning":
                 EnsureNonRegistry(record, "power-tuning", allowPower: true);
                 break;
+            case "pcie-aspm-off":
+                EnsureNonRegistry(record, "power-aspm", allowPower: true);
+                break;
             case "sysmain-off":
             case "wsearch-off":
                 EnsureNonRegistry(record, "service", allowService: true);
@@ -151,7 +154,8 @@ public static partial class BackupService
             record.SecondaryExisted.HasValue || !string.IsNullOrEmpty(record.SecondaryHive) ||
             !string.IsNullOrEmpty(record.SecondaryPath) || !string.IsNullOrEmpty(record.SecondaryName) ||
             record.SecondaryValue is not null ||
-            (!allowPower && (record.OldUsbValue.HasValue || record.OldBoostValue.HasValue || record.OldIdleValue.HasValue)) ||
+            (!allowPower && (record.OldUsbValue.HasValue || record.OldBoostValue.HasValue ||
+                             record.OldIdleValue.HasValue || record.OldAspmValue.HasValue)) ||
             (!allowService && (!string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
                                !string.IsNullOrEmpty(record.OldStartMode))) ||
             (!allowGuid && !string.IsNullOrEmpty(record.OldActiveGuid)) ||
@@ -162,6 +166,7 @@ public static partial class BackupService
 
     private static void EnsureRegistryFields(BackupRecord record)
         => Reject(record.OldUsbValue.HasValue || record.OldBoostValue.HasValue || record.OldIdleValue.HasValue ||
+            record.OldAspmValue.HasValue ||
             !string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
             !string.IsNullOrEmpty(record.OldStartMode) || !string.IsNullOrEmpty(record.OldActiveGuid) ||
             !string.IsNullOrEmpty(record.OldState), "注册表备份包含其他类型字段");

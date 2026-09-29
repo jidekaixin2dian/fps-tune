@@ -118,10 +118,10 @@ public class CoreLogicTests
     // ---------- ItemCatalog 完整性 ----------
 
     [Fact]
-    public void ItemCatalog_has_33_unique_items()
+    public void ItemCatalog_has_36_unique_items()
     {
         var ids = ItemCatalog.All.Select(x => x.Id).ToList();
-        Assert.Equal(33, ids.Count);
+        Assert.Equal(36, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 
@@ -135,15 +135,16 @@ public class CoreLogicTests
     public void Balanced_preset_excludes_the_documented_items()
     {
         // 除常规重负载项外，键鼠组里会改变输入手感的三项（keyboard-latency/
-        // keyboard-repeat）也不进均衡；mouse-accel-off 是 FPS 必关项，保留在均衡内。
+        // keyboard-repeat/mouse-latency）也不进均衡；mouse-accel-off 是 FPS 必关项，保留在均衡内。
         var ids = OptimizationEngine.GetPresetIds("balanced");
-        Assert.Equal(ItemCatalog.All.Count - 6, ids.Count);
+        Assert.Equal(ItemCatalog.All.Count - 7, ids.Count);
         Assert.DoesNotContain("sysmain-off", ids);
         Assert.DoesNotContain("wsearch-off", ids);
         Assert.DoesNotContain("hibernate-off", ids);
         Assert.DoesNotContain("power-tuning", ids);
         Assert.DoesNotContain("keyboard-latency", ids);
         Assert.DoesNotContain("keyboard-repeat", ids);
+        Assert.DoesNotContain("mouse-latency", ids);
         Assert.Contains("mouse-accel-off", ids);
         Assert.Contains("sticky-keys-off", ids);
         Assert.Contains("usb-power-save-off", ids);

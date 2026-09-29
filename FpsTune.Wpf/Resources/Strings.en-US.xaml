@@ -669,4 +669,20 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CompareHeaderSessionA">A</s:String>
     <s:String x:Key="Str.CompareHeaderSessionB">B</s:String>
     <s:String x:Key="Str.CompareHeaderDelta">Δ B−A</s:String>
+    <s:String x:Key="Str.MouseBufferEnlarged">Mouse buffer enlarged to 50</s:String>
+    <s:String x:Key="Str.PcieAspmFail">Failed to disable PCIe link power management: {0}</s:String>
+    <s:String x:Key="Str.PowerSkippedUnsupported">Platform not supported, skipped: {0}</s:String>
+    <s:String x:Key="Str.PowerApplyFail">Failed to apply hidden power settings: {0}</s:String>
+    <s:String x:Key="Str.PcieAspmOffDone">PCIe link state power management (ASPM) disabled</s:String>
+    <s:String x:Key="Str.NicRegOpenFail">Cannot open the network adapter registry key (administrator required)</s:String>
+    <s:String x:Key="Str.NicAllAlready">Power saving was already off on all {0} network adapter(s)</s:String>
+    <s:String x:Key="Str.NicNoneFound">No adjustable physical network adapter found</s:String>
+    <s:String x:Key="Str.NicOffDone">Power saving disabled on {0} network adapter(s)</s:String>
+    <s:String x:Key="Str.NicAlreadyPart">; {0} already off</s:String>
+    <s:String x:Key="Str.ReapplyPowerPlan">Reapplied the active power plan</s:String>
+    <s:String x:Key="Str.AspmReadFail">Cannot read the PCIe link power setting</s:String>
+    <s:String x:Key="Str.NicDetectReadFail">Cannot read the network adapter registry key</s:String>
+    <s:String x:Key="Str.NicDetectNone">No physical network adapter found</s:String>
+    <s:String x:Key="Str.NicDetectStatus">Power saving off on {0}/{1} network adapter(s)</s:String>
+    <s:String x:Key="Str.NicDetectError">Failed to read adapter power state: {0}</s:String>
 </ResourceDictionary>

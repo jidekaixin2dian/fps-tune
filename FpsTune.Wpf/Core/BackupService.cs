@@ -26,6 +26,9 @@ public sealed class BackupRecord
     public int? OldBoostValue { get; set; }
     public int? OldIdleValue { get; set; }
 
+    // pcie-aspm-off 的原始 AC 值；null 表示当时读取失败/平台不支持，还原时跳过该设置。
+    public int? OldAspmValue { get; set; }
+
     public string? SecondaryHive { get; set; }
     public string? SecondaryPath { get; set; }
     public string? SecondaryName { get; set; }

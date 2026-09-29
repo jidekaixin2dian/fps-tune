@@ -225,6 +225,19 @@ public static partial class BackupService
                             "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7")
                     }
                 };
+            case "pcie-aspm-off":
+                return new[]
+                {
+                    new BackupRecord
+                    {
+                        Id = id,
+                        Kind = "power-aspm",
+                        OldAspmValue = GetPowerAcIndex(
+                            "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5")
+                    }
+                };
+            case "nic-power-save-off":
+                return CaptureNicPowerSaveBackups(id);
             case "sysmain-off":
             case "wsearch-off":
             {
@@ -303,6 +316,8 @@ public static partial class BackupService
             }
             case "keyboard-latency":
                 return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", RegistryValueKind.DWord) };
+            case "mouse-latency":
+                return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", RegistryValueKind.DWord) };
             case "keyboard-repeat":
                 return new[]
                 {
@@ -401,6 +416,41 @@ public static partial class BackupService
             ValueKind = kind.ToString(),
             Existed = exists
         };
+    }
+
+    // nic-power-save-off 逐物理网卡备份：每块待改的网卡一条 registry 记录
+    //（PnPCapabilities 已含 0x18 位的不改也不备份）；原值不存在时 Existed=false，
+    // 还原走删除路径。与 ApplyNicPowerSaveOff 的过滤口径（NCF_VIRTUAL/DriverDesc）保持一致。
+    private static IReadOnlyList<BackupRecord> CaptureNicPowerSaveBackups(string id)
+    {
+        const string classPath = @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}";
+        var records = new List<BackupRecord>();
+        using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+        using var classKey = baseKey.OpenSubKey(classPath);
+        if (classKey is null)
+            return records;
+
+        foreach (var sub in classKey.GetSubKeyNames())
+        {
+            using var key = classKey.OpenSubKey(sub);
+            if (key is null) continue;
+            if (key.GetValue("Characteristics") is int caps && (caps & 0x1) != 0) continue;
+            if (key.GetValue("DriverDesc") is not string) continue;
+            var current = key.GetValue("PnPCapabilities");
+            if (current is int v && (v & 0x18) == 0x18) continue;
+            records.Add(new BackupRecord
+            {
+                Id = id,
+                Kind = "registry",
+                Hive = RegistryHive.LocalMachine.ToString(),
+                Path = classPath + "\\" + sub,
+                Name = "PnPCapabilities",
+                OldValue = current,
+                ValueKind = RegistryValueKind.DWord.ToString(),
+                Existed = current is not null
+            });
+        }
+        return records;
     }
 
 }

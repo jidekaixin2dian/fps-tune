@@ -669,4 +669,20 @@
     <s:String x:Key="Str.CompareHeaderSessionA">A</s:String>
     <s:String x:Key="Str.CompareHeaderSessionB">B</s:String>
     <s:String x:Key="Str.CompareHeaderDelta">差值 B−A</s:String>
+    <s:String x:Key="Str.MouseBufferEnlarged">鼠标缓冲区已扩容到 50</s:String>
+    <s:String x:Key="Str.PcieAspmFail">关闭 PCIe 链路省电失败：{0}</s:String>
+    <s:String x:Key="Str.PowerSkippedUnsupported">平台不支持，已跳过：{0}</s:String>
+    <s:String x:Key="Str.PowerApplyFail">应用电源隐藏项失败：{0}</s:String>
+    <s:String x:Key="Str.PcieAspmOffDone">已关闭 PCIe 链路省电（ASPM）</s:String>
+    <s:String x:Key="Str.NicRegOpenFail">无法打开网卡类注册表键（需要管理员）</s:String>
+    <s:String x:Key="Str.NicAllAlready">网卡节能本就全部关闭（{0} 块）</s:String>
+    <s:String x:Key="Str.NicNoneFound">未发现可调整的物理网卡</s:String>
+    <s:String x:Key="Str.NicOffDone">已关闭 {0} 块网卡的节能</s:String>
+    <s:String x:Key="Str.NicAlreadyPart">；{0} 块本已关闭</s:String>
+    <s:String x:Key="Str.ReapplyPowerPlan">重新应用电源计划</s:String>
+    <s:String x:Key="Str.AspmReadFail">无法读取 PCIe 链路省电设置</s:String>
+    <s:String x:Key="Str.NicDetectReadFail">无法读取网卡类注册表键</s:String>
+    <s:String x:Key="Str.NicDetectNone">未发现物理网卡</s:String>
+    <s:String x:Key="Str.NicDetectStatus">已关闭 {0}/{1} 块网卡节能</s:String>
+    <s:String x:Key="Str.NicDetectError">读取网卡节能状态失败：{0}</s:String>
 </ResourceDictionary>
