@@ -285,7 +285,7 @@ public static class ExperimentRunner
                 DeltaPct: Math.Round((testAvg - baseAvg) / baseAvg * 100, 2),
                 At: DateTime.Now,
                 DurationSec: options.DurationSec,
-                Mode: samples.Mode));
+                Mode: samples.Mode ?? "auto"));
         }
 
         // 4) 无效 → 自动还原（只还原本步骤真正改过、且记录在本次快照里的项）

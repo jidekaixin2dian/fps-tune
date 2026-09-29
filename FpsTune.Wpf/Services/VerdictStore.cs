@@ -81,6 +81,15 @@ public static class VerdictStore
     public static VerdictEntry? FindItem(string itemId)
         => Load().FirstOrDefault(v => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId);
 
+    /// <summary>项级徽标文案（本机实测 Δ 平均帧率百分比，带符号；无记录返回 null）。</summary>
+    public static string? BadgeFor(string itemId, IReadOnlyList<VerdictEntry>? preloaded = null)
+    {
+        var hit = preloaded is null
+            ? FindItem(itemId)
+            : preloaded.FirstOrDefault(v => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId);
+        return hit is null ? null : Str.T("Str.VerdictBadge", hit.DeltaPct);
+    }
+
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         WriteIndented = true,

@@ -9,6 +9,8 @@ using System.Windows.Shapes;
 using FpsTune.Wpf.Services;
 using Path = System.IO.Path;
 
+using FpsTune.Wpf.Core;
+
 namespace FpsTune.Wpf.Views;
 
 /// <summary>
@@ -37,8 +39,108 @@ public partial class AbExperimentView : UserControl
         Loaded += (_, _) =>
         {
             ReloadWizard();
+            RefreshCustomSummary();
+            RefreshVerdicts();
             _ = RefreshPresentMonAsync();
         };
+    }
+
+    // ---------- 0.2.0 M1：自定义实测 + 判定结论 ----------
+
+    private void RefreshCustomSummary()
+    {
+        var ids = AppState.SelectedIds.OrderBy(id => id, StringComparer.Ordinal).ToList();
+        if (ids.Count == 0)
+        {
+            CustomSelectionText.Text = Str.T("Str.CustomRunEmpty");
+            CustomRunButton.IsEnabled = false;
+            return;
+        }
+        var names = ids.Select(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id).ToList();
+        var reboot = ids.Where(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.Reboot == true).ToList();
+        CustomSelectionText.Text = Str.T("Str.CustomRunSelection", ids.Count, string.Join(", ", names));
+        if (reboot.Count > 0)
+            CustomSelectionText.Text += "\n" + Str.T("Str.CustomRunRebootHint", string.Join(", ", reboot));
+        // 引擎会拒绝需重启项；按钮保持可用，让引擎给出完整错误信息（与向导步同口径）。
+        CustomRunButton.IsEnabled = !_running;
+    }
+
+    private async void CustomRunButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_running || _runCancellation is not null) return;
+        var ids = AppState.SelectedIds.OrderBy(id => id, StringComparer.Ordinal).ToArray();
+        if (ids.Length == 0) return;
+
+        _running = true;
+        CustomRunButton.IsEnabled = false;
+        using var cancellation = new CancellationTokenSource();
+        _runCancellation = cancellation;
+        CancelRunButton.IsEnabled = true;
+        try
+        {
+            StatusText.Text = Str.T("Str.CustomRunning");
+            var (exitCode, json) = await ExperimentRunner.RunAsync(
+                "custom", new ExperimentRunner.Options { Items = ids }, cancellation.Token);
+            RawBox.Text = exitCode == 0 ? json : $"exit={exitCode}\n\n{json}";
+            StatusText.Text = exitCode == 0 ? Str.T("Str.CustomDone") : Str.T("Str.CustomFailed");
+            RefreshVerdicts();
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = Str.T("Str.CustomCancelled");
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = Str.T("Str.CustomFailed") + " " + ex.Message;
+        }
+        finally
+        {
+            _runCancellation = null;
+            _running = false;
+            CustomRunButton.IsEnabled = AppState.SelectedIds.Count > 0;
+            CancelRunButton.IsEnabled = false;
+        }
+    }
+
+    private void RefreshVerdicts()
+    {
+        var verdicts = VerdictStore.Load();
+        VerdictEmptyText.Visibility = verdicts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        VerdictList.ItemsSource = verdicts.Select(v => new VerdictVm(
+            string.Join(", ", v.Items.Select(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id)),
+            Str.T(v.Keep ? "Str.ReportKeep" : "Str.ReportRevert") + " · " +
+            Str.T("Str.VerdictMeta", v.AvgFpsBase, v.AvgFpsTest, v.At.ToString("MM-dd HH:mm"), v.DurationSec, v.Game ?? "-"),
+            Str.T("Str.VerdictDelta", v.DeltaPct),
+            v.DeltaPct < 0)).ToList();
+    }
+
+    private sealed record VerdictVm(string ItemsText, string MetaText, string DeltaText, bool IsNegative);
+
+    private void ExportReportButton_Click(object sender, RoutedEventArgs e)
+    {
+        var verdicts = VerdictStore.Load();
+        if (verdicts.Count == 0)
+        {
+            DialogService.Warning(Str.T("Str.ExportReport"), Str.T("Str.VerdictEmpty"));
+            return;
+        }
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = Str.T("Str.ExportReport"),
+            Filter = "Markdown|*.md",
+            FileName = $"fps-tune-verdicts-{DateTime.Now:yyyyMMdd-HHmm}.md",
+        };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+            return;
+        try
+        {
+            File.WriteAllText(dialog.FileName, VerdictReport.Build(verdicts), new System.Text.UTF8Encoding(false));
+            DialogService.Info(Str.T("Str.ExportReport"), Str.T("Str.ReportSaved", dialog.FileName));
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.ExportReport"), Str.T("Str.ReportExportFailed", ex.Message));
+        }
     }
 
     // ---------- PresentMon 前置探测（P2-12） ----------

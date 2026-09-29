@@ -207,7 +207,9 @@ public partial class ConsoleView : UserControl
         var selected = _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToHashSet();
         foreach (var row in _rows) row.Item.PropertyChanged -= ItemChanged;
         _source = AppState.Items;
-        _rows = _source.Select((item, index) => new Row($"{index + 1:00}", new OptimizationItemViewModel(item))).ToList();
+        var verdicts = VerdictStore.Load();
+        _rows = _source.Select((item, index) => new Row($"{index + 1:00}",
+            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts) })).ToList();
         foreach (var row in _rows) row.Item.PropertyChanged += ItemChanged;
         SetChecks(_preset == "custom" ? selected : OptimizationCatalog.ResolvePreset(_preset).ToHashSet());
         var count = _source.Count(i => i.Optimized);
@@ -242,6 +244,10 @@ public partial class ConsoleView : UserControl
     private void UpdateSelection()
     {
         UpdatePreparation();
+        // 0.2.0 M1：勾选集合同步给 A/B 页自定义实测。
+        AppState.SelectedIds.Clear();
+        foreach (var id in _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id))
+            AppState.SelectedIds.Add(id);
         var count = _rows.Count(r => r.Item.IsChecked);
         SelectionText.Text = _rows.Count == 0 ? Str.T("Str.NoDetectResult") : $"已选择 {count} 项 / 共 {_rows.Count} 项";
         ReviewButton.IsEnabled = count > 0 && !_refreshing;

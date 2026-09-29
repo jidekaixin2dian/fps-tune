@@ -130,6 +130,9 @@
                                     <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
                                                Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
+                                    <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
+                                    <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="10.5" Margin="0,3,0,0"
+                                               Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
                                 <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
                                            Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>

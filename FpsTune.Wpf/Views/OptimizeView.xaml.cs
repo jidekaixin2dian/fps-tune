@@ -71,6 +71,10 @@ public partial class OptimizeView : UserControl
 
     private void UpdateSelectionSummary()
     {
+        // 0.2.0 M1：勾选集合同步给 A/B 页自定义实测。
+        AppState.SelectedIds.Clear();
+        foreach (var id in Items.Where(i => i.IsChecked).Select(i => i.Id))
+            AppState.SelectedIds.Add(id);
         var selected = Items.Where(i => i.IsChecked).ToList();
         SelectionSummary.Text = $"待应用 {selected.Count} 项  ·  {selected.Count(i => i.RequiresAdmin)} 项需管理员  ·  {selected.Count(i => i.RequiresReboot)} 项需重启";
     }
@@ -138,9 +142,11 @@ public partial class OptimizeView : UserControl
     private bool _suppressPresetAutoCheck;
 
     private List<OptimizationItem>? _sourceItems;
+    private IReadOnlyList<VerdictStore.VerdictEntry> _verdicts = [];
 
     public void ReloadFromState()
     {
+        _verdicts = VerdictStore.Load();
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
         if (ReferenceEquals(_sourceItems, AppState.Items)) return;
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
@@ -150,7 +156,11 @@ public partial class OptimizeView : UserControl
         Items.Clear();
         foreach (var item in AppState.Items)
         {
-            var vm = new OptimizationItemViewModel(item) { IsChecked = selected.Contains(item.Id) };
+            var vm = new OptimizationItemViewModel(item)
+            {
+                IsChecked = selected.Contains(item.Id),
+                VerdictBadge = VerdictStore.BadgeFor(item.Id, _verdicts),
+            };
             vm.PropertyChanged += SelectionChanged;
             Items.Add(vm);
         }

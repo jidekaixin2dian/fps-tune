@@ -19,6 +19,9 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public string StatusText => Optimized ? "已达标" : "未应用";
     public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
+    /// <summary>0.2.0 M1：项级实测徽标（无记录为 null，行内零宽不占位）；由页面注入。</summary>
+    public string? VerdictBadge { get; set; }
+
     public OptimizationItemViewModel(OptimizationItem item)
     {
         Id = item.Id;

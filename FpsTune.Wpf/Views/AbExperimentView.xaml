@@ -13,6 +13,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 页头 -->
@@ -222,8 +224,65 @@
             </Grid>
         </Border>
 
+        <!-- 0.2.0 M1：自定义实测（整套实测主模式 / 单项深测 size-1） -->
+        <Border Grid.Row="5" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.CustomRunTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.CustomRunHint}"
+                                   Style="{StaticResource MutedTextStyle}" FontSize="11.5" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button x:Name="CustomRunButton" Content="{DynamicResource Str.CustomRunButton}"
+                            Style="{StaticResource PrimaryButtonStyle}" MinWidth="132" Height="36"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Click="CustomRunButton_Click"/>
+                </Grid>
+                <TextBlock x:Name="CustomSelectionText"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 0.2.0 M1：本机实测结论（verdicts.json 沉淀） + 报告导出 -->
+        <Border Grid.Row="6" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid>
+                    <TextBlock Text="{DynamicResource Str.VerdictListTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <Button x:Name="ExportReportButton" Content="{DynamicResource Str.ExportReport}"
+                            Style="{StaticResource SecondaryButtonStyle}" MinWidth="116" Height="30"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Click="ExportReportButton_Click"/>
+                </Grid>
+                <TextBlock x:Name="VerdictEmptyText"
+                           Text="{DynamicResource Str.VerdictEmpty}"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
+                <ItemsControl x:Name="VerdictList" Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,6" Padding="12,8" CornerRadius="{StaticResource RadiusControl}"
+                                    Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding ItemsText}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding MetaText}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding DeltaText}" FontSize="14" FontWeight="SemiBold"
+                                               VerticalAlignment="Center" Margin="14,0,0,0">
+                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/><Style.Triggers><DataTrigger Binding="{Binding IsNegative}" Value="True"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
         <!-- 原始输出 -->
-        <Border Grid.Row="5" Style="{StaticResource CardStyle}">
+        <Border Grid.Row="7" Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

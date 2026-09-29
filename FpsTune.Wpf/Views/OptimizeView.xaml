@@ -171,9 +171,13 @@
                                                    FontSize="12"/>
                                     </Border>
                                     </WrapPanel></StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" Margin="8,0">
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                                        <TextBlock Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" Margin="8,0">
                                         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-                                    </TextBlock>
+                                        </TextBlock>
+                                        <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
+                                        <TextBlock Text="{Binding VerdictBadge}" FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
+                                    </StackPanel>
                                     <CheckBox Grid.Column="2"
                                               Style="{StaticResource ToggleSwitchStyle}"
                                               IsChecked="{Binding IsChecked}" Click="ItemToggle_Click" AutomationProperties.Name="{Binding Name}"
