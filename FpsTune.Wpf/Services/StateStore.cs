@@ -90,6 +90,163 @@ public static class StateStore
         }
     }
 
+    // ---------- 0.2.0 M2：多游戏档案与逐游戏检测快照 ----------
+    // 红线约束（PLAN-0.2.0 v2）：catalog 不引入游戏维度；last-detect.json 是 CLI -Detect -Json
+    // 的同一结构、有测试逐字节依赖——逐游戏快照另存（last-detect-<id>.json），绝不写它。
+
+    private static string GamesFile => Path.Combine(BaseDir, "games.json");
+
+    public sealed record GameProfile(string Id, string ExePath, string Name, DateTime AddedAt);
+
+    private static readonly JsonSerializerOptions GamesJsonOpts = new() { WriteIndented = true };
+
+    /// <summary>读取游戏档案。首次访问时把旧 game-path.txt 迁移为单一档案（幂等）。</summary>
+    public static List<GameProfile> LoadGames()
+    {
+        EnsureGamesMigrated();
+        try
+        {
+            if (!File.Exists(GamesFile))
+                return [];
+            return JsonSerializer.Deserialize<List<GameProfile>>(File.ReadAllText(GamesFile), GamesJsonOpts) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    public static void SaveGames(IEnumerable<GameProfile> profiles)
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            AtomicFile.WriteAllText(
+                GamesFile,
+                JsonSerializer.Serialize(profiles.ToList(), GamesJsonOpts),
+                new UTF8Encoding(false));
+        }
+        catch
+        {
+            // 档案写入失败不影响检测与切换的内存态；下次保存重试。
+        }
+    }
+
+    public static GameProfile? FindGameByPath(string? exePath)
+    {
+        if (string.IsNullOrWhiteSpace(exePath))
+            return null;
+        return LoadGames().FirstOrDefault(g =>
+            string.Equals(g.ExePath, exePath.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    public static GameProfile AddGame(string exePath)
+    {
+        var path = exePath.Trim();
+        var existing = FindGameByPath(path);
+        if (existing is not null)
+            return existing;
+        var profile = new GameProfile(
+            "g" + Guid.NewGuid().ToString("N")[..8],
+            path,
+            Path.GetFileNameWithoutExtension(path),
+            DateTime.Now);
+        var games = LoadGames();
+        games.Add(profile);
+        SaveGames(games);
+        return profile;
+    }
+
+    private static void EnsureGamesMigrated()
+    {
+        try
+        {
+            if (File.Exists(GamesFile))
+                return;
+            var legacy = LoadGamePath();
+            if (string.IsNullOrWhiteSpace(legacy))
+                return;
+            var profile = new GameProfile(
+                "g" + Guid.NewGuid().ToString("N")[..8],
+                legacy.Trim(),
+                Path.GetFileNameWithoutExtension(legacy.Trim()),
+                DateTime.Now);
+            Directory.CreateDirectory(BaseDir);
+            AtomicFile.WriteAllText(
+                GamesFile,
+                JsonSerializer.Serialize(new List<GameProfile> { profile }, GamesJsonOpts),
+                new UTF8Encoding(false));
+        }
+        catch
+        {
+            // 迁移失败不阻塞启动：下次访问重试，期间表现为"无游戏档案"。
+        }
+    }
+
+    private static string GameDetectFile(string gameId) => Path.Combine(BaseDir, $"last-detect-{gameId}.json");
+    private static string GameDetectMetaFile(string gameId) => Path.Combine(BaseDir, $"last-detect-{gameId}.meta.json");
+
+    /// <summary>逐游戏检测快照（原子写）。与 CLI 契约文件 last-detect.json 完全独立。</summary>
+    public static void SaveDetectForGame(string gameId, JsonObject root)
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            AtomicFile.WriteAllText(
+                GameDetectFile(gameId),
+                root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }),
+                new UTF8Encoding(false));
+        }
+        catch
+        {
+        }
+    }
+
+    public static JsonObject? LoadDetectForGame(string gameId)
+    {
+        try
+        {
+            if (!File.Exists(GameDetectFile(gameId)))
+                return null;
+            return JsonNode.Parse(File.ReadAllText(GameDetectFile(gameId), Encoding.UTF8)) as JsonObject;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static void SaveDetectMetaForGame(string gameId, DetectMeta meta)
+    {
+        try
+        {
+            Directory.CreateDirectory(BaseDir);
+            AtomicFile.WriteAllText(
+                GameDetectMetaFile(gameId),
+                JsonSerializer.Serialize(meta),
+                new UTF8Encoding(false));
+        }
+        catch
+        {
+        }
+    }
+
+    /// <summary>当前游戏的检测元数据；该游戏无快照时回退全局 meta（P3-4 文件）。</summary>
+    public static DetectMeta? LoadDetectMetaForGame(string gameId)
+    {
+        try
+        {
+            var file = GameDetectMetaFile(gameId);
+            if (!File.Exists(file))
+                return LoadDetectMeta();
+            return JsonSerializer.Deserialize<DetectMeta>(File.ReadAllText(file, Encoding.UTF8));
+        }
+        catch
+        {
+            return LoadDetectMeta();
+        }
+    }
+
     private static string GamePathFile => Path.Combine(BaseDir, "game-path.txt");
 
     /// <summary>保存用户在设置里手动指定的游戏 EXE 路径（优先于自动检测）。</summary>

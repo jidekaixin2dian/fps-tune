@@ -4,6 +4,7 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>0.2.0 M1：实测判定沉淀存储——upsert 语义、规范化键、读写往返。</summary>
+[Collection("BackupService serial")]
 public sealed class VerdictStoreTests : IDisposable
 {
     private readonly string _dir = Path.Combine(

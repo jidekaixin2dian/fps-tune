@@ -6,6 +6,7 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>P3-4 检测元数据（last-detect.meta.json）的存取语义：原子写、损坏容错、独立于引擎输出。</summary>
+[Collection("BackupService serial")]
 public sealed class DetectMetaTests : IDisposable
 {
     private readonly string _baseDir = Path.Combine(
