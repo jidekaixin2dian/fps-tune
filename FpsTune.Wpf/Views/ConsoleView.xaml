@@ -26,6 +26,11 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                    <!-- 0.2.0 M2：多游戏切换器（末项 = 添加游戏） -->
+                    <ComboBox x:Name="GameSwitcher" MinWidth="240" Height="30" Margin="0,0,0,8"
+                              Style="{StaticResource SelectComboBoxStyle}"
+                              AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
+                              SelectionChanged="GameSwitcher_SelectionChanged"/>
                     <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12.5" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 </StackPanel>

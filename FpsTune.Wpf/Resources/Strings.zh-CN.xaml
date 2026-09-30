@@ -742,4 +742,9 @@
     <s:String x:Key="Str.ReportColDate">时间</s:String>
     <s:String x:Key="Str.ReportDisclaimer">口径说明：Δ平均帧率为「应用后采样均值 − 基线采样均值」的相对变化，采样期间为真实游玩画面；运行间噪声可能大于单项优化的真实效应，结论仅供本机参考。</s:String>
     <s:String x:Key="Str.ReportSourceNote">原始采样与实验状态保存在本机 %LOCALAPPDATA%\FpsTune\experiment，可复现。</s:String>
+    <s:String x:Key="Str.GameSwitcherLabel">游戏</s:String>
+    <s:String x:Key="Str.GameSwitcherAdd">＋ 添加游戏…</s:String>
+    <s:String x:Key="Str.PickGameExeTitle">请选择游戏主程序</s:String>
+    <s:String x:Key="Str.GameSwitchNeedDetect">已切换到新游戏，还没有它的检测快照——点「运行检测」为它建立基线。</s:String>
+    <s:String x:Key="Str.PickGameExeFilter">游戏主程序|*.exe</s:String>
 </ResourceDictionary>

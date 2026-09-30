@@ -742,4 +742,9 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReportColDate">Date</s:String>
     <s:String x:Key="Str.ReportDisclaimer">Reading guide: ΔAvg FPS is the relative change between the applied-phase sample mean and the baseline mean, captured on real gameplay. Run-to-run noise may exceed the true effect of a single item; verdicts are for this machine only.</s:String>
     <s:String x:Key="Str.ReportSourceNote">Raw samples and experiment state are kept in %LOCALAPPDATA%\FpsTune\experiment on this machine and can be reproduced.</s:String>
+    <s:String x:Key="Str.GameSwitcherLabel">Game</s:String>
+    <s:String x:Key="Str.GameSwitcherAdd">＋ Add a game…</s:String>
+    <s:String x:Key="Str.PickGameExeTitle">Pick the game executable</s:String>
+    <s:String x:Key="Str.GameSwitchNeedDetect">Switched to a new game — no detection snapshot for it yet. Click "Run detection" to build its baseline.</s:String>
+    <s:String x:Key="Str.PickGameExeFilter">Game executable|*.exe</s:String>
 </ResourceDictionary>

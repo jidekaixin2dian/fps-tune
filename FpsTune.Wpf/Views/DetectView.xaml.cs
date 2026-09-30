@@ -268,6 +268,13 @@ public partial class DetectView : UserControl
 
             StateStore.SaveDetect(root);
             StateStore.SaveDetectMeta(DateTime.Now, sw.ElapsedMilliseconds);
+            // 0.2.0 M2：同步写入当前游戏的逐游戏快照（未建档的游戏只写全局，不建档）。
+            var currentGameId = StateStore.FindGameByPath(AppState.GamePath)?.Id;
+            if (currentGameId is not null)
+            {
+                StateStore.SaveDetectForGame(currentGameId, root);
+                StateStore.SaveDetectMetaForGame(currentGameId, new StateStore.DetectMeta(DateTime.Now, sw.ElapsedMilliseconds));
+            }
             ApplyDetectData(root, showDetails: true);
             RefreshLastDetectText();
             _hasSavedState = true;
@@ -289,7 +296,11 @@ public partial class DetectView : UserControl
 
     private void LoadSavedState()
     {
-        var saved = StateStore.LoadDetect();
+        // 0.2.0 M2：优先当前游戏的逐游戏快照；没有（未建档/未检测）再回退全局 last-detect.json。
+        var gid = StateStore.FindGameByPath(AppState.GamePath)?.Id;
+        var saved = gid is null
+            ? StateStore.LoadDetect()
+            : (StateStore.LoadDetectForGame(gid) ?? StateStore.LoadDetect());
         if (saved is not JsonObject root)
             return;
 
@@ -298,10 +309,44 @@ public partial class DetectView : UserControl
         OutputBox.Text = Str.T("Str.LoadedLastScan");
     }
 
+    /// <summary>0.2.0 M2：概览页切换游戏后同步本页——有快照灌快照，无快照清空待自动检测。</summary>
+    public void OnGameSwitched()
+    {
+        if (_detectionInFlight) return;
+        var gid = StateStore.FindGameByPath(AppState.GamePath)?.Id;
+        var root = gid is null ? null : StateStore.LoadDetectForGame(gid);
+        if (root is not null)
+        {
+            ApplyDetectData(root, showDetails: false);
+            _hasSavedState = true;
+        }
+        else
+        {
+            _hasSavedState = false;
+            ResetDetectedState();
+        }
+        RefreshLastDetectText();
+    }
+
+    private void ResetDetectedState()
+    {
+        AppState.DetectJson = null;
+        AppState.Items = new List<OptimizationItem>();
+        DetectItemList.ItemsSource = new List<OptimizationItemViewModel>();
+        CheckList.ItemsSource = new List<object>();
+        CpuText.Text = "--"; GpuText.Text = "--"; RamText.Text = "--"; OsText.Text = "--";
+        LaptopText.Text = "--"; AdminText.Text = "--";
+        GamePathText.Text = AppState.GamePath ?? "--";
+        OutputBox.Text = Str.T("Str.GameSwitchNeedDetect");
+    }
+
     /// <summary>P3-4：页头状态行——上次检测的完成时间与耗时（未检测过时给出动作指引）。</summary>
     private void RefreshLastDetectText()
     {
-        var meta = StateStore.LoadDetectMeta();
+        // 0.2.0 M2：显示当前游戏的检测元数据（无逐游戏快照时回退全局）。
+        var meta = StateStore.FindGameByPath(AppState.GamePath) is { } g
+            ? StateStore.LoadDetectMetaForGame(g.Id)
+            : StateStore.LoadDetectMeta();
         LastDetectText.Text = meta is null
             ? Str.T("Str.NeverDetected")
             : Str.T("Str.LastDetectLabel",
@@ -330,35 +375,8 @@ public partial class DetectView : UserControl
         var checks = root["checks"]?.AsArray();
         CheckList.ItemsSource = BuildCheckItems(checks);
 
-        var detectedItems = new List<OptimizationItem>();
-        var items = root["items"]?.AsArray();
-        if (items is not null)
-        {
-            foreach (var item in items)
-            {
-                var id = item?["id"]?.GetValue<string>() ?? "";
-                var name = item?["name"]?.GetValue<string>() ?? "";
-                var desc = item?["desc"]?.GetValue<string>()
-                    ?? item?["description"]?.GetValue<string>()
-                    ?? "";
-                var sideEffect = item?["sideEffect"]?.GetValue<string>() ?? "";
-                var admin = item?["requiresAdmin"]?.GetValue<bool>()
-                    ?? item?["needsAdmin"]?.GetValue<bool>()
-                    ?? item?["admin"]?.GetValue<bool>()
-                    ?? false;
-                var reboot = item?["requiresReboot"]?.GetValue<bool>()
-                    ?? item?["needsReboot"]?.GetValue<bool>()
-                    ?? item?["reboot"]?.GetValue<bool>()
-                    ?? false;
-                var optimized = item?["optimized"]?.GetValue<bool>() ?? false;
-                var current = item?["current"]?.GetValue<string>() ?? "";
-                var isDefault = item?["default"]?.GetValue<bool>() ?? false;
-                var group = item?["group"]?.GetValue<string>() ?? "";
-                detectedItems.Add(new OptimizationItem(id, name, desc, sideEffect, admin, reboot, optimized, current, isDefault, group));
-            }
-        }
-
-        AppState.Items = detectedItems;
+        // 0.2.0 M2：解析逻辑抽到 DetectionData 共用（概览页切游戏灌快照走同一口径）。
+        AppState.Items = DetectionData.ParseItems(root);
         var viewModels = AppState.Items
             .Select(i => new OptimizationItemViewModel(i))
             .ToList();

@@ -222,6 +222,13 @@ public partial class MainWindow : Window
 
     internal Task<bool> RefreshDetectionAsync() => ((DetectView)GetPage("detect")).RunDetectionAsync();
 
+    /// <summary>0.2.0 M2：概览页切换游戏后，同步检测页（未创建则创建）状态到当前游戏。</summary>
+    internal void NotifyGameSwitched()
+    {
+        if (GetPage("detect") is DetectView detect)
+            detect.OnGameSwitched();
+    }
+
     internal void OpenDeltaSession()
     {
         NavigateTo("session");

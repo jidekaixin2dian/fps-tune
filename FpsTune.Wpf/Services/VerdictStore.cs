@@ -81,12 +81,15 @@ public static class VerdictStore
     public static VerdictEntry? FindItem(string itemId)
         => Load().FirstOrDefault(v => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId);
 
-    /// <summary>项级徽标文案（本机实测 Δ 平均帧率百分比，带符号；无记录返回 null）。</summary>
-    public static string? BadgeFor(string itemId, IReadOnlyList<VerdictEntry>? preloaded = null)
+    /// <summary>项级徽标文案（本机实测 Δ 平均帧率百分比，带符号；无记录返回 null）。
+    /// 0.2.0 M2：按当前游戏过滤——同一优化项在不同游戏的实测结论互不串台。</summary>
+    public static string? BadgeFor(string itemId, IReadOnlyList<VerdictEntry>? preloaded = null, string? gameName = null)
     {
+        bool Match(VerdictEntry v) => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId
+            && (gameName is null || string.Equals(v.Game, gameName, StringComparison.OrdinalIgnoreCase));
         var hit = preloaded is null
-            ? FindItem(itemId)
-            : preloaded.FirstOrDefault(v => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId);
+            ? Load().FirstOrDefault(Match)
+            : preloaded.FirstOrDefault(Match);
         return hit is null ? null : Str.T("Str.VerdictBadge", hit.DeltaPct);
     }
 

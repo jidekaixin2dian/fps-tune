@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.IO;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 
@@ -62,7 +63,7 @@ public partial class ConsoleView : UserControl
                 var picker = new Microsoft.Win32.OpenFileDialog
                 {
                     Title = Str.T("Str.PickGameExeHint"),
-                    Filter = "游戏主程序|*.exe", CheckFileExists = true
+                    Filter = Str.T("Str.PickGameExeFilter"), CheckFileExists = true
                 };
                 if (picker.ShowDialog(main) != true) return;
                 path = picker.FileName;
@@ -72,14 +73,15 @@ public partial class ConsoleView : UserControl
                 DialogService.Warning("请选择游戏主程序", Str.T("Str.MustPickGameExe"));
                 return;
             }
-            StateStore.SaveGamePath(path);
-            if (!string.Equals(StateStore.LoadGamePath(), path, StringComparison.OrdinalIgnoreCase))
+            var profile = StateStore.AddGame(path);   // 0.2.0 M2：定位即建档（已有档幂等返回）
+            StateStore.SaveGamePath(profile.ExePath);
+            if (!string.Equals(StateStore.LoadGamePath(), profile.ExePath, StringComparison.OrdinalIgnoreCase))
                 throw new System.IO.IOException(Str.T("Str.GamePathSaveFailed"));
-            AppState.GamePath = path;
+            AppState.GamePath = profile.ExePath;
             await RefreshDataAsync();
         }
         catch (Exception ex) { DialogService.Warning(Str.T("Str.GameLocateIncomplete"), ex.Message); }
-        finally { _locating = false; LocateDeltaButton.IsEnabled = true; UpdatePreparation(); }
+        finally { _locating = false; LocateDeltaButton.IsEnabled = true; RefreshGameSwitcher(); UpdatePreparation(); }
     }
 
     private void PrepareDelta_Click(object sender, RoutedEventArgs e)
@@ -200,6 +202,104 @@ public partial class ConsoleView : UserControl
         }
     }
 
+    // ---------- 0.2.0 M2：多游戏切换 ----------
+
+    private bool _suppressGameSwitch;
+
+    private sealed record GameSwitcherVm(string Label, string? ProfileId, string? ExePath)
+    {
+        public override string ToString() => Label;
+    }
+
+    private void RefreshGameSwitcher()
+    {
+        _suppressGameSwitch = true;
+        try
+        {
+            var profiles = StateStore.LoadGames()
+                .OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            var items = profiles.Select(g => new GameSwitcherVm(g.Name, g.Id, g.ExePath)).ToList();
+            items.Add(new GameSwitcherVm(Str.T("Str.GameSwitcherAdd"), null, null));
+            GameSwitcher.ItemsSource = items;
+            GameSwitcher.SelectedItem = items.FirstOrDefault(v => v.ExePath is not null
+                && string.Equals(v.ExePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            _suppressGameSwitch = false;
+        }
+    }
+
+    private void GameSwitcher_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressGameSwitch) return;
+        if (GameSwitcher.SelectedItem is not GameSwitcherVm vm) return;
+        if (vm.ProfileId is null)
+        {
+            AddGameViaPicker();
+            return;
+        }
+        var profile = StateStore.LoadGames().FirstOrDefault(g => g.Id == vm.ProfileId);
+        if (profile is null) return;
+        if (string.Equals(profile.ExePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) return;
+        SwitchToGame(profile);
+    }
+
+    private void AddGameViaPicker()
+    {
+        if (Window.GetWindow(this) is not MainWindow main)
+        {
+            RefreshGameSwitcher();
+            return;
+        }
+        var picker = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = Str.T("Str.PickGameExeTitle"),
+            Filter = Str.T("Str.PickGameExeFilter"), CheckFileExists = true
+        };
+        if (picker.ShowDialog(main) != true)
+        {
+            RefreshGameSwitcher();
+            return;
+        }
+        var path = picker.FileName;
+        if (!System.IO.File.Exists(path) || !string.Equals(System.IO.Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            DialogService.Warning(Str.T("Str.PickGameExeTitle"), Str.T("Str.MustPickGameExe"));
+            RefreshGameSwitcher();
+            return;
+        }
+        var profile = StateStore.AddGame(path);
+        SwitchToGame(profile, detectAfterSwitch: true);
+    }
+
+    private void SwitchToGame(StateStore.GameProfile profile, bool detectAfterSwitch = false)
+    {
+        // 切换 = 设当前游戏（game-path.txt 同步，CLI 对齐）→ 灌该游戏快照或清空 → 全页重建。
+        StateStore.SaveGamePath(profile.ExePath);
+        AppState.GamePath = profile.ExePath;
+        var root = StateStore.LoadDetectForGame(profile.Id);
+        if (root is not null)
+        {
+            AppState.DetectJson = root;
+            AppState.Items = DetectionData.ParseItems(root);
+        }
+        else
+        {
+            AppState.DetectJson = null;
+            AppState.Items = new List<OptimizationItem>();
+        }
+        _source = null;   // 绕过 RebuildRows 的同引用短路，强制重建
+        RebuildRows();
+        if (Window.GetWindow(this) is MainWindow main)
+        {
+            main.NotifyGameSwitched();
+            if (detectAfterSwitch && AppState.Items.Count == 0)
+                _ = main.RefreshDetectionAsync();
+        }
+        RefreshGameSwitcher();
+    }
+
     private void RebuildRows()
     {
         UpdatePreparation();
@@ -208,8 +308,9 @@ public partial class ConsoleView : UserControl
         foreach (var row in _rows) row.Item.PropertyChanged -= ItemChanged;
         _source = AppState.Items;
         var verdicts = VerdictStore.Load();
+        var currentGame = Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         _rows = _source.Select((item, index) => new Row($"{index + 1:00}",
-            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts) })).ToList();
+            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts, currentGame) })).ToList();
         foreach (var row in _rows) row.Item.PropertyChanged += ItemChanged;
         SetChecks(_preset == "custom" ? selected : OptimizationCatalog.ResolvePreset(_preset).ToHashSet());
         var count = _source.Count(i => i.Optimized);

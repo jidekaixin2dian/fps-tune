@@ -147,6 +147,7 @@ public partial class OptimizeView : UserControl
     public void ReloadFromState()
     {
         _verdicts = VerdictStore.Load();
+        var currentGame = System.IO.Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
         if (ReferenceEquals(_sourceItems, AppState.Items)) return;
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
@@ -159,7 +160,7 @@ public partial class OptimizeView : UserControl
             var vm = new OptimizationItemViewModel(item)
             {
                 IsChecked = selected.Contains(item.Id),
-                VerdictBadge = VerdictStore.BadgeFor(item.Id, _verdicts),
+                VerdictBadge = VerdictStore.BadgeFor(item.Id, _verdicts, currentGame),
             };
             vm.PropertyChanged += SelectionChanged;
             Items.Add(vm);
