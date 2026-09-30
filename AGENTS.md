@@ -52,6 +52,11 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 338
    | 7 | **`git push`** | ← 拍板后 |
    | 8 | **上传 Release**：`gh release create`（把第 3 步已产出的资产传上去） | ← 拍板后 |
 
+   - **Release 标记口径（用户 2026-09-30 变更）**：beta 版发布后执行
+     `gh release edit <tag> --prerelease=false --latest`——GitHub Latest 只认非预发布版，
+     不设 Latest 会停在 v0.1.3-beta（早期纪律缺口所致）。应用内更新检查用列表端点，
+     不受 pre-release 标记影响。
+
    - **第 3–5 步是"拍板前允许"的动作**：构建产物 + 部署到 `D:\FpsTune` + 启动，就是
      "把效果给用户看"的手段。这与"未拍板不得发版"**不冲突**。
    - **`publish-release.ps1` / `build-installer.ps1` 是构建脚本，不是发布动作**——它们只写 `dist/`，
