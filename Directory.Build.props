@@ -22,7 +22,8 @@
     <!-- 0.1.18 = P3-10 catalog 扩展三项（鼠标缓冲扩容 / PCIe ASPM 关闭 / 网卡节能关闭，用户批准落地） -->
     <!-- 0.2.0-beta.1 = M1 实测闭环（自定义实测 + 判定沉淀 + 徽标 + 报告导出）+ C-A 瓶颈判定 +
          C-E 会话 FPS + C-C 一键反馈流（beta.1 全量内容，范围见 PLAN-0.2.0 v3） -->
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <!-- 0.2.1-beta = M2 多游戏上下文（游戏档案 + 逐游戏快照 + 概览卡切换器，范围见 PLAN-0.2.0 v3） -->
+    <VersionPrefix>0.2.1</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
