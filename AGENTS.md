@@ -139,7 +139,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 338
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
 | 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
-| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `41540c3` = 0.1.14 候选，部署流程见硬纪律第 7 条），不是源码 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `66c0ab3` = 0.2.0-beta.1 已发布，部署流程见硬纪律第 7 条），不是源码 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
@@ -150,7 +150,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 338
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（0.1.16-beta 已发布版 @ 11398ea，实测 ProductVersion 确认；唯一回滚备份 -2f97 = 0.1.15 候选，2026-09-29 用户拍板清理了其余 15 个旧备份），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（0.2.0-beta.1 已发布版 @ 66c0ab3，实测 ProductVersion 确认；回滚备份 -1139 = 0.1.18 / -00f6 = 0.1.17 / -2f97 = 0.1.15），开始菜单 .lnk 也指向它；只读，别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 

@@ -16,8 +16,8 @@ C# WPF + .NET 10; `FpsTune.exe` doubles as a headless CLI (command line / AI-age
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD5)
 
-Version line 0.1 Beta: usable today, still converging; breaking changes are called out in release notes.
-1.x (including 1.6.X) is **unmaintained** (frozen at `legacy/1.x`); use 0.1 Beta.
+Version line 0.2 Beta (the measurement loop lands in 0.2.0): usable today, still converging; breaking changes are called out in release notes.
+1.x (including 1.6.X) is **unmaintained** (frozen at `legacy/1.x`); use 0.2 Beta.
 
 ## It tunes Windows, never the game
 
@@ -54,9 +54,19 @@ asks for consent and verifies SHA-256 first.
 |---|---|
 | ![Detection](assets/screenshots/02-detect.png) | ![Optimization](assets/screenshots/03-optimize.png) |
 
-| Performance sessions: local sampling + heuristic insight | A/B experiment: baseline, three candidate groups, rule-based verdict |
+| Performance sessions: local sampling + bottleneck verdict + insights | A/B experiment: baseline, candidate / custom groups, rule-based verdict |
 |---|---|
 | ![Sessions](assets/screenshots/04-session.png) | ![A/B experiment](assets/screenshots/05-ab-experiment.png) |
+
+**Measurement loop (0.2.0+)**: the A/B page can run the items currently checked on the
+Optimize/Overview page as a **custom group** (baseline sampling → apply with its own backup →
+sample again → rule-based keep or auto-revert; checking exactly one item gives a single-item deep
+test; items that need a restart are explicitly rejected since a restart invalidates the baseline).
+Verdicts persist locally and surface in the UI: optimization items carry a "Measured +x.x% FPS"
+badge (only shown when data exists), and the A/B page lists verdicts with a one-click **Markdown
+report export** (test conditions and reading guide included). Performance sessions now also record
+full-session **frame rate** (avg / 1% low / p99 / stutters, requires official PresentMon), and the
+insights card adds a **bottleneck verdict** (GPU-bound / CPU-bound / none, heuristic).
 
 Also included: **display & quality** (four tabs: DLSS preset override / vibrance & ICC — a
 digital-vibrance slider plus applying your own `.icc` / `.icm` calibration file / per-game driver
@@ -65,7 +75,7 @@ advice; each tab shows a live status badge so you can see every group's state wi
 all read-only guidance and reversible), backups & logs (audit of every write plus a backup-file
 status list so consumed `.restored` files are obvious), a PresentMon pre-check on the A/B page
 (gives the official install command when missing — the tool never installs it for you), and
-settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles).
+settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles / diagnostic export with one-click feedback).
 Dark, light and system themes; borderless custom title bar; a splash screen with real startup-phase
 progress; the classic overview offers a first-run "detect → optimize" guide, while the console overview
 gives one-click basic advice (game mode / background recording / GPU preference — three

@@ -12,8 +12,8 @@ C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入�
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD5)
 
-> 版本线 0.1 Beta：功能可用，仍在收敛期，破坏性变更会写进 Release Notes。
-> 1.x（含 1.6.X）**已停止维护**，冻结分支 `legacy/1.x`；请改用 0.1 Beta。
+> 版本线 0.2 Beta（0.2.0 起进入实测闭环阶段）：功能可用，仍在收敛期，破坏性变更会写进 Release Notes。
+> 1.x（含 1.6.X）**已停止维护**，冻结分支 `legacy/1.x`；请改用 0.2 Beta。
 
 ## 它只改 Windows，不碰游戏
 
@@ -49,16 +49,23 @@ C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入�
 |---|---|
 | ![检测页](assets/screenshots/02-detect.png) | ![优化页](assets/screenshots/03-optimize.png) |
 
-| 性能会话：本机采样与启发式洞察 | A/B 实验：基线 + 三候选组 + 规则判定 |
+| 性能会话：本机采样 + 瓶颈判定 + 启发式洞察 | A/B 实验：基线 + 候选组 / 自定义组 + 规则判定 |
 |---|---|
 | ![性能会话页](assets/screenshots/04-session.png) | ![A/B 实验页](assets/screenshots/05-ab-experiment.png) |
+
+**实测闭环（0.2.0 起）**：A/B 页可把优化页当前勾选的优化项作为**自定义组**整组实测
+（基线采样 → 自动应用（带独立备份）→ 再采样 → 规则判定保留或自动还原；只勾 1 项即单项深测；
+需重启的项会被明确拒绝——重启后基线失效，对比不成立）。结论沉淀在本机并落到界面上：
+优化项带「本机实测 +x.x% FPS」徽标（有数据才显示）、A/B 页有结论列表与**一键导出 Markdown
+实测报告**（含测试条件与口径说明）。性能会话同步记录全程**帧率**（平均 / 1% low / p99 / 卡顿，
+需官方 PresentMon），洞察卡给出**瓶颈判定**（GPU 受限 / CPU 受限 / 未呈现单侧，启发式口径）。
 
 另有：**显示与画质**（四个页签：DLSS 预设覆盖 / 振动与 ICC——数字振动滑条 + 应用你自己的
 `.icc` / `.icm` 校色文件 / 驱动 3D 按游戏写入 / 建议与清单——按厂商生成的驱动内手动设置
 清单与驱动版本建议；页签带当前状态徽标，不点进去也能看到每组状态，全部只读指引可还原）、
 备份 / 日志（每次写入的审计 + 备份文件状态列表，已消费的 `.restored` 一目了然）、
 A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，不代为安装）、
-设置（主题 / 托盘 / 全局热键 Ctrl+Alt+F / 按游戏自动应用方案）、
+设置（主题 / 托盘 / 全局热键 Ctrl+Alt+F / 按游戏自动应用方案 / 诊断包导出与一键反馈）、
 带真实阶段进度的启动画面与空闲预热。
 支持深色、浅色与跟随系统，无边框自绘标题栏；经典概览在首次启动提供「检测 → 优化」引导，
 控制台概览则是一键采纳「基础建议」（游戏模式 / 后台录制 / 显卡偏好三项，不挑游戏）。
@@ -98,7 +105,7 @@ A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，不代�
 
 ## 用数据说话，而不是承诺
 
-「性能会话」在本机采样 CPU / 内存 / GPU / 显存曲线，数据只存本机，可导出 JSON / CSV、可两次会话并排比较。
+「性能会话」在本机采样 CPU / 内存 / GPU / 显存曲线与全程帧率，数据只存本机，可导出 JSON / CSV、可两次会话并排比较。
 「A/B 实验」把这条链闭合：
 
 ```powershell
@@ -128,7 +135,7 @@ catalog/catalog.json          优化项与预设的唯一数据源（36 项 + �
 FpsTune.Wpf/
   Core/                       OptimizationCatalog / NativeOptimizationEngine /
                               BackupService / DetectionService / ExperimentRunner
-  Services/                   主题 / 设置 / 脚本定位 / 进程封装 / CLI 宿主 / 更新检查
+  Services/                   主题 / 设置 / 实验引擎与判定存储 / 采样 / CLI 宿主 / 更新检查
   Views/                      WPF 视图（概览页两种形态：紧凑控制台 / 经典概览）
 FpsTune.Wpf.Tests/            单元测试（含 catalog 一致性守卫）
 installer/                    Inno Setup 打包
