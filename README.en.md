@@ -58,6 +58,10 @@ asks for consent and verifies SHA-256 first.
 |---|---|
 | ![Sessions](assets/screenshots/04-session.png) | ![A/B experiment](assets/screenshots/05-ab-experiment.png) |
 
+**Multi-game (0.2.1+)**: add several games and switch from the overview page dropdown —
+each game keeps its own detection snapshot, optimization state and measurement verdicts; when a
+game with a bound profile starts, the context switches automatically.
+
 **Measurement loop (0.2.0+)**: the A/B page can run the items currently checked on the
 Optimize/Overview page as a **custom group** (baseline sampling → apply with its own backup →
 sample again → rule-based keep or auto-revert; checking exactly one item gives a single-item deep
@@ -73,7 +77,9 @@ digital-vibrance slider plus applying your own `.icc` / `.icm` calibration file 
 3D settings / advice & checklist — a vendor-specific in-driver manual checklist and driver version
 advice; each tab shows a live status badge so you can see every group's state without opening it,
 all read-only guidance and reversible), backups & logs (audit of every write plus a backup-file
-status list so consumed `.restored` files are obvious), a PresentMon pre-check on the A/B page
+status list so consumed `.restored` files are obvious, plus a **change overview**
+(original values vs live state) and **backup export/import** so a fresh Windows install can
+recover your pre-optimization state), a PresentMon pre-check on the A/B page
 (gives the official install command when missing — the tool never installs it for you), and
 settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles / diagnostic export with one-click feedback).
 Dark, light and system themes; borderless custom title bar; a splash screen with real startup-phase
