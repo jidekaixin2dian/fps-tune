@@ -29,7 +29,11 @@ public partial class BackupLogView : UserControl
 
         BackupDirText.Text = _backupDir;
         TempDirText.Text = _tempDir;
-        Loaded += (_, _) => _ = RefreshBackupListAsync();
+        Loaded += (_, _) =>
+        {
+            _ = RefreshBackupListAsync();
+            RefreshAudit();   // 0.2.2 M4：改动总览随页加载刷新（此前只在手动刷新时才有数据）
+        };
     }
 
     /// <summary>
