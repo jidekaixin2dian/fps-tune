@@ -747,4 +747,23 @@
     <s:String x:Key="Str.PickGameExeTitle">请选择游戏主程序</s:String>
     <s:String x:Key="Str.GameSwitchNeedDetect">已切换到新游戏，还没有它的检测快照——点「运行检测」为它建立基线。</s:String>
     <s:String x:Key="Str.PickGameExeFilter">游戏主程序|*.exe</s:String>
+    <s:String x:Key="Str.ChangeAuditTitle">改动总览（本工具改过什么）</s:String>
+    <s:String x:Key="Str.ChangeAuditHint">只读总览：每项显示工具写入时的原值与当前实时状态；还原请用上方「还原全部」或检测页逐项操作，本卡不做任何修改。</s:String>
+    <s:String x:Key="Str.ChangeAuditRefresh">刷新总览</s:String>
+    <s:String x:Key="Str.ChangeAuditEmpty">没有待还原的改动记录——本工具当前没有留下任何未还原的修改。</s:String>
+    <s:String x:Key="Str.ExportBackups">导出备份</s:String>
+    <s:String x:Key="Str.ImportBackups">导入备份</s:String>
+    <s:String x:Key="Str.BackupsExported">已导出 {0} 个备份文件：
+{1}</s:String>
+    <s:String x:Key="Str.BackupsImported">导入完成：新增 {0}、跳过重复 {1}、校验拒绝 {2}（校验确保只接受本工具创建过的合法备份目标）。</s:String>
+    <s:String x:Key="Str.BackupTransferFailed">操作失败：{0}</s:String>
+    <s:String x:Key="Str.AuditOriginalValue">原值 {0}</s:String>
+    <s:String x:Key="Str.AuditValueAbsent">（原值不存在）</s:String>
+    <s:String x:Key="Str.AuditPowerPlan">原电源计划 {0}</s:String>
+    <s:String x:Key="Str.AuditPowerTuning">原隐藏项：USB={0} 提升={1}</s:String>
+    <s:String x:Key="Str.AuditAspm">原 ASPM={0}</s:String>
+    <s:String x:Key="Str.AuditService">{0} 原启动类型 {1}</s:String>
+    <s:String x:Key="Str.AuditState">原状态 {0}</s:String>
+    <s:String x:Key="Str.AuditUnread">未读取</s:String>
+    <s:String x:Key="Str.AuditRowDetail">{0} · {1}（启发式实时状态，与检测页同口径）</s:String>
 </ResourceDictionary>

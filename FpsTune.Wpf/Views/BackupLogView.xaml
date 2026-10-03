@@ -82,6 +82,46 @@
         </Grid>
 
         <!-- 备份文件列表：区分"还能还原"与"已消费的 .restored 审计文件"（P2-11） -->
+
+        <!-- 0.2.2 M4：改动总览（只读）——本工具改过什么：原值 vs 当前实时状态 -->
+        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.ChangeAuditTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.ChangeAuditHint}"
+                                   Style="{StaticResource MutedTextStyle}" FontSize="11.5" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Button Content="{DynamicResource Str.ChangeAuditRefresh}"
+                            Style="{StaticResource GhostButtonStyle}"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Click="RefreshAudit_Click"/>
+                </Grid>
+                <TextBlock x:Name="AuditEmptyHint" Text="{DynamicResource Str.ChangeAuditEmpty}"
+                           Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" Visibility="Collapsed"/>
+                <ItemsControl x:Name="AuditList" Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,0,6" Padding="12,8" CornerRadius="{StaticResource RadiusControl}"
+                                    Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding NowText}" FontSize="12" VerticalAlignment="Center" Margin="14,0,0,0">
+                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/><Style.Triggers><DataTrigger Binding="{Binding OptimizedNow}" Value="False"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
         <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
@@ -91,11 +131,19 @@
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <TextBlock Text="{DynamicResource Str.BackupFilesCard}" Style="{StaticResource CardTitleStyle}"/>
+                    <StackPanel Orientation="Horizontal">
+                    <Button Content="{DynamicResource Str.ExportBackups}"
+                            Style="{StaticResource GhostButtonStyle}" Margin="0,0,8,0"
+                            Click="ExportBackups_Click"/>
+                    <Button Content="{DynamicResource Str.ImportBackups}"
+                            Style="{StaticResource GhostButtonStyle}" Margin="0,0,12,0"
+                            Click="ImportBackups_Click"/>
                     <Button Content="{DynamicResource Str.Refresh}"
                             Style="{StaticResource GhostButtonStyle}"
                             MinWidth="60" Height="26" Padding="8,0"
                             HorizontalAlignment="Right"
                             Click="RefreshBackupList_Click"/>
+                    </StackPanel>
                 </Grid>
                 <TextBlock Grid.Row="1" x:Name="BackupEmptyHint"
                            Text="{DynamicResource Str.BackupNoFiles}"

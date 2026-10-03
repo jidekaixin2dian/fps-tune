@@ -126,6 +126,66 @@ public partial class BackupLogView : UserControl
         }
     }
 
+    // ---------- 0.2.2 M4 改动总览 + C-B 备份导出/导入 ----------
+
+    private void RefreshAudit_Click(object sender, RoutedEventArgs e) => RefreshAudit();
+
+    private void RefreshAudit()
+    {
+        var rows = ChangeAudit.CollectPending();
+        AuditEmptyHint.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        AuditList.ItemsSource = rows.Select(r => new AuditVm(
+            r.ItemName,
+            Str.T("Str.AuditRowDetail", r.BackedUpAt.ToString("yyyy-MM-dd HH:mm"), r.BackupSummary),
+            r.CurrentNow,
+            r.OptimizedNow)).ToList();
+    }
+
+    private void ExportBackups_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = Str.T("Str.ExportBackups"),
+            Filter = "Zip|*.zip",
+            FileName = $"fps-tune-backups-{DateTime.Now:yyyyMMdd-HHmm}.zip",
+        };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+            return;
+        try
+        {
+            var count = BackupService.ExportBackups(dialog.FileName);
+            StatusText.Text = Str.T("Str.BackupsExported", count, dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.ExportBackups"), Str.T("Str.BackupTransferFailed", ex.Message));
+        }
+    }
+
+    private void ImportBackups_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = Str.T("Str.ImportBackups"),
+            Filter = "Zip|*.zip",
+        };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+            return;
+        try
+        {
+            var (imported, dup, invalid) = BackupService.ImportBackups(dialog.FileName);
+            StatusText.Text = Str.T("Str.BackupsImported", imported, dup, invalid);
+            _ = RefreshBackupListAsync();
+            RefreshAudit();
+        }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.ImportBackups"), Str.T("Str.BackupTransferFailed", ex.Message));
+        }
+    }
+
+    private sealed record AuditVm(string Title, string Detail, string NowText, bool OptimizedNow);
+
     private void OpenBackup_Click(object sender, RoutedEventArgs e)
         => OpenInExplorer(_backupDir);
 

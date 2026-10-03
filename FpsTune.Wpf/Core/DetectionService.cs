@@ -349,7 +349,7 @@ public static class DetectionService
         }
     }
 
-    private static (bool Optimized, string Current) GetItemState(OptimizationItemDefinition item, string? gamePath)
+    internal static (bool Optimized, string Current) GetItemState(OptimizationItemDefinition item, string? gamePath)
     {
         var target = item.Id switch
         {

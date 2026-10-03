@@ -85,6 +85,32 @@ public static partial class BackupService
             .ToList();
     }
 
+    /// <summary>0.2.2 M4：枚举全部备份文件里的未还原记录（供改动总览）。只读。</summary>
+    internal static IReadOnlyList<(string FileName, DateTime LastWrite, BackupRecord Record)> EnumeratePendingRecords()
+    {
+        var result = new List<(string, DateTime, BackupRecord)>();
+        foreach (var file in ListBackups())
+        {
+            try
+            {
+                var lastWrite = File.GetLastWriteTime(file);
+                var records = JsonSerializer.Deserialize<List<BackupRecord>>(
+                    File.ReadAllText(file, Encoding.UTF8));
+                if (records is null)
+                    continue;
+                foreach (var r in records.Where(r => !r.Restored))
+                    result.Add((Path.GetFileName(file), lastWrite, r));
+            }
+            catch (FileNotFoundException) { }
+            catch (DirectoryNotFoundException) { }
+            catch (Exception)
+            {
+                // 单个坏文件不拖垮总览
+            }
+        }
+        return result;
+    }
+
     /// <summary>备份文件的状态行：待还原 / 已消费（.restored 审计）/ 无法读取。</summary>
     public sealed record BackupFileStatus(
         string FileName,

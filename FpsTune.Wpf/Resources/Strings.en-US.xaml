@@ -747,4 +747,23 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.PickGameExeTitle">Pick the game executable</s:String>
     <s:String x:Key="Str.GameSwitchNeedDetect">Switched to a new game — no detection snapshot for it yet. Click "Run detection" to build its baseline.</s:String>
     <s:String x:Key="Str.PickGameExeFilter">Game executable|*.exe</s:String>
+    <s:String x:Key="Str.ChangeAuditTitle">Change overview (what this tool changed)</s:String>
+    <s:String x:Key="Str.ChangeAuditHint">Read-only: each row shows the original value recorded at write time and the live current status. To revert, use "Restore all" above or per-item actions on the Detection page — this card changes nothing.</s:String>
+    <s:String x:Key="Str.ChangeAuditRefresh">Refresh</s:String>
+    <s:String x:Key="Str.ChangeAuditEmpty">No pending changes — the tool currently has no unrestored modifications.</s:String>
+    <s:String x:Key="Str.ExportBackups">Export backups</s:String>
+    <s:String x:Key="Str.ImportBackups">Import backups</s:String>
+    <s:String x:Key="Str.BackupsExported">Exported {0} backup file(s):
+{1}</s:String>
+    <s:String x:Key="Str.BackupsImported">Import finished: {0} added, {1} duplicate skipped, {2} rejected by validation (only backups this tool created pass the target whitelist).</s:String>
+    <s:String x:Key="Str.BackupTransferFailed">Operation failed: {0}</s:String>
+    <s:String x:Key="Str.AuditOriginalValue">original value {0}</s:String>
+    <s:String x:Key="Str.AuditValueAbsent">(value did not exist)</s:String>
+    <s:String x:Key="Str.AuditPowerPlan">original power plan {0}</s:String>
+    <s:String x:Key="Str.AuditPowerTuning">original hidden settings: USB={0} boost={1}</s:String>
+    <s:String x:Key="Str.AuditAspm">original ASPM={0}</s:String>
+    <s:String x:Key="Str.AuditService">{0} original start type {1}</s:String>
+    <s:String x:Key="Str.AuditState">original state {0}</s:String>
+    <s:String x:Key="Str.AuditUnread">not read</s:String>
+    <s:String x:Key="Str.AuditRowDetail">{0} · {1} (heuristic live status, same source as the Detection page)</s:String>
 </ResourceDictionary>

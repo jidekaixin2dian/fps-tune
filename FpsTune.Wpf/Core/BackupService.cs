@@ -1,4 +1,5 @@
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -74,5 +75,86 @@ public static partial class BackupService
         BackupDirOverride ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "FpsTune", "backup");
+
+    /// <summary>0.2.2 C-B：把全部备份文件（含 .restored 审计）打包导出为 zip，返回导出的文件数。</summary>
+    public static int ExportBackups(string zipPath)
+    {
+        Directory.CreateDirectory(BackupDir);
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(zipPath))!);
+        if (File.Exists(zipPath))
+            File.Delete(zipPath);
+        using var archive = System.IO.Compression.ZipFile.Open(zipPath, System.IO.Compression.ZipArchiveMode.Create);
+        var count = 0;
+        foreach (var file in Directory.EnumerateFiles(BackupDir, "csharp-backup-*"))
+        {
+            archive.CreateEntryFromFile(file, Path.GetFileName(file));
+            count++;
+        }
+        return count;
+    }
+
+    /// <summary>0.2.2 C-B：从 zip 导入备份。逐条过 ValidateRecord 校验（目标必须在 Capture 白名单内），
+    /// 同名文件跳过（重复导入幂等），校验失败的单文件跳过并计数。返回 (导入, 跳过重复, 校验失败)。</summary>
+    public static (int Imported, int SkippedDuplicate, int SkippedInvalid) ImportBackups(string zipPath)
+    {
+        using var archive = System.IO.Compression.ZipFile.OpenRead(zipPath);
+        int imported = 0, dup = 0, invalid = 0;
+        Directory.CreateDirectory(BackupDir);
+        foreach (var entry in archive.Entries)
+        {
+            var name = Path.GetFileName(entry.Name);
+            if (!IsCSharpBackupFile(name) &&
+                !name.EndsWith(".json.restored", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (File.Exists(Path.Combine(BackupDir, name)))
+            {
+                dup++;
+                continue;
+            }
+            string json;
+            try
+            {
+                using var stream = entry.Open();
+                using var reader = new StreamReader(stream);
+                json = reader.ReadToEnd();
+            }
+            catch
+            {
+                invalid++;
+                continue;
+            }
+            try
+            {
+                var records = JsonSerializer.Deserialize<List<BackupRecord>>(json);
+                if (records is null || records.Count == 0)
+                    throw new InvalidOperationException("empty backup file");
+                foreach (var r in records)
+                    ValidateRecord(r);
+            }
+            catch
+            {
+                invalid++;
+                continue;
+            }
+            var target = Path.Combine(BackupDir, name);
+            try
+            {
+                using var stream = entry.Open();
+                using var outFile = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                stream.CopyTo(outFile);
+                imported++;
+            }
+            catch (IOException) when (File.Exists(target))
+            {
+                dup++;   // 罕见并发冲突视为重复
+            }
+            catch
+            {
+                invalid++;
+                try { File.Delete(target); } catch { }
+            }
+        }
+        return (imported, dup, invalid);
+    }
 
 }
