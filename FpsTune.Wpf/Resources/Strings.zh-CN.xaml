@@ -766,4 +766,5 @@
     <s:String x:Key="Str.AuditState">原状态 {0}</s:String>
     <s:String x:Key="Str.AuditUnread">未读取</s:String>
     <s:String x:Key="Str.AuditRowDetail">{0} · {1}（启发式实时状态，与检测页同口径）</s:String>
+    <s:String x:Key="Str.SwitchBlockedDetecting">检测进行中，暂不能切换游戏；等检测完成再试。</s:String>
 </ResourceDictionary>

@@ -74,10 +74,7 @@ public partial class ConsoleView : UserControl
                 return;
             }
             var profile = StateStore.AddGame(path);   // 0.2.0 M2：定位即建档（已有档幂等返回）
-            StateStore.SaveGamePath(profile.ExePath);
-            if (!string.Equals(StateStore.LoadGamePath(), profile.ExePath, StringComparison.OrdinalIgnoreCase))
-                throw new System.IO.IOException(Str.T("Str.GamePathSaveFailed"));
-            AppState.GamePath = profile.ExePath;
+            GameContextService.SwitchTo(profile.ExePath);
             await RefreshDataAsync();
         }
         catch (Exception ex) { DialogService.Warning(Str.T("Str.GameLocateIncomplete"), ex.Message); }
@@ -111,9 +108,11 @@ public partial class ConsoleView : UserControl
     public ConsoleView()
     {
         InitializeComponent();
+        GameContextService.GameSwitched += OnGameContextSwitched;
         Loaded += OnLoaded;
         Unloaded += (_, _) =>
         {
+            GameContextService.GameSwitched -= OnGameContextSwitched;
             StopMonitor();
             if (_owner is not null) _owner.IsVisibleChanged -= OwnerVisibilityChanged;
             _owner = null;
@@ -202,27 +201,18 @@ public partial class ConsoleView : UserControl
         }
     }
 
-    // ---------- 0.2.0 M2：多游戏切换 ----------
+    // ---------- 0.2.0 M2：多游戏切换（状态在 GameContextService，这里只管 UI） ----------
 
     private bool _suppressGameSwitch;
-
-    private sealed record GameSwitcherVm(string Label, string? ProfileId, string? ExePath)
-    {
-        public override string ToString() => Label;
-    }
 
     private void RefreshGameSwitcher()
     {
         _suppressGameSwitch = true;
         try
         {
-            var profiles = StateStore.LoadGames()
-                .OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            var items = profiles.Select(g => new GameSwitcherVm(g.Name, g.Id, g.ExePath)).ToList();
-            items.Add(new GameSwitcherVm(Str.T("Str.GameSwitcherAdd"), null, null));
+            var items = GameContextService.BuildSwitcherItems();
             GameSwitcher.ItemsSource = items;
-            GameSwitcher.SelectedItem = items.FirstOrDefault(v => v.ExePath is not null
-                && string.Equals(v.ExePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase));
+            GameSwitcher.SelectedItem = GameContextService.SelectedItem(items);
         }
         finally
         {
@@ -233,70 +223,37 @@ public partial class ConsoleView : UserControl
     private void GameSwitcher_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressGameSwitch) return;
-        if (GameSwitcher.SelectedItem is not GameSwitcherVm vm) return;
+        if (GameSwitcher.SelectedItem is not GameSwitcherItem vm) return;
         if (vm.ProfileId is null)
         {
-            AddGameViaPicker();
+            var added = GameContextService.PickAndAddGame(Window.GetWindow(this));
+            RefreshGameSwitcher();
+            if (added is not null)
+                GameContextService.SwitchTo(added.ExePath, detectIfMissing: true);
             return;
         }
-        var profile = StateStore.LoadGames().FirstOrDefault(g => g.Id == vm.ProfileId);
-        if (profile is null) return;
-        if (string.Equals(profile.ExePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) return;
-        SwitchToGame(profile);
+        SwitchToGame(vm.ExePath!);
     }
 
-    private void AddGameViaPicker()
+    private void SwitchToGame(string exePath)
     {
-        if (Window.GetWindow(this) is not MainWindow main)
+        if (GameContextService.IsBusy)
         {
-            RefreshGameSwitcher();
+            DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.SwitchBlockedDetecting"));
             return;
         }
-        var picker = new Microsoft.Win32.OpenFileDialog
-        {
-            Title = Str.T("Str.PickGameExeTitle"),
-            Filter = Str.T("Str.PickGameExeFilter"), CheckFileExists = true
-        };
-        if (picker.ShowDialog(main) != true)
-        {
-            RefreshGameSwitcher();
-            return;
-        }
-        var path = picker.FileName;
-        if (!System.IO.File.Exists(path) || !string.Equals(System.IO.Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase))
-        {
-            DialogService.Warning(Str.T("Str.PickGameExeTitle"), Str.T("Str.MustPickGameExe"));
-            RefreshGameSwitcher();
-            return;
-        }
-        var profile = StateStore.AddGame(path);
-        SwitchToGame(profile, detectAfterSwitch: true);
+        GameContextService.SwitchTo(exePath);
     }
 
-    private void SwitchToGame(StateStore.GameProfile profile, bool detectAfterSwitch = false)
+    private void OnGameContextSwitched()
     {
-        // 切换 = 设当前游戏（game-path.txt 同步，CLI 对齐）→ 灌该游戏快照或清空 → 全页重建。
-        StateStore.SaveGamePath(profile.ExePath);
-        AppState.GamePath = profile.ExePath;
-        var root = StateStore.LoadDetectForGame(profile.Id);
-        if (root is not null)
+        if (!Dispatcher.CheckAccess())
         {
-            AppState.DetectJson = root;
-            AppState.Items = DetectionData.ParseItems(root);
-        }
-        else
-        {
-            AppState.DetectJson = null;
-            AppState.Items = new List<OptimizationItem>();
+            Dispatcher.BeginInvoke(OnGameContextSwitched);
+            return;
         }
         _source = null;   // 绕过 RebuildRows 的同引用短路，强制重建
         RebuildRows();
-        if (Window.GetWindow(this) is MainWindow main)
-        {
-            main.NotifyGameSwitched();
-            if (detectAfterSwitch && AppState.Items.Count == 0)
-                _ = main.RefreshDetectionAsync();
-        }
         RefreshGameSwitcher();
     }
 

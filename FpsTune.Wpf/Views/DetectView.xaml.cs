@@ -309,6 +309,9 @@ public partial class DetectView : UserControl
         OutputBox.Text = Str.T("Str.LoadedLastScan");
     }
 
+    /// <summary>0.2.2：检测进行中标志（GameContextService 忙检数据源）。</summary>
+    public bool DetectionInFlight => _detectionInFlight;
+
     /// <summary>0.2.0 M2：概览页切换游戏后同步本页——有快照灌快照，无快照清空待自动检测。</summary>
     public void OnGameSwitched()
     {

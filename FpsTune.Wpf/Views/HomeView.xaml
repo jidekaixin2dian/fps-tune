@@ -51,6 +51,12 @@
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center"
                                TextWrapping="Wrap"/>
+                    <Border Width="1" Height="12" Background="{DynamicResource BorderBrush}" Margin="12,0" VerticalAlignment="Center"/>
+                    <!-- 0.2.0 M2：经典概览也接入游戏切换器 -->
+                    <ComboBox x:Name="GameSwitcher" MinWidth="180" Height="26"
+                              Style="{StaticResource SelectComboBoxStyle}"
+                              AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
+                              SelectionChanged="GameSwitcher_SelectionChanged"/>
                 </StackPanel>
             </StackPanel>
             <Button x:Name="StartOptimizeButton"

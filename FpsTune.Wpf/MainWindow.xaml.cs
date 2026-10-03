@@ -49,6 +49,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        HookGameContextService();
 
         _pageFactories = new Dictionary<string, Func<UserControl>>
         {
@@ -227,6 +228,21 @@ public partial class MainWindow : Window
     {
         if (GetPage("detect") is DetectView detect)
             detect.OnGameSwitched();
+    }
+
+    /// <summary>0.2.2 M2 收尾：接入游戏上下文服务（忙检数据源 + 自动补检测）。</summary>
+    private void HookGameContextService()
+    {
+        GameContextService.IsBusyProvider = () => GetPage("detect") is DetectView d && d.DetectionInFlight;
+        GameContextService.GameSwitched += () =>
+        {
+            NotifyGameSwitched();
+            if (GameContextService.NeedsDetection)
+            {
+                GameContextService.ClearNeedsDetection();
+                _ = RefreshDetectionAsync();
+            }
+        };
     }
 
     internal void OpenDeltaSession()

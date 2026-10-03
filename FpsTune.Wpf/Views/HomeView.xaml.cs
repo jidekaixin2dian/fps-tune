@@ -13,7 +13,9 @@ public partial class HomeView : UserControl
     public HomeView()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshContacts();
+        GameContextService.GameSwitched += OnGameContextSwitched;
+        Unloaded += (_, _) => GameContextService.GameSwitched -= OnGameContextSwitched;
+        Loaded += (_, _) => { RefreshContacts(); RefreshGameSwitcher(); };
         VersionText.Text = "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         // 优化项数量随 catalog 增长，首页文案不写死
         OptCardSummary.Text = $"预设与逐项开关、{ItemCatalog.All.Count} 项系统层优化、一键还原";
@@ -142,5 +144,60 @@ public partial class HomeView : UserControl
 
         if (Window.GetWindow(this) is MainWindow main)
             _ = main.RunOnboardingAsync();
+    }
+
+    // ---------- 0.2.0 M2：经典概览游戏切换器（状态在 GameContextService） ----------
+
+    private bool _suppressGameSwitch;
+
+    private void RefreshGameSwitcher()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(RefreshGameSwitcher);
+            return;
+        }
+        _suppressGameSwitch = true;
+        try
+        {
+            var items = GameContextService.BuildSwitcherItems();
+            GameSwitcher.ItemsSource = items;
+            GameSwitcher.SelectedItem = GameContextService.SelectedItem(items);
+        }
+        finally
+        {
+            _suppressGameSwitch = false;
+        }
+    }
+
+    private void GameSwitcher_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressGameSwitch) return;
+        if (GameSwitcher.SelectedItem is not GameSwitcherItem vm) return;
+        if (vm.ProfileId is null)
+        {
+            var added = GameContextService.PickAndAddGame(Window.GetWindow(this));
+            RefreshGameSwitcher();
+            if (added is not null)
+                GameContextService.SwitchTo(added.ExePath, detectIfMissing: true);
+            return;
+        }
+        if (GameContextService.IsBusy)
+        {
+            DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.SwitchBlockedDetecting"));
+            RefreshGameSwitcher();
+            return;
+        }
+        GameContextService.SwitchTo(vm.ExePath!);
+    }
+
+    private void OnGameContextSwitched()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(OnGameContextSwitched);
+            return;
+        }
+        RefreshGameSwitcher();
     }
 }

@@ -140,6 +140,17 @@ public static class StateStore
             string.Equals(g.ExePath, exePath.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>0.2.2 M2 收尾：按进程名找游戏档案（AutoProfile 启动边沿的入口）。</summary>
+    public static GameProfile? FindGameByProcessName(string? processName)
+    {
+        if (string.IsNullOrWhiteSpace(processName))
+            return null;
+        return LoadGames().FirstOrDefault(g => string.Equals(
+            Path.GetFileNameWithoutExtension(g.ExePath),
+            processName.Trim(),
+            StringComparison.OrdinalIgnoreCase));
+    }
+
     public static GameProfile AddGame(string exePath)
     {
         var path = exePath.Trim();

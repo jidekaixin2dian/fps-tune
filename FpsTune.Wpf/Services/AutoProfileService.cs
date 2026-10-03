@@ -188,6 +188,14 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
         foreach (var processName in _edgeTracker.Update(states))
         {
             cancellationToken.ThrowIfCancellationRequested();
+            // 0.2.2 M2 收尾：游戏进程启动边沿 → 自动切换游戏上下文（该进程名对应游戏档案时）。
+            // 需在 UI 线程执行（订阅方重建页面）；检测进行中由 GameContextService 忙检拒绝。
+            var gameExe = StateStore.FindGameByProcessName(processName)?.ExePath;
+            if (gameExe is not null)
+            {
+                System.Windows.Application.Current?.Dispatcher.Invoke(
+                    () => GameContextService.SwitchTo(gameExe, detectIfMissing: true));
+            }
             if (activeBindings.TryGetValue(processName, out var binding))
             {
                 var applyTask = StartBinding(binding, cancellationToken);
