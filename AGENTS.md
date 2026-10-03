@@ -9,7 +9,7 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（36 个可还原优化项 + 实测闭环） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.2.2` + `VersionSuffix=beta`；**线上最新 `v0.2.1-beta`**（标签 `86f84f4`，已设 Latest）；**beta.3 候选（M4+C-B+M2 收尾 @ `3eb2854`）已构建部署待拍板** |
+| 版本 | `VersionPrefix=0.2.2` + `VersionSuffix=beta`；**线上最新 `v0.2.2-beta`**（2026-10-03 发布，标签 `3eb2854`，内容 = M4 改动总览 + C-B 备份导出/导入 + M2 收尾，已设 Latest）；无未发布候选（RC = C-F） |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
 | 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **347 / 347 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫（中英对齐+字典内查重）+GameContextStore 4 条、M3 / 一键优化 / i18n / catalog 英译、审计修复防回归 9 条、DetectMeta 3 条、SessionFps/瓶颈判定 9 条、VerdictStore 5 条） |
@@ -144,7 +144,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 347
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
 | 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
-| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `3eb2854` = 0.2.2-beta 候选，部署流程见硬纪律第 7 条），不是源码 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `3eb2854` = 0.2.2-beta 已发布，部署流程见硬纪律第 7 条），不是源码 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
