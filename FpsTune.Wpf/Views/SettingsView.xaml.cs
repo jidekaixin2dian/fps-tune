@@ -34,8 +34,6 @@ public partial class SettingsView : UserControl
         ThemeDarkRadio.Checked += (_, _) => ApplyThemeMode("dark");
         ThemeLightRadio.Checked += (_, _) => ApplyThemeMode("light");
         ThemeSystemRadio.Checked += (_, _) => ApplyThemeMode("system");
-        LangZhRadio.Checked += Lang_Checked;
-        LangEnRadio.Checked += Lang_Checked;
         AutostartCheck.Checked += AutostartCheck_Changed;
         AutostartCheck.Unchecked += AutostartCheck_Changed;
         GamePathBox.LostFocus += (_, _) => SaveGamePathFromBox();

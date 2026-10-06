@@ -166,7 +166,7 @@
     <s:String x:Key="Str.FirstRunAdviceIntro">First run: this starts with a read-only check-up (no settings are changed), then takes you to review these {0} items.</s:String>
     <s:String x:Key="Str.TipBasicAdviceFirst">On first use this runs a read-only check-up first, then opens the optimize page for review</s:String>
     <s:String x:Key="Str.RecordMatch">Record a match</s:String>
-    <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load. This is not an FPS measurement.</s:String>
+    <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load, plus FPS when the game is running and PresentMon is available</s:String>
     <s:String x:Key="Str.BackupRestore">Backup / restore</s:String>
     <s:String x:Key="Str.ItemsOptimized">Items optimized</s:String>
     <s:String x:Key="Str.ChoosePlan">Choose plan</s:String>
@@ -491,7 +491,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AbTestDone">Testing complete.</s:String>
     <s:String x:Key="Str.ReportGenerated">Report generated</s:String>
     <s:String x:Key="Str.ReportGeneratedDetail">Report generated: report-latest.md in the experiment folder (with linked session summaries).</s:String>
-    <s:String x:Key="Str.RecordMatchHint">Record a similar duration on the same map, quality and frame cap. Start it, then enter the game yourself; this records load, it does not measure FPS.</s:String>
+    <s:String x:Key="Str.RecordMatchHint">Run the game before starting a recording. Record a similar duration on the same map, quality and frame cap. FPS is included when PresentMon and the game process are available; otherwise load is still recorded and the missing FPS reason is shown.</s:String>
     <s:String x:Key="Str.BasicsOk">Basic settings are in good shape · record one match's load to keep a before/after comparison.</s:String>
     <s:String x:Key="Str.ItemDetailHint">Click an item to see its current state and side effects. Confirm and apply at the bottom; the result shows here too.</s:String>
     <s:String x:Key="Str.ToggleHint2">Switches show what you are about to apply, not the current system state. Adjusting anything switches to Custom.</s:String>
