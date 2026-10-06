@@ -6,17 +6,19 @@ namespace FpsTune.Wpf.Views;
 
 public partial class WeChatQrWindow : Window
 {
+    private readonly string _weChatId;
+
     public WeChatQrWindow()
     {
         InitializeComponent();
         var s = SettingsService.Current;
-        if (!string.IsNullOrWhiteSpace(s.WeChat))
-            WeChatIdText.Text = Str.T("Str.WeChatIdLabel") + s.WeChat;
+        _weChatId = string.IsNullOrWhiteSpace(s.WeChat) ? "jiaxindeyang" : s.WeChat;
+        WeChatIdText.Text = Str.T("Str.WeChatIdLabel") + _weChatId;
     }
 
     private void CopyWeChat_Click(object sender, RoutedEventArgs e)
     {
-        Clipboard.SetText(SettingsService.Current.WeChat);
+        Clipboard.SetText(_weChatId);
         DialogService.Info(Str.T("Str.AppName"), Str.T("Str.WeChatIdCopied"));
     }
 
