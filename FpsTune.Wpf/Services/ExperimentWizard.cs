@@ -285,7 +285,7 @@ public static class ExperimentWizardStore
                     var normalized = Normalize(state);
                     if (normalized.IsFutureSchema)
                         return normalized;
-                    var recoveredState = RecoverInterrupted(normalized);
+                    var recoveredState = ReconcileLegacySimulation(RecoverInterrupted(normalized));
                     if (!string.IsNullOrEmpty(normalized.RunningStep))
                         Save(recoveredState);
                     return recoveredState;
@@ -326,6 +326,25 @@ public static class ExperimentWizardStore
 
     public static void Save(ExperimentWizardState state)
         => TrySave(state, out _);
+
+    // 早期迁移把模拟组硬编码为 false。只校正能够与旧来源精确对应的无会话结果，
+    // 不覆盖后续真测结果，不在读取时重写用户的 wizard.json。
+    private static ExperimentWizardState ReconcileLegacySimulation(ExperimentWizardState state)
+    {
+        if (!state.Groups.Any(g => !g.Simulated && g.SessionId is null)) return state;
+        var legacy = MigrateFromLegacyState() ?? MigrateFromLegacyHistory();
+        if (legacy is null) return state;
+        var groups = state.Groups.Select(group =>
+        {
+            var source = legacy.Groups.FirstOrDefault(g => g.GroupId == group.GroupId);
+            return !group.Simulated && group.SessionId is null
+                && source is { Simulated: true } && source.CompletedAt != DateTime.MinValue
+                && group.CompletedAt.ToUniversalTime() == source.CompletedAt.ToUniversalTime()
+                && group.AvgFps == source.AvgFps && group.P1Low == source.P1Low
+                    ? group with { Simulated = true } : group;
+        }).ToList();
+        return state with { Groups = groups };
+    }
 
     public static bool TrySave(ExperimentWizardState state, out string? error)
     {

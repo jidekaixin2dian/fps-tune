@@ -228,6 +228,35 @@ public sealed class ExperimentWizardTests : IDisposable
         Assert.Null(migrated);
     }
 
+    [Theory]
+    [InlineData(true, true, false, true)]
+    [InlineData(false, true, false, false)]
+    [InlineData(true, false, false, false)]
+    [InlineData(true, true, true, false)]
+    public void Existing_wizard_reconciles_only_matching_legacy_simulation_without_rewriting_file(
+        bool sameResult, bool sameTimestamp, bool hasSession, bool expectedSimulated)
+    {
+        Directory.CreateDirectory(_dir);
+        var at = new DateTime(2026, 9, 1, 11, 0, 0, DateTimeKind.Utc);
+        File.WriteAllText(Path.Combine(_dir, "state.json"), JsonSerializer.Serialize(new
+        {
+            groups = new[] { new { id = "group-1", samplerMode = "simulated", appliedAt = at,
+                summary = new { avgFps = 105.0, p1Low = 56.0 } } }
+        }));
+        var state = BaselineDoneState() with
+        {
+            Groups = [new WizardGroupResult("group-1", true, false, "", sameResult ? 105 : 110,
+                56, hasSession ? "real-session" : null, false, sameTimestamp ? at : at.AddMinutes(1))]
+        };
+        ExperimentWizardStore.Save(state);
+        var original = File.ReadAllBytes(ExperimentWizardStore.WizardFile);
+
+        var loaded = ExperimentWizardStore.Load();
+
+        Assert.Equal(expectedSimulated, Assert.Single(loaded.Groups).Simulated);
+        Assert.Equal(original, File.ReadAllBytes(ExperimentWizardStore.WizardFile));
+    }
+
     [Fact]
     public void Migration_recovers_latest_results_from_history_when_state_is_missing()
     {
