@@ -178,10 +178,15 @@
                         <ComboBox x:Name="ProfileCombo"
                                   Grid.Column="1"
                                   Style="{StaticResource SelectComboBoxStyle}"
-                                  DisplayMemberPath="Name"
                                   MinHeight="34"
                                   Margin="0,0,8,0"
-                                  ToolTip="{DynamicResource Str.TipSavedProfiles}"/>
+                                  ToolTip="{DynamicResource Str.TipSavedProfiles}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                         <Button Grid.Column="2"
                                 Content="{DynamicResource Str.AddBinding}"
                                 Style="{StaticResource SecondaryButtonStyle}"
