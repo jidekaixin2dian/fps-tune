@@ -9,10 +9,11 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（36 个可还原优化项 + 实测闭环） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.2.2` + `VersionSuffix=beta`；**线上最新 `v0.2.2-beta`**（2026-10-03 发布，标签 `3eb2854`，内容 = M4 改动总览 + C-B 备份导出/导入 + M2 收尾，已设 Latest）；无未发布候选（RC = C-F） |
-| 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.1 Beta** |
-| 开发分支 | **`main` 是技术主线**（0.1 Beta，用户 2026-09-22 决定）。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **347 / 347 通过**，`dotnet test -c Release`（含 ICC 自选文件、备份状态、P2-8 厂商识别、资源键守卫（中英对齐+字典内查重）+GameContextStore 4 条、M3 / 一键优化 / i18n / catalog 英译、审计修复防回归 9 条、DetectMeta 3 条、SessionFps/瓶颈判定 9 条、VerdictStore 5 条） |
+| 版本 | `VersionPrefix=0.2.2` + `VersionSuffix=beta`；已发布记录 `v0.2.2-beta`（2026-10-03，标签 `3eb2854`）。2026-10-07 本地新增游戏隔离/采样减负/历史摘要等修复，尚未发布或部署；独立目录开发构建不作为同号 Release 资产 |
+| 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.2 Beta** |
+| 开发分支 | **`main` 是技术主线**。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
+| 测试基线 | **354 / 354 通过**（2026-10-07，全量 Release；本轮新增游戏判定隔离/批量计数器/流式帧时间/历史摘要/字符串格式守卫）。全量重编译 0 错误、2 条 NU1900 网络审计警告，不能说 0 警告 |
+| 本轮未完 | 逐项 GUI 走查被 Computer Use 的当前浏览器 URL 策略检测终止；最终修复未完成界面复测。用户明确保留显示设置，禁止实际驱动/ICC 写入。先补走查与负载复测，再扩展功能；见 `docs/dev/AUDIT-PERFORMANCE-20261007.md` |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-29.md`） |
 
 ## 第一步：确认基线，不要先改代码
@@ -20,10 +21,12 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 347 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 354 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
+
+2026-10-07 环境实测：受限环境可能导致 testhost 的本地 socket 连接失败，或 `--no-restore` 空输出 exit 0；这些都不算测试通过。使用运行时审批允许的正常本地测试环境，核对包含测试总数的最终输出。GUI 构建占用时可用独立 `-p:OutputPath=<仓库内 work 路径>` 验证，不能将已打开的旧构建当作最终修复界面证据。
 
 ## 硬纪律（不可协商）
 
@@ -106,10 +109,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 347
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 代码健康度底数 | `docs/dev/CODE-HEALTH.md` | 体积/方法长度/警告数/已知债务；**接手先看，别重新量** |
+| 最新性能/冗余与功能审查 | `docs/dev/AUDIT-PERFORMANCE-20261007.md` | 短测结果、逐项已测/未测矩阵、下一步；354 项逻辑测试不等于 GUI 全功能验收 |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
 | 1.x 历史存档 | `docs/archive/` | **不代表现状**；路径/版本/依赖都可能过期 |
-
-`docs/` 根下只放**现状文档**（`HANDOFF.md` / `ROADMAP.md` / `README.md` 索引）。
 
 `docs/` 根下只放**现状文档**（`HANDOFF.md` / `ROADMAP.md` / `README.md` 索引）。
 1.x 版本线的存档（`RELEASE-v1.6.2.md`、`REVIEW-1.6.1.md`、`OPTIMIZE-CONSOLE-REVIEW.md` 等）
@@ -155,7 +157,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 347
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（0.2.0-beta.1 已发布版 @ 66c0ab3，实测 ProductVersion 确认；回滚备份 -1139 = 0.1.18 / -00f6 = 0.1.17 / -2f97 = 0.1.15），开始菜单 .lnk 也指向它；只读，别当源码
+D:\FpsTune                                         ← 本机唯一安装位（2026-10-07 ProductVersion 实测为 0.2.2-beta @ 3eb2854；本轮未覆盖），开始菜单 .lnk 也指向它；别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 
