@@ -437,6 +437,7 @@ public static class ExperimentWizardStore
                     var keep = group["keep"] is JsonNode k ? (bool?)k.GetValue<bool>() : null;
                     var reverted = group["reverted"]?.GetValue<bool>() ?? false;
                     var reason = group["reason"]?.GetValue<string>() ?? "";
+                    var simulated = group["samplerMode"]?.GetValue<string>() == "simulated";
                     var avg = sum["avgFps"] is JsonNode a ? a.GetValue<double>() : (double?)null;
                     var p1 = sum["p1Low"] is JsonNode p ? p.GetValue<double>() : (double?)null;
                     DateTime completed = DateTime.MinValue;
@@ -444,7 +445,7 @@ public static class ExperimentWizardStore
                         completed = t2;
                     state = ExperimentWizard.WithGroupResult(
                         state,
-                        new WizardGroupResult(id, keep, reverted, reason, avg, p1, null, false, completed),
+                        new WizardGroupResult(id, keep, reverted, reason, avg, p1, null, simulated, completed),
                         null);
                 }
             }

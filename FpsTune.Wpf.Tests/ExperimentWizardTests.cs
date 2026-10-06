@@ -218,6 +218,7 @@ public sealed class ExperimentWizardTests : IDisposable
         Assert.Single(migrated.Groups);
         Assert.Equal("group-1", migrated.Groups[0].GroupId);
         Assert.True(migrated.Groups[0].Keep);
+        Assert.True(migrated.Groups[0].Simulated);
     }
 
     [Fact]
