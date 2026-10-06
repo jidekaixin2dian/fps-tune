@@ -30,7 +30,7 @@ public static class GameContextService
     public static void ClearNeedsDetection() => NeedsDetection = false;
 
     /// <summary>切换到目标游戏（空路径清除当前选择）。返回 false = 找不到档案 / 检测进行中被拒；
-    /// 已是当前游戏时返回 true 且不做任何事。</summary>
+    /// 已是当前游戏时保持选择文件同步，不重建检测上下文。</summary>
     public static bool SwitchTo(string? exePath, bool detectIfMissing = false)
     {
         if (IsBusy)
@@ -39,7 +39,12 @@ public static class GameContextService
         if (!string.IsNullOrWhiteSpace(exePath) && profile is null)
             return false;
         if (string.Equals(AppState.GamePath, profile?.ExePath, StringComparison.OrdinalIgnoreCase))
+        {
+            // 自动检测可能已填入内存上下文，但用户仍未显式保存路径。
+            if (!string.Equals(StateStore.LoadGamePath(), profile?.ExePath, StringComparison.OrdinalIgnoreCase))
+                StateStore.SaveGamePath(profile?.ExePath);
             return true;
+        }
 
         StateStore.SaveGamePath(profile?.ExePath);
         AppState.GamePath = profile?.ExePath;

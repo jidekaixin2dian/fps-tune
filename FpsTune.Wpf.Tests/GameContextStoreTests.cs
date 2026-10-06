@@ -53,6 +53,34 @@ public sealed class GameContextStoreTests : IDisposable
     }
 
     [Fact]
+    public void Selecting_auto_detected_game_persists_path_without_replacing_context()
+    {
+        var profile = StateStore.AddGame(@"C:\Games\Detected.exe");
+        var previousPath = AppState.GamePath;
+        var previousBusy = GameContextService.IsBusyProvider;
+        var previousDetection = AppState.DetectJson;
+        try
+        {
+            StateStore.SaveGamePath(null);
+            AppState.GamePath = profile.ExePath;
+            GameContextService.IsBusyProvider = null;
+            var detection = new JsonObject { ["sentinel"] = true };
+            AppState.DetectJson = detection;
+
+            Assert.True(GameContextService.SwitchTo(profile.ExePath));
+
+            Assert.Equal(profile.ExePath, StateStore.LoadGamePath());
+            Assert.Same(detection, AppState.DetectJson);
+        }
+        finally
+        {
+            AppState.GamePath = previousPath;
+            AppState.DetectJson = previousDetection;
+            GameContextService.IsBusyProvider = previousBusy;
+        }
+    }
+
+    [Fact]
     public void PerGame_snapshots_are_isolated_and_leave_last_detect_untouched()
     {
         var g1 = StateStore.AddGame(@"C:\Games\A.exe");

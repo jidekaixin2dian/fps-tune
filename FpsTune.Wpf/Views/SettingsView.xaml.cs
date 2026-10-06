@@ -203,9 +203,7 @@ public partial class SettingsView : UserControl
     private void ClearGame_Click(object sender, RoutedEventArgs e)
     {
         GamePathBox.Text = "";
-        StateStore.SaveGamePath(null);
-        AppState.GamePath = null;
-        RefreshGamePathHint();
+        SaveGamePathFromBox();
     }
 
     // ---------- 开机自启 ----------
