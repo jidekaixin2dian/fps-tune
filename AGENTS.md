@@ -12,8 +12,8 @@
 | 版本 | `VersionPrefix=0.2.2` + `VersionSuffix=beta`；已发布记录 `v0.2.2-beta`（2026-10-03，标签 `3eb2854`）。2026-10-07 本地新增游戏隔离/采样减负/历史摘要等修复，尚未发布或部署；独立目录开发构建不作为同号 Release 资产 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.2 Beta** |
 | 开发分支 | **`main` 是技术主线**。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **354 / 354 通过**（2026-10-07，全量 Release；本轮新增游戏判定隔离/批量计数器/流式帧时间/历史摘要/字符串格式守卫）。全量重编译 0 错误、2 条 NU1900 网络审计警告，不能说 0 警告 |
-| 本轮未完 | 逐项 GUI 走查被 Computer Use 的当前浏览器 URL 策略检测终止；最终修复未完成界面复测。用户明确保留显示设置，禁止实际驱动/ICC 写入。先补走查与负载复测，再扩展功能；见 `docs/dev/AUDIT-PERFORMANCE-20261007.md` |
+| 测试基线 | **357 / 357 通过**（2026-10-07，最终全量 Release；新增旧备份往返/拒绝及显式游戏路径保存用例）。最终全量重编译 0 错误、3 条 NU1900 网络审计警告，不能说 0 警告 |
+| 本轮审查 | 已恢复 Computer Use 并试用主要页面的安全操作、复核改过的界面、短测概览/设置/隐藏/录制负载及恢复原数据。概览对照 CPU 均值约降 58%，Private Bytes 仅降 4.4 MiB；低配 CPU 收益未证实。未测真实游戏 FPS、优化写入/还原或驱动/ICC 写入；经典冷启动当前游戏框仍待完善，旧 wizard 模拟来源须核对。详见 `docs/dev/AUDIT-PERFORMANCE-20261007.md` |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-29.md`） |
 
 ## 第一步：确认基线，不要先改代码
@@ -21,7 +21,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 354 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 357 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
@@ -109,7 +109,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 354
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 代码健康度底数 | `docs/dev/CODE-HEALTH.md` | 体积/方法长度/警告数/已知债务；**接手先看，别重新量** |
-| 最新性能/冗余与功能审查 | `docs/dev/AUDIT-PERFORMANCE-20261007.md` | 短测结果、逐项已测/未测矩阵、下一步；354 项逻辑测试不等于 GUI 全功能验收 |
+| 最新性能/冗余与功能审查 | `docs/dev/AUDIT-PERFORMANCE-20261007.md` | CPU/RAM 对照、实际试用矩阵、残留问题及恢复校验；357 项逻辑测试不等于真实游戏或系统写入验收 |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
 | 1.x 历史存档 | `docs/archive/` | **不代表现状**；路径/版本/依赖都可能过期 |
 
