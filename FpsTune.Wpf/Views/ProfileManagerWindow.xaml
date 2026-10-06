@@ -81,7 +81,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="ProfileNameBox"
                                  Style="{StaticResource InputTextBoxStyle}"
-                                 Height="34"
+                                 MinHeight="40"
                                  VerticalContentAlignment="Center"
                                  FontSize="13"
                                  KeyDown="ProfileNameBox_KeyDown"/>
