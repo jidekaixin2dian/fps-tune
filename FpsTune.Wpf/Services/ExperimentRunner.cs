@@ -55,11 +55,14 @@ public static class ExperimentRunner
     {
         // 采样目标进程默认跟随当前定位的游戏主程序（红线四：全 FPS 通用）；
         // 未定位游戏时退回历史默认（三角洲）。
+        var gamePath = AppState.GamePath;
         var gameName = options.GameName;
         if (string.IsNullOrWhiteSpace(gameName))
-            gameName = !string.IsNullOrWhiteSpace(AppState.GamePath)
-                ? Path.GetFileNameWithoutExtension(AppState.GamePath)
+            gameName = !string.IsNullOrWhiteSpace(gamePath)
+                ? Path.GetFileNameWithoutExtension(gamePath)
                 : "DeltaForceClient-Win64-Shipping";
+        if (!string.Equals(gameName, Path.GetFileNameWithoutExtension(gamePath ?? ""), StringComparison.OrdinalIgnoreCase))
+            gamePath = null;
         options = options with { GameName = gameName };
 
         var (mode, groupId) = step switch
@@ -80,7 +83,7 @@ public static class ExperimentRunner
             {
                 "baseline" => await RunBaselineAsync(options, ct),
                 "report" => RunReport(options),
-                _ => await RunTestGroupAsync(groupId!, options, ct),
+                _ => await RunTestGroupAsync(groupId!, options, ct, gamePath),
             };
             var json = result.ToJsonString(JsonOpts);
             return (result["ok"]?.GetValue<bool>() == true ? 0 : 1, json);
@@ -156,7 +159,7 @@ public static class ExperimentRunner
     // 候选组测试
     // ------------------------------------------------------------------
 
-    private static async Task<JsonObject> RunTestGroupAsync(string groupId, Options options, CancellationToken ct)
+    private static async Task<JsonObject> RunTestGroupAsync(string groupId, Options options, CancellationToken ct, string? gamePath)
     {
         // 0.2.0 M1：已知组沿用硬编码清单；"custom" 组从 Options.Items 取项集合。
         var known = Groups.FirstOrDefault(g => g.Id == groupId);
@@ -273,7 +276,7 @@ public static class ExperimentRunner
                 Kind: itemIds.Length == 1 ? "item" : "bundle",
                 Items: itemIds,
                 GroupId: groupId,
-                Game: Path.GetFileNameWithoutExtension(AppState.GamePath ?? ""),
+                Game: options.GameName ?? "",
                 AvgFpsBase: baseAvg,
                 AvgFpsTest: testAvg,
                 P1LowBase: baselineSummary["p1Low"]!.GetValue<double>(),
@@ -286,7 +289,7 @@ public static class ExperimentRunner
                 At: DateTime.Now,
                 DurationSec: options.DurationSec,
                 Mode: samples.Mode ?? "auto",
-                GamePath: AppState.GamePath));
+                GamePath: gamePath));
         }
 
         // 4) 无效 → 自动还原（只还原本步骤真正改过、且记录在本次快照里的项）

@@ -648,7 +648,7 @@
 <s:String x:Key="Str.TabDrs">驱动 3D</s:String>
     <s:String x:Key="Str.TabAdvice">建议与清单</s:String>
     <s:String x:Key="Str.BadgeDefault">默认</s:String>
-    <s:String x:Key="Str.BadgeCustomCount">{}{0} 项</s:String>
+    <s:String x:Key="Str.BadgeCustomCount">{0} 项</s:String>
     <s:String x:Key="Str.NoGameLocated">未定位游戏</s:String>
 
     <!-- A/B 页 PresentMon 前置探测（P2-12） -->

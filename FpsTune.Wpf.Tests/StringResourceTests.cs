@@ -44,6 +44,20 @@ public class StringResourceTests
                .Select(m => m.Groups[1].Value));
 
     [Fact]
+    public void Driver_badge_count_can_be_formatted_in_both_locales()
+    {
+        foreach (var locale in new[] { "zh-CN", "en-US" })
+        {
+            var xml = System.Xml.Linq.XDocument.Load(Path.Combine(RepoRoot(), "FpsTune.Wpf", "Resources", $"Strings.{locale}.xaml"));
+            var key = System.Xml.Linq.XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
+            var template = xml.Descendants().Single(e => (string?)e.Attribute(key) == "Str.BadgeCustomCount").Value;
+            var formatted = string.Format(template, 4);
+            Assert.StartsWith("4 ", formatted);
+            Assert.DoesNotContain("{", formatted);
+        }
+    }
+
+    [Fact]
     public void No_duplicate_keys_within_a_dictionary()
     {
         // 0.2.0-beta.1 教训：同字典内重复键不报编译错，但 WPF 启动加载合并字典时

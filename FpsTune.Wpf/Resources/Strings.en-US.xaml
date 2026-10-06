@@ -648,7 +648,7 @@ Restart as administrator and restore afterwards?</s:String>
 <s:String x:Key="Str.TabDrs">Driver 3D</s:String>
     <s:String x:Key="Str.TabAdvice">Advice &amp; checklist</s:String>
     <s:String x:Key="Str.BadgeDefault">Default</s:String>
-    <s:String x:Key="Str.BadgeCustomCount">{}{0} set</s:String>
+    <s:String x:Key="Str.BadgeCustomCount">{0} set</s:String>
     <s:String x:Key="Str.NoGameLocated">No game located</s:String>
 
     <!-- A/B page PresentMon pre-check (P2-12) -->

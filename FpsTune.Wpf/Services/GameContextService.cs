@@ -29,7 +29,7 @@ public static class GameContextService
 
     public static void ClearNeedsDetection() => NeedsDetection = false;
 
-    /// <summary>切换到目标游戏。返回 false = 找不到档案 / 检测进行中被拒 / 参数为空；
+    /// <summary>切换到目标游戏（空路径清除当前选择）。返回 false = 找不到档案 / 检测进行中被拒；
     /// 已是当前游戏时返回 true 且不做任何事。</summary>
     public static bool SwitchTo(string? exePath, bool detectIfMissing = false)
     {
