@@ -92,6 +92,7 @@ public partial class App : Application
             }
 
             splash.SetPhase(80, Str.T("Str.SplashPhaseBuild"));
+            GameContextService.RestoreSavedSelection();
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
             mainWindow.IsVisibleChanged += (_, _) =>

@@ -53,6 +53,32 @@ public sealed class GameContextStoreTests : IDisposable
     }
 
     [Fact]
+    public void Startup_restores_saved_selection_without_loading_stale_detection()
+    {
+        var profile = StateStore.AddGame(@"C:\Games\Saved.exe");
+        StateStore.SaveGamePath(profile.ExePath);
+        var previousPath = AppState.GamePath;
+        var previousDetection = AppState.DetectJson;
+        try
+        {
+            AppState.GamePath = null;
+            var detection = new JsonObject { ["sentinel"] = true };
+            AppState.DetectJson = detection;
+
+            GameContextService.RestoreSavedSelection();
+
+            Assert.Equal(profile.ExePath, AppState.GamePath);
+            Assert.Equal(profile.Id, GameContextService.SelectedItem(GameContextService.BuildSwitcherItems())?.ProfileId);
+            Assert.Same(detection, AppState.DetectJson);
+        }
+        finally
+        {
+            AppState.GamePath = previousPath;
+            AppState.DetectJson = previousDetection;
+        }
+    }
+
+    [Fact]
     public void Selecting_auto_detected_game_persists_path_without_replacing_context()
     {
         var profile = StateStore.AddGame(@"C:\Games\Detected.exe");

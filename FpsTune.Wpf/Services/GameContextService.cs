@@ -29,6 +29,10 @@ public static class GameContextService
 
     public static void ClearNeedsDetection() => NeedsDetection = false;
 
+    /// <summary>首页创建前恢复已保存的选择；不加载旧检测快照，控制台仍按原流程刷新检测。</summary>
+    internal static void RestoreSavedSelection()
+        => AppState.GamePath = StateStore.FindGameByPath(StateStore.LoadGamePath())?.ExePath;
+
     /// <summary>切换到目标游戏（空路径清除当前选择）。返回 false = 找不到档案 / 检测进行中被拒；
     /// 已是当前游戏时保持选择文件同步，不重建检测上下文。</summary>
     public static bool SwitchTo(string? exePath, bool detectIfMissing = false)
