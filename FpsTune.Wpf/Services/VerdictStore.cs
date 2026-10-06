@@ -36,7 +36,8 @@ public static class VerdictStore
         double DeltaPct,
         DateTime At,
         int DurationSec,
-        string Mode);
+        string Mode,
+        string? GamePath = null);
 
     /// <summary>规范化键：按 id 排序后 "|" 连接，保证同集合幂等。</summary>
     public static string MakeKey(IEnumerable<string> itemIds)
@@ -48,7 +49,7 @@ public static class VerdictStore
         try
         {
             var entries = Load();
-            entries.RemoveAll(v => v.Key == entry.Key);
+            entries.RemoveAll(v => v.Key == entry.Key && SameGame(v, entry));
             entries.Add(entry);
             entries.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
             Directory.CreateDirectory(Dir);
@@ -79,17 +80,25 @@ public static class VerdictStore
 
     /// <summary>取单优化项的最新判定（项级徽标数据源）；无记录返回 null。</summary>
     public static VerdictEntry? FindItem(string itemId)
-        => Load().FirstOrDefault(v => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId);
+        => Load().Where(v => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId)
+            .MaxBy(v => v.At);
+
+    private static bool SameGame(VerdictEntry a, VerdictEntry b)
+        => string.Equals(a.GamePath, b.GamePath, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(a.Game, b.Game, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>项级徽标文案（本机实测 Δ 平均帧率百分比，带符号；无记录返回 null）。
     /// 0.2.0 M2：按当前游戏过滤——同一优化项在不同游戏的实测结论互不串台。</summary>
-    public static string? BadgeFor(string itemId, IReadOnlyList<VerdictEntry>? preloaded = null, string? gameName = null)
+    public static string? BadgeFor(string itemId, IReadOnlyList<VerdictEntry>? preloaded = null,
+        string? gameName = null, string? gamePath = null)
     {
         bool Match(VerdictEntry v) => v.Kind == "item" && v.Items.Count == 1 && v.Items[0] == itemId
-            && (gameName is null || string.Equals(v.Game, gameName, StringComparison.OrdinalIgnoreCase));
-        var hit = preloaded is null
-            ? Load().FirstOrDefault(Match)
-            : preloaded.FirstOrDefault(Match);
+            && (gameName is null || string.Equals(v.Game, gameName, StringComparison.OrdinalIgnoreCase))
+            && (gamePath is null || v.GamePath is null
+                || string.Equals(v.GamePath, gamePath, StringComparison.OrdinalIgnoreCase));
+        var hit = (preloaded ?? Load()).Where(Match)
+            .OrderByDescending(v => gamePath is not null && v.GamePath is not null)
+            .ThenByDescending(v => v.At).FirstOrDefault();
         return hit is null ? null : Str.T("Str.VerdictBadge", hit.DeltaPct);
     }
 

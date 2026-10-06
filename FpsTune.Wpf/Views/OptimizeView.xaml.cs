@@ -149,7 +149,12 @@ public partial class OptimizeView : UserControl
         _verdicts = VerdictStore.Load();
         var currentGame = System.IO.Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
-        if (ReferenceEquals(_sourceItems, AppState.Items)) return;
+        if (ReferenceEquals(_sourceItems, AppState.Items))
+        {
+            foreach (var vm in Items)
+                vm.VerdictBadge = VerdictStore.BadgeFor(vm.Id, _verdicts, currentGame, AppState.GamePath);
+            return;
+        }
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
         // 分组 ListCollectionView 在集合变化时会访问 CurrentPosition，不能在
         // DeferRefresh 作用域内逐项添加。列表规模很小，且仅在快照变化时重建。
@@ -160,7 +165,7 @@ public partial class OptimizeView : UserControl
             var vm = new OptimizationItemViewModel(item)
             {
                 IsChecked = selected.Contains(item.Id),
-                VerdictBadge = VerdictStore.BadgeFor(item.Id, _verdicts, currentGame),
+                VerdictBadge = VerdictStore.BadgeFor(item.Id, _verdicts, currentGame, AppState.GamePath),
             };
             vm.PropertyChanged += SelectionChanged;
             Items.Add(vm);

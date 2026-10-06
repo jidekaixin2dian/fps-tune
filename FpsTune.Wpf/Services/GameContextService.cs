@@ -31,19 +31,19 @@ public static class GameContextService
 
     /// <summary>切换到目标游戏。返回 false = 找不到档案 / 检测进行中被拒 / 参数为空；
     /// 已是当前游戏时返回 true 且不做任何事。</summary>
-    public static bool SwitchTo(string exePath, bool detectIfMissing = false)
+    public static bool SwitchTo(string? exePath, bool detectIfMissing = false)
     {
         if (IsBusy)
             return false;
-        var profile = StateStore.FindGameByPath(exePath);
-        if (profile is null)
+        var profile = string.IsNullOrWhiteSpace(exePath) ? null : StateStore.FindGameByPath(exePath);
+        if (!string.IsNullOrWhiteSpace(exePath) && profile is null)
             return false;
-        if (string.Equals(AppState.GamePath, profile.ExePath, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(AppState.GamePath, profile?.ExePath, StringComparison.OrdinalIgnoreCase))
             return true;
 
-        StateStore.SaveGamePath(profile.ExePath);
-        AppState.GamePath = profile.ExePath;
-        var root = StateStore.LoadDetectForGame(profile.Id);
+        StateStore.SaveGamePath(profile?.ExePath);
+        AppState.GamePath = profile?.ExePath;
+        var root = profile is null ? null : StateStore.LoadDetectForGame(profile.Id);
         AppState.DetectJson = root;
         AppState.Items = root is null ? new List<OptimizationItem>() : DetectionData.ParseItems(root);
         NeedsDetection = root is null && detectIfMissing;

@@ -162,8 +162,13 @@ public partial class SettingsView : UserControl
             GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["WarningBrush"];
             return;
         }
-        StateStore.SaveGamePath(text.Length > 0 ? text : null);
-        AppState.GamePath = text.Length > 0 ? text : null;
+        var path = text.Length > 0 ? StateStore.AddGame(text).ExePath : null;
+        if (!GameContextService.SwitchTo(path, detectIfMissing: true))
+        {
+            GamePathBox.Text = AppState.GamePath ?? "";
+            GamePathHint.Text = Str.T("Str.SwitchBlockedDetecting");
+            return;
+        }
         RefreshGamePathHint();
     }
 

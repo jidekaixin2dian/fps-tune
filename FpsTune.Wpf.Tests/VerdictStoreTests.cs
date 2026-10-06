@@ -79,4 +79,39 @@ public sealed class VerdictStoreTests : IDisposable
         File.WriteAllText(Path.Combine(_dir, "verdicts.json"), "{broken");
         Assert.Empty(VerdictStore.Load());
     }
+
+    [Fact]
+    public void Same_items_in_different_games_preserve_both_results()
+    {
+        var entry = Make("a", "item", ["a"]);
+        VerdictStore.Upsert(entry with { Game = "one", GamePath = @"C:\one\game.exe" });
+        VerdictStore.Upsert(entry with { Game = "two", GamePath = @"C:\two\game.exe" });
+        Assert.Equal(2, VerdictStore.Load().Count);
+        VerdictStore.Upsert(entry with { Game = "one", GamePath = @"c:\ONE\GAME.exe", Keep = false });
+        var all = VerdictStore.Load();
+        Assert.Equal(2, all.Count);
+        Assert.False(all.Single(v => v.Game == "one").Keep);
+        Assert.True(all.Single(v => v.Game == "two").Keep);
+    }
+
+    [Fact]
+    public void Identical_exe_names_in_different_directories_do_not_share_badges()
+    {
+        var entry = Make("a", "item", ["a"]) with { Game = "game", GamePath = @"C:\one\game.exe" };
+        VerdictStore.Upsert(entry);
+        Assert.Null(VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"C:\two\game.exe"));
+        Assert.NotNull(VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"c:\ONE\GAME.exe"));
+    }
+
+    [Fact]
+    public void Legacy_records_without_paths_remain_readable_and_do_not_overwrite_new_games()
+    {
+        var entry = Make("a", "item", ["a"]) with { Game = "game" };
+        VerdictStore.Upsert(entry);
+        Assert.NotNull(VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"C:\one\game.exe"));
+        VerdictStore.Upsert(entry with { GamePath = @"C:\one\game.exe", DeltaPct = 9 });
+        Assert.Equal(2, VerdictStore.Load().Count);
+        Assert.Equal(Str.T("Str.VerdictBadge", 9.0),
+            VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"C:\one\game.exe"));
+    }
 }

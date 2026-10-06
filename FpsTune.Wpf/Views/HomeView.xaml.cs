@@ -13,9 +13,13 @@ public partial class HomeView : UserControl
     public HomeView()
     {
         InitializeComponent();
-        GameContextService.GameSwitched += OnGameContextSwitched;
         Unloaded += (_, _) => GameContextService.GameSwitched -= OnGameContextSwitched;
-        Loaded += (_, _) => { RefreshContacts(); RefreshGameSwitcher(); };
+        Loaded += (_, _) =>
+        {
+            GameContextService.GameSwitched += OnGameContextSwitched;
+            RefreshContacts();
+            RefreshGameSwitcher();
+        };
         VersionText.Text = "v" + (System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
         // 优化项数量随 catalog 增长，首页文案不写死
         OptCardSummary.Text = $"预设与逐项开关、{ItemCatalog.All.Count} 项系统层优化、一键还原";

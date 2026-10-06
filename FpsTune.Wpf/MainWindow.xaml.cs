@@ -233,7 +233,8 @@ public partial class MainWindow : Window
     /// <summary>0.2.2 M2 收尾：接入游戏上下文服务（忙检数据源 + 自动补检测）。</summary>
     private void HookGameContextService()
     {
-        GameContextService.IsBusyProvider = () => GetPage("detect") is DetectView d && d.DetectionInFlight;
+        GameContextService.IsBusyProvider = () => _pageCache.TryGetValue("detect", out var page)
+            && page is DetectView d && d.DetectionInFlight;
         GameContextService.GameSwitched += () =>
         {
             NotifyGameSwitched();

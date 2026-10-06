@@ -108,7 +108,6 @@ public partial class ConsoleView : UserControl
     public ConsoleView()
     {
         InitializeComponent();
-        GameContextService.GameSwitched += OnGameContextSwitched;
         Loaded += OnLoaded;
         Unloaded += (_, _) =>
         {
@@ -121,6 +120,8 @@ public partial class ConsoleView : UserControl
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        GameContextService.GameSwitched += OnGameContextSwitched;
+        RefreshGameSwitcher();
         _owner = Window.GetWindow(this);
         if (_owner is not null) _owner.IsVisibleChanged += OwnerVisibilityChanged;
         StartMonitor();
@@ -267,7 +268,7 @@ public partial class ConsoleView : UserControl
         var verdicts = VerdictStore.Load();
         var currentGame = Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         _rows = _source.Select((item, index) => new Row($"{index + 1:00}",
-            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts, currentGame) })).ToList();
+            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts, currentGame, AppState.GamePath) })).ToList();
         foreach (var row in _rows) row.Item.PropertyChanged += ItemChanged;
         SetChecks(_preset == "custom" ? selected : OptimizationCatalog.ResolvePreset(_preset).ToHashSet());
         var count = _source.Count(i => i.Optimized);

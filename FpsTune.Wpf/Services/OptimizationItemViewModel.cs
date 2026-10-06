@@ -20,7 +20,17 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
     /// <summary>0.2.0 M1：项级实测徽标（无记录为 null，行内零宽不占位）；由页面注入。</summary>
-    public string? VerdictBadge { get; set; }
+    private string? _verdictBadge;
+    public string? VerdictBadge
+    {
+        get => _verdictBadge;
+        set
+        {
+            if (_verdictBadge == value) return;
+            _verdictBadge = value;
+            OnPropertyChanged();
+        }
+    }
 
     public OptimizationItemViewModel(OptimizationItem item)
     {
