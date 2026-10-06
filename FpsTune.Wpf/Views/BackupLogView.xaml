@@ -2,12 +2,14 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <Grid Margin="28,22,28,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 页头 -->
@@ -84,7 +86,7 @@
         <!-- 备份文件列表：区分"还能还原"与"已消费的 .restored 审计文件"（P2-11） -->
 
         <!-- 0.2.2 M4：改动总览（只读）——本工具改过什么：原值 vs 当前实时状态 -->
-        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
                 <Grid>
                     <StackPanel>
@@ -122,7 +124,7 @@
                 </ItemsControl>
             </StackPanel>
         </Border>
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -131,7 +133,7 @@
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <TextBlock Text="{DynamicResource Str.BackupFilesCard}" Style="{StaticResource CardTitleStyle}"/>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="{DynamicResource Str.ExportBackups}"
                             Style="{StaticResource GhostButtonStyle}" Margin="0,0,8,0"
                             Click="ExportBackups_Click"/>
@@ -196,7 +198,7 @@
         </Border>
 
         <!-- 日志 -->
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}">
+        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Height="260">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -211,4 +213,5 @@
             </Grid>
         </Border>
     </Grid>
+    </ScrollViewer>
 </UserControl>

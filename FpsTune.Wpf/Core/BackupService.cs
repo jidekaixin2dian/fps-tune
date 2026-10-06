@@ -85,7 +85,8 @@ public static partial class BackupService
             File.Delete(zipPath);
         using var archive = System.IO.Compression.ZipFile.Open(zipPath, System.IO.Compression.ZipArchiveMode.Create);
         var count = 0;
-        foreach (var file in Directory.EnumerateFiles(BackupDir, "csharp-backup-*"))
+        foreach (var file in Directory.EnumerateFiles(BackupDir, "*")
+                     .Where(file => IsBackupTransferName(Path.GetFileName(file)) && IsCSharpBackupFile(file)))
         {
             archive.CreateEntryFromFile(file, Path.GetFileName(file));
             count++;
@@ -103,8 +104,7 @@ public static partial class BackupService
         foreach (var entry in archive.Entries)
         {
             var name = Path.GetFileName(entry.Name);
-            if (!IsCSharpBackupFile(name) &&
-                !name.EndsWith(".json.restored", StringComparison.OrdinalIgnoreCase))
+            if (!IsBackupTransferName(name))
                 continue;
             if (File.Exists(Path.Combine(BackupDir, name)))
             {
@@ -156,5 +156,11 @@ public static partial class BackupService
         }
         return (imported, dup, invalid);
     }
+
+    private static bool IsBackupTransferName(string name) =>
+        (name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase)
+         || name.StartsWith(LegacyBackupPrefix, StringComparison.OrdinalIgnoreCase))
+        && (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith(".json.restored", StringComparison.OrdinalIgnoreCase));
 
 }

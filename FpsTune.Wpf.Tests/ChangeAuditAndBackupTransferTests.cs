@@ -120,6 +120,47 @@ public sealed class ChangeAuditAndBackupTransferTests : IDisposable
     }
 
     [Fact]
+    public void ExportImport_preserves_legacy_array_and_consumed_backups()
+    {
+        var legacy = WriteBackupFile("backup-20260824-101758.json", KeyboardLatencyRecord(20));
+        var consumed = KeyboardLatencyRecord(30);
+        consumed.Restored = true;
+        var restored = WriteBackupFile("backup-20260824-101759.json.restored", consumed);
+        File.WriteAllText(Path.Combine(_dir, "backup-powershell.json"), "{\"items\":[]}");
+        File.WriteAllText(Path.Combine(_dir, "csharp-backup-inflight.tmp"), "temporary");
+        var expectedLegacy = File.ReadAllBytes(legacy);
+        var expectedRestored = File.ReadAllBytes(restored);
+        var zip = Path.Combine(_dir, "transfer.zip");
+
+        Assert.Equal(2, BackupService.ExportBackups(zip));
+        File.Delete(legacy);
+        File.Delete(restored);
+
+        Assert.Equal((2, 0, 0), BackupService.ImportBackups(zip));
+        Assert.Equal(expectedLegacy, File.ReadAllBytes(legacy));
+        Assert.Equal(expectedRestored, File.ReadAllBytes(restored));
+        Assert.Equal((0, 2, 0), BackupService.ImportBackups(zip));
+        Assert.Equal(2, BackupService.ListBackupStatuses().Count);
+    }
+
+    [Fact]
+    public void Import_validates_legacy_records_and_ignores_unrelated_restored_names()
+    {
+        var zip = Path.Combine(_dir, "invalid-transfer.zip");
+        using (var archive = System.IO.Compression.ZipFile.Open(zip, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            using (var writer = new StreamWriter(archive.CreateEntry("backup-invalid.json").Open()))
+                writer.Write("[{\"Id\":\"keyboard-latency\",\"Kind\":\"registry\",\"Hive\":\"LocalMachine\",\"Path\":\"SOFTWARE\\\\Evil\",\"Name\":\"Evil\"}]");
+            using (var writer = new StreamWriter(archive.CreateEntry("settings.json.restored").Open()))
+                writer.Write(JsonSerializer.Serialize(new[] { KeyboardLatencyRecord(20) }));
+        }
+
+        Assert.Equal((0, 0, 1), BackupService.ImportBackups(zip));
+        Assert.False(File.Exists(Path.Combine(_dir, "backup-invalid.json")));
+        Assert.False(File.Exists(Path.Combine(_dir, "settings.json.restored")));
+    }
+
+    [Fact]
     public void Import_skips_files_failing_validation()
     {
         var zip = Path.Combine(_dir, "evil.zip");
