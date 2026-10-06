@@ -9,12 +9,12 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（36 个可还原优化项 + 实测闭环） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.2.3` + `VersionSuffix=beta`；2026-10-07 用户已授权本轮构建、push 与 Release。发布前上一版为 `v0.2.2-beta`（标签 `3eb2854`）；正式资产状态以 HANDOFF §2 为准 |
+| 版本 | `VersionPrefix=0.2.3` + `VersionSuffix=beta`；**v0.2.3-beta 已发布并设 Latest**（2026-10-07，标签/内嵌 SHA `8fe2a42`）。三项资产回下载哈希一致、构建提交 build/smoke CI 通过；本机 `D:\FpsTune` 已部署 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.2 Beta** |
 | 开发分支 | **`main` 是技术主线**。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
 | 测试基线 | **362 / 362 通过**（2026-10-07，全量 Release；新增启动游戏选择恢复与旧模拟来源精确匹配保护用例）。0.2.3 验证版全量重编译 **0 警告 / 0 错误**，未关闭 NuGet 审计 |
 | 本轮审查 | 已试用主要页面的安全操作并恢复原数据。历史冷启动概览对照 CPU 均值约降 58%、Private Bytes 仅降 4.4 MiB；0.2.3 同进程普通/低配复测未证明低配 CPU 收益。经典启动选择已修复；旧 G2/G3 精确匹配后只读标记模拟，G1 时间不匹配仍待核实。未测真实游戏 FPS 或优化/驱动/ICC 写入。详见 `docs/dev/AUDIT-PERFORMANCE-20261007.md` |
-| 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-29.md`） |
+| 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-10-07.md`） |
 
 ## 第一步：确认基线，不要先改代码
 
@@ -136,10 +136,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 362
   也会抛 `Remove-Item: missing path operand`（已实测，与文件数无关）。写脚本时一律用
   `Remove-Item -LiteralPath <路径>`，或 `foreach ($f in $items) { Remove-Item -LiteralPath $f.FullName }`。
   `publish-release.ps1` 曾因此把发布构建打断在打包之前，已于 `f09d944` 修掉。
-- 重跑 `publish-release.ps1` 前，先用 bash `rm -rf` 清掉
-  `dist/{single-file,folder,publish-tmp}-<版本>` 与 zip/清单：脚本开头的清理**没有**
-  `-ErrorAction`，一旦被拦会直接失败。它 `finally` 里的 `publish-tmp` 清理则会被跳过
-  （不影响退出码），需要手动清理。详见 `docs/HANDOFF.md` §2.1 与 `docs/archive/HANDOFF-轮次存档-20260925.md`（环境备忘）。
+- 重跑 `publish-release.ps1` 前先检查是否已部分成功；若需清理，只处理当前版本精确输出，
+  先核对解析后的绝对路径位于仓库 `dist/` 下，再使用 PowerShell `Remove-Item -LiteralPath`。
+  不跨 shell 拼接删除命令，不碰已发布旧版资产与 `work/` 探针。0.2.3 两脚本首次构建均成功。
 - `gh` CLI 已登录，仓库为 `jidekaixin2dian/fps-tune`（公开）。
 - Inno Setup 6 存在，路径由 `build-installer.ps1 -CheckOnly` 探测。
 
@@ -149,7 +148,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 362
 |---|---|
 | 运行 `FpsTune.exe -Apply` / GUI 里点"应用所选" | 真的改本机注册表、电源计划、服务、启动配置 |
 | 跑 `publish-release.ps1` / `build-installer.ps1` 后**未经用户拍板就发布** | 产物会公开出现在 GitHub Release；必须先本地构建 + git + 给用户看效果，拍板后才发 |
-| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `3eb2854` = 0.2.2-beta 已发布，部署流程见硬纪律第 7 条），不是源码 |
+| 覆盖 `D:\FpsTune` | 那是**本机安装位**（内嵌 SHA `8fe2a42` = 0.2.3-beta 已发布，部署流程见硬纪律第 7 条），不是源码；已有部署授权则不重复询问 |
 | force push / 重写 `main` 历史，或向 `legacy/1.x` 提交 | 破坏已推送历史或已冻结的 1.x |
 | 删 `dist/` 以外的目录、`work/` 里的探针 | 探针是驱动层实验的原始依据 |
 
@@ -160,7 +159,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 362
 ```
 C:\Users\Aether\Documents\fpstune\review-3a060d1   ← 主开发工作区（用户 2026-09-21 确认，代码在这里）
 C:\Users\Aether\Documents\GitHub\fps-tune          ← 次克隆，2026-09-01 建后停用；曾用来改 README 并推过 main
-D:\FpsTune                                         ← 本机唯一安装位（2026-10-07 ProductVersion 实测为 0.2.2-beta @ 3eb2854；本轮未覆盖），开始菜单 .lnk 也指向它；别当源码
+D:\FpsTune                                         ← 本机唯一安装位（2026-10-07 已部署并核验 0.2.3-beta @ 8fe2a42；旧版备份 D:\FpsTune-backup-20261007-070758），开始菜单 .lnk 也指向它；别当源码
 C:\Users\Aether\Documents\fps-tune-promo           ← 推广物料与文案（不在仓库里）
 ```
 

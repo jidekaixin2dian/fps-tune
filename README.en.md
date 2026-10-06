@@ -35,7 +35,8 @@ install directories; running processes' paths are never read. Use `-Game` for an
 
 ## Download
 
-**0.2.3-beta** shares preview/session sampling, pauses previews on hidden windows and inactive pages,
+**Released [v0.2.3-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.3-beta)** (2026-10-07)
+shares preview/session sampling, pauses previews on hidden windows and inactive pages,
 batches GPU counters, streams frame-time output, and loads session history as summaries.
 It fixes per-game verdict isolation, legacy backup ZIP transfers, profile names, saved game selection,
 and QR contact copying. Classic overview restores the saved game on startup. Legacy simulation labels
