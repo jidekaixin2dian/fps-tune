@@ -6,8 +6,8 @@ A **system-layer** frame-rate tuning bench for Windows gamers:
 detect → explain → confirm → apply → restore, every step reversible and every claim measurable.
 C# WPF + .NET 10; `FpsTune.exe` doubles as a headless CLI (command line / AI-agent entry point).
 
-> The UI is currently Chinese-only. The CLI, catalog and this README are readable without it —
-> and an English locale is a standing "good first issue".
+> Settings offers Chinese and English. Some interface text still falls back to Chinese;
+> localization is not yet complete.
 
 ![Overview: live load plus the state of all 36 items](assets/screenshots/01-overview.png)
 
@@ -34,6 +34,15 @@ Not game-specific — works for *Delta Force*, *Counter-Strike 2*, *VALORANT*, *
 install directories; running processes' paths are never read. Use `-Game` for an unrecognized title.
 
 ## Download
+
+**0.2.3-beta** shares preview/session sampling, pauses previews on hidden windows and inactive pages,
+batches GPU counters, streams frame-time output, and loads session history as summaries.
+It fixes per-game verdict isolation, legacy backup ZIP transfers, profile names, saved game selection,
+and QR contact copying. Classic overview restores the saved game on startup. Legacy simulation labels
+are corrected only when timestamps and metrics match their source, without rewriting the wizard on read.
+All 362 tests pass. An earlier cold-start comparison showed lower CPU use and a small RAM reduction;
+the final same-process low-spec check did not show a CPU/RAM benefit. Real-game FPS impact remains
+unverified. See the [audit](docs/dev/AUDIT-PERFORMANCE-20261007.md).
 
 Pick one from [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) (Windows 10/11 x64):
 

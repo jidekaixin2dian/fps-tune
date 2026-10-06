@@ -2,8 +2,8 @@
 
 版本号唯一来源：`Directory.Build.props` 的 `<VersionPrefix>`（三段数字，程序集 / 安装器 /
 CLI 自报版本共用）+ `<VersionSuffix>`（预发布标识，只进 `InformationalVersion` / `ProductVersion` 展示）。
-下文 `<ver>` 指 `VersionPrefix`。已发布最新：**`v0.1.13-beta`**（2026-09-28，标签 `0b23141`），上一版 `v0.1.12-beta`（`5c21ea4`）；
-发版状态细节看 `docs/HANDOFF.md` §2.1。
+下文 `<ver>` 指 `VersionPrefix`。本轮发布版本 **`v0.2.3-beta`**，上一版 `v0.2.2-beta`（`3eb2854`）；
+发布完成状态、构建 SHA 与验证以 `docs/HANDOFF.md` §2 为准。
 > 历史注记：1.x 版本线（v1.6.2 及之前）已在 `170a8bd` 重置为 0.1 Beta 线，旧版本号只出现在历史与 `docs/` 存档里。
 
 发布必须从最终提交开始。`publish-release.ps1` 读取干净工作树的
@@ -60,12 +60,15 @@ Output:
 
 ## 4. GitHub Release
 1. 先运行 `build-installer.ps1`；它会用当前单文件和便携包重写清单并加入安装器 SHA256。
-2. 只有所有本机验证通过后，创建与 `finalSha` 精确对应的 GitHub Release，tag 为 `v<ver>`。
+2. 只有所有本机验证通过后，创建与 `finalSha` 精确对应的 GitHub Release，tag 为 `v<ver>-beta`。
 3. Upload（**三个资产，与 README / README.en 下载表一致**）:
    - `dist\installer\FpsTune-Setup-<ver>.exe`
    - `dist\FpsTune-Portable-<ver>.zip`
    - `dist\SHA256SUMS-v<ver>.txt`
    不上传 `single-file-<ver>\FpsTune.exe`（验证用产物）。
 4. 发布前核对三个资产均存在、非空、版本正确，并按清单复核 SHA256；远端 tag/资产也须再次核对。
-5. Auto-update in the app will use GitHub latest release API
-   (repo: `jidekaixin2dian/fps-tune`).
+5. 每次 Release 必须同步更新 `README.md`、`README.en.md`、`AGENTS.md` 与 `docs/HANDOFF.md`。
+   构建前记录候选状态，发布验证后更新实际 tag/SHA/资产及校验结果并提交推送；
+   构建后文档提交不改变 Release 标签所对应的构建 SHA。
+6. 按用户既定口径将 beta Release 设置为 `--prerelease=false --latest`；应用更新检查使用
+   Release 列表端点（repo: `jidekaixin2dian/fps-tune`）。

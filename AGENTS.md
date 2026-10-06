@@ -9,11 +9,11 @@
 |---|---|
 | 项目 | FPS 帧律 / fps-tune —— Windows 系统层帧率调校台（36 个可还原优化项 + 实测闭环） |
 | 技术栈 | C# WPF · `net10.0-windows` · 单一 C# 引擎同时驱动 GUI 与无头 CLI |
-| 版本 | `VersionPrefix=0.2.2` + `VersionSuffix=beta`；已发布记录 `v0.2.2-beta`（2026-10-03，标签 `3eb2854`）。2026-10-07 本地新增游戏隔离/采样减负/历史摘要等修复，尚未发布或部署；独立目录开发构建不作为同号 Release 资产 |
+| 版本 | `VersionPrefix=0.2.3` + `VersionSuffix=beta`；2026-10-07 用户已授权本轮构建、push 与 Release。发布前上一版为 `v0.2.2-beta`（标签 `3eb2854`）；正式资产状态以 HANDOFF §2 为准 |
 | 版本线背景 | 1.x 线因 .NET 8 将于 2026-11-10 EOL，**已停止维护**（冻结点 `legacy/1.x` = `v1.6.2`）；现行线是 .NET 10 的 **0.2 Beta** |
 | 开发分支 | **`main` 是技术主线**。`beta` 内容已并入 `main`，仅作历史分支保留，不再单独演进 |
-| 测试基线 | **357 / 357 通过**（2026-10-07，最终全量 Release；新增旧备份往返/拒绝及显式游戏路径保存用例）。最终全量重编译 0 错误、3 条 NU1900 网络审计警告，不能说 0 警告 |
-| 本轮审查 | 已恢复 Computer Use 并试用主要页面的安全操作、复核改过的界面、短测概览/设置/隐藏/录制负载及恢复原数据。概览对照 CPU 均值约降 58%，Private Bytes 仅降 4.4 MiB；低配 CPU 收益未证实。未测真实游戏 FPS、优化写入/还原或驱动/ICC 写入；经典冷启动当前游戏框仍待完善，旧 wizard 模拟来源须核对。详见 `docs/dev/AUDIT-PERFORMANCE-20261007.md` |
+| 测试基线 | **362 / 362 通过**（2026-10-07，全量 Release；新增启动游戏选择恢复与旧模拟来源精确匹配保护用例）。0.2.3 验证版全量重编译 **0 警告 / 0 错误**，未关闭 NuGet 审计 |
+| 本轮审查 | 已试用主要页面的安全操作并恢复原数据。历史冷启动概览对照 CPU 均值约降 58%、Private Bytes 仅降 4.4 MiB；0.2.3 同进程普通/低配复测未证明低配 CPU 收益。经典启动选择已修复；旧 G2/G3 精确匹配后只读标记模拟，G1 时间不匹配仍待核实。未测真实游戏 FPS 或优化/驱动/ICC 写入。详见 `docs/dev/AUDIT-PERFORMANCE-20261007.md` |
 | 权威交接 | `AGENTS.md` + `docs/HANDOFF.md`（入库；**每轮收工必须两者都更新并提交**）+ 根目录 `HANDOFF_PROMPT_*.md`（不入库，单轮提示；当前 `HANDOFF_PROMPT_2026-09-29.md`） |
 
 ## 第一步：确认基线，不要先改代码
@@ -21,7 +21,7 @@
 ```bash
 cd /c/Users/Aether/Documents/fpstune/review-3a060d1   # 主开发工作区
 git status --short && git log --oneline -3
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 357 全绿
+dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 362 全绿
 ```
 
 基线不绿就先查为什么，别把别人的红灯算到自己头上。然后向用户确认本轮优先级，再动手。
@@ -67,6 +67,9 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 357
    - **三资产要跑两个脚本**：`publish-release.ps1` 只产单文件 exe + Portable zip + `SHA256SUMS`，
      **不产安装包**；`dist/installer/FpsTune-Setup-<版本>.exe` 由 **`build-installer.ps1` 单独产出**。
      两者都跑完才凑齐 Setup + Portable + SHA256SUMS。
+   - **每次 Release 必须更新 README 与本地交接**（用户 2026-10-07 明确要求）：构建前同步
+     `README.md` / `README.en.md` 的版本与变化，以及 `AGENTS.md` / `docs/HANDOFF.md` 的验证状态；
+     远端发布验证后补实际标签、构建 SHA、资产与 CI 结果并提交、push。已有明确授权时不重复问拍板。
    - `publish-release.ps1` 要求 **tracked tree 干净**，并把 HEAD 的完整 SHA 嵌进
      `InformationalVersion`——所以**必须先 commit 再构建**；早于最终提交的产物不能当发布资产。
    - **改版本号是"做好"的一部分**：`VersionPrefix` 若与已发布版本相同，重建会**覆盖 `dist/` 里
@@ -109,7 +112,7 @@ dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release   # 期望 357
 | P2-6 热门优化项 | `docs/dev/PLAN-P2-6-hot-options.md` | 六项逐项结论；**图像锐化 / 三重缓冲"不做"的理由在此，别再重查** |
 | 代理开发纪律 | `docs/dev/AI-WORKFLOW.md` | 硬要求 |
 | 代码健康度底数 | `docs/dev/CODE-HEALTH.md` | 体积/方法长度/警告数/已知债务；**接手先看，别重新量** |
-| 最新性能/冗余与功能审查 | `docs/dev/AUDIT-PERFORMANCE-20261007.md` | CPU/RAM 对照、实际试用矩阵、残留问题及恢复校验；357 项逻辑测试不等于真实游戏或系统写入验收 |
+| 最新性能/冗余与功能审查 | `docs/dev/AUDIT-PERFORMANCE-20261007.md` | CPU/RAM 对照、实际试用矩阵、0.2.3 收尾及恢复校验；362 项逻辑测试不等于真实游戏或系统写入验收 |
 | 工具使用者流程 | `SKILL.md` | 面向用户，不是开发者 |
 | 1.x 历史存档 | `docs/archive/` | **不代表现状**；路径/版本/依赖都可能过期 |
 
