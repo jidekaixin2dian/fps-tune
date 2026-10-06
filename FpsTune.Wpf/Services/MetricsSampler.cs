@@ -38,18 +38,17 @@ public sealed class MetricsSampler : IDisposable
 
     private PerformanceCounter? _cpu;
     private bool _cpuPrimed;
-    private readonly MetricCounterSet<PerformanceCounter> _gpuEngineCounters = new(
-        name => new PerformanceCounter("GPU Engine", "Utilization Percentage", name, readOnly: true), c => c.NextValue());
-    private readonly MetricCounterSet<PerformanceCounter> _vramCounters = new(
-        name => new PerformanceCounter("GPU Adapter Memory", "Dedicated Usage", name, readOnly: true), c => c.NextValue());
-    private int _gpuRefreshCountdown;
-    private int _vramRefreshCountdown;
+    private Dictionary<string, CounterSample> _gpuPrevious = new(StringComparer.Ordinal);
     private double? _vramTotalBytes;
     private bool _vramTotalQueried;
     private int _disposed;
 
     /// <summary>新样本产生时触发（DispatcherTimer 保证在创建线程上回调）。</summary>
     public event Action<MetricSample>? Sampled;
+    internal bool HasSubscribers => Sampled is not null;
+
+    internal void PublishExternal(MetricSample sample, IReadOnlyDictionary<string, string> reasons)
+        => Publish(sample, reasons);
 
     public MetricsSampler(TimeSpan? interval = null, int capacity = 600)
         : this(interval, capacity, null) { }
@@ -197,8 +196,7 @@ public sealed class MetricsSampler : IDisposable
             {
                 _cpu?.Dispose();
                 _cpu = null;
-                _gpuEngineCounters.Dispose();
-                _vramCounters.Dispose();
+                _gpuPrevious.Clear();
                 _unavailable.Clear();
             }
         });
@@ -250,42 +248,36 @@ public sealed class MetricsSampler : IDisposable
     {
         try
         {
-            if (_gpuEngineCounters.Count == 0 || _gpuRefreshCountdown-- <= 0)
-            {
-                _gpuRefreshCountdown = 20;
-                try { _gpuEngineCounters.Refresh(new PerformanceCounterCategory("GPU Engine").GetInstanceNames()); }
-                catch when (_gpuEngineCounters.Count > 0) { _gpuRefreshCountdown = 0; }
-            }
-            var values = _gpuEngineCounters.Read(needsBaseline: true);
-            var aggregated = GpuCounterMath.AggregateGpuUtilization(values);
+            var current = ReadCategorySamples("GPU Engine", "Utilization Percentage");
+            var aggregated = GpuCounterMath.AggregateGpuUtilization(
+                GpuCounterMath.CalculateRates(current, _gpuPrevious));
+            _gpuPrevious = current;
             if (aggregated is null)
             {
-                _gpuRefreshCountdown = 0;
-                return SetReason("gpu", _gpuEngineCounters.Count == 0
+                return SetReason("gpu", current.Count == 0
                     ? "系统未提供 GPU Engine 性能计数器"
                     : "GPU 正在建立采样基线，或当前实例尚无有效读数");
             }
             _unavailable.Remove("gpu");
             return aggregated;
         }
-        catch (Exception ex) { return SetReason("gpu", "GPU 计数器不可用：" + ex.Message); }
+        catch (Exception ex)
+        {
+            _gpuPrevious.Clear();
+            return SetReason("gpu", "GPU 计数器不可用：" + ex.Message);
+        }
     }
 
     private double? ReadVramUsedBytes()
     {
         try
         {
-            if (_vramCounters.Count == 0 || _vramRefreshCountdown-- <= 0)
-            {
-                _vramRefreshCountdown = 20;
-                try { _vramCounters.Refresh(new PerformanceCounterCategory("GPU Adapter Memory").GetInstanceNames()); }
-                catch when (_vramCounters.Count > 0) { _vramRefreshCountdown = 0; }
-            }
             // Dedicated Usage 是当前字节数，不是两次读数相减的利用率，无需抛弃首个读数。
-            var total = GpuCounterMath.AggregateAdapterDedicatedBytes(_vramCounters.Read(needsBaseline: false));
+            var values = ReadCategorySamples("GPU Adapter Memory", "Dedicated Usage");
+            var total = GpuCounterMath.AggregateAdapterDedicatedBytes(
+                values.Select(pair => (pair.Key, (double)pair.Value.RawValue)));
             if (total is null)
             {
-                _vramRefreshCountdown = 0;
                 return SetReason("vram", "系统未提供有效的专用显存读数");
             }
             _unavailable.Remove("vram");
@@ -313,6 +305,15 @@ public sealed class MetricsSampler : IDisposable
             SetReason("vram-total", "显存容量读取失败：" + ex.Message);
         }
         return _vramTotalBytes > 0 ? _vramTotalBytes : null;
+    }
+
+    // ReadCategory takes one snapshot for all instances. NextValue per GPU instance
+    // repeatedly reads the same large category and creates hundreds of native handles.
+    private static Dictionary<string, CounterSample> ReadCategorySamples(string category, string counter)
+    {
+        var data = new PerformanceCounterCategory(category).ReadCategory()[counter];
+        return data.Values.Cast<InstanceData>()
+            .ToDictionary(instance => instance.InstanceName, instance => instance.Sample, StringComparer.Ordinal);
     }
 
     private double? SetReason(string key, string reason)

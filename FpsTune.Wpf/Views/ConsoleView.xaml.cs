@@ -152,6 +152,7 @@ public partial class ConsoleView : UserControl
         if (_sampler is not null || !IsVisible) return;
         _sampler = App.LiveMetrics;
         _sampler.Sampled += ShowMetrics;
+        App.UpdateLiveMetrics();
         if (_sampler.Buffer.LastOrDefault() is { } latest) ShowMetrics(latest);
     }
 
@@ -160,6 +161,7 @@ public partial class ConsoleView : UserControl
         if (_sampler is null) return;
         _sampler.Sampled -= ShowMetrics;
         _sampler = null;
+        App.UpdateLiveMetrics();
     }
 
     private void ShowMetrics(MetricSample sample)
@@ -260,6 +262,7 @@ public partial class ConsoleView : UserControl
 
     private void RebuildRows()
     {
+        RefreshGameSwitcher();
         UpdatePreparation();
         if (ReferenceEquals(_source, AppState.Items)) return;
         var selected = _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToHashSet();

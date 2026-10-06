@@ -84,6 +84,8 @@ public sealed class PerformanceSessionService : IDisposable
         catch
         {
             IsRunning = false;
+            _fpsRecorder?.Stop();
+            _fpsRecorder = null;
             _sampler?.Dispose();
             _sampler = null;
             LatestSample = null;

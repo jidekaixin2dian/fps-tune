@@ -16,11 +16,14 @@ public sealed class SessionFpsRecorder
     private readonly Func<string?> _findPresentMon;
     private readonly Func<string?, Process?> _findGameProcess;
     private readonly Func<ProcessStartInfo, Process?> _start;
-    private readonly Func<Process, Task<string[]>> _readOutput;
+    private readonly Func<Process, Task<string[]>>? _readOutput;
     private readonly Action<Process> _kill;
 
     private Process? _proc;
     private Task<string[]>? _readTask;
+    private Task? _captureTask;
+    private Task? _errorTask;
+    private string? _outputPath;
     private string? _unavailableReasonKey;
     private string? _parseError;
 
@@ -38,15 +41,11 @@ public sealed class SessionFpsRecorder
                 return null;
             var name = Path.GetFileNameWithoutExtension(path);
             var procs = Process.GetProcessesByName(name);
-            return procs.Length > 0 ? procs[0] : null;
+            foreach (var process in procs.Skip(1)) process.Dispose();
+            return procs.FirstOrDefault();
         });
         _start = startProcess ?? Process.Start;
-        _readOutput = readOutput ?? (Func<Process, Task<string[]>>)(async p =>
-        {
-            // 与 ExperimentRunner.RunProcessAsync 同口径：按换行切行
-            var text = await p.StandardOutput.ReadToEndAsync();
-            return text.Split('\n');
-        });
+        _readOutput = readOutput;
         _kill = kill ?? (p => { try { p.Kill(entireProcessTree: true); } catch { /* 已退出即达标 */ } });
     }
 
@@ -58,13 +57,16 @@ public sealed class SessionFpsRecorder
     /// <summary>会话开始时调用。成功后 PresentMon 在后台持续采样；失败时记录降级原因并返回 false。</summary>
     public bool Start(string? gamePath)
     {
+        if (_proc is not null) return false;
+        _unavailableReasonKey = null;
+        _parseError = null;
         var pm = _findPresentMon();
         if (pm is null)
         {
             _unavailableReasonKey = "Str.FpsReasonNoPresentMon";
             return false;
         }
-        var game = _findGameProcess(gamePath);
+        using var game = _findGameProcess(gamePath);
         if (game is null)
         {
             _unavailableReasonKey = "Str.FpsReasonNoGameProcess";
@@ -96,14 +98,23 @@ public sealed class SessionFpsRecorder
                 _unavailableReasonKey = "Str.FpsReasonNoPresentMon";
                 return false;
             }
-            _readTask = _readOutput(_proc);
+            if (_readOutput is not null)
+                _readTask = _readOutput(_proc);
+            else
+            {
+                _outputPath = Path.Combine(Path.GetTempPath(), "FpsTune-frames-" + Guid.NewGuid().ToString("N") + ".csv");
+                _captureTask = CaptureOutputAsync(_proc, _outputPath);
+                _errorTask = DrainErrorsAsync(_proc);
+            }
             return true;
         }
         catch
         {
             _unavailableReasonKey = "Str.FpsReasonNoPresentMon";
+            if (_proc is not null) _kill(_proc);
             _proc?.Dispose();
             _proc = null;
+            CleanupOutput(_outputPath, _captureTask);
             return false;
         }
     }
@@ -113,27 +124,39 @@ public sealed class SessionFpsRecorder
     {
         var proc = _proc;
         var readTask = _readTask;
+        var capture = _captureTask;
+        var errors = _errorTask;
+        var path = _outputPath;
         _proc = null;
         _readTask = null;
-        if (proc is null || readTask is null)
+        _captureTask = null;
+        _errorTask = null;
+        _outputPath = null;
+        if (proc is null)
             return null;
 
-        string[] lines;
+        FrameParseResult parsed;
         try
         {
             _kill(proc);
-            lines = readTask.Wait(TimeSpan.FromSeconds(10)) ? readTask.Result : [];
+            if (readTask is not null)
+                parsed = FrameTimeStats.Parse(readTask.Wait(TimeSpan.FromSeconds(10)) ? readTask.Result : []);
+            else if (capture is not null && path is not null
+                && Task.WhenAll(capture, errors ?? Task.CompletedTask).Wait(TimeSpan.FromSeconds(10)))
+                parsed = FrameTimeStats.Parse(File.ReadLines(path));
+            else
+                parsed = FrameTimeStats.Parse([]);
         }
         catch
         {
-            lines = [];
+            parsed = FrameTimeStats.Parse([]);
         }
         finally
         {
             proc.Dispose();
+            CleanupOutput(path, capture);
         }
 
-        var parsed = FrameTimeStats.Parse(lines.Where(l => l.Length > 0));
         if (parsed.Frame is null)
         {
             _unavailableReasonKey = "Str.FpsReasonParseFailed";
@@ -148,6 +171,34 @@ public sealed class SessionFpsRecorder
         }
         var frame = parsed.Frame;
         return new SessionFpsStats(frame.Samples, frame.AvgFps, frame.P1Low, frame.P99Ms, frame.Stutters);
+    }
+
+    private static async Task CaptureOutputAsync(Process process, string path)
+    {
+        await using var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write,
+            FileShare.Read, 65536, useAsync: true);
+        await using var writer = new StreamWriter(file);
+        while (await process.StandardOutput.ReadLineAsync().ConfigureAwait(false) is { } line)
+            await writer.WriteLineAsync(line).ConfigureAwait(false);
+    }
+
+    private static async Task DrainErrorsAsync(Process process)
+    {
+        var buffer = new char[4096];
+        while (await process.StandardError.ReadAsync(buffer).ConfigureAwait(false) > 0) { }
+    }
+
+    private static void CleanupOutput(string? path, Task? capture)
+    {
+        if (path is null) return;
+        if (capture is { IsCompleted: false })
+        {
+            _ = capture.ContinueWith(_ => CleanupOutput(path, null), TaskScheduler.Default);
+            return;
+        }
+        try { File.Delete(path); }
+        catch (IOException) { /* Only this recorder's scratch file; never delete user data. */ }
+        catch (UnauthorizedAccessException) { }
     }
 
     private static string SafeProcessName(Process game)

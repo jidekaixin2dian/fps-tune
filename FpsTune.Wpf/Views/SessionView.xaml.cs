@@ -16,8 +16,10 @@ public partial class SessionView : UserControl
 {
     private readonly DispatcherTimer _ticker;
     private bool _refreshing;
+    private int _historyGeneration;
     private string? _preparationHint;
     private IReadOnlyList<PerformanceSession> _sessions = Array.Empty<PerformanceSession>();
+    private IReadOnlyDictionary<string, SessionSummary> _summaries = new Dictionary<string, SessionSummary>();
 
     public SessionView()
     {
@@ -59,6 +61,12 @@ public partial class SessionView : UserControl
         Service.Sampled -= Service_Sampled;
         Service.StateChanged -= Service_StateChanged;
         _ticker.Stop();
+        _historyGeneration++;
+        _refreshing = false;
+        _sessions = Array.Empty<PerformanceSession>();
+        _summaries = new Dictionary<string, SessionSummary>();
+        HistoryList.ItemsSource = CompareA.ItemsSource = CompareB.ItemsSource = null;
+        CompareRows.ItemsSource = InsightList.ItemsSource = null;
     }
 
     // ---------- 状态与实时指标 ----------
@@ -79,6 +87,7 @@ public partial class SessionView : UserControl
 
     private void Service_Sampled(MetricSample sample)
     {
+        if (!IsVisible || Window.GetWindow(this)?.WindowState == WindowState.Minimized) return;
         if (!Dispatcher.CheckAccess())
         {
             Dispatcher.BeginInvoke(() => Service_Sampled(sample));
@@ -90,6 +99,7 @@ public partial class SessionView : UserControl
 
     private void UpdateRunState()
     {
+        if (!IsVisible || Window.GetWindow(this)?.WindowState == WindowState.Minimized) return;
         if (Service.IsRunning)
         {
             var unavailable = Service.CurrentUnavailableReasons;
@@ -262,15 +272,20 @@ public partial class SessionView : UserControl
         if (_refreshing)
             return;
         _refreshing = true;
+        var generation = ++_historyGeneration;
         try
         {
             RefreshControlState();
             var snapshot = await Task.Run(() =>
             {
-                var sessions = PerformanceSessionStore.LoadAll();
-                return (Sessions: sessions, Rows: BuildHistoryRows(sessions));
+                var history = PerformanceSessionStore.LoadHistory();
+                var sessions = history.Select(s => s.Header).ToList();
+                var summaries = history.ToDictionary(s => s.Header.Id, s => s.Summary);
+                return (Sessions: sessions, Summaries: summaries, Rows: BuildHistoryRows(sessions, summaries));
             });
+            if (generation != _historyGeneration || !IsLoaded) return;
             _sessions = snapshot.Sessions;
+            _summaries = snapshot.Summaries;
             HistoryList.ItemsSource = snapshot.Rows;
             HistoryEmptyText.Visibility = _sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             RefreshCompareSources();
@@ -280,19 +295,21 @@ public partial class SessionView : UserControl
         }
         catch (Exception ex)
         {
-            RunStateText.Text = "历史记录读取失败：" + ex.Message;
+            if (generation == _historyGeneration && IsLoaded)
+                RunStateText.Text = "历史记录读取失败：" + ex.Message;
         }
         finally
         {
-            _refreshing = false;
+            if (generation == _historyGeneration) _refreshing = false;
         }
     }
 
-    private static List<SessionListVm> BuildHistoryRows(IReadOnlyList<PerformanceSession> sessions)
+    private static List<SessionListVm> BuildHistoryRows(IReadOnlyList<PerformanceSession> sessions,
+        IReadOnlyDictionary<string, SessionSummary> summaries)
     {
         return sessions.Select(s =>
         {
-            var sum = SessionStatistics.Summarize(s);
+            var sum = summaries[s.Id];
             var avgParts = new List<string>();
             if (sum.Cpu is { } c) avgParts.Add($"CPU {c.Avg}%");
             if (sum.Mem is { } m) avgParts.Add($"内存 {m.Avg}%");
@@ -409,7 +426,10 @@ public partial class SessionView : UserControl
             DialogService.Info("性能会话", Str.T("Str.SelectExactlyOneSession"));
             return null;
         }
-        return _sessions.FirstOrDefault(s => s.Id == selected[0].Id);
+        var path = Path.Combine(PerformanceSessionStore.SessionsDir, PerformanceSessionStore.FileNameFor(selected[0].Id));
+        if (PerformanceSessionStore.TryLoadFile(path, out var session, out var error)) return session;
+        DialogService.Warning(Str.T("Str.ExportFailed"), error ?? Str.T("Str.Unavailable"));
+        return null;
     }
 
     private static string SanitizeFileName(string name)
@@ -422,7 +442,8 @@ public partial class SessionView : UserControl
 
     private void ShowInsights(PerformanceSession session)
     {
-        var summary = SessionStatistics.Summarize(session);
+        var summary = session.Samples.Count == 0 && _summaries.TryGetValue(session.Id, out var cached)
+            ? cached : SessionStatistics.Summarize(session);
         var end = session.EndedAt
                   ?? (session.Samples.Count > 0 ? session.Samples[^1].T : session.StartedAt);
         var findings = SessionInsights.Evaluate(summary, session.StartedAt, end).ToList();
@@ -525,8 +546,8 @@ public partial class SessionView : UserControl
             return;
         }
 
-        var sa = SessionStatistics.Summarize(a);
-        var sb = SessionStatistics.Summarize(b);
+        var sa = _summaries[a.Id];
+        var sb = _summaries[b.Id];
         CompareHint.Text = $"A = {a.Name}（{a.StartedAt:MM-dd HH:mm}，{sa.SampleCount} 样本） · B = {b.Name}（{b.StartedAt:MM-dd HH:mm}，{sb.SampleCount} 样本）";
 
         var rows = new List<CompareRowVm>

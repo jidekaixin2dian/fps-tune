@@ -17,6 +17,28 @@ public partial class App : Application
     /// <summary>性能会话服务：应用级单例，页面切换不影响运行中的会话。</summary>
     public static PerformanceSessionService SessionService { get; } = new();
 
+    static App()
+    {
+        SessionService.StateChanged += UpdateLiveMetrics;
+        SessionService.Sampled += sample =>
+        {
+            if (_liveMetrics?.HasSubscribers == true && PreviewWindowVisible)
+                _liveMetrics.PublishExternal(sample, SessionService.CurrentUnavailableReasons);
+        };
+    }
+
+    private static bool PreviewWindowVisible => Current?.MainWindow is { IsVisible: true } window
+        && window.WindowState != WindowState.Minimized;
+
+    internal static void UpdateLiveMetrics()
+    {
+        if (_liveMetrics is null) return;
+        if (PreviewWindowVisible && _liveMetrics.HasSubscribers && !SessionService.IsRunning)
+            _liveMetrics.Start();
+        else
+            _liveMetrics.Stop();
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         // 无头 CLI 模式：命令行以已知动词（-Detect/-Apply/...）开头时不进 GUI，执行完直接退出。
@@ -74,8 +96,9 @@ public partial class App : Application
             MainWindow = mainWindow;
             mainWindow.IsVisibleChanged += (_, _) =>
             {
-                if (mainWindow.IsVisible) LiveMetrics.Start(); else _liveMetrics?.Stop();
+                UpdateLiveMetrics();
             };
+            mainWindow.StateChanged += (_, _) => UpdateLiveMetrics();
             // 首帧渲染 ≠ 首页数据就绪（控制台概览首启要跑后台检测、经典概览要等 WMI）。
             // splash 等到「首帧 + 首页数据就绪信号」双条件齐备才放行，超时兜底防启动卡死。
             var firstFrame = new TaskCompletionSource();
@@ -92,13 +115,6 @@ public partial class App : Application
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();
 
-            // 空闲预热重页（优化/显示）：构建挪出点击关键路径，首点即开。
-            // 失败不影响使用——首次导航仍会按原路径懒加载。
-            Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
-            {
-                try { mainWindow.WarmHeavyPages(); }
-                catch { /* 预热失败不阻塞 */ }
-            }));
         }));
     }
 

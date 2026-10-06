@@ -39,6 +39,28 @@ public sealed class SessionTests : IDisposable
     // ---------- 统计 ----------
 
     [Fact]
+    public void History_retains_summaries_without_samples_and_export_can_reload_full_data()
+    {
+        var older = MakeSession(PerformanceSessionStore.NewSessionId(), 14400);
+        var newer = MakeSession(PerformanceSessionStore.NewSessionId(), 10) with
+        {
+            StartedAt = older.StartedAt.AddDays(1),
+            EndedAt = older.EndedAt!.Value.AddDays(1),
+            Fps = new SessionFpsStats(1000, 120, 80, 12, 3)
+        };
+        PerformanceSessionStore.Save(older);
+        PerformanceSessionStore.Save(newer);
+        var history = PerformanceSessionStore.LoadHistory();
+        Assert.Equal(newer.Id, history[0].Header.Id);
+        Assert.All(history, entry => Assert.Empty(entry.Header.Samples));
+        Assert.Equal(SessionStatistics.Summarize(older), history[1].Summary);
+        Assert.Equal(newer.Fps, history[0].Header.Fps);
+        var path = Path.Combine(_dir, PerformanceSessionStore.FileNameFor(older.Id));
+        Assert.True(PerformanceSessionStore.TryLoadFile(path, out var reloaded, out _));
+        Assert.Equal(14400, reloaded!.Samples.Count);
+    }
+
+    [Fact]
     public void Statistics_computes_avg_peak_percentiles_and_skips_missing()
     {
         var samples = new List<SessionSamplePoint>

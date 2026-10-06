@@ -91,28 +91,36 @@ public static class PerformanceSessionStore
 
     /// <summary>加载全部会话（按开始时间倒序）。损坏文件留档后跳过。</summary>
     public static List<PerformanceSession> LoadAll()
+        => EnumerateSessions().OrderByDescending(s => s.StartedAt).ToList();
+
+    /// <summary>历史页面只保留摘要；逐文件读取，避免同时持有全部采样点。</summary>
+    public static List<SessionHistoryEntry> LoadHistory()
+        => EnumerateSessions().Select(s => new SessionHistoryEntry(
+            s with { Samples = Array.Empty<SessionSamplePoint>(),
+                EndedAt = s.EndedAt ?? (s.Samples.Count > 0 ? s.Samples[^1].T : s.StartedAt) },
+            SessionStatistics.Summarize(s)))
+            .OrderByDescending(s => s.Header.StartedAt).ToList();
+
+    private static IEnumerable<PerformanceSession> EnumerateSessions()
     {
-        var result = new List<PerformanceSession>();
         List<string>? files = null;
         try
         {
             if (!Directory.Exists(SessionsDir))
-                return result;
+                yield break;
             files = Directory.GetFiles(SessionsDir, "*.json").ToList();
         }
         catch
         {
-            return result;
+            files = null;
         }
 
+        if (files is null) yield break;
         foreach (var file in files)
         {
             if (IsManagedSessionFile(file) && TryLoadFile(file, out var session, out _) && session is not null)
-                result.Add(session);
+                yield return session;
         }
-        return result
-            .OrderByDescending(s => s.StartedAt)
-            .ToList();
     }
 
     /// <summary>读取单个会话文件。schemaVersion 不兼容时 error 说明且不删除；损坏时留档 .corrupt。</summary>

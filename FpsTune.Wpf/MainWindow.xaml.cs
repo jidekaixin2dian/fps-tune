@@ -387,15 +387,4 @@ public partial class MainWindow : Window
             home.RefreshContacts();
     }
 
-    /// <summary>
-    /// 空闲预热重页（用户反馈"首点优化/显示必卡"的后续优化）：把 XAML 解析与
-    /// 列表构建挪到启动后的空闲档完成，首次点击即开。不触发布局与数据读取
-    /// （页面未 attach，Loaded 不会触发），只做构建。
-    /// </summary>
-    internal void WarmHeavyPages()
-    {
-        if (GetPage("opt") is OptimizeView opt)
-            opt.ReloadFromState();
-        _ = GetPage("display");
-    }
 }

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace FpsTune.Wpf.Services;
 
 /// <summary>解析后的 GPU Engine 实例身份。</summary>
@@ -22,6 +24,18 @@ public sealed record GpuEngineInstance(
 /// </summary>
 public static class GpuCounterMath
 {
+    internal static IEnumerable<(string Instance, double Value)> CalculateRates(
+        IReadOnlyDictionary<string, CounterSample> current, IReadOnlyDictionary<string, CounterSample> previous)
+    {
+        foreach (var (name, sample) in current)
+        {
+            if (!previous.TryGetValue(name, out var baseline)) continue;
+            double value;
+            try { value = CounterSample.Calculate(baseline, sample); }
+            catch { continue; }
+            if (double.IsFinite(value)) yield return (name, value);
+        }
+    }
     /// <summary>解析 GPU Engine 实例名；无法识别的实例 Adapter=Raw，EngineType="unknown"。</summary>
     public static GpuEngineInstance ParseEngineInstance(string? instanceName)
     {

@@ -162,4 +162,27 @@ public sealed class SessionFpsTests
     private sealed class FakeProcess : Process
     {
     }
+
+    [Fact]
+    public void Parse_fps_column_is_converted_to_frame_time_and_nonfinite_values_are_ignored()
+    {
+        var lines = new[] { "FPS" }.Concat(Enumerable.Repeat("125", 30)).Concat(["NaN", "Infinity", "0"]);
+        var parsed = FrameTimeStats.Parse(lines);
+        Assert.Equal(30, parsed.Frame!.Samples);
+        Assert.Equal(125, parsed.Frame.AvgFps);
+        Assert.Equal(8, parsed.Frame.P99Ms);
+    }
+
+    [Fact]
+    public void Parse_reads_stream_once_without_materializing_csv_lines()
+    {
+        IEnumerable<string> Rows()
+        {
+            yield return "FrameTime";
+            for (var i = 0; i < 100000; i++) yield return "8";
+        }
+        var parsed = FrameTimeStats.Parse(Rows());
+        Assert.Equal(100000, parsed.Frame!.Samples);
+        Assert.Equal(125, parsed.Frame.AvgFps);
+    }
 }

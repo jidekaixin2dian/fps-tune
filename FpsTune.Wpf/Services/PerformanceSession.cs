@@ -43,6 +43,8 @@ public sealed record SessionSummary
     public double? VramTotalMib { get; init; }
 }
 
+public sealed record SessionHistoryEntry(PerformanceSession Header, SessionSummary Summary);
+
 public static class SessionStatistics
 {
     /// <summary>把采样缓冲汇总为摘要。样本缺失（null）的指标跳过；全部缺失则该指标为 null。</summary>

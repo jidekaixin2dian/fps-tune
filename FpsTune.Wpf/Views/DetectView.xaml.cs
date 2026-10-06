@@ -62,6 +62,7 @@ public partial class DetectView : UserControl
             return;
         _sampler = App.LiveMetrics;
         _sampler.Sampled += Sampler_Sampled;
+        App.UpdateLiveMetrics();
         if (_sampler.Buffer.LastOrDefault() is { } latest) Sampler_Sampled(latest);
     }
 
@@ -71,6 +72,7 @@ public partial class DetectView : UserControl
             return;
         _sampler.Sampled -= Sampler_Sampled;
         _sampler = null;
+        App.UpdateLiveMetrics();
     }
 
     private void Sampler_Sampled(MetricSample sample)

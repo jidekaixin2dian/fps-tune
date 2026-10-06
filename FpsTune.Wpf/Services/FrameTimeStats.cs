@@ -29,16 +29,17 @@ public sealed record FrameParseResult(
 /// </summary>
 public static class FrameTimeStats
 {
-    private static readonly string[] ColumnCandidates = ["msBetweenPresents", "frame_time", "FPS", "fps"];
+    private static readonly string[] ColumnCandidates = ["msBetweenPresents", "FrameTime", "frame_time", "FPS"];
     private const int MinFrames = 30;
 
     public static FrameParseResult Parse(IEnumerable<string> lines)
     {
-        var all = lines as IList<string> ?? lines.ToList();
-        if (all.Count < 2)
+        using var rows = lines.GetEnumerator();
+        if (!rows.MoveNext())
             return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
-
-        var header = all[0].Split(',');
+        var header = rows.Current.Split(',');
+        if (!rows.MoveNext())
+            return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
         var col = -1;
         foreach (var candidate in ColumnCandidates)
         {
@@ -50,21 +51,27 @@ public static class FrameTimeStats
             return new FrameParseResult(null, FrameParseError.UnknownColumns, 0, header);
 
         var frameTimes = new List<double>();
-        for (var i = 1; i < all.Count; i++)
+        var isFps = header[col].Trim().Equals("FPS", StringComparison.OrdinalIgnoreCase);
+        do
         {
-            var line = all[i];
+            var line = rows.Current;
             if (line.Length == 0)
                 continue;
             var fields = line.Split(',');
             if (col >= fields.Length)
                 continue;
-            if (double.TryParse(fields[col], NumberStyles.Float, CultureInfo.InvariantCulture, out var n) && n > 0)
-                frameTimes.Add(n);
-        }
+            if (double.TryParse(fields[col], NumberStyles.Float, CultureInfo.InvariantCulture, out var n)
+                && double.IsFinite(n) && n > 0)
+            {
+                var ms = isFps ? 1000.0 / n : n;
+                if (double.IsFinite(ms) && ms > 0) frameTimes.Add(ms);
+            }
+        } while (rows.MoveNext());
         if (frameTimes.Count < MinFrames)
             return new FrameParseResult(null, FrameParseError.TooFewFrames, frameTimes.Count, header);
 
-        var sorted = frameTimes.Order().ToList();
+        frameTimes.Sort();
+        var sorted = frameTimes;
         var p99Ms = sorted[Math.Min((int)Math.Floor(sorted.Count * 0.99), sorted.Count - 1)];
         var avgMs = frameTimes.Average();
         var avgFps = 1000.0 / avgMs;
