@@ -50,12 +50,15 @@ public static partial class BackupService
             case "power-ultimate":
                 EnsureNonRegistry(record, "power-plan", allowGuid: true);
                 Reject(!Guid.TryParse(record.OldActiveGuid, out _), "原电源计划 GUID 不合法");
+                Reject(record.CreatedPlanGuid is not null && !Guid.TryParse(record.CreatedPlanGuid, out _), Str.T("Str.PowerBackupTargetInvalid"));
                 break;
             case "power-tuning":
                 EnsureNonRegistry(record, "power-tuning", allowPower: true);
+                RequirePowerTarget(record);
                 break;
             case "pcie-aspm-off":
                 EnsureNonRegistry(record, "power-aspm", allowPower: true);
+                RequirePowerTarget(record);
                 break;
             case "sysmain-off":
             case "wsearch-off":
@@ -134,6 +137,15 @@ public static partial class BackupService
 
         Reject(!CreateBackupRecords(record.Id, gamePath).Any(candidate => SameTarget(record, candidate)),
             "备份注册表目标不在 Capture 白名单中");
+    }
+
+    private static void RequirePowerTarget(BackupRecord record)
+    {
+        if (record.TargetPlanGuid is null)
+            throw new BackupCompatibilityException(Str.T("Str.PowerLegacyTargetUnknown"));
+        Reject(!Guid.TryParse(record.TargetPlanGuid, out _), Str.T("Str.PowerBackupTargetInvalid"));
+        Reject(record.Kind == "power-tuning" && (!record.OldUsbValue.HasValue || !record.OldBoostValue.HasValue)
+            || record.Kind == "power-aspm" && !record.OldAspmValue.HasValue, Str.T("Str.PowerBackupTargetInvalid"));
     }
 
     private static bool SameTarget(BackupRecord actual, BackupRecord expected)

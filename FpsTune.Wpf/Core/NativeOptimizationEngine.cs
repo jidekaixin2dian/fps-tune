@@ -6,13 +6,15 @@ using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
 
-public sealed record OptimizationApplyResult(string Id, string Name, bool Ok, bool Changed, bool Skipped, string Message);
+public sealed record OptimizationApplyResult(string Id, string Name, bool Ok, bool Changed, bool Skipped, string Message, bool StateUncertain = false);
 
 public static class NativeOptimizationEngine
 {
     private const string UltimatePowerGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
 
-    public static IReadOnlyList<OptimizationApplyResult> ApplyAll(IEnumerable<string> ids, string? gamePath)
+    public static IReadOnlyList<OptimizationApplyResult> ApplyAll(IEnumerable<string> ids, string? gamePath,
+        Func<string, IReadOnlyList<BackupRecord>>? beforeApply = null,
+        Action<OptimizationApplyResult>? afterApply = null)
     {
         var results = new List<OptimizationApplyResult>();
         foreach (var id in ids)
@@ -24,14 +26,21 @@ public static class NativeOptimizationEngine
                 continue;
             }
 
+            var started = false;
             try
             {
-                var (ok, changed, skipped, message) = ApplyOne(def, gamePath);
-                results.Add(new OptimizationApplyResult(id, def.Name, ok, changed, skipped, message));
+                var records = beforeApply?.Invoke(id);
+                started = true;
+                var (ok, changed, skipped, message) = ApplyOne(def, gamePath, records?.FirstOrDefault());
+                var result = new OptimizationApplyResult(id, def.Name, ok, changed, skipped, message);
+                afterApply?.Invoke(result);
+                results.Add(result);
             }
             catch (Exception ex)
             {
-                results.Add(new OptimizationApplyResult(id, def.Name, false, false, false, ex.Message));
+                var result = new OptimizationApplyResult(id, def.Name, false, false, false, ex.Message, started);
+                if (started) { try { afterApply?.Invoke(result); } catch { /* 预写记录仍保留 pending */ } }
+                results.Add(result);
             }
         }
 
@@ -112,7 +121,7 @@ public static class NativeOptimizationEngine
     }
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyOne(
-        OptimizationItemDefinition item, string? gamePath)
+        OptimizationItemDefinition item, string? gamePath, BackupRecord? backup = null)
     {
         switch (item.Id)
         {
@@ -186,11 +195,11 @@ public static class NativeOptimizationEngine
             case "dyntick-off":
                 return ApplyDynamicTickOff();
             case "power-ultimate":
-                return ApplyPowerUltimate();
+                return ApplyPowerUltimate(backup);
             case "power-tuning":
-                return ApplyPowerTuning();
+                return ApplyPowerTuning(backup);
             case "pcie-aspm-off":
-                return ApplyPcieAspmOff();
+                return ApplyPcieAspmOff(backup);
             case "game-priority":
                 return ApplyGamePriority(gamePath);
             case "gpu-pstate-lock":
@@ -354,18 +363,16 @@ public static class NativeOptimizationEngine
         return (true, true, false, "已禁用动态计时器");
     }
 
-    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerUltimate()
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerUltimate(BackupRecord? backup)
     {
         var active = NativeSystem.GetActivePowerSchemeGuid();
         if (string.Equals(active, UltimatePowerGuid, StringComparison.OrdinalIgnoreCase))
             return (true, false, false, "本就使用卓越性能电源计划");
 
-        var set = NativeSystem.Run("powercfg.exe", "-setactive", UltimatePowerGuid);
-        if (set.Success)
-            return (true, true, false, "已切换到卓越性能");
-
-        var dup = NativeSystem.Run("powercfg.exe", "-duplicatescheme", UltimatePowerGuid);
-        if (!dup.Success || !TryExtractGuid(dup.Output, out var newGuid))
+        if (backup?.CreatedPlanGuid is not { } newGuid || !Guid.TryParse(newGuid, out _))
+            throw new InvalidOperationException("A durable target plan is required.");
+        var dup = NativeSystem.Run("powercfg.exe", "-duplicatescheme", UltimatePowerGuid, newGuid);
+        if (!dup.Success)
             throw new InvalidOperationException("无法激活或创建卓越性能电源计划：" + dup.Error.Trim());
 
         var rename = NativeSystem.Run("powercfg.exe", "-changename", newGuid, "FPS 帧律 · 卓越性能");
@@ -377,8 +384,9 @@ public static class NativeOptimizationEngine
         return (true, true, false, "已切换到卓越性能（自动创建）" + nameNote);
     }
 
-    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerTuning()
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerTuning(BackupRecord? backup)
     {
+        var plan = backup?.TargetPlanGuid ?? throw new InvalidOperationException("A durable target plan is required.");
         // SUB_USB\USB 选择性暂停=0 + SUB_PROCESSOR\PERFBOOSTMODE=2（激进）。
         // 历史版本的 idle 一对 GUID 无效（powercfg 拒绝，靠忽略退出码掩盖），已移除。
         const string subUsb = "2a737441-1930-4402-8d77-b2bebba308a3";
@@ -389,18 +397,18 @@ public static class NativeOptimizationEngine
         var applied = new List<string>();
         var skipped = new List<string>();
         var failures = new List<string>();
-        TrySetPowerIndex(subUsb, usbSelectiveSuspend, "0", "USB3 链路省电", applied, skipped, failures);
-        TrySetPowerIndex(subProcessor, perfBoostMode, "2", "处理器性能提升", applied, skipped, failures);
+        TrySetPowerIndex(plan, subUsb, usbSelectiveSuspend, "0", "USB3 链路省电", applied, skipped, failures);
+        TrySetPowerIndex(plan, subProcessor, perfBoostMode, "2", "处理器性能提升", applied, skipped, failures);
 
         if (failures.Count > 0)
-            return (false, false, false, "调整电源隐藏项失败：" + string.Join("；", failures));
+            return (false, applied.Count > 0, false, "调整电源隐藏项失败：" + string.Join("；", failures));
 
         if (applied.Count == 0)
             return (true, false, true, $"平台不支持，已跳过：{string.Join("、", skipped)}");
 
-        var apply = NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT");
+        var apply = NativeSystem.Run("powercfg.exe", "-setactive", plan);
         if (!apply.Success)
-            return (false, false, false, $"应用电源隐藏项失败：{NativeDetail(apply)}");
+            return (false, applied.Count > 0, false, $"应用电源隐藏项失败：{NativeDetail(apply)}");
 
         var message = $"已调整：{string.Join("、", applied)}";
         if (skipped.Count > 0)
@@ -408,8 +416,9 @@ public static class NativeOptimizationEngine
         return (true, true, false, message);
     }
 
-    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPcieAspmOff()
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPcieAspmOff(BackupRecord? backup)
     {
+        var plan = backup?.TargetPlanGuid ?? throw new InvalidOperationException("A durable target plan is required.");
         // SUB_PCIEXPRESS\ASPM = 0（None）。GUID 来自 Microsoft Learn《Link state power management》。
         const string subPciExpress = "501a4d13-42af-4429-9fd1-a8218c268e20";
         const string aspm = "ee12f906-d277-404b-b6da-e5fa1a576df5";
@@ -417,16 +426,16 @@ public static class NativeOptimizationEngine
         var applied = new List<string>();
         var skipped = new List<string>();
         var failures = new List<string>();
-        TrySetPowerIndex(subPciExpress, aspm, "0", "PCIe", applied, skipped, failures);
+        TrySetPowerIndex(plan, subPciExpress, aspm, "0", "PCIe", applied, skipped, failures);
 
         if (failures.Count > 0)
-            return (false, false, false, Str.T("Str.PcieAspmFail", string.Join("; ", failures)));
+            return (false, applied.Count > 0, false, Str.T("Str.PcieAspmFail", string.Join("; ", failures)));
         if (applied.Count == 0)
             return (true, false, true, Str.T("Str.PowerSkippedUnsupported", string.Join("; ", skipped)));
 
-        var apply = NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT");
+        var apply = NativeSystem.Run("powercfg.exe", "-setactive", plan);
         if (!apply.Success)
-            return (false, false, false, Str.T("Str.PowerApplyFail", NativeDetail(apply)));
+            return (false, applied.Count > 0, false, Str.T("Str.PowerApplyFail", NativeDetail(apply)));
         return (true, true, false, Str.T("Str.PcieAspmOffDone"));
     }
 
@@ -467,17 +476,10 @@ public static class NativeOptimizationEngine
 
     // 只有 powercfg 明确报告“设置不存在/不支持”时才跳过；访问拒绝等不能伪装成兼容性问题。
     private static void TrySetPowerIndex(
-        string subgroup, string setting, string value, string label,
+        string plan, string subgroup, string setting, string value, string label,
         List<string> applied, List<string> skipped, List<string> failures)
     {
-        var attributes = NativeSystem.Run("powercfg.exe", "-attributes", subgroup, setting, "-ATTRIB_HIDE");
-        if (!attributes.Success)
-        {
-            AddPowerSettingFailure(label, attributes, skipped, failures);
-            return;
-        }
-
-        var r = NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value);
+        var r = NativeSystem.Run("powercfg.exe", "-setacvalueindex", plan, subgroup, setting, value);
         if (r.Success)
             applied.Add(label);
         else

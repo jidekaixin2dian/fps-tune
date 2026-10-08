@@ -784,4 +784,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.NicBackupTargetInvalid">The network adapter backup target is invalid.</s:String>
     <s:String x:Key="Str.BackupArchiveTooLarge">The backup archive exceeds 100 MiB.</s:String>
     <s:String x:Key="Str.BackupImportLimit">The backup entry count or uncompressed size exceeds the limit.</s:String>
+    <s:String x:Key="Str.BackupFormatInvalid">The backup format could not be read. The file has been retained.</s:String>
+    <s:String x:Key="Str.BackupOtherOrigin">This backup comes from another installation. Review its target settings first.</s:String>
+    <s:String x:Key="Str.PowerBackupTargetInvalid">The power backup target or original values are incomplete.</s:String>
+    <s:String x:Key="Str.PowerLegacyTargetUnknown">This older backup does not identify its power plan. Review it manually; other settings can still be restored.</s:String>
+    <s:String x:Key="Str.PowerRestoreSetting">Restore power setting</s:String>
+    <s:String x:Key="Str.BackupPendingWrite">The previous write has not been confirmed. Review this setting first.</s:String>
+    <s:String x:Key="Str.BackupTargetChanged">This setting has changed since the operation. The backup has been retained for review.</s:String>
 </ResourceDictionary>

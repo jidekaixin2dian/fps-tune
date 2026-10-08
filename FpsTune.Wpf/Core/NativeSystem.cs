@@ -23,6 +23,7 @@ internal enum DynamicTickState
 /// </summary>
 internal static class NativeSystem
 {
+    internal static Func<string, string[], NativeResult>? RunOverride { get; set; }
     internal static string ResolveExecutable(string fileName)
     {
         if (fileName is not ("powercfg.exe" or "sc.exe" or "bcdedit.exe" or "nvidia-smi.exe"))
@@ -37,6 +38,7 @@ internal static class NativeSystem
 
     public static NativeResult Run(string fileName, params string[] arguments)
     {
+        if (RunOverride is not null) { _ = ResolveExecutable(fileName); return RunOverride(fileName, arguments); }
         var psi = new ProcessStartInfo
         {
             FileName = ResolveExecutable(fileName),

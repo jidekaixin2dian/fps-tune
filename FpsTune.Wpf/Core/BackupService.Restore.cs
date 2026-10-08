@@ -148,7 +148,7 @@ public static partial class BackupService
             List<BackupRecord>? markerRecords;
             try
             {
-                markerRecords = JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(markerFile));
+                markerRecords = ReadRecords(markerFile, requireLocalOrigin: true);
             }
             catch (Exception ex)
             {
@@ -211,7 +211,12 @@ public static partial class BackupService
             List<BackupRecord>? records;
             try
             {
-                records = JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(file));
+                records = ReadRecords(file, requireLocalOrigin: true);
+            }
+            catch (BackupCompatibilityException ex)
+            {
+                result.Failures.Add($"{fileName}: {ex.Message}");
+                continue;
             }
             catch (Exception ex)
             {
@@ -228,6 +233,7 @@ public static partial class BackupService
             }
 
             var fileFailed = false;
+            var incompatible = new HashSet<BackupRecord>();
 
             // 先校验尚未还原的记录，避免后面的篡改记录导致前面的记录先写入系统。
             foreach (var record in records)
@@ -244,6 +250,12 @@ public static partial class BackupService
                 try
                 {
                     ValidateRecord(record);
+                    VerifyRestorableState(record);
+                }
+                catch (BackupCompatibilityException ex)
+                {
+                    incompatible.Add(record);
+                    if (selection is null || selection.Contains(record.Id)) result.Failures.Add($"{fileName} / {record.Id}: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -265,8 +277,10 @@ public static partial class BackupService
                 continue;
             }
 
-            foreach (var record in targets)
+            foreach (var record in targets.Reverse().Where(r => !incompatible.Contains(r)))
             {
+                try { VerifyRestorableState(record); }
+                catch (Exception ex) { result.Failures.Add($"{fileName} / {record.Id}: {ex.Message}"); continue; }
                 var recordIndex = records.IndexOf(record);
                 try
                 {
@@ -291,7 +305,7 @@ public static partial class BackupService
 
                     // 每项都先持久化 Restored，再清理未决标记；任一步失败都留下标记，
                     // 下次只报告人工核实，绝不再次覆盖系统值。
-                    var json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+                    var json = SerializeRecords(file, records);
                     PersistRestoreProgress(file, json);
                     ClearRestoreJournal();
                 }
@@ -449,60 +463,49 @@ public static partial class BackupService
         if (string.IsNullOrWhiteSpace(r.OldActiveGuid))
             throw new InvalidOperationException("备份缺少原电源计划 GUID");
 
+        if (r.CreatedPlanGuid is not null)
+        {
+            if (r.CreatedPlanFingerprint is null || NativePowerSettings.Fingerprint(r.CreatedPlanGuid) != r.CreatedPlanFingerprint)
+                throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
+        }
+
         EnsureNativeSuccess(
             NativeSystem.Run("powercfg.exe", "-setactive", r.OldActiveGuid),
             "还原原电源计划");
+        if (!string.Equals(NativePowerSettings.RequireActiveGuid(), r.OldActiveGuid, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException(Str.T("Str.PowerBackupTargetInvalid"));
+        if (r.CreatedPlanGuid is not null)
+        {
+            if (NativePowerSettings.Fingerprint(r.CreatedPlanGuid) != r.CreatedPlanFingerprint)
+                throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
+            EnsureNativeSuccess(NativeSystem.Run("powercfg.exe", "-delete", r.CreatedPlanGuid), Str.T("Str.PowerRestoreSetting"));
+        }
     }
 
     private static void RestorePowerTuning(BackupRecord r)
     {
-        // 只还原备份里实际读到的原值；读不到（null）说明该设置从未被应用或平台不支持，跳过。
-        // 旧版本备份的 boost 查询用的是错误 GUID（必然为 null），更不能按默认值强写。
-        if (r.OldUsbValue.HasValue)
-            SetAcValue("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", r.OldUsbValue.Value);
-        if (r.OldBoostValue.HasValue)
-            SetAcValue("54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7", r.OldBoostValue.Value);
-        EnsureNativeSuccess(
-            NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT"),
-            Str.T("Str.ReapplyPowerPlan"));
+        RequirePowerTarget(r);
+        SetAcValue(r.TargetPlanGuid!, "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", r.OldUsbValue!.Value);
+        SetAcValue(r.TargetPlanGuid!, "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7", r.OldBoostValue!.Value);
+        ReapplyIfActive(r.TargetPlanGuid!);
     }
 
     private static void RestorePowerAspm(BackupRecord r)
     {
-        // 与 RestorePowerTuning 同口径：只还原备份里实际读到的原值，读不到就跳过。
-        if (r.OldAspmValue.HasValue)
-            SetAcValue("501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5", r.OldAspmValue.Value);
-        EnsureNativeSuccess(
-            NativeSystem.Run("powercfg.exe", "-setactive", "SCHEME_CURRENT"),
-            Str.T("Str.ReapplyPowerPlan"));
+        RequirePowerTarget(r);
+        SetAcValue(r.TargetPlanGuid!, "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5", r.OldAspmValue!.Value);
+        ReapplyIfActive(r.TargetPlanGuid!);
     }
 
-    private static void SetAcValue(string subgroup, string setting, int value)
-        => EnsureNativeSuccess(
-            NativeSystem.Run("powercfg.exe", "-setacvalueindex", "SCHEME_CURRENT", subgroup, setting, value.ToString()),
-            "还原电源隐藏项");
-
-    // 查询某电源设置的当前 AC 值（失败返回 null），用于 power-tuning 无损备份。
-    private static int? GetPowerAcIndex(string subgroup, string setting)
+    private static void ReapplyIfActive(string plan)
     {
-        var r = NativeSystem.Run("powercfg.exe", "/query", "SCHEME_CURRENT", subgroup, setting);
-        if (!r.Success)
-            return null;
-
-        foreach (var line in r.Output.Split('\n'))
-        {
-            if (!line.Contains("AC", StringComparison.OrdinalIgnoreCase) &&
-                !line.Contains("交流", StringComparison.Ordinal))
-                continue;
-
-            var m = Regex.Match(line, @"0x([0-9a-fA-F]+)");
-            if (m.Success && int.TryParse(m.Groups[1].Value,
-                    System.Globalization.NumberStyles.HexNumber, null, out var value))
-                return value;
-        }
-
-        return null;
+        if (string.Equals(NativePowerSettings.RequireActiveGuid(), plan, StringComparison.OrdinalIgnoreCase))
+            EnsureNativeSuccess(NativeSystem.Run("powercfg.exe", "-setactive", plan), Str.T("Str.ReapplyPowerPlan"));
     }
+
+    private static void SetAcValue(string plan, string subgroup, string setting, int value)
+        => EnsureNativeSuccess(NativeSystem.Run("powercfg.exe", "-setacvalueindex", plan, subgroup, setting,
+            value.ToString(System.Globalization.CultureInfo.InvariantCulture)), Str.T("Str.PowerRestoreSetting"));
 
     private static void RestoreHibernate(BackupRecord r)
     {

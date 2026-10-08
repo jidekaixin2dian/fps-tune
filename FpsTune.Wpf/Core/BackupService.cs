@@ -40,6 +40,18 @@ public sealed class BackupRecord
     public int? OldStartValue { get; set; }
     public string? OldStartMode { get; set; }
     public string? OldActiveGuid { get; set; }
+    public string? TargetPlanGuid { get; set; }
+    public string? CreatedPlanGuid { get; set; }
+    public string? CreatedPlanFingerprint { get; set; }
+    public string MutationState { get; set; } = "legacy";
+    public bool? PostExisted { get; set; }
+    public object? PostValue { get; set; }
+    public bool? SecondaryPostExisted { get; set; }
+    public object? SecondaryPostValue { get; set; }
+    public string? PostActiveGuid { get; set; }
+    public int? PostUsbValue { get; set; }
+    public int? PostBoostValue { get; set; }
+    public int? PostAspmValue { get; set; }
     public string? OldState { get; set; }
 
     // 定向还原后保留原始快照供审计，同时防止同一记录被后续 RestoreAll 重复覆盖。
@@ -147,7 +159,7 @@ public static partial class BackupService
             }
             try
             {
-                var records = JsonSerializer.Deserialize<List<BackupRecord>>(json);
+                var records = DecodeRecords(json);
                 if (records is null || records.Count == 0 || records.Count > 10000)
                     throw new InvalidOperationException("empty backup file");
                 foreach (var r in records)
@@ -182,7 +194,8 @@ public static partial class BackupService
     }
 
     private static bool IsBackupTransferName(string name) =>
-        (name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase)
+        (name.StartsWith(V2BackupPrefix, StringComparison.OrdinalIgnoreCase)
+         || name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase)
          || name.StartsWith(LegacyBackupPrefix, StringComparison.OrdinalIgnoreCase))
         && (name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
             || name.EndsWith(".json.restored", StringComparison.OrdinalIgnoreCase));

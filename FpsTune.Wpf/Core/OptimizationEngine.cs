@@ -89,8 +89,15 @@ public static class OptimizationEngine
         lock (OperationLock)
         {
             // 备份与应用必须是一个串行临界区，避免两次 Apply 互相覆盖快照。
-            var backupFile = BackupService.Capture(ids, gamePath);
-            var results = NativeOptimizationEngine.ApplyAll(ids, gamePath);
+            using var mutation = SystemMutationGate.Acquire();
+            if (ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
+                throw new ArgumentException("Unknown optimization item.", nameof(ids));
+            if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id).Admin))
+                throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
+            var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
+            var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
+                id => BackupService.AppendCapture(backupFile, id, gamePath),
+                result => BackupService.CompleteCapture(backupFile, result));
 
             var rebootIds = results
                 .Where(r => r.Ok && r.Changed)
@@ -111,7 +118,8 @@ public static class OptimizationEngine
                     ok = r.Ok,
                     changed = r.Changed,
                     skipped = r.Skipped,
-                    message = r.Message
+                    message = r.Message,
+                    stateUncertain = r.StateUncertain
                 }),
                 summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过",
                 backupFile = backupFile,
@@ -119,7 +127,7 @@ public static class OptimizationEngine
             };
 
             var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-            return new RunResult(0, json, "");
+            return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json, "");
         }
     }
 }

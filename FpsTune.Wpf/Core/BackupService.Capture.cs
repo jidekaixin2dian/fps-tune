@@ -53,18 +53,19 @@ public static partial class BackupService
     private static string WriteBackupFile(IReadOnlyList<BackupRecord> records)
     {
         Directory.CreateDirectory(BackupDir);
-        var json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
         for (var attempt = 0; attempt < 10; attempt++)
         {
             var ts = DateTime.Now.ToString("yyyyMMdd-HHmmss-fff");
             var suffix = Guid.NewGuid().ToString("N")[..8];
-            var file = Path.Combine(BackupDir, $"{CSharpBackupPrefix}{ts}-{suffix}.json");
+            var file = Path.Combine(BackupDir, $"{V2BackupPrefix}{ts}-{suffix}.json");
+            var json = SerializeRecords(file, records);
             try
             {
                 // CreateNew 保证并发调用不会覆盖另一份备份。
                 using var stream = new FileStream(file, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                using var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(false));
-                writer.Write(json);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                stream.Write(bytes);
+                stream.Flush(flushToDisk: true);
                 return file;
             }
             catch (IOException) when (File.Exists(file))
@@ -94,8 +95,7 @@ public static partial class BackupService
             try
             {
                 var lastWrite = File.GetLastWriteTime(file);
-                var records = JsonSerializer.Deserialize<List<BackupRecord>>(
-                    File.ReadAllText(file, Encoding.UTF8));
+                var records = ReadRecords(file);
                 if (records is null)
                     continue;
                 foreach (var r in records.Where(r => !r.Restored))
@@ -144,8 +144,7 @@ public static partial class BackupService
             try
             {
                 lastWrite = File.GetLastWriteTime(file);
-                var records = JsonSerializer.Deserialize<List<BackupRecord>>(
-                    File.ReadAllText(file, Encoding.UTF8));
+                var records = ReadRecords(file);
                 if (records is null)
                 {
                     valid = false;
@@ -182,8 +181,7 @@ public static partial class BackupService
             List<BackupRecord>? records;
             try
             {
-                records = JsonSerializer.Deserialize<List<BackupRecord>>(
-                    File.ReadAllText(file, Encoding.UTF8));
+                records = ReadRecords(file);
             }
             catch
             {
@@ -207,7 +205,7 @@ public static partial class BackupService
     internal static bool IsCSharpBackupFile(string file)
     {
         var name = Path.GetFileName(file);
-        if (name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase))
+        if (name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase) || name.StartsWith(V2BackupPrefix, StringComparison.OrdinalIgnoreCase))
             return true;
         if (!name.StartsWith(LegacyBackupPrefix, StringComparison.OrdinalIgnoreCase))
             return false;
@@ -237,31 +235,20 @@ public static partial class BackupService
         switch (id)
         {
             case "power-ultimate":
-                return new[] { new BackupRecord { Id = id, Kind = "power-plan", OldActiveGuid = NativeSystem.GetActivePowerSchemeGuid() } };
+                return new[] { new BackupRecord { Id = id, Kind = "power-plan", OldActiveGuid = NativePowerSettings.RequireActiveGuid(), CreatedPlanGuid = Guid.NewGuid().ToString("D") } };
             case "power-tuning":
-                return new[]
-                {
-                    new BackupRecord
-                    {
-                        Id = id,
-                        Kind = "power-tuning",
-                        OldUsbValue = GetPowerAcIndex(
-                            "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226"),
-                        OldBoostValue = GetPowerAcIndex(
-                            "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7")
-                    }
-                };
+            {
+                var plan = NativePowerSettings.RequireActiveGuid();
+                return new[] { new BackupRecord { Id = id, Kind = "power-tuning", TargetPlanGuid = plan,
+                    OldUsbValue = NativePowerSettings.ReadAc(plan, "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226"),
+                    OldBoostValue = NativePowerSettings.ReadAc(plan, "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7") } };
+            }
             case "pcie-aspm-off":
-                return new[]
-                {
-                    new BackupRecord
-                    {
-                        Id = id,
-                        Kind = "power-aspm",
-                        OldAspmValue = GetPowerAcIndex(
-                            "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5")
-                    }
-                };
+            {
+                var plan = NativePowerSettings.RequireActiveGuid();
+                return new[] { new BackupRecord { Id = id, Kind = "power-aspm", TargetPlanGuid = plan,
+                    OldAspmValue = NativePowerSettings.ReadAc(plan, "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5") } };
+            }
             case "nic-power-save-off":
                 return CaptureNicPowerSaveBackups(id);
             case "sysmain-off":
@@ -418,19 +405,23 @@ public static partial class BackupService
     // 记录第二个关联注册表值的原值（存在与否 + 值）。
     private static void FillSecondary(BackupRecord record, RegistryHive hive, string path, string name)
     {
-        var exists = RegistryHelper.ValueExists(hive, path, name);
+        var snapshot = RegistryHelper.ReadSnapshot(hive, path, name);
+        var exists = snapshot.Existed;
+        if (exists && snapshot.Kind != RegistryValueKind.DWord) throw new InvalidOperationException("Unexpected registry value type.");
         record.SecondaryHive = hive.ToString();
         record.SecondaryPath = path;
         record.SecondaryName = name;
         record.SecondaryExisted = exists;
-        record.SecondaryValue = exists ? RegistryHelper.ReadValue(hive, path, name) : null;
+        record.SecondaryValue = snapshot.Value;
     }
 
     private static BackupRecord CreateRegistryBackup(
         string id, RegistryHive hive, string path, string name, RegistryValueKind kind)
     {
-        var exists = RegistryHelper.ValueExists(hive, path, name);
-        var old = exists ? RegistryHelper.ReadValue(hive, path, name) : null;
+        var snapshot = RegistryHelper.ReadSnapshot(hive, path, name);
+        var exists = snapshot.Existed;
+        if (exists && snapshot.Kind != kind) throw new InvalidOperationException("Unexpected registry value type.");
+        var old = snapshot.Value;
         return new BackupRecord
         {
             Id = id,

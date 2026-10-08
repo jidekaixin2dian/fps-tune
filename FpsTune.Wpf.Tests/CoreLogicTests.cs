@@ -470,7 +470,7 @@ public class CoreLogicTests
 
             var first = BackupService.RestoreAll(new[] { "mouse-accel-off" });
             var second = BackupService.RestoreAll(new[] { "mouse-accel-off" });
-            var records = JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(file))!;
+            var records = BackupService.ReadRecords(file);
 
             Assert.NotEmpty(first.Restored);
             Assert.Empty(first.Failures);
@@ -548,7 +548,7 @@ public class CoreLogicTests
             Assert.Equal(new[] { "mouse-accel-off" }, calls);
             Assert.Contains(first.Failures, x => x.Contains("状态无法确定", StringComparison.Ordinal));
             Assert.True(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
-            Assert.All(JsonSerializer.Deserialize<List<BackupRecord>>(File.ReadAllText(fileB))!,
+            Assert.All(BackupService.ReadRecords(fileB),
                 record => Assert.False(record.Restored));
 
             // 即便进度写入故障已恢复，未决 A marker 也必须在任何 B 记录前阻断整个批次。

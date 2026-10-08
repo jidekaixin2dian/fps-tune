@@ -64,7 +64,8 @@ public static partial class BackupService
             || name.Contains('/')
             || !name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             return false;
-        return name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase)
+        return name.StartsWith(V2BackupPrefix, StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith(CSharpBackupPrefix, StringComparison.OrdinalIgnoreCase)
             || name.StartsWith(LegacyBackupPrefix, StringComparison.OrdinalIgnoreCase);
     }
 
