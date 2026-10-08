@@ -54,6 +54,60 @@ public sealed class OperationReceiptTests : IDisposable
     }
 
     [Fact]
+    public void Unknown_bcd_value_is_not_treated_as_absent()
+        => Assert.Throws<InvalidDataException>(() => NativeSystem.ParseDynamicTickState("disabledynamictick    unknown"));
+
+    [Fact]
+    public void Unreadable_hibernation_state_is_not_treated_as_disabled()
+    {
+        RegistryHelper.SnapshotOverride = (_, _, _) => new(false, null, RegistryValueKind.None);
+        Assert.Throws<InvalidOperationException>(() => NativeSystem.IsHibernateEnabled());
+    }
+
+    [Fact]
+    public void Missing_service_start_configuration_prevents_native_write()
+    {
+        RegistryHelper.SnapshotOverride = (_, _, _) => new(false, null, RegistryValueKind.None);
+        var writes = 0;
+        NativeSystem.RunOverride = (_, args) => args[0] == "query" ? new(0, "STATE : 1 STOPPED", "")
+            : new(++writes, "", "should not run");
+        var file = BackupService.Capture([], null);
+        var result = NativeOptimizationEngine.ApplyAll(["wsearch-off"], null,
+            id => BackupService.AppendCapture(file, id, null), r => BackupService.CompleteCapture(file, r));
+        Assert.False(result[0].Ok); Assert.Equal(0, writes);
+        Assert.False(result[0].StateUncertain);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Service_receipt_preserves_delayed_start_and_refuses_foreign_configuration(bool foreignChange)
+    {
+        var start = 2; var delayed = 1; var configWrites = 0;
+        RegistryHelper.SnapshotOverride = (_, _, name) => new(true, name == "Start" ? start : delayed, RegistryValueKind.DWord);
+        RegistryHelper.SetOverride = (_, _, _, value, _) => delayed = Convert.ToInt32(value);
+        RegistryHelper.DeleteOverride = (_, _, _) => throw new Exception("Original delayed setting must remain present");
+        NativeSystem.RunOverride = (_, args) =>
+        {
+            if (args[0] == "query") return new(0, "STATE : 1 STOPPED", "");
+            if (args[0] == "config") { configWrites++; start = args[^1] == "disabled" ? 4 : 2; delayed = 0; }
+            return new(0, "", "");
+        };
+        var file = BackupService.Capture([], null);
+        var applied = NativeOptimizationEngine.ApplyAll(["wsearch-off"], null,
+            id => BackupService.AppendCapture(file, id, null), r => BackupService.CompleteCapture(file, r));
+        Assert.True(applied[0].Ok); Assert.Equal(4, start);
+        if (foreignChange) start = 3;
+        var restored = BackupService.RestoreAll(null, file);
+        if (foreignChange)
+        {
+            Assert.Single(restored.Failures); Assert.Equal(1, configWrites); Assert.Equal(3, start);
+            Assert.True(File.Exists(file));
+        }
+        else { Assert.True(restored.Failures.Count == 0, string.Join("\n", restored.Failures)); Assert.Equal(2, start); Assert.Equal(1, delayed); }
+    }
+
+    [Fact]
     public void Unknown_legacy_power_target_does_not_block_known_registry_record()
     {
         Directory.CreateDirectory(_dir);

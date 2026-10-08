@@ -437,7 +437,7 @@ public static partial class BackupService
                 2 => "auto",
                 3 => "demand",
                 4 => "disabled",
-                _ => "demand"
+                _ => throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"))
             };
         }
 
@@ -445,6 +445,13 @@ public static partial class BackupService
         EnsureNativeSuccess(
             NativeSystem.Run("sc.exe", "config", r.ServiceName, "start=", mode),
             $"还原 {r.ServiceName} 启动类型");
+        if (r.OldDelayedExisted.HasValue)
+        {
+            var path = @"SYSTEM\CurrentControlSet\Services\" + r.ServiceName;
+            if (r.OldDelayedExisted.Value)
+                RegistryHelper.SetValue(RegistryHive.LocalMachine, path, "DelayedAutostart", r.OldDelayedValue!.Value, RegistryValueKind.DWord);
+            else RegistryHelper.DeleteValue(RegistryHive.LocalMachine, path, "DelayedAutostart");
+        }
 
         // 备份时若服务在运行，还原启动类型后把它拉回运行状态。
         // 旧版本备份没有 OldState（null）时保持不动；服务已在运行也不重复 start。

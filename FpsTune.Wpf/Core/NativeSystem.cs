@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
@@ -85,14 +86,12 @@ internal static class NativeSystem
 
     public static int? GetServiceStartValue(string serviceName)
     {
-        var value = RegistryHelper.ReadValue(
+        var snapshot = RegistryHelper.ReadSnapshot(
             RegistryHive.LocalMachine,
             @"SYSTEM\CurrentControlSet\Services\" + serviceName,
             "Start");
-        if (value is int i)
+        if (snapshot.Kind == RegistryValueKind.DWord && snapshot.Value is int i && i is >= 0 and <= 4)
             return i;
-        if (value is long l)
-            return (int)l;
         return null;
     }
 
@@ -113,6 +112,7 @@ internal static class NativeSystem
     /// <summary>sc query 的当前 STATE（RUNNING / STOPPED / ...）；查询失败返回 null，由调用方保守处理。</summary>
     public static string? GetServiceState(string serviceName)
     {
+        if (RunOverride is null) return NativeServiceStatus.Read(serviceName);
         var r = Run("sc.exe", "query", serviceName);
         if (!r.Success)
             return null;
@@ -122,15 +122,11 @@ internal static class NativeSystem
 
     public static bool IsHibernateEnabled()
     {
-        try
-        {
-            var root = Path.GetPathRoot(Environment.SystemDirectory) ?? @"C:\";
-            return File.Exists(Path.Combine(root, "hiberfil.sys"));
-        }
-        catch
-        {
-            return false;
-        }
+        var value = RegistryHelper.ReadSnapshot(RegistryHive.LocalMachine,
+            @"SYSTEM\CurrentControlSet\Control\Power", "HibernateEnabled");
+        if (!value.Existed || value.Kind != RegistryValueKind.DWord || value.Value is not int enabled || enabled is not (0 or 1))
+            throw new InvalidOperationException(Services.Str.T("Str.BackupTargetChanged"));
+        return enabled == 1;
     }
 
     public static bool IsDynamicTickEnabled()
@@ -159,7 +155,11 @@ internal static class NativeSystem
     {
         var match = Regex.Match(output ?? "", @"(?im)^\s*disabledynamictick\s+(yes|no)\b");
         if (!match.Success)
+        {
+            if (Regex.IsMatch(output ?? "", @"(?im)^\s*disabledynamictick\b"))
+                throw new InvalidDataException(Services.Str.T("Str.BackupFormatInvalid"));
             return DynamicTickState.Absent;
+        }
 
         return string.Equals(match.Groups[1].Value, "yes", StringComparison.OrdinalIgnoreCase)
             ? DynamicTickState.Yes

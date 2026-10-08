@@ -54,6 +54,12 @@ public sealed class BackupRecord
     public int? PostBoostValue { get; set; }
     public int? PostAspmValue { get; set; }
     public string? OldState { get; set; }
+    public string? PostState { get; set; }
+    public int? PostStartValue { get; set; }
+    public bool? OldDelayedExisted { get; set; }
+    public int? OldDelayedValue { get; set; }
+    public bool? PostDelayedExisted { get; set; }
+    public int? PostDelayedValue { get; set; }
 
     // 定向还原后保留原始快照供审计，同时防止同一记录被后续 RestoreAll 重复覆盖。
     public bool Restored { get; set; }

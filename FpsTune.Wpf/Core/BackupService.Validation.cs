@@ -74,13 +74,16 @@ public static partial class BackupService
                 break;
             case "sysmain-off":
             case "wsearch-off":
-                EnsureNonRegistry(record, "service", allowService: true);
+                EnsureNonRegistry(record, "service", allowService: true, allowState: true, allowedStates: ["RUNNING", "STOPPED"]);
                 var service = record.Id == "sysmain-off" ? "SysMain" : "WSearch";
                 Reject(!string.Equals(record.ServiceName, service, StringComparison.Ordinal) ||
                     record.OldStartValue is < 0 or > 4 ||
                     (record.OldStartMode is not null &&
                      record.OldStartMode is not ("boot" or "system" or "auto" or "demand" or "disabled")),
                     "服务还原目标字段不匹配");
+                Reject(record.OldDelayedValue is < 0 or > 1 ||
+                    record.OldDelayedExisted == true && record.OldDelayedValue is null ||
+                    record.PostDelayedValue is < 0 or > 1, Str.T("Str.BackupFormatInvalid"));
                 break;
             case "hibernate-off":
                 EnsureNonRegistry(record, "hibernate", allowState: true, allowedStates: new[] { "on", "off" });

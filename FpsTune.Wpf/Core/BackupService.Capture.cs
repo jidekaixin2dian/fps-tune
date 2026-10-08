@@ -273,6 +273,13 @@ public static partial class BackupService
             case "wsearch-off":
             {
                 var serviceName = id == "sysmain-off" ? "SysMain" : "WSearch";
+                var start = NativeSystem.GetServiceStartValue(serviceName);
+                var state = NativeSystem.GetServiceState(serviceName);
+                var delayed = RegistryHelper.ReadSnapshot(RegistryHive.LocalMachine,
+                    @"SYSTEM\CurrentControlSet\Services\" + serviceName, "DelayedAutostart");
+                if (start is not (2 or 3 or 4) || state is not ("RUNNING" or "STOPPED") ||
+                    delayed.Existed && (delayed.Kind != RegistryValueKind.DWord || delayed.Value is not int value || value is not (0 or 1)))
+                    throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
                 return new[]
                 {
                     new BackupRecord
@@ -280,10 +287,12 @@ public static partial class BackupService
                         Id = id,
                         Kind = "service",
                         ServiceName = serviceName,
-                        OldStartValue = NativeSystem.GetServiceStartValue(serviceName),
-                        OldStartMode = NativeSystem.GetServiceStartMode(serviceName),
+                        OldStartValue = start,
+                        OldStartMode = start switch { 2 => "auto", 3 => "demand", _ => "disabled" },
+                        OldDelayedExisted = delayed.Existed,
+                        OldDelayedValue = delayed.Existed ? (int)delayed.Value! : null,
                         // 记录应用前的运行状态（RUNNING 等），还原启动类型后据此拉回运行
-                        OldState = NativeSystem.GetServiceState(serviceName)
+                        OldState = state
                     }
                 };
             }

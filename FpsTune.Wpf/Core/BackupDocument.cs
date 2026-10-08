@@ -140,6 +140,19 @@ public static partial class BackupService
                 record.PostBoostValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7");
             }
             else if (record.Kind == "power-aspm") record.PostAspmValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5");
+            else if (record.Kind == "service")
+            {
+                record.PostStartValue = NativeSystem.GetServiceStartValue(record.ServiceName!);
+                record.PostState = NativeSystem.GetServiceState(record.ServiceName!);
+                var delayed = RegistryHelper.ReadSnapshot(Microsoft.Win32.RegistryHive.LocalMachine,
+                    @"SYSTEM\CurrentControlSet\Services\" + record.ServiceName, "DelayedAutostart");
+                if (delayed.Existed && (delayed.Kind != Microsoft.Win32.RegistryValueKind.DWord || delayed.Value is not int))
+                    throw new InvalidDataException(Str.T("Str.BackupTargetChanged"));
+                record.PostDelayedExisted = delayed.Existed;
+                record.PostDelayedValue = delayed.Existed ? (int)delayed.Value! : null;
+            }
+            else if (record.Kind == "bcdedit") record.PostState = NativeSystem.GetDynamicTickState().ToString().ToLowerInvariant();
+            else if (record.Kind == "hibernate") record.PostState = NativeSystem.IsHibernateEnabled() ? "on" : "off";
         }
         AtomicFile.WriteAllTextDurable(file, SerializeRecords(file, records), new UTF8Encoding(false));
     }
@@ -167,6 +180,28 @@ public static partial class BackupService
                     !(second.Existed == record.SecondaryExisted && SameValue(second.Value, record.SecondaryValue)))
                     throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
             }
+        }
+        else if (record.Kind == "service")
+        {
+            if (record.PostState is not ("RUNNING" or "STOPPED" or "STOP_PENDING") || !record.PostStartValue.HasValue || !record.PostDelayedExisted.HasValue)
+                throw new BackupCompatibilityException(Str.T("Str.BackupPendingWrite"));
+            var start = NativeSystem.GetServiceStartValue(record.ServiceName!);
+            var state = NativeSystem.GetServiceState(record.ServiceName!);
+            var delayed = RegistryHelper.ReadSnapshot(Microsoft.Win32.RegistryHive.LocalMachine,
+                @"SYSTEM\CurrentControlSet\Services\" + record.ServiceName, "DelayedAutostart");
+            if (start != record.PostStartValue && start != record.OldStartValue ||
+                state != record.PostState && state != record.OldState && !(record.PostState == "STOP_PENDING" && state == "STOPPED") ||
+                !(delayed.Existed == record.PostDelayedExisted && SameValue(delayed.Value, record.PostDelayedValue) ||
+                  delayed.Existed == record.OldDelayedExisted && SameValue(delayed.Value, record.OldDelayedValue)))
+                throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
+        }
+        else if (record.Kind is "bcdedit" or "hibernate")
+        {
+            if (record.PostState is null) throw new BackupCompatibilityException(Str.T("Str.BackupPendingWrite"));
+            var current = record.Kind == "bcdedit" ? NativeSystem.GetDynamicTickState().ToString().ToLowerInvariant()
+                : NativeSystem.IsHibernateEnabled() ? "on" : "off";
+            if (current != record.PostState && current != record.OldState)
+                throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
         }
         else if (record.Kind == "power-plan")
         {
