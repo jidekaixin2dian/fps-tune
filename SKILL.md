@@ -1,182 +1,87 @@
 ---
 name: fps-tune
-description: 三角洲行动（Delta Force）Windows 系统层帧率优化。检测电脑硬件、游戏安装位置与当前系统设置，经用户逐项确认后批量应用可还原的 Windows 层优化（电源计划、HAGS、游戏模式、关闭后台录制、MMCSS、网络限流等），并为对应显卡厂商给出驱动内手动设置清单。所有改动写入前自动备份，支持一键还原。当用户提到"三角洲行动 卡顿 / 掉帧 / 帧数低 / 画面优化 / 帧率优化 / 优化设置"时使用。
+description: Windows 系统设置调校与 FPS 对照测量。使用 FPS 帧律检测硬件、游戏路径和当前设置，解释优化项与副作用，在用户同意的范围内应用、实测或还原。适用于用户请求本工具调校三角洲行动、CS2、VALORANT 等 PC 游戏的场景。
 ---
 
-# 三角洲行动 · 系统层帧率优化（通用 Agent 技能）
+# FPS 帧律 · 使用者操作流程
 
-本技能与具体 AI 工具无关：任何能在用户 Windows 电脑上执行命令行的助手
-（Claude Code、Codex、WorkBuddy、豆包等）按下面的流程操作即可。核心逻辑全部在
-`FpsTune.exe`（C# 引擎，无头 CLI 模式）里，你只负责：**检测 → 向用户解释 → 征得确认 → 执行 → 汇报**。
-所有系统改动都由确定性引擎完成并自动备份，你的角色是"理解意图、解释取舍、把关确认"，
-而不是替引擎决定改什么。
+本文件面向通过 `FpsTune.exe` 帮用户调校的 AI 助手。开发项目使用本地开发规则。
+使用确定性的 C# 引擎执行检测、应用与还原，并向用户汇报实际结果。
 
 ## 前置条件
 
-- Windows 10 / 11。安装包为自包含发布（自带 .NET 运行时）；便携版需要 .NET 10 Windows Desktop Runtime。
-- 部分项（电源计划、HAGS、系统服务等）需要**管理员权限**的终端。
-- 程序位置：`<root>\FpsTune.exe`（下文 `<root>` 指仓库/安装目录；本地构建产物在
-  `FpsTune.Wpf\bin\Release\net10.0-windows\`）。
-- 带命令行参数时进入无头 CLI 模式：不弹 GUI 窗口、结果输出到 stdout、退出码 0/1。
-- 不要在未获得程序的机器上凭空执行；用户没有程序时，引导其从 Releases 下载或先构建。
+- Windows 10/11 x64，满足 .NET 10 运行条件。安装包自带运行时；便携包需要 .NET 10 Windows Desktop Runtime。
+- 从 [官方 Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 取得程序并核对校验值。当前源码候选为 0.2.4-beta，公开版为 0.2.3-beta；使用前读取 `-Version`。
+- `<root>` 是程序目录，本地构建通常位于 `FpsTune.Wpf\bin\Release\net10.0-windows`。
+- 带参数进入无头模式，结果输出到 stdout，退出码 0/1。CLI Apply / Restore 执行即生效。
+- 项目清单、副作用、权限和预设以引擎 `-Detect -Json` 及 `catalog/catalog.json` 为准，不根据旧文章猜测。
 
-## 流程
+## 检测与审阅
 
-### 第 1 步：检测（只读，安全）
-
-```
+```powershell
+& "<root>\FpsTune.exe" -Version
 & "<root>\FpsTune.exe" -Detect -Json
+& "<root>\FpsTune.exe" -Detect -Game "C:\Games\Game.exe" -Json
 ```
 
-返回 JSON：
-- `hardware`：CPU / 内存 / 显卡（含厂商）/ 系统版本 / 是否笔记本 / 是否管理员
-- `gamePath`：自动找到的游戏主程序（卸载注册表 → 常见盘符兜底；不读取运行中进程路径；找不到为 null）
-- `items`：每个优化项的 id、说明、副作用、是否需要管理员、当前是否已达标
-- `checks`：只读体检结果（VC++ 运行库、内存频率、PCIe 链路、显示器刷新率、颜色配置、DirectStorage、音频独占模式），只报告不修改
+检测返回 `hardware`、`gamePath`、`items` 与 `checks`。游戏查找使用卸载记录和有界目录扫描；没有识别时使用用户提供的 EXE。
+先说明硬件、当前状态、拟改项目及副作用，再按用户已有授权执行。未授权的系统修改需要明确同意；同一范围已获同意后不重复确认。
 
-### 第 2 步：向用户汇报并确认
+- 需要管理员时说明并使用用户认可的提权终端，不扩大到整个使用过程。
+- `fso-off` / `gpu-pref` / `game-priority` 依赖游戏路径，缺失时跳过。
+- `wsearch-off` 影响搜索索引；`hibernate-off` 关闭休眠与快速启动，删除的休眠内容不能恢复。
+- 接电 CPU 项、关闭节能项可能增加温度、功耗和风扇噪声；默认未选项不替用户自动勾选。
+- 体检中的驱动、内存频率等建议是诊断，不代为安装驱动、改 BIOS 或关闭安全功能。
 
-用平实的语言告诉用户：检测到什么硬件、游戏装在哪、哪些项已达标、哪些项建议优化、
-每项干什么、有什么副作用。**必须先获得用户明确同意才能进入第 3 步**——这是改系统设置。
+## 应用与汇报
 
-需要如实告知的注意点：
-
-- 需要管理员的项，当前会话不是管理员时会失败并明确报错——此时请用户用管理员身份重开终端。
-- `fso-off` / `gpu-pref` / `game-priority` 依赖找到游戏主程序；找不到时这三项自动跳过，
-  可让用户提供游戏安装位置后用 `-Game "主程序完整路径"` 补上。
-- `wsearch-off`（禁用搜索索引）会让系统搜索明显变慢；`hibernate-off`（关休眠）会顺带
-  关掉快速启动，笔记本合盖只剩睡眠——这两项默认不勾选，勾选前务必说明。
-- `power-tuning` 会改电源隐藏参数（关闭 USB3 链路省电、处理器性能提升模式设为激进），
-  个别主板/笔记本厂商策略下可能引起异常（极少见）；出现异常用还原命令恢复即可。
-- 纯检测项（`checks`）查出问题时是"体检立功"而不是工具失败，转述时区分开：
-  - VC++ 缺失：只报"哪个架构缺失"，给微软官方链接（aka.ms/vs/18/release/vc_redist.x64.exe
-    与 .x86.exe）。x64 与 x86 是两套独立运行库，**版本不同步通常无害**，不要引导用户
-    卸载重装其他年份的 VC++；缺失时覆盖安装即可，装完重启再检测。
-  - 内存频率：当前运行频率与 BIOS 配置频率不一致时，提示进 BIOS 查 XMP/A-XMP/EXPO/DOCP
-    （菜单名因主板品牌和 CPU 平台而异）；菜单不存在说明厂商未开放，不强求。
-  - PCIe 链路：仅 NVIDIA 卡自动读取；当前 Gen 低于上限时提示检查插槽/延长线。
-- **不要建议关闭引导虚拟化**：ACE 反作弊会检查虚拟化状态，关掉会导致游戏报错进不去。
-
-### 第 3 步：应用（必须已获用户同意）
-
-```
-& "<root>\FpsTune.exe" -Apply -Preset balanced -Json
+```powershell
+& "<root>\FpsTune.exe" -Apply -Preset balanced -Game "C:\Games\Game.exe" -Json
+& "<root>\FpsTune.exe" -Apply -Items game-mode,gpu-pref -Game "C:\Games\Game.exe" -Json
 ```
 
-- 默认套用预设：`-Preset balanced`（27 项，副作用小；不含会改变键鼠手感的
-  keyboard-latency / keyboard-repeat，鼠标加速关闭除外）通常最合适；`full` 含全部
-  33 项；`safe-only` 只有 5 项当前用户级设置、不需要管理员。
-- 也可以逐项：`-Apply -Items power-ultimate,hags,dvr-off -Json`。
-- 预设/清单念给用户听，让用户选，不要替用户决定勾哪些。
-- **CLI 没有"-Force"之类的同意开关：执行即生效**。征得用户同意的责任完全在你——
-  这也是红线第 2 条，没有例外。
-- 结果里每项带 `ok` / `changed` / `skipped`，末尾有 `summary`（x 成功、y 失败、z 跳过）。
-  `reboot` 数组列出需要重启才完全生效的项，汇报时按它提醒用户重启，别自己猜。
-- 每次 Apply 会先把所有原值写入 `%LocalAppData%\FpsTune\backup\backup-<时间戳>.json`，
-  结果里有 `backupFile` 路径；转述给用户，告诉他还原就靠这份备份。
+`balanced` 为 16 项，`safe-only` 为 4 项无需管理员的设置，`full` 包含全部 38 项；full 包含副作用不同的手动项目，不作为默认推荐。
+说明实际选择后执行。结果包含 `operationId`、`backupFile`、逐项 `ok/changed/skipped/stateUncertain` 及重启要求。
+写入前按项保存原值和目标身份；不能读取原值时停止该项。失败或状态不确定必须保留记录并如实报告，不把局部成功当成全部完成。
 
-### 第 4 步：显卡驱动内设置（手动，念给用户听）
+## 对照测量
 
-驱动内的 3D 设置无法安全脚本化。根据用户显卡厂商给出手动设置建议，
-指导其在 NVIDIA 控制面板 / AMD Adrenalin / Intel Arc 控制面板中手动设置（约 2 分钟）。
-清单已按检测到的显卡厂商生成（先确认 `hardware.gpuVendor` 再给对应内容）。
-
-### 自动寻找最佳配置（A/B 调优）
-
-同一台设备、固定场景下，用数据决定哪些优化组合值得保留
-（A/B 实验编排由 `FpsTune.exe -Experiment` 进程内完成；应用/还原同样走引擎并自动备份）：
-
-```
-# 1) 先采集基线（3 次采样，需游戏在运行、场景固定）
-FpsTune.exe -Experiment -Baseline -Json
-
-# 2) 依次测试候选组（每个组约 3 × 90 秒）
-FpsTune.exe -Experiment -Test -Group group-1 -Json
-FpsTune.exe -Experiment -Test -Group group-2 -Json
-FpsTune.exe -Experiment -Test -Group group-3 -Json
-
-# 3) 查看实验结果与 CSV 导出
-FpsTune.exe -Experiment -Report -Json
+```powershell
+& "<root>\FpsTune.exe" -Experiment -Baseline -Json
+& "<root>\FpsTune.exe" -Experiment -Test -Group group-1 -Json
+& "<root>\FpsTune.exe" -Experiment -Report -Json
 ```
 
-规则版决策（非统计推断）：按平均帧率 / 1% low / P99 帧时间 / 卡顿次数对比基线，
-有收益保留、无收益**自动还原**。样本不足、游戏退出、失去前台或基线不稳定时不形成结论。
+固定设备、驱动、游戏、画质、分辨率、地图和路线；真实采样需要已安装且签名/发布者通过检查的官方 PresentMon。
+基线和候选至少 3 次有效样本、CV ≤ 0.05。P99 恶化超过 3% 时拒绝保留，其他收益阈值以判定记录为准。规则判定不等于统计显著性或未来场景收益。
+需重启项目不加入即时 A/B。发生异常时检查该操作回执，报告回滚失败，不启动另一轮覆盖现场。
+演练时每条命令都加 `-Simulate`；模拟状态与历史独立，不当作真实 FPS 收益。
 
-Agent 的职责与红线：
+## 恢复
 
-- 向用户解释：采样期间必须**保持同一地图、画质、分辨率与路线**，不要切窗口、改设置、
-  开其他占资源的程序；每轮采样脚本会阻塞约 90 秒，不要打断。
-- 采样器依赖官方 PresentMon。本机没有时**引导用户自行安装**
-  （`winget install Intel.PresentMon.Console` 或官网下载），不要代替用户安装。
-- 不要替实验挑选候选组之外的项，**绝不要把高风险/需重启项加入候选**。
-- 基线不稳定（CV > 0.05）时让用户重采，不要强行继续。
-
-### 还原（用户后悔时）
-
-```
-# 查看可精确还原的项
+```powershell
 & "<root>\FpsTune.exe" -ListRestore -Json
-
-# 还原全部
 & "<root>\FpsTune.exe" -Restore -Json
-
-# 只还原某些项
 & "<root>\FpsTune.exe" -Restore -Items hags,dvr-off -Json
 ```
 
-- 还原按备份记录逐项恢复原值（包括"原本不存在"的值会删除而不是写默认值）。
-- 已消费的备份会重命名为 `.restored` 保留供审计，不会误删。
-- 还原失败会如实报错并指出哪一项，不要假装成功。
+恢复本工具记录的原值，原先不存在的值删除；已消费的系统备份保留为 `.restored`。
+系统、DRS、ICC、数字振动由恢复协调器分别处理，独立报告失败。
+外部修改、设备/驱动变化、旧备份目标不足或异机记录会阻止无法确认的恢复。不要删除未决标记或用猜测的默认值覆盖；先核对具体目标和记录。
+导入备份用于保存记录，不自动授权将其他机器或重装前设置写入当前系统。
 
-## 优化项一览（id 供 -Items 使用）
+## 显示与维护功能
 
-| id | 作用 | 管理员 | 默认勾选 | 需重启 |
-|---|---|---|---|---|
-| mouse-accel-off | 关闭鼠标加速 | 否 | 否 | 否 |
-| keyboard-latency | 键盘缓冲区扩容 | 是 | 否 | 是 |
-| keyboard-repeat | 键盘重复提速 | 否 | 否 | 否 |
-| sticky-keys-off | 关闭粘滞键/切换键弹窗 | 否 | 否 | 否 |
-| hags | 开启硬件加速 GPU 计划（HAGS） | 是 | 是 | 是 |
-| transparency-off | 关闭窗口透明特效 | 否 | 是 | 否 |
-| fso-off | 禁用游戏全屏优化 | 否 | 是 | 否 |
-| gpu-pref | 游戏强制使用高性能 GPU | 否 | 是 | 否 |
-| mpo-off | 禁用 MPO 多平面叠加 | 是 | 是 | 是 |
-| gpu-pstate-lock | 禁止显卡动态降频 | 是 | 否 | 是 |
-| net-throttling-off | 解除多媒体网络限流 | 是 | 是 | 否 |
-| net-nagle-off | 关闭 Nagle 算法(TcpAckFrequency) | 是 | 否 | 是 |
-| power-ultimate | 电源计划 → 卓越性能 | 是 | 是 | 否 |
-| power-tuning | 电源计划隐藏项调优 | 是 | 是 | 是 |
-| usb-power-save-off | 禁用 USB 选择性暂停 | 是 | 否 | 是 |
-| game-mode | 开启 Windows 游戏模式 | 否 | 是 | 否 |
-| dvr-off | 关闭 Xbox 后台录制 | 否 | 是 | 否 |
-| prio-separation | 前台进程调度权重提升 | 是 | 是 | 否 |
-| wer-off | 关闭 Windows 错误报告 | 是 | 是 | 否 |
-| sys-responsiveness | 系统后台响应保留设为最低 | 是 | 是 | 否 |
-| mmcss-games | MMCSS 游戏任务档位拉满 | 是 | 是 | 否 |
-| sysmain-off | 禁用 SysMain（预取）服务 | 是 | 否 | 是 |
-| wsearch-off | 禁用 Windows Search 索引 | 是 | 否 | 是 |
-| hibernate-off | 关闭休眠与快速启动 | 是 | 否 | 是 |
-| game-priority | 游戏进程 CPU 优先级提到高 | 是 | 是 | 否 |
-| paging-exec | 内核代码常驻内存 | 是 | 是 | 是 |
-| mem-compress-off | 关闭内存压缩 | 是 | 否 | 是 |
-| dyntick-off | 禁用动态计时器 | 是 | 否 | 是 |
-| menu-delay-off | 菜单弹出零延迟 | 否 | 否 | 否 |
-| visual-fx-perf | 视觉效果最佳性能 | 否 | 否 | 否 |
-| delivery-opt-off | 关闭传递优化 P2P 上传 | 是 | 否 | 否 |
-| bg-apps-off | 关闭桌面应用后台运行 | 否 | 否 | 否 |
-| telemetry-off | 关闭诊断遥测 | 是 | 否 | 否 |
+GUI 提供 NVIDIA DRS / DLSS、主屏数字振动与 ICC。部分游戏不使用 ICC；驱动设置的效果依游戏支持情况而异。
+GTX 1050 Ti 名称实验只改 Windows DeviceDesc，不改变 DXGI 硬件标识或硬件能力，不保证游戏采用该名称。
+缓存维护先预览再确认删除，删除不可还原，重建可能暂时卡顿。禁止未经授权清理真实缓存。
+本地壁纸仅是软件背景，不修改 Windows 壁纸。
 
-本工具**没有**以下高风险项，也永远不做：修改游戏目录文件、
-注入游戏进程、关闭引导虚拟化、任何与反作弊的交互。
+## 交付原则
 
-## 红线（任何 agent 都必须遵守）
-
-1. **agent 驱动 CLI 不代表用户同意任何声明。** 免责声明、副作用说明必须由用户
-   本人阅读并同意；不得代替用户确认，也不得通过任何方式绕过确认。
-2. 未经用户明确同意，不得执行 `-Apply` / `-Restore`。CLI 没有 `-Force` 之类的
-   防呆开关，同意与否完全由你把关。
-3. 不要绕过程序自己改注册表/电源设置——引擎的备份机制是唯一的还原保障。
-4. 不修改游戏安装目录内的任何文件，不注入进程，不与反作弊交互。
-5. 执行后如实汇报每项成功/失败/跳过，并告知备份文件位置与还原方法。
-6. 不要代替用户下载或运行任何安装包；需要装 VC++ 运行库时只给官方链接让用户自己装。
-7. 不承诺固定帧数提升；收益因机器而异，让用户实测对比。
+1. 不绕过引擎直接改注册表、电源、驱动，不修改游戏文件、不注入游戏进程。
+2. 按用户授权范围执行，解释实际影响；不把第三方工具或帖子当成收益证明。
+3. 以退出码、逐项结果和回执验证完成，保留失败与不确定记录。
+4. 不承诺固定帧数、全部可逆或所有反作弊兼容。
+5. 手动诊断导出可能包含设备与操作信息，用户检查后再分享，不自动发送。
+6. 默认启动访问 GitHub 检查更新，可关闭；下载与安装均由用户操作。遵守项目 MIT 与第三方许可，合法修改和再分发不需要额外许可。

@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        请先跑一次 `FpsTune.exe -Detect -Json` 并确认问题不是权限导致的（需要管理员的项在普通权限下会明确报错，这是预期行为）。
+        请描述现象与复现步骤，附软件版本。只分享与问题相关的输出，隐去个人信息；敏感漏洞先提出不含细节的联系请求。
   - type: textarea
     id: what-happened
     attributes:
@@ -36,12 +36,12 @@ body:
     id: logs
     attributes:
       label: 相关输出 / 日志
-      description: 粘贴 `-Json` 输出或「备份 / 日志」页内容。敏感路径可自行打码。
+      description: 可选。检查并打码后粘贴相关片段，不必提交完整日志或诊断包。
       render: shell
   - type: checkboxes
     id: revert
     attributes:
       label: 还原确认
       options:
-        - label: 我确认问题可以通过「还原全部」恢复到改动前的状态（或恢复本身有问题）
+        - label: 我已尝试还原，并在描述中说明结果
           required: false

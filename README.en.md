@@ -1,177 +1,105 @@
-# fps-tune
+# FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Download latest](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
 
-A **system-layer** frame-rate tuning bench for Windows gamers:
-detect → explain → confirm → apply → restore, every step reversible and every claim measurable.
-C# WPF + .NET 10; `FpsTune.exe` doubles as a headless CLI (command line / AI-agent entry point).
+Windows system tuning and performance measurement: detect → review → apply → measure → restore.
+Built with C# WPF / .NET 10; `FpsTune.exe` provides both a desktop interface and a headless CLI.
 
-> Settings offers Chinese and English. Some interface text still falls back to Chinese;
-> localization is not yet complete.
+## Versions and downloads
 
-![Overview: live load plus the state of all 36 items](assets/screenshots/01-overview.png)
+The public release is [v0.2.3-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.3-beta).
+The current source is a **0.2.4-beta candidate, not yet released**. The 1.x / .NET 8 line is unmaintained and preserved at `legacy/1.x`.
 
-![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
-![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
-![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
-![.NET](https://img.shields.io/badge/.NET-10-512BD5)
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest).
+The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-Version line 0.2 Beta (the measurement loop lands in 0.2.0): usable today, still converging; breaking changes are called out in release notes.
-1.x (including 1.6.X) is **unmaintained** (frozen at `legacy/1.x`); use 0.2 Beta.
-
-## It tunes Windows, never the game
-
-| What it does | What it never does |
+| File | Purpose |
 |---|---|
-| Edits registry / power plans / service start types / boot config | Touches any file inside a game folder |
-| Backs up the original value first (including "did not exist") | Injects into processes, reads game memory |
-| Locates the game EXE for path-level adaptation | Interacts with anti-cheat |
-| Samples on your machine, conclusions from measurement | Toggles virtualization-based security |
-| Restores per item or all at once | Sends telemetry, downloads anything unasked |
+| `FpsTune-Setup-<version>.exe` | Installer including the .NET runtime |
+| `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
+| `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Not game-specific — works for *Delta Force*, *Counter-Strike 2*, *VALORANT*, *APEX*, *PUBG*,
-*Call of Duty* and most other PC titles. Games are found via uninstall registry entries and known
-install directories; running processes' paths are never read. Use `-Game` for an unrecognized title.
+The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
+From 0.2.4, portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
 
-## Download
+## Current features
 
-**Released [v0.2.3-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.3-beta)** (2026-10-07)
-shares preview/session sampling, pauses previews on hidden windows and inactive pages,
-batches GPU counters, streams frame-time output, and loads session history as summaries.
-It fixes per-game verdict isolation, legacy backup ZIP transfers, profile names, saved game selection,
-and QR contact copying. Classic overview restores the saved game on startup. Legacy simulation labels
-are corrected only when timestamps and metrics match their source, without rewriting the wizard on read.
-The update reduces repeated sampling. Frame rates and resource use still depend on your hardware and workload; no fixed gain is promised.
+- **Studio and compact console layouts**, dark/light themes, shared selection controls and a local image as the application wallpaper. The classic overview has been removed.
+- **Detection and system tuning**: 38 catalog items with current state, privileges, restart flags and side effects. Memory compression control is unavailable, with legacy restoration retained. Balanced includes 16 items; safe-only includes 4 without elevation. New AC CPU energy preference and maximum-state controls start unchecked.
+- **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
+- **Display and quality**: per-game NVIDIA DRS / DLSS settings, primary-display digital vibrance, 11 generated ICC presets or a custom `.icc` / `.icm`, and restoration of the original association. ICC works in color-managed applications; some games ignore it.
+- **GPU name experiment**: sets the NVIDIA Windows `DeviceDesc` to GTX 1050 Ti and backs up the original description. It does not change DXGI hardware IDs, driver capabilities or GPU performance. Whether a game uses that name needs measurement.
+- **Cache maintenance**: preview the current user's DirectX / NVIDIA shader caches and confirm cleanup. Busy or changed files are skipped. Deleted cache files cannot be restored; regeneration may cause temporary stutter.
+- **Performance sessions and A/B**: local CPU, RAM, GPU, VRAM and frame-time recording, exports and comparisons. Real FPS capture requires official PresentMon.
+- **Inline guidance**: tutorial, community feedback and optional update cards appear in the main window's lower-right corner and can be collapsed or closed.
+- **Backups and recovery**: one inventory covers system settings, game driver profiles, ICC and vibrance, with individual results and failures.
 
-Pick one from [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) (Windows 10/11 x64):
-
-| Artifact | Notes |
-|---|---|
-| `FpsTune-Setup-<version>.exe` | Inno Setup installer, bundles the .NET runtime — **recommended** |
-| `FpsTune-Portable-<version>.zip` | Unzip and run; requires the [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
-| `SHA256SUMS-v<version>.txt` | Verify with `Get-FileHash -Algorithm SHA256 <file>` |
-
-There is **no code-signing certificate**, so SmartScreen will warn about an unknown publisher on
-first launch — normal for a personal open-source project. Choose "More info → Run anyway".
-Update checks only hit `api.github.com` when you press the button in Settings, and any download
-asks for consent and verifies SHA-256 first.
-
-## Screenshots
-
-| Detection: read-only health check + live meters | Optimization: presets, categories, per-item side effects |
-|---|---|
-| ![Detection](assets/screenshots/02-detect.png) | ![Optimization](assets/screenshots/03-optimize.png) |
-
-| Performance sessions: local sampling + bottleneck verdict + insights | A/B experiment: baseline, candidate / custom groups, rule-based verdict |
-|---|---|
-| ![Sessions](assets/screenshots/04-session.png) | ![A/B experiment](assets/screenshots/05-ab-experiment.png) |
-
-**Multi-game (0.2.1+)**: add several games and switch from the overview page dropdown —
-each game keeps its own detection snapshot, optimization state and measurement verdicts; when a
-game with a bound profile starts, the context switches automatically.
-
-**Measurement loop (0.2.0+)**: the A/B page can run the items currently checked on the
-Optimize/Overview page as a **custom group** (baseline sampling → apply with its own backup →
-sample again → rule-based keep or auto-revert; checking exactly one item gives a single-item deep
-test; items that need a restart are explicitly rejected since a restart invalidates the baseline).
-Verdicts persist locally and surface in the UI: optimization items carry a "Measured +x.x% FPS"
-badge (only shown when data exists), and the A/B page lists verdicts with a one-click **Markdown
-report export** (test conditions and reading guide included). Performance sessions now also record
-full-session **frame rate** (avg / 1% low / p99 / stutters, requires official PresentMon), and the
-insights card adds a **bottleneck verdict** (GPU-bound / CPU-bound / none, heuristic).
-
-Also included: **display & quality** (four tabs: DLSS preset override / vibrance & ICC — a
-digital-vibrance slider plus applying your own `.icc` / `.icm` calibration file / per-game driver
-3D settings / advice & checklist — a vendor-specific in-driver manual checklist and driver version
-advice; each tab shows a live status badge so you can see every group's state without opening it,
-all read-only guidance and reversible), backups & logs (audit of every write plus a backup-file
-status list so consumed `.restored` files are obvious, plus a **change overview**
-(original values vs live state) and **backup export/import** so a fresh Windows install can
-recover your pre-optimization state), a PresentMon pre-check on the A/B page
-(gives the official install command when missing — the tool never installs it for you), and
-settings (theme / tray / global hotkey Ctrl+Alt+F / per-game auto-apply profiles / diagnostic export with one-click feedback).
-Dark, light and system themes; borderless custom title bar; a splash screen with real startup-phase
-progress; the classic overview offers a first-run "detect → optimize" guide, while the console overview
-gives one-click basic advice (game mode / background recording / GPU preference — three
-game-agnostic settings).
+The application adjusts system or driver configuration without modifying game files or injecting into game processes. Results depend on hardware, drivers, games and scenes; compare on the same machine.
 
 ## Quick start
 
-### GUI
-
-Run `FpsTune.exe`. Start with the Detection tab (read-only, safe), then pick a preset in the
-Optimization tab, review each item, tick the consent box and apply. "Restore all" undoes everything.
-
-### CLI
-
-Passing arguments puts `FpsTune.exe` into headless mode (no window, stdout, exit code 0/1):
+Run `FpsTune.exe`, select a game and scan its current settings. Review the selected optimization items before applying them. Start with a small selection and measure whether to keep it.
+The application starts as `asInvoker`; operations needing elevation offer a restart as administrator.
 
 ```powershell
-.\FpsTune.exe -Detect -Json                       # read-only detection
-.\FpsTune.exe -Detect -Game <path-to-game.exe> -Json
-.\FpsTune.exe -Apply -Preset balanced -Json       # ask the user first
-.\FpsTune.exe -Apply -Items id1,id2 -Json         # specific items only
-.\FpsTune.exe -Restore -Json                      # restore everything
-.\FpsTune.exe -ListRestore -Json                  # list available backups
-.\FpsTune.exe -Version                            # version + build commit
+.\FpsTune.exe -Detect -Json
+.\FpsTune.exe -Detect -Game "C:\Games\Game.exe" -Json
+.\FpsTune.exe -Apply -Preset balanced -Json       # review and agree first
+.\FpsTune.exe -Apply -Items game-mode,gpu-pref -Game "C:\Games\Game.exe" -Json
+.\FpsTune.exe -ListRestore -Json
+.\FpsTune.exe -Restore -Json
+.\FpsTune.exe -Version
+.\FpsTune.exe -License
 ```
 
-Items that need admin rights fail loudly in a non-elevated terminal (the exe runs as asInvoker and
-never auto-prompts UAC). Of the 36 items, 25 require admin and 16 need a reboot to fully apply;
-the `balanced` preset contains 27.
+The catalog marks 28 items for administrator privileges and 16 for restart.
+CLI Apply / Restore begins work immediately and should be used within the agreed scope.
+The AI-assistant procedure is in [SKILL.md](SKILL.md); `catalog/catalog.json` is the item and preset source of truth.
 
-### AI agent
+## Recovery and measurement boundaries
 
-```text
-Run: git clone https://github.com/jidekaixin2dian/fps-tune.git
-Then read SKILL.md in the cloned directory and strictly follow its workflow to tune my frame rates.
-```
-
-`SKILL.md` is the single operating procedure, with hard red lines: explain before applying,
-never promise FPS, always stay reversible.
-
-## Measurements, not promises
-
-Performance sessions sample CPU / memory / GPU / VRAM locally — data stays on your machine,
-exports to JSON/CSV, and two sessions can be compared side by side. The A/B wizard closes the loop:
+Supported setting writes save original values first. An unreadable original blocks that item.
+Recovery targets the recorded setting, preserving backups and reporting conflicts when external changes, device/driver changes or insufficient legacy metadata prevent verification.
+Import preserves records; it does not authorize applying another machine's or a previous Windows installation's backups.
+Disabling hibernation can be reversed by re-enabling it, but deleted hibernation contents and the original file type/size are outside recovery scope. Cache deletion is also irreversible.
 
 ```powershell
 .\FpsTune.exe -Experiment -Baseline -Json
 .\FpsTune.exe -Experiment -Test -Group group-1 -Json
 .\FpsTune.exe -Experiment -Report -Json
+# Add -Simulate to every command for a rehearsal using separate simulated records.
 ```
 
-Verdicts are rule-based (avg FPS / 1% low / P99 frame time / stutter count vs baseline):
-keep on measurable gain, **auto-revert otherwise**. No conclusion is drawn when samples are
-insufficient or the baseline is unstable (CV > 0.05). Real sampling needs the official PresentMon
-CLI — install it yourself (`winget install Intel.PresentMon.Console`); the tool will never download
-or run an installer for you. `-Simulate` walks the whole flow safely first.
+Install official PresentMon yourself (for example, `winget install Intel.PresentMon.Console`). Its signature and publisher are checked before capture.
+A/B uses fixed hardware, game, graphics settings and route, with at least 3 valid samples and CV ≤ 0.05. A P99 regression above 3% prevents keeping the candidate; other thresholds appear in the recorded decision.
+This is a rule-based decision, not proof of statistical significance. Simulated records do not establish real FPS gains. Failed rollback is reported and its recovery records remain available.
 
-That is why this README contains no "+30 FPS guaranteed" claim: results depend on your hardware,
-driver and in-game settings, and controversial items ship unchecked by default.
+## Updates and privacy
 
-## Why this project exists
+Startup checks this repository's GitHub Releases by default. Disable it in Settings or check manually.
+New versions show an inline card; you control downloading and installing. Updates are optional, with no automatic installation.
+A third-party file host is unnecessary. Downloads use official HTTPS release assets and the same release's SHA256 manifest.
 
-Closed-source tools in this space ship proprietary EULAs that forbid modification and
-redistribution, and don't disclose what they change. This project was written from scratch against
-the *public feature list* only, is MIT licensed, and puts all 36 items and presets in
-`catalog/catalog.json` — you can read exactly which keys get touched.
+Hardware readings, game paths, backups, sessions and logs stay under `%LocalAppData%\FpsTune` and are not automatically uploaded.
+Update requests disclose the network connection's IP and a `FpsTune` User-Agent to GitHub, without hardware, game lists or logs. GitHub and QQ process visits and community information under their own service rules.
+Diagnostic exports are manual and may contain device, setting and operation records; inspect them before sharing. Preserve needed backups before deleting local records.
 
-## Safety & privacy
+## Community and feedback
 
-- Every reversible change is written to `%LocalAppData%\FpsTune\backup` first; restore is per item
-  and restores exact original values (deleting values that did not exist before). Empty or corrupt
-  backups are archived as `.stale` instead of failing the whole restore.
-- All changes leave a JSON audit trail, visible in the backups/logs tab.
-- No telemetry, no analytics. The only network access is the update check you trigger yourself.
-- Admin-required items fail with a reason instead of being silently skipped.
+Join the **FPS 帧律 developer community** to discuss usage, report issues, suggest features and discuss the developer's other open-source projects.
 
-## Feedback
+- **QQ group: 659528489**
+- **Bugs and feature requests:** [GitHub Issues](https://github.com/jidekaixin2dian/fps-tune/issues)
 
-Bug reports and feature suggestions are welcome in Issues.
+Use, learning and sharing are welcome. Follow the open-source license when redistributing and, where practical, credit the original project.
+The group is for community discussion and does not promise real-time support. Do not post vulnerabilities or private information publicly.
+Private vulnerability reporting is currently disabled on this repository. Start with a contact request containing no exploit details or personal information, then share details through a private channel supplied by the maintainer.
 
-## License
+## License and contributions
 
-MIT. Written from scratch; no derivative relationship to any existing tool's code or docs.
+The project's own code uses the [MIT License](LICENSE). The historical `Copyright (c) 2026 delta-force-tune contributors` notice is retained; renaming the project does not replace it.
+MIT permits use, modification, copying, redistribution, sublicensing and commercial use subject to preserving the copyright and license notice. Crediting the project source is a recommendation, not an added license condition. Modified distributions may use another name while clearly identifying their origin.
+Third-party components and API-reference scope are listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) and `licenses/manifest.json`; the project's MIT license does not replace their terms.
 
-If it saved you from hunting through the registry by hand, a star is the most direct way to help.
+Contributions should describe changes and validation, preserve copyright notices and supply sources/licenses for new dependencies or assets. Contributing does not transfer copyright.
+Game and hardware brands identify supported targets, without implying vendor sponsorship or endorsement. The software is provided under the MIT text and promises no fixed FPS gain.
