@@ -621,6 +621,9 @@ public partial class SettingsView : UserControl
         }
     }
 
+    private void OpenLicenses_Click(object sender, RoutedEventArgs e)
+        => new LicenseWindow { Owner = Window.GetWindow(this) }.Show();
+
     private void OpenGitHub_Click(object sender, RoutedEventArgs e)
     {
         try

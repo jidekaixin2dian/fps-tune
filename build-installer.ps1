@@ -83,6 +83,28 @@ if (-not (Test-Path -LiteralPath $portableZip)) {
 }
 
 Write-Host "App version: $version"
+& (Join-Path $root 'tools/verify-licenses.ps1')
+$head = (& git -C $root rev-parse HEAD | Out-String).Trim()
+if ($LASTEXITCODE -ne 0 -or $head -notmatch '^[0-9a-f]{40}$') { throw 'Cannot identify committed build source.' }
+& git -C $root diff --quiet HEAD
+if ($LASTEXITCODE -ne 0) { throw 'Installer requires clean tracked source.' }
+$suffix = [string]$propsXml.Project.PropertyGroup.VersionSuffix
+$displayVersion = if ($suffix) { "$version-$suffix" } else { $version }
+if ([Diagnostics.FileVersionInfo]::GetVersionInfo($singleExe).ProductVersion -cne "$displayVersion+$head") {
+    throw 'Single executable is not from the current committed source. Rebuild before packaging.'
+}
+foreach ($legalFile in @('LICENSE','THIRD-PARTY-NOTICES.txt')) {
+    $packaged = Join-Path (Split-Path $singleExe -Parent) $legalFile
+    if (-not (Test-Path -LiteralPath $packaged) -or
+        (Get-FileHash -LiteralPath $packaged).Hash -ne (Get-FileHash (Join-Path $root $legalFile)).Hash) {
+        throw "Installer payload lacks the reviewed license: $legalFile"
+    }
+}
+$oldHashes = Get-Content -LiteralPath $manifest
+foreach ($asset in @(@{Path=$singleExe;Name='FpsTune.exe'},@{Path=$portableZip;Name="FpsTune-Portable-$version.zip"})) {
+    $expected = (Get-FileHash -LiteralPath $asset.Path).Hash + '  ' + $asset.Name
+    if ($expected -notin $oldHashes) { throw "Asset changed since publication gate: $($asset.Name)" }
+}
 & $iscc "/DMyAppVersion=$version" (Join-Path $root 'installer\setup.iss')
 if ($LASTEXITCODE -ne 0) { exit 1 }
 if (-not (Test-Path -LiteralPath $installer)) {

@@ -1,0 +1,124 @@
+{
+  "Components": [
+    {
+      "License": "MIT",
+      "Directory": "dotnet-runtime",
+      "Files": [
+        {
+          "Sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "Path": "licenses/dotnet-runtime/LICENSE.txt"
+        },
+        {
+          "Sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+          "Path": "licenses/dotnet-runtime/THIRD-PARTY-NOTICES.txt"
+        }
+      ],
+      "Name": "microsoft.netcore.app.runtime.win-x64",
+      "Version": "10.0.12",
+      "Source": "https://www.nuget.org/packages/microsoft.netcore.app.runtime.win-x64/10.0.12",
+      "Scope": "Redistributed package/runtime"
+    },
+    {
+      "License": "MIT",
+      "Directory": "windowsdesktop-runtime",
+      "Files": [
+        {
+          "Sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "Path": "licenses/windowsdesktop-runtime/LICENSE.txt"
+        }
+      ],
+      "Name": "microsoft.windowsdesktop.app.runtime.win-x64",
+      "Version": "10.0.12",
+      "Source": "https://www.nuget.org/packages/microsoft.windowsdesktop.app.runtime.win-x64/10.0.12",
+      "Scope": "Redistributed package/runtime"
+    },
+    {
+      "License": "MIT",
+      "Directory": "system-management",
+      "Files": [
+        {
+          "Sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "Path": "licenses/system-management/LICENSE.txt"
+        },
+        {
+          "Sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+          "Path": "licenses/system-management/THIRD-PARTY-NOTICES.txt"
+        }
+      ],
+      "Name": "system.management",
+      "Version": "10.0.12",
+      "Source": "https://www.nuget.org/packages/system.management/10.0.12",
+      "Scope": "Redistributed package/runtime"
+    },
+    {
+      "License": "MIT",
+      "Directory": "system-codedom",
+      "Files": [
+        {
+          "Sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "Path": "licenses/system-codedom/LICENSE.txt"
+        },
+        {
+          "Sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+          "Path": "licenses/system-codedom/THIRD-PARTY-NOTICES.txt"
+        }
+      ],
+      "Name": "system.codedom",
+      "Version": "10.0.12",
+      "Source": "https://www.nuget.org/packages/system.codedom/10.0.12",
+      "Scope": "Redistributed package/runtime"
+    },
+    {
+      "License": "MIT",
+      "Directory": "nvapi",
+      "Files": [
+        {
+          "Sha256": "84726b60c17fe0f71f92a6c074c3d4087370886eba5d21ccc4ec55db37d6c8ba",
+          "Path": "licenses/nvapi/LICENSE.txt"
+        }
+      ],
+      "Name": "nvapi",
+      "Version": "34fa4289b1e2e1934b535f022d2b1ae51338791d",
+      "Source": "https://github.com/NVIDIA/nvapi/blob/main/License.txt",
+      "Scope": "NVAPI SDK reference; driver DLL loaded from Windows System32, not bundled"
+    },
+    {
+      "License": "MIT",
+      "Directory": "nvidia-profile-inspector",
+      "Files": [
+        {
+          "Sha256": "0b116abacb4c7dcaae7c32784627d0501a23931759b504babf2d3ca979d1eeac",
+          "Path": "licenses/nvidia-profile-inspector/LICENSE.txt"
+        }
+      ],
+      "Name": "nvidia-profile-inspector",
+      "Version": "f8ebc81293c90fcff1b0c7af1035eaf38350fe96",
+      "Source": "https://github.com/Orbmu2k/nvidiaProfileInspector/blob/master/LICENSE",
+      "Scope": "DRS interoperability adapted/reference definitions"
+    },
+    {
+      "License": "MIT",
+      "Directory": "dotnet",
+      "Files": [
+        {
+          "Sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "Path": "licenses/dotnet/LICENSE.txt"
+        }
+      ],
+      "Name": "dotnet-source",
+      "Version": "95017c711e6afc1085133d440e42b4bd78155701",
+      "Source": "https://github.com/dotnet/dotnet/blob/95017c711e6afc1085133d440e42b4bd78155701/LICENSE.TXT",
+      "Scope": "License source for System.Management and System.CodeDom"
+    }
+  ],
+  "RuntimeVersion": "10.0.12",
+  "SchemaVersion": 1,
+  "References": [
+    {
+      "Source": "https://github.com/falahati/NvAPIWrapper",
+      "Scope": "Private DVC API identifiers and ABI field layout reference only; no NuGet package, DLL or class implementation is bundled. Recheck license if copying code.",
+      "Name": "NvAPIWrapper",
+      "License": "LGPL-3.0"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=System.Runtime">
 
@@ -835,4 +835,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.RecipeApply">Apply</s:String>
     <s:String x:Key="Str.RecoveryDisplay">Display</s:String>
     <s:String x:Key="Str.RecoveryPending">Pending restore</s:String>
+    <s:String x:Key="Str.LicenseRights">MIT permits use, modification and commercial redistribution. Preserve applicable copyright and license notices when distributing.</s:String>
+    <s:String x:Key="Str.ThirdPartyNotices">Third-party notices</s:String>
+    <s:String x:Key="Str.Licenses">Licenses</s:String>
+    <s:String x:Key="Str.LicenseTitle">Licenses and third-party notices</s:String>
 </ResourceDictionary>

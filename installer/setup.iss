@@ -11,6 +11,7 @@ AppId={{8D6E7F3A-4C5B-4D1E-9A2B-7C0F6E1D8B4A}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+LicenseFile=..\LICENSE
 DefaultDirName={autopf}\FpsTune
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes

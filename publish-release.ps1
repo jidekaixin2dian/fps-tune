@@ -32,14 +32,15 @@ function Assert-CleanSource {
         throw '无法读取 Git 工作树状态。'
     }
 
-    # review-output/ is intentionally untracked and must remain untouched;
-    # every other tracked or untracked change blocks a release build.
+    # Untracked development helpers are not build inputs. Untracked source or
+    # publication inputs still block; tracked changes always block.
     $unexpected = @($status | Where-Object {
         $line = [string]$_
-        $line -and $line -notmatch '^\?\?\s+review-output(?:[\\/]|$)'
+        $line -and ($line -notmatch '^\?\?' -or
+            $line -match '^\?\?\s+(FpsTune\.Wpf/|catalog/|licenses/|installer/|Directory\.Build\.|LICENSE|THIRD-PARTY|global\.json|publish-release\.ps1|build-installer\.ps1|tools/verify-licenses\.ps1)')
     })
     if ($unexpected.Count -gt 0) {
-        throw ('发布构建要求 tracked tree 干净（仅允许 review-output/ 未跟踪）：' +
+        throw ('发布构建要求 tracked tree 与发布输入干净：' +
             [Environment]::NewLine + ($unexpected -join [Environment]::NewLine))
     }
 
@@ -59,6 +60,7 @@ if ($finalSha -notmatch '^[0-9a-fA-F]{40}$') {
     throw "HEAD 不是完整 40 位 Git SHA：$finalSha"
 }
 Assert-CleanSource
+& (Join-Path $root 'tools/verify-licenses.ps1')
 
 [xml]$propsXml = Get-Content $propsPath -Raw -Encoding UTF8
 # 版本唯一来源拆两段：VersionPrefix（三段数字，产物目录/清单/比较用）+ VersionSuffix（预发布标识）
@@ -86,8 +88,24 @@ $informationalVersion = "$displayVersion+$finalSha"
 
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
 
+function Assert-DistPath {
+    param([string]$Path)
+    $base = [IO.Path]::GetFullPath($dist).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    $target = [IO.Path]::GetFullPath($Path)
+    if (-not $target.StartsWith($base, [StringComparison]::OrdinalIgnoreCase)) { throw "Output path escapes dist: $target" }
+    $cursor = $target
+    while ($cursor -and $cursor.Length -ge $base.Length) {
+        if (Test-Path -LiteralPath $cursor) {
+            if ((Get-Item -LiteralPath $cursor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Output path is a reparse point: $cursor" }
+        }
+        $cursor = [IO.Path]::GetDirectoryName($cursor)
+    }
+    if ((Get-Item -LiteralPath $dist -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'dist is a reparse point.' }
+}
+
 # 只清理当前版本的输出，历史 dist 资产和 review-output/ 保持不变。
 foreach ($path in @($singleOut, $folderOut, $publishTmp, $zip, $manifest)) {
+    Assert-DistPath $path
     if (Test-Path -LiteralPath $path) {
         Remove-Item -LiteralPath $path -Recurse -Force
     }
@@ -109,9 +127,7 @@ function Assert-ProductIdentity {
     }
     $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($Path)
     $productVersion = [string]$info.ProductVersion
-    if ([string]::IsNullOrWhiteSpace($productVersion) -or
-        $productVersion.IndexOf($version, [StringComparison]::OrdinalIgnoreCase) -lt 0 -or
-        $productVersion.IndexOf($finalSha, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+    if ($productVersion -cne $informationalVersion) {
         throw "产物版本追溯校验失败：$Path；ProductVersion='$productVersion'，需要同时包含 $version 和 $finalSha"
     }
     Write-Host "  ProductVersion: $productVersion  [$Path]"
@@ -202,6 +218,10 @@ try {
     }
 
     Write-Host 'Creating portable zip...'
+    foreach ($outputDir in @($singleOut, $folderOut)) {
+        Copy-Item -LiteralPath (Join-Path $root 'LICENSE') -Destination (Join-Path $outputDir 'LICENSE')
+        Copy-Item -LiteralPath (Join-Path $root 'THIRD-PARTY-NOTICES.txt') -Destination (Join-Path $outputDir 'THIRD-PARTY-NOTICES.txt')
+    }
     # DebugType=none 后 folder 输出本应无 pdb; 此清理属双保险。
     # 用显式 foreach + -LiteralPath，**不要**写成 `... | Remove-Item`：
     # 管道形式在带 Remove-Item 包装的环境（安全删除垫片等）里会因拿不到路径而抛
@@ -217,6 +237,11 @@ try {
     $zipCheck = Join-Path $publishTmp 'zip-check'
     Expand-Archive -LiteralPath $zip -DestinationPath $zipCheck -Force
     Assert-ProductIdentity (Join-Path $zipCheck 'FpsTune.exe')
+    foreach ($legalFile in @('LICENSE', 'THIRD-PARTY-NOTICES.txt')) {
+        if ((Get-FileHash (Join-Path $zipCheck $legalFile)).Hash -ne (Get-FileHash (Join-Path $root $legalFile)).Hash) {
+            throw "Portable archive license differs: $legalFile"
+        }
+    }
 
     # Smoke-test the exact uploaded single EXE from an empty directory.
     $standaloneDir = Join-Path $publishTmp 'standalone'
@@ -226,6 +251,12 @@ try {
     $versionResult = Invoke-StandaloneCli $standaloneExe @('-Version')
     if ($versionResult.ExitCode -ne 0 -or $versionResult.Output -notmatch [regex]::Escape($version)) {
         throw "单文件 -Version 验证失败（exit=$($versionResult.ExitCode)）：$($versionResult.Output)"
+    }
+    $licenseResult = Invoke-StandaloneCli $standaloneExe @('-License')
+    if ($licenseResult.ExitCode -ne 0 -or
+        -not $licenseResult.Output.Contains([IO.File]::ReadAllText((Join-Path $root 'LICENSE')).Trim()) -or
+        -not $licenseResult.Output.Contains([IO.File]::ReadAllText((Join-Path $root 'THIRD-PARTY-NOTICES.txt')).Trim())) {
+        throw 'Standalone executable lacks the complete embedded license/notices.'
     }
     $detectResult = Invoke-StandaloneCli $standaloneExe @('-Detect', '-Json')
     if ($detectResult.ExitCode -ne 0) {
@@ -259,6 +290,7 @@ try {
 }
 finally {
     if (Test-Path -LiteralPath $publishTmp) {
+        Assert-DistPath $publishTmp
         Remove-Item -LiteralPath $publishTmp -Recurse -Force -ErrorAction SilentlyContinue
     }
 }

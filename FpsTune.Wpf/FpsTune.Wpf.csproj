@@ -10,6 +10,7 @@
     <AssemblyName>FpsTune</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <RuntimeFrameworkVersion>10.0.12</RuntimeFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +28,16 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\catalog\catalog.json" LogicalName="FpsTune.Wpf.Catalog.catalog.json" />
+    <EmbeddedResource Include="..\LICENSE" LogicalName="FpsTune.Legal.LICENSE" />
+    <EmbeddedResource Include="..\THIRD-PARTY-NOTICES.txt" LogicalName="FpsTune.Legal.THIRD-PARTY-NOTICES" />
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\tray.ico" />
     <Resource Include="Assets\app-icon.png" />
     <Resource Include="Assets\wechat-qr.jpg" />
   </ItemGroup>
+
+  <Target Name="VerifyLicenseInventory" BeforeTargets="BeforeBuild;Publish">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\verify-licenses.ps1&quot;" />
+  </Target>
 
 </Project>

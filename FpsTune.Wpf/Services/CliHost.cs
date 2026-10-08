@@ -15,7 +15,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "Version", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "Version", "License", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -64,6 +64,7 @@ public static class CliHost
             return verb switch
             {
                 "Version" => RunVersion(output),
+                "License" => RunLicense(output),
                 "Detect" => RunDetect(options, output),
                 "Apply" => RunApply(options, output),
                 "Restore" => RunRestore(options, output),
@@ -82,6 +83,13 @@ public static class CliHost
     private static int RunVersion(TextWriter output)
     {
         output.WriteLine("FpsTune " + UpdateService.DisplayVersion);
+        return 0;
+    }
+
+    private static int RunLicense(TextWriter output)
+    {
+        output.WriteLine(LicenseService.ProjectLicense);
+        output.WriteLine(LicenseService.ThirdPartyNotices);
         return 0;
     }
 
@@ -367,6 +375,7 @@ public static class CliHost
 
             用法:
               FpsTune.exe -Version
+              FpsTune.exe -License
               FpsTune.exe -Detect [-Game <游戏exe路径>] [-Json]
               FpsTune.exe -Apply -Items <id1,id2,...> | -Preset <预设名> [-Game <游戏exe路径>] [-Json]
               FpsTune.exe -Restore [-Items <id1,id2,...>] [-BackupFile <备份文件路径>] [-Json]
@@ -532,6 +541,7 @@ public static class CliHost
             "Restore" when options.PresetSpecified || hasGame => "-Restore 只接受 -Items、-BackupFile 和 -Json",
             "ListRestore" when hasApplyOnly || hasGame || hasBackupFile => "-ListRestore 只接受 -Json",
             "Version" when hasApplyOnly || hasGame || hasBackupFile => "-Version 不接受额外参数",
+            "License" when hasApplyOnly || hasGame || hasBackupFile => "-License does not accept additional arguments",
             "Help" when hasApplyOnly || hasGame || hasBackupFile => "-Help 不接受额外参数",
             "?" when hasApplyOnly || hasGame || hasBackupFile => "-Help 不接受额外参数",
             _ => null

@@ -376,6 +376,8 @@
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="100" Margin="0,0,14,0"
                                 Click="OpenGitHub_Click"/>
+                        <Button Content="{DynamicResource Str.Licenses}" Style="{StaticResource GhostButtonStyle}"
+                                Margin="0,0,12,0" Click="OpenLicenses_Click"/>
                         <TextBlock x:Name="UpdateStatusText"
                                    Text="{DynamicResource Str.NotChecked}"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
