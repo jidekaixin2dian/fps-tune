@@ -15,6 +15,8 @@
         <Grid x:Name="ChromeGrid">
             <Grid.ColumnDefinitions><ColumnDefinition x:Name="NavigationColumn" Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <Grid.RowDefinitions><RowDefinition Height="58"/><RowDefinition x:Name="NavigationRow" Height="0"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Image x:Name="WallpaperBackdrop" Grid.RowSpan="3" Grid.ColumnSpan="2" Stretch="UniformToFill"
+                   IsHitTestVisible="False" Visibility="Collapsed" RenderOptions.BitmapScalingMode="HighQuality"/>
             <Grid x:Name="TitleBar" Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
                     <Image Source="/Assets/app-icon.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
@@ -42,6 +44,7 @@
                     <controls:NavButton x:Name="NavSession" Tag="session" Text="{DynamicResource Str.NavSession}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavAb" Tag="ab" Text="{DynamicResource Str.NavAb}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavTools" Tag="tools" Text="{DynamicResource Str.NavTools}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Checked="Nav_Checked"/>
                 </StackPanel>
                 <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">

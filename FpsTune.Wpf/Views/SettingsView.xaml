@@ -84,6 +84,16 @@
                         <RadioButton x:Name="StudioModeRadio" GroupName="displayMode" Tag="studio" Checked="DisplayMode_Checked" Content="{DynamicResource Str.Workspace}" Style="{StaticResource SettingsChoice}"/>
                     </UniformGrid>
 </StackPanel></Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.Wallpaper}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    <WrapPanel Margin="0,14,0,8"><Button Content="{DynamicResource Str.WallpaperChoose}" Click="WallpaperChoose_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,8"/>
+                        <Button Content="{DynamicResource Str.WallpaperRemove}" Click="WallpaperRemove_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,0,8"/></WrapPanel>
+                    <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
+                    <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,12,0,4"/>
+                    <Slider x:Name="WallpaperOpacitySlider" Minimum="0.05" Maximum="0.35" Value="0.18" SmallChange="0.01" LargeChange="0.05" ValueChanged="WallpaperOpacity_Changed"/>
+                    <TextBlock x:Name="WallpaperStatus" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                </StackPanel></Border>
             </StackPanel></ScrollViewer>
             <ScrollViewer x:Name="Section1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
                 <Border Style="{StaticResource CardStyle}"><CheckBox x:Name="StartupUpdateCheck" Content="{DynamicResource Str.CheckUpdatesOnStartup}" Style="{StaticResource SettingsToggleStyle}" Checked="StartupUpdate_Changed" Unchecked="StartupUpdate_Changed"/></Border>

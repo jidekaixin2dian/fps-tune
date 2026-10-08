@@ -862,4 +862,27 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.PreviousStep">Previous</s:String>
     <s:String x:Key="Str.NextStep">Next</s:String>
     <s:String x:Key="Str.FinishGuide">Done</s:String>
+    <s:String x:Key="Str.CacheBusy">Finish the session or A/B experiment before cleaning.</s:String>
+    <s:String x:Key="Str.CacheClean">Clean cache</s:String>
+    <s:String x:Key="Str.CacheCleaned">Cleaned {0} files · {1}; kept {2} busy or changed files.</s:String>
+    <s:String x:Key="Str.CacheConfirm">Delete the {0} scanned files ({1})? Deleted caches cannot be restored; games regenerate them. Busy or changed files will be kept.</s:String>
+    <s:String x:Key="Str.CacheIntro">Review cache usage and clean when needed.</s:String>
+    <s:String x:Key="Str.CacheRebuild">Use cleanup to troubleshoot cache issues. Games regenerate caches; the first launch may involve compilation or stuttering.</s:String>
+    <s:String x:Key="Str.CacheScan">Scan cache</s:String>
+    <s:String x:Key="Str.CacheScanning">Scanning…</s:String>
+    <s:String x:Key="Str.CacheScope">Scans DirectX and NVIDIA caches for the current user. Close games before scanning and cleaning.</s:String>
+    <s:String x:Key="Str.CacheSkipped">Skipped {0} unavailable files or directories.</s:String>
+    <s:String x:Key="Str.CacheSummary">{0} files · {1}</s:String>
+    <s:String x:Key="Str.CacheTruncated">Scan limit reached. Clean with Windows Storage settings before scanning again.</s:String>
+    <s:String x:Key="Str.NavTools">Maintenance</s:String>
+    <s:String x:Key="Str.ShaderCache">Shader cache</s:String>
+    <s:String x:Key="Str.Wallpaper">Custom wallpaper</s:String>
+    <s:String x:Key="Str.WallpaperChoose">Choose image</s:String>
+    <s:String x:Key="Str.WallpaperFormat">Choose a PNG or JPEG image.</s:String>
+    <s:String x:Key="Str.WallpaperIntro">Choose a local PNG or JPEG for your workspace and adjust its opacity.</s:String>
+    <s:String x:Key="Str.WallpaperOpacity">Wallpaper opacity</s:String>
+    <s:String x:Key="Str.WallpaperRemove">Remove wallpaper</s:String>
+    <s:String x:Key="Str.WallpaperSaved">Wallpaper saved</s:String>
+    <s:String x:Key="Str.WallpaperShow">Show wallpaper</s:String>
+    <s:String x:Key="Str.WallpaperSizeLimit">Image limit: 20 MiB, 32 million pixels, up to 16384 pixels per side.</s:String>
 </ResourceDictionary>

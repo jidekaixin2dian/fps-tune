@@ -16,6 +16,8 @@ public sealed class AppSettings
     public string ThemeMode { get; set; } = "dark";
     public string OverviewMode { get; set; } = "studio";
     public bool CheckUpdatesOnStartup { get; set; } = true;
+    public bool WallpaperEnabled { get; set; }
+    public double WallpaperOpacity { get; set; } = 0.18;
 
     // 托盘常驻（v1.2）：最小化到托盘 / 全局热键呼出 / 完成通知，默认全开
     public bool MinimizeToTray { get; set; } = true;
@@ -101,6 +103,7 @@ public static class SettingsService
             var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
             Current.AutoProfileBindings ??= new List<AutoProfileBinding>();
+            Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
             if (Current.OverviewMode != "console") Current.OverviewMode = "studio";
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
                 Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);

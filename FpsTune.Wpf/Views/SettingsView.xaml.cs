@@ -16,6 +16,8 @@ public partial class SettingsView : UserControl
     private const string RunValueName = "FpsTune";
     private bool _suppressUiEvents;
     private bool _autoBindingsReady;
+    private bool _wallpaperReady;
+    private bool _wallpaperBusy;
     private readonly ObservableCollection<AutoProfileBinding> _autoBindings = new();
 
     public SettingsView()
@@ -71,6 +73,60 @@ public partial class SettingsView : UserControl
         LangService.Apply(lang);
     }
 
+    private async void WallpaperChoose_Click(object sender, RoutedEventArgs e)
+    {
+        if (_wallpaperBusy) return;
+        var picker = new OpenFileDialog { Filter = "PNG / JPEG|*.png;*.jpg;*.jpeg", Title = Str.T("Str.WallpaperChoose") };
+        if (picker.ShowDialog() != true) return;
+        _wallpaperBusy = true;
+        try
+        {
+            await Task.Run(() => WallpaperService.Import(picker.FileName));
+            SettingsService.Current.WallpaperEnabled = true;
+            SettingsService.Save(SettingsService.Current);
+            _suppressUiEvents = true; WallpaperEnabledCheck.IsChecked = true; _suppressUiEvents = false;
+            (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+            WallpaperStatus.Text = Str.T("Str.WallpaperSaved");
+        }
+        catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        finally { _wallpaperBusy = false; }
+    }
+    private void WallpaperRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (_wallpaperBusy) return;
+        try
+        {
+            WallpaperService.Remove();
+            SettingsService.Current.WallpaperEnabled = false;
+            SettingsService.Save(SettingsService.Current);
+            _suppressUiEvents = true; WallpaperEnabledCheck.IsChecked = false; _suppressUiEvents = false;
+            (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+            WallpaperStatus.Text = "";
+        }
+        catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+    private void WallpaperEnabled_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents || !_wallpaperReady) return;
+        SettingsService.Current.WallpaperEnabled = WallpaperEnabledCheck.IsChecked == true;
+        SaveWallpaperPreferences();
+    }
+    private void WallpaperOpacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_suppressUiEvents || !_wallpaperReady) return;
+        SettingsService.Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(e.NewValue);
+        SaveWallpaperPreferences();
+    }
+    private void SaveWallpaperPreferences()
+    {
+        try
+        {
+            SettingsService.Save(SettingsService.Current);
+            (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+        }
+        catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
     internal void RefreshDisplayMode()
     {
         _suppressUiEvents = true;
@@ -91,6 +147,9 @@ public partial class SettingsView : UserControl
         RefreshDisplayMode();
         var s = SettingsService.Current;
         _suppressUiEvents = true;
+        WallpaperEnabledCheck.IsChecked = s.WallpaperEnabled;
+        WallpaperOpacitySlider.Value = WallpaperService.NormalizeOpacity(s.WallpaperOpacity);
+        _wallpaperReady = true;
 
         if (s.ThemeMode == "light")
             ThemeLightRadio.IsChecked = true;

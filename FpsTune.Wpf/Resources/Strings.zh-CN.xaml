@@ -862,4 +862,27 @@
     <s:String x:Key="Str.PreviousStep">上一步</s:String>
     <s:String x:Key="Str.NextStep">下一步</s:String>
     <s:String x:Key="Str.FinishGuide">完成</s:String>
+    <s:String x:Key="Str.CacheBusy">请先结束性能会话或 A/B 实验，再清理缓存。</s:String>
+    <s:String x:Key="Str.CacheClean">清理缓存</s:String>
+    <s:String x:Key="Str.CacheCleaned">已清理 {0} 个文件 · {1}；保留 {2} 个占用或已变化的文件。</s:String>
+    <s:String x:Key="Str.CacheConfirm">清理本次扫描的 {0} 个文件（{1}）？缓存删除后无法还原，游戏会重新生成；占用或已变化的文件会保留。</s:String>
+    <s:String x:Key="Str.CacheIntro">查看缓存占用，按需清理。</s:String>
+    <s:String x:Key="Str.CacheRebuild">清理适用于缓存故障排查。游戏会重新生成缓存，首次进入可能出现编译等待或卡顿。</s:String>
+    <s:String x:Key="Str.CacheScan">扫描缓存</s:String>
+    <s:String x:Key="Str.CacheScanning">正在扫描…</s:String>
+    <s:String x:Key="Str.CacheScope">扫描当前用户的 DirectX 与 NVIDIA 缓存目录。先关闭游戏，再扫描和清理。</s:String>
+    <s:String x:Key="Str.CacheSkipped">已跳过 {0} 个无法处理的文件或目录。</s:String>
+    <s:String x:Key="Str.CacheSummary">{0} 个文件 · {1}</s:String>
+    <s:String x:Key="Str.CacheTruncated">缓存项较多，扫描未完成。请先用 Windows 存储设置清理后再扫描。</s:String>
+    <s:String x:Key="Str.NavTools">维护工具</s:String>
+    <s:String x:Key="Str.ShaderCache">着色器缓存</s:String>
+    <s:String x:Key="Str.Wallpaper">自定义壁纸</s:String>
+    <s:String x:Key="Str.WallpaperChoose">选择图片</s:String>
+    <s:String x:Key="Str.WallpaperFormat">请选择 PNG 或 JPEG 图片。</s:String>
+    <s:String x:Key="Str.WallpaperIntro">用本地图片装点工作台。支持 PNG、JPEG，可调整透明度。</s:String>
+    <s:String x:Key="Str.WallpaperOpacity">壁纸透明度</s:String>
+    <s:String x:Key="Str.WallpaperRemove">移除壁纸</s:String>
+    <s:String x:Key="Str.WallpaperSaved">壁纸已保存</s:String>
+    <s:String x:Key="Str.WallpaperShow">显示壁纸</s:String>
+    <s:String x:Key="Str.WallpaperSizeLimit">图片上限为 20 MiB、3200 万像素，单边不超过 16384 像素。</s:String>
 </ResourceDictionary>

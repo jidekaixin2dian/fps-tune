@@ -114,6 +114,7 @@ public partial class MainWindow : Window
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
             ["backup"] = () => new BackupLogView(),
+            ["tools"] = () => new MaintenanceView(),
             ["settings"] = () => new SettingsView(),
         };
 
@@ -137,6 +138,7 @@ public partial class MainWindow : Window
         if (string.IsNullOrWhiteSpace(theme))
             theme = "dark";
         ThemeManager.SetMode(theme);
+        RefreshWallpaper();
 
         StateChanged += OnStateChanged;
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
@@ -268,12 +270,26 @@ public partial class MainWindow : Window
         NavigationStack.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
         NavigationStack.Margin = new Thickness(12, studio ? 0 : 6, 12, 0);
         NavigationHeading.Visibility = NavigationFooter.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var nav in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavSettings })
+        foreach (var nav in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
             nav.SetResourceReference(StyleProperty, studio ? "StudioNavStyle" : typeof(Views.Controls.NavButton));
     }
 
     private void OverviewMode_Click(object sender, RoutedEventArgs e)
     => SetDisplayMode(SettingsService.Current.OverviewMode == "console" ? "studio" : "console");
+
+    internal void RefreshWallpaper()
+    {
+        WallpaperBackdrop.Visibility = Visibility.Collapsed;
+        WallpaperBackdrop.Source = null;
+        if (!SettingsService.Current.WallpaperEnabled) return;
+        try
+        {
+            WallpaperBackdrop.Source = WallpaperService.Load();
+            WallpaperBackdrop.Opacity = WallpaperService.NormalizeOpacity(SettingsService.Current.WallpaperOpacity);
+            if (WallpaperBackdrop.Source is not null) WallpaperBackdrop.Visibility = Visibility.Visible;
+        }
+        catch (Exception) { /* An unavailable personal backdrop does not block opening the application. */ }
+    }
 
     internal void SetDisplayMode(string mode)
     {
@@ -370,7 +386,7 @@ public partial class MainWindow : Window
         {
             // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
             // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavSettings })
+            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
             {
                 if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
                     radio.IsChecked = false;
@@ -443,6 +459,7 @@ public partial class MainWindow : Window
             case "session": NavSession.IsChecked = true; break;
             case "ab": NavAb.IsChecked = true; break;
             case "backup": NavBackup.IsChecked = true; break;
+            case "tools": NavTools.IsChecked = true; break;
             case "settings": NavSettings.IsChecked = true; break;
         }
     }
