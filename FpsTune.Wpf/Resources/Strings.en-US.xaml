@@ -941,4 +941,5 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.TrayShort">Minimize to tray</s:String>
     <s:String x:Key="Str.HotkeyShort">Global hotkey</s:String>
     <s:String x:Key="Str.NotifyShort">Completion notifications</s:String>
+    <s:String x:Key="Str.HibernateReadUnavailable">Hibernation state unavailable</s:String>
 </ResourceDictionary>

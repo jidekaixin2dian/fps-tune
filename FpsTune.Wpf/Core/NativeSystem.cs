@@ -125,7 +125,7 @@ internal static class NativeSystem
         var value = RegistryHelper.ReadSnapshot(RegistryHive.LocalMachine,
             @"SYSTEM\CurrentControlSet\Control\Power", "HibernateEnabled");
         if (!value.Existed || value.Kind != RegistryValueKind.DWord || value.Value is not int enabled || enabled is not (0 or 1))
-            throw new InvalidOperationException(Services.Str.T("Str.BackupTargetChanged"));
+            throw new InvalidOperationException(Services.Str.T("Str.HibernateReadUnavailable"));
         return enabled == 1;
     }
 

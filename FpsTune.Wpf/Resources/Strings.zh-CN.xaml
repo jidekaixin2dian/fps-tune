@@ -941,4 +941,5 @@
     <s:String x:Key="Str.TrayShort">最小化到托盘</s:String>
     <s:String x:Key="Str.HotkeyShort">全局热键</s:String>
     <s:String x:Key="Str.NotifyShort">完成通知</s:String>
+    <s:String x:Key="Str.HibernateReadUnavailable">无法读取休眠状态</s:String>
 </ResourceDictionary>

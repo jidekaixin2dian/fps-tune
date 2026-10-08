@@ -582,8 +582,17 @@ public static class DetectionService
 
     private static (bool Optimized, string Current) GetHibernateState()
     {
-        var on = NativeSystem.IsHibernateEnabled();
-        return (!on, on ? "开启" : "关闭");
+        try
+        {
+            var on = NativeSystem.IsHibernateEnabled();
+            return (!on, on ? "开启" : "关闭");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        {
+            // Detection may report an unknown value. Capture/apply still use the
+            // strict reader and must stop if no reliable original is available.
+            return (false, Str.T("Str.HibernateReadUnavailable"));
+        }
     }
 
     private static (bool Optimized, string Current) GetDynamicTickState()
