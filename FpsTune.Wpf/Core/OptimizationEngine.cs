@@ -87,10 +87,10 @@ public static class OptimizationEngine
 
     internal sealed record ApplyReceipt(string OperationId, string BackupFile, IReadOnlyList<OptimizationApplyResult> Results);
 
-    internal static Task<ApplyReceipt> ApplyItemsWithReceiptAsync(IEnumerable<string> ids, string? gamePath)
-        => Task.Run(() => ExecuteNative(ids.Distinct().ToArray(), gamePath));
+    internal static Task<ApplyReceipt> ApplyItemsWithReceiptAsync(IEnumerable<string> ids, string? gamePath, Action<string>? beforeWrite = null)
+        => Task.Run(() => ExecuteNative(ids.Distinct().ToArray(), gamePath, beforeWrite));
 
-    private static ApplyReceipt ExecuteNative(IReadOnlyList<string> ids, string? gamePath)
+    private static ApplyReceipt ExecuteNative(IReadOnlyList<string> ids, string? gamePath, Action<string>? beforeWrite = null)
     {
         lock (OperationLock)
         {
@@ -101,6 +101,8 @@ public static class OptimizationEngine
                 throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
             BackupService.EnsureNoPendingWrites(ids);
             var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
+            // Persist the caller's operation anchor before the first system write.
+            beforeWrite?.Invoke(backupFile);
             var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
                 id => BackupService.AppendCapture(backupFile, id, gamePath),
                 result => BackupService.CompleteCapture(backupFile, result));

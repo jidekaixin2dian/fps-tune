@@ -230,8 +230,7 @@ public static class ExperimentRunner
         var changedIds = itemIds.ToList();
         if (!options.Simulate)
         {
-            WriteInFlight(groupId, itemIds, null);
-            var applied = await ApplyGroupAsync(itemIds, ct, gamePath);
+            var applied = await ApplyGroupAsync(itemIds, ct, gamePath, backup => WriteInFlight(groupId, itemIds, backup));
             appliedBackup = applied.BackupFile;
             changedIds = applied.ChangedIds;
             WriteInFlight(groupId, changedIds, appliedBackup);
@@ -480,10 +479,10 @@ public static class ExperimentRunner
 
     private sealed record ApplyOutcome(bool Ok, string? Error, string? BackupFile, List<string> ChangedIds);
 
-    private static async Task<ApplyOutcome> ApplyGroupAsync(string[] itemIds, CancellationToken ct, string? gamePath)
+    private static async Task<ApplyOutcome> ApplyGroupAsync(string[] itemIds, CancellationToken ct, string? gamePath, Action<string> beforeWrite)
     {
         ct.ThrowIfCancellationRequested();
-        var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(itemIds, gamePath);
+        var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(itemIds, gamePath, beforeWrite);
         var changed = receipt.Results.Where(r => r.Changed || r.StateUncertain).Select(r => r.Id).ToList();
         var errors = receipt.Results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Id + " — " + r.Message).ToList();
         return new ApplyOutcome(errors.Count == 0, errors.Count == 0 ? null : string.Join("; ", errors), receipt.BackupFile, changed);
