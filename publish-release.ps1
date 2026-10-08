@@ -168,6 +168,7 @@ try {
         '/p:EnableCompressionInSingleFile=true',
         '/p:DebugType=none',
         "/p:InformationalVersion=$informationalVersion",
+        '/p:IncludeSourceRevisionInInformationalVersion=false',
         "/p:SourceRevisionId=$finalSha",
         "/p:OutDir=$singleBld",
         '-o', $singleOut
@@ -184,6 +185,7 @@ try {
         '/p:RestoreLockedMode=true',
         '/p:DebugType=none',
         "/p:InformationalVersion=$informationalVersion",
+        '/p:IncludeSourceRevisionInInformationalVersion=false',
         "/p:SourceRevisionId=$finalSha",
         "/p:OutDir=$folderBld",
         '-o', $folderOut
