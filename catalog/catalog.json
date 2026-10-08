@@ -3,6 +3,26 @@
   "_i18n": "name/description/sideEffect 为中文（zh-CN），*En 为英文（en-US）。英文缺失时界面回退中文，绝不显示空白。详见 docs/dev/PLAN-P2-1-catalog-i18n.md。",
   "items": [
     {
+      "id": "cpu-epp-ac",
+      "name": "接电 CPU 优先性能",
+      "nameEn": "CPU performance preference on AC",
+      "description": "将当前电源计划的接电 CPU 能效偏好设为 0（优先性能）。适用于支持自主 CPPC v2 性能调节的平台。",
+      "descriptionEn": "Sets the current plan's AC CPU energy performance preference to 0 (favor performance). Takes effect on platforms supporting autonomous CPPC v2 performance control.",
+      "sideEffect": "可能增加功耗、温度和风扇噪声；仅改接电设置。",
+      "sideEffectEn": "May increase power draw, temperature and fan noise; changes AC settings only.",
+      "admin": true, "default": false, "reboot": false, "kind": "power", "group": "电源"
+    },
+    {
+      "id": "cpu-max-ac",
+      "name": "接电 CPU 最大状态 100%",
+      "nameEn": "Maximum CPU state 100% on AC",
+      "description": "将当前电源计划的接电 CPU 最大状态设为 100%，解除该设置中的性能上限。已经是 100% 时不改动。",
+      "descriptionEn": "Sets the current plan's AC maximum processor state to 100%, removing a limit imposed by this setting. Leaves an existing value of 100% unchanged.",
+      "sideEffect": "原本主动限频时可能增加功耗和温度；仅改接电设置。",
+      "sideEffectEn": "May increase power draw and temperature if the CPU was intentionally limited; changes AC settings only.",
+      "admin": true, "default": false, "reboot": false, "kind": "power", "group": "电源"
+    },
+    {
       "id": "mouse-accel-off",
       "name": "关闭鼠标加速",
       "nameEn": "Disable mouse acceleration",

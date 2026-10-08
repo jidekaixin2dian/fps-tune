@@ -385,6 +385,7 @@ public static class DetectionService
             "game-mode" => GetGameModeState(),
             "dvr-off" => GetDvrOffState(),
             "power-ultimate" => GetPowerUltimateState(),
+            "cpu-epp-ac" or "cpu-max-ac" => GetProcessorPowerState(item.Id),
             "power-tuning" => GetPowerTuningState(),
             "pcie-aspm-off" => GetPcieAspmState(),
             "nic-power-save-off" => GetNicPowerSaveState(),
@@ -403,6 +404,13 @@ public static class DetectionService
             "net-nagle-off" => GetNagleState(),
             _ => (false, "需要运行时检测")
         };
+    }
+
+    private static (bool Optimized, string Current) GetProcessorPowerState(string id)
+    {
+        var option = PowerOption.For(id);
+        var value = option.Read(NativePowerSettings.RequireActiveGuid());
+        return (value == option.Target, value + "% (AC)");
     }
 
     private static (bool Optimized, string Current) GetMouseAccelState()

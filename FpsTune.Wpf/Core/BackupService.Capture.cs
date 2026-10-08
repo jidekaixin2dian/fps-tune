@@ -252,6 +252,13 @@ public static partial class BackupService
     {
         switch (id)
         {
+            case "cpu-epp-ac":
+            case "cpu-max-ac":
+            {
+                var plan = NativePowerSettings.RequireActiveGuid();
+                return new[] { new BackupRecord { Id = id, Kind = "power-setting", TargetPlanGuid = plan,
+                    OldPowerValue = PowerOption.For(id).Read(plan) } };
+            }
             case "power-ultimate":
                 return new[] { new BackupRecord { Id = id, Kind = "power-plan", OldActiveGuid = NativePowerSettings.RequireActiveGuid(), CreatedPlanGuid = Guid.NewGuid().ToString("D") } };
             case "power-tuning":

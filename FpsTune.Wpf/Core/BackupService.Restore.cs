@@ -383,6 +383,9 @@ public static partial class BackupService
             case "power-plan":
                 RestorePowerPlan(r);
                 break;
+            case "power-setting":
+                PowerOption.For(r.Id).Set(r.TargetPlanGuid!, r.OldPowerValue!.Value);
+                break;
             case "power-tuning":
                 RestorePowerTuning(r);
                 break;

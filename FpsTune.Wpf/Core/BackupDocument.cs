@@ -134,6 +134,7 @@ public static partial class BackupService
                 if (result.Ok && result.Changed && record.CreatedPlanGuid is not null)
                     record.CreatedPlanFingerprint = NativePowerSettings.Fingerprint(record.CreatedPlanGuid);
             }
+            else if (record.Kind == "power-setting") record.PostPowerValue = PowerOption.For(record.Id).Read(record.TargetPlanGuid!);
             else if (record.Kind == "power-tuning")
             {
                 record.PostUsbValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226");
@@ -207,6 +208,13 @@ public static partial class BackupService
         {
             var current = NativePowerSettings.RequireActiveGuid();
             if (current != record.PostActiveGuid && current != record.OldActiveGuid)
+                throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
+        }
+        else if (record.Kind == "power-setting")
+        {
+            RequirePowerTarget(record);
+            var current = PowerOption.For(record.Id).Read(record.TargetPlanGuid!);
+            if (current != record.PostPowerValue && current != record.OldPowerValue)
                 throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
         }
         else if (record.Kind is "power-tuning" or "power-aspm")

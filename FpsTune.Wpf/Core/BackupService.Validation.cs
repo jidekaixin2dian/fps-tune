@@ -59,6 +59,13 @@ public static partial class BackupService
 
         switch (record.Id)
         {
+            case "cpu-epp-ac":
+            case "cpu-max-ac":
+                EnsureNonRegistry(record, "power-setting", allowPower: true);
+                RequirePowerTarget(record);
+                Reject(record.OldPowerValue is null or < 0 or > 100 || record.PostPowerValue is < 0 or > 100,
+                    Str.T("Str.PowerBackupTargetInvalid"));
+                break;
             case "power-ultimate":
                 EnsureNonRegistry(record, "power-plan", allowGuid: true);
                 Reject(!Guid.TryParse(record.OldActiveGuid, out _), "原电源计划 GUID 不合法");
@@ -190,7 +197,7 @@ public static partial class BackupService
             record.SecondaryExisted.HasValue || !string.IsNullOrEmpty(record.SecondaryHive) ||
             !string.IsNullOrEmpty(record.SecondaryPath) || !string.IsNullOrEmpty(record.SecondaryName) ||
             record.SecondaryValue is not null ||
-            (!allowPower && (record.OldUsbValue.HasValue || record.OldBoostValue.HasValue ||
+            (!allowPower && (record.OldPowerValue.HasValue || record.PostPowerValue.HasValue || record.OldUsbValue.HasValue || record.OldBoostValue.HasValue ||
                              record.OldIdleValue.HasValue || record.OldAspmValue.HasValue)) ||
             (!allowService && (!string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
                                !string.IsNullOrEmpty(record.OldStartMode))) ||
@@ -201,7 +208,7 @@ public static partial class BackupService
     }
 
     private static void EnsureRegistryFields(BackupRecord record)
-        => Reject(record.OldUsbValue.HasValue || record.OldBoostValue.HasValue || record.OldIdleValue.HasValue ||
+        => Reject(record.OldPowerValue.HasValue || record.PostPowerValue.HasValue || record.OldUsbValue.HasValue || record.OldBoostValue.HasValue || record.OldIdleValue.HasValue ||
             record.OldAspmValue.HasValue ||
             !string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
             !string.IsNullOrEmpty(record.OldStartMode) || !string.IsNullOrEmpty(record.OldActiveGuid) ||

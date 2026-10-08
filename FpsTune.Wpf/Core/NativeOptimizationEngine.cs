@@ -196,6 +196,12 @@ public static class NativeOptimizationEngine
                 return ApplyDynamicTickOff();
             case "power-ultimate":
                 return ApplyPowerUltimate(backup);
+            case "cpu-epp-ac":
+            case "cpu-max-ac":
+                var power = PowerOption.For(item.Id);
+                if (backup?.TargetPlanGuid is null || backup.OldPowerValue is null)
+                    throw new InvalidOperationException(Str.T("Str.PowerBackupTargetInvalid"));
+                return (true, power.Set(backup.TargetPlanGuid, power.Target), false, "");
             case "power-tuning":
                 return ApplyPowerTuning(backup);
             case "pcie-aspm-off":

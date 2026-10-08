@@ -118,10 +118,10 @@ public class CoreLogicTests
     // ---------- ItemCatalog 完整性 ----------
 
     [Fact]
-    public void ItemCatalog_has_36_unique_items()
+    public void ItemCatalog_has_38_unique_items()
     {
         var ids = ItemCatalog.All.Select(x => x.Id).ToList();
-        Assert.Equal(36, ids.Count);
+        Assert.Equal(38, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 

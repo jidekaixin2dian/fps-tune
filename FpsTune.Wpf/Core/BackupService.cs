@@ -22,7 +22,9 @@ public sealed class BackupRecord
 
     // 第二个关联注册表值（如 game-mode 的 AllowAutoGameMode、dvr-off 的 AllowGameDVR 策略），
     // 用于无损还原；旧版本备份没有该字段（null）时还原保持不动。
-    // power-tuning 三项隐藏电源设置的原始 AC 值；null 表示当时读取失败，还原时回退常见默认值。
+    // 缺少原始 AC 值时拒绝还原，不猜测默认值。
+    public int? OldPowerValue { get; set; }
+    public int? PostPowerValue { get; set; }
     public int? OldUsbValue { get; set; }
     public int? OldBoostValue { get; set; }
     public int? OldIdleValue { get; set; }
