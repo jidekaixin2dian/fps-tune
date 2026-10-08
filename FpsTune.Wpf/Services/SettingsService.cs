@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -70,9 +70,7 @@ public sealed class AutoProfileBinding
 
 public static class SettingsService
 {
-    private static string BaseDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FpsTune");
+    private static string BaseDir => UserDataPaths.Root;
 
     private static string SettingsFile => Path.Combine(BaseDir, "settings.json");
 

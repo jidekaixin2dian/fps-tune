@@ -808,9 +808,7 @@ public static class ExperimentRunner
     // ------------------------------------------------------------------
 
     internal static string StateDir() =>
-        StateDirOverride ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "experiment");
+        StateDirOverride ?? Path.Combine(UserDataPaths.Root, "experiment");
 
     private static JsonObject? ReadState(Options options)
     {

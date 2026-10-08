@@ -423,9 +423,7 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
     {
         try
         {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FpsTune", "logs");
+            var dir = Path.Combine(UserDataPaths.Root, "logs");
             Directory.CreateDirectory(dir);
             var path = Path.Combine(dir, "auto-profile.log");
             message = PrivacyScrub.Sanitize(message);

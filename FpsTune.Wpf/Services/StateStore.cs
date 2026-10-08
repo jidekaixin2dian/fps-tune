@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,9 +10,7 @@ public static class StateStore
     /// <summary>仅供测试重定向状态目录（套 DiagnosticReportExporter.BaseDirOverride 模式）。</summary>
     internal static string? BaseDirOverride { get; set; }
 
-    private static string BaseDir => BaseDirOverride ?? Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FpsTune");
+    private static string BaseDir => BaseDirOverride ?? UserDataPaths.Root;
 
     private static string DetectFile => Path.Combine(BaseDir, "last-detect.json");
     private static string OnboardingFile => Path.Combine(BaseDir, "onboarding.done");
@@ -309,8 +307,7 @@ public static class ProfileStore
             throw new InvalidOperationException("方案包含未知或空的优化项，未导入。");
     }
 
-    private static string BaseDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
+    private static string BaseDir => UserDataPaths.Root;
 
     private static string ProfilesFile => Path.Combine(BaseDir, "profiles.json");
 

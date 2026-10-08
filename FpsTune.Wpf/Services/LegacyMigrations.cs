@@ -13,6 +13,7 @@ public static class LegacyMigrations
 
     public static void EnsureRun()
     {
+        if (UserDataPaths.RootOverride is not null) return;
         if (_done)
             return;
         _done = true;

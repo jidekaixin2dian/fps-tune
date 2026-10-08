@@ -41,6 +41,12 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // In-process render verification never starts tray, updates, profiles or migrations.
+        if (UserDataPaths.RootOverride is not null)
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            return;
+        }
         // 无头 CLI 模式：命令行以已知动词（-Detect/-Apply/...）开头时不进 GUI，执行完直接退出。
         if (e.Args.Length > 0 && CliHost.IsCliInvocation(e.Args))
         {
@@ -157,9 +163,7 @@ public partial class App : Application
     {
         try
         {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FpsTune", "logs");
+            var dir = Path.Combine(UserDataPaths.Root, "logs");
             Directory.CreateDirectory(dir);
             var path = Path.Combine(dir, "error.log");
             var content = new StringBuilder()

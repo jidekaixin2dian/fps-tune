@@ -133,9 +133,7 @@ public static class DisplayQualityService
     private static INvdrsApi CreateApi() => ApiOverride?.Invoke() ?? NvdrsApi.Shared;
 
     private static string BackupDir()
-        => BackupDirOverride ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "display-quality");
+        => BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "display-quality");
 
     /// <summary>本机是否有可用的 NVIDIA 驱动（NVAPI 初始化成功）。</summary>
     public static bool IsNvidiaSupported

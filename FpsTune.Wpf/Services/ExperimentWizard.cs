@@ -259,8 +259,7 @@ public static class ExperimentWizardStore
 {
     internal static string? OverrideDir { get; set; }
 
-    private static string ExperimentDir => OverrideDir ?? Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "experiment");
+    private static string ExperimentDir => OverrideDir ?? Path.Combine(UserDataPaths.Root, "experiment");
 
     public static string WizardFile => Path.Combine(ExperimentDir, "wizard.json");
 

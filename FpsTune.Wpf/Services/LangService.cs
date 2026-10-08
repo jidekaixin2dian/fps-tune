@@ -21,9 +21,7 @@ public static class LangService
     }
 
     private static string LangFile()
-        => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "lang.txt");
+        => Path.Combine(UserDataPaths.Root, "lang.txt");
 
     public static string Load()
     {

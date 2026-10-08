@@ -33,9 +33,7 @@ public static class DigitalVibranceService
     private static INvibranceApi CreateApi() => ApiOverride?.Invoke() ?? NvDvcApi.Shared;
 
     private static string BackupDir()
-        => BackupDirOverride ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "display-quality");
+        => BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "display-quality");
 
     private static string BackupPath => Path.Combine(BackupDir(), "vibrance.json");
 

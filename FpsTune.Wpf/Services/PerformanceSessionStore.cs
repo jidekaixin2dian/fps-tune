@@ -35,8 +35,7 @@ public static class PerformanceSessionStore
     private static readonly object ActiveOwnershipSync = new();
     private static FileStream? ActiveOwner;
 
-    public static string SessionsDir => OverrideDir ?? Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "sessions");
+    public static string SessionsDir => OverrideDir ?? Path.Combine(UserDataPaths.Root, "sessions");
 
     public static string ActiveSessionPath => Path.Combine(SessionsDir, "_active.json");
 

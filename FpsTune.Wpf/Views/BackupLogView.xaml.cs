@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,9 +21,7 @@ public partial class BackupLogView : UserControl
     {
         InitializeComponent();
         _tempDir = Path.Combine(Path.GetTempPath(), "delta-tune-wpf-tmp");
-        _backupDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "backup");
+        _backupDir = Path.Combine(UserDataPaths.Root, "backup");
         Directory.CreateDirectory(_tempDir);
         Directory.CreateDirectory(_backupDir);
 

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -560,23 +560,20 @@ public partial class SettingsView : UserControl
 
     private void OpenData_Click(object sender, RoutedEventArgs e)
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
+        var dir = UserDataPaths.Root;
         OpenInExplorer(dir);
     }
 
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "logs");
+        var dir = Path.Combine(UserDataPaths.Root, "logs");
         OpenInExplorer(dir);
     }
 
     private void OpenBackups_Click(object sender, RoutedEventArgs e)
     {
         // 与 BackupService.BackupDir 保持一致的默认位置
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "backup");
+        var dir = Path.Combine(UserDataPaths.Root, "backup");
         OpenInExplorer(dir);
     }
 

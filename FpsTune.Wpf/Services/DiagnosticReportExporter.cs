@@ -23,8 +23,7 @@ public static class DiagnosticReportExporter
     internal static Func<ExperimentWizardState>? ExperimentWizardLoaderOverride { get; set; }
     internal static Func<string, FileAttributes>? FileMetadataProbeOverride { get; set; }
 
-    private static string BaseDir => BaseDirOverride ?? Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
+    private static string BaseDir => BaseDirOverride ?? UserDataPaths.Root;
 
     public static string? Export()
     {

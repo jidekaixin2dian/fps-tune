@@ -15,7 +15,7 @@ public static class VerdictStore
     internal static string? DirOverride { get; set; }
 
     private static string Dir => DirOverride
-        ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune");
+        ?? UserDataPaths.Root;
     private static string FilePath => Path.Combine(Dir, FileName);
 
     /// <summary>一条实测结论。Items 单元素 = 项级（单项深测），多元素 = 整套实测。</summary>

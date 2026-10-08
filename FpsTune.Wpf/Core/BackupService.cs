@@ -91,9 +91,7 @@ public static partial class BackupService
     }
 
     private static string BackupDir =>
-        BackupDirOverride ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "backup");
+        BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "backup");
 
     /// <summary>0.2.2 C-B：把全部备份文件（含 .restored 审计）打包导出为 zip，返回导出的文件数。</summary>
     public static int ExportBackups(string zipPath)

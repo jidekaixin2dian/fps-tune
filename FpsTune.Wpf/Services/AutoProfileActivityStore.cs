@@ -59,8 +59,7 @@ public static class AutoProfileActivityStore
     public static long ScanCount { get; private set; }
 
     public static string EventsFile => Path.Combine(
-        OverrideDir ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune"),
+        OverrideDir ?? UserDataPaths.Root,
         "auto-profile-events.jsonl");
 
     public static void NoteScan()

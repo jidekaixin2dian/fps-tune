@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -26,9 +26,7 @@ public sealed record ExperimentRun(
 /// </summary>
 public static class ExperimentHistory
 {
-    private static string ExperimentDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FpsTune", "experiment");
+    private static string ExperimentDir => Path.Combine(UserDataPaths.Root, "experiment");
 
     public static string HistoryFile => Path.Combine(ExperimentDir, "history.jsonl");
     public static string StateFile => File.Exists(Path.Combine(ExperimentDir, "state-v2.json"))

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -643,8 +643,7 @@ public partial class AbExperimentView : UserControl
 
         try
         {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune", "experiment");
+            var dir = Path.Combine(UserDataPaths.Root, "experiment");
             Directory.CreateDirectory(dir);
             AtomicFile.WriteAllText(Path.Combine(dir, "report-latest.md"), sb.ToString(), new UTF8Encoding(false));
             RawBox.Text = sb.ToString() + "\n\n（原始 JSON 输出见脚本；文件已保存 report-latest.md）";
@@ -698,9 +697,7 @@ public partial class AbExperimentView : UserControl
 
     private void OpenDirButton_Click(object sender, RoutedEventArgs e)
     {
-        var dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "experiment");
+        var dir = Path.Combine(UserDataPaths.Root, "experiment");
         try
         {
             Directory.CreateDirectory(dir);

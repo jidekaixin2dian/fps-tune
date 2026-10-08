@@ -38,9 +38,7 @@ public static class IccFilterService
     private static IIccSystemApi CreateApi() => ApiOverride?.Invoke() ?? new MscmsIccApi();
 
     private static string BackupDir()
-        => BackupDirOverride ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FpsTune", "display-icc");
+        => BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "display-icc");
 
     private static string BackupPath() => Path.Combine(BackupDir(), "backup.json");
 
