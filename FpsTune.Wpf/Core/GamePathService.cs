@@ -6,20 +6,6 @@ namespace FpsTune.Wpf.Core;
 
 public static class GamePathService
 {
-    private static readonly string[] ExeNames =
-    {
-        "cs2.exe", "VALORANT-Win64-Shipping.exe", "r5apex_dx12.exe",
-        "TslGame.exe", "Overwatch.exe", "cod.exe", "TheFinals.exe",
-        "RainbowSix.exe", "EscapeFromTarkov.exe", "destiny2.exe", "BF2042.exe",
-        "DeltaForceClient-Win64-Shipping.exe", "DeltaForceClient.exe"
-    };
-
-    // 目录扫描优先命中的"真游戏进程"exes: fso-off/gpu-pref/game-priority 只对这些
-    // 进程名生效, 命中启动器(如 DeltaForceClient.exe)会产生无效的优化目标。
-    // 先按这份清单扫全树, 找不到再回退完整清单(兜底只装了启动器形态的极端情况)。
-    private static readonly string[] PrimaryGameExes =
-        ExeNames.Where(n => n != "DeltaForceClient.exe").ToArray();
-
     public static string? Find()
     {
         return DetectAll().FirstOrDefault()?.ExePath;
@@ -29,6 +15,7 @@ public static class GamePathService
     private static readonly Dictionary<string, string> ExeLabel = new(StringComparer.OrdinalIgnoreCase)
     {
         ["cs2.exe"] = "反恐精英 2 (CS2)",
+        ["VALORANT-Win64-Shipping.exe"] = "VALORANT",
         ["r5apex_dx12.exe"] = "APEX 英雄",
         ["TslGame.exe"] = "绝地求生 (PUBG)",
         ["Overwatch.exe"] = "守望先锋",
@@ -40,7 +27,11 @@ public static class GamePathService
         ["BF2042.exe"] = "战地 2042",
         ["DeltaForceClient-Win64-Shipping.exe"] = "三角洲行动",
         ["DeltaForceClient.exe"] = "三角洲行动",
+        ["FortniteClient-Win64-Shipping.exe"] = "Fortnite",
+        ["Warframe.x64.exe"] = "Warframe",
     };
+
+    private static readonly string[] ExeNames = ExeLabel.Keys.ToArray();
 
     public static string LabelFor(string exePath)
     {
@@ -129,10 +120,7 @@ public static class GamePathService
                         install = DeriveDirFromUninstallEntry(key);
                     if (!string.IsNullOrWhiteSpace(install) && Directory.Exists(install))
                     {
-                        var found = SearchForExe(install, maxDepth: 6, PrimaryGameExes)
-                                    ?? SearchForExe(install, maxDepth: 6, ExeNames);
-                        if (found is not null)
-                            paths.Add(found);
+                        paths.AddRange(FindAllInDirectory(install));
                     }
                 }
             }
@@ -155,7 +143,8 @@ public static class GamePathService
         "PUBG", "Call of Duty", "Overwatch", "THE FINALS",
         "Rainbow Six Siege", "RainbowSix", "Escape from Tarkov",
         "Destiny 2", "Battlefield 2042", "战地",
-        "Riot Games", "Tencent Games",
+        "Riot Games", "Tencent Games", "Epic Games", "Steam", "SteamLibrary",
+        "Fortnite", "Warframe",
     };
 
     // 顶层 pass-through 容器: 其下一层也可能出现上面的厂商目录
@@ -212,10 +201,7 @@ public static class GamePathService
     private static void TryFindGameExe(string dir, List<string> paths)
     {
         // 容器(Riot Games 等)到主程序可能隔 6 层, 放宽深度; 先找真游戏进程再兜底启动器
-        var found = SearchForExe(dir, maxDepth: 6, PrimaryGameExes)
-                    ?? SearchForExe(dir, maxDepth: 6, ExeNames);
-        if (found is not null)
-            paths.Add(found);
+        paths.AddRange(FindAllInDirectory(dir));
     }
 
     private static IEnumerable<string> EnumerateSafeDirs(string dir)
@@ -283,74 +269,39 @@ public static class GamePathService
     }
 
     private static bool ContainsGameKeyword(string text)
-    {
-        return text.Contains("三角洲", StringComparison.Ordinal) ||
-               text.Contains("Delta Force", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("DeltaForce", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("Counter-Strike", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("CS 2", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("CS2", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("VALORANT", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("无畏契约", StringComparison.Ordinal) ||
-               text.Contains("Apex Legends", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("PUBG", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("绝地求生", StringComparison.Ordinal) ||
-               text.Contains("Call of Duty", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("使命召唤", StringComparison.Ordinal) ||
-               text.Contains("Overwatch", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("守望先锋", StringComparison.Ordinal) ||
-               text.Contains("THE FINALS", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("彩虹六号", StringComparison.Ordinal) ||
-               text.Contains("Rainbow Six", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("逃离塔科夫", StringComparison.Ordinal) ||
-               text.Contains("Escape from Tarkov", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("命运2", StringComparison.Ordinal) ||
-               text.Contains("Destiny 2", StringComparison.OrdinalIgnoreCase) ||
-               text.Contains("战地", StringComparison.Ordinal) ||
-               text.Contains("Battlefield", StringComparison.OrdinalIgnoreCase);
-    }
+        => KnownInstallDirNames.Any(name => text.Contains(name, StringComparison.OrdinalIgnoreCase));
 
-    private static string? SearchForExe(string root, int maxDepth, string[] names)
+    /// <summary>Bounded read-only traversal; every known client in a shared launcher/library root.</summary>
+    internal static IReadOnlyList<string> FindAllInDirectory(string root)
     {
-        try
+        var found = new List<string>();
+        var pending = new Stack<(string Path, int Depth)>(); pending.Push((root, 0));
+        var visited = 0;
+        while (pending.Count > 0 && visited++ < 4096)
         {
-            var stack = new Stack<(string Path, int Depth)>();
-            stack.Push((root, 0));
-
-            while (stack.Count > 0)
+            var (current, depth) = pending.Pop();
+            try
             {
-                var (current, depth) = stack.Pop();
-                if (depth > maxDepth)
-                    continue;
-
-                foreach (var exe in names)
+                if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0) continue;
+                foreach (var name in ExeNames)
                 {
-                    var candidate = Path.Combine(current, exe);
-                    if (File.Exists(candidate))
-                        return candidate;
+                    var candidate = Path.Combine(current, name);
+                    if (File.Exists(candidate) && (File.GetAttributes(candidate) & FileAttributes.ReparsePoint) == 0)
+                        found.Add(candidate);
                 }
-
-                if (depth >= maxDepth)
-                    continue;
-
-                IEnumerable<string> dirs;
-                try
+                if (depth >= 6) continue;
+                foreach (var directory in Directory.EnumerateDirectories(current))
                 {
-                    dirs = Directory.EnumerateDirectories(current, "*", SearchOption.TopDirectoryOnly);
+                    if (pending.Count + visited >= 4096) break;
+                    pending.Push((directory, depth + 1));
                 }
-                catch
-                {
-                    continue;
-                }
-
-                foreach (var dir in dirs)
-                    stack.Push((dir, depth + 1));
             }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
-        catch
-        {
-        }
-
-        return null;
+        return found.Where(path => !Path.GetFileName(path).Equals("DeltaForceClient.exe", StringComparison.OrdinalIgnoreCase)
+            || !found.Any(other => Path.GetFileName(other).Equals("DeltaForceClient-Win64-Shipping.exe", StringComparison.OrdinalIgnoreCase)
+                && other.StartsWith(Path.GetDirectoryName(path)! + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 }

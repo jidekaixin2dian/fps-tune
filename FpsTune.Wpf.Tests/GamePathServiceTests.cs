@@ -5,6 +5,28 @@ namespace FpsTune.Wpf.Tests;
 public sealed class GamePathServiceTests
 {
     [Fact]
+    public void Shared_library_returns_all_clients_and_prefers_delta_client_over_launcher()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "FpsTune-game-path-" + Guid.NewGuid().ToString("N"));
+        var paths = new[] { @"Fortnite\FortniteGame\Binaries\Win64\FortniteClient-Win64-Shipping.exe",
+            @"Warframe\Warframe.x64.exe", @"DeltaForce\DeltaForceClient.exe",
+            @"DeltaForce\Game\Binaries\Win64\DeltaForceClient-Win64-Shipping.exe" };
+        try
+        {
+            foreach (var relative in paths)
+            {
+                var path = Path.Combine(root, relative); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.WriteAllText(path, "not executed");
+            }
+            var found = FpsTune.Wpf.Core.GamePathService.FindAllInDirectory(root);
+            Assert.Equal(3, found.Count);
+            Assert.DoesNotContain(found, path => Path.GetFileName(path) == "DeltaForceClient.exe");
+            Assert.Contains(found, path => FpsTune.Wpf.Core.GamePathService.LabelFor(path) == "Fortnite");
+            Assert.Contains(found, path => FpsTune.Wpf.Core.GamePathService.LabelFor(path) == "Warframe");
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void GamePathService_does_not_read_running_process_paths()
     {
         var source = File.ReadAllText(FindSourceFile());
