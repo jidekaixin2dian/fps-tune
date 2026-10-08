@@ -29,11 +29,16 @@ jobs:
       - name: A/B simulated full chain
         shell: powershell
         run: |
-          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP 'FpsTuneSmoke'
-          New-Item -ItemType Directory -Path $env:LOCALAPPDATA -Force | Out-Null
           $exe = 'FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe'
-          & $exe -Experiment -Baseline -Simulate -Json
-          & $exe -Experiment -Test -Group group-1 -Simulate -Json
-          & $exe -Experiment -Test -Group group-2 -Simulate -Json
-          & $exe -Experiment -Test -Group group-3 -Simulate -Json
-          & $exe -Experiment -Report -Simulate -Json
+          # The hosted runner is disposable; simulation uses its own application records.
+          $steps = @(
+            @('-Experiment', '-Baseline', '-Simulate', '-Json'),
+            @('-Experiment', '-Test', '-Group', 'group-1', '-Simulate', '-Json'),
+            @('-Experiment', '-Test', '-Group', 'group-2', '-Simulate', '-Json'),
+            @('-Experiment', '-Test', '-Group', 'group-3', '-Simulate', '-Json'),
+            @('-Experiment', '-Report', '-Simulate', '-Json')
+          )
+          foreach ($arguments in $steps) {
+            & $exe @arguments
+            if ($LASTEXITCODE -ne 0) { throw ('Simulation failed: ' + ($arguments -join ' ')) }
+          }
