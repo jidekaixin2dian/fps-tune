@@ -162,7 +162,7 @@
     <s:String x:Key="Str.ConsoleIntro">Locate the game, review the basic settings, then record one match's load.</s:String>
     <s:String x:Key="Str.BasicAdvice">Basic advice</s:String>
     <s:String x:Key="Str.TipBasicAdvice">Review Game Mode, background recording and the game's GPU preference. Nothing is changed immediately.</s:String>
-    <s:String x:Key="Str.FirstRunAdviceIntro">First run: this starts with a read-only check-up (no settings are changed), then takes you to review these {0} items.</s:String>
+    <s:String x:Key="Str.FirstRunAdviceIntro">Start with a check-up, then review these {0} suggestions.</s:String>
     <s:String x:Key="Str.TipBasicAdviceFirst">On first use this runs a read-only check-up first, then opens the optimize page for review</s:String>
     <s:String x:Key="Str.RecordMatch">Record a match</s:String>
     <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load, plus FPS when the game is running and PresentMon is available</s:String>
@@ -257,7 +257,7 @@
     <s:String x:Key="Str.ExportDiagnostics">Export diagnostic report</s:String>
     <s:String x:Key="Str.SectionAbout">About</s:String>
     <s:String x:Key="Str.AboutLine1">FPS Tune is a system-level frame rate optimizer for Windows, aimed at all FPS games.</s:String>
-    <s:String x:Key="Str.AboutLine2">It only adjusts Windows system-level settings: it does not modify game files, inject into processes, interact with anti-cheat or disable boot virtualization. Every change is backed up before it is written and can be restored in one click.</s:String>
+    <s:String x:Key="Str.AboutLine2">Tune Windows and driver settings, with backups, restoration and local measurements. Cache cleanup deletes the selected cache files.</s:String>
     <s:String x:Key="Str.CheckUpdate">Check for updates</s:String>
     <s:String x:Key="Str.GitHubHome">GitHub page</s:String>
     <s:String x:Key="Str.NotChecked">Not checked</s:String>
@@ -274,22 +274,22 @@
     <s:String x:Key="Str.PresetE">E preset</s:String>
     <s:String x:Key="Str.PresetEDesc">Previous-generation CNN model · retro image quality</s:String>
     <s:String x:Key="Str.DlssNote">Only settings actually written by this tool are backed up. Restore checks current values and preserves external changes and unrelated settings. Follow in-game restores all managed settings for this game. Check model support and visual effects in the game.</s:String>
-    <s:String x:Key="Str.VibNote">Applies to the whole screen (desktop, browser and games all become more vivid), not just in game. Streamers commonly use 70–80%.</s:String>
-    <s:String x:Key="Str.VibNote2">Note: the current level is remembered before any change, and Restore original brings it back in one click. Independent of the ICC filter, and the two can be combined. If colour accuracy matters to you, use a lower level or keep the default.</s:String>
-    <s:String x:Key="Str.VibRecommendedSet">Recommended 55–60%</s:String>
-    <s:String x:Key="Str.VibRecommendedNote">Community reference: competitive titles (CS2 / VALORANT) commonly use 50–70%, streamers 70–80%. Recommended moves the slider to the middle of 55–60; click Apply to take effect.</s:String>
-    <s:String x:Key="Str.TipVibRecommended">Community articles (2026-02-28) suggest 50–70% for competitive titles and 60–80% for atmospheric ones. This is community guidance, not an official recommendation — a starting point only; adjust to your own eyes.</s:String>
-    <s:String x:Key="Str.IccPresetLabel">Presets (applied to the primary monitor for the whole desktop: desktop, browser and game windows)</s:String>
+    <s:String x:Key="Str.VibNote">Adjust color vibrance on the primary display to suit your preference.</s:String>
+    <s:String x:Key="Str.VibNote2">The original level is saved before applying. Adjust it separately from the ICC profile.</s:String>
+    <s:String x:Key="Str.VibRecommendedSet">Try 58%</s:String>
+    <s:String x:Key="Str.VibRecommendedNote">Try 58% moves the slider. Choose Apply to use the setting.</s:String>
+    <s:String x:Key="Str.TipVibRecommended">58% is a starting point for a subtle color boost. Adjust to taste.</s:String>
+    <s:String x:Key="Str.IccPresetLabel">Primary display presets (for ICC-aware applications)</s:String>
     <s:String x:Key="Str.IccVivid">Vivid FPS</s:String>
     <s:String x:Key="Str.IccVividDesc">Slightly higher saturation and contrast, good for competitive play</s:String>
     <s:String x:Key="Str.IccShadow">Shadow boost</s:String>
     <s:String x:Key="Str.IccShadowDesc">Lifts the shadow range, prioritising dark corners</s:String>
     <s:String x:Key="Str.IccDehaze">Dehaze</s:String>
     <s:String x:Key="Str.IccDehazeDesc">S-curve contrast with slightly reduced blue, for foggy scenes</s:String>
-    <s:String x:Key="Str.IccStandard">Standard</s:String>
+    <s:String x:Key="Str.IccStandard">Original profile</s:String>
     <s:String x:Key="Str.IccStandardDesc">Restores your original colour configuration</s:String>
-    <s:String x:Key="Str.IccNote">Note: the generated ICC is a simple curve transform and is weaker than professional calibration; if colour accuracy matters to you, keep your original profile. Returning here and choosing Standard or Restore original brings everything back. Multiple monitors are not supported yet.</s:String>
-    <s:String x:Key="Str.DrsNote">Written into the same per-game profile as the DLSS override, sharing one Restore default. SettingIDs come from NVIDIA's official NvApiDriverSettings.h. The recommended values cross-check high-frequency community guides (Douyin / Bilibili / guide sites, September 2026).</s:String>
+    <s:String x:Key="Str.IccNote">ICC relies on color management; some games ignore it. Original profile restores the saved association.</s:String>
+    <s:String x:Key="Str.DrsNote">Writes per-game NVIDIA driver settings. Saves the settings managed by this tool before applying; shares restoration with DLSS.</s:String>
     <s:String x:Key="Str.TipOneClickEsports">High-quality textures + prefer maximum performance + 2x transparency AA + 1 prerendered frame; on high-end desktop cards transparency AA is raised to 4x automatically</s:String>
     <s:String x:Key="Str.DrsDefaultHint">Recommended: high-quality textures · 2x transparency AA · 1 prerendered frame</s:String>
     <s:String x:Key="Str.DrsTextureFilter">Texture filtering · quality</s:String>
@@ -329,7 +329,7 @@
     <s:String x:Key="Str.DrsShaderCache">Shader cache</s:String>
     <s:String x:Key="Str.TipShaderCache">Enabling it reduces compile-time stutter (recommended)</s:String>
     <s:String x:Key="Str.OnRecommended">On (recommended)</s:String>
-    <s:String x:Key="Str.DrsNote2">Note: written to a driver profile; no game files are changed. Original values are backed up before applying, and Restore default brings them back in one click (together with the DLSS override). Low latency means maximum prerendered frames = 1, roughly the queue semantics of the driver's low latency mode On. If the game offers NVIDIA Reflex, enable Reflex in game and leave prerendering at Application-controlled.</s:String>
+    <s:String x:Key="Str.DrsNote2">Original values are saved before applying. Prefer in-game NVIDIA Reflex when the game supports it.</s:String>
 
     <!-- Full UI text (converted 2026-09-25) -->
     <s:String x:Key="Str.Keep">Keep</s:String>
@@ -801,7 +801,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.GpuIdentityWriteFailed">Could not change the device description.</s:String>
     <s:String x:Key="Str.GpuIdentityApplied">Changed to GTX 1050 Ti. Restart before testing the game.</s:String>
     <s:String x:Key="Str.GpuIdentityTitle">GPU description experiment</s:String>
-    <s:String x:Key="Str.GpuIdentityIntro">Change the NVIDIA Windows device description to GTX 1050 Ti to test game model detection. The original name is backed up and can be restored. Hardware capabilities remain the same; measure performance in your game.</s:String>
+    <s:String x:Key="Str.GpuIdentityIntro">Change the Windows device description to GTX 1050 Ti to test game name detection. Saves the original name first. DXGI hardware IDs and GPU capabilities stay the same; some games ignore this name.</s:String>
     <s:String x:Key="Str.GpuIdentityDevice">Select GPU</s:String>
     <s:String x:Key="Str.GpuIdentityApply">Use GTX 1050 Ti description</s:String>
     <s:String x:Key="Str.GpuIdentityRestore">Restore original description</s:String>
@@ -893,4 +893,5 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.IccNeutralDesc">sRGB primaries, gamma 2.2</s:String>
     <s:String x:Key="Str.IccShadowGentle">Gentle shadows</s:String>
     <s:String x:Key="Str.IccShadowGentleDesc">A milder shadow curve</s:String>
+    <s:String x:Key="Str.MemoryCompressionUnavailable">Memory compression control is unavailable; no write performed.</s:String>
 </ResourceDictionary>

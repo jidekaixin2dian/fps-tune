@@ -26,19 +26,19 @@ public partial class GuideCard : UserControl
     {
         TutorialBody.Visibility = feedback ? Visibility.Collapsed : Visibility.Visible;
         FeedbackBody.Visibility = feedback ? Visibility.Visible : Visibility.Collapsed;
-        Card.SetHeader(Str.T(feedback ? "Str.Feedback" : "Str.Guide"),
-            Str.T(feedback ? "Str.CommunityTitle" : "Str.GuideIntro"));
+        Card.SetResourceReference(NotificationCard.NotificationTitleProperty, feedback ? "Str.Feedback" : "Str.Guide");
+        Card.SetResourceReference(NotificationCard.NotificationSubtitleProperty, feedback ? "Str.CommunityTitle" : "Str.GuideIntro");
         RefreshStep();
         Card.SetExpanded(true);
     }
 
     private void RefreshStep()
     {
-        StepTitle.Text = Str.T(Titles[_step]);
-        StepBody.Text = Str.T(Bodies[_step]);
+        StepTitle.SetResourceReference(TextBlock.TextProperty, Titles[_step]);
+        StepBody.SetResourceReference(TextBlock.TextProperty, Bodies[_step]);
         StepProgress.Text = $"{_step + 1:00} / {Targets.Length:00}";
         PreviousButton.IsEnabled = _step > 0;
-        NextButton.Content = Str.T(_step == Targets.Length - 1 ? "Str.FinishGuide" : "Str.NextStep");
+        NextButton.SetResourceReference(ContentControl.ContentProperty, _step == Targets.Length - 1 ? "Str.FinishGuide" : "Str.NextStep");
     }
     private void Previous_Click(object sender, RoutedEventArgs e)
     {

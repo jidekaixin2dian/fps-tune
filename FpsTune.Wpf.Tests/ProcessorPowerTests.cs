@@ -54,6 +54,7 @@ public sealed class ProcessorPowerTests : IDisposable
         NativeSystem.RunOverride = (_, args) => args[0] == "-getactivescheme" ? new(0, Plan, "") : new(++writes, "", "");
         NativePowerSettings.ReadOverride = (_, _, _) => throw new InvalidOperationException("Unsupported");
         Assert.Throws<InvalidOperationException>(() => BackupService.Capture(["cpu-epp-ac"], null));
+        Assert.False(DetectionService.GetItemState(ItemCatalog.All.Single(item => item.Id == "cpu-epp-ac"), null).Optimized);
         Assert.Throws<InvalidOperationException>(() => BackupService.ValidateRecord(new() { Id="cpu-max-ac", Kind="power-setting", TargetPlanGuid=Plan }));
         Assert.Throws<InvalidOperationException>(() => PowerOption.For("unknown"));
         Assert.Equal(0, writes);

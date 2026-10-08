@@ -97,7 +97,7 @@ public static class OptimizationEngine
             using var mutation = SystemMutationGate.Acquire();
             if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
                 throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
-            if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id).Admin))
+            if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id) is { Admin: true, Available: true }))
                 throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
             BackupService.EnsureNoPendingWrites(ids);
             var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);

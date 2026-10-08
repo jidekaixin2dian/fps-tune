@@ -16,6 +16,7 @@ public sealed record OptimizationItemDefinition(
     string? DescriptionEn = null,
     string? SideEffectEn = null)
 {
+    public bool Available { get; init; } = true;
     /// <summary>按当前界面语言取显示名（英文缺失回退中文，绝不返回空串）。</summary>
     public string DisplayName => Pick(Name, NameEn);
 

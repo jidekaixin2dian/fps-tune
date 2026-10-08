@@ -26,6 +26,12 @@ public static class NativeOptimizationEngine
                 continue;
             }
 
+            if (!def.Available)
+            {
+                results.Add(new(id, def.Name, true, false, true, Str.T("Str.MemoryCompressionUnavailable")));
+                continue;
+            }
+
             var started = false;
             try
             {
@@ -182,7 +188,7 @@ public static class NativeOptimizationEngine
             case "paging-exec":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", 1, RegistryValueKind.DWord, "已开启内核常驻内存");
             case "mem-compress-off":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", 0, RegistryValueKind.DWord, "已关闭内存压缩");
+                return (true, false, true, Str.T("Str.MemoryCompressionUnavailable"));
             case "fso-off":
                 return ApplyFsoOff(gamePath);
             case "gpu-pref":

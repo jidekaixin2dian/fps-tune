@@ -339,7 +339,7 @@ public class CatalogConsistencyTests
 
             FpsTune.Wpf.Services.LangService.SetCurrentForTest(FpsTune.Wpf.Services.LangService.EnUs);
             Assert.Equal("Disable mouse acceleration", def.DisplayName);
-            Assert.StartsWith("Turns off Windows pointer precision", def.DisplayDescription);
+            Assert.StartsWith("Disables Windows Enhance pointer precision", def.DisplayDescription);
 
             FpsTune.Wpf.Services.LangService.SetCurrentForTest(FpsTune.Wpf.Services.LangService.ZhCn);
             Assert.Equal("关闭鼠标加速", def.DisplayName);

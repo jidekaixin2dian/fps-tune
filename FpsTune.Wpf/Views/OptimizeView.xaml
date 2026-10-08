@@ -180,7 +180,7 @@
                                     </StackPanel>
                                     <CheckBox Grid.Column="2"
                                               Style="{StaticResource ToggleSwitchStyle}"
-                                              IsChecked="{Binding IsChecked}" Click="ItemToggle_Click" AutomationProperties.Name="{Binding Name}"
+                                              IsChecked="{Binding IsChecked}" IsEnabled="{Binding Available}" Click="ItemToggle_Click" AutomationProperties.Name="{Binding Name}"
                                               VerticalAlignment="Center"
                                               Margin="14,0,0,0"/>
                                 </Grid>

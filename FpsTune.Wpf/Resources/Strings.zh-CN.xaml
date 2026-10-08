@@ -162,7 +162,7 @@
     <s:String x:Key="Str.ConsoleIntro">定位游戏后，审阅基础设置并记录一局负载。</s:String>
     <s:String x:Key="Str.BasicAdvice">基础建议</s:String>
     <s:String x:Key="Str.TipBasicAdvice">审阅游戏模式、后台录制和游戏显卡偏好；不会立即修改系统</s:String>
-    <s:String x:Key="Str.FirstRunAdviceIntro">首次使用：点「基础建议」会先做一次只读体检（不修改任何设置），再带你审阅这 {0} 项。</s:String>
+    <s:String x:Key="Str.FirstRunAdviceIntro">首次使用：先做一次体检，再审阅这 {0} 项建议。</s:String>
     <s:String x:Key="Str.TipBasicAdviceFirst">首次使用会先跑一次只读体检建立基线，再进入优化页审阅</s:String>
     <s:String x:Key="Str.RecordMatch">记录一局</s:String>
     <s:String x:Key="Str.TipRecordMatch">记录 CPU、GPU、内存负载；游戏已运行且 PresentMon 可用时同时记录 FPS</s:String>
@@ -257,7 +257,7 @@
     <s:String x:Key="Str.ExportDiagnostics">导出诊断报告</s:String>
     <s:String x:Key="Str.SectionAbout">关于</s:String>
     <s:String x:Key="Str.AboutLine1">FPS 帧律：面向 Windows 的系统层帧率优化工具，全 FPS 游戏通用。</s:String>
-    <s:String x:Key="Str.AboutLine2">只调整 Windows 系统层设置：不修改游戏文件、不注入进程、不与反作弊交互、不关闭引导虚拟化；所有改动写入前自动备份，可一键还原。</s:String>
+    <s:String x:Key="Str.AboutLine2">调整 Windows 设置与驱动配置，提供备份、还原和本机实测。缓存清理会删除所选缓存文件。</s:String>
     <s:String x:Key="Str.CheckUpdate">检查更新</s:String>
     <s:String x:Key="Str.GitHubHome">GitHub 主页</s:String>
     <s:String x:Key="Str.NotChecked">未检查</s:String>
@@ -274,22 +274,22 @@
     <s:String x:Key="Str.PresetE">E 预设</s:String>
     <s:String x:Key="Str.PresetEDesc">旧一代 CNN 模型 · 复古画质</s:String>
     <s:String x:Key="Str.DlssNote">只备份本工具实际写入的驱动设置；恢复会核对当前值，保留外部更改及无关配置。选择“跟随游戏内”将恢复本游戏全部受管理设置。模型支持与画面效果需在游戏内确认。</s:String>
-    <s:String x:Key="Str.VibNote">作用于整块屏幕（桌面、网页、游戏都会变鲜艳），不是只在游戏内生效。主播常用 70–80%。</s:String>
-    <s:String x:Key="Str.VibNote2">说明：调整前自动记住当前档位，点「还原原始」一键恢复。与 ICC 滤镜独立，可叠加。对色准敏感请用较低档位或保持默认。</s:String>
-    <s:String x:Key="Str.VibRecommendedSet">推荐 55–60%</s:String>
-    <s:String x:Key="Str.VibRecommendedNote">社区取向参考：竞技类（CS2 / VALORANT 等）常用 50–70%，主播观感常用 70–80%。「推荐」按钮把滑块置到 55–60 的中点，需再点「应用」才生效。</s:String>
-    <s:String x:Key="Str.TipVibRecommended">社区文章（2026-02-28）给出竞技类 50–70%、单机氛围类 60–80% 的取向。这是社区参考而非官方推荐，仅作起点，请按自己观感调整。</s:String>
-    <s:String x:Key="Str.IccPresetLabel">预设（作用于主显示器，全桌面生效：含桌面、网页与游戏窗口）</s:String>
+    <s:String x:Key="Str.VibNote">调整主显示器的色彩鲜艳程度，按自己的观感选择档位。</s:String>
+    <s:String x:Key="Str.VibNote2">应用前保存原档位。可与 ICC 配置分别调整。</s:String>
+    <s:String x:Key="Str.VibRecommendedSet">试试 58%</s:String>
+    <s:String x:Key="Str.VibRecommendedNote">点「试试 58%」预览滑块位置，再点「应用」生效。</s:String>
+    <s:String x:Key="Str.TipVibRecommended">58% 是轻微增强色彩的起点，可继续调整。</s:String>
+    <s:String x:Key="Str.IccPresetLabel">主显示器预设（支持 ICC 的应用生效）</s:String>
     <s:String x:Key="Str.IccVivid">FPS 鲜艳</s:String>
     <s:String x:Key="Str.IccVividDesc">微增饱和与对比，通用竞技</s:String>
     <s:String x:Key="Str.IccShadow">暗部增强</s:String>
     <s:String x:Key="Str.IccShadowDesc">阴影段上抬，死角优先</s:String>
     <s:String x:Key="Str.IccDehaze">去雾</s:String>
     <s:String x:Key="Str.IccDehazeDesc">S 型对比 + 微降蓝，雾天场景</s:String>
-    <s:String x:Key="Str.IccStandard">标准</s:String>
+    <s:String x:Key="Str.IccStandard">原始配置</s:String>
     <s:String x:Key="Str.IccStandardDesc">还原为你原始的色彩配置</s:String>
-    <s:String x:Key="Str.IccNote">说明：程序生成的 ICC 是简单曲线变换，效果弱于专业校色；对色准敏感请保留原 profile。任何页面回到这里点「标准」或「还原原始」即可恢复原状。多显示器暂不支持。</s:String>
-    <s:String x:Key="Str.DrsNote">与 DLSS 覆盖写在同一游戏 profile 上，共用一键「还原默认」。SettingID 来自 NVIDIA 官方 NvApiDriverSettings.h。推荐档按社区高频教学（抖音/B 站/攻略站 2026-09 交叉）。</s:String>
+    <s:String x:Key="Str.IccNote">ICC 通过颜色管理生效，部分游戏会忽略它。选择「原始配置」可还原已保存的关联。</s:String>
+    <s:String x:Key="Str.DrsNote">按游戏写入 NVIDIA 驱动配置。应用前保存本工具涉及的设置；与 DLSS 共用还原入口。</s:String>
     <s:String x:Key="Str.TipOneClickEsports">纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧；桌面高端卡自动升透明度 4x</s:String>
     <s:String x:Key="Str.DrsDefaultHint">默认推：纹理高质量 · 透明度 2x · 预渲染 1 帧</s:String>
     <s:String x:Key="Str.DrsTextureFilter">纹理过滤 · 质量</s:String>
@@ -329,7 +329,7 @@
     <s:String x:Key="Str.DrsShaderCache">着色器缓存</s:String>
     <s:String x:Key="Str.TipShaderCache">开启可减少运行时编译卡顿（推荐）</s:String>
     <s:String x:Key="Str.OnRecommended">开启（推荐）</s:String>
-    <s:String x:Key="Str.DrsNote2">说明：写入驱动 profile，不改游戏文件；应用前自动备份原值，点「还原默认」一键恢复（与 DLSS 覆盖一起还原）。低延迟＝最大预渲染帧数 1（≈驱动低延迟模式「开启」的队列语义）；若游戏内有 NVIDIA Reflex，优先开游戏内 Reflex 且预渲染选「应用程序控制」。</s:String>
+    <s:String x:Key="Str.DrsNote2">应用前保存原值。游戏支持 NVIDIA Reflex 时，优先使用游戏内设置。</s:String>
 
     <!-- 界面全量文案（2026-09-25 转换） -->
     <s:String x:Key="Str.Keep">保留</s:String>
@@ -801,7 +801,7 @@
     <s:String x:Key="Str.GpuIdentityWriteFailed">显卡名称未修改成功。</s:String>
     <s:String x:Key="Str.GpuIdentityApplied">已改为 GTX 1050 Ti，重启后测试游戏。</s:String>
     <s:String x:Key="Str.GpuIdentityTitle">显卡名称实验</s:String>
-    <s:String x:Key="Str.GpuIdentityIntro">将 NVIDIA 显卡的 Windows 设备名称改为 GTX 1050 Ti，用于测试部分游戏的型号识别策略。会先备份原名称，可随时还原。不会改变显卡硬件能力，帧数效果请实测。</s:String>
+    <s:String x:Key="Str.GpuIdentityIntro">将 Windows 设备名称改为 GTX 1050 Ti，测试游戏对名称的识别。应用前保存原名称。DXGI 硬件标识和显卡能力不变，部分游戏可能忽略此名称。</s:String>
     <s:String x:Key="Str.GpuIdentityDevice">选择显卡</s:String>
     <s:String x:Key="Str.GpuIdentityApply">改为 GTX 1050 Ti</s:String>
     <s:String x:Key="Str.GpuIdentityRestore">还原原名称</s:String>
@@ -893,4 +893,5 @@
     <s:String x:Key="Str.IccNeutralDesc">sRGB 原色与 gamma 2.2</s:String>
     <s:String x:Key="Str.IccShadowGentle">轻度暗部</s:String>
     <s:String x:Key="Str.IccShadowGentleDesc">比暗部增强更轻的曲线</s:String>
+    <s:String x:Key="Str.MemoryCompressionUnavailable">内存压缩控制暂不可用，未执行写入。</s:String>
 </ResourceDictionary>

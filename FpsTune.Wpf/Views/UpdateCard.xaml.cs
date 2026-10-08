@@ -15,8 +15,9 @@ public partial class UpdateCard : UserControl
         InitializeComponent();
         _info = info;
         Card.SetHeader(Str.T("Str.UpdateAvailable"), $"{UpdateService.DisplayVersion} → {info.ReleaseTag ?? info.Version}");
+        Card.SetResourceReference(NotificationCard.NotificationTitleProperty, "Str.UpdateAvailable");
         NotesText.Text = info.Notes;
-        StatusText.Text = Str.T("Str.UpdateOptional");
+        StatusText.SetResourceReference(TextBlock.TextProperty, "Str.UpdateOptional");
     }
     public void Cancel() => _lifetime.Cancel();
     private void Later_Click(object sender, RoutedEventArgs e) => Card.SetExpanded(false);

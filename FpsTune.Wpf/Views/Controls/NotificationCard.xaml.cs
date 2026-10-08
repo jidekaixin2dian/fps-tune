@@ -24,7 +24,7 @@ public class NotificationCard : ContentControl
     public NotificationCard()
     {
         SetResourceReference(StyleProperty, "NotificationCardStyle");
-        FoldLabel = Str.T("Str.UpdateCollapse");
+        SetResourceReference(FoldLabelProperty, "Str.UpdateCollapse");
     }
 
     private Button? _foldButton;
@@ -51,7 +51,7 @@ public class NotificationCard : ContentControl
     public void SetExpanded(bool expanded)
     {
         IsExpanded = expanded;
-        FoldLabel = Str.T(expanded ? "Str.UpdateCollapse" : "Str.UpdateExpand");
+        SetResourceReference(FoldLabelProperty, expanded ? "Str.UpdateCollapse" : "Str.UpdateExpand");
         if (expanded) Expanded?.Invoke(this, EventArgs.Empty);
     }
 

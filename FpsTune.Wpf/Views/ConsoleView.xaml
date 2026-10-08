@@ -144,7 +144,7 @@
                                 <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="12" VerticalAlignment="Center">
                                     <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                 </TextBlock>
-                                <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" IsEnabled="{Binding Item.Available}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
                                           ToolTip="{DynamicResource Str.TipSelectItem}" AutomationProperties.Name="{Binding Item.Name}"/>
                             </Grid>
                         </DataTemplate>

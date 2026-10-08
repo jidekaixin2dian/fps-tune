@@ -351,6 +351,7 @@ public static class DetectionService
 
     internal static (bool Optimized, string Current) GetItemState(OptimizationItemDefinition item, string? gamePath)
     {
+        if (item.Id == "mem-compress-off") return (false, Str.T("Str.MemoryCompressionUnavailable"));
         var target = item.Id switch
         {
             "hags" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", "2"),
@@ -408,9 +409,13 @@ public static class DetectionService
 
     private static (bool Optimized, string Current) GetProcessorPowerState(string id)
     {
-        var option = PowerOption.For(id);
-        var value = option.Read(NativePowerSettings.RequireActiveGuid());
-        return (value == option.Target, value + "% (AC)");
+        try
+        {
+            var option = PowerOption.For(id);
+            var value = option.Read(NativePowerSettings.RequireActiveGuid());
+            return (value == option.Target, value + "% (AC)");
+        }
+        catch (Exception ex) { return (false, PrivacyScrub.Sanitize(ex.Message)); }
     }
 
     private static (bool Optimized, string Current) GetMouseAccelState()

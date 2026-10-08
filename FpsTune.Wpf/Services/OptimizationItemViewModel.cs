@@ -16,6 +16,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public bool Optimized { get; }
     public string Current { get; }
     public string Group { get; }
+    public bool Available => Core.ItemCatalog.All.FirstOrDefault(item => item.Id == Id)?.Available != false;
     public string StatusText => Optimized ? "已达标" : "未应用";
     public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
@@ -50,6 +51,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
         get => _isChecked;
         set
         {
+            if (value && !Available) return;
             if (_isChecked == value) return;
             _isChecked = value;
             OnPropertyChanged();

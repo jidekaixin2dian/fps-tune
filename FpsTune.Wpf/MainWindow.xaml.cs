@@ -128,7 +128,7 @@ public partial class MainWindow : Window
         if (UserDataPaths.RootOverride is null) TrayService.EnsureCreated();
 
         // 版本号唯一来源：程序集（编译自 Directory.Build.props）
-        var ver = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
+        var ver = "v" + UpdateService.DisplayVersion;
         TitleVersionText.Text = ver;
         SidebarVersionText.Text = ver;
         AdminStatusText.Text = AdminHelper.IsAdministrator() ? Str.T("Str.AdminMode") : Str.T("Str.NormalUser");
