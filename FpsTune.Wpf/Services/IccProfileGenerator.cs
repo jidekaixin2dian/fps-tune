@@ -13,6 +13,10 @@ public enum IccFilterPreset
     Warm = 4,        // 暖色：中度降蓝 + 对比微升
     Cool = 5,        // 冷色清晰：微升蓝 + 对比升
     Soft = 6,        // 柔和：降饱和 + 对比微降（久看不累）
+    ShadowGentle = 7,
+    ContrastGentle = 8,
+    Muted = 9,
+    Neutral = 10,
 }
 
 /// <summary>
@@ -56,7 +60,7 @@ public static class IccProfileGenerator
             BXyz = ScaleB(StdBXyz, 1.04),
         },
         // 夜战护眼：蓝列 Z 明显放大（屏幕明显降蓝）+ 暗部微抬，夜间/长时间用
-        IccFilterPreset.NightGuard => new("FpsTune-NightGuard.icc", "FPS 帧律 · 夜战护眼（降蓝 + 暗部微抬）")
+        IccFilterPreset.NightGuard => new("FpsTune-NightGuard.icc", "FPS 帧律 · 夜间暖色（降蓝 + 暗部微抬）")
         {
             Curve = ShadowLiftCurve(0.12),
             BXyz = ScaleB(StdBXyz, 1.10),
@@ -81,6 +85,29 @@ public static class IccProfileGenerator
             BXyz = PullAway(StdBXyz, StdWXyz, 0.92),
             Curve = ContrastCurve(0.94),
         },
+        IccFilterPreset.ShadowGentle => new("FpsTune-ShadowGentle.icc", "FPS Tune - Gentle shadows") { Curve = ShadowLiftCurve(0.08) },
+        IccFilterPreset.ContrastGentle => new("FpsTune-ContrastGentle.icc", "FPS Tune - Gentle contrast") { Curve = ContrastCurve(0.97) },
+        IccFilterPreset.Muted => new("FpsTune-Muted.icc", "FPS Tune - Muted")
+        {
+            RXyz = PullAway(StdRXyz, StdWXyz, 0.96), GXyz = PullAway(StdGXyz, StdWXyz, 0.96), BXyz = PullAway(StdBXyz, StdWXyz, 0.96),
+        },
+        IccFilterPreset.Neutral => new("FpsTune-Neutral.icc", "FPS Tune - Neutral gamma 2.2"),
+        _ => throw new ArgumentOutOfRangeException(nameof(preset)),
+    };
+
+    internal static (string Title, string Description) ResourceKeysFor(IccFilterPreset preset) => preset switch
+    {
+        IccFilterPreset.Vivid => ("Str.IccVivid", "Str.IccVividDesc"),
+        IccFilterPreset.ShadowBoost => ("Str.IccShadow", "Str.IccShadowDesc"),
+        IccFilterPreset.Dehaze => ("Str.IccDehaze", "Str.IccDehazeDesc"),
+        IccFilterPreset.NightGuard => ("Str.IccNight", "Str.IccNightDesc"),
+        IccFilterPreset.Warm => ("Str.IccWarm", "Str.IccWarmDesc"),
+        IccFilterPreset.Cool => ("Str.IccCool", "Str.IccCoolDesc"),
+        IccFilterPreset.Soft => ("Str.IccSoft", "Str.IccSoftDesc"),
+        IccFilterPreset.ShadowGentle => ("Str.IccShadowGentle", "Str.IccShadowGentleDesc"),
+        IccFilterPreset.ContrastGentle => ("Str.IccContrastGentle", "Str.IccContrastGentleDesc"),
+        IccFilterPreset.Muted => ("Str.IccMuted", "Str.IccMutedDesc"),
+        IccFilterPreset.Neutral => ("Str.IccNeutral", "Str.IccNeutralDesc"),
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };
 

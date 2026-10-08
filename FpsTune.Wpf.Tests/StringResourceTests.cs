@@ -91,6 +91,21 @@ public class StringResourceTests
     }
 
     [Fact]
+    public void Data_driven_icc_choices_have_localized_titles_and_descriptions()
+    {
+        foreach (var language in new[] { "zh-CN", "en-US" })
+        {
+            var keys = ReadKeys(language);
+            foreach (var preset in Enum.GetValues<FpsTune.Wpf.Services.IccFilterPreset>())
+            {
+                var resource = FpsTune.Wpf.Services.IccProfileGenerator.ResourceKeysFor(preset);
+                Assert.Contains(resource.Title, keys);
+                Assert.Contains(resource.Description, keys);
+            }
+        }
+    }
+
+    [Fact]
     public void Referenced_keys_exist_in_dictionaries()
     {
         var zh = ReadKeys("zh-CN");

@@ -1,6 +1,6 @@
 <UserControl x:Class="FpsTune.Wpf.Views.DisplayQualityView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <!-- 预设卡片：与优化页 PresetChoice 同语言，两行内容（名称 + 说明） -->
@@ -82,61 +82,7 @@
             <Setter Property="Margin" Value="0,0,0,5"/>
         </Style>
         <!-- 调节滑条（用户反馈默认 Slider 太粗笨）：细轨道 + 小圆点拇指 + accent 已选段 -->
-        <Style x:Key="TuneSliderStyle" TargetType="Slider">
-            <Setter Property="Height" Value="22"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="IsMoveToPointEnabled" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Slider">
-                        <Grid Background="Transparent">
-                            <!-- 轨道底：显式 MinWidth 防止无内容 Border 期望宽度为 0 把滑条压成拇指宽 -->
-                            <Border Height="4" MinWidth="80" CornerRadius="2"
-                                    Background="{DynamicResource BorderBrush}"
-                                    VerticalAlignment="Center"/>
-                            <Track x:Name="PART_Track">
-                                <Track.DecreaseRepeatButton>
-                                    <!-- 已选段：accent 细条填满 decrease 区 -->
-                                    <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
-                                        <RepeatButton.Template>
-                                            <ControlTemplate TargetType="RepeatButton">
-                                                <Grid Background="Transparent" Height="4" VerticalAlignment="Center">
-                                                    <Border Height="4" CornerRadius="2"
-                                                            Background="{DynamicResource AccentBrush}"
-                                                            VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </ControlTemplate>
-                                        </RepeatButton.Template>
-                                    </RepeatButton>
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="Slider.IncreaseLarge" Focusable="False" Opacity="0"/>
-                                </Track.IncreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb Width="16" Height="16" Focusable="False">
-                                        <Thumb.Template>
-                                            <ControlTemplate TargetType="Thumb">
-                                                <Grid Background="Transparent">
-                                                    <Ellipse x:Name="Dot" Width="14" Height="14"
-                                                             Fill="{DynamicResource AccentBrush}"
-                                                             Stroke="{DynamicResource AppBackdropBrush}"
-                                                             StrokeThickness="2"/>
-                                                </Grid>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource PrimaryHoverBrush}"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Thumb.Template>
-                                    </Thumb>
-                                </Track.Thumb>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="28,22,28,24">
@@ -333,56 +279,16 @@
                     <StackPanel x:Name="IccSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
                         <TextBlock Text="{DynamicResource Str.IccPresetLabel}"
                                    Style="{StaticResource MutedTextStyle}"/>
-                        <UniformGrid Columns="4" Margin="0,10,0,0">
-                            <RadioButton x:Name="IccPresetVivid" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccVivid}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccVividDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetShadowBoost" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccShadow}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccShadowDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetDehaze" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccDehaze}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccDehazeDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetNightGuard" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccNight}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccNightDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetWarm" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccWarm}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccWarmDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetCool" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccCool}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccCoolDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetSoft" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccSoft}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccSoftDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton x:Name="IccPresetStandard" GroupName="iccPreset" Style="{StaticResource PresetCard}">
-                                <StackPanel>
-                                    <TextBlock Text="{DynamicResource Str.IccStandard}" Style="{StaticResource PresetCardText}"/>
-                                    <TextBlock Text="{DynamicResource Str.IccStandardDesc}" Style="{StaticResource PresetCardNote}"/>
-                                </StackPanel>
-                            </RadioButton>
-                        </UniformGrid>
+                        <ItemsControl x:Name="IccPresetList" Margin="0,10,0,0">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate><DataTemplate>
+                                <RadioButton GroupName="iccPreset" Style="{StaticResource PresetCard}" IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                    <StackPanel><TextBlock controls:LocalizedText.Key="{Binding TitleKey}" Style="{StaticResource PresetCardText}"/>
+                                        <TextBlock controls:LocalizedText.Key="{Binding DescriptionKey}" Style="{StaticResource PresetCardNote}"/>
+                                    </StackPanel>
+                                </RadioButton>
+                            </DataTemplate></ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
                         <TextBlock x:Name="IccStateText" Text="" Style="{StaticResource MutedTextStyle}"
                                    Margin="0,10,0,0" TextWrapping="Wrap"/>

@@ -553,14 +553,14 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.InstallerHashMismatch">Installer SHA256 mismatch</s:String>
     <s:String x:Key="Str.ManifestMissingEntry">The SHA256 manifest has no entry for the current installer</s:String>
     <!-- Additional ICC presets (2026-09-25) -->
-    <s:String x:Key="Str.IccNight">Night guard</s:String>
+    <s:String x:Key="Str.IccNight">Night warmth</s:String>
     <s:String x:Key="Str.IccNightDesc">Noticeably less blue, shadows lifted slightly. For night or long sessions.</s:String>
     <s:String x:Key="Str.IccWarm">Warm</s:String>
     <s:String x:Key="Str.IccWarmDesc">Moderately less blue with slightly higher contrast, a warmer look</s:String>
     <s:String x:Key="Str.IccCool">Cool and crisp</s:String>
     <s:String x:Key="Str.IccCoolDesc">Cooler tint with higher contrast</s:String>
     <s:String x:Key="Str.IccSoft">Soft</s:String>
-    <s:String x:Key="Str.IccSoftDesc">Lower saturation and slightly lower contrast, easier on the eyes</s:String>
+    <s:String x:Key="Str.IccSoftDesc">Lower saturation and slightly lower contrast</s:String>
     <!-- Driver version advice (read-only; never downloads or installs) -->
     <s:String x:Key="Str.DriverCard">Recommended driver version</s:String>
     <s:String x:Key="Str.DriverGpuLabel">GPU: </s:String>
@@ -885,4 +885,12 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.WallpaperSaved">Wallpaper saved</s:String>
     <s:String x:Key="Str.WallpaperShow">Show wallpaper</s:String>
     <s:String x:Key="Str.WallpaperSizeLimit">Image limit: 20 MiB, 32 million pixels, up to 16384 pixels per side.</s:String>
+    <s:String x:Key="Str.IccContrastGentle">Gentle contrast</s:String>
+    <s:String x:Key="Str.IccContrastGentleDesc">Subtle contrast adjustment</s:String>
+    <s:String x:Key="Str.IccMuted">Muted</s:String>
+    <s:String x:Key="Str.IccMutedDesc">Slightly lower saturation</s:String>
+    <s:String x:Key="Str.IccNeutral">Neutral</s:String>
+    <s:String x:Key="Str.IccNeutralDesc">sRGB primaries, gamma 2.2</s:String>
+    <s:String x:Key="Str.IccShadowGentle">Gentle shadows</s:String>
+    <s:String x:Key="Str.IccShadowGentleDesc">A milder shadow curve</s:String>
 </ResourceDictionary>

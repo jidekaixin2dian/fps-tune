@@ -19,10 +19,24 @@ public partial class DisplayQualityView : UserControl
     private string? _iccStatus;
     private string? _drsStatus;
     private bool _drsSyncing;
+    private sealed class IccChoice(IccFilterPreset? preset, string titleKey, string descriptionKey, bool selected = false)
+    {
+        public IccFilterPreset? Preset { get; } = preset;
+        public string TitleKey { get; } = titleKey;
+        public string DescriptionKey { get; } = descriptionKey;
+        public bool IsSelected { get; set; } = selected;
+    }
 
     public DisplayQualityView()
     {
         InitializeComponent();
+        var choices = Enum.GetValues<IccFilterPreset>().Select(preset =>
+        {
+            var keys = IccProfileGenerator.ResourceKeysFor(preset);
+            return new IccChoice(preset, keys.Title, keys.Description, preset == IccFilterPreset.Vivid);
+        }).ToList();
+        choices.Add(new(null, "Str.IccStandard", "Str.IccStandardDesc"));
+        IccPresetList.ItemsSource = choices;
         Loaded += (_, _) => { Refresh(); _ = RefreshGpuIdentityAsync(); };
     }
 
@@ -581,25 +595,12 @@ public partial class DisplayQualityView : UserControl
 
     private void SetIccPresetCardsEnabled(bool enabled)
     {
-        // 8 张预设卡全量启停（原只列 4 张，其余靠默认值兜底，语义不完整）
-        foreach (var card in new RadioButton[]
-        {
-            IccPresetVivid, IccPresetShadowBoost, IccPresetDehaze, IccPresetNightGuard,
-            IccPresetWarm, IccPresetCool, IccPresetSoft, IccPresetStandard
-        })
-            card.IsEnabled = enabled;
+        IccPresetList.IsEnabled = enabled;
     }
 
     private IccFilterPreset? SelectedIccPreset()
     {
-        if (IccPresetVivid.IsChecked == true) return IccFilterPreset.Vivid;
-        if (IccPresetShadowBoost.IsChecked == true) return IccFilterPreset.ShadowBoost;
-        if (IccPresetDehaze.IsChecked == true) return IccFilterPreset.Dehaze;
-        if (IccPresetNightGuard.IsChecked == true) return IccFilterPreset.NightGuard;
-        if (IccPresetWarm.IsChecked == true) return IccFilterPreset.Warm;
-        if (IccPresetCool.IsChecked == true) return IccFilterPreset.Cool;
-        if (IccPresetSoft.IsChecked == true) return IccFilterPreset.Soft;
-        return null; // 「标准」卡片 = 还原语义，走 Restore
+        return IccPresetList.Items.OfType<IccChoice>().SingleOrDefault(choice => choice.IsSelected)?.Preset;
     }
 
     private async void IccApply_Click(object sender, RoutedEventArgs e)

@@ -851,6 +851,62 @@
                     </ControlTemplate.Triggers>
                 </ControlTemplate></Setter.Value></Setter>
             </Style>
-        </ResourceDictionary>
+                <Style x:Key="TuneSliderStyle" TargetType="Slider">
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="IsMoveToPointEnabled" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Background="Transparent">
+                            <!-- 轨道底：显式 MinWidth 防止无内容 Border 期望宽度为 0 把滑条压成拇指宽 -->
+                            <Border Height="4" MinWidth="80" CornerRadius="2"
+                                    Background="{DynamicResource BorderBrush}"
+                                    VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <!-- 已选段：accent 细条填满 decrease 区 -->
+                                    <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Grid Background="Transparent" Height="4" VerticalAlignment="Center">
+                                                    <Border Height="4" CornerRadius="2"
+                                                            Background="{DynamicResource AccentBrush}"
+                                                            VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Focusable="False" Opacity="0"/>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="16" Height="16" Focusable="False">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Grid Background="Transparent">
+                                                    <Ellipse x:Name="Dot" Width="14" Height="14"
+                                                             Fill="{DynamicResource AccentBrush}"
+                                                             Stroke="{DynamicResource AppBackdropBrush}"
+                                                             StrokeThickness="2"/>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Dot" Property="Fill" Value="{DynamicResource PrimaryHoverBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="Slider" BasedOn="{StaticResource TuneSliderStyle}"/>
+</ResourceDictionary>
     </Application.Resources>
 </Application>
