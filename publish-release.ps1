@@ -42,6 +42,16 @@ function Assert-CleanSource {
         throw ('发布构建要求 tracked tree 干净（仅允许 review-output/ 未跟踪）：' +
             [Environment]::NewLine + ($unexpected -join [Environment]::NewLine))
     }
+
+    $allowed = @('README.md', 'README.en.md', 'SKILL.md')
+    $trackedDocs = @(& git -C $root -c core.quotePath=false ls-files | Where-Object {
+        $_ -match '^(docs|dev-docs|development|\.agents|\.codex)/' -or
+        ($_ -match '\.(md|rst|adoc|docx?|pdf|html?)$' -and $_ -notin $allowed)
+    })
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot check tracked publication contents.' }
+    if ($trackedDocs.Count) {
+        throw ('Development documents must remain local: ' + ($trackedDocs -join ', '))
+    }
 }
 
 $finalSha = Invoke-GitValue @('rev-parse', 'HEAD')
@@ -169,6 +179,14 @@ try {
     $folderExe = Join-Path $folderOut 'FpsTune.exe'
     Assert-ProductIdentity $singleExe
     Assert-ProductIdentity $folderExe
+
+    $packagedDocs = @(Get-ChildItem -LiteralPath $folderOut -Recurse -File | Where-Object {
+        $_.Extension -match '^\.(md|rst|adoc|docx?|pdf|html?)$'
+    })
+    if ($packagedDocs.Count) {
+        throw ('Release packages must not include development documents: ' +
+            ($packagedDocs.FullName -join ', '))
+    }
 
     # A release asset is uploaded as one executable. Any external native DLL,
     # script, catalog or PDB here would make that promise false.

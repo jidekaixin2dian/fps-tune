@@ -35,8 +35,7 @@ C# WPF + .NET 10，`FpsTune.exe` 同时是无头 CLI（命令行 / AI Agent 入�
 会话帧时间流式保存、历史只保留摘要，减少重复工作和常驻明细。修复逐游戏判定隔离、
 旧备份 ZIP 漏导、方案名称显示、游戏路径保存及二维码复制；经典概览启动恢复已选游戏。
 旧模拟实验仅在时间与指标精确匹配来源时校正显示，不在读取时改写原向导文件。
-全量测试 362 项通过。此前冷启动对照显示 CPU 改善、内存收益有限；最终同进程普通/低配
-复测未证明低配 CPU/RAM 收益。尚未验证真实游戏 FPS，详见 [审查记录](docs/dev/AUDIT-PERFORMANCE-20261007.md)。
+此次更新减少重复采样，游戏帧率与资源占用仍因设备和场景而异，不承诺固定收益。
 
 去 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 挑一个（Windows 10/11 x64）：
 
@@ -139,29 +138,6 @@ A/B 页 PresentMon 前置可用性检测（缺了给官方安装命令，不代�
 本项目以公开的功能清单为参考，代码与文档全部自写（clean-room），MIT 宽松许可，
 36 个优化项与预设统一定义在 `catalog/catalog.json`——你可以直接读完它到底改哪些键值。
 
-## 架构
-
-```
-catalog/catalog.json          优化项与预设的唯一数据源（36 项 + 均衡/保守预设）
-FpsTune.Wpf/
-  Core/                       OptimizationCatalog / NativeOptimizationEngine /
-                              BackupService / DetectionService / ExperimentRunner
-  Services/                   主题 / 设置 / 实验引擎与判定存储 / 采样 / CLI 宿主 / 更新检查
-  Views/                      WPF 视图（概览页两种形态：紧凑控制台 / 经典概览）
-FpsTune.Wpf.Tests/            单元测试（含 catalog 一致性守卫）
-installer/                    Inno Setup 打包
-docs/                         现状文档（HANDOFF / ROADMAP / README 索引）
-  dev/                        计划与开发纪律；archive/  1.x 历史存档（不代表现状）
-```
-
-GUI 与 CLI 共用同一份 C# 引擎与数据，加载即校验。
-新增或修改一个优化项：编辑 `catalog/catalog.json`，再在 `NativeOptimizationEngine`
-（apply/revert）与 `DetectionService`（状态读取）各加一个 case 分支——
-catalog 一致性测试会强制条目与实现同步，漏改直接测试失败。
-
-版本与产品标识的单源是 `Directory.Build.props` 的 `VersionPrefix` / `VersionSuffix`；
-正式发布脚本从最终干净提交读取完整 SHA，嵌入 `InformationalVersion` 并用本机文件版本信息核验。
-
 ## 安全与隐私
 
 - 每次可逆改动先写入 `%LocalAppData%\FpsTune\backup`；还原按项进行，
@@ -170,23 +146,9 @@ catalog 一致性测试会强制条目与实现同步，漏改直接测试失败
 - 无遥测、无统计上报。唯一的网络访问是你主动触发的更新检查。
 - 需要管理员的项在普通权限下失败并说明原因，不会静默跳过。
 
-## 开发
+## 反馈
 
-```powershell
-dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release    # 需要 .NET 10 SDK
-.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe
-
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
-.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json   # 无副作用冒烟
-```
-
-文档入口：
-- **`docs/README.md`** —— 文档总索引：现状文档 vs 1.x 历史存档，按角色给出"先读什么"
-- `AGENTS.md` —— 接手开发的 AI 代理入口（硬纪律、危险操作清单、工作区地图）
-- `CONTRIBUTING.md` —— 人类贡献者最短路径
-- `RELEASE.md` —— 发版流程；`docs/ROADMAP.md` —— 产品方向与五条红线
-
-Issues 开放：报 bug、提优化项、指出某项解释不清，都欢迎。
+欢迎在 Issues 报告问题或提出功能建议。
 
 ## 许可
 

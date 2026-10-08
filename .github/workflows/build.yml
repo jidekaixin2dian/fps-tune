@@ -16,6 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Reject tracked development documents
+        shell: pwsh
+        run: |
+          $allowed = @('README.md', 'README.en.md', 'SKILL.md')
+          $blocked = @(git -c core.quotePath=false ls-files | Where-Object {
+            $_ -match '^(docs|dev-docs|development|\.agents|\.codex)/' -or
+            ($_ -match '\.(md|rst|adoc|docx?|pdf|html?)$' -and $_ -notin $allowed)
+          })
+          if ($blocked.Count) { throw ('Local development documents must not be published: ' + ($blocked -join ', ')) }
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:

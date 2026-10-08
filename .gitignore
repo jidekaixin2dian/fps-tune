@@ -25,13 +25,30 @@ dist/
 # 本地测试/验证输出（Tee-Object、手工冒烟日志等），不入库
 test-result*.txt
 
-# 本地 AI 交接文档，不入库
-HANDOFF_PROMPT*.md
+# 本地开发文档、交接、计划、审查与历史记录：禁止提交 / push / 放入 Release
+# 已跟踪的开发文档必须 git rm --cached；只忽略不会移除远端已有文件。
+*.md
+*.rst
+*.adoc
+*.doc
+*.docx
+*.pdf
+*.html
+*.htm
+/docs/
+/dev-docs/
+/development/
+/.agents/
+/.codex/
+# 公开白名单只有面向使用者的说明；嵌套 README 仍按开发文档忽略。
+!/README.md
+!/README.en.md
+!/SKILL.md
 
 # 本地 AI 代理的工作数据（记忆/技能/会话态），不入库
 .workbuddy-ai/
 
-# 本地探针/验证工程（驱动层实验用，结论沉淀进代码与 docs/，工程本身不入库）
+# 本地探针/验证工程（结论仅保留本地开发文档，工程本身不入库）
 work/
 .zcodeignore
 __pycache__/

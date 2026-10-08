@@ -41,9 +41,7 @@ batches GPU counters, streams frame-time output, and loads session history as su
 It fixes per-game verdict isolation, legacy backup ZIP transfers, profile names, saved game selection,
 and QR contact copying. Classic overview restores the saved game on startup. Legacy simulation labels
 are corrected only when timestamps and metrics match their source, without rewriting the wizard on read.
-All 362 tests pass. An earlier cold-start comparison showed lower CPU use and a small RAM reduction;
-the final same-process low-spec check did not show a CPU/RAM benefit. Real-game FPS impact remains
-unverified. See the [audit](docs/dev/AUDIT-PERFORMANCE-20261007.md).
+The update reduces repeated sampling. Frame rates and resource use still depend on your hardware and workload; no fixed gain is promised.
 
 Pick one from [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) (Windows 10/11 x64):
 
@@ -159,31 +157,6 @@ redistribution, and don't disclose what they change. This project was written fr
 the *public feature list* only, is MIT licensed, and puts all 36 items and presets in
 `catalog/catalog.json` — you can read exactly which keys get touched.
 
-## Architecture
-
-```
-catalog/catalog.json          single source of truth: 36 items + presets
-FpsTune.Wpf/
-  Core/                       OptimizationCatalog / NativeOptimizationEngine /
-                              BackupService / DetectionService / ExperimentRunner
-  Services/                   theme / settings / CLI host / update check
-  Views/                      WPF views (overview page has two forms: console / classic)
-FpsTune.Wpf.Tests/            unit tests, incl. catalog consistency guards
-TESTING.md                    external testing guide: full A/B, or a minimal data template
-installer/                    Inno Setup packaging
-docs/                         current docs (HANDOFF / ROADMAP / README index)
-  dev/                        plans and dev discipline; archive/  1.x history (not current)
-```
-
-GUI and CLI share one C# engine and one dataset, validated at load time.
-To add or change an item: edit `catalog/catalog.json`, then add a case to
-`NativeOptimizationEngine` (apply/revert) and `DetectionService` (state read). The catalog
-consistency test fails the build if implementation and data drift.
-
-Version single source is `VersionPrefix` / `VersionSuffix` in `Directory.Build.props`; the release
-script reads the full SHA from the final clean commit, embeds it in `InformationalVersion` and
-verifies it against the produced binary's file version info.
-
 ## Safety & privacy
 
 - Every reversible change is written to `%LocalAppData%\FpsTune\backup` first; restore is per item
@@ -193,22 +166,9 @@ verifies it against the produced binary's file version info.
 - No telemetry, no analytics. The only network access is the update check you trigger yourself.
 - Admin-required items fail with a reason instead of being silently skipped.
 
-## Development
+## Feedback
 
-```powershell
-dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release    # needs the .NET 10 SDK
-.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe
-
-dotnet test FpsTune.Wpf.Tests/FpsTune.Wpf.Tests.csproj -c Release
-.\FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json   # side-effect-free smoke test
-```
-
-Where to read next:
-- **`docs/README.md`** — documentation index: current docs vs the 1.x archive, with a "read this first" table per role
-- `AGENTS.md` — entry point for AI agents working on this repo (hard rules, dangerous-operation list, workspace map)
-- `CONTRIBUTING.md` — shortest path for human contributors
-- `RELEASE.md` — release procedure; `docs/ROADMAP.md` — product direction and the five red lines
-Issues are open — bug reports, new optimization items and "this explanation is unclear" are all welcome.
+Bug reports and feature suggestions are welcome in Issues.
 
 ## License
 
