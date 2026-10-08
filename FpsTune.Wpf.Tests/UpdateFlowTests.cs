@@ -26,6 +26,26 @@ public class UpdateFlowTests
         Assert.Equal("v0.2.4-beta.10", UpdateService.SelectRelease(doc.RootElement)?.ReleaseTag);
     }
 
+    [Fact]
+    public void Frozen_net8_line_is_not_an_update_for_the_current_product()
+    {
+        using var doc = JsonDocument.Parse(JsonSerializer.Serialize(new[] { Release("1.6.2"), Release("0.2.4-beta") }));
+        Assert.Equal("v0.2.4-beta", UpdateService.SelectRelease(doc.RootElement)?.ReleaseTag);
+    }
+
+    [Theory]
+    [InlineData("0.2.4-")]
+    [InlineData("0.2.4-beta..1")]
+    [InlineData("0.2.4-beta.01")]
+    [InlineData("0.2.4-beta/1")]
+    [InlineData("0.2.4+hash+hash")]
+    public void Rejects_malformed_semantic_versions(string value)
+        => Assert.False(UpdateService.TryNormalizeVersion(value, out _));
+
+    [Fact]
+    public void Numeric_prerelease_comparison_does_not_overflow()
+        => Assert.True(UpdateService.IsNewer("0.2.4-beta.1000000000000000000000", "0.2.4-beta.999999999999999999999"));
+
     [Theory]
     [InlineData("http://github.com/jidekaixin2dian/fps-tune/releases/download/v1/a", false)]
     [InlineData("https://github.com.evil.test/jidekaixin2dian/fps-tune/releases/a", false)]

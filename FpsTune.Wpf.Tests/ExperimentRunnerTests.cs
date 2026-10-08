@@ -31,7 +31,7 @@ public class ExperimentRunnerTests
         var expectedVersion = props.Descendants("VersionPrefix").First().Value.Trim();
         Assert.Equal(expectedVersion, json.GetProperty("version").GetString());
         Assert.True(File.Exists(Path.Combine(scope.Dir, "state-simulated-v2.json")));
-        Assert.True(File.Exists(Path.Combine(scope.Dir, "history-simulated.jsonl")));
+        Assert.True(File.Exists(Path.Combine(scope.Dir, "history-simulated-v2.jsonl")));
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class ExperimentRunnerTests
         Assert.Equal(0, (await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None)).ExitCode);
 
         var stateBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "state-simulated-v2.json"));
-        var historyBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "history-simulated.jsonl"));
+        var historyBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "history-simulated-v2.jsonl"));
 
         var result = await ExperimentRunner.RunAsync("group-2", Simulate, CancellationToken.None);
         var json = ParseJson(result.Json);
@@ -50,7 +50,7 @@ public class ExperimentRunnerTests
         Assert.False(json.GetProperty("ok").GetBoolean());
         Assert.Contains("group-1", json.GetProperty("error").GetString());
         Assert.Equal(stateBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "state-simulated-v2.json")));
-        Assert.Equal(historyBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "history-simulated.jsonl")));
+        Assert.Equal(historyBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "history-simulated-v2.jsonl")));
         Assert.False(File.Exists(Path.Combine(scope.Dir, "experiment-summary-simulated.csv")));
     }
 
@@ -65,7 +65,7 @@ public class ExperimentRunnerTests
         Assert.False(json.GetProperty("ok").GetBoolean());
         Assert.Contains("基线", json.GetProperty("error").GetString());
         Assert.False(File.Exists(Path.Combine(scope.Dir, "state-simulated-v2.json")));
-        Assert.False(File.Exists(Path.Combine(scope.Dir, "history-simulated.jsonl")));
+        Assert.False(File.Exists(Path.Combine(scope.Dir, "history-simulated-v2.jsonl")));
     }
 
     [Fact]

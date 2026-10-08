@@ -26,7 +26,7 @@ public partial class UpdateCardWindow : Window
     }
     private async void Install_Click(object sender, RoutedEventArgs e)
     {
-        if (App.SessionService.IsRunning)
+        if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
         {
             StatusText.Text = Str.T("Str.UpdateSessionBusy");
             return;

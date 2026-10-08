@@ -5,12 +5,13 @@ internal sealed class SystemMutationGate : IDisposable
 {
     private readonly Mutex _mutex = new(false, BackupService.RestoreMutexName);
     private bool _held;
-    private SystemMutationGate()
+    private SystemMutationGate(TimeSpan timeout)
     {
-        try { _held = _mutex.WaitOne(TimeSpan.FromSeconds(30)); }
+        try { _held = _mutex.WaitOne(timeout); }
         catch (AbandonedMutexException) { _held = true; }
         if (!_held) { _mutex.Dispose(); throw new TimeoutException("Another system operation is running."); }
     }
-    internal static SystemMutationGate Acquire() => new();
+    internal static SystemMutationGate Acquire() => new(TimeSpan.FromSeconds(30));
+    internal static SystemMutationGate Acquire(TimeSpan timeout) => new(timeout);
     public void Dispose() { if (_held) { _held = false; _mutex.ReleaseMutex(); } _mutex.Dispose(); }
 }

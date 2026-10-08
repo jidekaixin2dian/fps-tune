@@ -79,6 +79,8 @@ public static class DiagnosticReportExporter
                 AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "state.json"), "experiment/state.json", inputStatuses);
                 AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "history.jsonl"), "experiment/history.jsonl", inputStatuses);
                 AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "wizard.json"), "experiment/wizard.json", inputStatuses);
+                foreach (var file in new[] { "state-v2.json", "history-v2.jsonl", "state-simulated-v2.json", "history-simulated-v2.jsonl", "in-flight-v2.json" })
+                    AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", file), "experiment/" + file, inputStatuses);
                 AddText(zip, "diagnostic-input-status.json", JsonSerializer.Serialize(new
                 {
                     status = "complete",

@@ -42,6 +42,8 @@ public sealed class DiagnosticReportTests : IDisposable
             Path.Combine(experimentDir, "state.json"),
             "{\"log\":\"C:\\\\Program Files\\\\FPS Tune\\\\logs\\\\error.log\"}",
             Encoding.UTF8);
+        var v2Files = new[] { "state-v2.json", "history-v2.jsonl", "state-simulated-v2.json", "history-simulated-v2.jsonl", "in-flight-v2.json" };
+        foreach (var file in v2Files) File.Copy(Path.Combine(experimentDir, "state.json"), Path.Combine(experimentDir, file));
 
         var target = Path.Combine(_baseDir, "out", "diagnostic.zip");
         var result = DiagnosticReportExporter.ExportTo(target);
@@ -56,17 +58,20 @@ public sealed class DiagnosticReportTests : IDisposable
             "experiment/wizard.json"
         };
         Assert.DoesNotContain(archive.Entries, e => rawEntryNames.Contains(e.FullName, StringComparer.OrdinalIgnoreCase));
+        Assert.DoesNotContain(archive.Entries, e => v2Files.Any(file => e.FullName == "experiment/" + file));
 
         var statusEntry = Assert.Single(archive.Entries, e => e.FullName == "diagnostic-input-status.json");
         using var statusReader = new StreamReader(statusEntry.Open(), Encoding.UTF8);
         using var status = JsonDocument.Parse(statusReader.ReadToEnd());
         var files = status.RootElement.GetProperty("files").EnumerateArray().ToList();
-        Assert.Equal(4, files.Count);
+        Assert.Equal(9, files.Count);
         Assert.Equal(
-            new[] { "last-detect.json", "experiment/state.json", "experiment/history.jsonl", "experiment/wizard.json" },
+            new[] { "last-detect.json", "experiment/state.json", "experiment/history.jsonl", "experiment/wizard.json" }
+                .Concat(v2Files.Select(file => "experiment/" + file)),
             files.Select(x => x.GetProperty("source").GetString()).ToArray());
         Assert.Equal(
-            new[] { "source-present-but-omitted-by-privacy", "source-present-but-omitted-by-privacy", "source-missing", "source-missing" },
+            new[] { "source-present-but-omitted-by-privacy", "source-present-but-omitted-by-privacy", "source-missing", "source-missing" }
+                .Concat(Enumerable.Repeat("source-present-but-omitted-by-privacy", 5)),
             files.Select(x => x.GetProperty("status").GetString()).ToArray());
 
         foreach (var entry in archive.Entries)

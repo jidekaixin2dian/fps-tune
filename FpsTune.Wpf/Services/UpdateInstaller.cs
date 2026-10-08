@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
@@ -28,6 +29,9 @@ internal static class UpdateInstaller
             if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException(Str.T("Str.InstallerHashMismatch"));
             token.ThrowIfCancellationRequested();
+            using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
+            if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
+                throw new InvalidOperationException(Str.T("Str.UpdateSessionBusy"));
             var installDirectory = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
             using var process = Process.Start(new ProcessStartInfo(installerPath)
             {

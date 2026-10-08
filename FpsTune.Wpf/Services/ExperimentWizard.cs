@@ -485,6 +485,8 @@ public static class ExperimentWizardStore
         try
         {
             var historyFile = Path.Combine(ExperimentDir, "history.jsonl");
+            var currentHistory = Path.Combine(ExperimentDir, "history-v2.jsonl");
+            if (File.Exists(currentHistory)) historyFile = currentHistory;
             if (!File.Exists(historyFile))
                 return null;
 

@@ -72,6 +72,9 @@ public static class UpdateService
             var tag = entry.TryGetProperty("tag_name", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() : null;
             var page = entry.TryGetProperty("html_url", out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
             if (!TryNormalizeVersion(tag, out var version) || !IsOfficialUrl(page)) continue;
+            // 1.x is the frozen .NET 8 product line, not an upgrade from the .NET 10 Beta line.
+            // Those version numbers remain reserved; a future maintained major must use a new number.
+            if (Version.Parse(version).Major == 1) continue;
             var installer = FindAssetUrl(entry, InstallerAssetName(version));
             var checksum = FindAssetUrl(entry, ChecksumAssetName(version));
             if (!IsOfficialUrl(installer) || !IsOfficialUrl(checksum)) continue;
@@ -106,9 +109,11 @@ public static class UpdateService
             for (var i = 0; i < Math.Min(left.Length, right.Length); i++)
             {
                 if (left[i] == right[i]) continue;
-                var ln = int.TryParse(left[i], out var li);
-                var rn = int.TryParse(right[i], out var ri);
-                return ln && rn ? li > ri : ln != rn ? !ln : string.CompareOrdinal(left[i], right[i]) > 0;
+                var ln = left[i].All(char.IsAsciiDigit);
+                var rn = right[i].All(char.IsAsciiDigit);
+                return ln && rn ? (left[i].Length != right[i].Length ? left[i].Length > right[i].Length
+                    : string.CompareOrdinal(left[i], right[i]) > 0)
+                    : ln != rn ? !ln : string.CompareOrdinal(left[i], right[i]) > 0;
             }
             return left.Length > right.Length;
         }
@@ -143,13 +148,20 @@ public static class UpdateService
 
         var text = raw.Trim();
         var plus = text.IndexOf('+');
-        if (plus >= 0) text = text[..plus];
+        if (plus >= 0)
+        {
+            if (!ValidIdentifiers(text[(plus + 1)..], false)) return false;
+            text = text[..plus];
+        }
         if (text.StartsWith('v') || text.StartsWith('V'))
             text = text[1..];
         // 预发布后缀（v0.1.13-beta）只用于标签，不参与数值比较
         var dash = text.IndexOf('-');
         if (dash > 0)
+        {
+            if (!ValidIdentifiers(text[(dash + 1)..], true)) return false;
             text = text[..dash];
+        }
 
         var parts = text.Split('.');
         if (parts.Length != 3 || parts.Any(part =>
@@ -163,6 +175,10 @@ public static class UpdateService
         version = text;
         return true;
     }
+
+    private static bool ValidIdentifiers(string text, bool prerelease)
+        => text.Split('.').All(id => id.Length > 0 && id.All(c => char.IsAsciiLetterOrDigit(c) || c == '-')
+            && !(prerelease && id.All(char.IsAsciiDigit) && id.Length > 1 && id[0] == '0'));
 
     internal static bool TryReadSha256(string manifest, string expectedFileName, out string hash)
     {

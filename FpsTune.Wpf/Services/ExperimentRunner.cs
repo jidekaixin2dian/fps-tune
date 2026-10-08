@@ -20,6 +20,7 @@ public static class ExperimentRunner
 {
     private const string ToolName = "fps-tune";
     private static readonly SemaphoreSlim RunGate = new(1, 1);
+    internal static bool IsRunning => RunGate.CurrentCount == 0;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -859,7 +860,7 @@ public static class ExperimentRunner
         Directory.CreateDirectory(StateDir());
         var opts = new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
         File.AppendAllText(
-            Path.Combine(StateDir(), options.Simulate ? "history-simulated.jsonl" : "history.jsonl"),
+            Path.Combine(StateDir(), options.Simulate ? "history-simulated-v2.jsonl" : "history-v2.jsonl"),
             entry.ToJsonString(opts) + Environment.NewLine,
             new UTF8Encoding(false));
     }
