@@ -4,6 +4,11 @@ namespace FpsTune.Wpf.Tests;
 
 public sealed class GamePathServiceTests
 {
+    [Theory]
+    [InlineData("绝地求生")][InlineData("使命召唤")][InlineData("守望先锋")][InlineData("彩虹六号")]
+    [InlineData("逃离塔科夫")][InlineData("命运2")][InlineData("Counter-Strike")][InlineData("CS 2")]
+    public void Existing_localized_uninstall_names_remain_detectable(string displayName)
+        => Assert.True(FpsTune.Wpf.Core.GamePathService.ContainsGameKeyword(displayName));
     [Fact]
     public void Shared_library_returns_all_clients_and_prefers_delta_client_over_launcher()
     {

@@ -145,6 +145,7 @@ public static class GamePathService
         "Destiny 2", "Battlefield 2042", "战地",
         "Riot Games", "Tencent Games", "Epic Games", "Steam", "SteamLibrary",
         "Fortnite", "Warframe",
+        "CS 2", "Counter-Strike", "绝地求生", "使命召唤", "守望先锋", "彩虹六号", "逃离塔科夫", "命运2", "Battlefield",
     };
 
     // 顶层 pass-through 容器: 其下一层也可能出现上面的厂商目录
@@ -268,7 +269,7 @@ public static class GamePathService
         return File.Exists(s) ? s : null;
     }
 
-    private static bool ContainsGameKeyword(string text)
+    internal static bool ContainsGameKeyword(string text)
         => KnownInstallDirNames.Any(name => text.Contains(name, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Bounded read-only traversal; every known client in a shared launcher/library root.</summary>
