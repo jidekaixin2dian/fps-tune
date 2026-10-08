@@ -780,4 +780,8 @@
     <s:String x:Key="Str.UpdateFailed">更新未完成：{0}</s:String>
     <s:String x:Key="Str.UpdateUrlInvalid">更新下载地址无效。</s:String>
     <s:String x:Key="Str.UpdateFileTooLarge">下载文件超过大小限制。</s:String>
+    <s:String x:Key="Str.NvBackupInvalid">NVIDIA 备份无法读取，原文件已保留。</s:String>
+    <s:String x:Key="Str.NicBackupTargetInvalid">网卡节能备份目标不匹配。</s:String>
+    <s:String x:Key="Str.BackupArchiveTooLarge">备份压缩包超过 100 MiB。</s:String>
+    <s:String x:Key="Str.BackupImportLimit">备份文件数量或解压大小超过限制。</s:String>
 </ResourceDictionary>

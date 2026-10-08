@@ -41,7 +41,7 @@ internal static class NvapiNative
         var name = IntPtr.Size == 4 ? "nvapi.dll" : "nvapi64.dll";
         try
         {
-            var dll = NativeLibrary.Load(name);
+            var dll = NativeLibrary.Load(System.IO.Path.Combine(Environment.SystemDirectory, name));
             var export = NativeLibrary.GetExport(dll, "nvapi_QueryInterface");
             query = Marshal.GetDelegateForFunctionPointer<QueryInterfaceDelegate>(export);
             error = "";

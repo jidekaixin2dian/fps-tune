@@ -276,7 +276,7 @@
       "descriptionEn": "Turns off Game Bar background recording (DVR) to cut background encoding load while gaming.",
       "sideEffect": "Win+G 录制/截图功能不可用。",
       "sideEffectEn": "Win+G recording and capture become unavailable.",
-      "admin": false,
+      "admin": true,
       "default": true,
       "reboot": false,
       "kind": "registry",
@@ -509,20 +509,28 @@
   ],
   "presets": {
     "balanced": {
-      "exclude": [
-        "sysmain-off",
-        "wsearch-off",
-        "hibernate-off",
-        "power-tuning",
-        "keyboard-latency",
-        "keyboard-repeat",
-        "mouse-latency"
+      "include": [
+        "hags",
+        "transparency-off",
+        "fso-off",
+        "gpu-pref",
+        "mpo-off",
+        "net-throttling-off",
+        "power-ultimate",
+        "pcie-aspm-off",
+        "game-mode",
+        "dvr-off",
+        "prio-separation",
+        "wer-off",
+        "sys-responsiveness",
+        "mmcss-games",
+        "game-priority",
+        "paging-exec"
       ]
     },
     "safe-only": {
       "include": [
         "game-mode",
-        "dvr-off",
         "transparency-off",
         "fso-off",
         "gpu-pref"

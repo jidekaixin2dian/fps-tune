@@ -132,28 +132,21 @@ public class CoreLogicTests
         => Assert.Equal(ItemCatalog.All.Count, OptimizationEngine.GetPresetIds("full").Count);
 
     [Fact]
-    public void Balanced_preset_excludes_the_documented_items()
+    public void Balanced_preset_is_an_explicit_default_allowlist()
     {
-        // 除常规重负载项外，键鼠组里会改变输入手感的三项（keyboard-latency/
-        // keyboard-repeat/mouse-latency）也不进均衡；mouse-accel-off 是 FPS 必关项，保留在均衡内。
         var ids = OptimizationEngine.GetPresetIds("balanced");
-        Assert.Equal(ItemCatalog.All.Count - 7, ids.Count);
-        Assert.DoesNotContain("sysmain-off", ids);
-        Assert.DoesNotContain("wsearch-off", ids);
-        Assert.DoesNotContain("hibernate-off", ids);
+        Assert.Equal(16, ids.Count);
+        Assert.All(ids, id => Assert.True(ItemCatalog.All.Single(x => x.Id == id).Default));
+        Assert.DoesNotContain("mouse-accel-off", ids);
+        Assert.DoesNotContain("sticky-keys-off", ids);
+        Assert.DoesNotContain("usb-power-save-off", ids);
         Assert.DoesNotContain("power-tuning", ids);
-        Assert.DoesNotContain("keyboard-latency", ids);
-        Assert.DoesNotContain("keyboard-repeat", ids);
-        Assert.DoesNotContain("mouse-latency", ids);
-        Assert.Contains("mouse-accel-off", ids);
-        Assert.Contains("sticky-keys-off", ids);
-        Assert.Contains("usb-power-save-off", ids);
     }
 
     [Fact]
-    public void SafeOnly_preset_is_the_documented_five_items()
+    public void SafeOnly_preset_contains_only_non_admin_items()
         => Assert.Equal(
-            new[] { "dvr-off", "fso-off", "game-mode", "gpu-pref", "transparency-off" },
+            new[] { "fso-off", "game-mode", "gpu-pref", "transparency-off" },
             OptimizationEngine.GetPresetIds("safe-only").OrderBy(x => x).ToArray());
 
     [Fact]
@@ -171,10 +164,8 @@ public class CoreLogicTests
     }
 
     [Fact]
-    public void Unknown_preset_falls_back_to_balanced()
-        => Assert.Equal(
-            OptimizationEngine.GetPresetIds("balanced").Count,
-            OptimizationEngine.GetPresetIds("not-a-preset").Count);
+    public void Unknown_preset_is_rejected_before_apply()
+        => Assert.Throws<InvalidOperationException>(() => OptimizationEngine.GetPresetIds("not-a-preset"));
 
     /// <summary>预设里的每个 id 都必须真实存在于目录，避免出现“永远失败的选择项”。</summary>
     [Fact]

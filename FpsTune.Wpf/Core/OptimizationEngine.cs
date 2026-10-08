@@ -21,7 +21,7 @@ public static class OptimizationEngine
         return Task.Run(() => new RunResult(0, DetectionService.BuildDetectJson(gamePath), ""));
     }
 
-    /// <summary>预设 -> 优化项 id 列表。未知预设回退到 balanced。</summary>
+    /// <summary>预设 -> 优化项 id 列表。未知预设明确报错。</summary>
     internal static IReadOnlyList<string> GetPresetIds(string preset)
         => OptimizationCatalog.ResolvePreset(preset);
 

@@ -120,19 +120,30 @@ public class DisplayQualityTests : IDisposable
     }
 
     [Fact]
-    public void Failed_save_does_not_leave_fake_backup()
+    public void Failed_save_preserves_original_backup_for_recovery()
     {
         _api.AddProfile("三角洲行动", Exe);
         _api.SimulateSaveDenied = true;
 
         Assert.Throws<NvdrsException>(() =>
             DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
-        Assert.False(DisplayQualityService.HasRestorableBackup(Exe));
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
 
-        // 保存失败后允许重试成功，并在成功后才出现备份
+        // 保存失败后保留原值，重试也不重新捕获覆盖最初备份
         _api.SimulateSaveDenied = false;
         DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
         Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+    }
+
+    [Fact]
+    public void Backup_write_failure_prevents_driver_save()
+    {
+        _api.AddProfile("existing", Exe);
+        var blocked = Path.Combine(_backupDir, "blocked");
+        File.WriteAllText(blocked, "not a directory");
+        DisplayQualityService.BackupDirOverride = blocked;
+        Assert.ThrowsAny<IOException>(() => DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
+        Assert.False(_api.SaveCalled);
     }
 
     [Fact]

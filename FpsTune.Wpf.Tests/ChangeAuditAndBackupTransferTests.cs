@@ -35,6 +35,19 @@ public sealed class ChangeAuditAndBackupTransferTests : IDisposable
         return path;
     }
 
+    [Fact]
+    public void Import_rejects_high_compression_oversized_entry_before_writing()
+    {
+        var zip = Path.Combine(_dir, "oversized.zip");
+        using (var archive = System.IO.Compression.ZipFile.Open(zip, System.IO.Compression.ZipArchiveMode.Create))
+        {
+            using var stream = archive.CreateEntry("csharp-backup-oversized.json").Open();
+            stream.Write(new byte[10 * 1024 * 1024 + 1]);
+        }
+        Assert.Equal((0, 0, 1), BackupService.ImportBackups(zip));
+        Assert.False(File.Exists(Path.Combine(_dir, "csharp-backup-oversized.json")));
+    }
+
     private static BackupRecord KeyboardLatencyRecord(int oldValue) => new()
     {
         Id = "keyboard-latency",

@@ -146,10 +146,9 @@ public class CatalogConsistencyTests
         """;
 
     [Fact]
-    public void ResolvePreset_unknown_name_falls_back_to_balanced()
+    public void ResolvePreset_unknown_name_is_rejected()
     {
-        var ids = OptimizationCatalog.ResolvePresetFromJson(MinimalCatalogJson, "no-such-preset");
-        Assert.Equal(new[] { "a", "b" }, ids);
+        Assert.Throws<InvalidOperationException>(() => OptimizationCatalog.ResolvePresetFromJson(MinimalCatalogJson, "no-such-preset"));
     }
 
     [Fact]

@@ -780,4 +780,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.UpdateFailed">Update did not finish: {0}</s:String>
     <s:String x:Key="Str.UpdateUrlInvalid">The update download address is invalid.</s:String>
     <s:String x:Key="Str.UpdateFileTooLarge">The download exceeds the size limit.</s:String>
+    <s:String x:Key="Str.NvBackupInvalid">The NVIDIA backup could not be read. The original file has been retained.</s:String>
+    <s:String x:Key="Str.NicBackupTargetInvalid">The network adapter backup target is invalid.</s:String>
+    <s:String x:Key="Str.BackupArchiveTooLarge">The backup archive exceeds 100 MiB.</s:String>
+    <s:String x:Key="Str.BackupImportLimit">The backup entry count or uncompressed size exceeds the limit.</s:String>
 </ResourceDictionary>

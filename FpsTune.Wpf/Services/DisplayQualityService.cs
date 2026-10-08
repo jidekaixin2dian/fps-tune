@@ -333,7 +333,7 @@ public static class DisplayQualityService
                 session.SetSettingDword(owner, PreRenderLimitId, frames.Value);
         });
 
-    /// <summary>写入一项受管设置：首次写入前备份全部受管项；Save 成功才落盘备份。</summary>
+    /// <summary>首次写入先持久化原始设置，再保存驱动；失败仍保留可恢复记录。</summary>
     private static void ApplyManaged(string gameExe, Action<INvdrsSession, INvdrsProfile> write)
     {
         using var api = CreateApi();
@@ -362,6 +362,8 @@ public static class DisplayQualityService
             }
         }
 
+        if (pendingBackup is not null)
+            WriteBackup(new OverrideBackup(gameExe, ownProfile, pendingBackup));
         write(session, owner);
         try
         {
@@ -373,8 +375,6 @@ public static class DisplayQualityService
                 "保存驱动设置被拒绝（NVAPI_ACCESS_DENIED）：写入 NVIDIA 配置需要管理员权限。" +
                 "请以管理员身份重启本程序后再应用。");
         }
-        if (pendingBackup is not null)
-            WriteBackup(new OverrideBackup(gameExe, ownProfile, pendingBackup));
     }
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
@@ -390,18 +390,19 @@ public static class DisplayQualityService
             return null;
         try
         {
-            return JsonSerializer.Deserialize<OverrideBackup>(File.ReadAllText(path));
+            return JsonSerializer.Deserialize<OverrideBackup>(File.ReadAllText(path))
+                ?? throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new InvalidDataException(Str.T("Str.NvBackupInvalid"), ex);
         }
     }
 
     private static void WriteBackup(OverrideBackup backup)
     {
         Directory.CreateDirectory(BackupDir());
-        AtomicFile.WriteAllText(
+        AtomicFile.WriteAllTextDurable(
             BackupPath(backup.GameExe),
             JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true }),
             new System.Text.UTF8Encoding(false));

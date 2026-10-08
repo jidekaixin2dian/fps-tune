@@ -43,12 +43,7 @@ public static class OptimizationCatalog
         }
     }
 
-    /// <summary>
-    /// 预设 -> 优化项 id 列表。"full" 返回全部；其余按 catalog.presets 的
-    /// include/exclude 解析；未知预设回退到 balanced（保持既有 GUI 约定），
-    /// 但回退只允许一次——balanced 本身缺失或格式非法时明确报错，
-    /// 绝不无限递归（否则外部 catalog.json 被改坏会让进程 StackOverflow 崩溃）。
-    /// </summary>
+    /// <summary>按明确的预设解析项目；未知预设在系统写入前报错。</summary>
     public static IReadOnlyList<string> ResolvePreset(string name)
     {
         return ResolveFrom(Ensure(), name);
@@ -62,15 +57,13 @@ public static class OptimizationCatalog
 
     private static IReadOnlyList<string> ResolveFrom(CatalogData data, string name)
     {
-        if (string.IsNullOrWhiteSpace(name) || name == "full")
+        if (name == "full")
             return data.Order.ToList();
 
-        // 兼容旧约定：未知预设回退 balanced，但只回退一次。
+        // 不以默认方案替代未知输入。
         return ResolveNamed(data, name)
-               ?? ResolveNamed(data, "balanced")
                ?? throw new InvalidOperationException(
-                   "catalog.json 预设无法解析: " + name +
-                   "（回退预设 balanced 也缺失或格式非法：需为对象且含 include 或 exclude 数组）");
+                   "catalog.json 预设无法解析: " + name);
     }
 
     /// <summary>解析具名预设；不存在或格式非法（无 include/exclude）返回 null。</summary>
@@ -89,7 +82,13 @@ public static class OptimizationCatalog
 
             var obj = p.Value;
             if (obj.TryGetProperty("include", out var inc) && inc.ValueKind == JsonValueKind.Array)
-                return inc.EnumerateArray().Select(x => x.GetString() ?? "").Where(x => x.Length > 0).ToList();
+            {
+                var ids = inc.EnumerateArray().Select(x => x.GetString() ?? "").ToList();
+                if (ids.Count == 0 || ids.Distinct(StringComparer.Ordinal).Count() != ids.Count ||
+                    ids.Any(id => !data.Order.Contains(id, StringComparer.Ordinal)))
+                    throw new InvalidOperationException("catalog.json 预设包含空、重复或未知优化项: " + name);
+                return ids;
+            }
 
             if (obj.TryGetProperty("exclude", out var exc) && exc.ValueKind == JsonValueKind.Array)
             {
@@ -135,7 +134,7 @@ public static class OptimizationCatalog
                 throw new InvalidOperationException($"catalog.json 中 id 重复: {it.Id}");
         }
 
-        // 预设名是 GUI/CLI 的固定契约（未知预设回退 balanced 一次），
+        // 预设名是 GUI/CLI 的固定契约，
         // 这两个名字缺失说明 catalog 被改坏，启动即报错比静默回退更诚实。
         var presetNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         if (parsed.Presets is { ValueKind: JsonValueKind.Object } presets)

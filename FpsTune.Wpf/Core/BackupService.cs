@@ -98,8 +98,16 @@ public static partial class BackupService
     /// 同名文件跳过（重复导入幂等），校验失败的单文件跳过并计数。返回 (导入, 跳过重复, 校验失败)。</summary>
     public static (int Imported, int SkippedDuplicate, int SkippedInvalid) ImportBackups(string zipPath)
     {
+        const long totalLimit = 100L * 1024 * 1024;
+        const int fileLimit = 10 * 1024 * 1024;
+        if (new FileInfo(zipPath).Length > totalLimit)
+            throw new InvalidDataException(Str.T("Str.BackupArchiveTooLarge"));
         using var archive = System.IO.Compression.ZipFile.OpenRead(zipPath);
+        if (archive.Entries.Count > 1000 || archive.Entries.Any(e => e.Length > totalLimit) ||
+            archive.Entries.Sum(e => e.Length) > totalLimit)
+            throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
         int imported = 0, dup = 0, invalid = 0;
+        long actualRead = 0;
         Directory.CreateDirectory(BackupDir);
         foreach (var entry in archive.Entries)
         {
@@ -112,10 +120,24 @@ public static partial class BackupService
                 continue;
             }
             string json;
+            byte[] bytes;
             try
             {
+                if (entry.Length > fileLimit) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
                 using var stream = entry.Open();
-                using var reader = new StreamReader(stream);
+                using var buffer = new MemoryStream();
+                var chunk = new byte[81920];
+                int read;
+                while ((read = stream.Read(chunk, 0, chunk.Length)) > 0)
+                {
+                    actualRead += read;
+                    if (buffer.Length + read > fileLimit || actualRead > totalLimit)
+                        throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
+                    buffer.Write(chunk, 0, read);
+                }
+                bytes = buffer.ToArray();
+                buffer.Position = 0;
+                using var reader = new StreamReader(buffer);
                 json = reader.ReadToEnd();
             }
             catch
@@ -126,7 +148,7 @@ public static partial class BackupService
             try
             {
                 var records = JsonSerializer.Deserialize<List<BackupRecord>>(json);
-                if (records is null || records.Count == 0)
+                if (records is null || records.Count == 0 || records.Count > 10000)
                     throw new InvalidOperationException("empty backup file");
                 foreach (var r in records)
                     ValidateRecord(r);
@@ -137,21 +159,23 @@ public static partial class BackupService
                 continue;
             }
             var target = Path.Combine(BackupDir, name);
+            var created = false;
             try
             {
-                using var stream = entry.Open();
                 using var outFile = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                stream.CopyTo(outFile);
+                created = true;
+                outFile.Write(bytes);
+                outFile.Flush(flushToDisk: true);
                 imported++;
             }
-            catch (IOException) when (File.Exists(target))
+            catch (IOException) when (!created && File.Exists(target))
             {
                 dup++;   // 罕见并发冲突视为重复
             }
             catch
             {
                 invalid++;
-                try { File.Delete(target); } catch { }
+                if (created) { try { File.Delete(target); } catch { } }
             }
         }
         return (imported, dup, invalid);

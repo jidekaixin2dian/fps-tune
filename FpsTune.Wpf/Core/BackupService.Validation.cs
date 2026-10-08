@@ -83,6 +83,15 @@ public static partial class BackupService
     private static void ValidateRegistryRecord(BackupRecord record)
     {
         EnsureRegistryFields(record);
+        if (record.Id == "nic-power-save-off")
+        {
+            EnsureRegistryShape(record, RegistryHive.LocalMachine, "PnPCapabilities", RegistryValueKind.DWord);
+            Reject(!Regex.IsMatch(record.Path,
+                @"^SYSTEM\\CurrentControlSet\\Control\\Class\\\{4d36e972-e325-11ce-bfc1-08002be10318\}\\\d{4}$",
+                RegexOptions.IgnoreCase), Str.T("Str.NicBackupTargetInvalid"));
+            EnsureNoSecondary(record);
+            return;
+        }
         if (record.Id == "gpu-pstate-lock")
         {
             EnsureRegistryShape(record, RegistryHive.LocalMachine, "DisableDynamicPstate", RegistryValueKind.DWord);
