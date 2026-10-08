@@ -881,6 +881,7 @@
     <s:String x:Key="Str.WallpaperFormat">请选择 PNG 或 JPEG 图片。</s:String>
     <s:String x:Key="Str.WallpaperIntro">用本地图片装点工作台。支持 PNG、JPEG，可调整透明度。</s:String>
     <s:String x:Key="Str.WallpaperOpacity">壁纸透明度</s:String>
+    <s:String x:Key="Str.WallpaperPreview">预览</s:String>
     <s:String x:Key="Str.WallpaperRemove">移除壁纸</s:String>
     <s:String x:Key="Str.WallpaperSaved">壁纸已保存</s:String>
     <s:String x:Key="Str.WallpaperShow">显示壁纸</s:String>

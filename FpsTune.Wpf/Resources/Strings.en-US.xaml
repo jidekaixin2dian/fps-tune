@@ -881,6 +881,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.WallpaperFormat">Choose a PNG or JPEG image.</s:String>
     <s:String x:Key="Str.WallpaperIntro">Choose a local PNG or JPEG for your workspace and adjust its opacity.</s:String>
     <s:String x:Key="Str.WallpaperOpacity">Wallpaper opacity</s:String>
+    <s:String x:Key="Str.WallpaperPreview">Preview</s:String>
     <s:String x:Key="Str.WallpaperRemove">Remove wallpaper</s:String>
     <s:String x:Key="Str.WallpaperSaved">Wallpaper saved</s:String>
     <s:String x:Key="Str.WallpaperShow">Show wallpaper</s:String>

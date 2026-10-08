@@ -3,6 +3,57 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
+        <Style x:Key="WallpaperSliderStyle" TargetType="Slider">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="IsMoveToPointEnabled" Value="True"/>
+            <Setter Property="IsSnapToTickEnabled" Value="True"/>
+            <Setter Property="TickFrequency" Value="0.01"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Background="Transparent">
+                            <Border x:Name="FocusRing" Margin="0,3" CornerRadius="10" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" Visibility="Collapsed"/>
+                            <Border Height="4" Margin="9,0" CornerRadius="2" Background="{DynamicResource BorderBrush}" VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track" Margin="3,0" Orientation="Horizontal"
+                                   Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" Focusable="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Grid Background="Transparent"><Border Height="4" CornerRadius="2" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/></Grid>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" Focusable="False">
+                                        <RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Width="20" Height="20" Focusable="False" Cursor="Hand">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="Handle" Margin="2" CornerRadius="8" Background="{DynamicResource ElevatedBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2"/>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Handle" Property="Background" Value="{DynamicResource AccentSoftBrush}"/></Trigger>
+                                                    <Trigger Property="IsDragging" Value="True"><Setter TargetName="Handle" Property="Background" Value="{DynamicResource AccentBrush}"/></Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="SettingsToggleStyle" TargetType="CheckBox" BasedOn="{StaticResource ToggleSwitchStyle}">
             <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
             <Setter Property="FontSize" Value="14"/>
@@ -87,11 +138,42 @@
                 <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.Wallpaper}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                    <WrapPanel Margin="0,14,0,8"><Button Content="{DynamicResource Str.WallpaperChoose}" Click="WallpaperChoose_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,8"/>
-                        <Button Content="{DynamicResource Str.WallpaperRemove}" Click="WallpaperRemove_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,0,8"/></WrapPanel>
-                    <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
-                    <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,12,0,4"/>
-                    <Slider x:Name="WallpaperOpacitySlider" Minimum="0.05" Maximum="0.35" Value="0.18" SmallChange="0.01" LargeChange="0.05" ValueChanged="WallpaperOpacity_Changed"/>
+                    <Grid Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border x:Name="WallpaperPreviewFrame" Width="176" Height="176" CornerRadius="16"
+                                Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <Grid>
+                                <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="15"
+                                        Opacity="{Binding ElementName=WallpaperOpacitySlider, Path=Value}"/>
+                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path Data="M 2,22 L 12,10 L 19,18 L 25,12 L 34,22 M 24,5 A 3,3 0 1 0 30,5 A 3,3 0 1 0 24,5"
+                                          Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.5" Width="36" Height="26" Stretch="Uniform" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Str.WallpaperChoose}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                                </StackPanel>
+                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" Padding="7,3" CornerRadius="5" Background="{DynamicResource ElevatedBrush}">
+                                    <TextBlock Text="{DynamicResource Str.WallpaperPreview}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="24,0,0,0" Width="300" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
+                            <Grid Margin="0,14,0,0">
+                                <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <Border HorizontalAlignment="Right" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
+                                    <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="SemiBold"/>
+                                </Border>
+                            </Grid>
+                            <Slider x:Name="WallpaperOpacitySlider" Style="{StaticResource WallpaperSliderStyle}" Margin="0,4,0,0"
+                                    AutomationProperties.Name="{DynamicResource Str.WallpaperOpacity}"
+                                    Minimum="0.05" Maximum="0.35" Value="0.18" SmallChange="0.01" LargeChange="0.05" ValueChanged="WallpaperOpacity_Changed"/>
+                            <Grid Margin="4,-2,4,12"><TextBlock Text="5%" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                                <TextBlock Text="35%" HorizontalAlignment="Right" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/></Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{DynamicResource Str.WallpaperChoose}" Click="WallpaperChoose_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
+                                <Button Content="{DynamicResource Str.WallpaperRemove}" Click="WallpaperRemove_Click" Style="{StaticResource GhostButtonStyle}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
                     <TextBlock x:Name="WallpaperStatus" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
                 </StackPanel></Border>
             </StackPanel></ScrollViewer>

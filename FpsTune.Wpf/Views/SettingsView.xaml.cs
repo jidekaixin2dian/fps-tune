@@ -86,6 +86,7 @@ public partial class SettingsView : UserControl
             SettingsService.Save(SettingsService.Current);
             _suppressUiEvents = true; WallpaperEnabledCheck.IsChecked = true; _suppressUiEvents = false;
             (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+            RefreshWallpaperPreview();
             WallpaperStatus.Text = Str.T("Str.WallpaperSaved");
         }
         catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
@@ -101,6 +102,7 @@ public partial class SettingsView : UserControl
             SettingsService.Save(SettingsService.Current);
             _suppressUiEvents = true; WallpaperEnabledCheck.IsChecked = false; _suppressUiEvents = false;
             (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+            RefreshWallpaperPreview();
             WallpaperStatus.Text = "";
         }
         catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
@@ -127,6 +129,23 @@ public partial class SettingsView : UserControl
         catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
 
+    private void RefreshWallpaperPreview()
+    {
+        try
+        {
+            var image = WallpaperService.Load();
+            WallpaperPreviewImage.Background = image is null ? null : new System.Windows.Media.ImageBrush(image)
+                { Stretch = System.Windows.Media.Stretch.UniformToFill };
+            WallpaperPreviewPlaceholder.Visibility = image is null ? Visibility.Visible : Visibility.Collapsed;
+        }
+        catch (Exception ex)
+        {
+            WallpaperPreviewImage.Background = null;
+            WallpaperPreviewPlaceholder.Visibility = Visibility.Visible;
+            WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message);
+        }
+    }
+
     internal void RefreshDisplayMode()
     {
         _suppressUiEvents = true;
@@ -149,6 +168,7 @@ public partial class SettingsView : UserControl
         _suppressUiEvents = true;
         WallpaperEnabledCheck.IsChecked = s.WallpaperEnabled;
         WallpaperOpacitySlider.Value = WallpaperService.NormalizeOpacity(s.WallpaperOpacity);
+        RefreshWallpaperPreview();
         _wallpaperReady = true;
 
         if (s.ThemeMode == "light")
