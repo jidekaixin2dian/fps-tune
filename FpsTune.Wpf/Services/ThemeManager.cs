@@ -42,13 +42,14 @@ public static class ThemeManager
         var t = resolved == "light" ? LightPalette : DarkPalette;
 
         SetBrush("AppBackgroundBrush", t.AppBackground);
-        SetBrush("ConsoleBackgroundBrush", Parse(resolved == "light" ? "#F7F9FC" : "#07090B"));
+        SetBrush("ConsoleBackgroundBrush", Parse(resolved == "light" ? "#F7F9FC" : "#0C1015"));
         // 控制台风格：镀铬层（标题栏/页签栏）高通透，渐变底从所有区域透上来；
         // 内容表面保留足够不透明度保证文字可读。
         SetBrush("SidebarBackgroundBrush", WithAlpha(t.Sidebar, resolved == "light" ? (byte)0x7A : (byte)0x52));
         SetBrush("SurfaceBrush", WithAlpha(t.Surface, resolved == "light" ? (byte)0xE8 : (byte)0xC4));
         SetBrush("SurfaceAltBrush", WithAlpha(t.SurfaceAlt, resolved == "light" ? (byte)0xEC : (byte)0xCC));
         SetBrush("ElevatedBrush", WithAlpha(t.Elevated, resolved == "light" ? (byte)0xF0 : (byte)0xD8));
+        SetBrush("NotificationBackgroundBrush", t.Elevated);
         SetBrush("InputBackgroundBrush", WithAlpha(t.Input, resolved == "light" ? (byte)0xEA : (byte)0xCC));
         SetBrush("BorderBrush", t.Border);
         SetBrush("BorderHoverBrush", t.BorderHover);
@@ -66,6 +67,18 @@ public static class ThemeManager
         SetBrush("DangerBrush", t.Danger);
         SetBrush("WarningBrush", t.Warning);
         SetBrush("OkBrush", t.Ok);
+        var studio = SettingsService.Current.OverviewMode != "console";
+        if (studio)
+        {
+            var accent = Parse(resolved == "light" ? "#426E2F" : "#B8DD8D");
+            SetBrush("AccentBrush", accent);
+            SetBrush("PrimaryBrush", accent);
+            SetBrush("PrimaryHoverBrush", Parse(resolved == "light" ? "#355826" : "#CBE9A8"));
+            SetBrush("OnPrimaryBrush", Parse(resolved == "light" ? "#FFFFFF" : "#172113"));
+            SetBrush("AccentSoftBrush", WithAlpha(accent, 0x20));
+        }
+        Application.Current.Resources["RadiusCard"] = new CornerRadius(studio ? 12 : 6);
+        Application.Current.Resources["RadiusControl"] = new CornerRadius(studio ? 8 : 5);
         Application.Current.Resources["PrimaryColor"] = t.Primary;
         Application.Current.Resources["AccentColor"] = t.Accent;
         ApplyBackdrop(resolved);
@@ -81,7 +94,7 @@ public static class ThemeManager
 
         // 纯平风格（用户决策）：去掉渐变底，窗口层与页面层用同一颜色，
         // 透明页与不透明页在任何主题下观感完全一致。
-        var backdrop = new SolidColorBrush(Parse(resolved == "light" ? "#F7F9FC" : "#07090B"));
+        var backdrop = new SolidColorBrush(Parse(resolved == "light" ? "#F7F9FC" : "#0C1015"));
         backdrop.Freeze();
 
         // 控制台风格无投影：平面 + 发丝分割线；保留资源键，低配与否都置空
@@ -179,8 +192,8 @@ public static class ThemeManager
 
     // 控制台配色：近黑底 · 电光青动作 · 蓝色数据；文字三级灰阶
     private static readonly Palette DarkPalette = new(
-        "#05070A", "#05070A", "#0A0E14", "#0E141C", "#131B25", "#080B10",
-        "#1B2431", "#2E3D52", "#2A3648", "#E8EEF5", "#9AA7BA", "#66738A",
+        "#0C1015", "#0C1015", "#11171E", "#17202A", "#1B2632", "#0E141B",
+        "#293443", "#43546A", "#2A3648", "#E8EEF5", "#ABB8C9", "#8896A8",
         "#3B82F6", "#67E8F9", "#062A30", "#22D3EE", "#F87171", "#F2B75C", "#34D399");
 
     private static readonly Palette LightPalette = new(

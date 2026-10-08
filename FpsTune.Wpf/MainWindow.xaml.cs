@@ -14,13 +14,46 @@ namespace FpsTune.Wpf;
 public partial class MainWindow : Window
 {
     private readonly CancellationTokenSource _updateLifetime = new();
-    private UpdateCardWindow? _updateCard;
+    private UpdateCard? _updateCard;
+    private GuideCard? _guideCard;
     internal void ShowUpdateCard(UpdateInfo info)
     {
-        if (_updateCard is not null) { _updateCard.Activate(); return; }
-        _updateCard = new UpdateCardWindow(info) { Owner = this };
-        _updateCard.Closed += (_, _) => _updateCard = null;
-        _updateCard.Show();
+        if (_updateCard is not null) { _updateCard.Notification.SetExpanded(true); return; }
+        _updateCard = new UpdateCard(info);
+        var card = _updateCard;
+        card.Notification.Expanded += (_, _) => _guideCard?.Notification.SetExpanded(false);
+        card.Notification.CloseRequested += (_, _) =>
+        {
+            card.Cancel();
+            NotificationStack.Children.Remove(card);
+            _updateCard = null;
+            RefreshNotificationArea();
+        };
+        _guideCard?.Notification.SetExpanded(false);
+        NotificationStack.Children.Add(card);
+        RefreshNotificationArea();
+    }
+
+    private void RefreshNotificationArea() => NotificationArea.Visibility = NotificationStack.Children.Count == 0
+        ? Visibility.Collapsed : Visibility.Visible;
+
+    internal void ShowGuideCard(bool feedback)
+    {
+        if (_guideCard is null)
+        {
+            _guideCard = new GuideCard(NavigateTo) { Margin = new Thickness(0, 0, 0, 8) };
+            var card = _guideCard;
+            card.Notification.Expanded += (_, _) => _updateCard?.Notification.SetExpanded(false);
+            card.Notification.CloseRequested += (_, _) =>
+            {
+                NotificationStack.Children.Remove(card);
+                _guideCard = null;
+                RefreshNotificationArea();
+            };
+            NotificationStack.Children.Insert(0, card);
+        }
+        _guideCard.ShowSection(feedback);
+        RefreshNotificationArea();
     }
     private async Task CheckStartupUpdateAsync()
     {
@@ -74,8 +107,7 @@ public partial class MainWindow : Window
 
         _pageFactories = new Dictionary<string, Func<UserControl>>
         {
-            ["home"] = () => new HomeView(),
-            ["console"] = () => new ConsoleView(),
+            ["home"] = () => new ConsoleView(),
             ["detect"] = () => new DetectView(),
             ["opt"] = () => new OptimizeView(),
             ["display"] = () => new DisplayQualityView(),
@@ -92,7 +124,7 @@ public partial class MainWindow : Window
         _pageSlide.X = 0;
         PageHost.Content = GetPage("home");
         // 托盘图标随应用启动常驻(与最小化设置无关); 设置只控制最小化行为
-        TrayService.EnsureCreated();
+        if (UserDataPaths.RootOverride is null) TrayService.EnsureCreated();
 
         // 版本号唯一来源：程序集（编译自 Directory.Build.props）
         var ver = "v" + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0");
@@ -118,11 +150,12 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _updateLifetime.Cancel();
+            _updateCard?.Cancel();
             TrayService.Dispose();
             if (_hwndSource is not null)
                 UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
         };
-        Loaded += (_, _) => { _ = CheckStartupUpdateAsync(); };
+        Loaded += (_, _) => { if (UserDataPaths.RootOverride is null) _ = CheckStartupUpdateAsync(); };
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -133,7 +166,7 @@ public partial class MainWindow : Window
         var pref = DWMWCP_ROUND;
         DwmSetWindowAttribute(_hwndSource!.Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref pref, sizeof(int));
 
-        ApplyHotkeyRegistration();
+        if (UserDataPaths.RootOverride is null) ApplyHotkeyRegistration();
     }
 
     [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
@@ -207,7 +240,6 @@ public partial class MainWindow : Window
 
     private UserControl GetPage(string key)
     {
-        if (key == "home" && SettingsService.Current.OverviewMode != "classic") key = "console";
         if (!_pageCache.TryGetValue(key, out var page))
         {
             page = _pageFactories[key]();
@@ -225,21 +257,31 @@ public partial class MainWindow : Window
 
     private void UpdateOverviewModeLabel()
     {
-        var classic = SettingsService.Current.OverviewMode == "classic";
-        OverviewModeButton.Content = classic ? Str.T("Str.SwitchConsole") : Str.T("Str.ClassicMode");
-        TitleBar.SetResourceReference(Panel.BackgroundProperty, classic ? "SidebarBackgroundBrush" : "ConsoleBackgroundBrush");
-        TabBar.SetResourceReference(Panel.BackgroundProperty, classic ? "SidebarBackgroundBrush" : "ConsoleBackgroundBrush");
+        var studio = SettingsService.Current.OverviewMode != "console";
+        OverviewModeButton.Content = Str.T(studio ? "Str.CompactConsole" : "Str.Workspace");
+        NavigationColumn.Width = new GridLength(studio ? 180 : 0);
+        NavigationRow.Height = new GridLength(studio ? 0 : 50);
+        Grid.SetRowSpan(TabBar, studio ? 2 : 1);
+        Grid.SetColumnSpan(TabBar, studio ? 1 : 2);
+        Grid.SetRow(PageHost, studio ? 1 : 2);
+        Grid.SetRowSpan(PageHost, studio ? 2 : 1);
+        NavigationStack.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
+        NavigationStack.Margin = new Thickness(12, studio ? 0 : 6, 12, 0);
+        NavigationHeading.Visibility = NavigationFooter.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var nav in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavSettings })
+            nav.SetResourceReference(StyleProperty, studio ? "StudioNavStyle" : typeof(Views.Controls.NavButton));
     }
 
     private void OverviewMode_Click(object sender, RoutedEventArgs e)
-    => SetDisplayMode(SettingsService.Current.OverviewMode == "classic" ? "console" : "classic");
+    => SetDisplayMode(SettingsService.Current.OverviewMode == "console" ? "studio" : "console");
 
     internal void SetDisplayMode(string mode)
     {
-        SettingsService.Current.OverviewMode = mode == "classic" ? "classic" : "console";
+        SettingsService.Current.OverviewMode = mode == "console" ? "console" : "studio";
         try { SettingsService.Save(SettingsService.Current); }
         catch (Exception ex) { DialogService.Warning("界面模式", "本次切换已生效，但无法保存偏好：" + ex.Message); }
         UpdateOverviewModeLabel();
+        ThemeManager.SetMode(SettingsService.Current.ThemeMode);
         if (NavHome.IsChecked == true) SwitchPage(GetPage("home"));
         if (_pageCache.TryGetValue("settings", out var settings) && settings is SettingsView settingsView) settingsView.RefreshDisplayMode();
     }
@@ -397,6 +439,7 @@ public partial class MainWindow : Window
             case "home": NavHome.IsChecked = true; break;
             case "detect": NavDetect.IsChecked = true; break;
             case "opt": NavOpt.IsChecked = true; break;
+            case "display": NavDisplay.IsChecked = true; break;
             case "session": NavSession.IsChecked = true; break;
             case "ab": NavAb.IsChecked = true; break;
             case "backup": NavBackup.IsChecked = true; break;
@@ -406,8 +449,10 @@ public partial class MainWindow : Window
 
     public void RefreshHomeContacts()
     {
-        if (GetPage("home") is HomeView home)
-            home.RefreshContacts();
+        // Legacy contact fields remain readable; community feedback is now a global entry.
     }
+
+    private void Guide_Click(object sender, RoutedEventArgs e) => ShowGuideCard(false);
+    private void Feedback_Click(object sender, RoutedEventArgs e) => ShowGuideCard(true);
 
 }

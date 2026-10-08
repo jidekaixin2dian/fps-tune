@@ -1,4 +1,5 @@
 using System.IO;
+using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
@@ -67,6 +68,11 @@ public static class GameContextService
             .OrderBy(g => g.Name, StringComparer.OrdinalIgnoreCase)
             .Select(g => new GameSwitcherItem(g.Name, g.Id, g.ExePath))
             .ToList();
+        // Read-only detection can discover an executable before it has a saved profile.
+        // Keep that current target visible instead of showing an empty selection.
+        if (!string.IsNullOrWhiteSpace(AppState.GamePath) && File.Exists(AppState.GamePath) &&
+            !items.Any(item => string.Equals(item.ExePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)))
+            items.Insert(0, new GameSwitcherItem(GamePathService.LabelFor(AppState.GamePath), "detected", AppState.GamePath));
         items.Add(new GameSwitcherItem(Str.T("Str.GameSwitcherAdd"), null, null));
         return items;
     }

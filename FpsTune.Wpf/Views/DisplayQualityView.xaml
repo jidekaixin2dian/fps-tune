@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FpsTune.Wpf.Views.DisplayQualityView"
+<UserControl x:Class="FpsTune.Wpf.Views.DisplayQualityView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
@@ -42,7 +42,7 @@
             <Setter Property="MinHeight" Value="34"/>
             <Setter Property="Margin" Value="0,0,8,6"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Focusable" Value="True"/>
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
                 <Border x:Name="Tab" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="4" Padding="14,6">
                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -144,7 +144,7 @@
             <!-- 页头：左标题说明，右当前游戏（DLSS / 驱动 3D 共用的上下文） -->
             <Grid Margin="0,0,0,14">
                 <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.DisplayTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DisplayTitle}" Style="{StaticResource PageTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.DisplayIntro}"
                                Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
                 </StackPanel>

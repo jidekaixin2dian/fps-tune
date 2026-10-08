@@ -13,7 +13,6 @@
     <s:String x:Key="Str.NavSettings">Settings</s:String>
 
     <!-- Window chrome -->
-    <s:String x:Key="Str.ClassicMode">Classic UI</s:String>
     <s:String x:Key="Str.Minimize">Minimize</s:String>
     <s:String x:Key="Str.Maximize">Maximize or restore</s:String>
     <s:String x:Key="Str.Close">Close</s:String>
@@ -49,13 +48,13 @@
 
     <!-- Display & quality -->
     <s:String x:Key="Str.DisplayTitle">Display &amp; Quality</s:String>
-    <s:String x:Key="Str.DisplayIntro">Per-game driver quality settings: never touches game files; one-click restore</s:String>
+    <s:String x:Key="Str.DisplayIntro">Per-game driver quality settings; backups and external changes are checked before restoring.</s:String>
     <s:String x:Key="Str.DlssCard">DLSS SR model override (NVIDIA RTX only)</s:String>
     <s:String x:Key="Str.VibCard">Digital vibrance (NVIDIA · full screen)</s:String>
     <s:String x:Key="Str.IccCard">ICC filter (OS · primary display)</s:String>
     <s:String x:Key="Str.DrsCard">Driver 3D settings (per game · NVIDIA)</s:String>
     <s:String x:Key="Str.ApplyOverride">Apply override</s:String>
-    <s:String x:Key="Str.RestoreDefault">Restore default</s:String>
+    <s:String x:Key="Str.RestoreDefault">Restore tool changes</s:String>
     <s:String x:Key="Str.Apply">Apply</s:String>
     <s:String x:Key="Str.RestoreOriginal">Restore original</s:String>
     <s:String x:Key="Str.ApplyPreset">Apply preset</s:String>
@@ -212,16 +211,15 @@
     <s:String x:Key="Str.TipDisplayMode">Switches the overview page display mode; your choice is remembered</s:String>
     <s:String x:Key="Str.SettingsIntro">Pick a category to adjust. Settings are saved automatically.</s:String>
     <s:String x:Key="Str.ThemeDarkShort">Dark</s:String>
-    <s:String x:Key="Str.ThemeDarkDesc">Near-black background · cyan accent</s:String>
+    <s:String x:Key="Str.ThemeDarkDesc">Dark surfaces · clear contrast</s:String>
     <s:String x:Key="Str.ThemeLightShort">Light</s:String>
     <s:String x:Key="Str.ThemeLightDesc">Bright paper · easy reading</s:String>
     <s:String x:Key="Str.ThemeSystemShort">Follow system</s:String>
     <s:String x:Key="Str.ThemeSystemDesc">Follows the Windows appearance automatically</s:String>
     <s:String x:Key="Str.LowSpecMode">Low-spec mode (fewer animations, live sampling every 3 s)</s:String>
     <s:String x:Key="Str.DisplayMode">Interface mode</s:String>
-    <s:String x:Key="Str.DisplayModeDesc">Switches the overview layout: the compact console is a one-page action list; the classic overview uses module cards and charts.</s:String>
+    <s:String x:Key="Str.DisplayModeDesc">Workspace uses side navigation for step-by-step work; Console uses top navigation for compact review. Both layouts provide the same features.</s:String>
     <s:String x:Key="Str.CompactConsole">Compact console</s:String>
-    <s:String x:Key="Str.ClassicOverview">Classic overview</s:String>
     <s:String x:Key="Str.SectionStartup">Startup</s:String>
     <s:String x:Key="Str.AutoStart">Run FPS Tune automatically after signing in to Windows (current user)</s:String>
     <s:String x:Key="Str.SectionTray">Tray and notifications</s:String>
@@ -275,7 +273,7 @@
     <s:String x:Key="Str.PresetJDesc">New-generation model · earlier version</s:String>
     <s:String x:Key="Str.PresetE">E preset</s:String>
     <s:String x:Key="Str.PresetEDesc">Previous-generation CNN model · retro image quality</s:String>
-    <s:String x:Key="Str.DlssNote">Note: the override is written to a driver profile this tool creates, and deleting it restores everything. Profiles you or NVIDIA App created are never touched. You have to get in game to judge the visual difference.</s:String>
+    <s:String x:Key="Str.DlssNote">Only settings actually written by this tool are backed up. Restore checks current values and preserves external changes and unrelated settings. Follow in-game restores all managed settings for this game. Check model support and visual effects in the game.</s:String>
     <s:String x:Key="Str.VibNote">Applies to the whole screen (desktop, browser and games all become more vivid), not just in game. Streamers commonly use 70–80%.</s:String>
     <s:String x:Key="Str.VibNote2">Note: the current level is remembered before any change, and Restore original brings it back in one click. Independent of the ICC filter, and the two can be combined. If colour accuracy matters to you, use a lower level or keep the default.</s:String>
     <s:String x:Key="Str.VibRecommendedSet">Recommended 55–60%</s:String>
@@ -385,7 +383,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ApplyIcc">Apply ICC filter</s:String>
     <s:String x:Key="Str.ApplyDrsFull">Apply driver 3D settings</s:String>
     <s:String x:Key="Str.RestartAsAdminShort">Restart as administrator</s:String>
-    <s:String x:Key="Str.SwitchConsole">Switch to console UI</s:String>
     <s:String x:Key="Str.DetectAndOptimize">Detect and optimize</s:String>
     <s:String x:Key="Str.RefreshDetect">Refresh detection</s:String>
     <s:String x:Key="Str.UpdateNow">Update now</s:String>
@@ -839,4 +836,30 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ThirdPartyNotices">Third-party notices</s:String>
     <s:String x:Key="Str.Licenses">Licenses</s:String>
     <s:String x:Key="Str.LicenseTitle">Licenses and third-party notices</s:String>
+    <s:String x:Key="Str.Workspace">Workspace</s:String>
+    <s:String x:Key="Str.Guide">Getting started</s:String>
+    <s:String x:Key="Str.Feedback">Community &amp; feedback</s:String>
+    <s:String x:Key="Str.GuideIntro">Choose a game → Detect → Adjust → Measure</s:String>
+    <s:String x:Key="Str.GoToStep">Open page</s:String>
+    <s:String x:Key="Str.CommunityTitle">FPS Tune developer community</s:String>
+    <s:String x:Key="Str.CommunityIntro">Share usage experiences, report problems, suggest features and discuss other open-source projects.</s:String>
+    <s:String x:Key="Str.CopyGroup">Copy QQ group number</s:String>
+    <s:String x:Key="Str.GroupCopied">Copied group number 659528489</s:String>
+    <s:String x:Key="Str.FeedbackDetails">Include the app version, GPU and driver, steps and the issue you encountered.</s:String>
+    <s:String x:Key="Str.CommunitySafety">Keep security vulnerability details and private information out of the group chat.</s:String>
+    <s:String x:Key="Str.GuideStep1">Choose the game executable</s:String>
+    <s:String x:Key="Str.GuideBody1">Select the game&apos;s main EXE on Overview, such as the game client in its installation folder.</s:String>
+    <s:String x:Key="Str.GuideStep2">Detect current settings</s:String>
+    <s:String x:Key="Str.GuideBody2">Run detection to view current settings and suggestions. Expand an item to learn what it does.</s:String>
+    <s:String x:Key="Str.GuideStep3">Review before applying</s:String>
+    <s:String x:Key="Str.GuideBody3">Choose a few items at a time, review their effects and side effects, then apply the selection. Follow the elevation prompt when needed.</s:String>
+    <s:String x:Key="Str.GuideStep4">Record the same scenario</s:String>
+    <s:String x:Key="Str.GuideBody4">Connect PresentMon and keep graphics settings, scene and sampling duration consistent when measuring before and after.</s:String>
+    <s:String x:Key="Str.GuideStep5">Decide with an A/B comparison</s:String>
+    <s:String x:Key="Str.GuideBody5">Compare average FPS, 1% low and frame time across several runs. Consider stuttering and stability before keeping a setting.</s:String>
+    <s:String x:Key="Str.GuideStep6">Review recovery scope</s:String>
+    <s:String x:Key="Str.GuideBody6">Review saved settings in Backup and logs and choose the records to restore. Follow the record&apos;s guidance if a conflict appears.</s:String>
+    <s:String x:Key="Str.PreviousStep">Previous</s:String>
+    <s:String x:Key="Str.NextStep">Next</s:String>
+    <s:String x:Key="Str.FinishGuide">Done</s:String>
 </ResourceDictionary>

@@ -1,157 +1,61 @@
-﻿<Window x:Class="FpsTune.Wpf.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
-
-        Icon="Assets/app.ico"
-        Width="1200" Height="780"
-        MinWidth="1080" MinHeight="680"
-        WindowStartupLocation="CenterScreen"
-        Title="{DynamicResource Str.AppName}"
-        SourceInitialized="OnSourceInitialized"
-        WindowStyle="SingleBorderWindow"
-        ResizeMode="CanResize"
-        Background="{DynamicResource AppBackdropBrush}"
-        AllowsTransparency="False"
-        FontFamily="{StaticResource FontBody}"
-        TextOptions.TextFormattingMode="Display"
-        TextOptions.TextRenderingMode="ClearType"
-        UseLayoutRounding="True"
-        SnapsToDevicePixels="True"
-        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
+<Window x:Class="FpsTune.Wpf.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
+    xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+    Icon="Assets/app.ico" Width="1360" Height="860" MinWidth="1180" MinHeight="720"
+    Title="{DynamicResource Str.AppName}" WindowStartupLocation="CenterScreen"
+    SourceInitialized="OnSourceInitialized" ResizeMode="CanResize" AllowsTransparency="False"
+    Background="{DynamicResource AppBackdropBrush}" FontFamily="{StaticResource FontBody}"
+    TextOptions.TextFormattingMode="Display" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="52"
-                            GlassFrameThickness="0"
-                            CornerRadius="0"
-                            ResizeBorderThickness="7"
-                            UseAeroCaptionButtons="False"/>
+        <shell:WindowChrome CaptionHeight="58" GlassFrameThickness="0" ResizeBorderThickness="7" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
-    <Border x:Name="ChromeRoot"
-            Background="{DynamicResource AppBackdropBrush}"
-            BorderBrush="{DynamicResource WindowBorderBrush}"
-            >
-        <Border.Style>
-            <Style TargetType="Border">
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
-                        <Setter Property="CornerRadius" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Padding" Value="{x:Static SystemParameters.WindowResizeBorderThickness}"/>
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </Border.Style>
+    <Border x:Name="ChromeRoot" Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1" CornerRadius="8">
         <Grid x:Name="ChromeGrid">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="52"/>
-                <RowDefinition Height="38"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- 极光层已按产品决策整体移除：常驻全窗渐变动画的合成开销不再值得，背景只留主题渐变底 -->
-
-            <!-- 标题栏：品牌 + 状态 + 窗口按钮 -->
-            <Grid x:Name="TitleBar" Grid.Row="0"
-                  Background="{DynamicResource SidebarBackgroundBrush}">
-                <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-                    <Image Source="/Assets/app-icon.png" Width="40" Height="40" RenderOptions.BitmapScalingMode="HighQuality" AutomationProperties.Name="{DynamicResource Str.AppNameShort}"/>
-                    <TextBlock Text="{DynamicResource Str.AppNameShort}"
-                               Margin="8,0,0,0"
-                               FontSize="19" FontWeight="SemiBold"
-                               FontFamily="{StaticResource FontBody}"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
-                               VerticalAlignment="Center"/>
-                    <TextBlock Text="FPS" FontFamily="{StaticResource FontMono}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="10,3,0,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TitleVersionText"
-                               Text="v1.0.1"
-                               Margin="16,3,0,0"
-                               FontSize="11"
-                               FontFamily="{StaticResource FontMono}"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               VerticalAlignment="Center"/>
+            <Grid.ColumnDefinitions><ColumnDefinition x:Name="NavigationColumn" Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition Height="58"/><RowDefinition x:Name="NavigationRow" Height="0"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Grid x:Name="TitleBar" Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <Image Source="/Assets/app-icon.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="{DynamicResource Str.AppNameShort}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TitleVersionText" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                    <TextBlock x:Name="AdminStatusText" VerticalAlignment="Center" Margin="0,0,18,0" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <Button x:Name="OverviewModeButton" Content="{DynamicResource Str.ClassicMode}" Click="OverviewMode_Click"
-                            Style="{StaticResource PrimaryButtonStyle}" FontFamily="{StaticResource FontBody}" FontSize="13" MinWidth="136" Height="32" Padding="18,2" Margin="0,0,16,0"
-                            ToolTip="{DynamicResource Str.TipDisplayMode}"/>
-                    <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click"
-                            Width="44" Height="32" ToolTip="{DynamicResource Str.Minimize}" AutomationProperties.Name="{DynamicResource Str.Minimize}" Style="{StaticResource CaptionButtonStyle}">
-                        <Path Data="M0 0 H10" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"/>
-                    </Button>
-                    <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click"
-                            Width="44" Height="32" ToolTip="{DynamicResource Str.Maximize}" AutomationProperties.Name="{DynamicResource Str.Maximize}" Style="{StaticResource CaptionButtonStyle}">
-                        <Path Data="M0.5 0.5 H8.5 V8.5 H0.5 Z" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1"
-                              StrokeLineJoin="Round" Fill="Transparent"/>
-                    </Button>
-                    <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click"
-                            Width="44" Height="32" ToolTip="{DynamicResource Str.Close}" AutomationProperties.Name="{DynamicResource Str.Close}" Style="{StaticResource CaptionCloseButtonStyle}">
-                        <Path Data="M0 0 L8 8 M8 0 L0 8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.2"
-                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                    </Button>
+                    <TextBlock x:Name="AdminStatusText" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <Button Content="{DynamicResource Str.Guide}" Click="Guide_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,6,0"/>
+                    <Button Content="{DynamicResource Str.Feedback}" Click="Feedback_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0"/>
+                    <Button x:Name="OverviewModeButton" Click="OverviewMode_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,12,0" ToolTip="{DynamicResource Str.TipDisplayMode}"/>
+                    <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click" Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}" ToolTip="{DynamicResource Str.Minimize}" AutomationProperties.Name="{DynamicResource Str.Minimize}"><Path Data="M0 0 H10" Stroke="{DynamicResource TextSecondaryBrush}"/></Button>
+                    <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click" Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}" ToolTip="{DynamicResource Str.Maximize}" AutomationProperties.Name="{DynamicResource Str.Maximize}"><Path Data="M0 0 H9 V9 H0 Z" Stroke="{DynamicResource TextSecondaryBrush}" Fill="Transparent"/></Button>
+                    <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click" Width="44" Height="32" Style="{StaticResource CaptionCloseButtonStyle}" ToolTip="{DynamicResource Str.Close}" AutomationProperties.Name="{DynamicResource Str.Close}"><Path Data="M0 0 L9 9 M9 0 L0 9" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.4"/></Button>
                 </StackPanel>
             </Grid>
-
-            <!-- 页签栏：中文页签 + 底部指示线 -->
-            <Grid x:Name="TabBar" Grid.Row="1"
-                  Background="{DynamicResource SidebarBackgroundBrush}">
-                <Border BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="0,0,0,1">
-                    <StackPanel Orientation="Horizontal" Margin="8,0,8,0" VerticalAlignment="Bottom">
-                        <controls:NavButton x:Name="NavHome"
-                                            Tag="home"
-                                            Text="{DynamicResource Str.NavHome}"
-                                            IsChecked="True"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavDetect"
-                                            Tag="detect"
-                                            Text="{DynamicResource Str.NavDetect}"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavOpt"
-                                            Tag="opt"
-                                            Text="{DynamicResource Str.NavOpt}"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavDisplay"
-                                            Tag="display"
-                                            Text="{DynamicResource Str.NavDisplay}"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavSession"
-                                            Tag="session"
-                                            Text="{DynamicResource Str.NavSession}"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavAb"
-                                            Tag="ab"
-                                            Text="{DynamicResource Str.NavAb}"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavBackup"
-                                            Tag="backup"
-                                            Text="{DynamicResource Str.NavBackup}"
-                                            Checked="Nav_Checked"/>
-                        <controls:NavButton x:Name="NavSettings"
-                                            Tag="settings"
-                                            Text="{DynamicResource Str.NavSettings}"
-                                            Checked="Nav_Checked"/>
-                    </StackPanel>
-                </Border>
-                <TextBlock x:Name="SidebarVersionText"
-                           Visibility="Collapsed"
-                           Text="v1.0.1"
-                           Margin="0,0,14,0"
-                           FontSize="11"
-                           FontFamily="{StaticResource FontMono}"
-                           Foreground="{DynamicResource TextMutedBrush}"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"/>
+            <Grid x:Name="TabBar" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <TextBlock x:Name="NavigationHeading" Text="{DynamicResource Str.Workspace}" Margin="24,24,0,16" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                <StackPanel x:Name="NavigationStack" Grid.Row="1" Margin="12,0,12,0">
+                    <controls:NavButton x:Name="NavHome" Tag="home" Text="{DynamicResource Str.NavHome}" IsChecked="True" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavDetect" Tag="detect" Text="{DynamicResource Str.NavDetect}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavDisplay" Tag="display" Text="{DynamicResource Str.NavDisplay}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavSession" Tag="session" Text="{DynamicResource Str.NavSession}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavAb" Tag="ab" Text="{DynamicResource Str.NavAb}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Checked="Nav_Checked"/>
+                </StackPanel>
+                <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">
+                    <TextBlock Text="FPS TUNE" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                    <TextBlock x:Name="SidebarVersionText" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" Margin="0,5,0,0"/>
+                </StackPanel>
             </Grid>
-
-            <!-- 内容 -->
-            <ContentControl x:Name="PageHost"
-                            Grid.Row="2"
-                            Margin="0"
-                            Focusable="False"/>
+            <ContentControl x:Name="PageHost" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Focusable="False"/>
+            <ScrollViewer x:Name="NotificationArea" Grid.Row="2" Grid.Column="1" Panel.ZIndex="100"
+                          Width="440" Margin="20" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                          Visibility="Collapsed">
+                <StackPanel x:Name="NotificationStack"/>
+            </ScrollViewer>
         </Grid>
     </Border>
 </Window>

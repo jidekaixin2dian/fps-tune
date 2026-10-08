@@ -53,6 +53,23 @@ public sealed class GameContextStoreTests : IDisposable
     }
 
     [Fact]
+    public void Read_only_discovered_target_is_visible_without_creating_a_saved_profile()
+    {
+        var previous = AppState.GamePath;
+        var executable = Path.Combine(_dir, "discovered.exe");
+        File.WriteAllText(executable, "not executed");
+        try
+        {
+            AppState.GamePath = executable;
+            var items = GameContextService.BuildSwitcherItems();
+            Assert.Equal(executable, GameContextService.SelectedItem(items)?.ExePath);
+            Assert.Empty(StateStore.LoadGames());
+            Assert.Equal(2, items.Count); // Current discovery plus the explicit add entry.
+        }
+        finally { AppState.GamePath = previous; }
+    }
+
+    [Fact]
     public void Startup_restores_saved_selection_without_loading_stale_detection()
     {
         var profile = StateStore.AddGame(@"C:\Games\Saved.exe");

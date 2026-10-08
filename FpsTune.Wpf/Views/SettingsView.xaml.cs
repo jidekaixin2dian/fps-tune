@@ -74,8 +74,8 @@ public partial class SettingsView : UserControl
     internal void RefreshDisplayMode()
     {
         _suppressUiEvents = true;
-        ConsoleModeRadio.IsChecked = SettingsService.Current.OverviewMode != "classic";
-        ClassicModeRadio.IsChecked = SettingsService.Current.OverviewMode == "classic";
+        ConsoleModeRadio.IsChecked = SettingsService.Current.OverviewMode == "console";
+        StudioModeRadio.IsChecked = SettingsService.Current.OverviewMode != "console";
         _suppressUiEvents = false;
     }
 

@@ -1,29 +1,25 @@
 using System.Windows;
+using System.Windows.Controls;
 using FpsTune.Wpf.Services;
+using FpsTune.Wpf.Views.Controls;
 
 namespace FpsTune.Wpf.Views;
 
-public partial class UpdateCardWindow : Window
+public partial class UpdateCard : UserControl
 {
     private readonly UpdateInfo _info;
     private readonly CancellationTokenSource _lifetime = new();
-    private bool _collapsed;
-    public UpdateCardWindow(UpdateInfo info)
+    public NotificationCard Notification => Card;
+    public UpdateCard(UpdateInfo info)
     {
         InitializeComponent();
         _info = info;
-        VersionText.Text = $"{UpdateService.DisplayVersion} → {info.ReleaseTag ?? info.Version}";
+        Card.SetHeader(Str.T("Str.UpdateAvailable"), $"{UpdateService.DisplayVersion} → {info.ReleaseTag ?? info.Version}");
         NotesText.Text = info.Notes;
         StatusText.Text = Str.T("Str.UpdateOptional");
-        Closed += (_, _) => _lifetime.Cancel();
     }
-    private void Fold_Click(object sender, RoutedEventArgs e)
-    {
-        _collapsed = !_collapsed;
-        Details.Visibility = _collapsed ? Visibility.Collapsed : Visibility.Visible;
-        Height = _collapsed ? 112 : 360;
-        FoldButton.Content = Str.T(_collapsed ? "Str.UpdateExpand" : "Str.UpdateCollapse");
-    }
+    public void Cancel() => _lifetime.Cancel();
+    private void Later_Click(object sender, RoutedEventArgs e) => Card.SetExpanded(false);
     private async void Install_Click(object sender, RoutedEventArgs e)
     {
         if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
@@ -40,7 +36,7 @@ public partial class UpdateCardWindow : Window
             Application.Current.Shutdown();
         }
         catch (OperationCanceledException) { StatusText.Text = Str.T("Str.UpdateCancelled"); }
-        catch (Exception ex) { StatusText.Text = Str.T("Str.UpdateFailed", ex.Message); }
+        catch (Exception ex) { StatusText.Text = Str.T("Str.UpdateFailed", PrivacyScrub.Sanitize(ex.Message)); }
         finally { InstallButton.IsEnabled = true; DownloadProgress.Visibility = Visibility.Collapsed; }
     }
 }
