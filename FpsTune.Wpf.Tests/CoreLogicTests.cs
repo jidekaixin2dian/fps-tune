@@ -233,6 +233,12 @@ public class CoreLogicTests
         var tmp = Path.Combine(Path.GetTempPath(), "fpstune-restore-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tmp);
         BackupService.BackupDirOverride = tmp;
+        var displayDir = DisplayQualityService.BackupDirOverride;
+        var vibranceDir = DigitalVibranceService.BackupDirOverride;
+        var iccDir = IccFilterService.BackupDirOverride;
+        DisplayQualityService.BackupDirOverride = Path.Combine(tmp, "drs");
+        DigitalVibranceService.BackupDirOverride = Path.Combine(tmp, "vibrance");
+        IccFilterService.BackupDirOverride = Path.Combine(tmp, "icc");
         var file = Path.Combine(tmp, "csharp-backup-test.json");
         try
         {
@@ -247,6 +253,9 @@ public class CoreLogicTests
         }
         finally
         {
+            DisplayQualityService.BackupDirOverride = displayDir;
+            DigitalVibranceService.BackupDirOverride = vibranceDir;
+            IccFilterService.BackupDirOverride = iccDir;
             BackupService.BackupDirOverride = null;
             if (Directory.Exists(tmp))
                 Directory.Delete(tmp, recursive: true);

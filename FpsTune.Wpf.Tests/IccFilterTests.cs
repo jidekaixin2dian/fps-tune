@@ -352,6 +352,29 @@ public class IccFilterServiceTests : IDisposable
     }
 
     /// <summary>内存态 ICC 系统层：色彩目录用临时目录，SetDisplayDefault 模拟真实行为（追加到列表末尾）。</summary>
+    [Fact]
+    public void External_color_association_is_not_overwritten_by_restore()
+    {
+        _api.InstallDisplayProfile("sRGB.icm");
+        _api.AssociationList.Add("sRGB.icm");
+        IccFilterService.Apply(IccFilterPreset.Warm);
+        _api.InstallDisplayProfile("external.icm");
+        _api.AssociationList.Add("external.icm");
+        var before = _api.AssociationList.ToArray();
+        Assert.Throws<InvalidOperationException>(() => IccFilterService.Restore());
+        Assert.Equal(before, _api.AssociationList);
+        Assert.True(IccFilterService.HasRestorableBackup());
+    }
+
+    [Fact]
+    public void Corrupt_icc_backup_is_preserved()
+    {
+        var file = Path.Combine(_backupDir, "backup.json");
+        File.WriteAllText(file, "{broken");
+        Assert.Throws<InvalidDataException>(() => IccFilterService.Restore());
+        Assert.Equal("{broken", File.ReadAllText(file));
+    }
+
     private sealed class FakeIccApi : IIccSystemApi
     {
         public string ColorDirectory { get; } = Path.Combine(Path.GetTempPath(), "fpstune-icc-color-" + Guid.NewGuid().ToString("N"));

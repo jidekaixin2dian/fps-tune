@@ -34,6 +34,8 @@ public static partial class BackupService
     /// </summary>
     public static string SetAutostart(bool enabled, string? executablePath)
     {
+        using var gate = SystemMutationGate.Acquire();
+        EnsureNoPendingWrites(new[] { AutostartBackupId });
         if (enabled)
         {
             if (string.IsNullOrWhiteSpace(executablePath)
@@ -48,13 +50,22 @@ public static partial class BackupService
             AutostartRunKeyPath,
             AutostartRunValueName,
             RegistryValueKind.String);
+        record.MutationState = "pending";
         var backupFile = WriteBackupFile(new[] { record });
-        if (enabled)
-            RegistryHelper.SetValue(RegistryHive.CurrentUser, AutostartRunKeyPath, AutostartRunValueName,
-                '"' + executablePath!.Trim() + '"', RegistryValueKind.String);
-        else
-            RegistryHelper.DeleteValue(RegistryHive.CurrentUser, AutostartRunKeyPath, AutostartRunValueName);
-        return backupFile;
+        try
+        {
+            if (enabled)
+                RegistryHelper.SetValue(RegistryHive.CurrentUser, AutostartRunKeyPath, AutostartRunValueName,
+                    '"' + executablePath!.Trim() + '"', RegistryValueKind.String);
+            else RegistryHelper.DeleteValue(RegistryHive.CurrentUser, AutostartRunKeyPath, AutostartRunValueName);
+            CompleteCapture(backupFile, new(AutostartBackupId, AutostartBackupId, true, true, false, ""));
+            return backupFile;
+        }
+        catch
+        {
+            try { CompleteCapture(backupFile, new(AutostartBackupId, AutostartBackupId, false, false, false, "", true)); } catch { }
+            throw;
+        }
     }
 
     private static string WriteBackupFile(IReadOnlyList<BackupRecord> records)

@@ -71,8 +71,35 @@ public class DigitalVibranceTests : IDisposable
         Assert.Throws<NvdrsException>(() => DigitalVibranceService.SetPercent(70));
     }
 
+    [Fact]
+    public void External_change_or_display_replacement_does_not_get_overwritten()
+    {
+        _api.Current = 10;
+        DigitalVibranceService.SetPercent(75);
+        _api.Current = 20;
+        Assert.Throws<InvalidOperationException>(() => DigitalVibranceService.Restore());
+        Assert.Equal(20, _api.Current);
+        Assert.True(DigitalVibranceService.HasRestorableBackup());
+        _api.Current = 47;
+        _api.Display = "different-display";
+        Assert.Throws<InvalidOperationException>(() => DigitalVibranceService.Restore());
+        Assert.Equal(47, _api.Current);
+    }
+
+    [Fact]
+    public void Corrupt_backup_is_preserved_and_prevents_another_write()
+    {
+        var file = Path.Combine(_backupDir, "vibrance.json");
+        File.WriteAllText(file, "{broken");
+        Assert.Throws<InvalidDataException>(() => DigitalVibranceService.SetPercent(75));
+        Assert.Equal(0, _api.Current);
+        Assert.Equal("{broken", File.ReadAllText(file));
+    }
+
     private sealed class FakeVibranceApi : INvibranceApi
     {
+        public string Display { get; set; } = "test-display";
+        public string? DisplayIdentity() => Display;
         public int Current { get; set; }
         public int Min { get; set; }
         public int Max { get; set; } = 63;

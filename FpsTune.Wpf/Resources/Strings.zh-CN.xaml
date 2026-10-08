@@ -833,4 +833,6 @@
     <s:String x:Key="Str.RecipeConfirmIntro">将写入当前游戏的 NVIDIA 驱动配置：</s:String>
     <s:String x:Key="Str.RecipeConfirmFooter">写入前备份原设置，可在还原页恢复。最高性能会增加功耗，超级采样可能降低帧数。</s:String>
     <s:String x:Key="Str.RecipeApply">应用</s:String>
+    <s:String x:Key="Str.RecoveryDisplay">显示器</s:String>
+    <s:String x:Key="Str.RecoveryPending">待还原</s:String>
 </ResourceDictionary>

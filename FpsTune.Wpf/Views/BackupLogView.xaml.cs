@@ -59,6 +59,9 @@ public partial class BackupLogView : UserControl
                             ? Str.T("Str.BackupConsumedN", s.RestoredCount)
                             : Str.T("Str.BackupFileEmpty"),
                 !s.Valid ? "invalid" : s.PendingCount > 0 ? "pending" : "consumed")).ToList();
+            var scopes = await Task.Run(RecoveryCoordinator.Inventory);
+            rows.AddRange(scopes.Where(scope => scope.Module != "system").Select(scope => new BackupFileRow(
+                scope.Module + " / " + scope.Target, "", scope.Error ?? Str.T("Str.RecoveryPending"), scope.Error is null ? "pending" : "invalid")));
             BackupFileList.ItemsSource = rows;
             BackupEmptyHint.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -86,7 +89,7 @@ public partial class BackupLogView : UserControl
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
     {
         // 与优化页还原同款预检：待还原记录含电源/服务/HKLM 时需要管理员。
-        if (!AdminHelper.IsAdministrator() && BackupService.RestoreNeedsAdmin())
+        if (!AdminHelper.IsAdministrator() && RecoveryCoordinator.NeedsAdmin())
         {
             var elevate = DialogService.Confirm(
                 Str.T("Str.NeedsAdmin"),

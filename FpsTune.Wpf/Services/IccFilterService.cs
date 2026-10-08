@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
@@ -43,7 +44,7 @@ public static class IccFilterService
 
     private static string BackupPath() => Path.Combine(BackupDir(), "backup.json");
 
-    private sealed record Backup(string AssociationSubKey, string DefaultProfile, string[] ListBefore, string CreatedAt);
+    private sealed record Backup(string AssociationSubKey, string DefaultProfile, string[] ListBefore, string CreatedAt, string? ExpectedProfile = null, string? PreviousProfile = null);
 
     private static Backup? ReadBackup()
     {
@@ -52,17 +53,22 @@ public static class IccFilterService
             return null;
         try
         {
-            return JsonSerializer.Deserialize<Backup>(File.ReadAllText(path));
+            if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+            var backup = JsonSerializer.Deserialize<Backup>(File.ReadAllText(path));
+            if (backup is null || backup.ListBefore is null || backup.ListBefore.Length > 1000
+                || string.IsNullOrWhiteSpace(backup.AssociationSubKey) || string.IsNullOrWhiteSpace(backup.DefaultProfile))
+                throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+            return backup;
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"), ex);
         }
     }
 
     private static void WriteBackup(Backup backup)
     {
-        AtomicFile.WriteAllText(
+        AtomicFile.WriteAllTextDurable(
             BackupPath(),
             JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true }),
             new System.Text.UTF8Encoding(false));
@@ -110,6 +116,7 @@ public static class IccFilterService
     /// <summary>应用预设。成功返回生效的 profile 文件名；失败抛异常，系统状态只可能停在已验证的位置。</summary>
     public static string Apply(IccFilterPreset preset)
     {
+        using var gate = SystemMutationGate.Acquire();
         var api = CreateApi();
         var (display, colorDir) = RequireDisplayAndColorDir(api);
         string presetName = EnsurePresetInstalled(api, preset, colorDir);
@@ -122,6 +129,8 @@ public static class IccFilterService
     /// </summary>
     public static string ApplyFromFile(string sourcePath)
     {
+        using var gate = SystemMutationGate.Acquire();
+        if (File.Exists(sourcePath) && new FileInfo(sourcePath).Length > 16 * 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
             throw new InvalidOperationException(Str.T("Str.IccFileMissing"));
         var ext = Path.GetExtension(sourcePath);
@@ -160,7 +169,7 @@ public static class IccFilterService
         var backup = ReadBackup();
         if (backup is null)
         {
-            WriteBackup(new Backup(display.AssociationSubKey, currentDefault, list, DateTime.Now.ToString("s")));
+            backup = new Backup(display.AssociationSubKey, currentDefault, list, DateTime.Now.ToString("s"));
         }
         else
         {
@@ -173,6 +182,11 @@ public static class IccFilterService
                     "主显示器与备份时不一致，已拒绝切换。请先点「还原原始」后再试。");
         }
 
+        if (backup.ExpectedProfile is not null && currentDefault != backup.ExpectedProfile && currentDefault != backup.PreviousProfile
+            && currentDefault != backup.DefaultProfile) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        backup = backup with { PreviousProfile = currentDefault, ExpectedProfile = profileName };
+        WriteBackup(backup);
+
         if (!api.SetDisplayDefaultAssociation(display, profileName))
             throw new InvalidOperationException("系统拒绝了 profile 切换请求（未生效）。");
 
@@ -183,6 +197,7 @@ public static class IccFilterService
             throw new InvalidOperationException(
                 $"切换后验证失败：当前生效 profile 仍是 {verified ?? "<无>"}，系统设置未达成。");
 
+        WriteBackup(backup with { PreviousProfile = null });
         return profileName;
     }
 
@@ -207,6 +222,7 @@ public static class IccFilterService
     /// <summary>还原为备份的原始 profile。返回是否执行了还原；无备份时返回 false（如实无事发生）。</summary>
     public static bool Restore()
     {
+        using var gate = SystemMutationGate.Acquire();
         var backup = ReadBackup();
         if (backup is null)
             return false;
@@ -216,6 +232,13 @@ public static class IccFilterService
             throw new InvalidOperationException("无法定位主显示器，无法还原。");
         if (display.AssociationSubKey != backup.AssociationSubKey)
             throw new InvalidOperationException("主显示器与备份时不一致，无法按备份精确还原。");
+
+        var beforeRestoreColorDir = api.TryGetColorDirectory() ?? throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        var currentDefault = EffectiveDefault(api, display, beforeRestoreColorDir);
+        if (!IsBackupPlusOwnProfiles(api.ReadAssociationList(display), backup, beforeRestoreColorDir)
+            || backup.ExpectedProfile is not null && currentDefault != backup.ExpectedProfile
+                && currentDefault != backup.PreviousProfile && currentDefault != backup.DefaultProfile)
+            throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
 
         if (!api.SetDisplayDefaultAssociation(display, backup.DefaultProfile))
             throw new InvalidOperationException("系统拒绝了还原请求（未生效），备份已保留，可重试。");
@@ -294,5 +317,6 @@ public static class IccFilterService
             .Select(p => IccProfileGenerator.ParamsFor(p).FileName)
             .ToArray();
 
+    public static bool HasRestorableBackup() => ReadBackup() is not null;
     private static bool HasBackup() => ReadBackup() is not null;
 }

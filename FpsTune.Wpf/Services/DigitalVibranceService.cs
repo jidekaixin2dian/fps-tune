@@ -1,5 +1,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using FpsTune.Wpf.Core;
 using static FpsTune.Wpf.Services.NvapiNative;
 
 namespace FpsTune.Wpf.Services;
@@ -20,6 +22,7 @@ public interface INvibranceApi : IDisposable
     bool TryGetInfo(out int current, out int min, out int max, out int defaultValue);
     /// <summary>写入 DVC 档位（使用 GetInfo 返回的量纲）。失败抛 NvdrsException。</summary>
     void SetLevel(int level);
+    string? DisplayIdentity() => null;
 }
 
 public static class DigitalVibranceService
@@ -36,7 +39,7 @@ public static class DigitalVibranceService
 
     private static string BackupPath => Path.Combine(BackupDir(), "vibrance.json");
 
-    private sealed record VibranceBackup(int Level);
+    private sealed record VibranceBackup(int Level, string? Display = null, int? Expected = null, int? Previous = null, int? Min = null, int? Max = null);
 
     public static VibranceState GetState()
     {
@@ -53,6 +56,7 @@ public static class DigitalVibranceService
     /// <summary>percent 为 0–100（界面量纲），映射到驱动 min–max。</summary>
     public static void SetPercent(int percent)
     {
+        using var gate = SystemMutationGate.Acquire();
         percent = Math.Clamp(percent, 0, 100);
         using var api = CreateApi();
         if (!api.TryInitialize())
@@ -60,22 +64,36 @@ public static class DigitalVibranceService
         if (!api.TryGetInfo(out var current, out var min, out var max, out var _))
             throw new NvdrsException(-1, "当前显示路径不支持数字振动（DVC）。");
 
-        if (ReadBackup() is null)
-            WriteBackup(new VibranceBackup(current));
-
+        var display = api.DisplayIdentity() ?? throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        var backup = ReadBackup() ?? new VibranceBackup(current, display, Min: min, Max: max);
+        CheckRestorable(backup, display, current, min, max);
         var level = min + (int)Math.Round((max - min) * (percent / 100.0));
+        WriteBackup(backup with { Expected = level, Previous = current });
         api.SetLevel(level);
+        WriteBackup(backup with { Expected = level, Previous = null });
+    }
+
+    private static void CheckRestorable(VibranceBackup backup, string display, int current, int min, int max)
+    {
+        if (backup.Display is null || backup.Display != display || backup.Min != min || backup.Max != max
+            || backup.Level < min || backup.Level > max
+            || current != backup.Level && current != backup.Expected && current != backup.Previous)
+            throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
     }
 
     /// <summary>还原到进入本功能前的档位。返回是否发生了还原。</summary>
     public static bool Restore()
     {
+        using var gate = SystemMutationGate.Acquire();
         var backup = ReadBackup();
         if (backup is null)
             return false;
         using var api = CreateApi();
         if (!api.TryInitialize())
             throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        if (!api.TryGetInfo(out var current, out var min, out var max, out _))
+            throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        CheckRestorable(backup, api.DisplayIdentity() ?? "", current, min, max);
         api.SetLevel(backup.Level);
         DeleteBackup();
         return true;
@@ -87,18 +105,20 @@ public static class DigitalVibranceService
             return null;
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(BackupPath));
+            if (new FileInfo(BackupPath).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+            return System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(BackupPath))
+                ?? throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
         }
-        catch
+        catch (Exception ex)
         {
-            return null;
+            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"), ex);
         }
     }
 
     private static void WriteBackup(VibranceBackup backup)
     {
         Directory.CreateDirectory(BackupDir());
-        AtomicFile.WriteAllText(
+        AtomicFile.WriteAllTextDurable(
             BackupPath,
             System.Text.Json.JsonSerializer.Serialize(backup),
             new System.Text.UTF8Encoding(false));
@@ -140,6 +160,7 @@ internal sealed class NvDvcApi : INvibranceApi
     private string? _lastError;
     private InitializeDelegate? _initialize;
     private EnumNvidiaDisplayHandleDelegate? _enumDisplay;
+    private GetDisplayNameDelegate? _getDisplayName;
     private GetDvcInfoDelegate? _getDvcInfo;
     private GetDvcInfoExDelegate? _getDvcInfoEx;
     private SetDvcLevelDelegate? _setDvcLevel;
@@ -170,6 +191,7 @@ internal sealed class NvDvcApi : INvibranceApi
                 // （那会让下一次 TryInitialize 误判为已初始化）。
                 var initialize = query.Resolve<InitializeDelegate>(IdInitialize);
                 var enumDisplay = query.Resolve<EnumNvidiaDisplayHandleDelegate>(IdEnumNvidiaDisplayHandle);
+                var getDisplayName = query.Resolve<GetDisplayNameDelegate>(0x22a78b05);
 
                 // Ex 可返回 default/min/max；旧版只有 current/min/max。结构尺寸必须与接口匹配。
                 // Ex 与旧接口是互斥的能力探测：取不到 Ex 才回退，探测失败属预期，故吞掉异常。
@@ -196,6 +218,7 @@ internal sealed class NvDvcApi : INvibranceApi
 
                 _initialize = initialize;
                 _enumDisplay = enumDisplay;
+                _getDisplayName = getDisplayName;
                 _getDvcInfoEx = getDvcInfoEx;
                 _setDvcLevelEx = setDvcLevelEx;
                 _getDvcInfo = getDvcInfo;
@@ -256,6 +279,13 @@ internal sealed class NvDvcApi : INvibranceApi
         return false;
     }
 
+    public string? DisplayIdentity()
+    {
+        var name = new StringBuilder(64);
+        if (_getDisplayName is null || _getDisplayName(PrimaryDisplayHandle(), name) != StatusOk) return null;
+        return MscmsIccApi.DisplayIdentity(name.ToString());
+    }
+
     public void SetLevel(int level)
     {
         // 必须与读接口同一量纲：GetDVCInfoEx ↔ SetDVCLevelEx（0–100）；旧版 GetDVCInfo ↔ SetDVCLevel
@@ -306,6 +336,9 @@ internal sealed class NvDvcApi : INvibranceApi
     }
 
     // 说明：QueryInterface / NvAPI_Initialize 的委托与接口 ID 在 NvapiNative（与 DRS 共用），此处只留 DVC 专属部分。
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private delegate int GetDisplayNameDelegate(IntPtr display, [Out, MarshalAs(UnmanagedType.LPStr)] StringBuilder name);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int EnumNvidiaDisplayHandleDelegate(uint index, ref IntPtr handle);

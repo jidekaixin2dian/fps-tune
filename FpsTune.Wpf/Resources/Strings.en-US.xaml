@@ -833,4 +833,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.RecipeConfirmIntro">Apply these NVIDIA settings to the current game:</s:String>
     <s:String x:Key="Str.RecipeConfirmFooter">Original settings are backed up and available in Restore. Maximum performance increases power use; supersampling may reduce FPS.</s:String>
     <s:String x:Key="Str.RecipeApply">Apply</s:String>
+    <s:String x:Key="Str.RecoveryDisplay">Display</s:String>
+    <s:String x:Key="Str.RecoveryPending">Pending restore</s:String>
 </ResourceDictionary>

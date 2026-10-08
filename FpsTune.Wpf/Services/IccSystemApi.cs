@@ -209,6 +209,14 @@ public sealed class MscmsIccApi : IIccSystemApi
         }
     }
 
+    internal static string? DisplayIdentity(string gdiDeviceName)
+    {
+        var device = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
+        if (!EnumDisplayDevices(gdiDeviceName, 0, ref device, 0) || string.IsNullOrWhiteSpace(device.DeviceID)
+            || string.IsNullOrWhiteSpace(device.DeviceKey)) return null;
+        return device.DeviceID.ToUpperInvariant() + "|" + device.DeviceKey.ToUpperInvariant();
+    }
+
     /// <summary>主显示器的监视器驱动键名（Control\Class\{monitor class}\000X 的最后一段）。</summary>
     private static string? GetPrimaryMonitorSubKey(string gdiDeviceName)
     {

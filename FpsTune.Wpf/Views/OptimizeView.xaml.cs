@@ -393,7 +393,7 @@ public partial class OptimizeView : UserControl
         }
         // 与「应用」同款预检：待还原记录含电源/服务/HKLM 时需要管理员，
         // 否则非管理员用户会拿到逐项失败的结果。
-        if (!AdminHelper.IsAdministrator() && BackupService.RestoreNeedsAdmin())
+        if (!AdminHelper.IsAdministrator() && RecoveryCoordinator.NeedsAdmin())
         {
             var elevate = DialogService.Confirm(
                 Str.T("Str.NeedsAdmin"),

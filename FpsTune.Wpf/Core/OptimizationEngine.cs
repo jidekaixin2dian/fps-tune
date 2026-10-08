@@ -54,7 +54,7 @@ public static class OptimizationEngine
         {
             lock (OperationLock)
             {
-                var result = BackupService.RestoreAll();
+                var result = RecoveryCoordinator.RestoreAll();
                 if (result.Restored.Count == 0 && result.Failures.Count == 0)
                     return new RunResult(0, "没有找到可还原的备份。", "");
 
@@ -69,7 +69,7 @@ public static class OptimizationEngine
                 sb.AppendLine();
                 sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档。");
                 if (result.Restored.Count > 0 && result.Failures.Count == 0)
-                    sb.Append("已处理的备份文件已重命名为 .restored（保留供审计）。");
+                    sb.Append("恢复已完成；系统快照保留为 .restored，其他模块在验证后消费备份。");
                 return new RunResult(result.Failures.Count == 0 ? 0 : 1, sb.ToString(), "");
             }
         });
@@ -79,7 +79,8 @@ public static class OptimizationEngine
         IReadOnlyList<string> files;
         lock (OperationLock)
             files = BackupService.ListBackups();
-        var payload = new { backups = files, count = files.Count };
+        var scopes = RecoveryCoordinator.Inventory();
+        var payload = new { backups = files, count = files.Count, scopes };
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
         return Task.FromResult(new RunResult(0, json, ""));
     }
