@@ -10,13 +10,12 @@ public sealed record UpdateInfo(
     string Url,
     string Notes,
     string? InstallerUrl = null,
-    string? ChecksumUrl = null);
+    string? ChecksumUrl = null,
+    string? ReleaseTag = null);
 
 public static class UpdateService
 {
-    // 列表端点而非 /releases/latest：后者只返回「非 prerelease」的最新版，
-    // 而本项目全部发布都标记为 pre-release，latest 恒 404——更新检查因此永久失效。
-    // 列表按创建时间倒序，取第一个版本号可解析的条目（含 prerelease）。
+    // 列表端点同时覆盖正式与测试版本；不依赖 GitHub Latest 标记或创建顺序。
     private const string ReleasesApi =
         "https://api.github.com/repos/jidekaixin2dian/fps-tune/releases?per_page=10";
 
@@ -41,38 +40,20 @@ public static class UpdateService
         }
     }
 
-    public static async Task<UpdateInfo?> CheckAsync()
+    public static async Task<UpdateInfo?> CheckAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
-            using var response = await client.GetAsync(ReleasesApi);
+            using var response = await client.GetAsync(ReleasesApi, cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return null;
 
             await using var stream = await response.Content.ReadAsStreamAsync();
-            using var doc = await JsonDocument.ParseAsync(stream);
-            if (doc.RootElement.ValueKind != JsonValueKind.Array)
-                return null;
-
-            foreach (var entry in doc.RootElement.EnumerateArray())
-            {
-                var tag = entry.TryGetProperty("tag_name", out var tagEl) ? tagEl.GetString() : null;
-                var notes = entry.TryGetProperty("body", out var bodyEl) ? bodyEl.GetString() : "";
-                var htmlUrl = entry.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() : null;
-
-                if (!TryNormalizeVersion(tag, out var version) || string.IsNullOrWhiteSpace(htmlUrl))
-                    continue;
-
-                return new UpdateInfo(
-                    version,
-                    htmlUrl,
-                    notes ?? "",
-                    FindAssetUrl(entry, InstallerAssetName(version)),
-                    FindAssetUrl(entry, ChecksumAssetName(version)));
-            }
-            return null;
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            return SelectRelease(doc.RootElement);
         }
         catch
         {
@@ -80,49 +61,74 @@ public static class UpdateService
         }
     }
 
+    internal static UpdateInfo? SelectRelease(JsonElement releases)
+    {
+        if (releases.ValueKind != JsonValueKind.Array) return null;
+        UpdateInfo? best = null;
+        foreach (var entry in releases.EnumerateArray())
+        {
+            if (entry.ValueKind != JsonValueKind.Object ||
+                (entry.TryGetProperty("draft", out var draft) && draft.ValueKind == JsonValueKind.True)) continue;
+            var tag = entry.TryGetProperty("tag_name", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() : null;
+            var page = entry.TryGetProperty("html_url", out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+            if (!TryNormalizeVersion(tag, out var version) || !IsOfficialUrl(page)) continue;
+            var installer = FindAssetUrl(entry, InstallerAssetName(version));
+            var checksum = FindAssetUrl(entry, ChecksumAssetName(version));
+            if (!IsOfficialUrl(installer) || !IsOfficialUrl(checksum)) continue;
+            var notes = entry.TryGetProperty("body", out var b) && b.ValueKind == JsonValueKind.String ? b.GetString() : "";
+            var candidate = new UpdateInfo(version, page!, notes ?? "", installer, checksum, tag);
+            if (best is null || IsNewer(tag!, best.ReleaseTag ?? best.Version)) best = candidate;
+        }
+        return best;
+    }
+
+    internal static bool IsOfficialUrl(string? url) => Uri.TryCreate(url, UriKind.Absolute, out var uri)
+        && uri.Scheme == Uri.UriSchemeHttps && uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+        && uri.IsDefaultPort && string.IsNullOrEmpty(uri.UserInfo)
+        && uri.AbsolutePath.StartsWith("/jidekaixin2dian/fps-tune/releases/", StringComparison.Ordinal);
+
     public static bool IsNewer(string latest, string current)
     {
-        // 两侧都先归一化（剥离 v 前缀与 -beta 等预发布后缀），否则
-        // "0.1.14-beta" 这类 tag 会让 Version.Parse 抛异常、比较恒为 false。
+        // 先比较数字版本，再按预发布标识比较；构建 SHA 不影响更新顺序。
         if (!TryNormalizeVersion(latest, out var l) || !TryNormalizeVersion(current, out var c))
             return false;
         try
         {
-            return Version.Parse(l) > Version.Parse(c);
+            var comparison = Version.Parse(l).CompareTo(Version.Parse(c));
+            if (comparison != 0) return comparison > 0;
+            var lp = Prerelease(latest);
+            var cp = Prerelease(current);
+            if (lp == cp) return false;
+            if (lp.Length == 0) return true;
+            if (cp.Length == 0) return false;
+            var left = lp.Split('.');
+            var right = cp.Split('.');
+            for (var i = 0; i < Math.Min(left.Length, right.Length); i++)
+            {
+                if (left[i] == right[i]) continue;
+                var ln = int.TryParse(left[i], out var li);
+                var rn = int.TryParse(right[i], out var ri);
+                return ln && rn ? li > ri : ln != rn ? !ln : string.CompareOrdinal(left[i], right[i]) > 0;
+            }
+            return left.Length > right.Length;
         }
         catch
         {
             return false;
         }
+    }
+
+    private static string Prerelease(string value)
+    {
+        var text = value.Trim().Split('+')[0];
+        var dash = text.IndexOf('-');
+        return dash < 0 ? "" : text[(dash + 1)..];
     }
 
     /// <summary>在最新 Release 的资产里找安装包(FpsTune-Setup-x.y.z.exe)的下载地址。</summary>
     public static async Task<string?> FindInstallerUrlAsync()
     {
-        try
-        {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
-            using var response = await client.GetAsync(ReleasesApi);
-            if (!response.IsSuccessStatusCode)
-                return null;
-
-            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
-            if (doc.RootElement.ValueKind != JsonValueKind.Array)
-                return null;
-
-            foreach (var entry in doc.RootElement.EnumerateArray())
-            {
-                var tag = entry.TryGetProperty("tag_name", out var tagEl) ? tagEl.GetString() : null;
-                if (!TryNormalizeVersion(tag, out var version))
-                    continue;
-                return FindAssetUrl(entry, InstallerAssetName(version));
-            }
-        }
-        catch
-        {
-        }
-        return null;
+        return (await CheckAsync())?.InstallerUrl;
     }
 
     internal static string InstallerAssetName(string version) => $"FpsTune-Setup-{version}.exe";
@@ -136,6 +142,8 @@ public static class UpdateService
             return false;
 
         var text = raw.Trim();
+        var plus = text.IndexOf('+');
+        if (plus >= 0) text = text[..plus];
         if (text.StartsWith('v') || text.StartsWith('V'))
             text = text[1..];
         // 预发布后缀（v0.1.13-beta）只用于标签，不参与数值比较
@@ -245,24 +253,31 @@ public static class UpdateService
     }
 
     /// <summary>下载安装包到指定路径; progress 报告 0-100 百分比(服务器未给长度时不回调)。</summary>
-    public static async Task DownloadAsync(string url, string targetFile, Action<double>? progress)
+    public static async Task DownloadAsync(string url, string targetFile, Action<double>? progress,
+        CancellationToken cancellationToken = default, long maximumBytes = 512L * 1024 * 1024)
     {
+        if (!IsOfficialUrl(url)) throw new InvalidOperationException(Str.T("Str.UpdateUrlInvalid"));
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromMinutes(15));
+        var token = timeout.Token;
         using var client = new HttpClient();
-        // 默认 100 秒超时对 60MB 安装包的慢网下载不够；进度条已提供反馈，下载不设总时限
+        // 总时限与用户取消由上面的 linked token 统一控制。
         client.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
         client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
-        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, token);
         response.EnsureSuccessStatusCode();
 
         var total = response.Content.Headers.ContentLength ?? -1;
-        await using var source = await response.Content.ReadAsStreamAsync();
-        await using var target = new FileStream(targetFile, FileMode.Create);
+        if (total > maximumBytes) throw new InvalidOperationException(Str.T("Str.UpdateFileTooLarge"));
+        await using var source = await response.Content.ReadAsStreamAsync(token);
+        await using var target = new FileStream(targetFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
         var buffer = new byte[81920];
         long written = 0;
         int read;
-        while ((read = await source.ReadAsync(buffer)) > 0)
+        while ((read = await source.ReadAsync(buffer, token)) > 0)
         {
-            await target.WriteAsync(buffer.AsMemory(0, read));
+            if (written + read > maximumBytes) throw new InvalidOperationException(Str.T("Str.UpdateFileTooLarge"));
+            await target.WriteAsync(buffer.AsMemory(0, read), token);
             written += read;
             if (total > 0)
                 progress?.Invoke(written * 100.0 / total);

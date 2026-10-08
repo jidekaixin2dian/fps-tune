@@ -767,4 +767,17 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AuditUnread">not read</s:String>
     <s:String x:Key="Str.AuditRowDetail">{0} · {1} (heuristic live status, same source as the Detection page)</s:String>
     <s:String x:Key="Str.SwitchBlockedDetecting">A detection is running — game switching is unavailable until it finishes.</s:String>
+    <s:String x:Key="Str.CheckUpdatesOnStartup">Check for updates on startup</s:String>
+    <s:String x:Key="Str.UpdateAvailable">Update available</s:String>
+    <s:String x:Key="Str.UpdateCollapse">Collapse</s:String>
+    <s:String x:Key="Str.UpdateExpand">Expand</s:String>
+    <s:String x:Key="Str.UpdateLater">Later</s:String>
+    <s:String x:Key="Str.UpdateOptional">You can update later and continue using this version.</s:String>
+    <s:String x:Key="Str.UpdateAssetsMissing">The installation files for this release are not ready.</s:String>
+    <s:String x:Key="Str.UpdateSessionBusy">Install the update after the measurement finishes.</s:String>
+    <s:String x:Key="Str.UpdateDownloading">Downloading and verifying the installer…</s:String>
+    <s:String x:Key="Str.UpdateCancelled">Download cancelled.</s:String>
+    <s:String x:Key="Str.UpdateFailed">Update did not finish: {0}</s:String>
+    <s:String x:Key="Str.UpdateUrlInvalid">The update download address is invalid.</s:String>
+    <s:String x:Key="Str.UpdateFileTooLarge">The download exceeds the size limit.</s:String>
 </ResourceDictionary>

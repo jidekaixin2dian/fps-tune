@@ -13,6 +13,27 @@ namespace FpsTune.Wpf;
 
 public partial class MainWindow : Window
 {
+    private readonly CancellationTokenSource _updateLifetime = new();
+    private UpdateCardWindow? _updateCard;
+    internal void ShowUpdateCard(UpdateInfo info)
+    {
+        if (_updateCard is not null) { _updateCard.Activate(); return; }
+        _updateCard = new UpdateCardWindow(info) { Owner = this };
+        _updateCard.Closed += (_, _) => _updateCard = null;
+        _updateCard.Show();
+    }
+    private async Task CheckStartupUpdateAsync()
+    {
+        try
+        {
+            await Task.Delay(2500, _updateLifetime.Token);
+            if (!SettingsService.Current.CheckUpdatesOnStartup) return;
+            var info = await UpdateService.CheckAsync(_updateLifetime.Token);
+            if (!_updateLifetime.IsCancellationRequested && info is not null &&
+                UpdateService.IsNewer(info.ReleaseTag ?? info.Version, UpdateService.DisplayVersion)) ShowUpdateCard(info);
+        }
+        catch (OperationCanceledException) { }
+    }
     // 页面按需创建、创建后缓存：启动只构建首页，显著降低冷启动时间与常驻内存。
     private readonly Dictionary<string, Func<UserControl>> _pageFactories;
     private readonly Dictionary<string, UserControl> _pageCache = new();
@@ -96,10 +117,12 @@ public partial class MainWindow : Window
         };
         Closed += (_, _) =>
         {
+            _updateLifetime.Cancel();
             TrayService.Dispose();
             if (_hwndSource is not null)
                 UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
         };
+        Loaded += (_, _) => { _ = CheckStartupUpdateAsync(); };
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)

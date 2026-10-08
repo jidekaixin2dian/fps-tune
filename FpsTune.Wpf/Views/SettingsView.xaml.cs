@@ -109,6 +109,7 @@ public partial class SettingsView : UserControl
         RefreshGamePathHint();
 
         TrayCheck.IsChecked = s.MinimizeToTray;
+        StartupUpdateCheck.IsChecked = s.CheckUpdatesOnStartup;
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
         LowSpecCheck.IsChecked = s.LowSpecMode;
@@ -256,6 +257,13 @@ public partial class SettingsView : UserControl
         s.HotkeyEnabled = HotkeyCheck.IsChecked == true;
         SettingsService.Save(s);
         (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
+    }
+
+    private void StartupUpdate_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents) return;
+        SettingsService.Current.CheckUpdatesOnStartup = StartupUpdateCheck.IsChecked == true;
+        SettingsService.Save(SettingsService.Current);
     }
 
     private void NotifySetting_Changed(object sender, RoutedEventArgs e)
@@ -638,81 +646,18 @@ public partial class SettingsView : UserControl
                 return;
             }
 
-            if (!UpdateService.IsNewer(info.Version, UpdateService.CurrentVersion))
+            if (!UpdateService.IsNewer(info.ReleaseTag ?? info.Version, UpdateService.DisplayVersion))
             {
                 UpdateStatusText.Text = Str.T("Str.AlreadyLatest");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(info.InstallerUrl) || string.IsNullOrWhiteSpace(info.ChecksumUrl))
-            {
-                UpdateStatusText.Text = $"版本 {info.Version} 缺少对应安装包或 SHA256 清单，已拒绝更新";
-                return;
-            }
-
-            UpdateStatusText.Text = $"发现新版本 {info.Version}";
-            var go = DialogService.Confirm(
-                Str.T("Str.AppName"),
-                $"发现新版本 {info.Version}（当前 v{UpdateService.CurrentVersion}）。\n\n" +
-                Str.T("Str.ConfirmUpdate"),
-                confirmText: Str.T("Str.UpdateNow"));
-            if (!go)
-            {
-                UpdateStatusText.Text = $"已跳过 {info.Version}，可随时在 GitHub 主页手动下载";
-                return;
-            }
-
-            var tmp = Path.Combine(Path.GetTempPath(), $"FpsTune-Setup-{info.Version}.exe");
-            var checksumTmp = Path.Combine(Path.GetTempPath(), $"SHA256SUMS-v{info.Version}.txt");
-            var started = false;
-            var lastPct = -1;
-            try
-            {
-                Dispatcher.Invoke(() => UpdateProgressBar.Visibility = Visibility.Visible);
-                await UpdateService.DownloadAsync(info.InstallerUrl, tmp, pct =>
-                {
-                    var percent = (int)pct;
-                    if (percent == lastPct)
-                        return;
-                    lastPct = percent;
-                    Dispatcher.Invoke(() =>
-                    {
-                        UpdateStatusText.Text = $"下载中 {percent}%";
-                        UpdateProgressBar.Value = percent;
-                    });
-                });
-
-                UpdateStatusText.Text = Str.T("Str.DownloadingManifest");
-                await UpdateService.DownloadAsync(info.ChecksumUrl, checksumTmp, null);
-                var manifest = await File.ReadAllTextAsync(checksumTmp);
-                if (!UpdateService.TryReadSha256(manifest, Path.GetFileName(tmp), out var expectedHash))
-                    throw new InvalidOperationException(Str.T("Str.ManifestMissingEntry"));
-                if (!UpdateService.VerifySha256(tmp, expectedHash))
-                    throw new InvalidOperationException(Str.T("Str.InstallerHashMismatch"));
-
-                UpdateStatusText.Text = Str.T("Str.VerifyOkInstalling");
-                var dir = Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory;
-                var installer = Process.Start(new ProcessStartInfo(tmp)
-                {
-                    UseShellExecute = true,
-                    Arguments = $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=\"{dir}\""
-                });
-                if (installer is null)
-                    throw new InvalidOperationException(Str.T("Str.CannotStartInstaller"));
-                started = true;
-                await Task.Delay(1200);
-                Application.Current.Shutdown();
-            }
-            finally
-            {
-                TryDeleteFile(checksumTmp);
-                if (!started)
-                    TryDeleteFile(tmp);
-            }
+            UpdateStatusText.Text = Str.T("Str.UpdateAvailable") + " " + (info.ReleaseTag ?? info.Version);
+            (Application.Current.MainWindow as MainWindow)?.ShowUpdateCard(info);
         }
         catch (Exception ex)
         {
-            UpdateStatusText.Text = "更新失败: " + ex.Message;
+            UpdateStatusText.Text = Str.T("Str.UpdateFailed", ex.Message);
         }
         finally
         {
@@ -721,15 +666,4 @@ public partial class SettingsView : UserControl
         }
     }
 
-    private static void TryDeleteFile(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch
-        {
-        }
-    }
 }

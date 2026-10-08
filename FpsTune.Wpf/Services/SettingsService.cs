@@ -15,6 +15,7 @@ public sealed class AppSettings
     public string DouyinLink { get; set; } = "";
     public string ThemeMode { get; set; } = "dark";
     public string OverviewMode { get; set; } = "console";
+    public bool CheckUpdatesOnStartup { get; set; } = true;
 
     // 托盘常驻（v1.2）：最小化到托盘 / 全局热键呼出 / 完成通知，默认全开
     public bool MinimizeToTray { get; set; } = true;

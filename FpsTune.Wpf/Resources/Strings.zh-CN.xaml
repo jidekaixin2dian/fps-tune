@@ -767,4 +767,17 @@
     <s:String x:Key="Str.AuditUnread">未读取</s:String>
     <s:String x:Key="Str.AuditRowDetail">{0} · {1}（启发式实时状态，与检测页同口径）</s:String>
     <s:String x:Key="Str.SwitchBlockedDetecting">检测进行中，暂不能切换游戏；等检测完成再试。</s:String>
+    <s:String x:Key="Str.CheckUpdatesOnStartup">启动时检查更新</s:String>
+    <s:String x:Key="Str.UpdateAvailable">发现新版本</s:String>
+    <s:String x:Key="Str.UpdateCollapse">收起</s:String>
+    <s:String x:Key="Str.UpdateExpand">展开</s:String>
+    <s:String x:Key="Str.UpdateLater">稍后</s:String>
+    <s:String x:Key="Str.UpdateOptional">你可以稍后更新，当前版本仍可继续使用。</s:String>
+    <s:String x:Key="Str.UpdateAssetsMissing">这个版本的安装文件尚未准备好。</s:String>
+    <s:String x:Key="Str.UpdateSessionBusy">请在实测结束后安装更新。</s:String>
+    <s:String x:Key="Str.UpdateDownloading">正在下载并校验安装包…</s:String>
+    <s:String x:Key="Str.UpdateCancelled">下载已取消。</s:String>
+    <s:String x:Key="Str.UpdateFailed">更新未完成：{0}</s:String>
+    <s:String x:Key="Str.UpdateUrlInvalid">更新下载地址无效。</s:String>
+    <s:String x:Key="Str.UpdateFileTooLarge">下载文件超过大小限制。</s:String>
 </ResourceDictionary>
