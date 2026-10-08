@@ -814,4 +814,23 @@
     <s:String x:Key="Str.GpuIdentityConfirm">将「{0}」的设备名称改为 GTX 1050 Ti，并备份原名称。重启后再测试游戏，是否提高帧数取决于游戏的识别策略。</s:String>
     <s:String x:Key="Str.GpuIdentityRestored">原显卡名称已还原，重启后生效。</s:String>
     <s:String x:Key="Str.GpuIdentityNoBackup">没有待还原的显卡名称备份。</s:String>
+    <s:String x:Key="Str.NvLegacyBackupReview">旧驱动备份缺少写入回执，请保留文件并人工核对。</s:String>
+    <s:String x:Key="Str.RecipeTexture">纹理过滤质量</s:String>
+    <s:String x:Key="Str.RecipeHighQuality">高质量</s:String>
+    <s:String x:Key="Str.RecipePower">电源管理</s:String>
+    <s:String x:Key="Str.RecipeMaxPower">最高性能优先</s:String>
+    <s:String x:Key="Str.RecipeMultisample">透明度多重采样</s:String>
+    <s:String x:Key="Str.RecipeFollow">跟随驱动</s:String>
+    <s:String x:Key="Str.RecipeSupersample">透明度超级采样</s:String>
+    <s:String x:Key="Str.RecipeFrames">最大预渲染帧</s:String>
+    <s:String x:Key="Str.RecipeAnisoSource">各向异性过滤来源</s:String>
+    <s:String x:Key="Str.RecipeDriver">驱动覆盖</s:String>
+    <s:String x:Key="Str.RecipeAniso">各向异性过滤</s:String>
+    <s:String x:Key="Str.RecipeVSync">垂直同步</s:String>
+    <s:String x:Key="Str.RecipeOff">关闭</s:String>
+    <s:String x:Key="Str.RecipeCache">着色器磁盘缓存</s:String>
+    <s:String x:Key="Str.RecipeOn">开启</s:String>
+    <s:String x:Key="Str.RecipeConfirmIntro">将写入当前游戏的 NVIDIA 驱动配置：</s:String>
+    <s:String x:Key="Str.RecipeConfirmFooter">写入前备份原设置，可在还原页恢复。最高性能会增加功耗，超级采样可能降低帧数。</s:String>
+    <s:String x:Key="Str.RecipeApply">应用</s:String>
 </ResourceDictionary>

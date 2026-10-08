@@ -814,4 +814,23 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.GpuIdentityConfirm">Change the device description of {0} to GTX 1050 Ti and back up the original name. Restart before testing; any FPS benefit depends on the game’s detection logic.</s:String>
     <s:String x:Key="Str.GpuIdentityRestored">Original description restored. Restart to take effect.</s:String>
     <s:String x:Key="Str.GpuIdentityNoBackup">No pending GPU description backup.</s:String>
+    <s:String x:Key="Str.NvLegacyBackupReview">This legacy driver backup has no write receipt. Keep the file for manual review.</s:String>
+    <s:String x:Key="Str.RecipeTexture">Texture filtering quality</s:String>
+    <s:String x:Key="Str.RecipeHighQuality">High quality</s:String>
+    <s:String x:Key="Str.RecipePower">Power management</s:String>
+    <s:String x:Key="Str.RecipeMaxPower">Prefer maximum performance</s:String>
+    <s:String x:Key="Str.RecipeMultisample">Transparency multisampling</s:String>
+    <s:String x:Key="Str.RecipeFollow">Driver default</s:String>
+    <s:String x:Key="Str.RecipeSupersample">Transparency supersampling</s:String>
+    <s:String x:Key="Str.RecipeFrames">Maximum pre-rendered frames</s:String>
+    <s:String x:Key="Str.RecipeAnisoSource">Anisotropic filtering source</s:String>
+    <s:String x:Key="Str.RecipeDriver">Driver override</s:String>
+    <s:String x:Key="Str.RecipeAniso">Anisotropic filtering</s:String>
+    <s:String x:Key="Str.RecipeVSync">Vertical sync</s:String>
+    <s:String x:Key="Str.RecipeOff">Off</s:String>
+    <s:String x:Key="Str.RecipeCache">Shader disk cache</s:String>
+    <s:String x:Key="Str.RecipeOn">On</s:String>
+    <s:String x:Key="Str.RecipeConfirmIntro">Apply these NVIDIA settings to the current game:</s:String>
+    <s:String x:Key="Str.RecipeConfirmFooter">Original settings are backed up and available in Restore. Maximum performance increases power use; supersampling may reduce FPS.</s:String>
+    <s:String x:Key="Str.RecipeApply">Apply</s:String>
 </ResourceDictionary>

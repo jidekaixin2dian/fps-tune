@@ -36,6 +36,10 @@ internal interface INvdrsSession : IDisposable
     /// <summary>读取 DWORD 设置；未设置返回 false（正常状态，不是错误）。</summary>
     bool TryGetSettingDword(INvdrsProfile profile, uint settingId, out uint value);
 
+    /// <summary>仅本 profile 的用户覆盖，不把继承值或驱动预置值当作显式覆盖。</summary>
+    bool TryGetOverrideDword(INvdrsProfile profile, uint settingId, out uint value)
+        => TryGetSettingDword(profile, settingId, out value);
+
     /// <summary>写入 DWORD 设置；失败抛 NvdrsException。</summary>
     void SetSettingDword(INvdrsProfile profile, uint settingId, uint value);
 
@@ -302,6 +306,11 @@ internal sealed class NvdrsApi : INvdrsApi
         }
 
         public bool TryGetSettingDword(INvdrsProfile profile, uint settingId, out uint value)
+            => ReadSetting(profile, settingId, false, out value);
+        public bool TryGetOverrideDword(INvdrsProfile profile, uint settingId, out uint value)
+            => ReadSetting(profile, settingId, true, out value);
+
+        private bool ReadSetting(INvdrsProfile profile, uint settingId, bool overrideOnly, out uint value)
         {
             var setting = new NvdrsSetting
             {
@@ -319,6 +328,9 @@ internal sealed class NvdrsApi : INvdrsApi
                 return false;
             }
             api.Check(status, $"读取设置 {settingId:X8}");
+            if (setting.settingType != 0) throw new NvdrsException(-1, "Expected a DWORD driver setting.");
+            if (overrideOnly && (setting.settingLocation != 0 || setting.isCurrentPredefined != 0))
+            { value = 0; return false; }
             value = setting.currentValue.u32Value;
             return true;
         }

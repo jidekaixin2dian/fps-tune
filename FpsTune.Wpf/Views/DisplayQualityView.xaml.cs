@@ -813,15 +813,10 @@ public partial class DisplayQualityView : UserControl
         // 桌面非笔电高端卡才推透明度 4x；默认 2x
         var desktopHighEnd = HardwareInfoService.IsDesktop && HardwareInfoService.IsHighEndNvidia;
         var traaLabel = desktopHighEnd ? Str.T("Str.Supersample4x") : Str.T("Str.Supersample2x");
-        var confirmed = DialogService.Confirm(
-            Str.T("Str.OneClickEsports"),
-            "将按社区高频组合写入当前游戏的 NVIDIA 驱动配置：\n\n" +
-            "· 纹理过滤 · 质量：高质量\n" +
-            "· 电源管理：最高性能优先\n" +
-            "· 平滑处理 · 透明度：" + traaLabel + "\n" +
-            "· 低延迟 · 预渲染帧：1 帧\n\n" +
-            "写入前自动备份，可一键「还原默认」。确定应用？",
-            confirmText: "应用");
+        var recipe = DisplayQualityService.CompetitiveRecipe(desktopHighEnd);
+        var confirmed = DialogService.Confirm(Str.T("Str.OneClickEsports"),
+            Str.T("Str.RecipeConfirmIntro") + "\n\n" + string.Join("\n", recipe.Select(r => "· " + r.Label + ": " + r.ValueLabel))
+            + "\n\n" + Str.T("Str.RecipeConfirmFooter"), confirmText: Str.T("Str.RecipeApply"));
         if (!confirmed)
             return;
 

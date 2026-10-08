@@ -83,9 +83,9 @@ public class DisplayQualityTests : IDisposable
         var state = DisplayQualityService.GetDlssState(Exe);
         Assert.True(state.Covered);
 
-        // 还原：自建 profile 整体删除
+        // 还原只清除本工具触及的设置，保留 profile 容器
         DisplayQualityService.RemoveDlssOverride(Exe);
-        Assert.Null(_api.GetProfile("FpsTune · " + Exe));
+        Assert.Empty(_api.GetProfile("FpsTune · " + Exe)!.Settings);
     }
 
     [Fact]
@@ -317,6 +317,44 @@ public class DisplayQualityTests : IDisposable
         Assert.True(s.ShaderCache);
     }
 
+    [Fact]
+    public void Restore_preserves_later_unmanaged_settings_in_own_profile()
+    {
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        var profile = _api.GetProfile("FpsTune · " + Exe)!;
+        profile.Settings[0x12345678] = 9;
+        DisplayQualityService.RemoveDlssOverride(Exe);
+        Assert.Equal(9u, profile.Settings[0x12345678]);
+        Assert.Single(profile.Settings);
+    }
+
+    [Fact]
+    public void Newly_touched_setting_backs_up_its_current_external_value_and_drift_blocks_restore()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        profile.Settings[DisplayQualityService.TextureQualityId] = 10;
+        DisplayQualityService.ApplyTextureQuality(Exe, TextureFilterQuality.HighQuality);
+        DisplayQualityService.RemoveDlssOverride(Exe);
+        Assert.Equal(10u, profile.Settings[DisplayQualityService.TextureQualityId]);
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        profile.Settings[DisplayQualityService.DlssSrPresetId] = 123;
+        Assert.Throws<InvalidOperationException>(() => DisplayQualityService.RemoveDlssOverride(Exe));
+        Assert.Equal(123u, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+    }
+
+    [Fact]
+    public void Inherited_driver_values_do_not_become_explicit_overrides_on_restore()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        profile.InheritedSettings[DisplayQualityService.DlssSrPresetId] = 5;
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        DisplayQualityService.RemoveDlssOverride(Exe);
+        Assert.Empty(profile.Settings);
+        Assert.Equal(5u, profile.InheritedSettings[DisplayQualityService.DlssSrPresetId]);
+    }
+
     private sealed class FakeNvdrsApi : INvdrsApi
     {
         private readonly Dictionary<string, FakeProfile> _profiles = new();
@@ -376,6 +414,9 @@ public class DisplayQualityTests : IDisposable
             public string GetProfileName(INvdrsProfile profile) => throw new NotSupportedException();
 
             public bool TryGetSettingDword(INvdrsProfile profile, uint settingId, out uint value)
+                => ((FakeProfileRef)profile).Profile.Settings.TryGetValue(settingId, out value)
+                    || ((FakeProfileRef)profile).Profile.InheritedSettings.TryGetValue(settingId, out value);
+            public bool TryGetOverrideDword(INvdrsProfile profile, uint settingId, out uint value)
                 => ((FakeProfileRef)profile).Profile.Settings.TryGetValue(settingId, out value);
 
             public void SetSettingDword(INvdrsProfile profile, uint settingId, uint value)
@@ -404,6 +445,7 @@ public class DisplayQualityTests : IDisposable
         {
             public string Name { get; init; } = "";
             internal Dictionary<uint, uint> Settings { get; } = new();
+            internal Dictionary<uint, uint> InheritedSettings { get; } = new();
         }
 
         private sealed class FakeProfileRef(FakeProfile profile) : INvdrsProfile

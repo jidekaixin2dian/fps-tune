@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
@@ -221,16 +222,28 @@ public static class DisplayQualityService
     /// 纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧 + AF16x + VSync 关 + 着色器缓存开。
     /// <paramref name="desktopHighEndGpu"/> 为 true（桌面非笔电高端卡，如 5070 Ti）时透明度升到 4x。
     /// </summary>
-    public static void ApplyCompetitivePreset(string gameExe, bool desktopHighEndGpu)
+    public sealed record DriverRecipeEntry(uint SettingId, uint? Value, string Label, string ValueLabel);
+    public static IReadOnlyList<DriverRecipeEntry> CompetitiveRecipe(bool desktopHighEndGpu) => new DriverRecipeEntry[]
     {
-        ApplyTextureQuality(gameExe, TextureFilterQuality.HighQuality);
-        ApplyPowerMode(gameExe, PowerMode.PreferMax);
-        ApplyTransparencyAa(gameExe, desktopHighEndGpu ? TransparencyAa.Supersample4x : TransparencyAa.Supersample2x);
-        ApplyPreRenderLimit(gameExe, 1);
-        ApplyAnisoLevel(gameExe, AnisoLevel.Level16);
-        ApplyVSyncMode(gameExe, VSyncMode.ForceOff);
-        ApplyShaderDiskCache(gameExe, true);
-    }
+        new(TextureQualityId, (uint)TextureFilterQuality.HighQuality, Str.T("Str.RecipeTexture"), Str.T("Str.RecipeHighQuality")),
+        new(PowerModeId, (uint)PowerMode.PreferMax, Str.T("Str.RecipePower"), Str.T("Str.RecipeMaxPower")),
+        new(TransparencyMultisampleId, null, Str.T("Str.RecipeMultisample"), Str.T("Str.RecipeFollow")),
+        new(TransparencySupersampleId, desktopHighEndGpu ? TransparencySupersample4x : TransparencySupersample2x,
+            Str.T("Str.RecipeSupersample"), desktopHighEndGpu ? "4x" : "2x"),
+        new(PreRenderLimitId, 1, Str.T("Str.RecipeFrames"), "1"),
+        new(AnisoSelectorId, AnisoSelectorUser, Str.T("Str.RecipeAnisoSource"), Str.T("Str.RecipeDriver")),
+        new(AnisoLevelId, AnisoLevel16x, Str.T("Str.RecipeAniso"), "16x"),
+        new(VSyncModeId, VSyncForceOff, Str.T("Str.RecipeVSync"), Str.T("Str.RecipeOff")),
+        new(ShaderDiskCacheId, ShaderCacheOn, Str.T("Str.RecipeCache"), Str.T("Str.RecipeOn")),
+    };
+
+    public static void ApplyCompetitivePreset(string gameExe, bool desktopHighEndGpu)
+        => ApplyManaged(gameExe, (session, owner) =>
+        {
+            foreach (var choice in CompetitiveRecipe(desktopHighEndGpu))
+                if (choice.Value.HasValue) session.SetSettingDword(owner, choice.SettingId, choice.Value.Value);
+                else session.DeleteSetting(owner, choice.SettingId);
+        });
 
     public static DrsGameSettings GetDrsGameSettings(string gameExe)
     {
@@ -336,52 +349,84 @@ public static class DisplayQualityService
     /// <summary>首次写入先持久化原始设置，再保存驱动；失败仍保留可恢复记录。</summary>
     private static void ApplyManaged(string gameExe, Action<INvdrsSession, INvdrsProfile> write)
     {
+        ValidateGameExe(gameExe);
+        using var gate = SystemMutationGate.Acquire();
         using var api = CreateApi();
-        if (!api.TryInitialize())
-            throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        if (!api.TryInitialize()) throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
         using var session = api.OpenSession();
-
-        // 先找登记了该游戏的 profile；找不到才自建（ProfilePrefix 前缀）。
-        // 写成 `found ?? CreateProfile(...)` 而不是先赋值再 if 覆盖：让编译器能确定 owner 非空，
-        // 也避免"先赋可能为 null 的值、再在条件分支里覆盖"这种需要人肉推断的写法。
         var found = session.FindApplicationOwner(gameExe);
-        var isFirstWrite = ReadBackup(gameExe) is null;
-        var ownProfile = found is null;
+        var backup = ReadBackup(gameExe);
         var owner = found ?? session.CreateProfile(ProfilePrefix + gameExe, gameExe);
-
-        List<SettingBackup>? pendingBackup = null;
-        if (isFirstWrite)
+        if (backup is not null)
         {
-            pendingBackup = new List<SettingBackup>();
-            foreach (var id in ManagedSettingIds)
+            if (backup.SchemaVersion != 2 || backup.PostSettings is null)
+                throw new InvalidDataException(Str.T("Str.NvLegacyBackupReview"));
+            VerifySettings(session, owner, backup);
+        }
+        else backup = new(gameExe, found is null, new(), 2, new());
+
+        // 每条写入先记录原始覆盖与预期后值；新的设置直到第一次触及才捕获，保留外部既有更改。
+        var tracked = new TrackedSession(session, (id, existed, value) =>
+        {
+            if (!ManagedSettingIds.Contains(id)) throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+            if (!backup.Settings.Any(x => x.SettingId == id))
             {
-                if (session.TryGetSettingDword(owner, id, out var current))
-                    pendingBackup.Add(new SettingBackup(id, true, current));
-                else
-                    pendingBackup.Add(new SettingBackup(id, false, 0));
+                var original = session.TryGetOverrideDword(owner, id, out var oldValue);
+                backup.Settings.Add(new(id, original, oldValue));
             }
-        }
-
-        if (pendingBackup is not null)
-            WriteBackup(new OverrideBackup(gameExe, ownProfile, pendingBackup));
-        write(session, owner);
-        try
-        {
-            session.Save();
-        }
+            backup.PostSettings!.RemoveAll(x => x.SettingId == id);
+            backup.PostSettings.Add(new(id, existed, value));
+            WriteBackup(backup);
+        });
+        write(tracked, owner);
+        try { session.Save(); }
         catch (NvdrsException ex) when (ex.Status == -175)
-        {
-            throw new NvdrsException(-175,
-                "保存驱动设置被拒绝（NVAPI_ACCESS_DENIED）：写入 NVIDIA 配置需要管理员权限。" +
-                "请以管理员身份重启本程序后再应用。");
-        }
+        { throw new NvdrsException(-175, "保存驱动设置需要管理员权限 (NVAPI_ACCESS_DENIED)。"); }
     }
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
-    private sealed record OverrideBackup(string GameExe, bool OwnProfile, List<SettingBackup> Settings);
+    private sealed record OverrideBackup(string GameExe, bool OwnProfile, List<SettingBackup> Settings,
+        int SchemaVersion = 1, List<SettingBackup>? PostSettings = null);
+
+    private static void ValidateGameExe(string gameExe)
+    {
+        if (string.IsNullOrWhiteSpace(gameExe) || gameExe.Length > 255 || gameExe.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
+            || !gameExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(gameExe) != gameExe)
+            throw new ArgumentException(Str.T("Str.NvBackupInvalid"), nameof(gameExe));
+    }
+
+    private static void VerifySettings(INvdrsSession session, INvdrsProfile profile, OverrideBackup backup)
+    {
+        if (backup.SchemaVersion != 2 || backup.PostSettings is null) throw new InvalidDataException(Str.T("Str.NvLegacyBackupReview"));
+        foreach (var post in backup.PostSettings)
+        {
+            var original = backup.Settings.Single(s => s.SettingId == post.SettingId);
+            var exists = session.TryGetOverrideDword(profile, post.SettingId, out var current);
+            if (!(exists == post.Existed && (!exists || current == post.Value))
+                && !(exists == original.Existed && (!exists || current == original.Value)))
+                throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        }
+    }
+
+    private sealed class TrackedSession(INvdrsSession inner, Action<uint, bool, uint> beforeWrite) : INvdrsSession
+    {
+        public INvdrsProfile? FindApplicationOwner(string exe) => inner.FindApplicationOwner(exe);
+        public INvdrsProfile CreateProfile(string name, string exe) => inner.CreateProfile(name, exe);
+        public bool TryGetSettingDword(INvdrsProfile profile, uint id, out uint value) => inner.TryGetSettingDword(profile, id, out value);
+        public bool TryGetOverrideDword(INvdrsProfile profile, uint id, out uint value) => inner.TryGetOverrideDword(profile, id, out value);
+        public void SetSettingDword(INvdrsProfile profile, uint id, uint value) { beforeWrite(id, true, value); inner.SetSettingDword(profile, id, value); }
+        public bool DeleteSetting(INvdrsProfile profile, uint id) { beforeWrite(id, false, 0); return inner.DeleteSetting(profile, id); }
+        public void DeleteProfile(INvdrsProfile profile) => throw new NotSupportedException();
+        public void Save() => throw new NotSupportedException();
+        public void Dispose() { }
+    }
 
     private static string BackupPath(string gameExe)
-        => Path.Combine(BackupDir(), "backup-" + gameExe + ".json");
+    { ValidateGameExe(gameExe); return Path.Combine(BackupDir(), "backup-" + gameExe + ".json"); }
+
+    public static IReadOnlyList<string> BackupGames() => Directory.Exists(BackupDir())
+        ? Directory.EnumerateFiles(BackupDir(), "backup-*.exe.json").Select(f => Path.GetFileName(f)[7..^5]).ToArray()
+        : Array.Empty<string>();
 
     private static OverrideBackup? ReadBackup(string gameExe)
     {
@@ -390,8 +435,17 @@ public static class DisplayQualityService
             return null;
         try
         {
-            return JsonSerializer.Deserialize<OverrideBackup>(File.ReadAllText(path))
+            if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+            var backup = JsonSerializer.Deserialize<OverrideBackup>(File.ReadAllText(path))
                 ?? throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+            if (backup.GameExe != gameExe || backup.Settings is null || backup.Settings.Count > ManagedSettingIds.Length
+                || backup.Settings.Select(x => x.SettingId).Distinct().Count() != backup.Settings.Count
+                || backup.Settings.Any(x => !ManagedSettingIds.Contains(x.SettingId))
+                || backup.PostSettings is not null && (backup.PostSettings.Count > ManagedSettingIds.Length
+                    || backup.PostSettings.Select(x => x.SettingId).Distinct().Count() != backup.PostSettings.Count
+                    || backup.PostSettings.Any(x => !backup.Settings.Any(y => y.SettingId == x.SettingId))))
+                throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+            return backup;
         }
         catch (Exception ex)
         {
@@ -433,11 +487,12 @@ public static class DisplayQualityService
 
     /// <summary>
     /// 移除本工具的覆盖：按备份恢复原值（原来有值就写回，没有就删除设置项）；
-    /// 覆盖写在自建 profile 时则整个删除该 profile。返回是否有覆盖被移除。
+    /// 自建 profile 保留容器，仅恢复本工具触及的设置。返回是否有覆盖被移除。
     /// DLSS 与 M3 二期 3D 设置共用同一份备份与还原。
     /// </summary>
     public static bool RemoveDlssOverride(string gameExe)
     {
+        using var gate = SystemMutationGate.Acquire();
         var backup = ReadBackup(gameExe);
         using var api = CreateApi();
         if (!api.TryInitialize())
@@ -447,27 +502,18 @@ public static class DisplayQualityService
         if (backup is null)
             return false;
 
-        if (backup.OwnProfile)
+        var target = session.FindApplicationOwner(gameExe);
+        if (target is null)
         {
-            // 自建 profile：本来就是我们为这次覆盖创建的，按 exe 定位后整体删除
-            var target = session.FindApplicationOwner(gameExe);
-            if (target is not null)
-                session.DeleteProfile(target);
+            if (!backup.OwnProfile) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         }
         else
         {
-            // 预置/用户 profile：按 exe 重新定位（登记关系持久存在），恢复写入前的原值
-            var target = session.FindApplicationOwner(gameExe);
-            if (target is not null)
-            {
-                foreach (var setting in backup.Settings)
-                {
-                    if (setting.Existed)
-                        session.SetSettingDword(target, setting.SettingId, setting.Value);
-                    else
-                        session.DeleteSetting(target, setting.SettingId);
-                }
-            }
+            VerifySettings(session, target, backup);
+            foreach (var setting in backup.Settings)
+                if (setting.Existed) session.SetSettingDword(target, setting.SettingId, setting.Value);
+                else session.DeleteSetting(target, setting.SettingId);
+            // 无可靠的完整 profile 枚举证据时保留空壳，避免删除用户追加的设置或应用。
         }
         try
         {
