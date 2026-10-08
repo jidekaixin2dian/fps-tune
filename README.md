@@ -11,7 +11,7 @@
 
 ## 版本与下载
 
-已公开发布的是 [v0.2.3-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.3-beta)。当前源码为 **0.2.4-beta 候选版，尚未发布**。
+当前版本为 **[v0.2.4-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.4-beta)**。
 1.x / .NET 8 版本线已停止维护，历史源码保留在 `legacy/1.x`。
 
 从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
@@ -32,6 +32,8 @@
 - **多游戏**：识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置、主显示器数字振动、11 个生成的 ICC 预设或自选 `.icc` / `.icm`，以及原始关联还原。ICC 在使用颜色管理的应用中生效，部分游戏会忽略它。
 - **显卡名称实验**：将 NVIDIA 显卡的 Windows `DeviceDesc` 改为 GTX 1050 Ti，保留原名称备份。它不改变 DXGI 硬件标识、驱动能力或显卡性能，游戏是否采用此名称需实测。
+- **设置分类**：外观、壁纸、启动与通知、游戏与方案、数据与权限、关于；设置自动保存，壁纸提供圆角预览与短滑条。
+- **日常维护**：查看固定磁盘空间和内存工作集前 8 项，按需刷新；打开 Windows 存储清理、已安装应用、任务管理器、启动应用、可靠性历史、资源监视器、网络和更新页面。快照保留在当前页面，不自动上传。
 - **缓存维护**：先预览当前用户的 DirectX / NVIDIA 着色器缓存，再确认清理；跳过占用或预览后变化的文件。删除的缓存不能还原，下次运行会重建，可能短暂卡顿。
 - **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，支持报告导出与会话比较。真实 FPS 采样需要官方 PresentMon。
 - **窗口内引导**：新手教程、社区反馈和非强制更新提示位于主窗口右下角，可收起或关闭。

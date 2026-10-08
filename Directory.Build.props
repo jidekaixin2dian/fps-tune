@@ -25,7 +25,7 @@
     <!-- 0.2.1-beta = M2 多游戏上下文（游戏档案 + 逐游戏快照 + 概览卡切换器，范围见 PLAN-0.2.0 v3） -->
     <!-- 0.2.2-beta = M4 改动总览 + C-B 备份导出/导入 + M2 收尾（AutoProfile 自动切游戏/经典概览切换器） -->
     <!-- 0.2.3-beta = 按需共享采样/历史摘要 + 游戏判定隔离 + 旧备份传输与界面修复 -->
-    <!-- 0.2.4-beta = 合规与恢复修复、窗口内通知、界面与维护功能候选版 -->
+    <!-- 0.2.4-beta = 合规与恢复修复、窗口内通知、设置分类与维护快照 -->
     <VersionPrefix>0.2.4</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>

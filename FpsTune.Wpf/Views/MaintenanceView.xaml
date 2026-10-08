@@ -1,10 +1,46 @@
 <UserControl x:Class="FpsTune.Wpf.Views.MaintenanceView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{DynamicResource AppBackgroundBrush}">
-    <Grid Margin="28,22,28,24"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-        <StackPanel Margin="0,0,0,20"><TextBlock Text="{DynamicResource Str.NavTools}" Style="{StaticResource PageTitleStyle}"/>
-            <TextBlock Text="{DynamicResource Str.CacheIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/></StackPanel>
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><Border Style="{StaticResource CardStyle}" VerticalAlignment="Top"><StackPanel>
+    <Grid Margin="28,22,28,24"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Grid Margin="0,0,0,20"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="{DynamicResource Str.NavTools}" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                <TextBlock x:Name="SnapshotStatus" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,6,0,0"/></StackPanel>
+            <Button x:Name="RefreshButton" Grid.Column="1" Content="{DynamicResource Str.MaintenanceRefresh}" Style="{StaticResource SecondaryButtonStyle}" Click="Refresh_Click" VerticalAlignment="Top" Margin="20,0,0,0"/>
+        </Grid>
+        <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="232"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,24,0">
+                <RadioButton x:Name="StorageNav" Content="{DynamicResource Str.MaintenanceStorage}" GroupName="maintenanceSection" Tag="0" Checked="Section_Checked" IsChecked="True" Style="{StaticResource SectionNavigationStyle}"/>
+                <RadioButton x:Name="ProcessesNav" Content="{DynamicResource Str.MaintenanceProcesses}" GroupName="maintenanceSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+                <RadioButton x:Name="TroubleshootNav" Content="{DynamicResource Str.MaintenanceTroubleshoot}" GroupName="maintenanceSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+            </StackPanel>
+            <Grid Grid.Column="1">
+                <ScrollViewer x:Name="StorageSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,14,0">
+                    <Border Style="{StaticResource CardStyle}"><StackPanel>
+                        <TextBlock Text="{DynamicResource Str.MaintenanceDrives}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.MaintenanceDriveHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap"/>
+                        <ItemsControl x:Name="Drives" Margin="0,16,0,0"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,0,0,18">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <Grid><TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding Amount}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Grid Grid.Row="1" Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <ProgressBar Maximum="100" Value="{Binding UsedPercent}" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{DynamicResource Str.MaintenanceLowSpace}" Foreground="{DynamicResource WarningBrush}" FontSize="11" Margin="12,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding LowSpace}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                            </Grid>
+                        </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                        <TextBlock x:Name="NoDrives" Text="{DynamicResource Str.MaintenanceNoDrives}" Style="{StaticResource MutedTextStyle}" Visibility="Collapsed"/>
+                    </StackPanel></Border>
+<Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceTemporary}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceTemporaryHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="temporary" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceTemporary}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid>
+<Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceApps}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceAppsHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="apps" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceApps}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" VerticalAlignment="Top" Margin="0,14,0,0"><StackPanel>
             <TextBlock Text="{DynamicResource Str.ShaderCache}" Style="{StaticResource CardTitleStyle}"/>
             <TextBlock Text="{DynamicResource Str.CacheScope}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
             <WrapPanel Margin="0,18,0,12"><Button x:Name="ScanButton" Content="{DynamicResource Str.CacheScan}" Click="Scan_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,8"/>
@@ -19,6 +55,56 @@
             </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
             <TextBlock Text="{DynamicResource Str.CacheRebuild}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,12,0,0"/>
             <TextBlock x:Name="Skipped" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-        </StackPanel></Border></ScrollViewer>
+        </StackPanel></Border>
+                </StackPanel></ScrollViewer>
+                <ScrollViewer x:Name="ProcessesSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">
+                    <Border Style="{StaticResource CardStyle}"><StackPanel>
+                        <TextBlock Text="{DynamicResource Str.MaintenanceMemoryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.MaintenanceMemoryHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap"/>
+                        <ItemsControl x:Name="Processes" Margin="0,18,0,0"><ItemsControl.ItemTemplate><DataTemplate>
+                            <Grid Margin="0,0,0,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Pid, StringFormat=PID {0}}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Amount}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                        <TextBlock x:Name="NoProcesses" Text="{DynamicResource Str.MaintenanceNoProcesses}" Style="{StaticResource MutedTextStyle}" Visibility="Collapsed"/>
+                    </StackPanel></Border>
+<Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceTaskManager}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceTaskManagerHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="taskmanager" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceTaskManager}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid>
+<Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceStartup}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceStartupHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="startup" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceStartup}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid></StackPanel></Border>
+                </StackPanel></ScrollViewer>
+                <ScrollViewer x:Name="TroubleshootSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">
+<Border Style="{StaticResource CardStyle}" Margin="0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceReliability}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceReliabilityHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="reliability" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceReliability}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid>
+<Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceResources}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceResourcesHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="resources" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceResources}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid>
+<Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceNetwork}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceNetworkHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="network" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceNetwork}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid>
+<Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceUpdate}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource Str.MaintenanceUpdateHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+            <Button Grid.Column="1" Tag="update" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceUpdate}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
+        </Grid></StackPanel></Border>
+                </StackPanel></ScrollViewer>
+            </Grid>
+        </Grid>
+        <TextBlock x:Name="ToolStatus" Grid.Row="2" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="232,12,0,0"/>
     </Grid>
 </UserControl>

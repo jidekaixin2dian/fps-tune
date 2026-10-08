@@ -60,7 +60,7 @@ public partial class SettingsView : UserControl
     private void Section_Checked(object sender, RoutedEventArgs e)
     {
         if (Section0 is null || sender is not RadioButton { Tag: string tag }) return;
-        var sections = new[] { Section0, Section1, Section2, Section3 };
+        var sections = new[] { Section0, Section1, Section2, Section3, Section4, Section5 };
         for (var i = 0; i < sections.Length; i++)
             sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
     }

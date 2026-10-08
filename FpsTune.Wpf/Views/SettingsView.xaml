@@ -78,40 +78,45 @@
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
+        <Style x:Key="SettingsRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,12,0,12"/>
+        </Style>
     </UserControl.Resources>
     <Grid Margin="28,22,28,24">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-        <StackPanel Margin="0,0,0,18"><TextBlock Text="{DynamicResource Str.NavSettings}" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="{DynamicResource Str.SettingsIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/></StackPanel>
-        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,18">
-            <RadioButton Content="{DynamicResource Str.SettingsAppearance}" GroupName="settingsSection" Tag="0" Checked="Section_Checked" Style="{StaticResource SettingsChoice}" IsChecked="True"/>
-            <RadioButton Content="{DynamicResource Str.SettingsStartup}" GroupName="settingsSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
-            <RadioButton Content="{DynamicResource Str.SettingsGame}" GroupName="settingsSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
-            <RadioButton Content="{DynamicResource Str.SettingsData}" GroupName="settingsSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SettingsChoice}"/>
-        </UniformGrid>
-        <Grid Grid.Row="2">
-            <ScrollViewer x:Name="Section0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Visible"><StackPanel Margin="0,0,12,0">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,20"><TextBlock Text="{DynamicResource Str.NavSettings}" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="{DynamicResource Str.SettingsIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/></StackPanel>
+        <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="232"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,24,0"><RadioButton x:Name="SettingsNav0" Content="{DynamicResource Str.SettingsAppearance}" GroupName="settingsSection" Tag="0" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}" IsChecked="True"/>
+<RadioButton x:Name="SettingsNav4" Content="{DynamicResource Str.Wallpaper}" GroupName="settingsSection" Tag="4" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav1" Content="{DynamicResource Str.SettingsStartup}" GroupName="settingsSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav2" Content="{DynamicResource Str.SettingsGame}" GroupName="settingsSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav3" Content="{DynamicResource Str.SettingsData}" GroupName="settingsSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav5" Content="{DynamicResource Str.SectionAbout}" GroupName="settingsSection" Tag="5" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/></StackPanel>
+            <Grid Grid.Column="1" MaxWidth="960" HorizontalAlignment="Stretch"><ScrollViewer x:Name="Section0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Visible"><StackPanel Margin="0,0,14,0">
 <Border Style="{StaticResource CardStyle}"><StackPanel>                    <TextBlock Text="{DynamicResource Str.ThemeLabel}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
-                    <!-- 主题三选一紧随「主题外观」标签；语言块移后（原在标签与主题之间，标签与内容错位） -->
-                    <UniformGrid Columns="3" Margin="0,12,0,16">
+
+                    <UniformGrid Columns="3" Margin="0,12,0,20">
                         <RadioButton x:Name="ThemeDarkRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeDark}">
                             <StackPanel><Border Height="26" Background="#07090B" CornerRadius="3" Margin="0,0,0,10"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeDarkShort}" FontSize="16" FontWeight="SemiBold"/>
-                                <TextBlock Text="{DynamicResource Str.ThemeDarkDesc}" FontSize="13" Margin="0,5,0,0"/>
+                                <TextBlock Text="{DynamicResource Str.ThemeDarkDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="ThemeLightRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeLight}">
                             <StackPanel><Border Height="26" Background="#F7F9FC" CornerRadius="3" Margin="0,0,0,10"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeLightShort}" FontSize="16" FontWeight="SemiBold"/>
-                                <TextBlock Text="{DynamicResource Str.ThemeLightDesc}" FontSize="13" Margin="0,5,0,0"/>
+                                <TextBlock Text="{DynamicResource Str.ThemeLightDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="ThemeSystemRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeSystem}">
                             <StackPanel><Border Height="26" Background="#64748B" CornerRadius="3" Margin="0,0,0,10"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeSystemShort}" FontSize="16" FontWeight="SemiBold"/>
-                                <TextBlock Text="{DynamicResource Str.ThemeSystemDesc}" FontSize="13" Margin="0,5,0,0"/>
+                                <TextBlock Text="{DynamicResource Str.ThemeSystemDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                     </UniformGrid>
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,0,0,20"/>
                     <StackPanel Margin="0,2,0,0">
                         <TextBlock Text="{DynamicResource Str.LanguageLabel}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -122,10 +127,6 @@
                         </StackPanel>
                         <TextBlock Text="{DynamicResource Str.LanguageNote}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,6,0,0"/>
                     </StackPanel>
-                    <CheckBox x:Name="LowSpecCheck"
-                              Style="{StaticResource SettingsToggleStyle}"
-                              Content="{DynamicResource Str.LowSpecMode}"
-                              Margin="0,12,0,0"/>
 
                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,18,0,14"/>
                     <TextBlock Text="{DynamicResource Str.DisplayMode}" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -135,74 +136,27 @@
                         <RadioButton x:Name="StudioModeRadio" GroupName="displayMode" Tag="studio" Checked="DisplayMode_Checked" Content="{DynamicResource Str.Workspace}" Style="{StaticResource SettingsChoice}"/>
                     </UniformGrid>
 </StackPanel></Border>
-                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
-                    <TextBlock Text="{DynamicResource Str.Wallpaper}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                    <Grid Margin="0,18,0,0">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <Border x:Name="WallpaperPreviewFrame" Width="176" Height="176" CornerRadius="16"
-                                Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-                            <Grid>
-                                <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="15"
-                                        Opacity="{Binding ElementName=WallpaperOpacitySlider, Path=Value}"/>
-                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Path Data="M 2,22 L 12,10 L 19,18 L 25,12 L 34,22 M 24,5 A 3,3 0 1 0 30,5 A 3,3 0 1 0 24,5"
-                                          Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.5" Width="36" Height="26" Stretch="Uniform" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{DynamicResource Str.WallpaperChoose}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
-                                </StackPanel>
-                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" Padding="7,3" CornerRadius="5" Background="{DynamicResource ElevatedBrush}">
-                                    <TextBlock Text="{DynamicResource Str.WallpaperPreview}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                        <StackPanel Grid.Column="1" Margin="24,0,0,0" Width="300" HorizontalAlignment="Left" VerticalAlignment="Center">
-                            <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
-                            <Grid Margin="0,14,0,0">
-                                <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                                <Border HorizontalAlignment="Right" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
-                                    <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="SemiBold"/>
-                                </Border>
-                            </Grid>
-                            <Slider x:Name="WallpaperOpacitySlider" Style="{StaticResource WallpaperSliderStyle}" Margin="0,4,0,0"
-                                    AutomationProperties.Name="{DynamicResource Str.WallpaperOpacity}"
-                                    Minimum="0.05" Maximum="0.35" Value="0.18" SmallChange="0.01" LargeChange="0.05" ValueChanged="WallpaperOpacity_Changed"/>
-                            <Grid Margin="4,-2,4,12"><TextBlock Text="5%" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
-                                <TextBlock Text="35%" HorizontalAlignment="Right" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/></Grid>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="{DynamicResource Str.WallpaperChoose}" Click="WallpaperChoose_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
-                                <Button Content="{DynamicResource Str.WallpaperRemove}" Click="WallpaperRemove_Click" Style="{StaticResource GhostButtonStyle}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock x:Name="WallpaperStatus" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-                </StackPanel></Border>
-            </StackPanel></ScrollViewer>
-            <ScrollViewer x:Name="Section1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
-                <Border Style="{StaticResource CardStyle}"><CheckBox x:Name="StartupUpdateCheck" Content="{DynamicResource Str.CheckUpdatesOnStartup}" Style="{StaticResource SettingsToggleStyle}" Checked="StartupUpdate_Changed" Unchecked="StartupUpdate_Changed"/></Border>
-<Border Style="{StaticResource CardStyle}"><StackPanel>                    <TextBlock Text="{DynamicResource Str.SectionStartup}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
-                    <CheckBox x:Name="AutostartCheck"
-                              Style="{StaticResource SettingsToggleStyle}"
-                              Content="{DynamicResource Str.AutoStart}"
-                              Margin="0,8,0,0"/>
-
-                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,14,0,12"/>
-
-                    <TextBlock Text="{DynamicResource Str.SectionTray}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
-                    <CheckBox x:Name="TrayCheck"
-                              Style="{StaticResource SettingsToggleStyle}"
-                              Content="{DynamicResource Str.MinimizeToTray}"
-                              Margin="0,8,0,0"/>
-                    <CheckBox x:Name="HotkeyCheck"
-                              Style="{StaticResource SettingsToggleStyle}"
-                              Content="{DynamicResource Str.GlobalHotkey}"
-                              Margin="0,10,0,0"/>
-                    <CheckBox x:Name="NotifyCheck"
-                              Style="{StaticResource SettingsToggleStyle}"
-                              Content="{DynamicResource Str.NotifyOnComplete}"
-                              Margin="0,10,0,0"/>
-</StackPanel></Border>
-            </StackPanel></ScrollViewer>
-            <ScrollViewer x:Name="Section2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
+</StackPanel></ScrollViewer><ScrollViewer x:Name="Section1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0"><Border Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsStartup}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.StartupShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.StartupHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="AutostartCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.StartupShort}" />
+    </Grid><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.TrayShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.TrayHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="TrayCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.TrayShort}" />
+    </Grid><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.HotkeyShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.HotkeyHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="HotkeyCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.HotkeyShort}" />
+    </Grid><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.NotifyShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.NotifyHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="NotifyCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.NotifyShort}" />
+    </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsPerformance}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.LowSpecShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.LowSpecHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="LowSpecCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.LowSpecShort}" />
+    </Grid></StackPanel></Border></StackPanel></ScrollViewer><ScrollViewer x:Name="Section2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 游戏 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
@@ -248,7 +202,8 @@
                               Checked="AutoProfileSetting_Changed"
                               Unchecked="AutoProfileSetting_Changed"/>
 
-                    <Grid Margin="0,14,0,0">
+                    <UniformGrid Columns="2" Margin="0,14,100,6"><TextBlock Text="{DynamicResource Str.SectionGame}" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{DynamicResource Str.TipSavedProfiles}" Style="{StaticResource MutedTextStyle}"/></UniformGrid>
+                    <Grid Margin="0,0,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -346,8 +301,7 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <!-- 活动中心：本地审计事件，可解释自动应用都发生了什么 -->
-                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,16,0,12"/>
+<Expander Header="{DynamicResource Str.ActivityLogTitle}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,18,0,0"><StackPanel Margin="0,12,0,0">                    <!-- 活动中心：本地审计事件，可解释自动应用都发生了什么 -->
                     <Grid>
                         <TextBlock Text="{DynamicResource Str.ActivityLogTitle}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -405,12 +359,12 @@
                                Text="{DynamicResource Str.NoActivity}"
                                Style="{StaticResource MutedTextStyle}"
                                Margin="0,10,0,0" TextWrapping="Wrap"/>
+</StackPanel></Expander>
                 </StackPanel>
             </Border>
 
 
-            </StackPanel></ScrollViewer>
-            <ScrollViewer x:Name="Section3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
+            </StackPanel></ScrollViewer><ScrollViewer x:Name="Section3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 高级 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>
@@ -427,7 +381,7 @@
                                 MinWidth="150" Margin="14,0,0,0"
                                 Click="AdminRestartButton_Click"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <WrapPanel Margin="0,14,0,0">
                         <Button Content="{DynamicResource Str.OpenDataDir}"
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="110" Margin="0,0,6,0"
@@ -444,11 +398,54 @@
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="110"
                                 Click="ExportDiagnostics_Click"/>
-                    </StackPanel>
+                    </WrapPanel>
                 </StackPanel>
             </Border>
 
-            <!-- 关于 -->
+</StackPanel></ScrollViewer>
+<ScrollViewer x:Name="Section4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">                <Border Style="{StaticResource CardStyle}" Margin="0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.Wallpaper}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    <Grid Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Border x:Name="WallpaperPreviewFrame" Width="176" Height="176" CornerRadius="16"
+                                Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <Grid>
+                                <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="15"
+                                        Opacity="{Binding ElementName=WallpaperOpacitySlider, Path=Value}"/>
+                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path Data="M 2,22 L 12,10 L 19,18 L 25,12 L 34,22 M 24,5 A 3,3 0 1 0 30,5 A 3,3 0 1 0 24,5"
+                                          Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.5" Width="36" Height="26" Stretch="Uniform" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{DynamicResource Str.WallpaperChoose}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,12,0,0"/>
+                                </StackPanel>
+                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" Padding="7,3" CornerRadius="5" Background="{DynamicResource ElevatedBrush}">
+                                    <TextBlock Text="{DynamicResource Str.WallpaperPreview}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="24,0,0,0" Width="300" HorizontalAlignment="Left" VerticalAlignment="Center">
+                            <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
+                            <Grid Margin="0,14,0,0">
+                                <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                <Border HorizontalAlignment="Right" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
+                                    <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="SemiBold"/>
+                                </Border>
+                            </Grid>
+                            <Slider x:Name="WallpaperOpacitySlider" Style="{StaticResource WallpaperSliderStyle}" Margin="0,4,0,0"
+                                    AutomationProperties.Name="{DynamicResource Str.WallpaperOpacity}"
+                                    Minimum="0.05" Maximum="0.35" Value="0.18" SmallChange="0.01" LargeChange="0.05" ValueChanged="WallpaperOpacity_Changed"/>
+                            <Grid Margin="4,-2,4,12"><TextBlock Text="5%" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                                <TextBlock Text="35%" HorizontalAlignment="Right" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/></Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{DynamicResource Str.WallpaperChoose}" Click="WallpaperChoose_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
+                                <Button Content="{DynamicResource Str.WallpaperRemove}" Click="WallpaperRemove_Click" Style="{StaticResource GhostButtonStyle}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock x:Name="WallpaperStatus" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                </StackPanel></Border>
+            </StackPanel></ScrollViewer>
+<ScrollViewer x:Name="Section5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">            <!-- 关于 -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.SectionAbout}" Style="{StaticResource CardTitleStyle}"/>
@@ -458,7 +455,7 @@
                                Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <TextBlock Text="{DynamicResource Str.AboutLine2}"
                                Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <WrapPanel Margin="0,14,0,0">
                         <Button x:Name="CheckUpdateButton"
                                 Content="{DynamicResource Str.CheckUpdate}"
                                 Style="{StaticResource SecondaryButtonStyle}"
@@ -474,13 +471,18 @@
                                    Text="{DynamicResource Str.NotChecked}"
                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                    VerticalAlignment="Center"/>
-                    </StackPanel>
+                    </WrapPanel>
                     <ProgressBar x:Name="UpdateProgressBar"
                                  Style="{StaticResource ThinMeterStyle}"
                                  Foreground="{DynamicResource AccentBrush}"
                                  Maximum="100"
                                  Visibility="Collapsed"
                                  Margin="0,10,0,0"/>
+<Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.CheckUpdatesOnStartup}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.UpdateHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="StartupUpdateCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CheckUpdatesOnStartup}" Checked="StartupUpdate_Changed" Unchecked="StartupUpdate_Changed"/>
+    </Grid>
                     <TextBlock Text="{DynamicResource Str.ContactNote}"
                                Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
                 </StackPanel>
@@ -488,6 +490,5 @@
 
 
             </StackPanel></ScrollViewer>
-        </Grid>
-    </Grid>
+</Grid></Grid></Grid>
 </UserControl>
