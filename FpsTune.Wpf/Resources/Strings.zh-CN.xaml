@@ -791,4 +791,11 @@
     <s:String x:Key="Str.PowerRestoreSetting">恢复电源设置</s:String>
     <s:String x:Key="Str.BackupPendingWrite">上次写入尚未完成确认，请先核查这项设置。</s:String>
     <s:String x:Key="Str.BackupTargetChanged">这项设置后来发生了变化，已保留备份供核查。</s:String>
+    <s:String x:Key="Str.ExperimentContextMismatch">采样条件已变化，请重新采集基线。</s:String>
+    <s:String x:Key="Str.ExperimentApplyFailed">应用未完成：{0}。恢复结果：{1}</s:String>
+    <s:String x:Key="Str.ExperimentRecoveryFailed">实验恢复未完成：{0}。请到还原页查看。</s:String>
+    <s:String x:Key="Str.ExperimentNotStable">样本不足或不稳定，未确认收益。</s:String>
+    <s:String x:Key="Str.ExperimentP99Rejected">P99 帧时间增加超过 3%，不保留本组。</s:String>
+    <s:String x:Key="Str.VerdictLegacyBadge">历史记录·待复测</s:String>
+    <s:String x:Key="Str.ExperimentInterrupted">上次实验尚未结束，请先在还原页处理实验备份。</s:String>
 </ResourceDictionary>

@@ -84,21 +84,34 @@ public static class OptimizationEngine
         return Task.FromResult(new RunResult(0, json, ""));
     }
 
-    private static RunResult ApplyNative(IReadOnlyList<string> ids, string? gamePath)
+    internal sealed record ApplyReceipt(string OperationId, string BackupFile, IReadOnlyList<OptimizationApplyResult> Results);
+
+    internal static Task<ApplyReceipt> ApplyItemsWithReceiptAsync(IEnumerable<string> ids, string? gamePath)
+        => Task.Run(() => ExecuteNative(ids.Distinct().ToArray(), gamePath));
+
+    private static ApplyReceipt ExecuteNative(IReadOnlyList<string> ids, string? gamePath)
     {
         lock (OperationLock)
         {
-            // 备份与应用必须是一个串行临界区，避免两次 Apply 互相覆盖快照。
             using var mutation = SystemMutationGate.Acquire();
-            if (ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
-                throw new ArgumentException("Unknown optimization item.", nameof(ids));
+            if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
+                throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
             if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id).Admin))
                 throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
+            BackupService.EnsureNoPendingWrites(ids);
             var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
             var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
                 id => BackupService.AppendCapture(backupFile, id, gamePath),
                 result => BackupService.CompleteCapture(backupFile, result));
+            return new ApplyReceipt(BackupService.OperationId(backupFile), backupFile, results);
+        }
+    }
 
+    private static RunResult ApplyNative(IReadOnlyList<string> ids, string? gamePath)
+    {
+        var receipt = ExecuteNative(ids, gamePath);
+        var backupFile = receipt.BackupFile;
+        var results = receipt.Results;
             var rebootIds = results
                 .Where(r => r.Ok && r.Changed)
                 .Select(r => ItemCatalog.All.FirstOrDefault(x => x.Id == r.Id))
@@ -108,6 +121,7 @@ public static class OptimizationEngine
 
             var payload = new
             {
+                operationId = receipt.OperationId,
                 tool = "fps-tune",
                 version = UpdateService.CurrentVersion,
                 mode = "apply",
@@ -128,6 +142,5 @@ public static class OptimizationEngine
 
             var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
             return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json, "");
-        }
     }
 }

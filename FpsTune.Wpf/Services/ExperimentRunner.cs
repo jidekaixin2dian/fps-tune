@@ -14,12 +14,12 @@ namespace FpsTune.Wpf.Services;
 /// 编排全部在进程内完成——应用/还原直接调 OptimizationEngine/BackupService，
 /// 采样直接调 PresentMon，不再经过 PowerShell；
 /// 旧脚本存在的理由（提权执行可写脚本、租约、子进程哈希复校验）随之整类删除。
-/// 输出 JSON 与旧脚本逐字段同构，state.json / history.jsonl 格式不变，
-/// 因此 GUI 解析、向导旧状态迁移与历史曲线均无需迁移。
+/// v2 状态绑定采样条件与实验批次；模拟与真实数据分开保存，旧记录只读兼容。
 /// </summary>
 public static class ExperimentRunner
 {
     private const string ToolName = "fps-tune";
+    private static readonly SemaphoreSlim RunGate = new(1, 1);
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -44,7 +44,8 @@ public static class ExperimentRunner
         string? CsvPath = null,
         string? PresentMonPath = null,
         string? GameName = null,
-        IReadOnlyList<string>? Items = null);
+        IReadOnlyList<string>? Items = null,
+        string? Scene = null);
 
     /// <summary>
     /// 执行一个实验步骤。step 取值：baseline / report / group-1 / group-2 / group-3。
@@ -77,11 +78,14 @@ public static class ExperimentRunner
         if (mode == "unknown")
             return (1, ErrorJson("test", $"未知实验步骤: {step}（可选 baseline / report / group-1 / group-2 / group-3）"));
 
+        await RunGate.WaitAsync(ct);
         try
         {
+            if (!options.Simulate && mode != "report" && HasInterruptedOperation())
+                return (1, ErrorJson(mode, Str.T("Str.ExperimentInterrupted")));
             JsonObject result = mode switch
             {
-                "baseline" => await RunBaselineAsync(options, ct),
+                "baseline" => await RunBaselineAsync(options, ct, gamePath),
                 "report" => RunReport(options),
                 _ => await RunTestGroupAsync(groupId!, options, ct, gamePath),
             };
@@ -96,6 +100,7 @@ public static class ExperimentRunner
         {
             return (1, ErrorJson(mode, ex.Message));
         }
+        finally { RunGate.Release(); }
     }
 
     private static string ErrorJson(string mode, string error) =>
@@ -106,17 +111,17 @@ public static class ExperimentRunner
     // 基线
     // ------------------------------------------------------------------
 
-    private static async Task<JsonObject> RunBaselineAsync(Options options, CancellationToken ct)
+    private static async Task<JsonObject> RunBaselineAsync(Options options, CancellationToken ct, string? gamePath)
     {
         var samples = await CollectSamplesAsync(3, options, ct);
         if (samples.Ok is false)
             return Fail("baseline", samples.Error!);
         var summary = Summarize(samples.Samples!);
 
-        var state = ReadState();
+        var context = ExperimentContext.Create(options, gamePath);
         var newState = new JsonObject
         {
-            ["schema"] = "v1",
+            ["schema"] = "v2",
             ["updatedAt"] = DateTime.Now.ToString("o"),
             ["baseline"] = new JsonObject
             {
@@ -124,18 +129,21 @@ public static class ExperimentRunner
                 ["summary"] = summary,
                 ["mode"] = samples.Mode,
                 ["durationSec"] = options.DurationSec,
+                ["context"] = JsonSerializer.SerializeToNode(context),
             },
-            ["groups"] = state?["groups"] is JsonArray g ? (JsonArray)g.DeepClone() : [],
+            ["groups"] = new JsonArray(),
         };
-        WriteState(newState);
+        WriteState(newState, options);
         AppendHistory(new JsonObject
         {
             ["time"] = DateTime.Now.ToString("o"),
             ["kind"] = "baseline",
+            ["samplerMode"] = samples.Mode,
+            ["experimentId"] = context.BatchId,
             ["id"] = "baseline",
             ["name"] = "基线",
             ["summary"] = summary.DeepClone(),
-        });
+        }, options);
 
         var stable = summary["stable"]!.GetValue<bool>();
         var msg = $"基线采集完成：平均帧率 {summary["avgFps"]} FPS、1% low {summary["p1Low"]}、P99 {summary["p99Ms"]} ms、卡顿 {summary["stutters"]} 次";
@@ -180,12 +188,16 @@ public static class ExperimentRunner
         }
         var groupName = isKnownGroup ? known.Name : Str.T("Str.CustomGroupName", itemIds.Length);
 
-        var state = ReadState();
+        var state = ReadState(options);
         var baselineSummary = state?["baseline"]?["summary"] as JsonObject;
         if (baselineSummary is null)
             return Fail("test", "还没有基线数据，请先采集基线（同一地图/画质/路线采集 3 次）。");
         if (baselineSummary["stable"]?.GetValue<bool>() != true)
             return Fail("test", "基线不稳定，重新采集基线后再测试。");
+
+        var baselineContext = state?["baseline"]?["context"]?.Deserialize<ExperimentContext>();
+        if (baselineContext is null || baselineContext != ExperimentContext.Create(options, gamePath, baselineContext.BatchId))
+            return Fail("test", Str.T("Str.ExperimentContextMismatch"));
 
         // 候选组必须按 group-1 → group-2 → group-3 推进；允许重跑当前组，
         // 但缺少前置组时在任何 apply、state/history/CSV 写入前明确拒绝。
@@ -206,21 +218,35 @@ public static class ExperimentRunner
             return Fail("test",
                 $"候选组顺序不合法：运行 {groupId} 前必须先完成 {string.Join("、", missing)}；当前未写入任何状态。");
 
+        var inheritedIds = (state?["groups"] as JsonArray ?? []).OfType<JsonObject>()
+            .Where(g => g["keep"]?.GetValue<bool>() == true && g["id"]?.GetValue<string>() != groupId)
+            .SelectMany(g => (g["items"] as JsonArray ?? []).Select(i => i!.GetValue<string>()))
+            .Distinct(StringComparer.Ordinal).ToArray();
+        var effectiveIds = inheritedIds.Concat(itemIds).Distinct(StringComparer.Ordinal).ToArray();
+
         // 1) 应用候选组（真实模式），记下"本次应用写下的快照"与"真正被改动的项"
         string? appliedBackup = null;
         var changedIds = itemIds.ToList();
         if (!options.Simulate)
         {
-            var applied = await ApplyGroupAsync(itemIds, ct);
-            if (!applied.Ok)
-                return Fail("test", "应用候选组未完成：" + applied.Error);
+            WriteInFlight(groupId, itemIds, null);
+            var applied = await ApplyGroupAsync(itemIds, ct, gamePath);
             appliedBackup = applied.BackupFile;
             changedIds = applied.ChangedIds;
+            WriteInFlight(groupId, changedIds, appliedBackup);
+            if (!applied.Ok)
+            {
+                var rollback = changedIds.Count == 0 ? null : await RestoreGroupAsync(changedIds, appliedBackup);
+                if (rollback is null || rollback.Ok) ClearInFlight();
+                return Fail("test", Str.T("Str.ExperimentApplyFailed", applied.Error, rollback?.Error ?? ""));
+            }
             if (string.IsNullOrEmpty(appliedBackup) || !File.Exists(appliedBackup))
                 return Fail("test",
                     "应用已完成，但没有取得本步骤自己的备份快照，已停止采样以保证可还原；请在「还原」页核对该组项目后重试。");
         }
 
+        try
+        {
         // 2) 采样 3 次
         SamplesResult samples;
         if (options.Simulate)
@@ -257,6 +283,7 @@ public static class ExperimentRunner
                 if (!rr.Ok)
                     return Fail("test", samples.Error + "；且现场还原失败：" + rr.Error);
             }
+            if (!options.Simulate) ClearInFlight();
             return Fail("test", samples.Error!);
         }
         var summary = Summarize(samples.Samples!);
@@ -264,33 +291,6 @@ public static class ExperimentRunner
         // 3) 决策
         var decision = DecideKeep(baselineSummary, summary);
         var kept = decision.Keep;
-
-        // 0.2.0 M1：判定沉淀——真实模式（非 Simulate）的每次实验结论入册 verdicts.json；
-        // 模拟数据绝不入册（红线「数据说话」）。写入失败静默，不阻塞实验流程。
-        if (!options.Simulate && baselineSummary["avgFps"] is { } baseAvgNode && baseAvgNode.GetValue<double>() > 0)
-        {
-            var baseAvg = baseAvgNode.GetValue<double>();
-            var testAvg = summary["avgFps"]!.GetValue<double>();
-            VerdictStore.Upsert(new VerdictStore.VerdictEntry(
-                VerdictStore.MakeKey(itemIds),
-                Kind: itemIds.Length == 1 ? "item" : "bundle",
-                Items: itemIds,
-                GroupId: groupId,
-                Game: options.GameName ?? "",
-                AvgFpsBase: baseAvg,
-                AvgFpsTest: testAvg,
-                P1LowBase: baselineSummary["p1Low"]!.GetValue<double>(),
-                P1LowTest: summary["p1Low"]!.GetValue<double>(),
-                StuttersBase: baselineSummary["stutters"]!.GetValue<int>(),
-                StuttersTest: summary["stutters"]!.GetValue<int>(),
-                Stable: baselineSummary["stable"]!.GetValue<bool>(),
-                Keep: kept,
-                DeltaPct: Math.Round((testAvg - baseAvg) / baseAvg * 100, 2),
-                At: DateTime.Now,
-                DurationSec: options.DurationSec,
-                Mode: samples.Mode ?? "auto",
-                GamePath: gamePath));
-        }
 
         // 4) 无效 → 自动还原（只还原本步骤真正改过、且记录在本次快照里的项）
         //    若本组在测试前就已达标，本次没有任何"原值"可还原，绝不能谎报"已还原"。
@@ -323,6 +323,42 @@ public static class ExperimentRunner
             }
         }
 
+        // 0.2.0 M1：判定沉淀——真实模式（非 Simulate）的每次实验结论入册 verdicts.json；
+        // 模拟数据绝不入册（红线「数据说话」）。写入失败静默，不阻塞实验流程。
+        if (!options.Simulate && summary["stable"]?.GetValue<bool>() == true && baselineSummary["avgFps"] is { } baseAvgNode && baseAvgNode.GetValue<double>() > 0)
+        {
+            var baseAvg = baseAvgNode.GetValue<double>();
+            var testAvg = summary["avgFps"]!.GetValue<double>();
+            VerdictStore.Upsert(new VerdictStore.VerdictEntry(
+                VerdictStore.MakeKey(effectiveIds),
+                Kind: effectiveIds.Length == 1 ? "item" : "bundle",
+                Items: effectiveIds,
+                GroupId: groupId,
+                Game: options.GameName ?? "",
+                AvgFpsBase: baseAvg,
+                AvgFpsTest: testAvg,
+                P1LowBase: baselineSummary["p1Low"]!.GetValue<double>(),
+                P1LowTest: summary["p1Low"]!.GetValue<double>(),
+                StuttersBase: baselineSummary["stutters"]!.GetValue<int>(),
+                StuttersTest: summary["stutters"]!.GetValue<int>(),
+                Stable: true,
+                Keep: kept,
+                DeltaPct: Math.Round((testAvg - baseAvg) / baseAvg * 100, 2),
+                At: DateTime.Now,
+                DurationSec: options.DurationSec,
+                Mode: samples.Mode ?? "auto",
+                GamePath: gamePath,
+                RuleVersion: "v2-p99-3",
+                ExperimentId: baselineContext.BatchId,
+                P99Base: baselineSummary["p99Ms"]!.GetValue<double>(),
+                P99Test: summary["p99Ms"]!.GetValue<double>(),
+                Reverted: reverted,
+                RecoveryError: revertError,
+                EnvironmentHash: baselineContext.EnvironmentHash,
+                RecipeHash: baselineContext.RecipeHash,
+                Scene: baselineContext.Scene));
+        }
+
         // 5) 更新状态
         var groups = (state?["groups"] as JsonArray ?? []).DeepClone().AsArray();
         var existing = groups.OfType<JsonObject>().FirstOrDefault(g => g["id"]?.GetValue<string>() == groupId);
@@ -336,6 +372,8 @@ public static class ExperimentRunner
             ["id"] = groupId,
             ["name"] = groupName,
             ["items"] = new JsonArray(itemIds.Select(i => JsonValue.Create(i)).ToArray()),
+            ["effectiveItems"] = new JsonArray(effectiveIds.Select(i => JsonValue.Create(i)).ToArray()),
+            ["backupFile"] = appliedBackup,
             ["appliedAt"] = DateTime.Now.ToString("o"),
             ["summary"] = summary.DeepClone(),
             ["keep"] = kept,
@@ -346,23 +384,26 @@ public static class ExperimentRunner
         });
         WriteState(new JsonObject
         {
-            ["schema"] = "v1",
+            ["schema"] = "v2",
             ["updatedAt"] = DateTime.Now.ToString("o"),
             ["baseline"] = state!["baseline"]!.DeepClone(),
             ["groups"] = groups,
-        });
+        }, options);
         AppendHistory(new JsonObject
         {
             ["time"] = DateTime.Now.ToString("o"),
             ["kind"] = "test",
+            ["samplerMode"] = samples.Mode,
+            ["experimentId"] = baselineContext.BatchId,
             ["id"] = groupId,
             ["name"] = groupName,
             ["summary"] = summary.DeepClone(),
             ["keep"] = kept,
             ["reverted"] = reverted,
             ["reason"] = reason,
-        });
+        }, options);
 
+        if (!options.Simulate && (revertError.Length == 0 || changedIds.Count == 0)) ClearInFlight();
         var verdict = kept ? "保留" : reverted ? "已还原" : "未还原";
         return new JsonObject
         {
@@ -382,6 +423,17 @@ public static class ExperimentRunner
             ["samplerMode"] = samples.Mode,
             ["message"] = $"{groupName}（{groupId}）测试完成：{verdict}。{reason}",
         };
+        }
+        catch
+        {
+            if (!options.Simulate && appliedBackup is not null && changedIds.Count > 0)
+            {
+                var recovery = await RestoreGroupAsync(changedIds, appliedBackup);
+                if (!recovery.Ok) throw new InvalidOperationException(Str.T("Str.ExperimentRecoveryFailed", recovery.Error));
+                ClearInFlight();
+            }
+            throw;
+        }
     }
 
     // ------------------------------------------------------------------
@@ -390,11 +442,11 @@ public static class ExperimentRunner
 
     private static JsonObject RunReport(Options options)
     {
-        var state = ReadState();
+        var state = ReadState(options);
         if (state is null)
             return Fail("report", "还没有实验数据。");
 
-        var csvPath = Path.Combine(StateDir(), "experiment-summary.csv");
+        var csvPath = Path.Combine(StateDir(), options.Simulate ? "experiment-summary-simulated.csv" : "experiment-summary.csv");
         var lines = new List<string> { "group,keep,avgFps,p1Low,p99Ms,stutters,reason" };
         if (state["groups"] is JsonArray groups)
         {
@@ -416,7 +468,7 @@ public static class ExperimentRunner
             ["ok"] = true,
             ["baseline"] = state["baseline"]?["summary"]?.DeepClone(),
             ["groups"] = state["groups"] is JsonArray arr ? arr.DeepClone() : new JsonArray(),
-            ["stateFile"] = Path.Combine(StateDir(), "state.json"),
+            ["stateFile"] = StateFile(options),
             ["csvExport"] = csvPath,
         };
     }
@@ -427,38 +479,13 @@ public static class ExperimentRunner
 
     private sealed record ApplyOutcome(bool Ok, string? Error, string? BackupFile, List<string> ChangedIds);
 
-    private static async Task<ApplyOutcome> ApplyGroupAsync(string[] itemIds, CancellationToken ct)
+    private static async Task<ApplyOutcome> ApplyGroupAsync(string[] itemIds, CancellationToken ct, string? gamePath)
     {
-        var gamePath = StateStore.LoadGamePath() ?? GamePathService.Find();
-        var run = await OptimizationEngine.ApplyItemsAsync(itemIds, gamePath);
         ct.ThrowIfCancellationRequested();
-
-        JsonObject parsed;
-        try
-        {
-            parsed = JsonNode.Parse(run.Output)!.AsObject();
-        }
-        catch
-        {
-            // 应用命令已经执行过，系统可能已被修改，但拿不到锚定快照，绝不能再往下采样/还原。
-            return new ApplyOutcome(false,
-                "应用已返回，但结果无法解析为 JSON（系统可能已被修改，请务必到「还原」页核对）：" + run.Output, null, []);
-        }
-
-        var changedIds = new List<string>();
-        var failures = new List<string>();
-        foreach (var r in parsed["results"]!.AsArray().OfType<JsonObject>())
-        {
-            var id = r["id"]!.GetValue<string>();
-            if (r["changed"]?.GetValue<bool>() == true)
-                changedIds.Add(id);
-            if (r["ok"]?.GetValue<bool>() == false && r["skipped"]?.GetValue<bool>() == false)
-                failures.Add($"{id} — {r["message"]?.GetValue<string>()}");
-        }
-        if (failures.Count > 0)
-            return new ApplyOutcome(false, string.Join("；", failures), null, []);
-
-        return new ApplyOutcome(true, null, parsed["backupFile"]?.GetValue<string>(), changedIds);
+        var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(itemIds, gamePath);
+        var changed = receipt.Results.Where(r => r.Changed || r.StateUncertain).Select(r => r.Id).ToList();
+        var errors = receipt.Results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Id + " — " + r.Message).ToList();
+        return new ApplyOutcome(errors.Count == 0, errors.Count == 0 ? null : string.Join("; ", errors), receipt.BackupFile, changed);
     }
 
     private sealed record RestoreOutcome(bool Ok, string? Error, HashSet<string> RestoredIds);
@@ -539,24 +566,23 @@ public static class ExperimentRunner
 
     private static string? FindPresentMon(string? explicitPath)
     {
-        if (explicitPath is { Length: > 0 } && File.Exists(explicitPath))
-            return explicitPath;
-
-        var candidates = new List<string>();
-        var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
-        foreach (var dir in pathEnv.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            candidates.Add(Path.Combine(dir, "presentmon.exe"));
-        candidates.Add(Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            @"Microsoft\WinGet\Links\presentmon.exe"));
-        candidates.Add(@"C:\Program Files\NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe");
-        candidates.Add(@"C:\Program Files (x86)\NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe");
-        return candidates.FirstOrDefault(File.Exists);
+        if (explicitPath is { Length: > 0 })
+            return Path.IsPathFullyQualified(explicitPath) && TrustedCaptureTool.IsTrusted(explicitPath) ? explicitPath : null;
+        var candidates = new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                @"NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                @"NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                @"Microsoft\WinGet\Links\presentmon.exe"),
+        };
+        return candidates.FirstOrDefault(p => File.Exists(p) && TrustedCaptureTool.IsTrusted(p));
     }
 
     /// <summary>
     /// P2-12：A/B 页前置探测 PresentMon 是否可用（只读查找，不安装、不启动）。
-    /// 与自动采样同一套查找口径：显式路径 → PATH → WinGet Links → FrameViewSDK。
+    /// 与自动采样共用固定安装位置及签名验证，不从 PATH 搜索。
     /// </summary>
     public static string? ProbePresentMon() => FindPresentMon(new Options());
 
@@ -609,7 +635,9 @@ public static class ExperimentRunner
             if (File.Exists(csvOut))
                 File.Delete(csvOut);
 
-            var (code, output) = await RunProcessAsync(pm, args, ct).ConfigureAwait(false);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(seconds + 30));
+            var (code, output) = await RunProcessAsync(pm, args, timeout.Token).ConfigureAwait(false);
             if (code != 0)
                 continue;
             if (args.Contains("--output_stdout"))
@@ -644,12 +672,18 @@ public static class ExperimentRunner
             };
             foreach (var a in args)
                 psi.ArgumentList.Add(a);
+            using var verified = TrustedCaptureTool.OpenVerified(exe);
             using var proc = Process.Start(psi);
             if (proc is null)
                 return (-1, []);
             var outTask = proc.StandardOutput.ReadToEndAsync(ct);
             var errTask = proc.StandardError.ReadToEndAsync(ct);
-            await proc.WaitForExitAsync(ct).ConfigureAwait(false);
+            try { await proc.WaitForExitAsync(ct).ConfigureAwait(false); }
+            catch (OperationCanceledException)
+            {
+                try { if (!proc.HasExited) proc.Kill(entireProcessTree: true); } catch { }
+                throw;
+            }
             var stdout = await outTask.ConfigureAwait(false);
             await errTask.ConfigureAwait(false);
             return (proc.ExitCode, stdout.Split('\n'));
@@ -721,7 +755,9 @@ public static class ExperimentRunner
 
         // 手动模式只有单次样本，无法评估稳定性：如实标注且不判定为稳定（旧脚本会把同一份
         // CSV 算 3 遍得出 CV=0 的假稳定，这里一并修正）。
-        var stable = cv <= 0.05 && samples.Count >= 3;
+        var valid = samples.All(s => new[] { "avgFps", "p1Low", "p99Ms" }
+            .All(k => s[k] is not null && double.IsFinite(s[k]!.GetValue<double>()) && s[k]!.GetValue<double>() > 0));
+        var stable = valid && cv <= 0.05 && samples.Count >= 3;
 
         return new JsonObject
         {
@@ -735,8 +771,16 @@ public static class ExperimentRunner
         };
     }
 
-    private static (bool Keep, string Reason) DecideKeep(JsonObject baseline, JsonObject group)
+    internal static (bool Keep, string Reason) DecideKeep(JsonObject baseline, JsonObject group)
     {
+        if (baseline["stable"]?.GetValue<bool>() != true || group["stable"]?.GetValue<bool>() != true)
+            return (false, Str.T("Str.ExperimentNotStable"));
+        var baselineP99 = baseline["p99Ms"]!.GetValue<double>();
+        var candidateP99 = group["p99Ms"]!.GetValue<double>();
+        if (!double.IsFinite(baselineP99) || !double.IsFinite(candidateP99) || baselineP99 <= 0 || candidateP99 <= 0)
+            return (false, Str.T("Str.ExperimentNotStable"));
+        if (candidateP99 > baselineP99 * 1.03)
+            return (false, Str.T("Str.ExperimentP99Rejected"));
         var bAvg = baseline["avgFps"]!.GetValue<double>();
         var bP1 = baseline["p1Low"]!.GetValue<double>();
         var gAvg = group["avgFps"]!.GetValue<double>();
@@ -744,6 +788,8 @@ public static class ExperimentRunner
         var bStut = baseline["stutters"]!.GetValue<int>();
         var gStut = group["stutters"]!.GetValue<int>();
 
+        if (new[] { bAvg, bP1, gAvg, gP1 }.Any(v => !double.IsFinite(v) || v <= 0))
+            return (false, Str.T("Str.ExperimentNotStable"));
         var dAvg = (gAvg - bAvg) / bAvg * 100.0;
         var dP1 = (gP1 - bP1) / bP1 * 100.0;
         var dStut = gStut - bStut;
@@ -766,9 +812,10 @@ public static class ExperimentRunner
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "FpsTune", "experiment");
 
-    private static JsonObject? ReadState()
+    private static JsonObject? ReadState(Options options)
     {
-        var file = Path.Combine(StateDir(), "state.json");
+        var file = StateFile(options);
+        if (!File.Exists(file) && !options.Simulate) file = Path.Combine(StateDir(), "state.json");
         if (!File.Exists(file))
             return null;
         try
@@ -785,16 +832,36 @@ public static class ExperimentRunner
         }
     }
 
-    private static void WriteState(JsonObject state) =>
-        AtomicFile.WriteAllText(Path.Combine(StateDir(), "state.json"), state.ToJsonString(JsonOpts), new UTF8Encoding(false));
+    private static string InFlightFile => Path.Combine(StateDir(), "in-flight-v2.json");
+    private static bool HasInterruptedOperation()
+    {
+        if (!File.Exists(InFlightFile)) return false;
+        try
+        {
+            var backup = JsonNode.Parse(File.ReadAllText(InFlightFile))?["backup"]?.GetValue<string>();
+            if (backup is not null && BackupService.IsOperationResolved(backup))
+            { ClearInFlight(); return false; }
+        }
+        catch { }
+        return true;
+    }
+    private static void WriteInFlight(string group, IEnumerable<string> items, string? backup) =>
+        AtomicFile.WriteAllTextDurable(InFlightFile, JsonSerializer.Serialize(new
+        { group, items, backup, at = DateTimeOffset.UtcNow }), new UTF8Encoding(false));
+    internal static void ClearInFlight() => File.Delete(InFlightFile);
+
+    internal static string StateFile(Options options) => Path.Combine(StateDir(), options.Simulate ? "state-simulated-v2.json" : "state-v2.json");
+
+    private static void WriteState(JsonObject state, Options options) =>
+        AtomicFile.WriteAllTextDurable(StateFile(options), state.ToJsonString(JsonOpts), new UTF8Encoding(false));
 
     /// <summary>追加一条实验记录到 history.jsonl（GUI 历史趋势图的数据源）。只追加不改写。</summary>
-    private static void AppendHistory(JsonObject entry)
+    private static void AppendHistory(JsonObject entry, Options options)
     {
         Directory.CreateDirectory(StateDir());
         var opts = new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
         File.AppendAllText(
-            Path.Combine(StateDir(), "history.jsonl"),
+            Path.Combine(StateDir(), options.Simulate ? "history-simulated.jsonl" : "history.jsonl"),
             entry.ToJsonString(opts) + Environment.NewLine,
             new UTF8Encoding(false));
     }

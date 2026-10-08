@@ -31,7 +31,8 @@ public static class ExperimentHistory
         "FpsTune", "experiment");
 
     public static string HistoryFile => Path.Combine(ExperimentDir, "history.jsonl");
-    public static string StateFile => Path.Combine(ExperimentDir, "state.json");
+    public static string StateFile => File.Exists(Path.Combine(ExperimentDir, "state-v2.json"))
+        ? Path.Combine(ExperimentDir, "state-v2.json") : Path.Combine(ExperimentDir, "state.json");
 
     public static List<ExperimentRun> Load()
     {

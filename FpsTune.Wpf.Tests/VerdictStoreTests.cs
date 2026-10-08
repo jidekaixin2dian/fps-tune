@@ -27,7 +27,7 @@ public sealed class VerdictStoreTests : IDisposable
         new(key, kind, items, "custom", "game.exe",
             AvgFpsBase: 100, AvgFpsTest: 103, P1LowBase: 55, P1LowTest: 58,
             StuttersBase: 3, StuttersTest: 2, Stable: true, Keep: keep,
-            DeltaPct: 3.0, At: DateTime.Now, DurationSec: 90, Mode: "auto");
+            DeltaPct: 3.0, At: DateTime.Now, DurationSec: 90, Mode: "auto", RuleVersion: "v2-p99-3", ExperimentId: Guid.NewGuid().ToString("N"), P99Base: 20, P99Test: 19);
 
     [Fact]
     public void MakeKey_is_order_independent()
@@ -106,10 +106,10 @@ public sealed class VerdictStoreTests : IDisposable
     [Fact]
     public void Legacy_records_without_paths_remain_readable_and_do_not_overwrite_new_games()
     {
-        var entry = Make("a", "item", ["a"]) with { Game = "game" };
+        var entry = Make("a", "item", ["a"]) with { Game = "game", RuleVersion = null };
         VerdictStore.Upsert(entry);
         Assert.NotNull(VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"C:\one\game.exe"));
-        VerdictStore.Upsert(entry with { GamePath = @"C:\one\game.exe", DeltaPct = 9 });
+        VerdictStore.Upsert(entry with { GamePath = @"C:\one\game.exe", DeltaPct = 9, RuleVersion = "v2-p99-3" });
         Assert.Equal(2, VerdictStore.Load().Count);
         Assert.Equal(Str.T("Str.VerdictBadge", 9.0),
             VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"C:\one\game.exe"));

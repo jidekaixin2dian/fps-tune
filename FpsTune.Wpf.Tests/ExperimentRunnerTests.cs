@@ -30,8 +30,8 @@ public class ExperimentRunnerTests
         var props = XDocument.Load(Path.Combine(RepoRoot(), "Directory.Build.props"));
         var expectedVersion = props.Descendants("VersionPrefix").First().Value.Trim();
         Assert.Equal(expectedVersion, json.GetProperty("version").GetString());
-        Assert.True(File.Exists(Path.Combine(scope.Dir, "state.json")));
-        Assert.True(File.Exists(Path.Combine(scope.Dir, "history.jsonl")));
+        Assert.True(File.Exists(Path.Combine(scope.Dir, "state-simulated-v2.json")));
+        Assert.True(File.Exists(Path.Combine(scope.Dir, "history-simulated.jsonl")));
     }
 
     [Fact]
@@ -40,8 +40,8 @@ public class ExperimentRunnerTests
         using var scope = TempStateDir.Create();
         Assert.Equal(0, (await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None)).ExitCode);
 
-        var stateBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "state.json"));
-        var historyBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "history.jsonl"));
+        var stateBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "state-simulated-v2.json"));
+        var historyBefore = File.ReadAllBytes(Path.Combine(scope.Dir, "history-simulated.jsonl"));
 
         var result = await ExperimentRunner.RunAsync("group-2", Simulate, CancellationToken.None);
         var json = ParseJson(result.Json);
@@ -49,9 +49,9 @@ public class ExperimentRunnerTests
         Assert.Equal(1, result.ExitCode);
         Assert.False(json.GetProperty("ok").GetBoolean());
         Assert.Contains("group-1", json.GetProperty("error").GetString());
-        Assert.Equal(stateBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "state.json")));
-        Assert.Equal(historyBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "history.jsonl")));
-        Assert.False(File.Exists(Path.Combine(scope.Dir, "experiment-summary.csv")));
+        Assert.Equal(stateBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "state-simulated-v2.json")));
+        Assert.Equal(historyBefore, File.ReadAllBytes(Path.Combine(scope.Dir, "history-simulated.jsonl")));
+        Assert.False(File.Exists(Path.Combine(scope.Dir, "experiment-summary-simulated.csv")));
     }
 
     [Fact]
@@ -64,8 +64,8 @@ public class ExperimentRunnerTests
         Assert.Equal(1, result.ExitCode);
         Assert.False(json.GetProperty("ok").GetBoolean());
         Assert.Contains("基线", json.GetProperty("error").GetString());
-        Assert.False(File.Exists(Path.Combine(scope.Dir, "state.json")));
-        Assert.False(File.Exists(Path.Combine(scope.Dir, "history.jsonl")));
+        Assert.False(File.Exists(Path.Combine(scope.Dir, "state-simulated-v2.json")));
+        Assert.False(File.Exists(Path.Combine(scope.Dir, "history-simulated.jsonl")));
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class ExperimentRunnerTests
         }
 
         // 同一组结论必须原样落到 state.json，且字段齐全（历史/报告都靠它）
-        using var state = JsonDocument.Parse(File.ReadAllText(Path.Combine(scope.Dir, "state.json")));
+        using var state = JsonDocument.Parse(File.ReadAllText(Path.Combine(scope.Dir, "state-simulated-v2.json")));
         var group = state.RootElement.GetProperty("groups").EnumerateArray()
             .First(g => g.GetProperty("id").GetString() == "group-2");
         Assert.Equal(keep, group.GetProperty("keep").GetBoolean());
@@ -168,6 +168,42 @@ public class ExperimentRunnerTests
         File.WriteAllLines(shortCsv, SyntheticCsv(10, frameMs: 8.0));
         var failed = ExperimentRunner.ParsePresentMonCsv(shortCsv)!;
         Assert.True(failed.ContainsKey("error"));
+    }
+
+    [Fact]
+    public async Task Changing_conditions_rejects_group_and_new_baseline_clears_old_groups()
+    {
+        using var scope = TempStateDir.Create();
+        await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None);
+        await ExperimentRunner.RunAsync("group-1", Simulate, CancellationToken.None);
+        var changed = await ExperimentRunner.RunAsync("custom", Simulate with { DurationSec = 60, Items = ["transparency-off"] }, CancellationToken.None);
+        Assert.Equal(1, changed.ExitCode);
+        await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None);
+        var report = ParseJson((await ExperimentRunner.RunAsync("report", Simulate, CancellationToken.None)).Json);
+        Assert.Empty(report.GetProperty("groups").EnumerateArray());
+        Assert.False(File.Exists(Path.Combine(scope.Dir, "state-v2.json")));
+        Assert.False(File.Exists(Path.Combine(scope.Dir, "history.jsonl")));
+    }
+
+    [Fact]
+    public void Tail_latency_or_unstable_samples_cannot_be_accepted_for_average_gain()
+    {
+        static System.Text.Json.Nodes.JsonObject Summary(double p99, bool stable = true) => new()
+        { ["avgFps"] = 110.0, ["p1Low"] = 60.0, ["p99Ms"] = p99, ["stutters"] = 0, ["stable"] = stable };
+        Assert.False(ExperimentRunner.DecideKeep(Summary(20), Summary(21)).Keep);
+        Assert.False(ExperimentRunner.DecideKeep(Summary(20), Summary(19, false)).Keep);
+        Assert.False(ExperimentRunner.DecideKeep(Summary(20), Summary(double.NaN)).Keep);
+    }
+
+    [Fact]
+    public void Unsigned_or_unapproved_capture_tool_is_rejected_without_execution()
+    {
+        using var scope = TempStateDir.Create();
+        var path = Path.Combine(scope.Dir, "presentmon.exe");
+        File.WriteAllText(path, "not an executable");
+        Assert.False(TrustedCaptureTool.IsTrusted(path));
+        Assert.True(TrustedCaptureTool.IsAllowedPublisher("Intel Corporation"));
+        Assert.False(TrustedCaptureTool.IsAllowedPublisher("Intel Corporation unofficial"));
     }
 
     // ---------- 工具 ----------

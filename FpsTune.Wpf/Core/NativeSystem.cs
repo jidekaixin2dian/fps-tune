@@ -59,7 +59,11 @@ internal static class NativeSystem
 
             var outputTask = process.StandardOutput.ReadToEndAsync();
             var errorTask = process.StandardError.ReadToEndAsync();
-            process.WaitForExit();
+            if (!process.WaitForExit(30000))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return new NativeResult(-1, "", "System command timed out; check the backup before retrying.");
+            }
             return new NativeResult(process.ExitCode, outputTask.GetAwaiter().GetResult(), errorTask.GetAwaiter().GetResult());
         }
         catch (Exception ex)

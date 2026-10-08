@@ -791,4 +791,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.PowerRestoreSetting">Restore power setting</s:String>
     <s:String x:Key="Str.BackupPendingWrite">The previous write has not been confirmed. Review this setting first.</s:String>
     <s:String x:Key="Str.BackupTargetChanged">This setting has changed since the operation. The backup has been retained for review.</s:String>
+    <s:String x:Key="Str.ExperimentContextMismatch">Sampling conditions changed. Collect a new baseline.</s:String>
+    <s:String x:Key="Str.ExperimentApplyFailed">Apply incomplete: {0}. Recovery: {1}</s:String>
+    <s:String x:Key="Str.ExperimentRecoveryFailed">Experiment recovery incomplete: {0}. Check Restore.</s:String>
+    <s:String x:Key="Str.ExperimentNotStable">Samples are insufficient or unstable; benefit is unconfirmed.</s:String>
+    <s:String x:Key="Str.ExperimentP99Rejected">P99 frame time increased by more than 3%; discard this group.</s:String>
+    <s:String x:Key="Str.VerdictLegacyBadge">Historical result · retest needed</s:String>
+    <s:String x:Key="Str.ExperimentInterrupted">The previous experiment is unfinished. Restore its backup first.</s:String>
 </ResourceDictionary>

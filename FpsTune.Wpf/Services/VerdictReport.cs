@@ -22,7 +22,7 @@ public static class VerdictReport
         var durations = verdicts.Select(v => v.DurationSec).Distinct().ToList();
         var modes = verdicts.Select(v => v.Mode).Distinct().ToList();
         sb.AppendLine($"- {Str.T("Str.ReportCondGame")}: {(games.Count > 0 ? string.Join(", ", games) : "-")}");
-        sb.AppendLine($"- {Str.T("Str.ReportCondSample")}: {string.Join(", ", durations.Select(d => $"{d}s ×3"))} ({string.Join(", ", modes)})");
+        sb.AppendLine($"- {Str.T("Str.ReportCondSample")}: {string.Join(", ", durations.Select(d => $"{d}s"))} ({string.Join(", ", modes)})");
         sb.AppendLine($"- {Str.T("Str.ReportCondTool")}: FPS Tune v{UpdateService.CurrentVersion} (.NET 10, PresentMon)");
         sb.AppendLine();
         sb.AppendLine($"## {Str.T("Str.ReportConclusionSection")}");
@@ -34,8 +34,10 @@ public static class VerdictReport
             var v = verdicts[i];
             var items = string.Join(", ", v.Items.Select(id =>
                 ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id));
+            var outcome = !VerdictStore.IsQualified(v) ? Str.T("Str.VerdictLegacyBadge")
+                : Str.T(v.Keep ? "Str.ReportKeep" : v.Reverted ? "Str.ReportRevert" : "Str.VerdictLegacyBadge");
             sb.AppendLine(
-                $"| {i + 1} | {items} | {v.DeltaPct:+0.0;-0.0;0}% | {v.P1LowBase:0.#} → {v.P1LowTest:0.#} | {Str.T(v.Keep ? "Str.ReportKeep" : "Str.ReportRevert")} | {v.At:yyyy-MM-dd HH:mm} |");
+                $"| {i + 1} | {items} | {v.DeltaPct:+0.0;-0.0;0}% | {v.P1LowBase:0.#} → {v.P1LowTest:0.#} | {outcome} | {v.At:yyyy-MM-dd HH:mm} |");
         }
         sb.AppendLine();
         sb.AppendLine(Str.T("Str.ReportDisclaimer"));

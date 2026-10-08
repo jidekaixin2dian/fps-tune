@@ -94,6 +94,23 @@ public static partial class BackupService
         return captured;
     }
 
+    internal static string OperationId(string file) => DecodeDocument(File.ReadAllText(file)).OperationId;
+    internal static bool IsOperationResolved(string file)
+    {
+        if (!IsSafeBackupFilePath(file)) return false;
+        var current = File.Exists(file) ? file : file + ".restored";
+        return File.Exists(current) && ReadRecords(current, requireLocalOrigin: true).All(r => r.Restored);
+    }
+    internal static void EnsureNoPendingWrites(IReadOnlyList<string> ids)
+    {
+        foreach (var file in ListBackups())
+        {
+            foreach (var record in ReadRecords(file))
+                if (!record.Restored && record.MutationState == "pending" && ids.Contains(record.Id))
+                    throw new InvalidOperationException(Str.T("Str.BackupPendingWrite"));
+        }
+    }
+
     internal static void CompleteCapture(string file, OptimizationApplyResult result)
     {
         var records = ReadRecords(file, requireLocalOrigin: true);

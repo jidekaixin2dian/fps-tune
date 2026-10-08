@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using FpsTune.Wpf.Core;
 using Microsoft.Win32;
 using Xunit;
+using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Tests;
 
@@ -15,6 +16,7 @@ public sealed class OperationReceiptTests : IDisposable
         RegistryHelper.SnapshotOverride = null; RegistryHelper.SetOverride = null; RegistryHelper.DeleteOverride = null;
         NativeSystem.RunOverride = null; NativePowerSettings.ReadOverride = null;
         NativePowerSettings.FingerprintOverride = null;
+        ExperimentRunner.StateDirOverride = null;
         BackupService.RestoreRecordOverride = null; BackupService.BackupDirOverride = null;
         if (Directory.Exists(_dir)) Directory.Delete(_dir, true);
     }
@@ -113,5 +115,34 @@ public sealed class OperationReceiptTests : IDisposable
         var result = BackupService.RestoreAll(null, file);
         Assert.Single(result.Failures); Assert.Empty(result.Restored); Assert.Equal(2, value);
         Assert.True(File.Exists(file));
+    }    [Fact]
+    public async Task Cancellation_after_apply_recovers_from_receipt_without_using_cancelled_token()
+    {
+        var experimentDir = Path.Combine(_dir, "experiment");
+        Directory.CreateDirectory(experimentDir);
+        ExperimentRunner.StateDirOverride = experimentDir;
+        var options = new ExperimentRunner.Options(CsvPath: "unused.csv", GameName: "mock", Items: ["transparency-off"]);
+        var value = 1;
+        RegistryHelper.SnapshotOverride = (_, _, name) => name == "DriverVersion"
+            ? new(true, "test-driver", RegistryValueKind.String) : new(true, value, RegistryValueKind.DWord);
+        var context = ExperimentContext.Create(options, null);
+        File.WriteAllText(ExperimentRunner.StateFile(options), System.Text.Json.JsonSerializer.Serialize(new
+        {
+            schema = "v2", baseline = new { context, summary = new { stable = true, avgFps = 100, p1Low = 55, p99Ms = 20, stutters = 0 } }, groups = Array.Empty<object>()
+        }));
+        using var cancellation = new CancellationTokenSource();
+        RegistryHelper.SetOverride = (_, _, _, v, _) => { value = Convert.ToInt32(v); if (value == 0) cancellation.Cancel(); };
+        var cancelled = false;
+        try
+        {
+            var result = await ExperimentRunner.RunAsync("custom", options, cancellation.Token);
+            Assert.Fail("Expected cancellation after apply: " + result.Json);
+        }
+        catch (OperationCanceledException) { cancelled = true; }
+        Assert.True(cancelled);
+        Assert.Equal(1, value);
+        Assert.False(File.Exists(Path.Combine(experimentDir, "in-flight-v2.json")));
+        Assert.Empty(BackupService.ListBackups());
     }
+
 }

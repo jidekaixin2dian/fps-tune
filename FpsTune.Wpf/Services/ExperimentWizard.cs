@@ -418,7 +418,8 @@ public static class ExperimentWizardStore
     {
         try
         {
-            var stateFile = Path.Combine(ExperimentDir, "state.json");
+            var stateFile = Path.Combine(ExperimentDir, "state-v2.json");
+            if (!File.Exists(stateFile)) stateFile = Path.Combine(ExperimentDir, "state.json");
             if (!File.Exists(stateFile))
                 return null;
             var root = JsonNode.Parse(File.ReadAllText(stateFile, Encoding.UTF8));

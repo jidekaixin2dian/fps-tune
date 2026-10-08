@@ -18,6 +18,7 @@ public sealed class SessionFpsRecorder
     private readonly Func<ProcessStartInfo, Process?> _start;
     private readonly Func<Process, Task<string[]>>? _readOutput;
     private readonly Action<Process> _kill;
+    private readonly bool _verifyExecutable;
 
     private Process? _proc;
     private Task<string[]>? _readTask;
@@ -45,6 +46,7 @@ public sealed class SessionFpsRecorder
             return procs.FirstOrDefault();
         });
         _start = startProcess ?? Process.Start;
+        _verifyExecutable = startProcess is null;
         _readOutput = readOutput;
         _kill = kill ?? (p => { try { p.Kill(entireProcessTree: true); } catch { /* 已退出即达标 */ } });
     }
@@ -92,6 +94,7 @@ public sealed class SessionFpsRecorder
             };
             foreach (var a in new[] { "--session_name", "FpsTune-Session", "--process_name", procName, "--no_console_stats", "--output_stdout" })
                 psi.ArgumentList.Add(a);
+            using var verified = _verifyExecutable ? TrustedCaptureTool.OpenVerified(pm) : null;
             _proc = _start(psi);
             if (_proc is null)
             {

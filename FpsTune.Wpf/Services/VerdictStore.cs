@@ -37,7 +37,24 @@ public static class VerdictStore
         DateTime At,
         int DurationSec,
         string Mode,
-        string? GamePath = null);
+        string? GamePath = null,
+        string? RuleVersion = null,
+        string? ExperimentId = null,
+        double? P99Base = null,
+        double? P99Test = null,
+        bool Reverted = false,
+        string? RecoveryError = null,
+        string? EnvironmentHash = null,
+        string? RecipeHash = null,
+        string? Scene = null);
+
+    public static bool IsQualified(VerdictEntry v) => v.RuleVersion == "v2-p99-3"
+        && Guid.TryParse(v.ExperimentId, out _) && v.Mode == "auto" && v.Stable
+        && double.IsFinite(v.AvgFpsBase) && v.AvgFpsBase > 0
+        && double.IsFinite(v.AvgFpsTest) && v.AvgFpsTest > 0
+        && v.P99Base is > 0 && v.P99Test is > 0
+        && double.IsFinite(v.P99Base.Value) && double.IsFinite(v.P99Test.Value)
+        && string.IsNullOrEmpty(v.RecoveryError);
 
     /// <summary>规范化键：按 id 排序后 "|" 连接，保证同集合幂等。</summary>
     public static string MakeKey(IEnumerable<string> itemIds)
@@ -99,7 +116,7 @@ public static class VerdictStore
         var hit = (preloaded ?? Load()).Where(Match)
             .OrderByDescending(v => gamePath is not null && v.GamePath is not null)
             .ThenByDescending(v => v.At).FirstOrDefault();
-        return hit is null ? null : Str.T("Str.VerdictBadge", hit.DeltaPct);
+        return hit is null ? null : IsQualified(hit) ? Str.T("Str.VerdictBadge", hit.DeltaPct) : Str.T("Str.VerdictLegacyBadge");
     }
 
     private static readonly JsonSerializerOptions JsonOpts = new()
