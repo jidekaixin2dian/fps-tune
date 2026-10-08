@@ -21,6 +21,13 @@ public static partial class BackupService
         return WriteBackupFile(records);
     }
 
+    internal static string CaptureGpuDescription(BackupRecord record)
+    {
+        ValidateRecord(record);
+        GpuIdentityService.VerifyIdentity(record);
+        return WriteBackupFile(new[] { record });
+    }
+
     /// <summary>
     /// 写入开机自启前先保存 HKCU Run 的原值（包括原本不存在），再执行同一项写入。
     /// 该入口让设置页的系统写入与优化项共享 BackupService 还原语义。

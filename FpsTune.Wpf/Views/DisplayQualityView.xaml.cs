@@ -23,7 +23,7 @@ public partial class DisplayQualityView : UserControl
     public DisplayQualityView()
     {
         InitializeComponent();
-        Loaded += (_, _) => Refresh();
+        Loaded += (_, _) => { Refresh(); _ = RefreshGpuIdentityAsync(); };
     }
 
     private int _refreshGen;
@@ -193,6 +193,7 @@ public partial class DisplayQualityView : UserControl
         CardVib.Visibility = key == "vibicc" ? Visibility.Visible : Visibility.Collapsed;
         CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;
         CardAdvice.Visibility = key == "advice" ? Visibility.Visible : Visibility.Collapsed;
+        CardGpuIdentity.Visibility = key == "identity" ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ApplyDlssState(StateSnapshot s)
@@ -958,4 +959,67 @@ public partial class DisplayQualityView : UserControl
             Refresh();
         }
     }
+    private async Task RefreshGpuIdentityAsync()
+    {
+        if (_busy) return;
+        try
+        {
+            var devices = await Task.Run(GpuIdentityService.GetDevices);
+            if (_busy) return;
+            GpuIdentityDevices.ItemsSource = devices;
+            GpuIdentityDevices.SelectedIndex = devices.Count > 0 ? 0 : -1;
+            GpuIdentityApplyButton.IsEnabled = devices.Count > 0;
+            GpuIdentityStatus.Text = devices.Count == 0 ? Str.T("Str.GpuIdentityUnavailable") : Str.T("Str.GpuIdentityReady");
+        }
+        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; GpuIdentityApplyButton.IsEnabled = false; }
+    }
+
+    private void GpuIdentityRefresh_Click(object sender, RoutedEventArgs e) => _ = RefreshGpuIdentityAsync();
+
+    private bool CheckGpuIdentityPrerequisites()
+    {
+        if (_busy) return false;
+        if (App.SessionService.IsRunning)
+        { GpuIdentityStatus.Text = Str.T("Str.GpuIdentityCloseGame"); return false; }
+        var path = AppState.GamePath;
+        if (!string.IsNullOrEmpty(path))
+        {
+            var processes = System.Diagnostics.Process.GetProcessesByName(Path.GetFileNameWithoutExtension(path));
+            var running = processes.Length > 0;
+            foreach (var process in processes) process.Dispose();
+            if (running) { GpuIdentityStatus.Text = Str.T("Str.GpuIdentityCloseGame"); return false; }
+        }
+        if (!AdminHelper.IsAdministrator())
+        {
+            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.ConfirmRestartAdminRetry"), confirmText: Str.T("Str.RestartAsAdminShort")))
+                AdminHelper.RestartAsAdministrator();
+            return false;
+        }
+        return true;
+    }
+
+    private async void GpuIdentityApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (!CheckGpuIdentityPrerequisites() || GpuIdentityDevices.SelectedItem is not GpuIdentityTarget target) return;
+        if (!DialogService.Confirm(Str.T("Str.GpuIdentityTitle"), Str.T("Str.GpuIdentityConfirm", target.DriverName))) return;
+        _busy = true; GpuIdentityApplyButton.IsEnabled = false; GpuIdentityRestoreButton.IsEnabled = false;
+        try { var result = await GpuIdentityService.ApplyAsync(target); GpuIdentityStatus.Text = result.Message; }
+        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; }
+        finally { _busy = false; GpuIdentityApplyButton.IsEnabled = true; GpuIdentityRestoreButton.IsEnabled = true; }
+    }
+
+    private async void GpuIdentityRestore_Click(object sender, RoutedEventArgs e)
+    {
+        if (!CheckGpuIdentityPrerequisites()) return;
+        _busy = true; GpuIdentityApplyButton.IsEnabled = false; GpuIdentityRestoreButton.IsEnabled = false;
+        try
+        {
+            var result = await GpuIdentityService.RestoreAsync();
+            GpuIdentityStatus.Text = result.Failures.Count > 0 ? string.Join("\n", result.Failures)
+                : result.Restored.Count > 0 ? Str.T("Str.GpuIdentityRestored") : Str.T("Str.GpuIdentityNoBackup");
+        }
+        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; }
+        finally { _busy = false; GpuIdentityApplyButton.IsEnabled = true; GpuIdentityRestoreButton.IsEnabled = true; }
+    }
+
 }

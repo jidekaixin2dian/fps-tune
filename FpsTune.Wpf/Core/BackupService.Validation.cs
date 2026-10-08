@@ -42,6 +42,18 @@ public static partial class BackupService
             return;
         }
 
+        if (record.Id == GpuIdentityService.BackupId)
+        {
+            EnsureKind(record, "registry");
+            EnsureRegistryFields(record);
+            EnsureRegistryShape(record, RegistryHive.LocalMachine, "DeviceDesc", RegistryValueKind.String);
+            Reject(!GpuIdentityService.IsDevicePath(record.Path) || record.Existed != true
+                || record.DeviceFingerprint is null || !Regex.IsMatch(record.DeviceFingerprint, "^[A-F0-9]{64}$"),
+                Str.T("Str.GpuIdentityUnavailable"));
+            EnsureNoSecondary(record);
+            return;
+        }
+
         Reject(!ItemCatalog.All.Any(item => string.Equals(item.Id, record.Id, StringComparison.Ordinal)),
             $"未知优化项: {record.Id}");
 

@@ -798,4 +798,20 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ExperimentP99Rejected">P99 frame time increased by more than 3%; discard this group.</s:String>
     <s:String x:Key="Str.VerdictLegacyBadge">Historical result · retest needed</s:String>
     <s:String x:Key="Str.ExperimentInterrupted">The previous experiment is unfinished. Restore its backup first.</s:String>
+    <s:String x:Key="Str.GpuIdentityUnavailable">No supported NVIDIA display device found.</s:String>
+    <s:String x:Key="Str.GpuIdentityChanged">The device or driver changed. Refresh the device list.</s:String>
+    <s:String x:Key="Str.GpuIdentityAlready">The device description already uses GTX 1050 Ti.</s:String>
+    <s:String x:Key="Str.GpuIdentityWriteFailed">Could not change the device description.</s:String>
+    <s:String x:Key="Str.GpuIdentityApplied">Changed to GTX 1050 Ti. Restart before testing the game.</s:String>
+    <s:String x:Key="Str.GpuIdentityTitle">GPU description experiment</s:String>
+    <s:String x:Key="Str.GpuIdentityIntro">Change the NVIDIA Windows device description to GTX 1050 Ti to test game model detection. The original name is backed up and can be restored. Hardware capabilities remain the same; measure performance in your game.</s:String>
+    <s:String x:Key="Str.GpuIdentityDevice">Select GPU</s:String>
+    <s:String x:Key="Str.GpuIdentityApply">Use GTX 1050 Ti description</s:String>
+    <s:String x:Key="Str.GpuIdentityRestore">Restore original description</s:String>
+    <s:String x:Key="Str.GpuIdentityRefresh">Refresh devices</s:String>
+    <s:String x:Key="Str.GpuIdentityReady">Close the game before applying; restart before testing.</s:String>
+    <s:String x:Key="Str.GpuIdentityCloseGame">End the session and close the game first.</s:String>
+    <s:String x:Key="Str.GpuIdentityConfirm">Change the device description of {0} to GTX 1050 Ti and back up the original name. Restart before testing; any FPS benefit depends on the game’s detection logic.</s:String>
+    <s:String x:Key="Str.GpuIdentityRestored">Original description restored. Restart to take effect.</s:String>
+    <s:String x:Key="Str.GpuIdentityNoBackup">No pending GPU description backup.</s:String>
 </ResourceDictionary>

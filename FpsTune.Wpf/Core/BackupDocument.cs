@@ -149,6 +149,7 @@ public static partial class BackupService
 
     private static void VerifyRestorableState(BackupRecord record)
     {
+        if (record.Id == GpuIdentityService.BackupId) GpuIdentityService.VerifyIdentity(record);
         if (record.MutationState == "legacy") return;
         if (record.MutationState is not ("applied" or "uncertain" or "unchanged"))
             throw new BackupCompatibilityException(Str.T("Str.BackupPendingWrite"));

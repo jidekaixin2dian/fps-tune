@@ -187,6 +187,9 @@
                         </Border>
                     </StackPanel>
                 </RadioButton>
+                <RadioButton x:Name="SubTabGpuIdentity" GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.GpuIdentityTitle}" Style="{StaticResource SubTabStyle}" Tag="identity" Checked="SubTab_Checked">
+                    <TextBlock Text="{DynamicResource Str.GpuIdentityTitle}"/>
+                </RadioButton>
                 <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabAdvice}" Style="{StaticResource SubTabStyle}" Tag="advice" Checked="SubTab_Checked">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{DynamicResource Str.TabAdvice}" VerticalAlignment="Center"/>
@@ -611,6 +614,21 @@
                     </StackPanel>
                 </Border>
             </Grid>
+                <Border x:Name="CardGpuIdentity" Style="{StaticResource CardStyle}" Padding="20,18" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,18"/>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityDevice}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="GpuIdentityDevices" DisplayMemberPath="DriverName" MinWidth="280" HorizontalAlignment="Left" AutomationProperties.Name="{DynamicResource Str.GpuIdentityDevice}"/>
+                        <WrapPanel Margin="0,18,0,10">
+                            <Button x:Name="GpuIdentityApplyButton" Content="{DynamicResource Str.GpuIdentityApply}" Click="GpuIdentityApply_Click" Margin="0,0,10,8"/>
+                            <Button x:Name="GpuIdentityRestoreButton" Content="{DynamicResource Str.GpuIdentityRestore}" Click="GpuIdentityRestore_Click" Margin="0,0,10,8"/>
+                            <Button Content="{DynamicResource Str.GpuIdentityRefresh}" Click="GpuIdentityRefresh_Click" Margin="0,0,0,8"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="GpuIdentityStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
 
         </StackPanel>
     </ScrollViewer>

@@ -49,6 +49,7 @@ public sealed class BackupRecord
     public bool? SecondaryPostExisted { get; set; }
     public object? SecondaryPostValue { get; set; }
     public string? PostActiveGuid { get; set; }
+    public string? DeviceFingerprint { get; set; }
     public int? PostUsbValue { get; set; }
     public int? PostBoostValue { get; set; }
     public int? PostAspmValue { get; set; }

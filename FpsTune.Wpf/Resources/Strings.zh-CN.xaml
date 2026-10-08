@@ -798,4 +798,20 @@
     <s:String x:Key="Str.ExperimentP99Rejected">P99 帧时间增加超过 3%，不保留本组。</s:String>
     <s:String x:Key="Str.VerdictLegacyBadge">历史记录·待复测</s:String>
     <s:String x:Key="Str.ExperimentInterrupted">上次实验尚未结束，请先在还原页处理实验备份。</s:String>
+    <s:String x:Key="Str.GpuIdentityUnavailable">未找到可用的 NVIDIA 显卡设备。</s:String>
+    <s:String x:Key="Str.GpuIdentityChanged">显卡或驱动已变化，请刷新设备列表。</s:String>
+    <s:String x:Key="Str.GpuIdentityAlready">当前设备名称已是 GTX 1050 Ti。</s:String>
+    <s:String x:Key="Str.GpuIdentityWriteFailed">显卡名称未修改成功。</s:String>
+    <s:String x:Key="Str.GpuIdentityApplied">已改为 GTX 1050 Ti，重启后测试游戏。</s:String>
+    <s:String x:Key="Str.GpuIdentityTitle">显卡名称实验</s:String>
+    <s:String x:Key="Str.GpuIdentityIntro">将 NVIDIA 显卡的 Windows 设备名称改为 GTX 1050 Ti，用于测试部分游戏的型号识别策略。会先备份原名称，可随时还原。不会改变显卡硬件能力，帧数效果请实测。</s:String>
+    <s:String x:Key="Str.GpuIdentityDevice">选择显卡</s:String>
+    <s:String x:Key="Str.GpuIdentityApply">改为 GTX 1050 Ti</s:String>
+    <s:String x:Key="Str.GpuIdentityRestore">还原原名称</s:String>
+    <s:String x:Key="Str.GpuIdentityRefresh">刷新设备</s:String>
+    <s:String x:Key="Str.GpuIdentityReady">关闭游戏后应用，重启电脑再测试。</s:String>
+    <s:String x:Key="Str.GpuIdentityCloseGame">请先结束会话并关闭游戏。</s:String>
+    <s:String x:Key="Str.GpuIdentityConfirm">将「{0}」的设备名称改为 GTX 1050 Ti，并备份原名称。重启后再测试游戏，是否提高帧数取决于游戏的识别策略。</s:String>
+    <s:String x:Key="Str.GpuIdentityRestored">原显卡名称已还原，重启后生效。</s:String>
+    <s:String x:Key="Str.GpuIdentityNoBackup">没有待还原的显卡名称备份。</s:String>
 </ResourceDictionary>
