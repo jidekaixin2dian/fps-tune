@@ -11,6 +11,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <RuntimeFrameworkVersion>10.0.12</RuntimeFrameworkVersion>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <!-- Single-file publishing adds SDK linker tasks; keep that graph separately locked. -->
+    <NuGetLockFilePath Condition="'$(PublishSingleFile)' == 'true'">packages.publish.lock.json</NuGetLockFilePath>
   </PropertyGroup>
 
   <ItemGroup>

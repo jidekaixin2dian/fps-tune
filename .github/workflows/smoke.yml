@@ -1,5 +1,8 @@
 name: smoke
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ main ]
@@ -10,15 +13,15 @@ jobs:
   windows-smoke:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
-          dotnet-version: '10.0.x'
+          global-json-file: global.json
 
       - name: Build
-        run: dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release
+        run: dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release /p:RestoreLockedMode=true
 
       - name: Core detect (read-only)
         run: FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json
@@ -33,4 +36,4 @@ jobs:
           & $exe -Experiment -Test -Group group-1 -Simulate -Json
           & $exe -Experiment -Test -Group group-2 -Simulate -Json
           & $exe -Experiment -Test -Group group-3 -Simulate -Json
-          & $exe -Experiment -Report -Json
+          & $exe -Experiment -Report -Simulate -Json

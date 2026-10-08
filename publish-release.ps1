@@ -161,6 +161,7 @@ try {
         '-c', 'Release',
         '-r', 'win-x64',
         '--self-contained', 'true',
+        '/p:RestoreLockedMode=true',
         '/p:PublishSingleFile=true',
         '/p:IncludeNativeLibrariesForSelfExtract=true',
         '/p:IncludeAllContentForSelfExtract=true',
@@ -180,6 +181,7 @@ try {
         '-c', 'Release',
         '-r', 'win-x64',
         '--self-contained', 'false',
+        '/p:RestoreLockedMode=true',
         '/p:DebugType=none',
         "/p:InformationalVersion=$informationalVersion",
         "/p:SourceRevisionId=$finalSha",
@@ -253,9 +255,11 @@ try {
         throw "单文件 -Version 验证失败（exit=$($versionResult.ExitCode)）：$($versionResult.Output)"
     }
     $licenseResult = Invoke-StandaloneCli $standaloneExe @('-License')
+    # PowerShell reconstructs redirected lines using its platform newline.
+    $licenseOutput = $licenseResult.Output.Replace("`r`n", "`n")
     if ($licenseResult.ExitCode -ne 0 -or
-        -not $licenseResult.Output.Contains([IO.File]::ReadAllText((Join-Path $root 'LICENSE')).Trim()) -or
-        -not $licenseResult.Output.Contains([IO.File]::ReadAllText((Join-Path $root 'THIRD-PARTY-NOTICES.txt')).Trim())) {
+        -not $licenseOutput.Contains([IO.File]::ReadAllText((Join-Path $root 'LICENSE')).Replace("`r`n", "`n").Trim()) -or
+        -not $licenseOutput.Contains([IO.File]::ReadAllText((Join-Path $root 'THIRD-PARTY-NOTICES.txt')).Replace("`r`n", "`n").Trim())) {
         throw 'Standalone executable lacks the complete embedded license/notices.'
     }
     $detectResult = Invoke-StandaloneCli $standaloneExe @('-Detect', '-Json')
