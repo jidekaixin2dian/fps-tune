@@ -51,8 +51,7 @@ jobs:
         run: |
           Copy-Item -LiteralPath LICENSE, THIRD-PARTY-NOTICES.txt -Destination dist/ci
           $exe = 'dist/ci/FpsTune.exe'
-          $text = (& $exe -License | Out-String).Replace("`r`n", "`n")
-          if ($LASTEXITCODE -ne 0) { throw 'Embedded license command failed.' }
+          $text = (./tools/invoke-cli-check.ps1 -Executable $exe -CliArguments @('-License') | Out-String).Replace("`r`n", "`n")
           foreach ($file in @('LICENSE', 'THIRD-PARTY-NOTICES.txt')) {
             if (-not $text.Contains([IO.File]::ReadAllText((Join-Path $PWD $file)).Replace("`r`n", "`n").Trim())) { throw "Missing complete text: $file" }
           }

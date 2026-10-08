@@ -24,7 +24,7 @@ jobs:
         run: dotnet build FpsTune.Wpf/FpsTune.Wpf.csproj -c Release /p:RestoreLockedMode=true
 
       - name: Core detect (read-only)
-        run: FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe -Detect -Json
+        run: ./tools/invoke-cli-check.ps1 -Executable 'FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe' -CliArguments @('-Detect', '-Json')
 
       - name: A/B simulated full chain
         shell: powershell
@@ -39,6 +39,5 @@ jobs:
             @('-Experiment', '-Report', '-Simulate', '-Json')
           )
           foreach ($arguments in $steps) {
-            & $exe @arguments
-            if ($LASTEXITCODE -ne 0) { throw ('Simulation failed: ' + ($arguments -join ' ')) }
+            ./tools/invoke-cli-check.ps1 -Executable $exe -CliArguments $arguments -RequireSuccessJson
           }
