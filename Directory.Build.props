@@ -28,7 +28,8 @@
     <!-- 0.2.4-beta = 合规与恢复修复、窗口内通知、设置分类与维护快照 -->
     <!-- 0.2.5-beta = 字体渲染、主题过渡、品牌安装向导与公开截图 -->
     <!-- 0.2.6-beta = DLSS 权限处理、模型预设独立写入与持久化读回校验 -->
-    <VersionPrefix>0.2.6</VersionPrefix>
+    <!-- 0.2.7-beta = DLSS 失败反馈保留、待应用选择与后台快照隔离 -->
+    <VersionPrefix>0.2.7</VersionPrefix>
     <VersionSuffix>beta</VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

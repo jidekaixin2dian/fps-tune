@@ -15,6 +15,9 @@ public partial class DisplayQualityView : UserControl
 {
     private bool _busy;
     private string? _dlssStatus;
+    private string? _dlssGameExe;
+    private bool _presetSyncing;
+    private bool _presetSelectionDirty;
     private string? _vibStatus;
     private string? _iccStatus;
     private string? _drsStatus;
@@ -106,7 +109,7 @@ public partial class DisplayQualityView : UserControl
     private async Task RefreshStatesAsync(int gen)
     {
         var snap = await Task.Run(ComputeSnapshot);
-        if (gen != _refreshGen)
+        if (_busy || gen != _refreshGen)
             return; // 期间发生了更新的刷新，旧结果作废
         ApplySnapshot(snap);
     }
@@ -244,9 +247,16 @@ public partial class DisplayQualityView : UserControl
 
         SetGameChip(s.GameLabel, s.GameExe);
 
+        if (!string.Equals(_dlssGameExe, s.GameExe, StringComparison.OrdinalIgnoreCase))
+        {
+            _dlssGameExe = s.GameExe;
+            _presetSelectionDirty = false;
+            _dlssStatus = null;
+        }
+
         if (s.DlssError is not null)
         {
-            StateText.Text = "读取覆盖状态失败：" + s.DlssError;
+            StateText.Text = _dlssStatus ?? ("读取覆盖状态失败：" + s.DlssError);
             ApplyButton.IsEnabled = false;
             RestoreButton.IsEnabled = false;
             SetBadge(TabStatusDlss, TabBadgeDlss, "—");
@@ -280,6 +290,9 @@ public partial class DisplayQualityView : UserControl
 
     private void SyncPresetCardSelection(DisplayQualityService.DlssState state)
     {
+        // 驱动当前值和用户待应用的选择是两种状态。失败后的刷新不能丢掉待重试的预设。
+        if (_presetSelectionDirty)
+            return;
         var target = state.Covered && state.PresetValue is { } value
             ? value switch
             {
@@ -291,13 +304,20 @@ public partial class DisplayQualityView : UserControl
                 _ => null
             }
             : PresetFollowGame;
-        if (target is not null)
-            target.IsChecked = true;
+        if (target is null)
+            return;
+        _presetSyncing = true;
+        try { target.IsChecked = true; }
+        finally { _presetSyncing = false; }
     }
 
     private void Preset_Checked(object sender, RoutedEventArgs e)
     {
+        // 同步驱动状态同样会触发 Checked；它不能清除刚记录的保存/读回错误。
+        if (_presetSyncing)
+            return;
         // 选中卡片即启用Str.T("Str.ApplyOverride")；不自动写驱动，统一由按钮执行
+        _presetSelectionDirty = true;
         _dlssStatus = null;
         if (SupportedPanel.Visibility == Visibility.Visible && !_busy)
             ApplyButton.IsEnabled = true;
@@ -344,14 +364,17 @@ public partial class DisplayQualityView : UserControl
         }
 
         _busy = true;
+        ++_refreshGen;
         _dlssStatus = null;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
+        SetPresetCardsEnabled(false);
         StateText.Text = Str.T("Str.WritingDrs");
         try
         {
             var exeName = Path.GetFileName(path);
             await Task.Run(() => DisplayQualityService.ApplyDlssPreset(exeName, preset.Value));
+            _presetSelectionDirty = false;
             _dlssStatus = preset.Value == DlssPreset.FollowGame
                 ? Str.T("Str.OverrideRemoved")
                 : Str.T("Str.DlssPresetVerified", DlssPresetBadge((uint)preset.Value));
@@ -379,14 +402,17 @@ public partial class DisplayQualityView : UserControl
             return;
 
         _busy = true;
+        ++_refreshGen;
         _dlssStatus = null;
         ApplyButton.IsEnabled = false;
         RestoreButton.IsEnabled = false;
+        SetPresetCardsEnabled(false);
         StateText.Text = Str.T("Str.Restoring2");
         try
         {
             var exeName = Path.GetFileName(path);
             var removed = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
+            _presetSelectionDirty = false;
             _dlssStatus = removed
                 ? Str.T("Str.OverrideRestored")
                 : Str.T("Str.NothingToRestoreOverride");
