@@ -78,7 +78,7 @@
                     <TextBlock x:Name="StatusText" Text="{DynamicResource Str.WaitingAction}"
                                Foreground="{DynamicResource AccentBrush}"
                                FontFamily="{StaticResource FontMono}"
-                               FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                               FontSize="14" FontWeight="{StaticResource SmallEmphasisWeight}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
         </Grid>
@@ -112,7 +112,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" Text="{Binding NowText}" FontSize="12" VerticalAlignment="Center" Margin="14,0,0,0">

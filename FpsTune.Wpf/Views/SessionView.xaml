@@ -141,7 +141,7 @@
                                                 </Style>
                                             </Ellipse.Style>
                                         </Ellipse>
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
+                                        <TextBlock Text="{Binding Title}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="8,0,0,0"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         <TextBlock Text="{Binding KindLabel}" FontSize="10" Margin="10,0,0,0"
                                                    VerticalAlignment="Center"
@@ -197,7 +197,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                    <TextBlock Text="{Binding Name}" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <TextBlock Text="{Binding MetaText}" FontSize="11"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
@@ -267,7 +267,7 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Metric}" FontWeight="SemiBold" FontSize="12"
+                                <TextBlock Text="{Binding Metric}" FontWeight="{StaticResource SmallEmphasisWeight}" FontSize="12"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding AVal}" FontSize="12" FontFamily="{StaticResource FontMono}"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>

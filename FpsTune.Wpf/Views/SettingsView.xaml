@@ -99,19 +99,19 @@
                     <UniformGrid Columns="3" Margin="0,12,0,20">
                         <RadioButton x:Name="ThemeDarkRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeDark}">
                             <StackPanel><Border Height="26" Background="#07090B" CornerRadius="3" Margin="0,0,0,10"/>
-                                <TextBlock Text="{DynamicResource Str.ThemeDarkShort}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="{DynamicResource Str.ThemeDarkShort}" FontSize="16" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeDarkDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="ThemeLightRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeLight}">
                             <StackPanel><Border Height="26" Background="#F7F9FC" CornerRadius="3" Margin="0,0,0,10"/>
-                                <TextBlock Text="{DynamicResource Str.ThemeLightShort}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="{DynamicResource Str.ThemeLightShort}" FontSize="16" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeLightDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="ThemeSystemRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeSystem}">
                             <StackPanel><Border Height="26" Background="#64748B" CornerRadius="3" Margin="0,0,0,10"/>
-                                <TextBlock Text="{DynamicResource Str.ThemeSystemShort}" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="{DynamicResource Str.ThemeSystemShort}" FontSize="16" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeSystemDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
@@ -271,7 +271,7 @@
                                     <StackPanel>
                                         <TextBlock Text="{Binding DisplayName}"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
-                                                   FontWeight="SemiBold"/>
+                                                   FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                         <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="13">
                                             <Run Text="{DynamicResource Str.LabelProcess}"/>
                                             <Run Text="{Binding ProcessName, Mode=OneWay}" FontFamily="{StaticResource FontMono}"/>
@@ -373,7 +373,7 @@
                         <TextBlock x:Name="AdminStatusText"
                                    Text="{DynamicResource Str.NotAdminNow}"
                                    Foreground="{DynamicResource WarningBrush}"
-                                   FontWeight="SemiBold"
+                                   FontWeight="{StaticResource SmallEmphasisWeight}"
                                    VerticalAlignment="Center"/>
                         <Button x:Name="AdminRestartButton"
                                 Content="{DynamicResource Str.RestartAsAdmin}"
@@ -428,7 +428,7 @@
                             <Grid Margin="0,14,0,0">
                                 <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <Border HorizontalAlignment="Right" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
-                                    <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="12" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 </Border>
                             </Grid>
                             <Slider x:Name="WallpaperOpacitySlider" Style="{StaticResource WallpaperSliderStyle}" Margin="0,4,0,0"
@@ -450,7 +450,7 @@
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.SectionAbout}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="VersionText" Text="{DynamicResource Str.VersionLabel}"
-                               Foreground="{DynamicResource AccentBrush}" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold"/>
+                               Foreground="{DynamicResource AccentBrush}" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                     <TextBlock Text="{DynamicResource Str.AboutLine1}"
                                Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <TextBlock Text="{DynamicResource Str.AboutLine2}"
@@ -484,7 +484,7 @@
         <CheckBox x:Name="StartupUpdateCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CheckUpdatesOnStartup}" Checked="StartupUpdate_Changed" Unchecked="StartupUpdate_Changed"/>
     </Grid>
                     <TextBlock Text="{DynamicResource Str.ContactNote}"
-                               Foreground="{DynamicResource WarningBrush}" FontWeight="SemiBold" Margin="0,14,0,0"/>
+                               Foreground="{DynamicResource WarningBrush}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="0,14,0,0"/>
                 </StackPanel>
             </Border>
 

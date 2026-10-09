@@ -54,7 +54,7 @@
                 <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{DynamicResource Str.MyProfiles}"
                                FontSize="15"
-                               FontWeight="SemiBold"
+                               FontWeight="{StaticResource SmallEmphasisWeight}"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="SelectionSummaryText" Text=""
                                FontSize="11"
@@ -120,7 +120,7 @@
                                         <StackPanel VerticalAlignment="Center" Margin="0,0,8,0">
                                             <TextBlock Text="{Binding DisplayName}"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       FontWeight="SemiBold"
+                                                       FontWeight="{StaticResource SmallEmphasisWeight}"
                                                        FontSize="14"
                                                        TextTrimming="CharacterEllipsis"
                                                        ToolTip="{Binding DisplayName}"/>

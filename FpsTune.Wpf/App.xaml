@@ -14,10 +14,18 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <!-- ============ 设计令牌：字体 ============ -->
-            <FontFamily x:Key="FontDisplay">Microsoft YaHei UI, Segoe UI Variable Display, Segoe UI</FontFamily>
-            <FontFamily x:Key="FontBody">Microsoft YaHei UI, Segoe UI Variable Text, Segoe UI</FontFamily>
+            <FontFamily x:Key="FontDisplay">Segoe UI, Microsoft YaHei UI</FontFamily>
+            <FontFamily x:Key="FontBody">Segoe UI, Microsoft YaHei UI</FontFamily>
             <FontFamily x:Key="FontMono">Cascadia Mono, Consolas, Microsoft YaHei UI</FontFamily>
             <FontFamily x:Key="FontStat">Segoe UI, Microsoft YaHei UI</FontFamily>
+            <!-- Small CJK labels must not resolve SemiBold to YaHei's full Bold face.
+                 Medium retains Latin emphasis and lets CJK use its regular face. -->
+            <FontWeight x:Key="SmallEmphasisWeight">Medium</FontWeight>
+            <Style x:Key="ItemTitleStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+            </Style>
 
             <!-- Grayscale avoids RGB fringes on themed, translucent and wallpaper surfaces. -->
             <Style x:Key="WindowTypographyStyle" TargetType="Window">
@@ -113,7 +121,7 @@
             <Style x:Key="CardTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="16"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Margin" Value="0,0,0,10"/>
             </Style>
@@ -202,7 +210,7 @@
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
                                     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -352,7 +360,7 @@
                 <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="13"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="34"/>
                 <Setter Property="Padding" Value="16,0"/>
@@ -858,7 +866,7 @@
                         <TextBlock Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="NavSurface" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger>
+                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="NavSurface" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/></Trigger>
                         <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavSurface" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/></Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="NavSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
                     </ControlTemplate.Triggers>

@@ -56,7 +56,7 @@
                     <StackPanel>
                         <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="CpuText" Text="--"
-                                   FontSize="12.5" FontWeight="SemiBold"
+                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -65,7 +65,7 @@
                     <StackPanel>
                         <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="GpuText" Text="--"
-                                   FontSize="12.5" FontWeight="SemiBold"
+                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -74,7 +74,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="RamText" Text="--"
-                                   FontSize="12.5" FontWeight="SemiBold"
+                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -83,7 +83,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.System}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="OsText" Text="--"
-                                   FontSize="12.5" FontWeight="SemiBold"
+                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -111,7 +111,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.CpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="CpuNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"/>
                         </Grid>
                         <Canvas x:Name="CpuChart" Height="72"/>
                     </StackPanel>
@@ -119,7 +119,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.MemoryUsage}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="MemNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource PrimaryBrush}"/>
                         </Grid>
                         <Canvas x:Name="MemChart" Height="72"/>
                     </StackPanel>
@@ -127,7 +127,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.GpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="GpuNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource OkBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource OkBrush}"/>
                         </Grid>
                         <Canvas x:Name="GpuChart" Height="72"/>
                     </StackPanel>
@@ -135,7 +135,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.VramDedicated}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
                             <TextBlock x:Name="VramNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource WarningBrush}"/>
                         </Grid>
                         <Canvas x:Name="VramChart" Height="72"/>
                         <TextBlock x:Name="VramNoteText" Text="" FontSize="10" Margin="0,3,0,0"
@@ -250,7 +250,7 @@
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Name}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"
-                                               FontWeight="SemiBold"/>
+                                               FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                     <TextBlock Text="{Binding Description}"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
                                                FontSize="11"

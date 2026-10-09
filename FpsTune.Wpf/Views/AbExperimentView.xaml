@@ -86,7 +86,7 @@
                                                     </Style>
                                                 </Ellipse.Style>
                                             </Ellipse>
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="8,0,0,0"
+                                            <TextBlock Text="{Binding Title}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="8,0,0,0"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                                             <TextBlock Text="{Binding StatusText}" FontSize="11" Margin="10,0,0,0"
                                                        VerticalAlignment="Center"
@@ -132,7 +132,7 @@
                 <TextBlock x:Name="StatusText"
                            Text="{DynamicResource Str.AbReady}"
                            FontSize="12.5"
-                           FontWeight="SemiBold"
+                           FontWeight="{StaticResource SmallEmphasisWeight}"
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            TextWrapping="Wrap"
                            Margin="16,0,0,0"
@@ -184,7 +184,7 @@
                 <Border Grid.Column="5" Padding="12,10">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.Verdict}" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBlock x:Name="DecisionText" Text="--" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource OkBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                        <TextBlock x:Name="DecisionText" Text="--" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource OkBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -270,7 +270,7 @@
                                         <TextBlock Text="{Binding ItemsText}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
                                         <TextBlock Text="{Binding MetaText}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0"/>
                                     </StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{Binding DeltaText}" FontSize="14" FontWeight="SemiBold"
+                                    <TextBlock Grid.Column="1" Text="{Binding DeltaText}" FontSize="14" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                VerticalAlignment="Center" Margin="14,0,0,0">
                                         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/><Style.Triggers><DataTrigger Binding="{Binding IsNegative}" Value="True"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
                                 </Grid>

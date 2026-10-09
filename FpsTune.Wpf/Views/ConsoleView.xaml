@@ -94,7 +94,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="{StaticResource SmallEmphasisWeight}" VerticalAlignment="Center" Margin="0,0,16,0"/>
                         <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
                         <RadioButton x:Name="BalancedPreset" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
                         <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
@@ -129,7 +129,7 @@
                                     <ColumnDefinition Width="94"/><ColumnDefinition Width="78"/><ColumnDefinition Width="48"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Number}" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" Style="{StaticResource ItemTitleStyle}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
                                     <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
                                     <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"

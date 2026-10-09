@@ -50,7 +50,7 @@
                     <TextBlock x:Name="TitleTextBlock"
                                Text="{DynamicResource Str.Prompt}"
                                FontSize="15"
-                               FontWeight="SemiBold"
+                               FontWeight="{StaticResource SmallEmphasisWeight}"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="SubTextBlock"
                                Text="{DynamicResource Str.AppName}"
