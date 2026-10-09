@@ -16,9 +16,11 @@ Available through a desktop interface and command-line tools.
 
 **0.2.5 refines this major update** with consistent small-text weights and item-title sizes, theme transitions and a branded installer that always lets you choose the destination.
 
+**0.2.6 fixes DLSS preset saving and privilege messages**: elevated processes no longer repeatedly offer elevation, and saving handles a missing NVIDIA driver database directory. Model selection writes only the preset. Saving and restoration reload the driver settings to verify the result, retaining the original backup on failure. Applying K should report that it was saved and independently verified; restart the game and enable DLSS to confirm its in-game effect.
+
 ## Versions and downloads
 
-Current version: **[v0.2.5-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.5-beta)**. The 1.x line is unmaintained.
+Current version: **[v0.2.6-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.6-beta)**. The 1.x line is unmaintained.
 
 Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.

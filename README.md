@@ -20,9 +20,11 @@
 
 **0.2.5 在这次大更新的基础上继续打磨体验**：统一小字号字重与标题字号，加入主题切换过渡，并提供帧律品牌安装向导和始终可选的安装路径。
 
+**0.2.6 修复 DLSS 预设保存与权限提示**：已以管理员身份运行时，不再反复要求提权；处理 NVIDIA 驱动数据库目录缺失的保存失败。模型切换只写预设，保存和还原都会重新读取驱动确认结果，失败保留原值备份。应用 K 后应显示「已保存并读回确认」；重新启动游戏并开启 DLSS 后确认游戏内效果。
+
 ## 版本与下载
 
-当前版本为 **[v0.2.5-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.5-beta)**。
+当前版本为 **[v0.2.6-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.6-beta)**。
 1.x 版本线已停止维护。
 
 从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
