@@ -19,7 +19,22 @@ public partial class MainWindow : Window
     internal void ShowUpdateCard(UpdateInfo info)
     {
         if (_updateCard is not null) { _updateCard.Notification.SetExpanded(true); return; }
-        _updateCard = new UpdateCard(info);
+        AttachUpdateCard(new UpdateCard(info));
+    }
+    internal void ShowUpdateRecovery(UpdateAttempt attempt)
+    {
+        if (_updateCard is not null)
+        {
+            if (_updateCard.IsRunning) { _updateCard.Notification.SetExpanded(true); return; }
+            _updateCard.Cancel();
+            NotificationStack.Children.Remove(_updateCard);
+            _updateCard = null;
+        }
+        AttachUpdateCard(new UpdateCard(attempt));
+    }
+    private void AttachUpdateCard(UpdateCard updateCard)
+    {
+        _updateCard = updateCard;
         var card = _updateCard;
         card.Notification.Expanded += (_, _) => _guideCard?.Notification.SetExpanded(false);
         card.Notification.CloseRequested += (_, _) =>
@@ -60,6 +75,10 @@ public partial class MainWindow : Window
         try
         {
             await Task.Delay(2500, _updateLifetime.Token);
+            UpdateAttempt? recovery = null;
+            try { recovery = UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!); }
+            catch { /* Recovery metadata must never block app startup. */ }
+            if (recovery is not null && recovery.Status != "succeeded") { ShowUpdateRecovery(recovery); return; }
             if (!SettingsService.Current.CheckUpdatesOnStartup) return;
             var info = await UpdateService.CheckAsync(_updateLifetime.Token);
             if (!_updateLifetime.IsCancellationRequested && info is not null &&

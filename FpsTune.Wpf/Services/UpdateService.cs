@@ -85,6 +85,20 @@ public static class UpdateService
         return best;
     }
 
+    internal static async Task<UpdateInfo?> GetReleaseAsync(string version, CancellationToken token)
+    {
+        if (!TryNormalizeVersion(version, out _)) return null;
+        var tag = version.StartsWith('v') ? version : "v" + version;
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
+        using var response = await client.GetAsync("https://api.github.com/repos/jidekaixin2dian/fps-tune/releases/tags/" + Uri.EscapeDataString(tag), token);
+        if (!response.IsSuccessStatusCode) return null;
+        var json = await response.Content.ReadAsStringAsync(token);
+        using var doc = JsonDocument.Parse("[" + json + "]");
+        var release = SelectRelease(doc.RootElement);
+        return release?.ReleaseTag == tag ? release : null;
+    }
+
     internal static bool IsOfficialUrl(string? url) => Uri.TryCreate(url, UriKind.Absolute, out var uri)
         && uri.Scheme == Uri.UriSchemeHttps && uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
         && uri.IsDefaultPort && string.IsNullOrEmpty(uri.UserInfo)

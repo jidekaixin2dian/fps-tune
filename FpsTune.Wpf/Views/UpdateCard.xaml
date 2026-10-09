@@ -14,6 +14,11 @@
                     <Button Content="{DynamicResource Str.UpdateLater}" Click="Later_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
                     <Button x:Name="InstallButton" Content="{DynamicResource Str.UpdateNow}" Click="Install_Click" Style="{StaticResource PrimaryButtonStyle}"/>
                 </WrapPanel>
+                <WrapPanel x:Name="RecoveryActions" Visibility="Collapsed" Margin="0,12,0,0">
+                    <Button x:Name="RollbackButton" Content="{DynamicResource Str.UpdateRollback}" Click="Rollback_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
+                    <Button x:Name="ProtectedCopyButton" Content="{DynamicResource Str.UpdateProtectedCopy}" Click="ProtectedCopy_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
+                    <Button Content="{DynamicResource Str.ExportDiagnostics}" Click="Export_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,0,8"/>
+                </WrapPanel>
             </StackPanel>
         </controls:NotificationCard.Body>
     </controls:NotificationCard>

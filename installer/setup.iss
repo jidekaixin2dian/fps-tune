@@ -46,8 +46,20 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: nowait postinstall skipifsilent; Check: NotManagedUpdate
 
 [Messages]
 WelcomeLabel1=安装 FPS 帧律
 WelcomeLabel2=系统调校与性能测量，从检测到实测。%n%n接下来选择安装位置和快捷方式，然后安装 FPS 帧律。
+
+[Code]
+function NotManagedUpdate: Boolean;
+begin
+  Result := ExpandConstant('{param:FpsTuneUpdate|0}') <> '1';
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  { An in-app update must replace the running app, rather than installing elsewhere. }
+  Result := (PageID = wpSelectDir) and (not NotManagedUpdate);
+end;

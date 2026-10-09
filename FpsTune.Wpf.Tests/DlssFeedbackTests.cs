@@ -177,7 +177,7 @@ public sealed class DlssFeedbackTests
         combo.SelectedItem = combo.Items.OfType<ComboBoxItem>().Single(i => (string)i.Tag == tag);
     }
 
-    private static void PumpUntil(Func<bool> complete)
+    internal static void PumpUntil(Func<bool> complete)
     {
         var deadline = DateTime.UtcNow.AddSeconds(10);
         while (!complete() && DateTime.UtcNow < deadline)
@@ -190,7 +190,7 @@ public sealed class DlssFeedbackTests
         Assert.True(complete(), "UI state did not reach the expected operation result.");
     }
 
-    private static void RunIsolated([CallerMemberName] string test = "")
+    internal static void RunIsolated([CallerMemberName] string test = "", Type? testType = null)
     {
         var results = Path.Combine(RepoRoot(), "work", "test-results", "dlss-ui-child-" + Guid.NewGuid().ToString("N"));
         var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
@@ -198,7 +198,7 @@ public sealed class DlssFeedbackTests
         start.Environment["DOTNET_CLI_UI_LANGUAGE"] = "en-US";
         start.ArgumentList.Add("vstest");
         start.ArgumentList.Add(typeof(DlssFeedbackTests).Assembly.Location);
-        start.ArgumentList.Add("--TestCaseFilter:FullyQualifiedName=" + typeof(DlssFeedbackTests).FullName + "." + test);
+        start.ArgumentList.Add("--TestCaseFilter:FullyQualifiedName=" + (testType ?? typeof(DlssFeedbackTests)).FullName + "." + test);
         start.ArgumentList.Add("--logger:trx;LogFileName=ui-child.trx");
         start.ArgumentList.Add("--ResultsDirectory:" + results);
         using var process = Process.Start(start)!;
@@ -230,7 +230,7 @@ public sealed class DlssFeedbackTests
             .Invoke(page, [snapshot]);
     }
 
-    private static ResourceDictionary LoadResources()
+    internal static ResourceDictionary LoadResources()
     {
         var document = XDocument.Load(Path.Combine(RepoRoot(), "FpsTune.Wpf", "App.xaml"));
         var dictionary = document.Root!.Elements().Single().Elements().Single();
@@ -242,7 +242,7 @@ public sealed class DlssFeedbackTests
         return (ResourceDictionary)XamlReader.Parse(dictionary.ToString());
     }
 
-    private static string RepoRoot()
+    internal static string RepoRoot()
     {
         var root = new DirectoryInfo(AppContext.BaseDirectory);
         while (root is not null && !File.Exists(Path.Combine(root.FullName, "FpsTune.Wpf", "App.xaml")))

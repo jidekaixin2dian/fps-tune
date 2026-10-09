@@ -712,6 +712,16 @@ public partial class SettingsView : UserControl
         }
     }
 
+    private void UpdateRecovery_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var attempt = UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!);
+            if (attempt is null) DialogService.Info(Str.T("Str.UpdateRecovery"), Str.T("Str.UpdateNoRecords"));
+            else (Application.Current.MainWindow as MainWindow)?.ShowUpdateRecovery(attempt);
+        }
+        catch (Exception ex) { UpdateStatusText.Text = Str.T("Str.UpdateFailed", OperationDiagnostics.Scrub(ex.Message)); }
+    }
     private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         CheckUpdateButton.IsEnabled = false;

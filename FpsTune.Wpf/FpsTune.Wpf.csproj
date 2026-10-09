@@ -33,6 +33,7 @@
     <EmbeddedResource Include="..\catalog\catalog.json" LogicalName="FpsTune.Wpf.Catalog.catalog.json" />
     <EmbeddedResource Include="..\LICENSE" LogicalName="FpsTune.Legal.LICENSE" />
     <EmbeddedResource Include="..\THIRD-PARTY-NOTICES.txt" LogicalName="FpsTune.Legal.THIRD-PARTY-NOTICES" />
+    <EmbeddedResource Include="Services\UpdateWorker.ps1" LogicalName="FpsTune.UpdateWorker.ps1" />
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\tray.ico" />
     <Resource Include="Assets\app-icon.png" />

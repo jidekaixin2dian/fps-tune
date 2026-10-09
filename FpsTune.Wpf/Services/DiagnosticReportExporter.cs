@@ -92,6 +92,8 @@ public static class DiagnosticReportExporter
                 AddBackupManifest(zip);
                 AddText(zip, "operation-diagnostics.json", JsonSerializer.Serialize(OperationDiagnostics.Read(BaseDir),
                     new JsonSerializerOptions { WriteIndented = true }));
+                AddText(zip, "update-recovery.json", JsonSerializer.Serialize(UpdateRecovery.DiagnosticSummary(BaseDir),
+                    new JsonSerializerOptions { WriteIndented = true }));
             }
 
             MoveArchiveAtomically(stagingZip, fullTarget);
@@ -173,6 +175,7 @@ public static class DiagnosticReportExporter
                 }),
                 backup = TryGet(() => BackupHealth()),
                 operations = OperationDiagnostics.Read(BaseDir),
+                update = UpdateRecovery.DiagnosticSummary(BaseDir),
                 settings = TryGet(() => new
                 {
                     SettingsService.Current.ThemeMode,
