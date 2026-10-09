@@ -772,6 +772,7 @@ public partial class DisplayQualityView : UserControl
         }
 
         var state = s.Drs!;
+        SetDrsInputsEnabled(true);
         _drsSyncing = true;
         SelectComboByTag(TexQualityCombo, state.TextureQuality is { } t ? ((uint)t).ToString() : "");
         SelectComboByTag(PowerModeCombo, state.PowerMode is { } p ? ((uint)p).ToString() : "");
@@ -829,6 +830,33 @@ public partial class DisplayQualityView : UserControl
     private static string? ComboTag(System.Windows.Controls.ComboBox combo)
         => (combo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
 
+    private DisplayQualityService.DriverSettingsSelection ReadDrsSelection()
+    {
+        Dispatcher.VerifyAccess();
+        var tex = ComboTag(TexQualityCombo);
+        var power = ComboTag(PowerModeCombo);
+        var transparency = ComboTag(TransparencyCombo);
+        var frames = ComboTag(PreRenderCombo);
+        var aniso = ComboTag(AnisoCombo);
+        var vsync = ComboTag(VSyncCombo);
+        var cache = ComboTag(ShaderCacheCombo);
+        return new(
+            string.IsNullOrEmpty(tex) ? null : (TextureFilterQuality)uint.Parse(tex),
+            string.IsNullOrEmpty(power) ? null : (PowerMode)uint.Parse(power),
+            string.IsNullOrEmpty(transparency) ? null : (TransparencyAa)int.Parse(transparency),
+            string.IsNullOrEmpty(frames) ? null : uint.Parse(frames),
+            string.IsNullOrEmpty(aniso) ? AnisoLevel.AppControlled : (AnisoLevel)uint.Parse(aniso),
+            vsync switch { "off" => VSyncMode.ForceOff, "on" => VSyncMode.ForceOn, _ => VSyncMode.AppControlled },
+            cache switch { "1" => true, "0" => false, _ => null });
+    }
+
+    private void SetDrsInputsEnabled(bool enabled)
+    {
+        foreach (var combo in new[] { TexQualityCombo, PowerModeCombo, TransparencyCombo, PreRenderCombo, AnisoCombo, VSyncCombo, ShaderCacheCombo })
+            combo.IsEnabled = enabled;
+        DrsPresetButton.IsEnabled = enabled;
+    }
+
     private void Drs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_drsSyncing)
@@ -853,7 +881,9 @@ public partial class DisplayQualityView : UserControl
             return;
 
         _busy = true;
+        ++_refreshGen;
         _drsStatus = null;
+        SetDrsInputsEnabled(false);
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
         DrsStateText.Text = Str.T("Str.WritingEsports");
@@ -885,60 +915,25 @@ public partial class DisplayQualityView : UserControl
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             return;
 
+        var selection = ReadDrsSelection();
         var confirmed = DialogService.Confirm(
             Str.T("Str.ApplyDrsFull"),
-            "将按所选值写入当前游戏的 NVIDIA 驱动配置。\n\n" +
-            "· 不修改游戏文件，可随时「还原默认」\n" +
-            "· 与 DLSS 覆盖共用备份，还原会一并恢复\n" +
-            "· 写入驱动需要管理员权限\n\n确定应用？",
-            confirmText: "应用");
+            Str.T("Str.DrsApplyConfirm"),
+            confirmText: Str.T("Str.Apply"));
         if (!confirmed)
             return;
 
         _busy = true;
+        ++_refreshGen;
         _drsStatus = null;
+        SetDrsInputsEnabled(false);
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
         DrsStateText.Text = Str.T("Str.Writing");
         try
         {
             var exeName = Path.GetFileName(path);
-            await Task.Run(() =>
-            {
-                var tex = ComboTag(TexQualityCombo);
-                if (!string.IsNullOrEmpty(tex))
-                    DisplayQualityService.ApplyTextureQuality(exeName, (TextureFilterQuality)uint.Parse(tex));
-                var power = ComboTag(PowerModeCombo);
-                if (!string.IsNullOrEmpty(power))
-                    DisplayQualityService.ApplyPowerMode(exeName, (PowerMode)uint.Parse(power));
-                var traa = ComboTag(TransparencyCombo);
-                if (!string.IsNullOrEmpty(traa))
-                    DisplayQualityService.ApplyTransparencyAa(exeName, (TransparencyAa)int.Parse(traa));
-                var pr = ComboTag(PreRenderCombo);
-                if (!string.IsNullOrEmpty(pr))
-                    DisplayQualityService.ApplyPreRenderLimit(exeName, uint.Parse(pr));
-                else
-                    DisplayQualityService.ApplyPreRenderLimit(exeName, null);
-                var aniso = ComboTag(AnisoCombo);
-                if (!string.IsNullOrEmpty(aniso))
-                    DisplayQualityService.ApplyAnisoLevel(exeName, (AnisoLevel)uint.Parse(aniso));
-                else
-                    DisplayQualityService.ApplyAnisoLevel(exeName, AnisoLevel.AppControlled);
-                var vsync = ComboTag(VSyncCombo);
-                DisplayQualityService.ApplyVSyncMode(exeName, vsync switch
-                {
-                    "off" => VSyncMode.ForceOff,
-                    "on" => VSyncMode.ForceOn,
-                    _ => VSyncMode.AppControlled,
-                });
-                var sc = ComboTag(ShaderCacheCombo);
-                DisplayQualityService.ApplyShaderDiskCache(exeName, sc switch
-                {
-                    "1" => true,
-                    "0" => false,
-                    _ => null,
-                });
-            });
+            await Task.Run(() => DisplayQualityService.ApplyDriverSettings(exeName, selection));
             _drsStatus = Str.T("Str.DrsApplied");
         }
         catch (NvdrsException ex) when (ex.Status == -175)
@@ -959,14 +954,19 @@ public partial class DisplayQualityView : UserControl
     private async void DrsRestore_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
+        var path = AppState.GamePath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
         _busy = true;
+        ++_refreshGen;
+        SetDrsInputsEnabled(false);
         _drsStatus = null;
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
         DrsStateText.Text = Str.T("Str.Restoring2");
         try
         {
-            var exeName = Path.GetFileName(AppState.GamePath!);
+            var exeName = Path.GetFileName(path);
             var restored = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
             _drsStatus = restored
                 ? Str.T("Str.DrsRestored")

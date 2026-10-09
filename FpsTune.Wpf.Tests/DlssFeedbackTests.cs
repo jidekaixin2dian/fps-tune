@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Markup;
+using System.Windows.Threading;
 using System.Xml.Linq;
 using FpsTune.Wpf.Services;
 using FpsTune.Wpf.Views;
@@ -86,14 +88,117 @@ public sealed class DlssFeedbackTests
         if (error is not null) ExceptionDispatchInfo.Capture(error).Throw();
     }
 
-    private static void RunIsolated()
+    [Fact]
+    public void Actual_3D_apply_button_captures_UI_choices_and_saves_one_batch_on_worker_then_restores()
+    {
+        if (Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") != "1")
+        {
+            RunIsolated();
+            return;
+        }
+        Exception? error = null;
+        var thread = new Thread(() =>
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "fpstune-drs-ui-" + Guid.NewGuid().ToString("N"));
+            var api = new DisplayQualityTests.FakeNvdrsApi();
+            var exe = "FpsTune-DrsUi-test.exe";
+            Application? app = null;
+            Window? owner = null;
+            DispatcherTimer? confirm = null;
+            try
+            {
+                Directory.CreateDirectory(directory);
+                var fixture = Path.Combine(directory, exe);
+                File.WriteAllBytes(fixture, []);
+                UserDataPaths.RootOverride = directory;
+                DisplayQualityService.BackupDirOverride = Path.Combine(directory, "backup");
+                DisplayQualityService.ApiOverride = () => api;
+                AppState.GamePath = fixture;
+                var profile = api.AddProfile("existing", exe);
+                profile.Settings[DisplayQualityService.TextureQualityId] = 10;
+                var original = profile.Settings.OrderBy(p => p.Key).ToArray();
+                app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown, Resources = LoadResources() };
+                SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(app.Dispatcher));
+                var page = new DisplayQualityView();
+                owner = new Window { Content = page, Width = 1000, Height = 700 };
+                app.MainWindow = owner;
+                owner.Show();
+                PumpUntil(() => ((FrameworkElement)page.FindName("DrsSupportedPanel")).Visibility == Visibility.Visible);
+                Select(page, "TexQualityCombo", ((uint)TextureFilterQuality.HighQuality).ToString());
+                Select(page, "PowerModeCombo", ((uint)PowerMode.OptimalPower).ToString());
+                Select(page, "TransparencyCombo", "0");
+                Select(page, "PreRenderCombo", "1");
+                Select(page, "AnisoCombo", "16");
+                Select(page, "VSyncCombo", "off");
+                Select(page, "ShaderCacheCombo", "1");
+                confirm = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+                confirm.Tick += (_, _) =>
+                {
+                    var dialog = app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible
+                        && ((TextBlock)w.FindName("TitleTextBlock")).Text == Str.T("Str.ApplyDrsFull"));
+                    if (dialog is null) return;
+                    confirm.Stop();
+                    ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                };
+                confirm.Start();
+                ((Button)page.FindName("DrsApplyButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                PumpUntil(() => ((TextBlock)page.FindName("DrsStateText")).Text == Str.T("Str.DrsApplied"));
+                Assert.Equal(1, api.SaveCount);
+                Assert.Equal((uint)TextureFilterQuality.HighQuality, profile.Settings[DisplayQualityService.TextureQualityId]);
+                Assert.Equal((uint)PowerMode.OptimalPower, profile.Settings[DisplayQualityService.PowerModeId]);
+                Assert.Equal(16u, profile.Settings[DisplayQualityService.AnisoLevelId]);
+                Assert.Equal(DisplayQualityService.VSyncForceOff, profile.Settings[DisplayQualityService.VSyncModeId]);
+                Assert.True(((ComboBox)page.FindName("PowerModeCombo")).IsEnabled);
+                ((Button)page.FindName("DrsRestoreButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                PumpUntil(() => ((TextBlock)page.FindName("DrsStateText")).Text == Str.T("Str.DrsRestored"));
+                Assert.Equal(original, profile.Settings.OrderBy(p => p.Key).ToArray());
+                Assert.False(DisplayQualityService.HasRestorableBackup(exe));
+            }
+            catch (Exception ex) { error = ex; }
+            finally
+            {
+                confirm?.Stop(); owner?.Close(); app?.Shutdown();
+                DisplayQualityService.ApiOverride = null;
+                DisplayQualityService.BackupDirOverride = null;
+                UserDataPaths.RootOverride = null;
+                AppState.GamePath = null;
+                if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+            }
+        }) { IsBackground = true };
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(30)), "3D UI regression did not finish.");
+        if (error is not null) ExceptionDispatchInfo.Capture(error).Throw();
+    }
+
+    private static void Select(DisplayQualityView page, string name, string tag)
+    {
+        var combo = (ComboBox)page.FindName(name);
+        combo.SelectedItem = combo.Items.OfType<ComboBoxItem>().Single(i => (string)i.Tag == tag);
+    }
+
+    private static void PumpUntil(Func<bool> complete)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (!complete() && DateTime.UtcNow < deadline)
+        {
+            var frame = new DispatcherFrame();
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+            timer.Tick += (_, _) => { timer.Stop(); frame.Continue = false; };
+            timer.Start(); Dispatcher.PushFrame(frame);
+        }
+        Assert.True(complete(), "UI state did not reach the expected operation result.");
+    }
+
+    private static void RunIsolated([CallerMemberName] string test = "")
     {
         var results = Path.Combine(RepoRoot(), "work", "test-results", "dlss-ui-child-" + Guid.NewGuid().ToString("N"));
         var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
         start.Environment["FPSTUNE_DLSS_UI_TEST_CHILD"] = "1";
+        start.Environment["DOTNET_CLI_UI_LANGUAGE"] = "en-US";
         start.ArgumentList.Add("vstest");
         start.ArgumentList.Add(typeof(DlssFeedbackTests).Assembly.Location);
-        start.ArgumentList.Add("--TestCaseFilter:FullyQualifiedName~DlssFeedbackTests");
+        start.ArgumentList.Add("--TestCaseFilter:FullyQualifiedName=" + typeof(DlssFeedbackTests).FullName + "." + test);
         start.ArgumentList.Add("--logger:trx;LogFileName=ui-child.trx");
         start.ArgumentList.Add("--ResultsDirectory:" + results);
         using var process = Process.Start(start)!;

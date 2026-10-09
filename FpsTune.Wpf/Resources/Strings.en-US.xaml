@@ -382,6 +382,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ApplyVibrance">Apply digital vibrance</s:String>
     <s:String x:Key="Str.ApplyIcc">Apply ICC filter</s:String>
     <s:String x:Key="Str.ApplyDrsFull">Apply driver 3D settings</s:String>
+    <s:String x:Key="Str.DrsApplyConfirm">Write the selected NVIDIA driver settings for the current game without changing game files.&#10;&#10;Original values are backed up before applying. Restoration is shared with DLSS overrides and checks for external changes.&#10;&#10;Apply these settings?</s:String>
     <s:String x:Key="Str.RestartAsAdminShort">Restart as administrator</s:String>
     <s:String x:Key="Str.DetectAndOptimize">Detect and optimize</s:String>
     <s:String x:Key="Str.RefreshDetect">Refresh detection</s:String>

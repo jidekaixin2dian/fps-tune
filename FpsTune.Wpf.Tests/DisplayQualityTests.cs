@@ -434,12 +434,14 @@ public class DisplayQualityTests : IDisposable
         Assert.False(DisplayQualityService.GetDlssState(Exe).Covered);
     }
 
-    private sealed class FakeNvdrsApi : INvdrsApi
+    internal sealed class FakeNvdrsApi : INvdrsApi
     {
         private readonly Dictionary<string, FakeProfile> _profiles = new();
         private readonly Dictionary<string, string> _exeOwners = new(); // exe -> profileName
 
         public bool SaveCalled { get; private set; }
+        public int SaveCount { get; private set; }
+        public uint? FailSettingId { get; set; }
         public bool SimulateMissingDriver { get; set; }
         public bool SimulateSaveDenied { get; set; }
         public bool SimulateSaveIgnored { get; set; }
@@ -509,6 +511,7 @@ public class DisplayQualityTests : IDisposable
 
             public void SetSettingDword(INvdrsProfile profile, uint settingId, uint value)
             {
+                if (api.FailSettingId == settingId) throw new NvdrsException(-1, "Controlled setting write failure.");
                 if (api.DenyLegacySwitchWrites && settingId == DisplayQualityService.DlssSrEnableId)
                     throw api.SaveDeniedError;
                 ((FakeProfileRef)profile).Profile.Settings[settingId] = value;
@@ -527,6 +530,7 @@ public class DisplayQualityTests : IDisposable
 
             public void Save()
             {
+                api.SaveCount++;
                 if (api.SimulateSaveDenied)
                     throw api.SaveDeniedError;
                 api.SaveCalled = true;

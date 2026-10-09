@@ -382,6 +382,7 @@
     <s:String x:Key="Str.ApplyVibrance">应用数字振动</s:String>
     <s:String x:Key="Str.ApplyIcc">应用 ICC 滤镜</s:String>
     <s:String x:Key="Str.ApplyDrsFull">应用驱动 3D 设置</s:String>
+    <s:String x:Key="Str.DrsApplyConfirm">将按所选值写入当前游戏的 NVIDIA 驱动配置，不修改游戏文件。&#10;&#10;应用前会备份原值。与 DLSS 覆盖共用还原入口，还原会核对外部改动。&#10;&#10;确定应用？</s:String>
     <s:String x:Key="Str.RestartAsAdminShort">以管理员重启</s:String>
     <s:String x:Key="Str.DetectAndOptimize">检测并优化</s:String>
     <s:String x:Key="Str.RefreshDetect">更新检测</s:String>

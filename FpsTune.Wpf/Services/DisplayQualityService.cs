@@ -180,40 +180,45 @@ public static class DisplayQualityService
 
     /// <summary>各向异性过滤。AppControlled=删除设置；16x 为社区/文档推荐（现代卡开销极低）。</summary>
     public static void ApplyAnisoLevel(string gameExe, AnisoLevel level)
-        => ApplyManaged(gameExe, (session, owner) =>
+        => ApplyManaged(gameExe, (session, owner) => WriteAnisoLevel(session, owner, level));
+
+    private static void WriteAnisoLevel(INvdrsSession session, INvdrsProfile owner, AnisoLevel level)
+    {
+        if (level == AnisoLevel.AppControlled)
         {
-            if (level == AnisoLevel.AppControlled)
-            {
-                session.DeleteSetting(owner, AnisoSelectorId);
-                session.DeleteSetting(owner, AnisoLevelId);
-                return;
-            }
-            session.SetSettingDword(owner, AnisoSelectorId, AnisoSelectorUser);
-            session.SetSettingDword(owner, AnisoLevelId, (uint)level);
-        });
+            session.DeleteSetting(owner, AnisoSelectorId);
+            session.DeleteSetting(owner, AnisoLevelId);
+            return;
+        }
+        session.SetSettingDword(owner, AnisoSelectorId, AnisoSelectorUser);
+        session.SetSettingDword(owner, AnisoLevelId, (uint)level);
+    }
 
     /// <summary>垂直同步。竞技推荐 ForceOff；三重缓冲仅 OGL 有独立项，D3D 下与 VSync 一并关闭即可。</summary>
     public static void ApplyVSyncMode(string gameExe, VSyncMode mode)
-        => ApplyManaged(gameExe, (session, owner) =>
+        => ApplyManaged(gameExe, (session, owner) => WriteVSyncMode(session, owner, mode));
+
+    private static void WriteVSyncMode(INvdrsSession session, INvdrsProfile owner, VSyncMode mode)
+    {
+        if (mode == VSyncMode.AppControlled)
         {
-            if (mode == VSyncMode.AppControlled)
-            {
-                session.DeleteSetting(owner, VSyncModeId);
-                return;
-            }
-            session.SetSettingDword(
-                owner, VSyncModeId, mode == VSyncMode.ForceOn ? 0x47814940u : VSyncForceOff);
-        });
+            session.DeleteSetting(owner, VSyncModeId);
+            return;
+        }
+        session.SetSettingDword(owner, VSyncModeId, mode == VSyncMode.ForceOn ? 0x47814940u : VSyncForceOff);
+    }
 
     /// <summary>着色器磁盘缓存。null=删除；true=开（推荐，减少运行时编译卡顿）。</summary>
     public static void ApplyShaderDiskCache(string gameExe, bool? enabled)
-        => ApplyManaged(gameExe, (session, owner) =>
-        {
-            if (enabled is null)
-                session.DeleteSetting(owner, ShaderDiskCacheId);
-            else
-                session.SetSettingDword(owner, ShaderDiskCacheId, enabled.Value ? ShaderCacheOn : 0u);
-        });
+        => ApplyManaged(gameExe, (session, owner) => WriteShaderDiskCache(session, owner, enabled));
+
+    private static void WriteShaderDiskCache(INvdrsSession session, INvdrsProfile owner, bool? enabled)
+    {
+        if (enabled is null)
+            session.DeleteSetting(owner, ShaderDiskCacheId);
+        else
+            session.SetSettingDword(owner, ShaderDiskCacheId, enabled.Value ? ShaderCacheOn : 0u);
+    }
 
     /// <summary>
     /// 社区/教学高频「竞技 3D 预设」（2026-09-22 调研）：
@@ -307,27 +312,27 @@ public static class DisplayQualityService
     /// 平滑处理 - 透明度（关闭 / 多重采样 / 超级采样 2x 推荐 / 超级采样 4x 桌面高端卡）。
     /// </summary>
     public static void ApplyTransparencyAa(string gameExe, TransparencyAa mode)
-        => ApplyManaged(gameExe, (session, owner) =>
+        => ApplyManaged(gameExe, (session, owner) => WriteTransparencyAa(session, owner, mode));
+
+    private static void WriteTransparencyAa(INvdrsSession session, INvdrsProfile owner, TransparencyAa mode)
+    {
+        if (mode == TransparencyAa.Off)
         {
-            if (mode == TransparencyAa.Off)
-            {
-                // 显式关闭：写 0（官方 MODE_OFF），区别于「未覆盖/跟随驱动」（设置不存在）
-                session.SetSettingDword(owner, TransparencyMultisampleId, 0);
-                session.SetSettingDword(owner, TransparencySupersampleId, 0);
-                return;
-            }
-            if (mode == TransparencyAa.Multisample)
-            {
-                session.SetSettingDword(owner, TransparencyMultisampleId, TransparencyMultisampleOn);
-                session.DeleteSetting(owner, TransparencySupersampleId);
-                return;
-            }
-            session.DeleteSetting(owner, TransparencyMultisampleId);
-            session.SetSettingDword(
-                owner,
-                TransparencySupersampleId,
-                mode == TransparencyAa.Supersample4x ? TransparencySupersample4x : TransparencySupersample2x);
-        });
+            // 显式关闭：写 0（官方 MODE_OFF），区别于「未覆盖/跟随驱动」（设置不存在）
+            session.SetSettingDword(owner, TransparencyMultisampleId, 0);
+            session.SetSettingDword(owner, TransparencySupersampleId, 0);
+            return;
+        }
+        if (mode == TransparencyAa.Multisample)
+        {
+            session.SetSettingDword(owner, TransparencyMultisampleId, TransparencyMultisampleOn);
+            session.DeleteSetting(owner, TransparencySupersampleId);
+            return;
+        }
+        session.DeleteSetting(owner, TransparencyMultisampleId);
+        session.SetSettingDword(owner, TransparencySupersampleId,
+            mode == TransparencyAa.Supersample4x ? TransparencySupersample4x : TransparencySupersample2x);
+    }
 
     /// <summary>
     /// 低延迟 · 最大预渲染帧数（官方 PRERENDERLIMIT）。
@@ -336,12 +341,33 @@ public static class DisplayQualityService
     /// null = 应用程序控制（还原/跟随语义）。
     /// </summary>
     public static void ApplyPreRenderLimit(string gameExe, uint? frames)
+        => ApplyManaged(gameExe, (session, owner) => WritePreRenderLimit(session, owner, frames));
+
+    private static void WritePreRenderLimit(INvdrsSession session, INvdrsProfile owner, uint? frames)
+    {
+        if (frames is null or 0)
+            session.DeleteSetting(owner, PreRenderLimitId);
+        else
+            session.SetSettingDword(owner, PreRenderLimitId, frames.Value);
+    }
+
+    /// <summary>UI 线程读取的纯值；一次会话写入全部选择，然后保存一次并独立读回。</summary>
+    public sealed record DriverSettingsSelection(TextureFilterQuality? TextureQuality, PowerMode? PowerMode,
+        TransparencyAa? TransparencyAa, uint? PreRenderLimit, AnisoLevel Aniso, VSyncMode VSync, bool? ShaderCache);
+
+    public static void ApplyDriverSettings(string gameExe, DriverSettingsSelection selection)
         => ApplyManaged(gameExe, (session, owner) =>
         {
-            if (frames is null or 0)
-                session.DeleteSetting(owner, PreRenderLimitId);
-            else
-                session.SetSettingDword(owner, PreRenderLimitId, frames.Value);
+            if (selection.TextureQuality is { } texture)
+                session.SetSettingDword(owner, TextureQualityId, (uint)texture);
+            if (selection.PowerMode is { } power)
+                session.SetSettingDword(owner, PowerModeId, (uint)power);
+            if (selection.TransparencyAa is { } transparency)
+                WriteTransparencyAa(session, owner, transparency);
+            WritePreRenderLimit(session, owner, selection.PreRenderLimit);
+            WriteAnisoLevel(session, owner, selection.Aniso);
+            WriteVSyncMode(session, owner, selection.VSync);
+            WriteShaderDiskCache(session, owner, selection.ShaderCache);
         });
 
     /// <summary>首次写入先持久化原始设置，再保存驱动；失败仍保留可恢复记录。</summary>
@@ -357,11 +383,11 @@ public static class DisplayQualityService
         var owner = found ?? session.CreateProfile(ProfilePrefix + gameExe, gameExe);
         if (backup is not null)
         {
-            if (backup.SchemaVersion != 2 || backup.PostSettings is null)
-                throw new InvalidDataException(Str.T("Str.NvLegacyBackupReview"));
-            VerifySettings(session, owner, backup);
+            backup = ReconcileBackupForApply(session, owner, backup);
+            if (found is null) backup = backup with { OwnProfile = true };
         }
         else backup = new(gameExe, found is null, new(), 2, new());
+        backup = backup with { PreviousSettings = new() };
 
         // 每条写入先记录原始覆盖与预期后值；新的设置直到第一次触及才捕获，保留外部既有更改。
         var touched = new HashSet<uint>();
@@ -369,11 +395,13 @@ public static class DisplayQualityService
         {
             if (!ManagedSettingIds.Contains(id)) throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
             touched.Add(id);
+            var original = session.TryGetOverrideDword(owner, id, out var oldValue);
             if (!backup.Settings.Any(x => x.SettingId == id))
-            {
-                var original = session.TryGetOverrideDword(owner, id, out var oldValue);
                 backup.Settings.Add(new(id, original, oldValue));
-            }
+            // Preserve the last real state as well as the original and proposed post-value.
+            // A failed reapply must not make the previous successful value look like drift.
+            if (!backup.PreviousSettings!.Any(x => x.SettingId == id))
+                backup.PreviousSettings.Add(new(id, original, oldValue));
             backup.PostSettings!.RemoveAll(x => x.SettingId == id);
             backup.PostSettings.Add(new(id, existed, value));
             WriteBackup(backup);
@@ -381,11 +409,57 @@ public static class DisplayQualityService
         write(tracked, owner);
         session.Save();
         VerifyPersistedSettings(api, gameExe, backup.PostSettings!.Where(s => touched.Contains(s.SettingId)));
+        WriteBackup(backup with { PreviousSettings = null });
     }
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
     private sealed record OverrideBackup(string GameExe, bool OwnProfile, List<SettingBackup> Settings,
-        int SchemaVersion = 1, List<SettingBackup>? PostSettings = null);
+        int SchemaVersion = 1, List<SettingBackup>? PostSettings = null, List<SettingBackup>? PreviousSettings = null);
+
+    private static OverrideBackup ReconcileBackupForApply(INvdrsSession session, INvdrsProfile profile, OverrideBackup backup)
+    {
+        // Applying an explicitly selected value starts from the current driver state. An old
+        // receipt must not block a new write after driver reset or another tool's changes.
+        // Keep originals for settings still at our post-value/original; retire only drifted
+        // receipts, archive them durably, and capture the new original before touching an ID.
+        if (backup.SchemaVersion == 1)
+        {
+            ArchiveBackup(backup.GameExe);
+            return new(backup.GameExe, backup.OwnProfile, new(), 2, new());
+        }
+        if (backup.SchemaVersion != 2 || backup.PostSettings is null)
+            throw new InvalidDataException(Str.T("Str.NvLegacyBackupReview"));
+
+        var drifted = new HashSet<uint>();
+        var currentPosts = new List<SettingBackup>();
+        foreach (var post in backup.PostSettings)
+        {
+            var original = backup.Settings.Single(s => s.SettingId == post.SettingId);
+            var exists = session.TryGetOverrideDword(profile, post.SettingId, out var value);
+            var previous = backup.PreviousSettings?.SingleOrDefault(s => s.SettingId == post.SettingId);
+            if (!Matches(exists, value, post) && !Matches(exists, value, original)
+                && (previous is null || !Matches(exists, value, previous)))
+                drifted.Add(post.SettingId);
+            else currentPosts.Add(new(post.SettingId, exists, value));
+        }
+        if (drifted.Count > 0) ArchiveBackup(backup.GameExe);
+        return backup with
+        {
+            Settings = backup.Settings.Where(s => !drifted.Contains(s.SettingId)).ToList(),
+            PostSettings = currentPosts,
+            PreviousSettings = null,
+        };
+    }
+
+    private static bool Matches(bool exists, uint value, SettingBackup setting)
+        => exists == setting.Existed && (!exists || value == setting.Value);
+
+    private static void ArchiveBackup(string gameExe)
+    {
+        var content = File.ReadAllText(BackupPath(gameExe));
+        var history = Path.Combine(BackupDir(), "history", Guid.NewGuid().ToString("N") + ".json");
+        AtomicFile.WriteAllTextDurable(history, content, new System.Text.UTF8Encoding(false));
+    }
 
     // Load a new driver session: the write session can still contain unpersisted changes after Save.
     private static void VerifyPersistedSettings(INvdrsApi api, string gameExe, IEnumerable<SettingBackup> expected)
@@ -415,8 +489,9 @@ public static class DisplayQualityService
         {
             var original = backup.Settings.Single(s => s.SettingId == post.SettingId);
             var exists = session.TryGetOverrideDword(profile, post.SettingId, out var current);
-            if (!(exists == post.Existed && (!exists || current == post.Value))
-                && !(exists == original.Existed && (!exists || current == original.Value)))
+            var previous = backup.PreviousSettings?.SingleOrDefault(s => s.SettingId == post.SettingId);
+            if (!Matches(exists, current, post) && !Matches(exists, current, original)
+                && (previous is null || !Matches(exists, current, previous)))
                 throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         }
     }
@@ -454,6 +529,10 @@ public static class DisplayQualityService
             if (backup.GameExe != gameExe || backup.Settings is null || backup.Settings.Count > ManagedSettingIds.Length
                 || backup.Settings.Select(x => x.SettingId).Distinct().Count() != backup.Settings.Count
                 || backup.Settings.Any(x => !ManagedSettingIds.Contains(x.SettingId))
+                || backup.SchemaVersion == 2 && (backup.PostSettings is null || backup.PostSettings.Count != backup.Settings.Count)
+                || backup.PreviousSettings is not null && (backup.PreviousSettings.Count > backup.Settings.Count
+                    || backup.PreviousSettings.Select(x => x.SettingId).Distinct().Count() != backup.PreviousSettings.Count
+                    || backup.PreviousSettings.Any(x => !backup.Settings.Any(s => s.SettingId == x.SettingId)))
                 || backup.PostSettings is not null && (backup.PostSettings.Count > ManagedSettingIds.Length
                     || backup.PostSettings.Select(x => x.SettingId).Distinct().Count() != backup.PostSettings.Count
                     || backup.PostSettings.Any(x => !backup.Settings.Any(y => y.SettingId == x.SettingId))))
