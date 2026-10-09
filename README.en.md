@@ -18,16 +18,20 @@ Available through a desktop interface and command-line tools.
 
 **0.2.6 fixes DLSS preset saving and privilege messages**: elevated processes no longer repeatedly offer elevation, and saving handles a missing NVIDIA driver database directory. Model selection writes only the preset. Saving and restoration reload the driver settings to verify the result, retaining the original backup on failure. Applying K should report that it was saved and independently verified; restart the game and enable DLSS to confirm its in-game effect.
 
+**0.2.7 further fixes DLSS K and driver 3D apply failures**: when an old backup differs from the current driver values, it preserves the old record and backs up the current values before applying. Driver 3D choices are read on the UI thread and saved in one batch. Refreshes retain failure details and the preset selected for retry. Saving reloads the driver settings to verify the result, and restoration still checks external changes. The reporting user has confirmed success with this fix.
+
 ## Versions and downloads
 
-Current version: **[v0.2.6-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.6-beta)**. The 1.x line is unmaintained.
+Current version: **[v0.2.7-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.7-beta)**. The 1.x line is unmaintained.
 
 Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
+**Download the [EXE installer, FpsTune-Setup-0.2.7.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.7-beta/FpsTune-Setup-0.2.7.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+
 | File | Purpose |
 |---|---|
-| `FpsTune-Setup-<version>.exe` | Installer including the .NET runtime |
+| `FpsTune-Setup-<version>.exe` | **Recommended download**; installer including the .NET runtime |
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 

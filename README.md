@@ -22,16 +22,20 @@
 
 **0.2.6 修复 DLSS 预设保存与权限提示**：已以管理员身份运行时，不再反复要求提权；处理 NVIDIA 驱动数据库目录缺失的保存失败。模型切换只写预设，保存和还原都会重新读取驱动确认结果，失败保留原值备份。应用 K 后应显示「已保存并读回确认」；重新启动游戏并开启 DLSS 后确认游戏内效果。
 
+**0.2.7 进一步修复 DLSS K 与驱动 3D 应用失败**：旧备份与当前驱动值不一致时，先保留旧记录，再按当前值备份并应用；修复 3D 设置的界面线程访问错误，全部选择一次提交。失败信息和待重试预设不再被刷新清空；保存后重新读取驱动确认结果，还原仍核对外部改动。反馈用户已确认本次修复版本成功。
+
 ## 版本与下载
 
-当前版本为 **[v0.2.6-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.6-beta)**。
+当前版本为 **[v0.2.7-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.7-beta)**。
 1.x 版本线已停止维护。
 
 从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
+**优先下载 [EXE 安装版：FpsTune-Setup-0.2.7.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.7-beta/FpsTune-Setup-0.2.7.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+
 | 文件 | 用途 |
 |---|---|
-| `FpsTune-Setup-<版本>.exe` | 安装包，包含 .NET 运行时 |
+| `FpsTune-Setup-<版本>.exe` | **推荐优先下载**；安装包，包含 .NET 运行时 |
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
