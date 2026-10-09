@@ -105,7 +105,7 @@ foreach ($asset in @(@{Path=$singleExe;Name='FpsTune.exe'},@{Path=$portableZip;N
     $expected = (Get-FileHash -LiteralPath $asset.Path).Hash + '  ' + $asset.Name
     if ($expected -notin $oldHashes) { throw "Asset changed since publication gate: $($asset.Name)" }
 }
-& (Join-Path $root 'tools\generate-installer-art.ps1') -OutputDirectory (Join-Path $dist 'installer-art')
+& (Join-Path $root 'tools\generate-installer-art.ps1') -OutputDirectory (Join-Path $root 'dist\installer-art')
 & $iscc "/DMyAppVersion=$version" (Join-Path $root 'installer\setup.iss')
 if ($LASTEXITCODE -ne 0) { exit 1 }
 if (-not (Test-Path -LiteralPath $installer)) {
