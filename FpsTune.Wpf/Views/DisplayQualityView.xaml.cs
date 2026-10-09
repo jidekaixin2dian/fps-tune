@@ -354,7 +354,7 @@ public partial class DisplayQualityView : UserControl
             await Task.Run(() => DisplayQualityService.ApplyDlssPreset(exeName, preset.Value));
             _dlssStatus = preset.Value == DlssPreset.FollowGame
                 ? Str.T("Str.OverrideRemoved")
-                : $"已覆盖 DLSS 预设为 {PresetLabel((uint)preset.Value)}。进游戏生效；不满意可点「还原默认」。";
+                : Str.T("Str.DlssPresetVerified", DlssPresetBadge((uint)preset.Value));
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
@@ -362,7 +362,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            _dlssStatus = "应用失败：" + ex.Message + "。系统设置未变或已如实还原，可重试。";
+            _dlssStatus = Str.T("Str.DlssApplyFailed", ex.Message);
         }
         finally
         {

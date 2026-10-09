@@ -949,4 +949,7 @@
     <s:String x:Key="Str.HotkeyShort">全局热键</s:String>
     <s:String x:Key="Str.NotifyShort">完成通知</s:String>
     <s:String x:Key="Str.HibernateReadUnavailable">无法读取休眠状态</s:String>
+    <s:String x:Key="Str.NvDrsReadbackFailed">驱动保存后重新读取的设置 {0} 与目标不一致。未确认成功，原值备份已保留，可重试或还原。</s:String>
+    <s:String x:Key="Str.DlssPresetVerified">已保存并读回确认 DLSS 预设 {0}。重新启动游戏并开启 DLSS 后使用；可通过「还原本工具改动」恢复。</s:String>
+    <s:String x:Key="Str.DlssApplyFailed">应用未成功确认：{0}。已生成的原值备份会保留，请检查状态后重试或还原。</s:String>
 </ResourceDictionary>

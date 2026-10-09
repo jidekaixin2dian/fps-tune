@@ -949,4 +949,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.HotkeyShort">Global hotkey</s:String>
     <s:String x:Key="Str.NotifyShort">Completion notifications</s:String>
     <s:String x:Key="Str.HibernateReadUnavailable">Hibernation state unavailable</s:String>
+    <s:String x:Key="Str.NvDrsReadbackFailed">Setting {0} reloaded after saving does not match the target. Success is unconfirmed; the original backup is retained for retry or restore.</s:String>
+    <s:String x:Key="Str.DlssPresetVerified">DLSS preset {0} saved and independently verified. Restart the game and enable DLSS to use it; Restore tool changes restores the original settings.</s:String>
+    <s:String x:Key="Str.DlssApplyFailed">Application could not be confirmed: {0}. Any original backup created is retained. Check the state before retrying or restoring.</s:String>
 </ResourceDictionary>

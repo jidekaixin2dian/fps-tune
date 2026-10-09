@@ -162,7 +162,7 @@ public static class DisplayQualityService
         if (owner is null)
             return new DlssState(gameExe, false, null, restorable);
         return session.TryGetSettingDword(owner, DlssSrPresetId, out var preset)
-            ? new DlssState(gameExe, true, preset, restorable)
+            ? new DlssState(gameExe, preset != 0, preset, restorable)
             : new DlssState(gameExe, false, null, restorable);
     }
 
@@ -364,9 +364,11 @@ public static class DisplayQualityService
         else backup = new(gameExe, found is null, new(), 2, new());
 
         // 每条写入先记录原始覆盖与预期后值；新的设置直到第一次触及才捕获，保留外部既有更改。
+        var touched = new HashSet<uint>();
         var tracked = new TrackedSession(session, (id, existed, value) =>
         {
             if (!ManagedSettingIds.Contains(id)) throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+            touched.Add(id);
             if (!backup.Settings.Any(x => x.SettingId == id))
             {
                 var original = session.TryGetOverrideDword(owner, id, out var oldValue);
@@ -378,11 +380,26 @@ public static class DisplayQualityService
         });
         write(tracked, owner);
         session.Save();
+        VerifyPersistedSettings(api, gameExe, backup.PostSettings!.Where(s => touched.Contains(s.SettingId)));
     }
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
     private sealed record OverrideBackup(string GameExe, bool OwnProfile, List<SettingBackup> Settings,
         int SchemaVersion = 1, List<SettingBackup>? PostSettings = null);
+
+    // Load a new driver session: the write session can still contain unpersisted changes after Save.
+    private static void VerifyPersistedSettings(INvdrsApi api, string gameExe, IEnumerable<SettingBackup> expected)
+    {
+        using var verify = api.OpenSession();
+        var profile = verify.FindApplicationOwner(gameExe);
+        foreach (var setting in expected)
+        {
+            uint value = 0;
+            var exists = profile is not null && verify.TryGetOverrideDword(profile, setting.SettingId, out value);
+            if (exists != setting.Existed || exists && value != setting.Value)
+                throw new InvalidOperationException(Str.T("Str.NvDrsReadbackFailed", setting.SettingId.ToString("X8")));
+        }
+    }
 
     private static void ValidateGameExe(string gameExe)
     {
@@ -474,11 +491,10 @@ public static class DisplayQualityService
             return;
         }
 
+        // Model selection is independent of NVIDIA App's legacy override switch.
+        // Keep that ID in ManagedSettingIds only to restore backups made by older versions.
         ApplyManaged(gameExe, (session, owner) =>
-        {
-            session.SetSettingDword(owner, DlssSrEnableId, 1);
-            session.SetSettingDword(owner, DlssSrPresetId, (uint)preset);
-        });
+            session.SetSettingDword(owner, DlssSrPresetId, (uint)preset));
     }
 
     /// <summary>
@@ -501,17 +517,23 @@ public static class DisplayQualityService
         var target = session.FindApplicationOwner(gameExe);
         if (target is null)
         {
-            if (!backup.OwnProfile) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+            if (!backup.OwnProfile || backup.Settings.Any(s => s.Existed))
+                throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         }
         else
         {
             VerifySettings(session, target, backup);
             foreach (var setting in backup.Settings)
+            {
+                var exists = session.TryGetOverrideDword(target, setting.SettingId, out var value);
+                if (exists == setting.Existed && (!exists || value == setting.Value)) continue;
                 if (setting.Existed) session.SetSettingDword(target, setting.SettingId, setting.Value);
                 else session.DeleteSetting(target, setting.SettingId);
+            }
             // 无可靠的完整 profile 枚举证据时保留空壳，避免删除用户追加的设置或应用。
         }
         session.Save();
+        VerifyPersistedSettings(api, gameExe, backup.Settings);
         DeleteBackup(gameExe);
         return true;
     }

@@ -33,7 +33,7 @@ public class DisplayQualityTests : IDisposable
     }
 
     [Fact]
-    public void Apply_to_predefined_profile_writes_enable_and_preset_and_backs_up()
+    public void Apply_to_predefined_profile_writes_only_model_and_backs_up()
     {
         // NVIDIA 预置 profile：登记了游戏但没有 DLSS 覆盖设置
         _api.AddProfile("三角洲行动", Exe);
@@ -42,7 +42,7 @@ public class DisplayQualityTests : IDisposable
 
         var predefined = _api.GetProfile("三角洲行动");
         Assert.NotNull(predefined);
-        Assert.Equal(1u, predefined.Settings[DisplayQualityService.DlssSrEnableId]);
+        Assert.False(predefined.Settings.ContainsKey(DisplayQualityService.DlssSrEnableId));
         Assert.Equal(11u, predefined.Settings[DisplayQualityService.DlssSrPresetId]);
         Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
 
@@ -60,7 +60,7 @@ public class DisplayQualityTests : IDisposable
         _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.DlssSrEnableId] = 0;
 
         DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetM);
-        Assert.Equal(1u, _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.DlssSrEnableId]);
+        Assert.Equal(0u, _api.GetProfile("三角洲行动")!.Settings[DisplayQualityService.DlssSrEnableId]);
 
         DisplayQualityService.RemoveDlssOverride(Exe);
 
@@ -372,6 +372,68 @@ public class DisplayQualityTests : IDisposable
         Assert.Equal(5u, profile.InheritedSettings[DisplayQualityService.DlssSrPresetId]);
     }
 
+    [Fact]
+    public void K_selection_succeeds_when_unrelated_legacy_switch_is_protected()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        profile.Settings[DisplayQualityService.DlssSrEnableId] = 0;
+        _api.DenyLegacySwitchWrites = true;
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.Equal(11u, DisplayQualityService.GetDlssState(Exe).PresetValue);
+        Assert.Equal(0u, profile.Settings[DisplayQualityService.DlssSrEnableId]);
+        Assert.True(DisplayQualityService.RemoveDlssOverride(Exe));
+    }
+
+    [Fact]
+    public void Save_success_without_persistence_is_not_reported_as_K_success()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        profile.InheritedSettings[DisplayQualityService.DlssSrPresetId] = 11;
+        _api.SimulateSaveIgnored = true;
+        Assert.Throws<InvalidOperationException>(() => DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
+        Assert.Empty(profile.Settings);
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+        _api.SimulateSaveIgnored = false;
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.Equal(11u, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+    }
+
+    [Fact]
+    public void Restore_save_success_without_persistence_retains_backup()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        _api.SimulateSaveIgnored = true;
+        Assert.Throws<InvalidOperationException>(() => DisplayQualityService.RemoveDlssOverride(Exe));
+        Assert.Equal(11u, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+        _api.SimulateSaveIgnored = false;
+        Assert.True(DisplayQualityService.RemoveDlssOverride(Exe));
+        Assert.Empty(profile.Settings);
+    }
+
+    [Fact]
+    public void Failed_old_switch_backup_does_not_block_K_or_write_unchanged_switch_on_restore()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        profile.Settings[DisplayQualityService.DlssSrEnableId] = 0;
+        File.WriteAllText(Path.Combine(_backupDir, "backup-" + Exe + ".json"),
+            $$"""{"GameExe":"{{Exe}}","OwnProfile":false,"SchemaVersion":2,"Settings":[{"SettingId":283385345,"Existed":true,"Value":0}],"PostSettings":[{"SettingId":283385345,"Existed":true,"Value":1}]}""");
+        _api.DenyLegacySwitchWrites = true;
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.Equal(11u, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+        Assert.True(DisplayQualityService.RemoveDlssOverride(Exe));
+        Assert.Equal(0u, profile.Settings[DisplayQualityService.DlssSrEnableId]);
+        Assert.False(DisplayQualityService.HasRestorableBackup(Exe));
+    }
+
+    [Fact]
+    public void Zero_default_preset_is_not_an_active_model_override()
+    {
+        _api.AddProfile("existing", Exe).InheritedSettings[DisplayQualityService.DlssSrPresetId] = 0;
+        Assert.False(DisplayQualityService.GetDlssState(Exe).Covered);
+    }
+
     private sealed class FakeNvdrsApi : INvdrsApi
     {
         private readonly Dictionary<string, FakeProfile> _profiles = new();
@@ -380,6 +442,8 @@ public class DisplayQualityTests : IDisposable
         public bool SaveCalled { get; private set; }
         public bool SimulateMissingDriver { get; set; }
         public bool SimulateSaveDenied { get; set; }
+        public bool SimulateSaveIgnored { get; set; }
+        public bool DenyLegacySwitchWrites { get; set; }
         public NvdrsException SaveDeniedError { get; } = new(-175,
             "保存驱动设置失败：NVAPI_ACCESS_DENIED（NVAPI -175）");
         public string? LastError { get; private set; }
@@ -412,10 +476,14 @@ public class DisplayQualityTests : IDisposable
 
         private sealed class FakeSession(FakeNvdrsApi api) : INvdrsSession
         {
+            // A session stages changes independently until Save commits them.
+            private readonly Dictionary<string, FakeProfile> _profiles = api._profiles.ToDictionary(
+                p => p.Key, p => p.Value.Clone());
+            private readonly Dictionary<string, string> _exeOwners = new(api._exeOwners);
             public void Dispose() { }
 
             public INvdrsProfile? FindApplicationOwner(string exeName)
-                => api._exeOwners.TryGetValue(exeName, out var owner) && api.GetProfile(owner) is { } profile
+                => _exeOwners.TryGetValue(exeName, out var owner) && _profiles.TryGetValue(owner, out var profile)
                     ? new FakeProfileRef(profile)
                     : null;
 
@@ -425,8 +493,9 @@ public class DisplayQualityTests : IDisposable
                     throw new InvalidOperationException("只允许创建 FpsTune 前缀的配置文件");
                 if (!gameExe.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("应用必须是游戏主程序 exe");
-                var profile = api.AddProfile(name);
-                api._exeOwners[gameExe] = name;
+                var profile = new FakeProfile { Name = name };
+                _profiles[name] = profile;
+                _exeOwners[gameExe] = name;
                 return new FakeProfileRef(profile);
             }
 
@@ -439,7 +508,11 @@ public class DisplayQualityTests : IDisposable
                 => ((FakeProfileRef)profile).Profile.Settings.TryGetValue(settingId, out value);
 
             public void SetSettingDword(INvdrsProfile profile, uint settingId, uint value)
-                => ((FakeProfileRef)profile).Profile.Settings[settingId] = value;
+            {
+                if (api.DenyLegacySwitchWrites && settingId == DisplayQualityService.DlssSrEnableId)
+                    throw api.SaveDeniedError;
+                ((FakeProfileRef)profile).Profile.Settings[settingId] = value;
+            }
 
             public bool DeleteSetting(INvdrsProfile profile, uint settingId)
                 => ((FakeProfileRef)profile).Profile.Settings.Remove(settingId);
@@ -447,9 +520,9 @@ public class DisplayQualityTests : IDisposable
             public void DeleteProfile(INvdrsProfile profile)
             {
                 var p = ((FakeProfileRef)profile).Profile;
-                api._profiles.Remove(p.Name);
-                foreach (var key in api._exeOwners.Where(kv => kv.Value == p.Name).Select(kv => kv.Key).ToList())
-                    api._exeOwners.Remove(key);
+                _profiles.Remove(p.Name);
+                foreach (var key in _exeOwners.Where(kv => kv.Value == p.Name).Select(kv => kv.Key).ToList())
+                    _exeOwners.Remove(key);
             }
 
             public void Save()
@@ -457,6 +530,18 @@ public class DisplayQualityTests : IDisposable
                 if (api.SimulateSaveDenied)
                     throw api.SaveDeniedError;
                 api.SaveCalled = true;
+                if (api.SimulateSaveIgnored) return;
+                foreach (var name in api._profiles.Keys.Except(_profiles.Keys).ToArray()) api._profiles.Remove(name);
+                foreach (var (name, staged) in _profiles)
+                {
+                    var persisted = api.AddProfile(name);
+                    persisted.Settings.Clear();
+                    foreach (var (id, value) in staged.Settings) persisted.Settings[id] = value;
+                    persisted.InheritedSettings.Clear();
+                    foreach (var (id, value) in staged.InheritedSettings) persisted.InheritedSettings[id] = value;
+                }
+                api._exeOwners.Clear();
+                foreach (var (exe, owner) in _exeOwners) api._exeOwners[exe] = owner;
             }
         }
 
@@ -465,6 +550,13 @@ public class DisplayQualityTests : IDisposable
             public string Name { get; init; } = "";
             internal Dictionary<uint, uint> Settings { get; } = new();
             internal Dictionary<uint, uint> InheritedSettings { get; } = new();
+            internal FakeProfile Clone()
+            {
+                var clone = new FakeProfile { Name = Name };
+                foreach (var (id, value) in Settings) clone.Settings[id] = value;
+                foreach (var (id, value) in InheritedSettings) clone.InheritedSettings[id] = value;
+                return clone;
+            }
         }
 
         private sealed class FakeProfileRef(FakeProfile profile) : INvdrsProfile
