@@ -372,17 +372,24 @@ public static class DisplayQualityService
 
     /// <summary>首次写入先持久化原始设置，再保存驱动；失败仍保留可恢复记录。</summary>
     private static void ApplyManaged(string gameExe, Action<INvdrsSession, INvdrsProfile> write)
+        => OperationDiagnostics.Run("driver-apply", gameExe, BackupDirOverride, trace =>
     {
+        trace.Stage("validate-target");
         ValidateGameExe(gameExe);
+        trace.Stage("operation-lock");
         using var gate = SystemMutationGate.Acquire();
+        trace.Stage("initialize-driver");
         using var api = CreateApi();
         if (!api.TryInitialize()) throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        trace.Stage("load-driver");
         using var session = api.OpenSession();
         var found = session.FindApplicationOwner(gameExe);
+        trace.Stage("load-backup");
         var backup = ReadBackup(gameExe);
         var owner = found ?? session.CreateProfile(ProfilePrefix + gameExe, gameExe);
         if (backup is not null)
         {
+            trace.Stage("reconcile-backup");
             backup = ReconcileBackupForApply(session, owner, backup);
             if (found is null) backup = backup with { OwnProfile = true };
         }
@@ -393,24 +400,33 @@ public static class DisplayQualityService
         var touched = new HashSet<uint>();
         var tracked = new TrackedSession(session, (id, existed, value) =>
         {
+            trace.Stage("capture-original");
             if (!ManagedSettingIds.Contains(id)) throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
             touched.Add(id);
             var original = session.TryGetOverrideDword(owner, id, out var oldValue);
             if (!backup.Settings.Any(x => x.SettingId == id))
                 backup.Settings.Add(new(id, original, oldValue));
+            var baseline = backup.Settings.Single(s => s.SettingId == id);
+            trace.Setting(id, original, oldValue, existed, value, baseline.Existed, baseline.Value);
             // Preserve the last real state as well as the original and proposed post-value.
             // A failed reapply must not make the previous successful value look like drift.
             if (!backup.PreviousSettings!.Any(x => x.SettingId == id))
                 backup.PreviousSettings.Add(new(id, original, oldValue));
             backup.PostSettings!.RemoveAll(x => x.SettingId == id);
             backup.PostSettings.Add(new(id, existed, value));
+            trace.Stage("persist-backup");
             WriteBackup(backup);
+            trace.Stage("stage-setting");
         });
         write(tracked, owner);
+        trace.Stage("save-driver");
         session.Save();
-        VerifyPersistedSettings(api, gameExe, backup.PostSettings!.Where(s => touched.Contains(s.SettingId)));
+        trace.Stage("readback-driver");
+        VerifyPersistedSettings(api, gameExe, backup.PostSettings!.Where(s => touched.Contains(s.SettingId)), trace);
+        trace.Stage("finalize-backup");
         WriteBackup(backup with { PreviousSettings = null });
-    }
+        return true;
+    });
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
     private sealed record OverrideBackup(string GameExe, bool OwnProfile, List<SettingBackup> Settings,
@@ -462,7 +478,8 @@ public static class DisplayQualityService
     }
 
     // Load a new driver session: the write session can still contain unpersisted changes after Save.
-    private static void VerifyPersistedSettings(INvdrsApi api, string gameExe, IEnumerable<SettingBackup> expected)
+    private static void VerifyPersistedSettings(INvdrsApi api, string gameExe, IEnumerable<SettingBackup> expected,
+        OperationDiagnostics.Trace? trace = null)
     {
         using var verify = api.OpenSession();
         var profile = verify.FindApplicationOwner(gameExe);
@@ -470,6 +487,7 @@ public static class DisplayQualityService
         {
             uint value = 0;
             var exists = profile is not null && verify.TryGetOverrideDword(profile, setting.SettingId, out value);
+            trace?.Readback(setting.SettingId, exists, value);
             if (exists != setting.Existed || exists && value != setting.Value)
                 throw new InvalidOperationException(Str.T("Str.NvDrsReadbackFailed", setting.SettingId.ToString("X8")));
         }
@@ -482,13 +500,16 @@ public static class DisplayQualityService
             throw new ArgumentException(Str.T("Str.NvBackupInvalid"), nameof(gameExe));
     }
 
-    private static void VerifySettings(INvdrsSession session, INvdrsProfile profile, OverrideBackup backup)
+    private static void VerifySettings(INvdrsSession session, INvdrsProfile profile, OverrideBackup backup,
+        OperationDiagnostics.Trace? trace = null)
     {
         if (backup.SchemaVersion != 2 || backup.PostSettings is null) throw new InvalidDataException(Str.T("Str.NvLegacyBackupReview"));
         foreach (var post in backup.PostSettings)
         {
             var original = backup.Settings.Single(s => s.SettingId == post.SettingId);
             var exists = session.TryGetOverrideDword(profile, post.SettingId, out var current);
+            trace?.Setting(post.SettingId, exists, current, original.Existed, original.Value,
+                original.Existed, original.Value, DriverValue.From(post.Existed, post.Value));
             var previous = backup.PreviousSettings?.SingleOrDefault(s => s.SettingId == post.SettingId);
             if (!Matches(exists, current, post) && !Matches(exists, current, original)
                 && (previous is null || !Matches(exists, current, previous)))
@@ -582,12 +603,17 @@ public static class DisplayQualityService
     /// DLSS 与 M3 二期 3D 设置共用同一份备份与还原。
     /// </summary>
     public static bool RemoveDlssOverride(string gameExe)
+        => OperationDiagnostics.Run("driver-restore", gameExe, BackupDirOverride, trace =>
     {
+        trace.Stage("operation-lock");
         using var gate = SystemMutationGate.Acquire();
+        trace.Stage("load-backup");
         var backup = ReadBackup(gameExe);
+        trace.Stage("initialize-driver");
         using var api = CreateApi();
         if (!api.TryInitialize())
             throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        trace.Stage("load-driver");
         using var session = api.OpenSession();
 
         if (backup is null)
@@ -601,7 +627,9 @@ public static class DisplayQualityService
         }
         else
         {
-            VerifySettings(session, target, backup);
+            trace.Stage("check-restore-conflicts");
+            VerifySettings(session, target, backup, trace);
+            trace.Stage("stage-restore");
             foreach (var setting in backup.Settings)
             {
                 var exists = session.TryGetOverrideDword(target, setting.SettingId, out var value);
@@ -611,9 +639,12 @@ public static class DisplayQualityService
             }
             // 无可靠的完整 profile 枚举证据时保留空壳，避免删除用户追加的设置或应用。
         }
+        trace.Stage("save-driver");
         session.Save();
-        VerifyPersistedSettings(api, gameExe, backup.Settings);
+        trace.Stage("readback-driver");
+        VerifyPersistedSettings(api, gameExe, backup.Settings, trace);
+        trace.Stage("finalize-backup");
         DeleteBackup(gameExe);
         return true;
-    }
+    });
 }

@@ -830,6 +830,13 @@ public partial class DisplayQualityView : UserControl
     private static string? ComboTag(System.Windows.Controls.ComboBox combo)
         => (combo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
 
+    private void Diagnostics_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var file = DiagnosticReportExporter.Export();
+        if (file is not null) DialogService.Info(Str.T("Str.DiagnosticReport"), Str.T("Str.DiagExportedBody", file));
+    }
+
     private DisplayQualityService.DriverSettingsSelection ReadDrsSelection()
     {
         Dispatcher.VerifyAccess();

@@ -90,6 +90,8 @@ public static class DiagnosticReportExporter
                 AddAutoProfileEvents(zip);
                 AddErrorLogTail(zip);
                 AddBackupManifest(zip);
+                AddText(zip, "operation-diagnostics.json", JsonSerializer.Serialize(OperationDiagnostics.Read(BaseDir),
+                    new JsonSerializerOptions { WriteIndented = true }));
             }
 
             MoveArchiveAtomically(stagingZip, fullTarget);
@@ -170,6 +172,7 @@ public static class DiagnosticReportExporter
                     recentEvents = AutoProfileActivityStore.Load().Take(20).ToList()
                 }),
                 backup = TryGet(() => BackupHealth()),
+                operations = OperationDiagnostics.Read(BaseDir),
                 settings = TryGet(() => new
                 {
                     SettingsService.Current.ThemeMode,

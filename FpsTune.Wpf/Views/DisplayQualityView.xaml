@@ -209,6 +209,8 @@
                             <Button x:Name="RestoreButton" Content="{DynamicResource Str.RestoreDefault}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="110" Click="Restore_Click"/>
+                            <Button Content="{DynamicResource Str.ExportDiagnostics}" Style="{StaticResource SecondaryButtonStyle}"
+                                    Margin="8,0,0,0" Click="Diagnostics_Click"/>
                         </StackPanel>
 
                         <TextBlock Text="{DynamicResource Str.DlssNote}"
@@ -436,16 +438,18 @@
                             </Grid>
                         </Grid>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <WrapPanel Margin="0,14,0,0">
                             <Button x:Name="DrsApplyButton" Content="{DynamicResource Str.ApplyDrs}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="DrsApply_Click"/>
                             <Button x:Name="DrsRestoreButton" Content="{DynamicResource Str.RestoreDefault}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="110" Click="DrsRestore_Click"/>
+                            <Button Content="{DynamicResource Str.ExportDiagnostics}" Style="{StaticResource SecondaryButtonStyle}"
+                                    Margin="8,0,0,0" Click="Diagnostics_Click"/>
                             <TextBlock Text="{DynamicResource Str.DrsDefaultHint}"
                                        Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                        </StackPanel>
+                        </WrapPanel>
 
                         <TextBlock Text="{DynamicResource Str.DrsNote2}"
                                    Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
