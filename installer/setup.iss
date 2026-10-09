@@ -23,7 +23,6 @@ OutputBaseFilename=FpsTune-Setup-{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-WizardResizable=yes
 WizardSizePercent=115
 DisableWelcomePage=no
 SetupIconFile=..\FpsTune.Wpf\Assets\app.ico
