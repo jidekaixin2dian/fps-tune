@@ -3,11 +3,22 @@
 [简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
-Built with C# WPF / .NET 10; `FpsTune.exe` provides both a desktop interface and a headless CLI.
+Available through a desktop interface and command-line tools.
+
+## 0.2.4: a major update
+
+0.2.4 brings substantial changes across the interface, tuning options and recovery workflow:
+
+- **Redesigned interface**: studio and compact layouts, six settings categories, custom wallpaper, and inline tutorial, community and update cards.
+- **Expanded tuning**: multiple-game path detection, 11 ICC presets, AC CPU controls and shader-cache preview and cleanup.
+- **Everyday maintenance**: drive space, process memory snapshots, storage cleanup, startup apps and troubleshooting shortcuts.
+- **Recovery and updates**: improved backups for system, driver and color settings, optional updates with download verification, and complete license texts in the app and packages.
+
+**0.2.5 refines this major update** with smoother text rendering, theme transitions and a branded installer that always lets you choose the destination.
 
 ## Versions and downloads
 
-Current version: **[v0.2.4-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.4-beta)**. The 1.x / .NET 8 line is unmaintained and preserved at `legacy/1.x`.
+Current version: **[v0.2.5-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.5-beta)**. The 1.x line is unmaintained.
 
 Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
@@ -21,9 +32,21 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 From 0.2.4, portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
 
+The branded installer lets you choose a destination, including during reinstallation; your existing directory remains the default. In-app updates show release notes and download progress, then open the installer after verification.
+
+## Interface preview
+
+| Studio | Settings |
+|---|---|
+| ![Studio](assets/screenshots/01-overview.png) | ![Settings](assets/screenshots/06-settings.png) |
+
+| Maintenance | Detection |
+|---|---|
+| ![Maintenance](assets/screenshots/07-maintenance.png) | ![Detection](assets/screenshots/02-detect.png) |
+
 ## Current features
 
-- **Studio and compact console layouts**, dark/light themes, shared selection controls and a local image as the application wallpaper. The classic overview has been removed.
+- **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
 - **Detection and system tuning**: 38 catalog items with current state, privileges, restart flags and side effects. Memory compression control is unavailable, with legacy restoration retained. Balanced includes 16 items; safe-only includes 4 without elevation. New AC CPU energy preference and maximum-state controls start unchecked.
 - **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
 - **Display and quality**: per-game NVIDIA DRS / DLSS settings, primary-display digital vibrance, 11 generated ICC presets or a custom `.icc` / `.icm`, and restoration of the original association. ICC works in color-managed applications; some games ignore it.
@@ -42,6 +65,9 @@ The application adjusts system or driver configuration without modifying game fi
 Run `FpsTune.exe`, select a game and scan its current settings. Review the selected optimization items before applying them. Start with a small selection and measure whether to keep it.
 The application starts as `asInvoker`; operations needing elevation offer a restart as administrator.
 
+<details>
+<summary>Command-line usage (advanced)</summary>
+
 ```powershell
 .\FpsTune.exe -Detect -Json
 .\FpsTune.exe -Detect -Game "C:\Games\Game.exe" -Json
@@ -55,7 +81,9 @@ The application starts as `asInvoker`; operations needing elevation offer a rest
 
 The catalog marks 28 items for administrator privileges and 16 for restart.
 CLI Apply / Restore begins work immediately and should be used within the agreed scope.
-The AI-assistant procedure is in [SKILL.md](SKILL.md); `catalog/catalog.json` is the item and preset source of truth.
+The AI-assistant procedure is in [SKILL.md](SKILL.md).
+
+</details>
 
 ## Recovery and measurement boundaries
 
@@ -96,11 +124,10 @@ Use, learning and sharing are welcome. Follow the open-source license when redis
 The group is for community discussion and does not promise real-time support. Do not post vulnerabilities or private information publicly.
 Private vulnerability reporting is currently disabled on this repository. Start with a contact request containing no exploit details or personal information, then share details through a private channel supplied by the maintainer.
 
-## License and contributions
+## License and redistribution
 
 The project's own code uses the [MIT License](LICENSE). The historical `Copyright (c) 2026 delta-force-tune contributors` notice is retained; renaming the project does not replace it.
 MIT permits use, modification, copying, redistribution, sublicensing and commercial use subject to preserving the copyright and license notice. Crediting the project source is a recommendation, not an added license condition. Modified distributions may use another name while clearly identifying their origin.
-Third-party components and API-reference scope are listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) and `licenses/manifest.json`; the project's MIT license does not replace their terms.
+Third-party terms are listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt); the project's MIT license does not replace them.
 
-Contributions should describe changes and validation, preserve copyright notices and supply sources/licenses for new dependencies or assets. Contributing does not transfer copyright.
 Game and hardware brands identify supported targets, without implying vendor sponsorship or endorsement. The software is provided under the MIT text and promises no fixed FPS gain.

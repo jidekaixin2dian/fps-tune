@@ -1,6 +1,8 @@
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Media;
-using System.Windows.Media.Effects;
+using System.Windows.Media.Animation;
+using System.Runtime.CompilerServices;
 using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Services;
@@ -10,6 +12,7 @@ public static class ThemeManager
     public static string CurrentMode { get; private set; } = "dark";
 
     private static bool _hooked;
+    private static readonly ConditionalWeakTable<SolidColorBrush, SolidColorBrush> ColorSources = new();
 
     public static void Initialize()
     {
@@ -26,22 +29,26 @@ public static class ThemeManager
             var app = Application.Current;
             if (app is null)
                 return;
-            app.Dispatcher.Invoke(() => Apply("system"));
+            app.Dispatcher.Invoke(() => Apply("system", animate: true));
         };
     }
 
     public static void SetMode(string mode)
     {
         CurrentMode = mode;
-        Apply(mode);
+        Apply(mode, animate: true);
     }
 
-    public static void Apply(string mode)
+    public static void Apply(string mode, bool animate = false)
     {
+        animate = animate && !UiPerformance.LowSpec && SystemParameters.ClientAreaAnimation
+            && Application.Current.MainWindow is { IsLoaded: true, IsVisible: true };
+        void SetBrush(string key, Color target) => UpdateResourceBrush(key, target, animate);
         var resolved = mode == "system" ? ResolveSystemTheme() : mode;
         var t = resolved == "light" ? LightPalette : DarkPalette;
+        var studio = SettingsService.Current.OverviewMode != "console";
+        var accent = studio ? Parse(resolved == "light" ? "#426E2F" : "#B8DD8D") : t.Accent;
 
-        SetBrush("AppBackgroundBrush", t.AppBackground);
         SetBrush("ConsoleBackgroundBrush", Parse(resolved == "light" ? "#F7F9FC" : "#0C1015"));
         // 控制台风格：镀铬层（标题栏/页签栏）高通透，渐变底从所有区域透上来；
         // 内容表面保留足够不透明度保证文字可读。
@@ -58,35 +65,25 @@ public static class ThemeManager
         SetBrush("TextPrimaryBrush", t.TextPrimary);
         SetBrush("TextSecondaryBrush", t.TextSecondary);
         SetBrush("TextMutedBrush", t.TextMuted);
-        SetBrush("PrimaryBrush", t.Primary);
-        SetBrush("PrimaryHoverBrush", t.PrimaryHover);
-        SetBrush("OnPrimaryBrush", t.OnPrimary);
-        SetBrush("AccentBrush", t.Accent);
+        SetBrush("PrimaryBrush", studio ? accent : t.Primary);
+        SetBrush("PrimaryHoverBrush", studio ? Parse(resolved == "light" ? "#355826" : "#CBE9A8") : t.PrimaryHover);
+        SetBrush("OnPrimaryBrush", studio ? Parse(resolved == "light" ? "#FFFFFF" : "#172113") : t.OnPrimary);
+        SetBrush("AccentBrush", accent);
         // 选中态软底：强调色 13% 透明铺底，深/浅主题下都刚好托住文字不抢层级
-        SetBrush("AccentSoftBrush", WithAlpha(t.Accent, resolved == "light" ? (byte)0x20 : (byte)0x24));
+        SetBrush("AccentSoftBrush", WithAlpha(accent, studio || resolved == "light" ? (byte)0x20 : (byte)0x24));
         SetBrush("DangerBrush", t.Danger);
         SetBrush("WarningBrush", t.Warning);
         SetBrush("OkBrush", t.Ok);
-        var studio = SettingsService.Current.OverviewMode != "console";
-        if (studio)
-        {
-            var accent = Parse(resolved == "light" ? "#426E2F" : "#B8DD8D");
-            SetBrush("AccentBrush", accent);
-            SetBrush("PrimaryBrush", accent);
-            SetBrush("PrimaryHoverBrush", Parse(resolved == "light" ? "#355826" : "#CBE9A8"));
-            SetBrush("OnPrimaryBrush", Parse(resolved == "light" ? "#FFFFFF" : "#172113"));
-            SetBrush("AccentSoftBrush", WithAlpha(accent, 0x20));
-        }
         Application.Current.Resources["RadiusCard"] = new CornerRadius(studio ? 12 : 6);
         Application.Current.Resources["RadiusControl"] = new CornerRadius(studio ? 8 : 5);
         Application.Current.Resources["PrimaryColor"] = t.Primary;
         Application.Current.Resources["AccentColor"] = t.Accent;
-        ApplyBackdrop(resolved);
+        ApplyBackdrop(resolved, animate);
     }
 
     // 页面底色只提供基础对比（纯平底色铺在主窗口层），
     // 不放进页面背景——否则会随页面滑入动画平移。
-    private static void ApplyBackdrop(string resolved)
+    private static void ApplyBackdrop(string resolved, bool animate)
     {
         var app = Application.Current;
         if (app is null)
@@ -94,13 +91,10 @@ public static class ThemeManager
 
         // 纯平风格（用户决策）：去掉渐变底，窗口层与页面层用同一颜色，
         // 透明页与不透明页在任何主题下观感完全一致。
-        var backdrop = new SolidColorBrush(Parse(resolved == "light" ? "#F7F9FC" : "#0C1015"));
-        backdrop.Freeze();
-
         // 控制台风格无投影：平面 + 发丝分割线；保留资源键，低配与否都置空
         app.Resources["CardShadowEffect"] = null;
 
-        app.Resources["AppBackdropBrush"] = backdrop;
+        UpdateResourceBrush("AppBackdropBrush", Parse(resolved == "light" ? "#F7F9FC" : "#0C1015"), animate);
         // 页面根全部引用 Transparent 版 AppBackgroundBrush(App.xaml), 窗口层背景透出
         app.Resources["AppBackgroundBrush"] = TransparentBrush();
     }
@@ -115,9 +109,43 @@ public static class ThemeManager
     private static Color WithAlpha(Color color, byte alpha) =>
         Color.FromArgb(alpha, color.R, color.G, color.B);
 
-    private static void SetBrush(string key, Color target)
+    private static void UpdateResourceBrush(string key, Color target, bool animate)
     {
-        Application.Current.Resources[key] = new SolidColorBrush(target);
+        var resources = Application.Current.Resources;
+        if (resources[key] is not SolidColorBrush { IsFrozen: false } brush)
+        {
+            resources[key] = CreateThemeBrush(target);
+            return;
+        }
+        TransitionBrush(brush, target, animate);
+    }
+
+    internal static SolidColorBrush CreateThemeBrush(Color initial)
+    {
+        // ResourceDictionary seals ordinary brushes on lookup. A live color
+        // binding keeps the shared brush animatable without dummy animation clocks.
+        var source = new SolidColorBrush(initial);
+        var brush = new SolidColorBrush();
+        BindingOperations.SetBinding(brush, SolidColorBrush.ColorProperty,
+            new Binding(nameof(SolidColorBrush.Color)) { Source = source, Mode = BindingMode.OneWay });
+        ColorSources.Add(brush, source);
+        return brush;
+    }
+
+    internal static void TransitionBrush(SolidColorBrush brush, Color target, bool animate)
+    {
+        // Read the displayed color before replacing the previous animation. Rapid
+        // switches continue from the current frame, replacing rather than stacking clocks.
+        var from = brush.Color;
+        brush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+        if (ColorSources.TryGetValue(brush, out var source)) source.Color = target;
+        else brush.Color = target;
+        if (!animate || from == target) return;
+        brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(from, target, TimeSpan.FromMilliseconds(180))
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            FillBehavior = FillBehavior.Stop
+        }, HandoffBehavior.SnapshotAndReplace);
     }
 
     private static string ResolveSystemTheme()

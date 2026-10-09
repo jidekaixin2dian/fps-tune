@@ -236,7 +236,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" x:Name="VibPercentText" Text="—"
-                                       FontFamily="{StaticResource FontMono}" FontSize="26" FontWeight="Bold"
+                                       FontFamily="{StaticResource FontStat}" FontSize="26" FontWeight="SemiBold"
                                        Foreground="{DynamicResource AccentBrush}"
                                        VerticalAlignment="Center" MinWidth="64"/>
                             <Slider Grid.Column="1" x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"

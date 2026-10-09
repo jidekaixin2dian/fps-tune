@@ -17,6 +17,15 @@
             <FontFamily x:Key="FontDisplay">Microsoft YaHei UI, Segoe UI Variable Display, Segoe UI</FontFamily>
             <FontFamily x:Key="FontBody">Microsoft YaHei UI, Segoe UI Variable Text, Segoe UI</FontFamily>
             <FontFamily x:Key="FontMono">Cascadia Mono, Consolas, Microsoft YaHei UI</FontFamily>
+            <FontFamily x:Key="FontStat">Segoe UI, Microsoft YaHei UI</FontFamily>
+
+            <!-- Grayscale avoids RGB fringes on themed, translucent and wallpaper surfaces. -->
+            <Style x:Key="WindowTypographyStyle" TargetType="Window">
+                <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+            </Style>
 
             <!-- ============ 设计令牌：圆角（控制台 = 微圆角） ============ -->
             <CornerRadius x:Key="RadiusChip">3</CornerRadius>
@@ -121,9 +130,9 @@
             </Style>
 
             <Style x:Key="StatValueStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontStat}"/>
                 <Setter Property="FontSize" Value="24"/>
-                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             </Style>
 

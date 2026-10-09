@@ -6,7 +6,7 @@
     Icon="Assets/app.ico" Width="1360" Height="860" MinWidth="1180" MinHeight="720"
     Title="{DynamicResource Str.AppName}" WindowStartupLocation="CenterScreen"
     SourceInitialized="OnSourceInitialized" ResizeMode="CanResize" AllowsTransparency="False"
-    Background="{DynamicResource AppBackdropBrush}" FontFamily="{StaticResource FontBody}"
+    Background="{DynamicResource AppBackdropBrush}" FontFamily="{StaticResource FontBody}" Style="{StaticResource WindowTypographyStyle}"
     TextOptions.TextFormattingMode="Display" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="58" GlassFrameThickness="0" ResizeBorderThickness="7" UseAeroCaptionButtons="False"/>

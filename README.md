@@ -3,16 +3,27 @@
 [简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
-使用 C# WPF / .NET 10，同一个 `FpsTune.exe` 提供桌面界面和无头 CLI。
+提供桌面界面和命令行两种使用方式。
 
 ![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
 
+## 0.2.4：一次大更新
+
+0.2.4 集中升级了界面、调校范围和备份恢复流程，覆盖日常使用的多个环节：
+
+- **界面重做**：工作台与紧凑控制台、六类设置、自定义壁纸；教程、社区反馈和更新提示整合到窗口右下角。
+- **调校扩展**：多游戏路径识别、11 个 ICC 预设、接电 CPU 调校项目和着色器缓存预览清理。
+- **日常维护**：磁盘空间、应用内存快照，以及存储清理、启动应用和故障排查入口。
+- **恢复与更新**：完善系统、驱动和颜色设置的备份恢复，增加非强制更新与下载校验，包内及软件内提供完整开源许可。
+
+**0.2.5 在这次大更新的基础上继续打磨体验**：改善文字渲染，加入主题切换过渡，并提供品牌安装界面和始终可选的安装路径。
+
 ## 版本与下载
 
-当前版本为 **[v0.2.4-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.4-beta)**。
-1.x / .NET 8 版本线已停止维护，历史源码保留在 `legacy/1.x`。
+当前版本为 **[v0.2.5-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.5-beta)**。
+1.x 版本线已停止维护。
 
 从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
@@ -25,9 +36,21 @@
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 0.2.4 起，便携包和安装包包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
 
+安装版提供帧律品牌安装向导，可选择安装目录；再次安装时保留原目录作为默认值，也可自行调整。软件内更新先显示版本说明和下载进度，校验完成后再打开安装向导。
+
+## 界面预览
+
+| 工作台 | 设置 |
+|---|---|
+| ![工作台](assets/screenshots/01-overview.png) | ![分类设置](assets/screenshots/06-settings.png) |
+
+| 日常维护 | 检测 |
+|---|---|
+| ![维护与排查](assets/screenshots/07-maintenance.png) | ![系统检测](assets/screenshots/02-detect.png) |
+
 ## 当前功能
 
-- **工作台与紧凑控制台**：深浅主题，统一选择控件，可使用本地图片作为软件背景。原经典概览已移除。
+- **工作台与紧凑控制台**：深浅主题和主题切换过渡，统一选择控件，可使用本地图片作为软件背景。低配模式或 Windows 关闭动画时直接切换主题。
 - **检测与系统调校**：38 个目录项目，逐项展示当前状态、权限、重启要求和副作用；内存压缩项暂不可用，保留旧记录还原。均衡预设含 16 项；无需管理员的预设含 4 项。新增接电 CPU 能效偏好与最大状态，默认不勾选。
 - **多游戏**：识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置、主显示器数字振动、11 个生成的 ICC 预设或自选 `.icc` / `.icm`，以及原始关联还原。ICC 在使用颜色管理的应用中生效，部分游戏会忽略它。
@@ -47,6 +70,9 @@
 先测试少量项目；通过性能会话或固定场景的 A/B 判断是否保留。
 需要管理员的操作会提示重启为管理员；应用以 `asInvoker` 启动，不在启动时要求管理员权限。
 
+<details>
+<summary>命令行用法（进阶使用）</summary>
+
 ```powershell
 .\FpsTune.exe -Detect -Json                       # 只读检测
 .\FpsTune.exe -Detect -Game "C:\Games\Game.exe" -Json
@@ -59,7 +85,9 @@
 ```
 
 目录标记 28 项需要管理员、16 项需要重启。CLI 执行 Apply / Restore 即开始操作，需在已同意的范围内使用。
-AI 助手操作流程见 [SKILL.md](SKILL.md)；项目清单和预设以 `catalog/catalog.json` 为准。
+AI 助手操作流程见 [SKILL.md](SKILL.md)。
+
+</details>
 
 ## 备份与实测的边界
 
@@ -101,11 +129,10 @@ A/B 使用固定硬件、游戏、画质与路线，要求至少 3 次有效样�
 
 本仓库目前未启用 GitHub 私密漏洞报告。需报告敏感问题时，先发不含利用步骤和个人资料的联系请求，待维护者提供私密渠道后再提交细节。
 
-## 许可与贡献
+## 许可与分发
 
 项目自身代码使用 [MIT License](LICENSE)，保留原有 `Copyright (c) 2026 delta-force-tune contributors` 声明；项目更名没有改变历史声明。
 MIT 允许使用、修改、复制、分发、再许可和商业使用，条件是保留版权与许可声明。注明项目来源是建议，不是新增的许可限制；修改版可另行命名并清楚说明其来源。
-第三方组件及 API 参考的范围见 [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt) 和 `licenses/manifest.json`，不能用本项目 MIT 替代第三方许可。
+第三方组件的许可范围见 [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt)，不能用本项目 MIT 替代第三方许可。
 
-欢迎贡献代码与测试。提交时说明变化和验证，保留相关版权声明；新引入的依赖或素材请附来源及许可。贡献不表示转让著作权。
 项目名称用于识别本项目，提及游戏或硬件品牌用于说明适配对象，不表示相关厂商赞助或背书。软件按 MIT 原文提供，不承诺固定帧数收益。
