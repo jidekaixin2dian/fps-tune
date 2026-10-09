@@ -420,6 +420,13 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AlreadyAdmin">Already running as administrator</s:String>
     <s:String x:Key="Str.NotAdminPartial">Not running as administrator; some items may fail</s:String>
     <s:String x:Key="Str.NeedsAdmin">Administrator rights required</s:String>
+    <s:String x:Key="Str.NvDrsDirectoryNeedsAdmin">The NVIDIA driver database directory is missing. Administrator privileges are needed to create it: {0}</s:String>
+    <s:String x:Key="Str.NvDrsDirectoryFailed">Cannot create NVIDIA driver database directory {0}: {1}</s:String>
+    <s:String x:Key="Str.NvDrsAccessDeniedTitle">NVIDIA driver denied access</s:String>
+    <s:String x:Key="Str.NvDrsApplyDenied">Apply failed: NVIDIA driver denied access. The backup is retained.</s:String>
+    <s:String x:Key="Str.NvDrsRestoreDenied">Restore failed: NVIDIA driver denied access. The backup is retained; restoration is incomplete.</s:String>
+    <s:String x:Key="Str.NvDrsDeniedElevated">The app is already running as administrator, but the NVIDIA driver still denies access. Restarting with elevation again cannot resolve this error. Check the driver installation and database directory access using the failed operation below: {0}. This tool does not delete databases or reset permissions.</s:String>
+    <s:String x:Key="Str.NvDrsDeniedStandard">The NVIDIA driver denied access and the app is not running as administrator. Retry with elevation. If access is still denied, check the driver installation and database directory access: {0}.</s:String>
     <s:String x:Key="Str.ManualSpecify">Specify manually…</s:String>
     <s:String x:Key="Str.Scanning">Scanning…</s:String>
     <s:String x:Key="Str.Detecting">Detecting…</s:String>

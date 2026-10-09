@@ -147,7 +147,7 @@ public class DisplayQualityTests : IDisposable
     }
 
     [Fact]
-    public void Save_denied_error_mentions_admin_rights()
+    public void Save_denied_preserves_native_operation_and_status()
     {
         _api.AddProfile("三角洲行动", Exe);
         _api.SimulateSaveDenied = true;
@@ -155,7 +155,24 @@ public class DisplayQualityTests : IDisposable
         var ex = Assert.Throws<NvdrsException>(() =>
             DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
         Assert.Equal(-175, ex.Status);
-        Assert.Contains("管理员", ex.Message, StringComparison.Ordinal);
+        Assert.Same(_api.SaveDeniedError, ex);
+        Assert.Contains("NVAPI_ACCESS_DENIED", ex.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Restore_denied_retains_backup_and_preserves_the_native_failure()
+    {
+        _api.AddProfile("existing", Exe);
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        _api.SimulateSaveDenied = true;
+
+        var ex = Assert.Throws<NvdrsException>(() => DisplayQualityService.RemoveDlssOverride(Exe));
+
+        Assert.Same(_api.SaveDeniedError, ex);
+        Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
+        _api.SimulateSaveDenied = false;
+        Assert.True(DisplayQualityService.RemoveDlssOverride(Exe));
+        Assert.False(DisplayQualityService.HasRestorableBackup(Exe));
     }
 
     /// <summary>内存态 DRS：profile 集合 + 游戏 exe 登记表 + 设置字典。</summary>
@@ -363,6 +380,8 @@ public class DisplayQualityTests : IDisposable
         public bool SaveCalled { get; private set; }
         public bool SimulateMissingDriver { get; set; }
         public bool SimulateSaveDenied { get; set; }
+        public NvdrsException SaveDeniedError { get; } = new(-175,
+            "保存驱动设置失败：NVAPI_ACCESS_DENIED（NVAPI -175）");
         public string? LastError { get; private set; }
 
         internal FakeProfile AddProfile(string name, string? gameExe = null)
@@ -436,7 +455,7 @@ public class DisplayQualityTests : IDisposable
             public void Save()
             {
                 if (api.SimulateSaveDenied)
-                    throw new NvdrsException(-175, "保存驱动设置失败：NVAPI_ACCESS_DENIED（NVAPI -175）");
+                    throw api.SaveDeniedError;
                 api.SaveCalled = true;
             }
         }

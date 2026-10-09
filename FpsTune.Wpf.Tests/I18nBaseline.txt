@@ -15,7 +15,7 @@ Core/GamePathService.cs	24
 Core/HardwareInfoService.cs	11
 Core/NativeOptimizationEngine.cs	76
 Core/NativeSystem.cs	4
-Core/OneClickOptimizer.cs	18
+Core/OneClickOptimizer.cs	16
 Core/OptimizationCatalog.cs	8
 Core/OptimizationEngine.cs	8
 MainWindow.xaml.cs	2
@@ -26,7 +26,7 @@ Services/CliHost.cs	49
 Services/DiagnosticReportExporter.cs	81
 Services/DialogService.cs	4
 Services/DigitalVibranceService.cs	8
-Services/DisplayQualityService.cs	10
+Services/DisplayQualityService.cs	6
 Services/ExperimentHistory.cs	2
 Services/ExperimentRunner.cs	42
 Services/ExperimentWizard.cs	17
@@ -49,7 +49,7 @@ Views/BackupLogView.xaml.cs	2
 Views/CatalogGroupLabelConverter.cs	1
 Views/ConsoleView.xaml.cs	9
 Views/DetectView.xaml.cs	22
-Views/DisplayQualityView.xaml.cs	54
+Views/DisplayQualityView.xaml.cs	45
 Views/HomeView.xaml.cs	4
 Views/OptimizeView.xaml.cs	22
 Views/SessionView.xaml.cs	45

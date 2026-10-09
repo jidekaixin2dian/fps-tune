@@ -377,9 +377,7 @@ public static class DisplayQualityService
             WriteBackup(backup);
         });
         write(tracked, owner);
-        try { session.Save(); }
-        catch (NvdrsException ex) when (ex.Status == -175)
-        { throw new NvdrsException(-175, "保存驱动设置需要管理员权限 (NVAPI_ACCESS_DENIED)。"); }
+        session.Save();
     }
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
@@ -513,16 +511,7 @@ public static class DisplayQualityService
                 else session.DeleteSetting(target, setting.SettingId);
             // 无可靠的完整 profile 枚举证据时保留空壳，避免删除用户追加的设置或应用。
         }
-        try
-        {
-            session.Save();
-        }
-        catch (NvdrsException ex) when (ex.Status == -175)
-        {
-            throw new NvdrsException(-175,
-                "保存驱动设置被拒绝（NVAPI_ACCESS_DENIED）：还原 NVIDIA 配置需要管理员权限。" +
-                "请以管理员身份重启本程序后再还原。");
-        }
+        session.Save();
         DeleteBackup(gameExe);
         return true;
     }

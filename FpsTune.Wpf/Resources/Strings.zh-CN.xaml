@@ -420,6 +420,13 @@
     <s:String x:Key="Str.AlreadyAdmin">当前已是管理员</s:String>
     <s:String x:Key="Str.NotAdminPartial">当前不是管理员，部分优化项可能失败</s:String>
     <s:String x:Key="Str.NeedsAdmin">需要管理员权限</s:String>
+    <s:String x:Key="Str.NvDrsDirectoryNeedsAdmin">NVIDIA 驱动数据库目录缺失，创建该目录需要管理员权限：{0}</s:String>
+    <s:String x:Key="Str.NvDrsDirectoryFailed">无法创建 NVIDIA 驱动数据库目录 {0}：{1}</s:String>
+    <s:String x:Key="Str.NvDrsAccessDeniedTitle">NVIDIA 驱动拒绝访问</s:String>
+    <s:String x:Key="Str.NvDrsApplyDenied">应用失败：NVIDIA 驱动拒绝访问。备份已保留。</s:String>
+    <s:String x:Key="Str.NvDrsRestoreDenied">还原失败：NVIDIA 驱动拒绝访问。备份已保留，尚未完成还原。</s:String>
+    <s:String x:Key="Str.NvDrsDeniedElevated">当前程序已以管理员身份运行，NVIDIA 驱动仍拒绝访问。再次提权重启无法解决此错误。请根据下方失败步骤检查驱动安装状态及数据库目录的访问权限：{0}。本工具不会删除数据库或重置权限。</s:String>
+    <s:String x:Key="Str.NvDrsDeniedStandard">NVIDIA 驱动拒绝访问，当前程序未以管理员身份运行。可以提权后重试；若仍被拒绝，请检查驱动安装状态及数据库目录的访问权限：{0}。</s:String>
     <s:String x:Key="Str.ManualSpecify">手动指定…</s:String>
     <s:String x:Key="Str.Scanning">扫描中…</s:String>
     <s:String x:Key="Str.Detecting">正在检测...</s:String>

@@ -64,7 +64,8 @@ internal sealed class NvdrsException : Exception
 {
     public int Status { get; }
 
-    public NvdrsException(int status, string message) : base(message) => Status = status;
+    public NvdrsException(int status, string message, Exception? innerException = null)
+        : base(message, innerException) => Status = status;
 }
 
 /// <summary>真实 NVAPI 实现。进程内单例（Shared），所有操作经 Gate 串行。</summary>
@@ -363,7 +364,9 @@ internal sealed class NvdrsApi : INvdrsApi
         public void DeleteProfile(INvdrsProfile profile)
             => api.Check(api._deleteProfile!(session, ProfilePtr(profile)), "删除配置文件");
 
-        public void Save() => api.Check(api._saveSettings!(session), "保存驱动设置");
+        public void Save() => NvidiaDrsAccess.SaveSettings(
+            () => api.Check(api._saveSettings!(session), "保存驱动设置"),
+            NvidiaDrsAccess.DatabaseDirectory, AdminHelper.IsAdministrator());
     }
 
     /// <summary>会话内 profile 的轻量包装：只持有原生句柄。仅由 <see cref="SessionImpl"/> 创建。</summary>

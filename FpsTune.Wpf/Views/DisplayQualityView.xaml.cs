@@ -358,13 +358,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _dlssStatus = Str.T("Str.ApplyFailedNeedAdminUnchanged");
-            if (DialogService.Confirm(
-                    Str.T("Str.NeedsAdmin"),
-                    "写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。\n\n" +
-                    Str.T("Str.ConfirmRestartAdminRetry"),
-                    confirmText: Str.T("Str.RestartAsAdminShort")))
-                AdminHelper.RestartAsAdministrator();
+            _dlssStatus = HandleDrsAccessDenied(ex, restoring: false);
         }
         catch (Exception ex)
         {
@@ -399,12 +393,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _dlssStatus = Str.T("Str.RestoreFailedNeedAdmin");
-            if (DialogService.Confirm(
-                    Str.T("Str.NeedsAdmin"),
-                    "还原 NVIDIA 驱动配置需要管理员权限。\n\n要以管理员身份重启并重试吗？",
-                    confirmText: Str.T("Str.RestartAsAdminShort")))
-                AdminHelper.RestartAsAdministrator();
+            _dlssStatus = HandleDrsAccessDenied(ex, restoring: true);
         }
         catch (Exception ex)
         {
@@ -415,6 +404,22 @@ public partial class DisplayQualityView : UserControl
             _busy = false;
             Refresh();
         }
+    }
+
+    private static string HandleDrsAccessDenied(NvdrsException exception, bool restoring)
+    {
+        var feedback = NvidiaDrsAccess.DescribeAccessDenied(AdminHelper.IsAdministrator(), restoring);
+        var message = Str.T(feedback.MessageKey, NvidiaDrsAccess.DatabaseDirectory) + "\n\n" + exception.Message;
+        if (feedback.OfferElevation)
+        {
+            if (DialogService.Confirm(Str.T(feedback.TitleKey),
+                    message + "\n\n" + Str.T("Str.ConfirmRestartAdminRetry"),
+                    confirmText: Str.T("Str.RestartAsAdminShort")))
+                AdminHelper.RestartAsAdministrator();
+        }
+        else
+            DialogService.Warning(Str.T(feedback.TitleKey), message);
+        return Str.T(feedback.StatusKey) + " " + exception.Message;
     }
 
     // ---------- 数字振动（显示级，全桌面） ----------
@@ -834,9 +839,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _drsStatus = Str.T("Str.ApplyFailedNeedAdmin");
-            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.ConfirmRestartAdminRetry"), confirmText: Str.T("Str.RestartAsAdminShort")))
-                AdminHelper.RestartAsAdministrator();
+            _drsStatus = HandleDrsAccessDenied(ex, restoring: false);
         }
         catch (Exception ex)
         {
@@ -914,9 +917,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
-            _drsStatus = Str.T("Str.ApplyFailedNeedAdmin");
-            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.ConfirmRestartAdminRetry"), confirmText: Str.T("Str.RestartAsAdminShort")))
-                AdminHelper.RestartAsAdministrator();
+            _drsStatus = HandleDrsAccessDenied(ex, restoring: false);
         }
         catch (Exception ex)
         {
@@ -944,6 +945,10 @@ public partial class DisplayQualityView : UserControl
             _drsStatus = restored
                 ? Str.T("Str.DrsRestored")
                 : Str.T("Str.NothingToRestore");
+        }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            _drsStatus = HandleDrsAccessDenied(ex, restoring: true);
         }
         catch (Exception ex)
         {

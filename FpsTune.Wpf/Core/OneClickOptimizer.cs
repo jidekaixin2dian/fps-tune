@@ -82,14 +82,6 @@ public static class OneClickOptimizer
             sb.AppendLine("电源方案：卓越性能（随均衡档 power-ultimate）");
             sb.AppendLine("可在「显示与画质」微调或一键还原。");
         }
-        catch (NvdrsException ex) when (ex.Status == -175)
-        {
-            sb.AppendLine();
-            sb.AppendLine("== 显卡 3D（1070 Ti 档）==");
-            sb.AppendLine("[失败] 写入 NVIDIA 配置需要管理员权限；系统层均衡档已应用。");
-            sb.AppendLine(ex.Message);
-            exit = 1;
-        }
         catch (Exception ex)
         {
             sb.AppendLine();
