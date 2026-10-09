@@ -14,11 +14,11 @@ Available through a desktop interface and command-line tools.
 - **Everyday maintenance**: drive space, process memory snapshots, storage cleanup, startup apps and troubleshooting shortcuts.
 - **Recovery and updates**: improved backups for system, driver and color settings, optional updates with download verification, and complete license texts in the app and packages.
 
-**0.2.5 refines this major update** with smoother text rendering, theme transitions and a branded installer that always lets you choose the destination.
+The next version will refine text rendering, theme switching and the installation experience.
 
 ## Versions and downloads
 
-Current version: **[v0.2.5-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.5-beta)**. The 1.x line is unmaintained.
+Current public version: **[v0.2.4-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.4-beta)**. The 1.x line is unmaintained.
 
 Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
@@ -32,9 +32,11 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 From 0.2.4, portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
 
-The branded installer lets you choose a destination, including during reinstallation; your existing directory remains the default. In-app updates show release notes and download progress, then open the installer after verification.
+The installer lets you choose a destination. In-app updates show release notes and download progress, then open the installer after verification. The next version will add FPS Tune branding and keep directory selection available during reinstallation.
 
 ## Interface preview
+
+These images preview the next version. Check Releases for the downloadable version.
 
 | Studio | Settings |
 |---|---|
@@ -46,7 +48,7 @@ The branded installer lets you choose a destination, including during reinstalla
 
 ## Current features
 
-- **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
+- **Studio and compact console layouts**, dark/light themes, shared selection controls and a local image as the application wallpaper.
 - **Detection and system tuning**: 38 catalog items with current state, privileges, restart flags and side effects. Memory compression control is unavailable, with legacy restoration retained. Balanced includes 16 items; safe-only includes 4 without elevation. New AC CPU energy preference and maximum-state controls start unchecked.
 - **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
 - **Display and quality**: per-game NVIDIA DRS / DLSS settings, primary-display digital vibrance, 11 generated ICC presets or a custom `.icc` / `.icm`, and restoration of the original association. ICC works in color-managed applications; some games ignore it.
