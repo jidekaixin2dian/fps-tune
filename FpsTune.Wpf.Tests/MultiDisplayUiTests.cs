@@ -33,6 +33,8 @@ public sealed class MultiDisplayUiTests
                 var page = new DisplayQualityView();
                 window = new Window { Width = 1050, Height = 850, Content = page };
                 application.MainWindow = window;
+                DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
+                DlssFeedbackTests.PrepareBackgroundWindow(window);
                 window.Show();
                 var combo = (ComboBox)page.FindName("DisplayTargetCombo");
                 var vib = (Button)page.FindName("VibApplyButton");
@@ -49,6 +51,7 @@ public sealed class MultiDisplayUiTests
                 {
                     var dialog = application.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible);
                     if (dialog is null) return;
+                    DlssFeedbackTests.AssertBackgroundWindow(dialog);
                     ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 };
                 confirm.Start();
@@ -92,7 +95,7 @@ public sealed class MultiDisplayUiTests
                 Assert.Empty(DigitalVibranceService.BackupTargets());
             }
             catch (Exception ex) { error = ex; }
-            finally { confirm?.Stop(); window?.Close(); application?.Shutdown(); UserDataPaths.RootOverride = null; }
+            finally { confirm?.Stop(); window?.Close(); application?.Shutdown(); UserDataPaths.RootOverride = null; DialogService.PrepareWindowForTest = null; }
         }) { IsBackground = true };
         thread.SetApartmentState(ApartmentState.STA); thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(35)), "Multi-display WPF test did not finish.");

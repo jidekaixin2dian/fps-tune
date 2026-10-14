@@ -5,6 +5,8 @@ namespace FpsTune.Wpf.Services;
 
 public static class DialogService
 {
+    internal static Action<Window>? PrepareWindowForTest { get; set; }
+
     public static void Info(string title, string message)
     {
         Show(title, message, isConfirm: false, isDanger: false, confirmText: "知道了", cancelText: "");
@@ -19,6 +21,7 @@ public static class DialogService
     {
         var dialog = new AppDialogWindow(title, message, isConfirm: true, isDanger: danger, confirmText: confirmText, cancelText: cancelText);
         dialog.Owner = GetOwner();
+        PrepareWindowForTest?.Invoke(dialog);
         return dialog.ShowDialog() == true;
     }
 
@@ -26,6 +29,7 @@ public static class DialogService
     {
         var dialog = new AppDialogWindow(title, message, isConfirm, isDanger, confirmText, cancelText);
         dialog.Owner = GetOwner();
+        PrepareWindowForTest?.Invoke(dialog);
         dialog.ShowDialog();
     }
 

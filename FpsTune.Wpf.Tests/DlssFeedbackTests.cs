@@ -122,6 +122,8 @@ public sealed class DlssFeedbackTests
                 var page = new DisplayQualityView();
                 owner = new Window { Content = page, Width = 1000, Height = 700 };
                 app.MainWindow = owner;
+                DialogService.PrepareWindowForTest = PrepareBackgroundWindow;
+                PrepareBackgroundWindow(owner);
                 owner.Show();
                 PumpUntil(() => ((FrameworkElement)page.FindName("DrsSupportedPanel")).Visibility == Visibility.Visible);
                 Select(page, "TexQualityCombo", ((uint)TextureFilterQuality.HighQuality).ToString());
@@ -137,6 +139,7 @@ public sealed class DlssFeedbackTests
                     var dialog = app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible
                         && ((TextBlock)w.FindName("TitleTextBlock")).Text == Str.T("Str.ApplyDrsFull"));
                     if (dialog is null) return;
+                    AssertBackgroundWindow(dialog);
                     confirm.Stop();
                     ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 };
@@ -158,6 +161,7 @@ public sealed class DlssFeedbackTests
             finally
             {
                 confirm?.Stop(); owner?.Close(); app?.Shutdown();
+                DialogService.PrepareWindowForTest = null;
                 DisplayQualityService.ApiOverride = null;
                 DisplayQualityService.BackupDirOverride = null;
                 UserDataPaths.RootOverride = null;
@@ -193,7 +197,7 @@ public sealed class DlssFeedbackTests
     internal static void RunIsolated([CallerMemberName] string test = "", Type? testType = null)
     {
         var results = Path.Combine(RepoRoot(), "work", "test-results", "dlss-ui-child-" + Guid.NewGuid().ToString("N"));
-        var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+        var start = new ProcessStartInfo("dotnet") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
         start.Environment["FPSTUNE_DLSS_UI_TEST_CHILD"] = "1";
         start.Environment["DOTNET_CLI_UI_LANGUAGE"] = "en-US";
         start.ArgumentList.Add("vstest");
@@ -215,6 +219,24 @@ public sealed class DlssFeedbackTests
         Assert.Equal("1", (string?)counters.Attribute("executed"));
         Assert.Equal("1", (string?)counters.Attribute("passed"));
         Assert.Equal("0", (string?)counters.Attribute("failed"));
+    }
+
+    internal static void PrepareBackgroundWindow(Window window)
+    {
+        // Retain real Loaded/layout/modal behavior without showing tests on the user's desktop.
+        window.WindowStartupLocation = WindowStartupLocation.Manual;
+        window.Left = -32000;
+        window.Top = -32000;
+        window.ShowInTaskbar = false;
+        window.ShowActivated = false;
+        window.Loaded += (_, _) => AssertBackgroundWindow(window);
+    }
+
+    internal static void AssertBackgroundWindow(Window window)
+    {
+        Assert.True(window.Left < -10000 && window.Top < -10000);
+        Assert.False(window.ShowInTaskbar);
+        Assert.False(window.ShowActivated);
     }
 
     private static void Field(DisplayQualityView page, string name, object value)

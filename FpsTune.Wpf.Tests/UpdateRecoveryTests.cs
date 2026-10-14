@@ -293,7 +293,7 @@ public sealed class UpdateRecoveryTests : IDisposable
         using var process = Process.Start(new ProcessStartInfo(compiler)
         {
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
-            Arguments = $"/nologo /out:\"{output}\" \"{source}\""
+            Arguments = $"/nologo /target:winexe /out:\"{output}\" \"{source}\""
         })!;
         var standard = process.StandardOutput.ReadToEndAsync();
         var error = process.StandardError.ReadToEndAsync();

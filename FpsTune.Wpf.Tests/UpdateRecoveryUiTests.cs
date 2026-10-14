@@ -37,6 +37,7 @@ public sealed class UpdateRecoveryUiTests
                 window = new Window { Content = card, Width = 440, SizeToContent = SizeToContent.Height,
                     Background = (Brush)application.FindResource("ConsoleBackgroundBrush") };
                 application.MainWindow = window;
+                DlssFeedbackTests.PrepareBackgroundWindow(window);
                 window.Show();
                 Assert.Equal(Str.T("Str.UpdateRecovery"), card.Notification.NotificationTitle);
                 Assert.True(((Button)card.FindName("RollbackButton")).IsEnabled);
