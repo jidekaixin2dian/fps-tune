@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows;
+using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using FpsTune.Wpf.Core;
@@ -51,6 +52,10 @@ public partial class SessionView : UserControl
     {
         Service.Sampled += Service_Sampled;
         Service.StateChanged += Service_StateChanged;
+        Service.AutomaticStopFailed += Service_AutomaticStopFailed;
+        GameContextService.GameSwitched += UpdateConditionGame;
+        UpdateConditionGame();
+        if (Service.IsRunning) FillConditions(Service.Conditions);
         RefreshAll();
         if (Service.IsRunning)
             _ticker.Start();
@@ -60,6 +65,8 @@ public partial class SessionView : UserControl
     {
         Service.Sampled -= Service_Sampled;
         Service.StateChanged -= Service_StateChanged;
+        Service.AutomaticStopFailed -= Service_AutomaticStopFailed;
+        GameContextService.GameSwitched -= UpdateConditionGame;
         _ticker.Stop();
         _historyGeneration++;
         _refreshing = false;
@@ -82,7 +89,20 @@ public partial class SessionView : UserControl
         if (Service.IsRunning)
             _ticker.Start();
         else
+        {
             _ticker.Stop();
+            RefreshAll();
+        }
+    }
+
+    private void Service_AutomaticStopFailed(string message)
+        => Dispatcher.BeginInvoke(() => { _preparationHint = Str.T("Str.ConditionStopFailed", message); UpdateRunState(); });
+
+    private void UpdateConditionGame()
+    {
+        var name = Service.IsRunning ? Service.Conditions?.GameName :
+            string.IsNullOrWhiteSpace(AppState.GamePath) ? null : GamePathService.LabelFor(AppState.GamePath);
+        ConditionGameText.Text = Str.T("Str.ConditionGameValue", name ?? Str.T("Str.ConditionsUnknown"));
     }
 
     private void Service_Sampled(MetricSample sample)
@@ -105,7 +125,7 @@ public partial class SessionView : UserControl
             var unavailable = Service.CurrentUnavailableReasons;
             var missing = unavailable.Count == 0 ? Str.T("Str.None") : string.Join("；", unavailable.Keys);
             RunStateText.Text = $"采样中：{Service.SessionName} · 已运行 {FormatDuration(Service.Elapsed)} · " +
-                                $"样本 {Service.RunningBuffer.Count} · 间隔 {PerformanceSessionService.CurrentInterval.TotalSeconds:0.#} 秒 · 缺失指标：{missing}";
+                                $"样本 {Service.RunningBuffer.Count} · 间隔 {Service.SampleIntervalSeconds:0.#} 秒 · 缺失指标：{missing}";
             if (Service.CurrentFpsUnavailableReasonKey is { } fpsKey)
                 RunStateText.Text += " · " + Str.T("Str.FpsUnavailableShort", Str.T(fpsKey));
         }
@@ -122,6 +142,8 @@ public partial class SessionView : UserControl
         StopButton.IsEnabled = running;
         CancelButton.IsEnabled = running;
         SessionNameBox.IsEnabled = !running;
+        ConditionsPanel.IsEnabled = !running;
+        UpdateConditionGame();
         UpdateRunState();
         if (running)
             SessionNameBox.Text = Service.SessionName;
@@ -189,7 +211,13 @@ public partial class SessionView : UserControl
             DialogService.Warning("性能会话", "会话名称包含不能用于文件的字符，请修改后重试。");
             return;
         }
-        if (!Service.Start(name) && !TryArchiveUnreadableSession(name))
+        if (!TryReadConditions(out var conditions))
+        {
+            RunStateText.Text = Str.T("Str.ConditionInvalid");
+            return;
+        }
+        _preparationHint = null;
+        if (!Service.Start(name, conditions) && !TryArchiveUnreadableSession(name, conditions))
         {
             DialogService.Warning(
                 "性能会话",
@@ -207,7 +235,7 @@ public partial class SessionView : UserControl
     /// 上次的活动快照本版本解释不了（更新版本写入或已损坏）时，让用户明确选择Str.T("Str.ArchiveRename")再开始：
     /// 既不丢数据，也不会把会话功能永久锁死。
     /// </summary>
-    private bool TryArchiveUnreadableSession(string name)
+    private bool TryArchiveUnreadableSession(string name, SessionConditions? conditions)
     {
         if (Service.IsRunning || !PerformanceSessionStore.HasUnreadableActiveSnapshot())
             return false;
@@ -230,7 +258,45 @@ public partial class SessionView : UserControl
             "性能会话",
             "已留档为：" + Environment.NewLine + Path.GetFileName(archived) + Environment.NewLine +
             Environment.NewLine + "文件仍在会话目录中，可随时手动找回。");
-        return Service.Start(name);
+        return Service.Start(name, conditions);
+    }
+
+    internal bool TryReadConditions(out SessionConditions conditions)
+    {
+        var valid = Number(ResolutionWidthBox.Text, out var w) & Number(ResolutionHeightBox.Text, out var h)
+            & Number(TargetSecondsBox.Text, out var seconds);
+        conditions = new SessionConditions(Width: w, Height: h, Quality: QualityBox.Text.Trim(),
+            Scene: SceneBox.Text.Trim(), TargetSeconds: seconds);
+        return valid && SessionConditionRules.IsValid(conditions);
+        static bool Number(string input, out int? value)
+        {
+            value = null;
+            if (string.IsNullOrWhiteSpace(input)) return true;
+            if (!int.TryParse(input.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var parsed)) return false;
+            value = parsed; return true;
+        }
+    }
+
+    private void FillConditions(SessionConditions? c)
+    {
+        ResolutionWidthBox.Text = c?.Width?.ToString(CultureInfo.InvariantCulture) ?? "";
+        ResolutionHeightBox.Text = c?.Height?.ToString(CultureInfo.InvariantCulture) ?? "";
+        QualityBox.Text = c?.Quality ?? "";
+        SceneBox.Text = c?.Scene ?? "";
+        TargetSecondsBox.Text = c?.TargetSeconds?.ToString(CultureInfo.InvariantCulture) ?? "";
+    }
+
+    private void ReuseConditions_Click(object sender, RoutedEventArgs e)
+    {
+        if (Service.IsRunning) return;
+        var selected = HistoryList.SelectedItems.OfType<SessionListVm>().ToArray();
+        var previous = selected.Length == 1 ? _sessions.FirstOrDefault(s => s.Id == selected[0].Id) : null;
+        if (previous?.Conditions is null)
+        {
+            RunStateText.Text = Str.T("Str.ConditionSelectPrevious"); return;
+        }
+        FillConditions(previous.Conditions);
+        RunStateText.Text = Str.T("Str.ConditionCopied");
     }
 
     private void Stop_Click(object sender, RoutedEventArgs e)
@@ -319,7 +385,7 @@ public partial class SessionView : UserControl
             return new SessionListVm(
                 s.Id,
                 s.Name,
-                $"{s.StartedAt:yyyy-MM-dd HH:mm} · {FormatDuration(sum.Duration)} · {sum.SampleCount} 样本",
+                $"{s.StartedAt:yyyy-MM-dd HH:mm} · {FormatDuration(sum.Duration)} · {sum.SampleCount} 样本 · {SessionConditionRules.Describe(s.Conditions)}",
                 avgParts.Count > 0 ? string.Join(" · ", avgParts) : Str.T("Str.NotEnoughSamples"),
                 s.StartedAt);
         }).ToList();
@@ -530,6 +596,7 @@ public partial class SessionView : UserControl
     {
         if (CompareA.SelectedItem is not CompareSourceVm va || CompareB.SelectedItem is not CompareSourceVm vb)
         {
+            CompareConditionsText.Visibility = Visibility.Collapsed;
             CompareHint.Text = Str.T("Str.SelectTwoSessions");
             CompareRows.ItemsSource = null;
             return;
@@ -541,6 +608,7 @@ public partial class SessionView : UserControl
             return;
         if (a.Id == b.Id)
         {
+            CompareConditionsText.Visibility = Visibility.Collapsed;
             CompareHint.Text = Str.T("Str.SameSessionCannotCompare");
             CompareRows.ItemsSource = null;
             return;
@@ -549,6 +617,11 @@ public partial class SessionView : UserControl
         var sa = _summaries[a.Id];
         var sb = _summaries[b.Id];
         CompareHint.Text = $"A = {a.Name}（{a.StartedAt:MM-dd HH:mm}，{sa.SampleCount} 样本） · B = {b.Name}（{b.StartedAt:MM-dd HH:mm}，{sb.SampleCount} 样本）";
+        var differences = SessionConditionRules.Differences(a, b);
+        CompareConditionsText.Visibility = Visibility.Visible;
+        CompareConditionsText.Text = differences.Count == 0 ? Str.T("Str.ConditionMatch") :
+            Str.T("Str.ConditionWarning", string.Join("; ", differences));
+        CompareConditionsText.SetResourceReference(TextBlock.ForegroundProperty, differences.Count == 0 ? "TextMutedBrush" : "WarningBrush");
 
         var rows = new List<CompareRowVm>
         {
@@ -556,6 +629,13 @@ public partial class SessionView : UserControl
             Row(Str.T("Str.SampleCount"), sa.SampleCount.ToString(), sb.SampleCount.ToString(), null)
         };
         rows.Add(PercentRow("CPU 平均 %", sa.Cpu?.Avg, sb.Cpu?.Avg));
+        rows.Add(Row(Str.T("Str.ConditionGame"), a.Conditions?.GameName ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.GameName ?? Str.T("Str.ConditionsUnknown"), null));
+        rows.Add(Row(Str.T("Str.ConditionResolution"), SessionConditionRules.Resolution(a.Conditions), SessionConditionRules.Resolution(b.Conditions), null));
+        rows.Add(Row(Str.T("Str.ConditionQuality"), a.Conditions?.Quality ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.Quality ?? Str.T("Str.ConditionsUnknown"), null));
+        rows.Add(Row(Str.T("Str.ConditionScene"), a.Conditions?.Scene ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.Scene ?? Str.T("Str.ConditionsUnknown"), null));
+        rows.Add(PercentRow(Str.T("Str.ConditionAverageFps"), a.Fps?.AvgFps, b.Fps?.AvgFps));
+        rows.Add(PercentRow(Str.T("Str.ReportColP1Low"), a.Fps?.P1Low, b.Fps?.P1Low));
+        rows.Add(PercentRow("P99 (ms)", a.Fps?.P99Ms, b.Fps?.P99Ms));
         rows.Add(PercentRow("CPU 95 位 %", sa.Cpu?.HighP95, sb.Cpu?.HighP95));
         rows.Add(PercentRow("内存平均 %", sa.Mem?.Avg, sb.Mem?.Avg));
         rows.Add(PercentRow("GPU 平均 %", sa.Gpu?.Avg, sb.Gpu?.Avg));

@@ -733,6 +733,11 @@ public static class PerformanceSessionStore
             error = "样本列表缺失";
             return false;
         }
+        if (!SessionConditionRules.IsValid(session.Conditions))
+        {
+            error = Str.T("Str.ConditionInvalid");
+            return false;
+        }
         if (session.Samples.Count > MaxSamplesPerSession)
         {
             error = "样本数量超过本地缓冲上限";

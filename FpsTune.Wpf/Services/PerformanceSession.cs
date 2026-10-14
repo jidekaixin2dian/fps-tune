@@ -24,7 +24,8 @@ public sealed record PerformanceSession(
     IReadOnlyList<SessionSamplePoint> Samples,
     double? VramTotalMib = null,
     SessionFpsStats? Fps = null,
-    string? FpsNote = null);
+    string? FpsNote = null,
+    SessionConditions? Conditions = null);
 
 /// <summary>单指标的摘要统计。</summary>
 public sealed record MetricStats(int Count, double Avg, double Peak, double LowP5, double HighP95);

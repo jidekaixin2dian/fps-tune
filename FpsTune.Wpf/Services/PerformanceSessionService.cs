@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Windows.Threading;
 
@@ -22,6 +23,10 @@ public sealed class PerformanceSessionService : IDisposable
     private int _sampleCount;
     private int _disposed;
     private IDisposable? _activeOwner;
+    private readonly Stopwatch _clock = new();
+    public double SampleIntervalSeconds { get; private set; }
+    public SessionConditions? Conditions { get; private set; }
+    public event Action<string>? AutomaticStopFailed;
 
     public bool IsRunning { get; private set; }
     public string SessionName => _name;
@@ -47,12 +52,15 @@ public sealed class PerformanceSessionService : IDisposable
     /// <summary>运行中已缓冲的样本（只读快照语义，UI 线程使用）。</summary>
     public IReadOnlyList<MetricSample> RunningBuffer => _sampler?.Buffer ?? Array.Empty<MetricSample>();
 
-    public bool Start(string name)
+    public bool Start(string name, SessionConditions? conditions = null)
     {
         if (Volatile.Read(ref _disposed) != 0)
             throw new ObjectDisposedException(nameof(PerformanceSessionService));
         if (IsRunning)
             return false;
+        var captured = SessionConditionRules.CaptureGame(AppState.GamePath, conditions);
+        if (!SessionConditionRules.IsValid(captured))
+            throw new ArgumentException(Str.T("Str.ConditionInvalid"), nameof(conditions));
 
         var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership();
         if (owner is null)
@@ -70,8 +78,12 @@ public sealed class PerformanceSessionService : IDisposable
 
             _name = string.IsNullOrWhiteSpace(name) ? DefaultSessionName() : name.Trim();
             _startedAt = DateTime.Now;
+            Conditions = captured;
+            _clock.Restart();
             _sampleCount = 0;
-            _sampler = new MetricsSampler(CurrentInterval, CurrentBufferCapacity);
+            var interval = CurrentInterval;
+            SampleIntervalSeconds = interval.TotalSeconds;
+            _sampler = new MetricsSampler(interval, CurrentBufferCapacity);
             _sampler.Sampled += OnSample;
             // 0.2.0 C-E：会话期间同步跑 PresentMon（可选能力，失败降级并记录原因键）。
             _fpsRecorder = new SessionFpsRecorder();
@@ -84,6 +96,7 @@ public sealed class PerformanceSessionService : IDisposable
         catch
         {
             IsRunning = false;
+            _clock.Stop();
             _fpsRecorder?.Stop();
             _fpsRecorder = null;
             _sampler?.Dispose();
@@ -130,6 +143,7 @@ public sealed class PerformanceSessionService : IDisposable
             // Cleanup is unconditional: a full disk or a malformed callback must
             // never leave a live DispatcherTimer/event subscription behind.
             IsRunning = false;
+            _clock.Stop();
             sampler?.Dispose();
             _sampler = null;
             _fpsRecorder = null;
@@ -254,11 +268,12 @@ public sealed class PerformanceSessionService : IDisposable
             _startedAt,
             endedAt,
             PerformanceSessionStore.CurrentSchemaVersion,
-            CurrentInterval.TotalSeconds,
+            SampleIntervalSeconds,
             points,
             vramTotalMib,
             fps,
-            fpsNote);
+            fpsNote,
+            Conditions);
     }
 
     private void OnSample(MetricSample sample)
@@ -276,6 +291,11 @@ public sealed class PerformanceSessionService : IDisposable
             PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
         }
         Sampled?.Invoke(sample);
+        if (IsRunning && Conditions?.TargetSeconds is { } target && _clock.Elapsed.TotalSeconds >= target)
+        {
+            try { Stop(save: true); }
+            catch (Exception ex) { AutomaticStopFailed?.Invoke(ex.Message); }
+        }
     }
 
     public static string DefaultSessionName() => "会话 " + DateTime.Now.ToString("MM-dd HH:mm");

@@ -23,7 +23,7 @@
         </Grid>
 
         <!-- 采样控制 -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border x:Name="SamplingCard" Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.SamplingControl}" Style="{StaticResource CardTitleStyle}"/>
                 <Grid Margin="0,2,0,0">
@@ -50,6 +50,35 @@
                                 Click="Cancel_Click"/>
                     </StackPanel>
                 </Grid>
+                <StackPanel x:Name="ConditionsPanel" Margin="0,14,0,0">
+                    <TextBlock Text="{DynamicResource Str.ConditionTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                    <TextBlock x:Name="ConditionGameText" Style="{StaticResource MutedTextStyle}" Margin="0,5,0,6"/>
+                    <UniformGrid Columns="3">
+                        <StackPanel Margin="0,0,12,0">
+                            <TextBlock Text="{DynamicResource Str.ConditionResolution}" Style="{StaticResource MutedTextStyle}"/>
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="24"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                <TextBox x:Name="ResolutionWidthBox" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
+                                <TextBlock Grid.Column="1" Text="×" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBox x:Name="ResolutionHeightBox" Grid.Column="2" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,12,0">
+                            <TextBlock Text="{DynamicResource Str.ConditionQuality}" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBox x:Name="QualityBox" MaxLength="120" Margin="0,5,0,0" Style="{StaticResource InputTextBoxStyle}"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.ConditionScene}" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBox x:Name="SceneBox" MaxLength="160" Margin="0,5,0,0" Style="{StaticResource InputTextBoxStyle}"/>
+                        </StackPanel>
+                    </UniformGrid>
+                    <WrapPanel Margin="0,10,0,0">
+                        <TextBlock Text="{DynamicResource Str.ConditionTarget}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="TargetSecondsBox" Text="60" Width="80" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
+                        <Button x:Name="ReuseConditionsButton" Content="{DynamicResource Str.ConditionReuse}" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0" Click="ReuseConditions_Click"/>
+                    </WrapPanel>
+                    <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0"/>
+                </StackPanel>
                 <TextBlock x:Name="RunStateText"
                            Text="{DynamicResource Str.SessionReady}"
                            Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap"
@@ -218,7 +247,7 @@
         </Border>
 
         <!-- 并排比较 -->
-        <Border Grid.Row="5" Style="{StaticResource CardStyle}">
+        <Border x:Name="ComparisonCard" Grid.Row="5" Style="{StaticResource CardStyle}">
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.SessionCompare}" Style="{StaticResource CardTitleStyle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
@@ -244,6 +273,7 @@
                     </ComboBox>
                 </StackPanel>
                 <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,8,0,0"/>
+                <TextBlock x:Name="CompareConditionsText" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,8,0,10" Visibility="Collapsed"/>
                 <!-- 表头：四列含义不再依赖上方提示文本反推 -->
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
@@ -270,8 +300,10 @@
                                 <TextBlock Text="{Binding Metric}" FontWeight="{StaticResource SmallEmphasisWeight}" FontSize="12"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding AVal}" FontSize="12" FontFamily="{StaticResource FontMono}"
+                                           TextWrapping="Wrap" Margin="0,0,8,0"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="2" Text="{Binding BVal}" FontSize="12" FontFamily="{StaticResource FontMono}"
+                                           TextWrapping="Wrap" Margin="0,0,8,0"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <TextBlock Grid.Column="3" Text="{Binding Delta}" FontSize="12" FontFamily="{StaticResource FontMono}"
                                            Foreground="{DynamicResource AccentBrush}"/>

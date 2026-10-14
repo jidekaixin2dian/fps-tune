@@ -21,7 +21,7 @@ public static class SessionExporter
     {
         // 会话名称是用户输入，可能主动包含机器路径或用户名；导出时也按
         // 诊断包同一规则脱敏，避免“本地导出不含隐私”的承诺被名称绕过。
-        var exportSession = session with { Name = PrivacyScrub.Sanitize(session.Name) };
+        var exportSession = session with { Name = PrivacyScrub.Sanitize(session.Name), Conditions = SessionConditionRules.Scrub(session.Conditions) };
         var payload = new
         {
             export = "fpstune-performance-session",
@@ -42,7 +42,13 @@ public static class SessionExporter
     public static string BuildCsv(PerformanceSession session)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("schema_version,timestamp_iso,cpu_pct,mem_pct,gpu_pct,vram_used_mib");
+        var conditions = SessionConditionRules.Scrub(session.Conditions);
+        var metadata = conditions is null ? "" : string.Join(",", "", Cell(conditions.GameName), conditions.Width?.ToString(CultureInfo.InvariantCulture),
+            conditions.Height?.ToString(CultureInfo.InvariantCulture), Cell(conditions.Quality), Cell(conditions.Scene),
+            conditions.TargetSeconds?.ToString(CultureInfo.InvariantCulture), Fmt(session.IntervalSeconds),
+            Fmt(session.EndedAt is { } end ? (end - session.StartedAt).TotalSeconds : null));
+        sb.AppendLine("schema_version,timestamp_iso,cpu_pct,mem_pct,gpu_pct,vram_used_mib" +
+            (conditions is null ? "" : ",game,resolution_width,resolution_height,quality,scene,target_seconds,interval_seconds,duration_seconds"));
         foreach (var s in session.Samples)
         {
             sb.Append(session.SchemaVersion).Append(',')
@@ -50,10 +56,17 @@ public static class SessionExporter
               .Append(',').Append(Fmt(s.CpuPct))
               .Append(',').Append(Fmt(s.MemPct))
               .Append(',').Append(Fmt(s.GpuPct))
-              .Append(',').Append(Fmt(s.VramUsedMib))
+              .Append(',').Append(Fmt(s.VramUsedMib)).Append(metadata)
               .Append('\n');
         }
         return sb.ToString();
+    }
+
+    private static string Cell(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return "";
+        if ("=+-@\t\r\n".Contains(value.TrimStart().FirstOrDefault())) value = "'" + value;
+        return "\"" + value.Replace("\"", "\"\"") + "\"";
     }
 
     /// <summary>缺失值输出空单元格；数值用不变文化（小数点为 .）。</summary>
