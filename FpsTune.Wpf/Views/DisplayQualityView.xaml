@@ -223,6 +223,18 @@
             </Border>
 
             <!-- 振动与 ICC（用户反馈合并一签）：一卡两分区，细线分隔 -->
+            <Border x:Name="CardDisplayTarget" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Str.DisplayTarget}" Style="{StaticResource CardTitleStyle}"/>
+                    <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ComboBox x:Name="DisplayTargetCombo" DisplayMemberPath="Label" Style="{StaticResource SelectComboBoxStyle}"
+                                  AutomationProperties.Name="{DynamicResource Str.DisplayTarget}" SelectionChanged="DisplayTarget_Changed"/>
+                        <Button x:Name="DisplayRefreshButton" Grid.Column="1" Content="{DynamicResource Str.DisplayRefresh}" Margin="10,0,0,0"
+                                Style="{StaticResource SecondaryButtonStyle}" Click="DisplayRefresh_Click"/>
+                    </Grid>
+                    <TextBlock x:Name="DisplayTargetState" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
             <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
                     <!-- 分区一：数字振动（显示级饱和度，全桌面生效） -->

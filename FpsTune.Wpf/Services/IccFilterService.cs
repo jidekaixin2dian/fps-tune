@@ -5,14 +5,14 @@ using FpsTune.Wpf.Core;
 namespace FpsTune.Wpf.Services;
 
 /// <summary>
-/// ICC 滤镜服务：程序生成预设 profile、安装到系统色彩目录并切换主显示器默认关联。
+/// ICC 滤镜服务：安装 profile 并切换选定显示器的默认关联。
 /// 安全语义（不可弱化）：
 ///  - 进入功能（首次切换）前按 DetectionService 颜色配置检查的同一读取口径，把当前关联列表
 ///    与生效默认 profile 持久化备份（JSON + AtomicFile 落盘到 %LOCALAPPDATA%\FpsTune\display-icc\）；
 ///  - 备份始终代表"本工具介入前"的原始状态；切换到其他预设不覆盖备份；
 ///  - 切换前发现显示器配置在本工具之外被修改（当前列表 ≠ 备份列表 + 本工具预设）→ 如实拒绝；
 ///  - 还原 = 按备份精确写回原关联列表并验证生效，成功后才删除备份；
-///  - 第一版只作用主显示器，多显示器显式不支持。
+///  - 逐屏识别并保留原点；复制模式的共享 source 不允许逐屏修改。
 /// </summary>
 public static class IccFilterService
 {
@@ -40,13 +40,13 @@ public static class IccFilterService
     private static string BackupDir()
         => BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "display-icc");
 
-    private static string BackupPath() => Path.Combine(BackupDir(), "backup.json");
+    private static string BackupPath(string? identity = null) => DisplayBackupFiles.PathFor(BackupDir(), "backup", identity);
 
-    private sealed record Backup(string AssociationSubKey, string DefaultProfile, string[] ListBefore, string CreatedAt, string? ExpectedProfile = null, string? PreviousProfile = null);
+    private sealed record Backup(string AssociationSubKey, string DefaultProfile, string[] ListBefore, string CreatedAt, string? ExpectedProfile = null, string? PreviousProfile = null, string? Identity = null, string? DisplayName = null);
 
-    private static Backup? ReadBackup()
+    private static Backup? ReadBackup(string? identity = null)
     {
-        var path = BackupPath();
+        var path = BackupPath(identity);
         if (!File.Exists(path))
             return null;
         try
@@ -67,14 +67,14 @@ public static class IccFilterService
     private static void WriteBackup(Backup backup)
     {
         AtomicFile.WriteAllTextDurable(
-            BackupPath(),
+            BackupPath(backup.Identity),
             JsonSerializer.Serialize(backup, new JsonSerializerOptions { WriteIndented = true }),
             new System.Text.UTF8Encoding(false));
     }
 
-    private static void DeleteBackup()
+    private static void DeleteBackup(string? identity)
     {
-        var path = BackupPath();
+        var path = BackupPath(identity);
         if (File.Exists(path))
             File.Delete(path);
     }
@@ -87,17 +87,18 @@ public static class IccFilterService
         string? CurrentProfilePath,
         bool Restorable);
 
-    public static IccState GetState()
+    public static IccState GetState(string? identity = null)
     {
         var api = CreateApi();
-        if (!api.TryGetPrimaryDisplay(out var display))
-            return new IccState(false, "无法定位主显示器（ICC 滤镜第一版只作用主显示器）。", null, null, HasBackup());
+        IccDisplayInfo display;
+        try { display = SelectDisplay(api, identity); }
+        catch (Exception ex) { return new IccState(false, ex.Message, null, null, false); }
         if (!display.UsePerUserProfiles)
-            return new IccState(false, "当前显示器使用系统级色彩关联，本版本暂不支持切换。", null, null, HasBackup());
+            return new IccState(false, "当前显示器使用系统级色彩关联，本版本暂不支持切换。", null, null, HasRestorableBackup(identity));
 
         var colorDir = api.TryGetColorDirectory();
         if (colorDir is null)
-            return new IccState(false, "无法读取系统色彩目录。", null, null, HasBackup());
+            return new IccState(false, "无法读取系统色彩目录。", null, null, HasRestorableBackup(identity));
 
         var current = EffectiveDefault(api, display, colorDir);
         return new IccState(
@@ -105,18 +106,18 @@ public static class IccFilterService
             null,
             current,
             current is null ? null : Path.Combine(colorDir, current),
-            HasBackup());
+            ReadForDisplay(display) is not null);
     }
 
     /// <summary>本工具从用户文件安装的自定义 profile 统一用此前缀（漂移检查据此放行）。</summary>
     internal const string CustomProfilePrefix = "FpsTune-Custom-";
 
     /// <summary>应用预设。成功返回生效的 profile 文件名；失败抛异常，系统状态只可能停在已验证的位置。</summary>
-    public static string Apply(IccFilterPreset preset)
+    public static string Apply(IccFilterPreset preset, string? identity = null)
     {
         using var gate = SystemMutationGate.Acquire();
         var api = CreateApi();
-        var (display, colorDir) = RequireDisplayAndColorDir(api);
+        var (display, colorDir) = RequireDisplayAndColorDir(api, identity);
         string presetName = EnsurePresetInstalled(api, preset, colorDir);
         return AssociateWithBackup(api, display, colorDir, presetName);
     }
@@ -125,7 +126,7 @@ public static class IccFilterService
     /// 应用用户自选的 .icc / .icm 文件（P2-10）。与预设走同一套备份/漂移保护/验证，
     /// 自定义文件以内容哈希命名安装进系统色彩目录，可随时「还原原始」。
     /// </summary>
-    public static string ApplyFromFile(string sourcePath)
+    public static string ApplyFromFile(string sourcePath, string? identity = null)
     {
         using var gate = SystemMutationGate.Acquire();
         if (File.Exists(sourcePath) && new FileInfo(sourcePath).Length > 16 * 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
@@ -140,15 +141,14 @@ public static class IccFilterService
             throw new InvalidOperationException(Str.T("Str.IccFileNotDisplay"));
 
         var api = CreateApi();
-        var (display, colorDir) = RequireDisplayAndColorDir(api);
+        var (display, colorDir) = RequireDisplayAndColorDir(api, identity);
         string name = EnsureCustomInstalled(api, sourcePath, colorDir);
         return AssociateWithBackup(api, display, colorDir, name);
     }
 
-    private static (IccDisplayInfo Display, string ColorDir) RequireDisplayAndColorDir(IIccSystemApi api)
+    private static (IccDisplayInfo Display, string ColorDir) RequireDisplayAndColorDir(IIccSystemApi api, string? identity)
     {
-        if (!api.TryGetPrimaryDisplay(out var display))
-            throw new InvalidOperationException("无法定位主显示器，ICC 滤镜第一版只作用主显示器。");
+        var display = SelectDisplay(api, identity);
         if (!display.UsePerUserProfiles)
             throw new InvalidOperationException("当前显示器使用系统级色彩关联，本版本暂不支持切换。");
         var colorDir = api.TryGetColorDirectory() ?? throw new InvalidOperationException("无法读取系统色彩目录。");
@@ -164,10 +164,11 @@ public static class IccFilterService
             throw new InvalidOperationException(
                 "未读取到当前生效的显示 profile，为避免无法还原，已拒绝切换。请先在 Windows 颜色管理中确认当前显示器有可用配置文件。");
 
-        var backup = ReadBackup();
+        var backup = ReadForDisplay(display);
         if (backup is null)
         {
-            backup = new Backup(display.AssociationSubKey, currentDefault, list, DateTime.Now.ToString("s"));
+            backup = new Backup(display.AssociationSubKey, currentDefault, list, DateTime.Now.ToString("s"),
+                Identity: DisplayTopology.Identity(display), DisplayName: display.FriendlyName);
         }
         else
         {
@@ -182,14 +183,16 @@ public static class IccFilterService
 
         if (backup.ExpectedProfile is not null && currentDefault != backup.ExpectedProfile && currentDefault != backup.PreviousProfile
             && currentDefault != backup.DefaultProfile) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        api.ValidateConnection(display);
         backup = backup with { PreviousProfile = currentDefault, ExpectedProfile = profileName };
         WriteBackup(backup);
 
+        api.ValidateConnection(display);
         if (!api.SetDisplayDefaultAssociation(display, profileName))
             throw new InvalidOperationException("系统拒绝了 profile 切换请求（未生效）。");
 
         // 验证：读回关联列表，最后一个有效 profile 必须是刚设置的预设
-        var after = api.ReadAssociationList(display);
+        api.ValidateConnection(display);
         var verified = EffectiveDefault(api, display, colorDir);
         if (verified != profileName)
             throw new InvalidOperationException(
@@ -218,18 +221,20 @@ public static class IccFilterService
     }
 
     /// <summary>还原为备份的原始 profile。返回是否执行了还原；无备份时返回 false（如实无事发生）。</summary>
-    public static bool Restore()
+    public static bool Restore(string? identity = null)
     {
         using var gate = SystemMutationGate.Acquire();
-        var backup = ReadBackup();
-        if (backup is null)
-            return false;
-
+        if (!HasRestorableBackup()) return false;
         var api = CreateApi();
-        if (!api.TryGetPrimaryDisplay(out var display))
-            throw new InvalidOperationException("无法定位主显示器，无法还原。");
+        var display = SelectDisplay(api, identity);
+        var backup = ReadForDisplay(display);
+        if (backup is null)
+        {
+            if (identity is null) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+            return false;
+        }
         if (display.AssociationSubKey != backup.AssociationSubKey)
-            throw new InvalidOperationException("主显示器与备份时不一致，无法按备份精确还原。");
+            throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
 
         var beforeRestoreColorDir = api.TryGetColorDirectory() ?? throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         var currentDefault = EffectiveDefault(api, display, beforeRestoreColorDir);
@@ -238,19 +243,21 @@ public static class IccFilterService
                 && currentDefault != backup.PreviousProfile && currentDefault != backup.DefaultProfile)
             throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
 
+        api.ValidateConnection(display);
         if (!api.SetDisplayDefaultAssociation(display, backup.DefaultProfile))
             throw new InvalidOperationException("系统拒绝了还原请求（未生效），备份已保留，可重试。");
 
         // 精确还原：写回备份时的完整关联列表（同时清掉本工具追加的预设条目）
         api.WriteAssociationList(display, backup.ListBefore);
 
+        api.ValidateConnection(display);
         var after = api.ReadAssociationList(display);
         var colorDir = api.TryGetColorDirectory();
         var verified = colorDir is null ? null : EffectiveDefault(api, display, colorDir);
         if (!after.SequenceEqual(backup.ListBefore) || verified != backup.DefaultProfile)
             throw new InvalidOperationException("还原后验证失败，备份已保留，可重试。");
 
-        DeleteBackup();
+        DeleteBackup(backup.Identity);
         return true;
     }
 
@@ -297,16 +304,19 @@ public static class IccFilterService
     private static bool IsBackupPlusOwnProfiles(string[] list, Backup backup, string colorDir)
     {
         var ownNames = AllPresetFileNames();
-        var trimmed = new List<string>(list.Length);
+        var originalIndex = 0;
         foreach (var n in list)
         {
-            if (ownNames.Contains(n, StringComparer.OrdinalIgnoreCase))
+            if (originalIndex < backup.ListBefore.Length && string.Equals(n, backup.ListBefore[originalIndex], StringComparison.OrdinalIgnoreCase))
+            {
+                originalIndex++;
                 continue;
-            if (n.StartsWith(CustomProfilePrefix, StringComparison.OrdinalIgnoreCase))
+            }
+            if (ownNames.Contains(n, StringComparer.OrdinalIgnoreCase) || n.StartsWith(CustomProfilePrefix, StringComparison.OrdinalIgnoreCase))
                 continue;
-            trimmed.Add(n);
+            return false;
         }
-        return trimmed.SequenceEqual(backup.ListBefore, StringComparer.OrdinalIgnoreCase);
+        return originalIndex == backup.ListBefore.Length;
     }
 
     /// <summary>本工具生成的全部预设文件名（含尚未生成的）。</summary>
@@ -315,6 +325,45 @@ public static class IccFilterService
             .Select(p => IccProfileGenerator.ParamsFor(p).FileName)
             .ToArray();
 
-    public static bool HasRestorableBackup() => ReadBackup() is not null;
-    private static bool HasBackup() => ReadBackup() is not null;
+    private static IccDisplayInfo SelectDisplay(IIccSystemApi api, string? identity)
+    {
+        var matches = api.GetDisplays().Where(d => identity is null ? d.IsPrimary
+            : DisplayTopology.Identity(d).Equals(identity, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (matches.Length != 1) throw new InvalidOperationException(Str.T("Str.DisplayDisconnected"));
+        if (!matches[0].Independent) throw new InvalidOperationException(Str.T("Str.DisplayMirrored"));
+        api.ValidateConnection(matches[0]);
+        return matches[0];
+    }
+    private static Backup? ReadForDisplay(IccDisplayInfo display)
+    {
+        var identity = DisplayTopology.Identity(display);
+        var backup = ReadBackup(identity);
+        if (backup is not null && (backup.Identity != identity || backup.AssociationSubKey != display.AssociationSubKey))
+            throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        if (backup is not null) return backup;
+        var legacy = ReadBackup();
+        if (legacy is null || legacy.AssociationSubKey != display.AssociationSubKey) return null;
+        // Old ICC receipts only identified a driver key. Never assign them to a physical monitor without proof.
+        if (display.Identity is not null) throw new InvalidOperationException(Str.T("Str.DisplayLegacyBackup"));
+        return legacy;
+    }
+    internal static IReadOnlyList<DisplayBackupTarget> BackupTargets()
+    {
+        var result = new List<DisplayBackupTarget>();
+        foreach (var path in DisplayBackupFiles.List(BackupDir(), "backup"))
+        {
+            try
+            {
+                if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+                var backup = JsonSerializer.Deserialize<Backup>(File.ReadAllText(path)) ?? throw new InvalidDataException();
+                if (Path.GetFullPath(path) != Path.GetFullPath(BackupPath(backup.Identity))) throw new InvalidDataException();
+                _ = ReadBackup(backup.Identity);
+                result.Add(new(backup.Identity, backup.DisplayName ?? Str.T("Str.RecoveryDisplay")));
+            }
+            catch (Exception ex) { result.Add(new(null, Path.GetFileName(path), OperationDiagnostics.Scrub(ex.Message))); }
+        }
+        return result;
+    }
+    public static bool HasRestorableBackup(string? identity = null)
+        => identity is null ? DisplayBackupFiles.List(BackupDir(), "backup").Any() : ReadForDisplay(SelectDisplay(CreateApi(), identity)) is not null;
 }

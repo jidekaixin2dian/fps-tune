@@ -51,7 +51,7 @@
     <s:String x:Key="Str.DisplayIntro">按游戏配置驱动画质；恢复前会核对备份与外部更改。</s:String>
     <s:String x:Key="Str.DlssCard">DLSS 超分模型覆盖（仅 NVIDIA RTX）</s:String>
     <s:String x:Key="Str.VibCard">数字振动（N 卡 · 显示器全局）</s:String>
-    <s:String x:Key="Str.IccCard">ICC 滤镜（系统层 · 仅主显示器）</s:String>
+    <s:String x:Key="Str.IccCard">ICC 滤镜（选定显示器）</s:String>
     <s:String x:Key="Str.DrsCard">驱动 3D 设置（按游戏 · N 卡）</s:String>
     <s:String x:Key="Str.ApplyOverride">应用覆盖</s:String>
     <s:String x:Key="Str.RestoreDefault">还原本工具改动</s:String>
@@ -274,12 +274,12 @@
     <s:String x:Key="Str.PresetE">E 预设</s:String>
     <s:String x:Key="Str.PresetEDesc">旧一代 CNN 模型 · 复古画质</s:String>
     <s:String x:Key="Str.DlssNote">只备份本工具实际写入的驱动设置；恢复会核对当前值，保留外部更改及无关配置。选择“跟随游戏内”将恢复本游戏全部受管理设置。模型支持与画面效果需在游戏内确认。</s:String>
-    <s:String x:Key="Str.VibNote">调整主显示器的色彩鲜艳程度，按自己的观感选择档位。</s:String>
+    <s:String x:Key="Str.VibNote">调整选定显示器的色彩鲜艳程度，按自己的观感选择档位。</s:String>
     <s:String x:Key="Str.VibNote2">应用前保存原档位。可与 ICC 配置分别调整。</s:String>
     <s:String x:Key="Str.VibRecommendedSet">试试 58%</s:String>
     <s:String x:Key="Str.VibRecommendedNote">点「试试 58%」预览滑块位置，再点「应用」生效。</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% 是轻微增强色彩的起点，可继续调整。</s:String>
-    <s:String x:Key="Str.IccPresetLabel">主显示器预设（支持 ICC 的应用生效）</s:String>
+    <s:String x:Key="Str.IccPresetLabel">选定显示器预设（支持 ICC 的应用生效）</s:String>
     <s:String x:Key="Str.IccVivid">FPS 鲜艳</s:String>
     <s:String x:Key="Str.IccVividDesc">微增饱和与对比，通用竞技</s:String>
     <s:String x:Key="Str.IccShadow">暗部增强</s:String>
@@ -973,4 +973,19 @@
     <s:String x:Key="Str.NvDrsReadbackFailed">驱动保存后重新读取的设置 {0} 与目标不一致。未确认成功，原值备份已保留，可重试或还原。</s:String>
     <s:String x:Key="Str.DlssPresetVerified">已保存并读回确认 DLSS 预设 {0}。重新启动游戏并开启 DLSS 后使用；可通过「还原本工具改动」恢复。</s:String>
     <s:String x:Key="Str.DlssApplyFailed">应用未成功确认：{0}。已生成的原值备份会保留，请检查状态后重试或还原。</s:String>
+    <s:String x:Key="Str.DisplayTarget">目标显示器</s:String>
+    <s:String x:Key="Str.DisplayRefresh">刷新屏幕</s:String>
+    <s:String x:Key="Str.DisplayPrimary">主屏</s:String>
+    <s:String x:Key="Str.DisplayTargetHint">ICC 和数字振动只修改选定屏幕；每块屏幕分别备份和还原。</s:String>
+    <s:String x:Key="Str.DisplayDisconnected">选定屏幕未连接或无法唯一识别。请重新连接，或明确选择另一块屏幕。</s:String>
+    <s:String x:Key="Str.DisplayConnectionChanged">屏幕连接已变化，本次操作已停止。请刷新后重试。</s:String>
+    <s:String x:Key="Str.DisplayMirrored">复制模式共享显示路径，无法安全逐屏修改。请切换到扩展模式。</s:String>
+    <s:String x:Key="Str.DisplayDvcUnavailable">选定屏幕没有可用的独立 NVIDIA 数字振动通道。</s:String>
+    <s:String x:Key="Str.DisplayLegacyBackup">旧版 ICC 备份未记录屏幕身份，无法安全自动还原。备份已保留，请在 Windows 颜色管理中核对原始关联。</s:String>
+    <s:String x:Key="Str.DisplayWriteUnconfirmed">驱动读回值与目标值不一致，备份已保留，可重试或还原。</s:String>
+    <s:String x:Key="Str.DisplayVibConfirm">目标屏幕：{0}&#10;&#10;将把这块屏幕的数字振动设为 {1}%。桌面、网页和游戏观感都会变化。应用前保存原档位，只还原这块屏幕。</s:String>
+    <s:String x:Key="Str.DisplayIccConfirm">目标屏幕：{0}&#10;&#10;ICC 会改变这块屏幕上桌面、网页和游戏的色彩。预设是简单曲线变换，不能替代专业校色。应用前保存完整原始关联，只还原这块屏幕。</s:String>
+    <s:String x:Key="Str.DisplayVibApplied">已保存并读回确认：{0}%。仅选定屏幕生效。</s:String>
+    <s:String x:Key="Str.DisplayApplyFailed">应用失败：{0}</s:String>
+    <s:String x:Key="Str.DisplayRestoreFailed">还原失败：{0}</s:String>
 </ResourceDictionary>

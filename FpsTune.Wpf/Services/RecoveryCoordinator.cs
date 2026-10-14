@@ -18,8 +18,8 @@ public static class RecoveryCoordinator
         Read("system", () => BackupService.ListBackupStatuses().Where(s => !s.Valid || s.PendingCount > 0)
             .Select(s => new RecoveryScope("system", s.FileName, BackupService.RestoreNeedsAdmin(), s.Valid ? null : Str.T("Str.BackupFormatInvalid"))));
         Read("nvidia", () => DisplayQualityService.BackupGames().Select(game => new RecoveryScope("nvidia", game, true)));
-        Read("icc", () => IccFilterService.HasRestorableBackup() ? new[] { new RecoveryScope("icc", Str.T("Str.RecoveryDisplay"), false) } : []);
-        Read("vibrance", () => DigitalVibranceService.HasRestorableBackup() ? new[] { new RecoveryScope("vibrance", Str.T("Str.RecoveryDisplay"), false) } : []);
+        Read("icc", () => IccFilterService.BackupTargets().Select(t => new RecoveryScope("icc", t.Name, false, t.Error)));
+        Read("vibrance", () => DigitalVibranceService.BackupTargets().Select(t => new RecoveryScope("vibrance", t.Name, false, t.Error)));
         return scopes;
     }
 
@@ -40,8 +40,24 @@ public static class RecoveryCoordinator
                 Recover("NVIDIA / " + game, () => DisplayQualityService.RemoveDlssOverride(game));
         }
         catch (Exception ex) { result.Failures.Add("NVIDIA: " + PrivacyScrub.Sanitize(ex.Message)); }
-        Recover("ICC", IccFilterService.Restore);
-        Recover("Digital Vibrance", DigitalVibranceService.Restore);
+        void RecoverDisplays(string module, Func<IReadOnlyList<DisplayBackupTarget>> targets, Func<string?, bool> restore)
+        {
+            try
+            {
+                foreach (var target in targets())
+                {
+                    if (target.Error is not null) result.Failures.Add(module + " / " + target.Name + ": " + target.Error);
+                    else
+                    {
+                        try { if (restore(target.Identity)) result.Restored.Add((target.Name, module)); }
+                        catch (Exception ex) { result.Failures.Add(module + " / " + target.Name + ": " + PrivacyScrub.Sanitize(ex.Message)); }
+                    }
+                }
+            }
+            catch (Exception ex) { result.Failures.Add(module + ": " + PrivacyScrub.Sanitize(ex.Message)); }
+        }
+        RecoverDisplays("ICC", IccFilterService.BackupTargets, identity => IccFilterService.Restore(identity));
+        RecoverDisplays("Digital Vibrance", DigitalVibranceService.BackupTargets, identity => DigitalVibranceService.Restore(identity));
         return result;
     }
 }

@@ -10,7 +10,7 @@ namespace FpsTune.Wpf.Services;
 /// 数字振动（Digital Vibrance / DVC）服务：显示级饱和度，**整块屏幕全局生效**
 /// （含桌面/网页/游戏），不是按游戏 exe 的 DRS 项。机制走 NVAPI 私有 DVC 接口，
 /// ID 与结构对齐 falahati/NvAPIWrapper（GetDVCInfo/SetDVCLevel 系列）。
-/// 调整前备份当前档位，可一键还原；作用于第一块 NVIDIA 显示器。
+/// 调整前备份当前档位，可一键还原；作用于选定的独立 NVIDIA 显示器。
 /// </summary>
 public sealed record VibranceState(bool Supported, int Current, int Min, int Max, int Default, bool Restorable, string? UnsupportedReason = null);
 
@@ -23,6 +23,9 @@ public interface INvibranceApi : IDisposable
     /// <summary>写入 DVC 档位（使用 GetInfo 返回的量纲）。失败抛 NvdrsException。</summary>
     void SetLevel(int level);
     string? DisplayIdentity() => null;
+    string? LegacyDisplayIdentity() => DisplayIdentity();
+    string DisplayName() => Str.T("Str.RecoveryDisplay");
+    bool TrySelectDisplay(string? identity) => identity is null || identity == DisplayIdentity();
 }
 
 public static class DigitalVibranceService
@@ -30,44 +33,49 @@ public static class DigitalVibranceService
     internal static Func<INvibranceApi>? ApiOverride;
     internal static string? BackupDirOverride;
 
-    private static INvibranceApi CreateApi() => ApiOverride?.Invoke() ?? NvDvcApi.Shared;
+    private static INvibranceApi CreateApi() => ApiOverride?.Invoke() ?? new NvDvcApi();
 
     private static string BackupDir()
         => BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "display-quality");
 
-    private static string BackupPath => Path.Combine(BackupDir(), "vibrance.json");
+    private static string BackupPath(string? identity = null) => DisplayBackupFiles.PathFor(BackupDir(), "vibrance", identity);
 
-    private sealed record VibranceBackup(int Level, string? Display = null, int? Expected = null, int? Previous = null, int? Min = null, int? Max = null);
+    private sealed record VibranceBackup(int Level, string? Display = null, int? Expected = null, int? Previous = null, int? Min = null, int? Max = null, string? DisplayName = null);
 
-    public static VibranceState GetState()
+    public static VibranceState GetState(string? identity = null)
     {
         using var api = CreateApi();
         if (!api.TryInitialize())
             return new VibranceState(false, 0, 0, 0, 0, false, api.LastError ?? "NVAPI 不可用");
+        if (!api.TrySelectDisplay(identity)) return new VibranceState(false, 0, 0, 0, 0, false, Str.T("Str.DisplayDvcUnavailable"));
         if (!api.TryGetInfo(out var current, out var min, out var max, out var def))
             return new VibranceState(false, 0, 0, 0, 0, false, "当前显示路径不支持数字振动（DVC）。");
-        return new VibranceState(true, current, min, max, def, ReadBackup() is not null);
+        return new VibranceState(true, current, min, max, def, ReadForDisplay(api) is not null);
     }
 
-    public static bool HasRestorableBackup() => ReadBackup() is not null;
+    public static bool HasRestorableBackup(string? identity = null)
+        => identity is null ? DisplayBackupFiles.List(BackupDir(), "vibrance").Any() : ReadBackup(identity) is not null;
 
     /// <summary>percent 为 0–100（界面量纲），映射到驱动 min–max。</summary>
-    public static void SetPercent(int percent)
+    public static void SetPercent(int percent, string? identity = null)
     {
         using var gate = SystemMutationGate.Acquire();
         percent = Math.Clamp(percent, 0, 100);
         using var api = CreateApi();
         if (!api.TryInitialize())
             throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        if (!api.TrySelectDisplay(identity)) throw new InvalidOperationException(Str.T("Str.DisplayDvcUnavailable"));
         if (!api.TryGetInfo(out var current, out var min, out var max, out var _))
             throw new NvdrsException(-1, "当前显示路径不支持数字振动（DVC）。");
 
         var display = api.DisplayIdentity() ?? throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
-        var backup = ReadBackup() ?? new VibranceBackup(current, display, Min: min, Max: max);
+        var backup = ReadForDisplay(api) ?? new VibranceBackup(current, display, Min: min, Max: max, DisplayName: api.DisplayName());
         CheckRestorable(backup, display, current, min, max);
+        MigrateLegacy(backup, api);
         var level = min + (int)Math.Round((max - min) * (percent / 100.0));
         WriteBackup(backup with { Expected = level, Previous = current });
         api.SetLevel(level);
+        VerifyLevel(api, level, min, max);
         WriteBackup(backup with { Expected = level, Previous = null });
     }
 
@@ -80,31 +88,85 @@ public static class DigitalVibranceService
     }
 
     /// <summary>还原到进入本功能前的档位。返回是否发生了还原。</summary>
-    public static bool Restore()
+    public static bool Restore(string? identity = null)
     {
         using var gate = SystemMutationGate.Acquire();
-        var backup = ReadBackup();
-        if (backup is null)
-            return false;
+        if (!HasRestorableBackup()) return false;
         using var api = CreateApi();
-        if (!api.TryInitialize())
-            throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        if (!api.TryInitialize()) throw new NvdrsException(-5, api.LastError ?? "NVAPI unavailable");
+        if (!api.TrySelectDisplay(identity)) throw new InvalidOperationException(Str.T("Str.DisplayDvcUnavailable"));
+        var backup = ReadForDisplay(api);
+        if (backup is null)
+        {
+            if (identity is null) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+            return false;
+        }
         if (!api.TryGetInfo(out var current, out var min, out var max, out _))
             throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         CheckRestorable(backup, api.DisplayIdentity() ?? "", current, min, max);
+        MigrateLegacy(backup, api);
         api.SetLevel(backup.Level);
-        DeleteBackup();
+        VerifyLevel(api, backup.Level, min, max);
+        File.Delete(BackupPath(backup.Display));
         return true;
     }
-
-    private static VibranceBackup? ReadBackup()
+    private static void VerifyLevel(INvibranceApi api, int expected, int min, int max)
     {
-        if (!File.Exists(BackupPath))
+        if (!api.TryGetInfo(out var actual, out var readMin, out var readMax, out _) || actual != expected || min != readMin || max != readMax)
+            throw new InvalidOperationException(Str.T("Str.DisplayWriteUnconfirmed"));
+    }
+    private static VibranceBackup? ReadForDisplay(INvibranceApi api)
+    {
+        var identity = api.DisplayIdentity();
+        if (identity is null) return null;
+        var backup = ReadBackup(identity);
+        if (backup is not null)
+        {
+            if (backup.Display != identity) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+            return backup;
+        }
+        var legacy = ReadBackup();
+        if (legacy is null) return null;
+        if (legacy.Display is null) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        if (legacy.Display != api.LegacyDisplayIdentity()) return null;
+        return legacy with { Display = identity };
+    }
+    private static void MigrateLegacy(VibranceBackup backup, INvibranceApi api)
+    {
+        if (!File.Exists(BackupPath(backup.Display)) && File.Exists(BackupPath()))
+        {
+            if (ReadBackup()?.Display != api.LegacyDisplayIdentity()) return;
+            WriteBackup(backup);
+            File.Delete(BackupPath()); // A durably persisted, matched receipt now exists under the screen identity.
+        }
+    }
+    internal static IReadOnlyList<DisplayBackupTarget> BackupTargets()
+    {
+        var result = new List<DisplayBackupTarget>();
+        foreach (var path in DisplayBackupFiles.List(BackupDir(), "vibrance"))
+        {
+            try
+            {
+                if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+                var legacy = Path.GetFileName(path) == "vibrance.json";
+                var backup = System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(path)) ?? throw new InvalidDataException();
+                if (!legacy && (backup.Display is null || Path.GetFullPath(path) != Path.GetFullPath(BackupPath(backup.Display)))) throw new InvalidDataException();
+                _ = ReadBackup(legacy ? null : backup.Display);
+                result.Add(new(legacy ? null : backup.Display, backup.DisplayName ?? Str.T("Str.RecoveryDisplay")));
+            }
+            catch (Exception ex) { result.Add(new(null, Path.GetFileName(path), OperationDiagnostics.Scrub(ex.Message))); }
+        }
+        return result;
+    }
+
+    private static VibranceBackup? ReadBackup(string? identity = null)
+    {
+        if (!File.Exists(BackupPath(identity)))
             return null;
         try
         {
-            if (new FileInfo(BackupPath).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
-            return System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(BackupPath))
+            if (new FileInfo(BackupPath(identity)).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+            return System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(BackupPath(identity)))
                 ?? throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
         }
         catch (Exception ex)
@@ -117,16 +179,12 @@ public static class DigitalVibranceService
     {
         Directory.CreateDirectory(BackupDir());
         AtomicFile.WriteAllTextDurable(
-            BackupPath,
+            BackupPath(backup.Display),
             System.Text.Json.JsonSerializer.Serialize(backup),
             new System.Text.UTF8Encoding(false));
     }
 
-    private static void DeleteBackup()
-    {
-        if (File.Exists(BackupPath))
-            File.Delete(BackupPath);
-    }
+
 }
 
 /// <summary>真实 DVC 实现（NvAPI_GetDVCInfo / SetDVCLevel）。</summary>
@@ -143,18 +201,6 @@ internal sealed class NvDvcApi : INvibranceApi
     private static readonly object Gate = new();
     private static NvDvcApi? _shared;
 
-    internal static NvDvcApi Shared
-    {
-        get
-        {
-            lock (Gate)
-            {
-                _shared ??= new NvDvcApi();
-                return _shared;
-            }
-        }
-    }
-
     private string? _lastError;
     private InitializeDelegate? _initialize;
     private EnumNvidiaDisplayHandleDelegate? _enumDisplay;
@@ -168,14 +214,21 @@ internal sealed class NvDvcApi : INvibranceApi
     public string? LastError => _lastError;
     public void Dispose() { }
 
-    private NvDvcApi() { }
+    internal NvDvcApi() { }
+    private IccDisplayInfo? _target;
 
     public bool TryInitialize()
     {
         lock (Gate)
         {
-            if (_initialize is not null)
+            if (_initialize is not null) return true;
+            if (_shared?._initialize is not null)
+            {
+                _initialize = _shared._initialize; _enumDisplay = _shared._enumDisplay; _getDisplayName = _shared._getDisplayName;
+                _getDvcInfo = _shared._getDvcInfo; _getDvcInfoEx = _shared._getDvcInfoEx;
+                _setDvcLevel = _shared._setDvcLevel; _setDvcLevelEx = _shared._setDvcLevelEx;
                 return true;
+            }
             try
             {
                 if (!TryLoad(out var query, out var loadError))
@@ -221,6 +274,7 @@ internal sealed class NvDvcApi : INvibranceApi
                 _setDvcLevelEx = setDvcLevelEx;
                 _getDvcInfo = getDvcInfo;
                 _setDvcLevel = setDvcLevel;
+                _shared ??= this;
                 return true;
             }
             catch (Exception ex)
@@ -231,19 +285,32 @@ internal sealed class NvDvcApi : INvibranceApi
         }
     }
 
-    private IntPtr PrimaryDisplayHandle()
+    public bool TrySelectDisplay(string? identity)
     {
-        var handle = IntPtr.Zero;
-        var status = _enumDisplay!(0, ref handle);
-        if (status != StatusOk || handle == IntPtr.Zero)
-            throw new NvdrsException(status, "未找到 NVIDIA 显示器句柄");
-        return handle;
+        try { _target = DisplayTopology.Require(identity); _ = SelectedDisplayHandle(); return true; }
+        catch (Exception ex) { _target = null; _lastError = ex.Message; return false; }
+    }
+    private IntPtr SelectedDisplayHandle()
+    {
+        if (_target is null) throw new InvalidOperationException(Str.T("Str.DisplayDisconnected"));
+        DisplayTopology.ValidateConnection(_target);
+        var matches = new HashSet<IntPtr>();
+        for (uint i = 0; i < 128; i++)
+        {
+            var handle = IntPtr.Zero;
+            if (_enumDisplay!(i, ref handle) != StatusOk) break;
+            var name = new StringBuilder(64);
+            if (_getDisplayName!(handle, name) == StatusOk && name.ToString().Equals(_target.GdiDeviceName, StringComparison.OrdinalIgnoreCase))
+                matches.Add(handle);
+        }
+        if (matches.Count == 1) return matches.Single();
+        throw new InvalidOperationException(Str.T("Str.DisplayDvcUnavailable"));
     }
 
     public bool TryGetInfo(out int current, out int min, out int max, out int defaultValue)
     {
         current = min = max = defaultValue = 0;
-        var display = PrimaryDisplayHandle();
+        var display = SelectedDisplayHandle();
         // 不同驱动对 outputId（0 / 0xFFFFFFFF）与 Ex/旧接口的兼容性不一，按组合探测
         foreach (var outputId in new uint[] { 0, 0xffffffff })
         {
@@ -277,12 +344,9 @@ internal sealed class NvDvcApi : INvibranceApi
         return false;
     }
 
-    public string? DisplayIdentity()
-    {
-        var name = new StringBuilder(64);
-        if (_getDisplayName is null || _getDisplayName(PrimaryDisplayHandle(), name) != StatusOk) return null;
-        return MscmsIccApi.DisplayIdentity(name.ToString());
-    }
+    public string? DisplayIdentity() => _target is null ? null : DisplayTopology.Identity(_target);
+    public string? LegacyDisplayIdentity() => _target is null ? null : MscmsIccApi.DisplayIdentity(_target.GdiDeviceName);
+    public string DisplayName() => _target is null ? Str.T("Str.RecoveryDisplay") : $"{_target.FriendlyName} ({_target.GdiDeviceName})";
 
     public void SetLevel(int level)
     {
@@ -292,11 +356,11 @@ internal sealed class NvDvcApi : INvibranceApi
         {
             var info = DvcInfoEx.Create();
             info.currentLevel = level;
-            status = _setDvcLevelEx(PrimaryDisplayHandle(), _lastOutputId, ref info);
+            status = _setDvcLevelEx(SelectedDisplayHandle(), _lastOutputId, ref info);
         }
         else
         {
-            status = _setDvcLevel!(PrimaryDisplayHandle(), _lastOutputId, level);
+            status = _setDvcLevel!(SelectedDisplayHandle(), _lastOutputId, level);
         }
         if (status != StatusOk)
             throw new NvdrsException(status, $"设置数字振动失败（NVAPI {status}）");

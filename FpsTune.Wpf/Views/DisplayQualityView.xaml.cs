@@ -2,6 +2,7 @@
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 
@@ -22,6 +23,12 @@ public partial class DisplayQualityView : UserControl
     private string? _iccStatus;
     private string? _drsStatus;
     private bool _drsSyncing;
+    private string? _displayIdentity;
+    private bool _displaySyncing;
+    private sealed record DisplayChoice(string Identity, string Label)
+    {
+        public override string ToString() => Label;
+    }
     private sealed class IccChoice(IccFilterPreset? preset, string titleKey, string descriptionKey, bool selected = false)
     {
         public IccFilterPreset? Preset { get; } = preset;
@@ -40,7 +47,18 @@ public partial class DisplayQualityView : UserControl
         }).ToList();
         choices.Add(new(null, "Str.IccStandard", "Str.IccStandardDesc"));
         IccPresetList.ItemsSource = choices;
-        Loaded += (_, _) => { Refresh(); _ = RefreshGpuIdentityAsync(); };
+        Loaded += (_, _) => { SystemEvents.DisplaySettingsChanged += DisplaysChanged; Refresh(); _ = RefreshGpuIdentityAsync(); };
+        Unloaded += (_, _) => SystemEvents.DisplaySettingsChanged -= DisplaysChanged;
+    }
+    private void DisplaysChanged(object? sender, EventArgs e) => Dispatcher.BeginInvoke(new Action(Refresh));
+    private void DisplayRefresh_Click(object sender, RoutedEventArgs e) => Refresh();
+    private void DisplayTarget_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_displaySyncing || _busy || DisplayTargetCombo.SelectedItem is not DisplayChoice choice) return;
+        _displayIdentity = choice.Identity;
+        _vibStatus = _iccStatus = null;
+        _refreshGen++;
+        Refresh();
     }
 
     private int _refreshGen;
@@ -70,7 +88,7 @@ public partial class DisplayQualityView : UserControl
         IccFilterService.IccState? Icc, string? IccError,
         DisplayQualityService.DrsGameSettings? Drs, string? DrsError);
 
-    private static StateSnapshot ComputeSnapshot()
+    private static StateSnapshot ComputeSnapshot(string? displayIdentity)
     {
         var feature = DisplayQualityService.FeatureEnabled;
         var nvidia = feature && DisplayQualityService.IsNvidiaSupported;
@@ -94,12 +112,12 @@ public partial class DisplayQualityView : UserControl
 
         var vib = default(VibranceState);
         var vibError = default(string);
-        try { vib = DigitalVibranceService.GetState(); }
+        try { vib = DigitalVibranceService.GetState(displayIdentity); }
         catch (Exception ex) { vibError = ex.Message; }
 
         var icc = default(IccFilterService.IccState);
         var iccError = default(string);
-        try { icc = IccFilterService.GetState(); }
+        try { icc = IccFilterService.GetState(displayIdentity); }
         catch (Exception ex) { iccError = ex.Message; }
 
         return new StateSnapshot(feature, nvidia, hasGame, label, exe,
@@ -108,7 +126,28 @@ public partial class DisplayQualityView : UserControl
 
     private async Task RefreshStatesAsync(int gen)
     {
-        var snap = await Task.Run(ComputeSnapshot);
+        DisplayTargetCombo.IsEnabled = DisplayRefreshButton.IsEnabled = false;
+        VibApplyButton.IsEnabled = VibRestoreButton.IsEnabled = false;
+        IccApplyButton.IsEnabled = IccApplyFileButton.IsEnabled = IccRestoreButton.IsEnabled = false;
+        IReadOnlyList<IccDisplayInfo> displays;
+        string? displayError = null;
+        try { displays = await Task.Run(DisplayTopology.GetDisplays); }
+        catch (Exception ex) { displays = []; displayError = ex.Message; }
+        if (_busy || gen != _refreshGen) return;
+        _displayIdentity ??= displays.FirstOrDefault(d => d.IsPrimary)?.Identity;
+        _displaySyncing = true;
+        var choices = displays.Select(d => new DisplayChoice(DisplayTopology.Identity(d),
+            $"{(string.IsNullOrWhiteSpace(d.FriendlyName) ? d.GdiDeviceName : d.FriendlyName)} ({d.GdiDeviceName.Replace(@"\\.\", "")})"
+            + (d.IsPrimary ? " · " + Str.T("Str.DisplayPrimary") : ""))).ToList();
+        DisplayTargetCombo.ItemsSource = choices;
+        DisplayTargetCombo.SelectedItem = choices.FirstOrDefault(c => c.Identity == _displayIdentity);
+        _displaySyncing = false;
+        SetDisplayInputEnabled(true);
+        var selected = displays.FirstOrDefault(d => DisplayTopology.Identity(d) == _displayIdentity);
+        DisplayTargetState.Text = displayError ?? Str.T(selected is null ? "Str.DisplayDisconnected" : !selected.Independent
+            ? "Str.DisplayMirrored" : "Str.DisplayTargetHint");
+        var identity = _displayIdentity ?? "unavailable-display"; // Never silently fall back when the selection is missing.
+        var snap = await Task.Run(() => ComputeSnapshot(identity));
         if (_busy || gen != _refreshGen)
             return; // 期间发生了更新的刷新，旧结果作废
         ApplySnapshot(snap);
@@ -208,6 +247,7 @@ public partial class DisplayQualityView : UserControl
 
         CardDlss.Visibility = key == "dlss" ? Visibility.Visible : Visibility.Collapsed;
         CardVib.Visibility = key == "vibicc" ? Visibility.Visible : Visibility.Collapsed;
+        CardDisplayTarget.Visibility = CardVib.Visibility;
         CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;
         CardAdvice.Visibility = key == "advice" ? Visibility.Visible : Visibility.Collapsed;
         CardGpuIdentity.Visibility = key == "identity" ? Visibility.Visible : Visibility.Collapsed;
@@ -522,29 +562,28 @@ public partial class DisplayQualityView : UserControl
     {
         if (_busy) return;
         var percent = (int)VibSlider.Value;
+        var identity = _displayIdentity ?? "unavailable-display";
         var confirmed = DialogService.Confirm(
             Str.T("Str.ApplyVibrance"),
-            $"将把整块屏幕的色彩鲜艳度调到 {percent}%。\n\n" +
-            "· 这是显示全局设置：桌面、网页、游戏观感都会变化\n" +
-            "· 不是只在游戏内生效\n" +
-            "· 应用前会记住当前档位，可随时「还原原始」\n\n确定应用？",
-            confirmText: "应用");
+            Str.T("Str.DisplayVibConfirm", DisplayTargetCombo.Text, percent),
+            confirmText: Str.T("Str.Apply"));
         if (!confirmed)
             return;
 
         _busy = true;
+        SetDisplayInputEnabled(false);
         _vibStatus = null;
         VibApplyButton.IsEnabled = false;
         VibRestoreButton.IsEnabled = false;
         VibStateText.Text = Str.T("Str.Writing");
         try
         {
-            await Task.Run(() => DigitalVibranceService.SetPercent(percent));
-            _vibStatus = $"已应用：{percent}%。整屏即时生效；不满意点「还原原始」。";
+            await Task.Run(() => DigitalVibranceService.SetPercent(percent, identity));
+            _vibStatus = Str.T("Str.DisplayVibApplied", percent);
         }
         catch (Exception ex)
         {
-            _vibStatus = "应用失败：" + ex.Message;
+            _vibStatus = Str.T("Str.DisplayApplyFailed", ex.Message);
         }
         finally
         {
@@ -556,21 +595,23 @@ public partial class DisplayQualityView : UserControl
     private async void VibRestore_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
+        var identity = _displayIdentity ?? "unavailable-display";
         _busy = true;
+        SetDisplayInputEnabled(false);
         _vibStatus = null;
         VibApplyButton.IsEnabled = false;
         VibRestoreButton.IsEnabled = false;
         VibStateText.Text = Str.T("Str.Restoring2");
         try
         {
-            var restored = await Task.Run(() => DigitalVibranceService.Restore());
+            var restored = await Task.Run(() => DigitalVibranceService.Restore(identity));
             _vibStatus = restored
                 ? Str.T("Str.VibranceRestored")
                 : Str.T("Str.NothingToRestore2");
         }
         catch (Exception ex)
         {
-            _vibStatus = "还原失败：" + ex.Message;
+            _vibStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
         }
         finally
         {
@@ -645,7 +686,8 @@ public partial class DisplayQualityView : UserControl
             return;
         }
 
-        await IccApplyCore(() => IccFilterService.Apply(preset.Value));
+        var identity = _displayIdentity ?? "unavailable-display";
+        await IccApplyCore(() => IccFilterService.Apply(preset.Value, identity));
     }
 
     /// <summary>P2-10：用户自选 .icc / .icm 文件。与预设共用确认与应用流程。</summary>
@@ -660,7 +702,8 @@ public partial class DisplayQualityView : UserControl
         if (dialog.ShowDialog() != true)
             return;
         var path = dialog.FileName;
-        _ = IccApplyCore(() => IccFilterService.ApplyFromFile(path));
+        var identity = _displayIdentity ?? "unavailable-display";
+        _ = IccApplyCore(() => IccFilterService.ApplyFromFile(path, identity));
     }
 
     /// <summary>预设与用户文件共用的应用流程：确认 → 写入 → 状态反馈（同一套全局生效警示）。</summary>
@@ -668,15 +711,13 @@ public partial class DisplayQualityView : UserControl
     {
         var confirmed = DialogService.Confirm(
             Str.T("Str.ApplyIcc"),
-            "切换是系统全局的：整个桌面（含网页、视频、游戏）的观感都会变化。\n\n" +
-            "· 第一版只作用主显示器，多显示器暂不支持\n" +
-            "· 程序生成的 ICC 是简单曲线变换，效果弱于专业校色\n" +
-            "· 应用前会自动记录原始配置，随时可点「还原原始」恢复\n\n确定应用？",
-            confirmText: "应用");
+            Str.T("Str.DisplayIccConfirm", DisplayTargetCombo.Text),
+            confirmText: Str.T("Str.Apply"));
         if (!confirmed)
             return;
 
         _busy = true;
+        SetDisplayInputEnabled(false);
         _iccStatus = null;
         IccApplyButton.IsEnabled = false;
         IccApplyFileButton.IsEnabled = false;
@@ -706,21 +747,23 @@ public partial class DisplayQualityView : UserControl
 
     private async Task IccRestoreCore()
     {
+        var identity = _displayIdentity ?? "unavailable-display";
         _busy = true;
+        SetDisplayInputEnabled(false);
         _iccStatus = null;
         IccApplyButton.IsEnabled = false;
         IccRestoreButton.IsEnabled = false;
         IccStateText.Text = Str.T("Str.Restoring2");
         try
         {
-            var restored = await Task.Run(() => IccFilterService.Restore());
+            var restored = await Task.Run(() => IccFilterService.Restore(identity));
             _iccStatus = restored
                 ? Str.T("Str.IccRestored")
                 : Str.T("Str.NothingToRestoreFilter");
         }
         catch (Exception ex)
         {
-            _iccStatus = "还原失败：" + ex.Message;
+            _iccStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
         }
         finally
         {
@@ -730,6 +773,12 @@ public partial class DisplayQualityView : UserControl
     }
 
     // ---------- M3：驱动 3D（纹理/电源/透明度/预渲染） ----------
+    private void SetDisplayInputEnabled(bool enabled)
+    {
+        DisplayTargetCombo.IsEnabled = DisplayRefreshButton.IsEnabled = enabled;
+        VibSlider.IsEnabled = VibRecommendedButton.IsEnabled = enabled;
+        IccPresetList.IsEnabled = enabled;
+    }
 
     private void ApplyDrsState(StateSnapshot s)
     {

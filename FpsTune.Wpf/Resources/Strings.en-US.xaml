@@ -51,7 +51,7 @@
     <s:String x:Key="Str.DisplayIntro">Per-game driver quality settings; backups and external changes are checked before restoring.</s:String>
     <s:String x:Key="Str.DlssCard">DLSS SR model override (NVIDIA RTX only)</s:String>
     <s:String x:Key="Str.VibCard">Digital vibrance (NVIDIA · full screen)</s:String>
-    <s:String x:Key="Str.IccCard">ICC filter (OS · primary display)</s:String>
+    <s:String x:Key="Str.IccCard">ICC filter (selected display)</s:String>
     <s:String x:Key="Str.DrsCard">Driver 3D settings (per game · NVIDIA)</s:String>
     <s:String x:Key="Str.ApplyOverride">Apply override</s:String>
     <s:String x:Key="Str.RestoreDefault">Restore tool changes</s:String>
@@ -274,12 +274,12 @@
     <s:String x:Key="Str.PresetE">E preset</s:String>
     <s:String x:Key="Str.PresetEDesc">Previous-generation CNN model · retro image quality</s:String>
     <s:String x:Key="Str.DlssNote">Only settings actually written by this tool are backed up. Restore checks current values and preserves external changes and unrelated settings. Follow in-game restores all managed settings for this game. Check model support and visual effects in the game.</s:String>
-    <s:String x:Key="Str.VibNote">Adjust color vibrance on the primary display to suit your preference.</s:String>
+    <s:String x:Key="Str.VibNote">Adjust color vibrance on the selected display to suit your preference.</s:String>
     <s:String x:Key="Str.VibNote2">The original level is saved before applying. Adjust it separately from the ICC profile.</s:String>
     <s:String x:Key="Str.VibRecommendedSet">Try 58%</s:String>
     <s:String x:Key="Str.VibRecommendedNote">Try 58% moves the slider. Choose Apply to use the setting.</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% is a starting point for a subtle color boost. Adjust to taste.</s:String>
-    <s:String x:Key="Str.IccPresetLabel">Primary display presets (for ICC-aware applications)</s:String>
+    <s:String x:Key="Str.IccPresetLabel">Selected display presets (for ICC-aware applications)</s:String>
     <s:String x:Key="Str.IccVivid">Vivid FPS</s:String>
     <s:String x:Key="Str.IccVividDesc">Slightly higher saturation and contrast, good for competitive play</s:String>
     <s:String x:Key="Str.IccShadow">Shadow boost</s:String>
@@ -973,4 +973,19 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.NvDrsReadbackFailed">Setting {0} reloaded after saving does not match the target. Success is unconfirmed; the original backup is retained for retry or restore.</s:String>
     <s:String x:Key="Str.DlssPresetVerified">DLSS preset {0} saved and independently verified. Restart the game and enable DLSS to use it; Restore tool changes restores the original settings.</s:String>
     <s:String x:Key="Str.DlssApplyFailed">Application could not be confirmed: {0}. Any original backup created is retained. Check the state before retrying or restoring.</s:String>
+    <s:String x:Key="Str.DisplayTarget">Target display</s:String>
+    <s:String x:Key="Str.DisplayRefresh">Refresh displays</s:String>
+    <s:String x:Key="Str.DisplayPrimary">Primary</s:String>
+    <s:String x:Key="Str.DisplayTargetHint">ICC and digital vibrance affect the selected screen. Each screen has its own backup and restore.</s:String>
+    <s:String x:Key="Str.DisplayDisconnected">The selected screen is disconnected or cannot be identified uniquely. Reconnect it or explicitly choose another screen.</s:String>
+    <s:String x:Key="Str.DisplayConnectionChanged">The display connection changed. This operation stopped. Refresh and try again.</s:String>
+    <s:String x:Key="Str.DisplayMirrored">Mirrored screens share a display source and cannot be changed independently. Use extended mode.</s:String>
+    <s:String x:Key="Str.DisplayDvcUnavailable">The selected screen has no independent NVIDIA digital vibrance channel.</s:String>
+    <s:String x:Key="Str.DisplayLegacyBackup">The old ICC backup has no monitor identity, so it cannot be restored automatically. It has been kept. Check the original associations in Windows Color Management.</s:String>
+    <s:String x:Key="Str.DisplayWriteUnconfirmed">The driver readback differs from the requested value. The backup was kept. Retry or restore.</s:String>
+    <s:String x:Key="Str.DisplayVibConfirm">Target screen: {0}&#10;&#10;Set this screen's digital vibrance to {1}%. Its desktop, web pages and games will change. Its original level is saved for independent restore.</s:String>
+    <s:String x:Key="Str.DisplayIccConfirm">Target screen: {0}&#10;&#10;ICC changes desktop, web and game colors on this screen. The presets are simple curves, not professional calibration. Its complete original associations are saved for independent restore.</s:String>
+    <s:String x:Key="Str.DisplayVibApplied">Saved and verified: {0}%. Applies to the selected screen.</s:String>
+    <s:String x:Key="Str.DisplayApplyFailed">Apply failed: {0}</s:String>
+    <s:String x:Key="Str.DisplayRestoreFailed">Restore failed: {0}</s:String>
 </ResourceDictionary>
