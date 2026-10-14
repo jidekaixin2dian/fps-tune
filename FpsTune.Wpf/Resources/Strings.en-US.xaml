@@ -1014,4 +1014,15 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ConditionCopied">Conditions filled in. Confirm the current game and its actual settings before starting.</s:String>
     <s:String x:Key="Str.ConditionStopFailed">Timed save failed: {0}. Check the local records; retained snapshots are not treated as a successful save.</s:String>
     <s:String x:Key="Str.ConditionAverageFps">Average FPS</s:String>
+    <s:String x:Key="Str.ConditionInterval">Sample interval (seconds)</s:String>
+    <s:String x:Key="Str.ConditionCpuAvg">CPU average %</s:String>
+    <s:String x:Key="Str.ConditionCpu95">CPU P95 %</s:String>
+    <s:String x:Key="Str.ConditionMemAvg">RAM average %</s:String>
+    <s:String x:Key="Str.ConditionGpuAvg">GPU average %</s:String>
+    <s:String x:Key="Str.ConditionGpu95">GPU P95 %</s:String>
+    <s:String x:Key="Str.ConditionVramAvg">VRAM avg MiB</s:String>
+    <s:String x:Key="Str.ConditionDurationHours">{0}h {1:00}m</s:String>
+    <s:String x:Key="Str.ConditionDurationMinutes">{0}m {1:00}s</s:String>
+    <s:String x:Key="Str.ConditionHistoryMeta">{0} · {1} · {2} samples · {3}</s:String>
+    <s:String x:Key="Str.ConditionCompareMeta">A = {0} ({1}, {2} samples) · B = {3} ({4}, {5} samples)</s:String>
 </ResourceDictionary>

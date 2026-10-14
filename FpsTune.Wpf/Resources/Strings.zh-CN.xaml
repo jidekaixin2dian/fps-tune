@@ -1014,4 +1014,15 @@
     <s:String x:Key="Str.ConditionCopied">条件已填入；请确认当前游戏及游戏内设置，再开始采样。</s:String>
     <s:String x:Key="Str.ConditionStopFailed">定时保存失败：{0}。请检查本地会话记录，保留的快照不会被当成保存成功。</s:String>
     <s:String x:Key="Str.ConditionAverageFps">平均 FPS</s:String>
+    <s:String x:Key="Str.ConditionInterval">采样间隔（秒）</s:String>
+    <s:String x:Key="Str.ConditionCpuAvg">CPU 平均 %</s:String>
+    <s:String x:Key="Str.ConditionCpu95">CPU 95 位 %</s:String>
+    <s:String x:Key="Str.ConditionMemAvg">内存平均 %</s:String>
+    <s:String x:Key="Str.ConditionGpuAvg">GPU 平均 %</s:String>
+    <s:String x:Key="Str.ConditionGpu95">GPU 95 位 %</s:String>
+    <s:String x:Key="Str.ConditionVramAvg">显存平均 MiB</s:String>
+    <s:String x:Key="Str.ConditionDurationHours">{0}时{1:00}分</s:String>
+    <s:String x:Key="Str.ConditionDurationMinutes">{0}分{1:00}秒</s:String>
+    <s:String x:Key="Str.ConditionHistoryMeta">{0} · {1} · {2} 样本 · {3}</s:String>
+    <s:String x:Key="Str.ConditionCompareMeta">A = {0}（{1}，{2} 样本） · B = {3}（{4}，{5} 样本）</s:String>
 </ResourceDictionary>

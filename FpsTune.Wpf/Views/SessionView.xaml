@@ -298,6 +298,7 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Metric}" FontWeight="{StaticResource SmallEmphasisWeight}" FontSize="12"
+                                           TextWrapping="Wrap" Margin="0,0,8,0"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding AVal}" FontSize="12" FontFamily="{StaticResource FontMono}"
                                            TextWrapping="Wrap" Margin="0,0,8,0"

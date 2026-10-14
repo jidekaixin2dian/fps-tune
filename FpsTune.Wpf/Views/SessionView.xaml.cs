@@ -385,7 +385,7 @@ public partial class SessionView : UserControl
             return new SessionListVm(
                 s.Id,
                 s.Name,
-                $"{s.StartedAt:yyyy-MM-dd HH:mm} · {FormatDuration(sum.Duration)} · {sum.SampleCount} 样本 · {SessionConditionRules.Describe(s.Conditions)}",
+                Str.T("Str.ConditionHistoryMeta", s.StartedAt.ToString("yyyy-MM-dd HH:mm"), FormatDuration(sum.Duration), sum.SampleCount, SessionConditionRules.Describe(s.Conditions)),
                 avgParts.Count > 0 ? string.Join(" · ", avgParts) : Str.T("Str.NotEnoughSamples"),
                 s.StartedAt);
         }).ToList();
@@ -616,7 +616,8 @@ public partial class SessionView : UserControl
 
         var sa = _summaries[a.Id];
         var sb = _summaries[b.Id];
-        CompareHint.Text = $"A = {a.Name}（{a.StartedAt:MM-dd HH:mm}，{sa.SampleCount} 样本） · B = {b.Name}（{b.StartedAt:MM-dd HH:mm}，{sb.SampleCount} 样本）";
+        CompareHint.Text = Str.T("Str.ConditionCompareMeta", a.Name, a.StartedAt.ToString("MM-dd HH:mm"), sa.SampleCount,
+            b.Name, b.StartedAt.ToString("MM-dd HH:mm"), sb.SampleCount);
         var differences = SessionConditionRules.Differences(a, b);
         CompareConditionsText.Visibility = Visibility.Visible;
         CompareConditionsText.Text = differences.Count == 0 ? Str.T("Str.ConditionMatch") :
@@ -628,7 +629,9 @@ public partial class SessionView : UserControl
             Row(Str.T("Str.Duration"), FormatDuration(sa.Duration), FormatDuration(sb.Duration), null),
             Row(Str.T("Str.SampleCount"), sa.SampleCount.ToString(), sb.SampleCount.ToString(), null)
         };
-        rows.Add(PercentRow("CPU 平均 %", sa.Cpu?.Avg, sb.Cpu?.Avg));
+        rows.Add(Row(Str.T("Str.ConditionTarget"), a.Conditions?.TargetSeconds?.ToString() ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.TargetSeconds?.ToString() ?? Str.T("Str.ConditionsUnknown"), null));
+        rows.Add(Row(Str.T("Str.ConditionInterval"), a.IntervalSeconds.ToString("0.#"), b.IntervalSeconds.ToString("0.#"), null));
+        rows.Add(PercentRow(Str.T("Str.ConditionCpuAvg"), sa.Cpu?.Avg, sb.Cpu?.Avg));
         rows.Add(Row(Str.T("Str.ConditionGame"), a.Conditions?.GameName ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.GameName ?? Str.T("Str.ConditionsUnknown"), null));
         rows.Add(Row(Str.T("Str.ConditionResolution"), SessionConditionRules.Resolution(a.Conditions), SessionConditionRules.Resolution(b.Conditions), null));
         rows.Add(Row(Str.T("Str.ConditionQuality"), a.Conditions?.Quality ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.Quality ?? Str.T("Str.ConditionsUnknown"), null));
@@ -636,12 +639,12 @@ public partial class SessionView : UserControl
         rows.Add(PercentRow(Str.T("Str.ConditionAverageFps"), a.Fps?.AvgFps, b.Fps?.AvgFps));
         rows.Add(PercentRow(Str.T("Str.ReportColP1Low"), a.Fps?.P1Low, b.Fps?.P1Low));
         rows.Add(PercentRow("P99 (ms)", a.Fps?.P99Ms, b.Fps?.P99Ms));
-        rows.Add(PercentRow("CPU 95 位 %", sa.Cpu?.HighP95, sb.Cpu?.HighP95));
-        rows.Add(PercentRow("内存平均 %", sa.Mem?.Avg, sb.Mem?.Avg));
-        rows.Add(PercentRow("GPU 平均 %", sa.Gpu?.Avg, sb.Gpu?.Avg));
-        rows.Add(PercentRow("GPU 95 位 %", sa.Gpu?.HighP95, sb.Gpu?.HighP95));
+        rows.Add(PercentRow(Str.T("Str.ConditionCpu95"), sa.Cpu?.HighP95, sb.Cpu?.HighP95));
+        rows.Add(PercentRow(Str.T("Str.ConditionMemAvg"), sa.Mem?.Avg, sb.Mem?.Avg));
+        rows.Add(PercentRow(Str.T("Str.ConditionGpuAvg"), sa.Gpu?.Avg, sb.Gpu?.Avg));
+        rows.Add(PercentRow(Str.T("Str.ConditionGpu95"), sa.Gpu?.HighP95, sb.Gpu?.HighP95));
         rows.Add(new CompareRowVm(
-            "显存平均 MiB",
+            Str.T("Str.ConditionVramAvg"),
             sa.VramAvgMib?.ToString("0") ?? Str.T("Str.Unavailable"),
             sb.VramAvgMib?.ToString("0") ?? Str.T("Str.Unavailable"),
             sa.VramAvgMib is { } x && sb.VramAvgMib is { } y ? $"{y - x:+0;-0;0} MiB" : Str.T("Str.Unavailable")));
@@ -661,5 +664,6 @@ public partial class SessionView : UserControl
     private sealed record CompareRowVm(string Metric, string AVal, string BVal, string Delta);
 
     private static string FormatDuration(TimeSpan d)
-        => d.TotalHours >= 1 ? $"{d.Hours}时{d.Minutes:00}分" : $"{d.Minutes}分{d.Seconds:00}秒";
+        => d.TotalHours >= 1 ? Str.T("Str.ConditionDurationHours", (int)d.TotalHours, d.Minutes)
+            : Str.T("Str.ConditionDurationMinutes", (int)d.TotalMinutes, d.Seconds);
 }
