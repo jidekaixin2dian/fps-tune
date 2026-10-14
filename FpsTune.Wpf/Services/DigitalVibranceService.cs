@@ -345,7 +345,7 @@ internal sealed class NvDvcApi : INvibranceApi
     }
 
     public string? DisplayIdentity() => _target is null ? null : DisplayTopology.Identity(_target);
-    public string? LegacyDisplayIdentity() => _target is null ? null : MscmsIccApi.DisplayIdentity(_target.GdiDeviceName);
+    public string? LegacyDisplayIdentity() => _target is null ? null : MscmsIccApi.DisplayIdentity(_target.GdiDeviceName, _target.Identity);
     public string DisplayName() => _target is null ? Str.T("Str.RecoveryDisplay") : $"{_target.FriendlyName} ({_target.GdiDeviceName})";
 
     public void SetLevel(int level)

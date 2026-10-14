@@ -42,7 +42,7 @@ public static class IccFilterService
 
     private static string BackupPath(string? identity = null) => DisplayBackupFiles.PathFor(BackupDir(), "backup", identity);
 
-    private sealed record Backup(string AssociationSubKey, string DefaultProfile, string[] ListBefore, string CreatedAt, string? ExpectedProfile = null, string? PreviousProfile = null, string? Identity = null, string? DisplayName = null);
+    private sealed record Backup(string AssociationSubKey, string? DefaultProfile, string[] ListBefore, string CreatedAt, string? ExpectedProfile = null, string? PreviousProfile = null, string? Identity = null, string? DisplayName = null);
 
     private static Backup? ReadBackup(string? identity = null)
     {
@@ -54,7 +54,8 @@ public static class IccFilterService
             if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
             var backup = JsonSerializer.Deserialize<Backup>(File.ReadAllText(path));
             if (backup is null || backup.ListBefore is null || backup.ListBefore.Length > 1000
-                || string.IsNullOrWhiteSpace(backup.AssociationSubKey) || string.IsNullOrWhiteSpace(backup.DefaultProfile))
+                || string.IsNullOrWhiteSpace(backup.AssociationSubKey)
+                || string.IsNullOrWhiteSpace(backup.DefaultProfile) && (backup.Identity is null || backup.ListBefore.Length != 0))
                 throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
             return backup;
         }
@@ -85,7 +86,7 @@ public static class IccFilterService
         string? UnsupportedReason,
         string? CurrentProfileName,
         string? CurrentProfilePath,
-        bool Restorable);
+        bool Restorable, bool CanApply = false);
 
     public static IccState GetState(string? identity = null)
     {
@@ -106,7 +107,8 @@ public static class IccFilterService
             null,
             current,
             current is null ? null : Path.Combine(colorDir, current),
-            ReadForDisplay(display) is not null);
+            ReadForDisplay(display) is not null,
+            current is not null || api.CanRestoreAbsentDefault && api.ReadAssociationList(display).Length == 0);
     }
 
     /// <summary>本工具从用户文件安装的自定义 profile 统一用此前缀（漂移检查据此放行）。</summary>
@@ -160,7 +162,7 @@ public static class IccFilterService
     {
         var list = api.ReadAssociationList(display);
         var currentDefault = EffectiveDefault(api, display, colorDir);
-        if (currentDefault is null)
+        if (currentDefault is null && !(api.CanRestoreAbsentDefault && list.Length == 0))
             throw new InvalidOperationException(
                 "未读取到当前生效的显示 profile，为避免无法还原，已拒绝切换。请先在 Windows 颜色管理中确认当前显示器有可用配置文件。");
 
@@ -227,6 +229,7 @@ public static class IccFilterService
         if (!HasRestorableBackup()) return false;
         var api = CreateApi();
         var display = SelectDisplay(api, identity);
+        if (!display.UsePerUserProfiles) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         var backup = ReadForDisplay(display);
         if (backup is null)
         {
@@ -244,7 +247,7 @@ public static class IccFilterService
             throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
 
         api.ValidateConnection(display);
-        if (!api.SetDisplayDefaultAssociation(display, backup.DefaultProfile))
+        if (backup.DefaultProfile is not null && !api.SetDisplayDefaultAssociation(display, backup.DefaultProfile))
             throw new InvalidOperationException("系统拒绝了还原请求（未生效），备份已保留，可重试。");
 
         // 精确还原：写回备份时的完整关联列表（同时清掉本工具追加的预设条目）
@@ -290,14 +293,8 @@ public static class IccFilterService
     /// <summary>生效默认 = per-user 关联列表中从末尾数第一个有效显示类 profile。</summary>
     private static string? EffectiveDefault(IIccSystemApi api, IccDisplayInfo display, string colorDir)
     {
-        foreach (var name in api.ReadAssociationList(display).Reverse())
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                continue;
-            if (IccProfileFile.IsDisplayProfile(Path.Combine(colorDir, name)))
-                return name;
-        }
-        return null;
+        var name = api.ReadDefaultProfile(display);
+        return name is not null && IccProfileFile.IsDisplayProfile(Path.Combine(colorDir, name)) ? name : null;
     }
 
     /// <summary>当前列表是否 = 备份列表 + 本工具安装的 profile（预设或用户文件；顺序与数量漂移都算外部修改）。</summary>

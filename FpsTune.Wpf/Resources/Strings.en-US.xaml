@@ -988,4 +988,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DisplayVibApplied">Saved and verified: {0}%. Applies to the selected screen.</s:String>
     <s:String x:Key="Str.DisplayApplyFailed">Apply failed: {0}</s:String>
     <s:String x:Key="Str.DisplayRestoreFailed">Restore failed: {0}</s:String>
+    <s:String x:Key="Str.DisplayNoCustomIcc">Windows default (no custom ICC)</s:String>
+    <s:String x:Key="Str.DisplayCurrentIccAssociation">Current ICC association: </s:String>
 </ResourceDictionary>

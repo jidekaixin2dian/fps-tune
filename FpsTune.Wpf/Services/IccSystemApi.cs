@@ -15,14 +15,8 @@ public sealed record IccDisplayInfo(
     string? Identity = null, string FriendlyName = "", bool IsPrimary = true, bool Independent = true);
 
 /// <summary>
-/// mscms/系统色彩层抽象：单测注入内存态假实现，正式路径见 MscmsIccApi。
-/// 机制均经真机探针验证（2026-09-14，Windows 11 26200）：
-///  - 切换默认 = ColorProfileSetDisplayDefaultAssociation(CURRENT_USER, CPT_ICM, CPST_NONE)，
-///    行为是把 profile 追加到 per-user 显示关联列表末尾（默认 = 列表中最后一个有效 profile）；
-///  - 旧 AssociateColorProfileWithDeviceW 在该系统上把 "DISPLAY1" 当捕获设备处理（写错存储），
-///    WcsSetDefaultColorProfile 返回 TRUE 但静默无操作——均不可用；
-///  - GetICMProfile 不反映真实默认（始终报 sRGB），读端以关联列表（注册表）为准；
-///  - ColorProfileGetDisplayList 在该系统上访问冲突，不可用。
+/// Profile installation/validation uses mscms. Per-user associations use the physical monitor's documented WCS store.
+/// Parent GDI/adapter APIs can select an inactive cached monitor; never use them to write a selected physical screen.
 /// </summary>
 internal interface IIccSystemApi
 {
@@ -30,6 +24,13 @@ internal interface IIccSystemApi
     bool TryGetPrimaryDisplay(out IccDisplayInfo display);
     IReadOnlyList<IccDisplayInfo> GetDisplays() => TryGetPrimaryDisplay(out var display) ? [display] : [];
     void ValidateConnection(IccDisplayInfo display) { }
+    bool CanRestoreAbsentDefault => false;
+    string? ReadDefaultProfile(IccDisplayInfo display)
+    {
+        var directory = TryGetColorDirectory();
+        return directory is null ? null : ReadAssociationList(display).Reverse()
+            .FirstOrDefault(name => IccProfileFile.IsDisplayProfile(Path.Combine(directory, name)));
+    }
 
     /// <summary>系统色彩目录（COLOR directory）；失败返回 null。</summary>
     string? TryGetColorDirectory();
@@ -51,13 +52,8 @@ internal interface IIccSystemApi
 /// <summary>真实 mscms/注册表实现。</summary>
 public sealed class MscmsIccApi : IIccSystemApi
 {
-    private const string AssociationClassGuid = "{4d36e96e-e325-11ce-bfc1-08002be10318}";
     private const string AssociationBasePath =
-        @"Software\Microsoft\Windows NT\CurrentVersion\ICM\ProfileAssociations\Display\" + AssociationClassGuid;
-    private const uint WcsScopeCurrentUser = 1;
-    private const uint ProfileTypeIcm = 0;
-    private const uint ProfileSubTypeNone = 4; // CPT_ICM + CPST_NONE = 设备默认 ICC
-
+        @"Software\Microsoft\Windows NT\CurrentVersion\ICM\ProfileAssociations\Display\{4d36e96e-e325-11ce-bfc1-08002be10318}";
     public IReadOnlyList<IccDisplayInfo> GetDisplays() => DisplayTopology.GetDisplays();
     public void ValidateConnection(IccDisplayInfo display) => DisplayTopology.ValidateConnection(display);
 
@@ -66,9 +62,9 @@ public sealed class MscmsIccApi : IIccSystemApi
         display = GetDisplays().SingleOrDefault(d => d.IsPrimary)!;
         return display is not null;
     }
-    internal static bool UsesPerUserProfiles(string subKey)
+    internal static bool UsesPerUserProfiles(string keyName)
     {
-        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(AssociationBasePath + "\\" + subKey);
+        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(AssociationBasePath + "\\" + keyName);
         return key?.GetValue("UsePerUserProfiles") is not int value || value != 0;
     }
 
@@ -85,22 +81,25 @@ public sealed class MscmsIccApi : IIccSystemApi
     public bool SetDisplayDefaultAssociation(IccDisplayInfo display, string profileName)
     {
         ValidateConnection(display);
-        return ColorProfileSetDisplayDefaultAssociation(
-            WcsScopeCurrentUser, profileName, ProfileTypeIcm, ProfileSubTypeNone,
-            display.AdapterIdLow, display.AdapterIdHigh, display.SourceId) == 0;
+        var profiles = ReadAssociationList(display).Where(n => !n.Equals(profileName, StringComparison.OrdinalIgnoreCase)).ToList();
+        profiles.Add(profileName);
+        WriteAssociationList(display, profiles.ToArray());
+        return true;
     }
-
     public string[] ReadAssociationList(IccDisplayInfo display)
     {
+        ValidateConnection(display);
         using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(AssociationBasePath + "\\" + display.AssociationSubKey);
-        return (key?.GetValue("ICMProfile") as string[]) ?? Array.Empty<string>();
+        return key?.GetValue("ICMProfile") as string[] ?? [];
     }
-
     public void WriteAssociationList(IccDisplayInfo display, string[] list)
     {
         ValidateConnection(display);
+        if (!UsesPerUserProfiles(display.AssociationSubKey)) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(AssociationBasePath + "\\" + display.AssociationSubKey);
         key.SetValue("ICMProfile", list, Microsoft.Win32.RegistryValueKind.MultiString);
+        // Existing color-managed applications observe the documented registry change. Notify the desktop too.
+        SendMessageTimeout(new IntPtr(0xffff), 0x1a, UIntPtr.Zero, "ICM", 2, 200, out _);
     }
 
     public bool IsProfileBytesValid(byte[] profile)
@@ -132,10 +131,22 @@ public sealed class MscmsIccApi : IIccSystemApi
         }
     }
 
-    internal static string? DisplayIdentity(string gdiDeviceName)
+    internal static string? DisplayIdentity(string gdiDeviceName, string? monitorIdentity = null)
     {
+        uint index = 0;
+        if (monitorIdentity is not null)
+        {
+            var found = false;
+            for (; index < 128; index++)
+            {
+                var monitor = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
+                if (!EnumDisplayDevices(gdiDeviceName, index, ref monitor, 1)) break;
+                if (monitor.DeviceID.Equals(monitorIdentity, StringComparison.OrdinalIgnoreCase)) { found = true; break; }
+            }
+            if (!found) return null;
+        }
         var device = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
-        if (!EnumDisplayDevices(gdiDeviceName, 0, ref device, 0) || string.IsNullOrWhiteSpace(device.DeviceID)
+        if (!EnumDisplayDevices(gdiDeviceName, index, ref device, 0) || string.IsNullOrWhiteSpace(device.DeviceID)
             || string.IsNullOrWhiteSpace(device.DeviceKey)) return null;
         return device.DeviceID.ToUpperInvariant() + "|" + device.DeviceKey.ToUpperInvariant();
     }
@@ -167,10 +178,9 @@ public sealed class MscmsIccApi : IIccSystemApi
     [DllImport("mscms.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern bool GetColorDirectoryW(string? machine, [Out] StringBuilder dir, ref uint size);
 
-    [DllImport("mscms.dll", CharSet = CharSet.Unicode)]
-    private static extern int ColorProfileSetDisplayDefaultAssociation(
-        uint scope, string profileName, uint profileType, uint profileSubType,
-        uint adapterIdLow, int adapterIdHigh, uint sourceId);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr SendMessageTimeout(IntPtr window, uint message, UIntPtr wParam, string lParam,
+        uint flags, uint timeout, out UIntPtr result);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct PROFILE

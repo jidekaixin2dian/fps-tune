@@ -988,4 +988,6 @@
     <s:String x:Key="Str.DisplayVibApplied">已保存并读回确认：{0}%。仅选定屏幕生效。</s:String>
     <s:String x:Key="Str.DisplayApplyFailed">应用失败：{0}</s:String>
     <s:String x:Key="Str.DisplayRestoreFailed">还原失败：{0}</s:String>
+    <s:String x:Key="Str.DisplayNoCustomIcc">Windows 默认（未设置自定义 ICC）</s:String>
+    <s:String x:Key="Str.DisplayCurrentIccAssociation">当前 ICC 关联：</s:String>
 </ResourceDictionary>

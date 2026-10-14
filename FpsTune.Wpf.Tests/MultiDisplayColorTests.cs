@@ -186,6 +186,17 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(new IntPtr(200), _writtenHandle);
     }
     [Fact]
+    public void External_switch_to_system_color_scope_is_not_overwritten_by_per_user_restore()
+    {
+        IccFilterService.Apply(IccFilterPreset.Warm, "A");
+        Displays[0] = Displays[0] with { UsePerUserProfiles = false };
+        var before = Writes.Count;
+        Assert.Throws<InvalidOperationException>(() => IccFilterService.Restore("A"));
+        Assert.Equal(before, Writes.Count);
+        Assert.Single(IccFilterService.BackupTargets());
+        Assert.Equal("FpsTune-Warm.icc", Profiles["A"].Last());
+    }
+    [Fact]
     public void Existing_preset_in_original_association_list_is_kept_as_part_of_the_exact_restore_baseline()
     {
         File.Copy(Path.Combine(Root, "colors", "a.icm"), Path.Combine(Root, "colors", "FpsTune-Warm.icc"));

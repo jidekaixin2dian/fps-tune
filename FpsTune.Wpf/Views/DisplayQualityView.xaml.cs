@@ -645,10 +645,10 @@ public partial class DisplayQualityView : UserControl
 
         IccSupportedPanel.Visibility = Visibility.Visible;
         IccUnsupportedText.Visibility = Visibility.Collapsed;
-        IccCurrentText.Text = Str.T("Str.CurrentlyActive") + (state.CurrentProfileName ?? "<无>（未读取到可用的显示配置文件）");
+        IccCurrentText.Text = Str.T("Str.DisplayCurrentIccAssociation") + (state.CurrentProfileName ?? Str.T("Str.DisplayNoCustomIcc"));
 
         SetIccPresetCardsEnabled(true);
-        IccApplyButton.IsEnabled = state.CurrentProfileName is not null;
+        IccApplyButton.IsEnabled = IccApplyFileButton.IsEnabled = state.CanApply;
         IccRestoreButton.IsEnabled = state.Restorable;
 
         IccStateText.Text = _iccStatus ?? (state.Restorable

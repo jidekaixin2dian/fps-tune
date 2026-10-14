@@ -38,6 +38,7 @@ public sealed class MultiDisplayUiTests
                 var vib = (Button)page.FindName("VibApplyButton");
                 var icc = (Button)page.FindName("IccApplyButton");
                 DlssFeedbackTests.PumpUntil(() => combo.Items.Count == 2 && vib.IsEnabled && icc.IsEnabled);
+                Assert.True(((Button)page.FindName("IccApplyFileButton")).IsEnabled);
                 var subtab = FindVisual<RadioButton>(page).Single(b => Equals(b.Tag, "vibicc"));
                 subtab.IsChecked = true;
                 combo.SelectedIndex = 1;
