@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
@@ -33,6 +33,8 @@ public partial class OptimizeView : UserControl
     {
         InitializeComponent();
         DataContext = this;
+        Loaded += (_, _) => { LangService.Changed += RefreshWorkspaceLabels; RefreshWorkspaceLabels(); };
+        Unloaded += (_, _) => LangService.Changed -= RefreshWorkspaceLabels;
         PresetFull.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
         PresetBalanced.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
         PresetSafeOnly.Checked += (_, _) => { if (!_suppressPresetAutoCheck) ShowPresetContents(); };
@@ -47,6 +49,7 @@ public partial class OptimizeView : UserControl
     private string _searchText = "";
     internal void SelectForReview(IEnumerable<string> ids)
     {
+        if (_operationBusy) return;
         ReloadFromState();
         SetCustomMode();
         var selected = ids.ToHashSet(StringComparer.Ordinal);
@@ -66,6 +69,7 @@ public partial class OptimizeView : UserControl
     {
         if (e.PropertyName != nameof(OptimizationItemViewModel.IsChecked)) return;
         ConsentCheck.IsChecked = false;
+        if (_scopeFilter == "selected") { ItemsView.Refresh(); UpdateFilterSummary(); }
         UpdateSelectionSummary();
     }
 
@@ -76,27 +80,31 @@ public partial class OptimizeView : UserControl
         foreach (var id in Items.Where(i => i.IsChecked).Select(i => i.Id))
             AppState.SelectedIds.Add(id);
         var selected = Items.Where(i => i.IsChecked).ToList();
-        SelectionSummary.Text = $"待应用 {selected.Count} 项  ·  {selected.Count(i => i.RequiresAdmin)} 项需管理员  ·  {selected.Count(i => i.RequiresReboot)} 项需重启";
+        if (!_operationBusy) ApplyButton.IsEnabled = selected.Count > 0;
+        ShowSelectedButton.IsEnabled = ClearSelectionButton.IsEnabled = selected.Count > 0;
+        SelectionSummary.Text = Str.T("Str.ReviewSummary", selected.Count, selected.Count(i => i.RequiresAdmin), selected.Count(i => i.RequiresReboot));
+        var hidden = selected.Count(i => !ItemsView.Contains(i));
+        if (hidden > 0) SelectionSummary.Text += "\n" + Str.T("Str.OptHiddenSelection", hidden);
     }
 
     private void UpdateFilterSummary()
     {
         if (ItemsView is null) return;
         var count = Items.Count(ItemsView.Contains);
-        ItemListTitle.Text = $"优化项  {count} / {Items.Count}";
+        ItemListTitle.Text = Str.T("Str.OptFilteredCount", count, Items.Count);
         EmptyHint.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateSelectionSummary();
     }
     private bool FilterItem(object obj)
     {
         if (obj is not OptimizationItemViewModel vm)
             return false;
+        if (!MatchesScope(vm, _scopeFilter)) return false;
         if (_groupFilter.Length > 0 && vm.Group != _groupFilter)
             return false;
         if (_searchText.Length == 0)
             return true;
-        return vm.Id.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
-            || vm.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
-            || vm.Description.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+        return vm.MatchesQuery(_searchText);
     }
 
     private void GroupChip_Checked(object sender, RoutedEventArgs e)
@@ -146,6 +154,7 @@ public partial class OptimizeView : UserControl
 
     public void ReloadFromState()
     {
+        if (_operationBusy) return;
         _verdicts = VerdictStore.Load();
         var currentGame = System.IO.Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
@@ -269,6 +278,7 @@ public partial class OptimizeView : UserControl
 
     private async void OneClickButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_operationBusy) return;
         if (ConsentCheck.IsChecked != true)
         {
             DialogService.Warning("未确认", Str.T("Str.ConsentOneClick"));
@@ -300,9 +310,7 @@ public partial class OptimizeView : UserControl
         if (!confirmed)
             return;
 
-        OneClickButton.IsEnabled = false;
-        ApplyButton.IsEnabled = false;
-        RestoreButton.IsEnabled = false;
+        SetOperationBusy(true);
         SetPlain(Str.T("Str.RunningOneClick"), "AccentBrush");
         try
         {
@@ -315,76 +323,16 @@ public partial class OptimizeView : UserControl
         }
         finally
         {
-            OneClickButton.IsEnabled = true;
-            ApplyButton.IsEnabled = true;
-            RestoreButton.IsEnabled = true;
+            SetOperationBusy(false);
         }
     }
 
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ConsentCheck.IsChecked != true)
-        {
-            DialogService.Warning("未确认", Str.T("Str.ConsentApply"));
-            return;
-        }
-
-        // 所选项包含需要管理员的项而当前非管理员时，先提供提权重启，避免一批项直接失败。
-        var selectedIds = CollectSelectedIds().ToList();
-        if (selectedIds.Count > 0
-            && AppState.Items.Any(i => selectedIds.Contains(i.Id) && i.RequiresAdmin)
-            && !AdminHelper.IsAdministrator())
-        {
-            var elevate = DialogService.Confirm(
-                Str.T("Str.NeedsAdmin"),
-                "所选优化项中包含需要管理员权限的项目，而当前程序不是以管理员身份运行的。\n\n" +
-                "要以管理员身份重启并继续应用吗？\n\n" +
-                Str.T("Str.SwitchToSafeOnly"),
-                danger: false);
-            if (elevate)
-                AdminHelper.RestartAsAdministrator();
-            return;
-        }
-
-        if (PresetCustom.IsChecked == true && Items.All(i => !i.IsChecked))
-        {
-            DialogService.Info("提示", Str.T("Str.SelectAtLeastOneItem"));
-            return;
-        }
-
-        ApplyButton.IsEnabled = false;
-        RestoreButton.IsEnabled = false;
-        SetPlain(Str.T("Str.Applying"), "AccentBrush");
-
-        try
-        {
-            RunResult result;
-            if (PresetCustom.IsChecked == true)
-            {
-                var ids = Items.Where(i => i.IsChecked).Select(i => i.Id).ToList();
-                result = await OptimizationEngine.ApplyItemsAsync(ids);
-            }
-            else
-            {
-                var preset = PresetFull.IsChecked == true ? "full"
-                    : PresetSafeOnly.IsChecked == true ? "safe-only" : "balanced";
-                result = await OptimizationEngine.ApplyPresetAsync(preset);
-            }
-            SetApplyResult(result);
-        }
-        catch (Exception ex)
-        {
-            SetRawMonospace(ex.ToString());
-        }
-        finally
-        {
-            ApplyButton.IsEnabled = true;
-            RestoreButton.IsEnabled = true;
-        }
-    }
+        => await ApplyReviewedAsync();
 
     private async void RestoreButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_operationBusy) return;
         var backupCount = BackupService.ListBackups().Count;
         if (backupCount == 0)
         {
@@ -409,8 +357,7 @@ public partial class OptimizeView : UserControl
                 danger: true))
             return;
 
-        RestoreButton.IsEnabled = false;
-        ApplyButton.IsEnabled = false;
+        SetOperationBusy(true);
         SetPlain(Str.T("Str.Restoring"), "AccentBrush");
 
         try
@@ -424,8 +371,7 @@ public partial class OptimizeView : UserControl
         }
         finally
         {
-            ApplyButton.IsEnabled = true;
-            RestoreButton.IsEnabled = true;
+            SetOperationBusy(false);
         }
     }
 

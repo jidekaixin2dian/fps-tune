@@ -35,7 +35,7 @@
    <TextBlock Text="{DynamicResource Str.OptimizeTitle}" Style="{StaticResource SectionLabelStyle}"/>
    <TextBlock Text="{DynamicResource Str.OptIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
   </StackPanel>
-  <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="14,12" Margin="0,0,0,12">
+  <Border x:Name="PresetControlsCard" Grid.Row="1" Style="{StaticResource CardStyle}" Padding="14,12" Margin="0,0,0,12">
    <DockPanel LastChildFill="True">
     <TextBlock Text="{DynamicResource Str.OptimizePresets}" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
     <Button DockPanel.Dock="Right" x:Name="ProfilesOpenButton" Content="{DynamicResource Str.MyProfiles}"
@@ -51,9 +51,9 @@
   </Border>
   <Grid Grid.Row="2">
    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="300"/></Grid.ColumnDefinitions>
-   <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="14">
+   <Border x:Name="OptimizationItemsCard" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="14">
     <Grid>
-     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 <Grid Grid.Row="0" Margin="0,0,10,10">
                         <TextBlock x:Name="ItemListTitle" Text="{DynamicResource Str.ItemsTitle}" Style="{StaticResource CardTitleStyle}" Margin="0" VerticalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -90,7 +90,7 @@
                                     Click="ClearAll_Click"/>
                         </StackPanel>
                     </Grid><UniformGrid Columns="6" Grid.Row="1" Margin="0,0,10,8">
-                        <RadioButton Content="{DynamicResource Str.GroupAll}" GroupName="grpfilter" IsChecked="True" Tag=""
+                        <RadioButton x:Name="AllGroups" Content="{DynamicResource Str.GroupAll}" GroupName="grpfilter" IsChecked="True" Tag=""
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                         <RadioButton Content="{DynamicResource Str.GroupKeyboardMouse}" GroupName="grpfilter" Tag="键鼠"
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
@@ -102,8 +102,22 @@
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                         <RadioButton Content="{DynamicResource Str.GroupSystem}" GroupName="grpfilter" Tag="系统与调度"
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
-                    </UniformGrid><ListBox x:Name="ItemList"
-                             Grid.Row="2"
+                    </UniformGrid>
+                    <WrapPanel Grid.Row="2" Margin="0,0,0,12">
+                        <ComboBox x:Name="ScopeFilter" Width="170" Style="{StaticResource SelectComboBoxStyle}" SelectedIndex="0" SelectionChanged="ScopeFilter_Changed"
+                                  AutomationProperties.Name="{DynamicResource Str.OptFilterLabel}">
+                            <ComboBoxItem Tag="all" Content="{DynamicResource Str.OptScopeAll}"/>
+                            <ComboBoxItem Tag="pending" Content="{DynamicResource Str.OptScopePending}"/>
+                            <ComboBoxItem Tag="selected" Content="{DynamicResource Str.OptScopeSelected}"/>
+                            <ComboBoxItem Tag="noAdmin" Content="{DynamicResource Str.OptScopeNoAdmin}"/>
+                            <ComboBoxItem Tag="noRestart" Content="{DynamicResource Str.OptScopeNoRestart}"/>
+                            <ComboBoxItem Tag="effects" Content="{DynamicResource Str.OptScopeEffects}"/>
+                        </ComboBox>
+                        <Button x:Name="ShowSelectedButton" Content="{DynamicResource Str.OptShowSelected}" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Click="ShowSelected_Click"/>
+                        <Button x:Name="ClearSelectionButton" Content="{DynamicResource Str.OptClearSelection}" Style="{StaticResource GhostButtonStyle}" Margin="6,0,0,0" Click="ClearSelection_Click"/>
+                    </WrapPanel>
+                    <ListBox x:Name="ItemList"
+                             Grid.Row="3"
                              Background="Transparent"
                              BorderThickness="0"
                              ItemContainerStyle="{StaticResource CardListItemStyle}"
@@ -212,7 +226,7 @@
   <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0" Margin="0,16,0,0">
    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <StackPanel>
-     <TextBlock x:Name="SelectionSummary" Text="{DynamicResource Str.PendingZero}" Foreground="{DynamicResource AccentBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="0,0,0,8"/>
+     <TextBlock x:Name="SelectionSummary" Text="{DynamicResource Str.PendingZero}" Foreground="{DynamicResource AccentBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="0,0,12,8" TextWrapping="Wrap"/>
      <CheckBox x:Name="ConsentCheck" Style="{StaticResource ToggleSwitchStyle}"><TextBlock Text="{DynamicResource Str.ConsentText}" FontSize="13" TextWrapping="Wrap"/></CheckBox>
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -220,7 +234,7 @@
      <Button x:Name="OneClickButton" Content="{DynamicResource Str.OneClick}"
              Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Height="40" Margin="0,0,12,0" Click="OneClickButton_Click"
              ToolTip="{DynamicResource Str.OneClickTip}"/>
-     <Button x:Name="ApplyButton" Content="{DynamicResource Str.ApplySelected}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="144" Height="40" Click="ApplyButton_Click"/>
+     <Button x:Name="ApplyButton" Content="{DynamicResource Str.OptReviewApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="144" Height="40" Click="ApplyButton_Click"/>
     </StackPanel>
    </Grid>
   </Border>

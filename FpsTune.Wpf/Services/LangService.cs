@@ -9,6 +9,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class LangService
 {
+    public static event Action? Changed;
     public const string ZhCn = "zh-CN";
     public const string EnUs = "en-US";
 
@@ -96,5 +97,6 @@ public static class LangService
                 app.Resources.MergedDictionaries.RemoveAt(i);
         }
         app.Resources.MergedDictionaries.Add(dict);
+        Changed?.Invoke();
     }
 }

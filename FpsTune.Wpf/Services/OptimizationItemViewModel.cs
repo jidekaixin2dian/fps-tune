@@ -6,18 +6,23 @@ namespace FpsTune.Wpf.Services;
 public sealed class OptimizationItemViewModel : INotifyPropertyChanged
 {
     private bool _isChecked;
+    private readonly Core.OptimizationItemDefinition? _definition;
+    private readonly string _name;
+    private readonly string _description;
+    private readonly string _sideEffect;
+    private readonly string _searchIndex;
 
     public string Id { get; }
-    public string Name { get; }
-    public string Description { get; }
-    public string SideEffect { get; }
+    public string Name => _definition?.DisplayName ?? _name;
+    public string Description => _definition?.DisplayDescription ?? _description;
+    public string SideEffect => _definition?.DisplaySideEffect ?? _sideEffect;
     public bool RequiresAdmin { get; }
     public bool RequiresReboot { get; }
     public bool Optimized { get; }
     public string Current { get; }
     public string Group { get; }
     public bool Available => Core.ItemCatalog.All.FirstOrDefault(item => item.Id == Id)?.Available != false;
-    public string StatusText => Optimized ? "已达标" : "未应用";
+    public string StatusText => Str.T(Optimized ? "Str.OptStateAtTarget" : "Str.OptStatePending");
     public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
     /// <summary>0.2.0 M1：项级实测徽标（无记录为 null，行内零宽不占位）；由页面注入。</summary>
@@ -36,9 +41,10 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public OptimizationItemViewModel(OptimizationItem item)
     {
         Id = item.Id;
-        Name = item.Name;
-        Description = item.Description;
-        SideEffect = item.SideEffect;
+        _definition = Core.ItemCatalog.All.FirstOrDefault(d => d.Id == item.Id);
+        _name = item.Name; _description = item.Description; _sideEffect = item.SideEffect;
+        _searchIndex = string.Join(" ", item.Id, item.Name, item.Description, _definition?.Name, _definition?.NameEn,
+            _definition?.Description, _definition?.DescriptionEn);
         RequiresAdmin = item.RequiresAdmin;
         RequiresReboot = item.RequiresReboot;
         Optimized = item.Optimized;
@@ -59,6 +65,14 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    internal bool MatchesQuery(string query) => query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+        .All(term => _searchIndex.Contains(term, StringComparison.OrdinalIgnoreCase));
+    internal void RefreshLanguage()
+    {
+        foreach (var property in new[] { nameof(Name), nameof(Description), nameof(SideEffect), nameof(StatusText), nameof(HasSideEffect) })
+            OnPropertyChanged(property);
+    }
 
     private void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

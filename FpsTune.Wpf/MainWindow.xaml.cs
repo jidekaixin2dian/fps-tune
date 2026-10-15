@@ -122,6 +122,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeCommandPalette();
         HookGameContextService();
 
         _pageFactories = new Dictionary<string, Func<UserControl>>
