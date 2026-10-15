@@ -1,11 +1,20 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-## 0.2.4: a major update
+## v0.2.8-beta: measurement, display and recovery improvements
+
+- **Timed performance sessions**: record game resolution, quality / DLSS / frame cap and a fixed scene. Enter a duration to save automatically, or leave it blank to stop manually. Reuse past conditions and include them in JSON / CSV exports.
+- **Clearer comparisons**: compare average FPS, 1% low and P99 frame time, with explicit notices when games, scenes, quality, resolution or sampling conditions are missing or different. Conditions are user entries; a single difference does not establish an optimization benefit. Real FPS still requires official PresentMon.
+- **Multiple displays**: select the target for digital vibrance and ICC associations, preserve originals separately and restore each screen independently. Changing the primary display does not silently retarget a write; disconnected targets are disabled. ICC affects color-managed applications and some games ignore it. Configurations that cannot be switched safely, including system-level associations, remain unavailable with an explanation.
+- **Diagnostics and update recovery**: export scrubbed DLSS / 3D diagnostics with privileges, driver version, operation stage and before/after values. Protect settings and restore records before updating, then offer retry and rollback when the previous installer is available.
+
+## Previous updates
+
+### 0.2.4: a major update
 
 0.2.4 brings substantial changes across the interface, tuning options and recovery workflow:
 
@@ -20,17 +29,11 @@ Available through a desktop interface and command-line tools.
 
 **0.2.7 further fixes DLSS K and driver 3D apply failures**: when an old backup differs from the current driver values, it preserves the old record and backs up the current values before applying. Driver 3D choices are read on the UI thread and saved in one batch. Refreshes retain failure details and the preset selected for retry. Saving reloads the driver settings to verify the result, and restoration still checks external changes. The reporting user has confirmed success with this fix.
 
-## 0.2.8: measurement, display and recovery improvements
-
-- **Timed performance sessions**: record game resolution, quality / DLSS / frame cap and a fixed scene. Enter a duration to save automatically, or leave it blank to stop manually. Reuse past conditions and include them in JSON / CSV exports.
-- **Clearer comparisons**: compare average FPS, 1% low and P99 frame time, with explicit notices when games, scenes, quality, resolution or sampling conditions are missing or different. Conditions are user entries; a single difference does not establish an optimization benefit. Real FPS still requires official PresentMon.
-- **Multiple displays**: select the target for digital vibrance and ICC associations, preserve originals separately and restore each screen independently. Changing the primary display does not silently retarget a write; disconnected targets are disabled. ICC affects color-managed applications and some games ignore it. Configurations that cannot be switched safely, including system-level associations, remain unavailable with an explanation.
-- **Diagnostics and update recovery**: export scrubbed DLSS / 3D diagnostics with privileges, driver version, operation stage and before/after values. Protect settings and restore records before updating, then offer retry and rollback when the previous installer is available.
 ## Versions and downloads
 
 Current version: **[v0.2.8-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
 **Download the [EXE installer, FpsTune-Setup-0.2.8.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/FpsTune-Setup-0.2.8.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
@@ -40,6 +43,8 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Setup-<version>.exe` | **Recommended download**; installer including the .NET runtime |
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
+
+Checksum manifest for this release: [SHA256SUMS-v0.2.8.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/SHA256SUMS-v0.2.8.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 From 0.2.4, portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.

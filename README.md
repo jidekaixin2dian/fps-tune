@@ -1,15 +1,24 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/latest)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
+![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?include_prereleases)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
 
-## 0.2.4：一次大更新
+## v0.2.8-beta：测量、显示器与恢复增强
+
+- **定时性能会话**：填写游戏分辨率、画质 / DLSS / 帧率上限及固定测试场景，设置目标时长后自动保存；留空仍可手动停止。支持沿用历史会话的条件，JSON / CSV 导出附带这些记录。
+- **更清楚的前后对照**：比较平均 FPS、1% low、P99 帧时间；游戏、场景、画质、分辨率或采样条件缺失 / 不一致时明确提示。条件由用户填写，单次差值不代表优化收益；真实 FPS 仍需要官方 PresentMon。
+- **多显示器控制**：选择目标屏幕调整数字振动与 ICC 关联，逐屏保留原值、独立还原。主屏变化不自动换目标，断开的屏幕禁用写入。ICC 仅影响支持色彩管理的应用，部分游戏会忽略；系统级关联等无法安全切换的配置会提示不可用。
+- **诊断与更新恢复**：DLSS / 3D 可直接导出脱敏诊断，记录权限、驱动版本、失败阶段及设置前后值；更新前保护设置和还原记录，失败后提供重试与旧版包可用时的回退入口。
+
+## 历史更新
+
+### 0.2.4：一次大更新
 
 0.2.4 集中升级了界面、调校范围和备份恢复流程，覆盖日常使用的多个环节：
 
@@ -24,18 +33,12 @@
 
 **0.2.7 进一步修复 DLSS K 与驱动 3D 应用失败**：旧备份与当前驱动值不一致时，先保留旧记录，再按当前值备份并应用；修复 3D 设置的界面线程访问错误，全部选择一次提交。失败信息和待重试预设不再被刷新清空；保存后重新读取驱动确认结果，还原仍核对外部改动。反馈用户已确认本次修复版本成功。
 
-## 0.2.8：测量、显示器与恢复增强
-
-- **定时性能会话**：填写游戏分辨率、画质 / DLSS / 帧率上限及固定测试场景，设置目标时长后自动保存；留空仍可手动停止。支持沿用历史会话的条件，JSON / CSV 导出附带这些记录。
-- **更清楚的前后对照**：比较平均 FPS、1% low、P99 帧时间；游戏、场景、画质、分辨率或采样条件缺失 / 不一致时明确提示。条件由用户填写，单次差值不代表优化收益；真实 FPS 仍需要官方 PresentMon。
-- **多显示器控制**：选择目标屏幕调整数字振动与 ICC 关联，逐屏保留原值、独立还原。主屏变化不自动换目标，断开的屏幕禁用写入。ICC 仅影响支持色彩管理的应用，部分游戏会忽略；系统级关联等无法安全切换的配置会提示不可用。
-- **诊断与更新恢复**：DLSS / 3D 可直接导出脱敏诊断，记录权限、驱动版本、失败阶段及设置前后值；更新前保护设置和还原记录，失败后提供重试与旧版包可用时的回退入口。
 ## 版本与下载
 
 当前版本为 **[v0.2.8-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
 **优先下载 [EXE 安装版：FpsTune-Setup-0.2.8.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/FpsTune-Setup-0.2.8.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
@@ -44,6 +47,8 @@
 | `FpsTune-Setup-<版本>.exe` | **推荐优先下载**；安装包，包含 .NET 运行时 |
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
+
+本版校验清单：[SHA256SUMS-v0.2.8.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/SHA256SUMS-v0.2.8.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 0.2.4 起，便携包和安装包包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
