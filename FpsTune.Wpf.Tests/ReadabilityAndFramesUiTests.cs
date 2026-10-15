@@ -99,6 +99,9 @@ public sealed class ReadabilityAndFramesUiTests
                         window.NavigateTo(route); window.UpdateLayout();
                         var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
                         DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
+                        if (page is ConsoleView)
+                            foreach (var name in new[] { "CpuText", "MemoryText", "GpuText", "TunedText" })
+                                Assert.Equal("Segoe UI, Microsoft YaHei UI", ((TextBlock)page.FindName(name)).FontFamily.Source);
                         if (page is DisplayQualityView)
                             DlssFeedbackTests.PumpUntil(() => ((Grid)page.FindName("FrameControls")).IsEnabled);
                         if (page is SessionView or AbExperimentView)
