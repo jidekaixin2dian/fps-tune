@@ -35,7 +35,10 @@ public sealed class ModernWorkspaceUiTests
                 var expected = page.Items.Where(i => i.IsChecked).Select(i => i.Id).ToArray();
                 var binding = window.InputBindings.OfType<KeyBinding>().Single(b => b.Key == Key.K && b.Modifiers == ModifierKeys.Control);
                 Assert.Same(MainWindow.QuickAccessCommand, binding.Command);
-                ((RoutedCommand)binding.Command).Execute(null, window);
+                var searchButton = (Button)window.FindName("CommandSearchButton");
+                Assert.IsType<System.Windows.Shapes.Path>(searchButton.Content);
+                Assert.Equal(Str.T("Str.CommandSearch"), System.Windows.Automation.AutomationProperties.GetName(searchButton));
+                searchButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 var palette = (CommandPaletteView)((ContentControl)window.FindName("CommandHost")).Content;
                 var query = (TextBox)palette.FindName("QueryBox"); var results = (ListBox)palette.FindName("ResultsList");
                 Assert.Equal(Visibility.Visible, ((Grid)window.FindName("CommandOverlay")).Visibility);
@@ -46,7 +49,7 @@ public sealed class ModernWorkspaceUiTests
                 DlssFeedbackTests.PumpUntil(() => ((TextBox)page.FindName("SearchBox")).Text == wanted);
                 Assert.Equal(expected, page.Items.Where(i => i.IsChecked).Select(i => i.Id).ToArray());
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("CommandOverlay")).Visibility);
-                window.OpenCommandPalette(); query.Text = "update";
+                ((RoutedCommand)binding.Command).Execute(null, window); query.Text = "update";
                 Assert.Equal("settings:5", ((WorkspaceCommand)results.SelectedItem).Id);
                 PressKey(palette, window, Key.Enter);
                 DlssFeedbackTests.PumpUntil(() => ((ContentControl)window.FindName("PageHost")).Content is SettingsView view

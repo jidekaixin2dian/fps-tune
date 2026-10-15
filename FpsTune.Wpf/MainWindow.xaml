@@ -24,11 +24,10 @@
                     <TextBlock x:Name="TitleVersionText" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button x:Name="CommandSearchButton" Click="CommandSearch_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0"
-                            ToolTip="{DynamicResource Str.CommandQuery}" AutomationProperties.Name="{DynamicResource Str.CommandQuery}">
-                        <StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CommandSearch}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Ctrl+K" FontFamily="{StaticResource FontBody}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,0,0,0" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <Button x:Name="CommandSearchButton" Click="CommandSearch_Click" Style="{StaticResource GhostButtonStyle}" Width="34" Height="34" Padding="0" Margin="0,0,12,0"
+                            ToolTip="{DynamicResource Str.CommandSearch}" AutomationProperties.Name="{DynamicResource Str.CommandSearch}">
+                        <Path Data="M 10.5,4.5 A 6,6 0 1 0 10.5,16.5 A 6,6 0 1 0 10.5,4.5 M 15,15 L 20,20" Width="18" Height="18" Stretch="Uniform"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" IsHitTestVisible="False"/>
                     </Button>
                     <TextBlock x:Name="AdminStatusText" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
                     <Button Content="{DynamicResource Str.Guide}" Click="Guide_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,6,0"/>
