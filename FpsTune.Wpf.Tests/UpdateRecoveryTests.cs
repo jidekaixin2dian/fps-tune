@@ -210,6 +210,9 @@ public sealed class UpdateRecoveryTests : IDisposable
         var executable = CompileFixture();
         var app = Path.Combine(UpdateRecovery.InstallDirectoryOverride!, "FpsTune.exe");
         File.Copy(executable, app);
+        var restartGate = app + ".hold";
+        File.WriteAllText(restartGate, "keep the restarted fixture alive until explicitly released");
+        Process? restarted = null;
         var parentPath = Path.Combine(_root, "parent.exe");
         File.Copy(executable, parentPath);
         using var parent = Process.Start(new ProcessStartInfo(parentPath) { UseShellExecute = false, CreateNoWindow = true })!;
@@ -227,13 +230,31 @@ public sealed class UpdateRecoveryTests : IDisposable
             Assert.True(parent.WaitForExit(5000));
             WaitUntil(() => UpdateRecovery.Recent()?.Status == status);
             WaitUntil(() => File.Exists(app + ".started"));
+            // A startup marker does not mean the image has been unmapped. Own the exact
+            // restarted fixture and keep it alive until the worker assertions finish.
+            var identity = File.ReadAllText(app + ".started").Split('|');
+            restarted = Process.GetProcessById(int.Parse(identity[0]));
+            Assert.Equal(long.Parse(identity[1]), restarted.StartTime.ToUniversalTime().Ticks);
+            Assert.Equal(app, restarted.MainModule!.FileName);
             Assert.Equal(code, UpdateRecovery.Recent()!.ExitCode);
             Assert.Contains("/SILENT /FpsTuneUpdate=1", File.ReadAllText(installer + ".args"));
             Assert.Contains("/DIR=", File.ReadAllText(installer + ".args"));
             Assert.NotNull(UpdateRecovery.ProtectedCopy(attempt));
             WaitUntil(() => !UpdateRecovery.ProcessMatches(UpdateRecovery.Recent()!.WorkerId, UpdateRecovery.Recent()!.WorkerStartedTicks));
+            Assert.False(restarted.HasExited);
         }
-        finally { if (!parent.HasExited) { parent.Kill(); parent.WaitForExit(); } }
+        finally
+        {
+            File.Delete(restartGate);
+            try
+            {
+                if (restarted is not null)
+                {
+                    using (restarted) Assert.True(restarted.WaitForExit(5000), "Restarted fixture did not exit before cleanup.");
+                }
+            }
+            finally { if (!parent.HasExited) { parent.Kill(); parent.WaitForExit(); } }
+        }
     }
     [Fact]
     public void Real_worker_rejects_corrupt_executable_before_handover_and_never_runs_it()
@@ -285,7 +306,11 @@ public sealed class UpdateRecoveryTests : IDisposable
                     if (Path.GetFileName(path) == "parent.exe") { Thread.Sleep(30000); return 0; }
                     string code = Path.Combine(Path.GetDirectoryName(path), "exit-code.txt");
                     if (File.Exists(code)) { File.WriteAllText(path + ".args", String.Join(" ", args)); return Int32.Parse(File.ReadAllText(code)); }
-                    File.WriteAllText(path + ".started", "started"); return 0;
+                    using (var current = Process.GetCurrentProcess())
+                        File.WriteAllText(path + ".started.tmp", current.Id + "|" + current.StartTime.ToUniversalTime().Ticks);
+                    File.Move(path + ".started.tmp", path + ".started");
+                    while (File.Exists(path + ".hold")) Thread.Sleep(20);
+                    return 0;
                 }
             }
             """, Encoding.UTF8);
