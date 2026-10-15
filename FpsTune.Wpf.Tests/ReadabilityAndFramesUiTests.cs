@@ -127,6 +127,56 @@ public sealed class ReadabilityAndFramesUiTests
         });
     }
 
+    [Fact]
+    public void Memory_button_handles_busy_elevation_pending_success_and_failures_without_real_cleanup()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var busy = false; var admin = true;
+            var api = new MemoryCleanupTests.FakeMemory();
+            var page = new MaintenanceView(new MemoryCleanupService(api, () => busy, () => admin));
+            var window = new Window { Width = 1180, Height = 800, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            var button = (Button)page.FindName("MemoryCleanButton");
+            var status = (TextBlock)page.FindName("MemoryResult");
+            var refresh = (Button)page.FindName("RefreshButton");
+            try
+            {
+                ((RadioButton)page.FindName("ProcessesNav")).IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => button.IsEnabled && ((TextBlock)page.FindName("MemoryAvailable")).Text.Contains("5.00"));
+                busy = true; button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(Str.T("Str.MemoryBusy"), status.Text); Assert.Equal(0, api.Purges); busy = false;
+                admin = false;
+                var cancel = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+                cancel.Tick += (_, _) =>
+                {
+                    var dialog = app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible);
+                    if (dialog is not null) ((Button)dialog.FindName("CancelButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                };
+                cancel.Start();
+                try { button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); }
+                finally { cancel.Stop(); }
+                Assert.Equal(0, api.Purges); admin = true;
+                using var hold = new ManualResetEventSlim(); api.Hold = hold;
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => Volatile.Read(ref api.Purges) == 1);
+                Assert.False(button.IsEnabled); Assert.False(refresh.IsEnabled);
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Equal(1, api.Purges);
+                hold.Set(); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
+                Assert.Equal(Str.T("Str.MemoryCleaned", "5.00 GiB", "5.00 GiB"), status.Text);
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "memory-" + theme); }
+                api.Hold = null; api.PurgeError = new System.ComponentModel.Win32Exception(1314);
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
+                Assert.StartsWith(Str.T("Str.MemoryFailed", ""), status.Text); Assert.True(refresh.IsEnabled);
+                api.PurgeError = null; api.FailRead = api.Reads + 2;
+                button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
+                Assert.Contains("snapshot unavailable", status.Text); Assert.Contains("刷新", status.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {
@@ -191,7 +241,12 @@ public sealed class ReadabilityAndFramesUiTests
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth * dpi.DpiScaleX), (int)Math.Ceiling(element.ActualHeight * dpi.DpiScaleY),
             dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
         var visual = new DrawingVisual();
-        using (var drawing = visual.RenderOpen()) drawing.DrawRectangle(new VisualBrush(element), null, new Rect(0, 0, element.ActualWidth, element.ActualHeight));
+        using (var drawing = visual.RenderOpen())
+        {
+            var bounds = new Rect(0, 0, element.ActualWidth, element.ActualHeight);
+            drawing.DrawRectangle((Brush)Application.Current.FindResource("AppBackdropBrush"), null, bounds);
+            drawing.DrawRectangle(new VisualBrush(element), null, bounds);
+        }
         bitmap.Render(visual);
         using var stream = File.Create(Path.Combine(Output(), name + ".png"));
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); encoder.Save(stream);

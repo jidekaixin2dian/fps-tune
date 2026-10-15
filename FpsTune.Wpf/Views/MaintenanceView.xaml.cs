@@ -11,8 +11,10 @@ public partial class MaintenanceView : UserControl
     private ShaderCacheService.Preview? _preview;
     private bool _busy;
     private sealed record FolderRow(string Name, string Amount, string Path);
-    public MaintenanceView()
+    public MaintenanceView() : this(new MemoryCleanupService()) { }
+    internal MaintenanceView(MemoryCleanupService memory)
     {
+        _memory = memory;
         InitializeComponent();
         Loaded += async (_, _) => await RefreshSnapshotAsync();
     }
@@ -29,9 +31,9 @@ public partial class MaintenanceView : UserControl
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshSnapshotAsync();
     private async Task RefreshSnapshotAsync()
     {
-        if (_snapshotBusy) return;
+        if (_snapshotBusy || _busy) return;
         _snapshotBusy = true;
-        RefreshButton.IsEnabled = false;
+        RefreshButton.IsEnabled = MemoryCleanButton.IsEnabled = false;
         SnapshotStatus.Text = Str.T("Str.MaintenanceLoading");
         try
         {
@@ -42,9 +44,11 @@ public partial class MaintenanceView : UserControl
             NoDrives.Visibility = snapshot.Drives.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             NoProcesses.Visibility = snapshot.Processes.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             SnapshotStatus.Text = Str.T("Str.MaintenanceReady", DateTime.Now.ToString("HH:mm:ss"), snapshot.Drives.Unavailable + snapshot.Processes.Unavailable);
+            try { ShowMemory(await Task.Run(_memory.Read)); }
+            catch (Exception ex) { MemoryAvailable.Text = Str.T("Str.MemoryReadFailed", PrivacyScrub.Sanitize(ex.Message)); MemoryStandby.Text = ""; }
         }
         catch (Exception ex) { SnapshotStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { _snapshotBusy = false; RefreshButton.IsEnabled = true; }
+        finally { _snapshotBusy = false; RefreshButton.IsEnabled = MemoryCleanButton.IsEnabled = true; }
     }
     private void OpenTool_Click(object sender, RoutedEventArgs e)
     {

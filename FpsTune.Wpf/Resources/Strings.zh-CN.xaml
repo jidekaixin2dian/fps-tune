@@ -933,7 +933,7 @@
     <s:String x:Key="Str.UpdateHint">从官方 GitHub Releases 检查新版本。</s:String>
     <s:String x:Key="Str.MaintenanceIntro">查看空间与应用占用，处理常见游戏运行问题。</s:String>
     <s:String x:Key="Str.MaintenanceStorage">空间与缓存</s:String>
-    <s:String x:Key="Str.MaintenanceProcesses">应用占用</s:String>
+    <s:String x:Key="Str.MaintenanceProcesses">内存整理</s:String>
     <s:String x:Key="Str.MaintenanceTroubleshoot">排查与维护</s:String>
     <s:String x:Key="Str.MaintenanceRefresh">刷新快照</s:String>
     <s:String x:Key="Str.MaintenanceLoading">正在读取本机状态…</s:String>
@@ -1121,4 +1121,18 @@
     <s:String x:Key="Str.FrameApplied">已保存并验证帧率设置。重新启动游戏后测试效果。</s:String>
     <s:String x:Key="Str.FrameRestored">已还原帧率设置。</s:String>
     <s:String x:Key="Str.FrameFailed">帧率操作失败：{0}</s:String>
+    <s:String x:Key="Str.MemoryTitle">开局前整理内存</s:String>
+    <s:String x:Key="Str.MemoryHint">开游戏前，清理低优先级的待机缓存。</s:String>
+    <s:String x:Key="Str.MemoryAvailable">可用内存 {0} / {1}</s:String>
+    <s:String x:Key="Str.MemoryStandby">低优先级待机缓存：{0}</s:String>
+    <s:String x:Key="Str.MemoryStandbyUnknown">低优先级待机缓存：暂无法读取</s:String>
+    <s:String x:Key="Str.MemoryClean">整理内存</s:String>
+    <s:String x:Key="Str.MemoryCleaning">正在整理内存…</s:String>
+    <s:String x:Key="Str.MemoryCleaned">整理完成。可用内存：{0} → {1}</s:String>
+    <s:String x:Key="Str.MemoryCleanedReadFailed">整理已完成，最新内存状态读取失败：{0}。请点击右上角“刷新”。</s:String>
+    <s:String x:Key="Str.MemoryReadFailed">内存状态读取失败：{0}</s:String>
+    <s:String x:Key="Str.MemoryFailed">整理失败：{0}</s:String>
+    <s:String x:Key="Str.MemoryNativeFailed">Windows 未能完成内存整理</s:String>
+    <s:String x:Key="Str.MemoryBusy">请先结束性能记录或 A/B 实验，再整理内存。</s:String>
+    <s:String x:Key="Str.MemoryAdmin">整理内存需要管理员权限。请以管理员身份重启，然后进入“维护工具 → 内存整理”再次点击整理。</s:String>
 </ResourceDictionary>

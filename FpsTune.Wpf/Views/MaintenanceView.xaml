@@ -58,6 +58,14 @@
         </StackPanel></Border>
                 </StackPanel></ScrollViewer>
                 <ScrollViewer x:Name="ProcessesSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">
+                    <Border Style="{StaticResource CardStyle}" Margin="0,0,0,14"><StackPanel>
+                        <TextBlock Text="{DynamicResource Str.MemoryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.MemoryHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="MemoryAvailable" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="18" Margin="0,18,0,6" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="MemoryStandby" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                        <Button x:Name="MemoryCleanButton" Content="{DynamicResource Str.MemoryClean}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,18,0,0" Click="MemoryClean_Click"/>
+                        <TextBlock x:Name="MemoryResult" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                    </StackPanel></Border>
                     <Border Style="{StaticResource CardStyle}"><StackPanel>
                         <TextBlock Text="{DynamicResource Str.MaintenanceMemoryTitle}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.MaintenanceMemoryHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap"/>
