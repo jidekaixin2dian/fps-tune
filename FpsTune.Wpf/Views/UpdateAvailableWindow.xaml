@@ -20,8 +20,8 @@
                 </ScrollViewer>
             </Border>
             <StackPanel Grid.Row="3" Margin="0,18,0,0">
-                <TextBlock Text="{DynamicResource Str.ReleaseExeHint}" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" FontSize="12"/>
-                <TextBlock x:Name="StatusText" Text="{DynamicResource Str.UpdateOptional}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,7,0,16" FontSize="12" AutomationProperties.LiveSetting="Polite"/>
+                <TextBlock Text="{DynamicResource Str.ReleaseExeHint}" Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" FontSize="13"/>
+                <TextBlock x:Name="StatusText" Text="{DynamicResource Str.UpdateOptional}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,7,0,16" FontSize="13" AutomationProperties.LiveSetting="Polite"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="LaterButton" Content="{DynamicResource Str.CommunityLater}" IsCancel="True" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
                     <Button x:Name="DownloadPageButton" Content="{DynamicResource Str.ReleaseDownloadPage}" Click="Download_Click" IsDefault="True" Style="{StaticResource PrimaryButtonStyle}"/>

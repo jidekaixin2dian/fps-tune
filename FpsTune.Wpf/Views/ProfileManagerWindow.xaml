@@ -57,7 +57,7 @@
                                FontWeight="{StaticResource SmallEmphasisWeight}"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="SelectionSummaryText" Text=""
-                               FontSize="12"
+                               FontSize="13"
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,2,0,0"/>
                 </StackPanel>
@@ -126,7 +126,7 @@
                                                        ToolTip="{Binding DisplayName}"/>
                                             <TextBlock Text="{Binding CountText}"
                                                        Foreground="{DynamicResource TextMutedBrush}"
-                                                       FontSize="12"
+                                                       FontSize="13"
                                                        Margin="0,2,0,0"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

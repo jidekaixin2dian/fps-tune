@@ -46,20 +46,22 @@
 
             <Style TargetType="Expander">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Expander">
                     <StackPanel>
-                        <ToggleButton x:Name="HeaderSite" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Stretch" FocusVisualStyle="{x:Null}">
+                        <ToggleButton x:Name="HeaderSite" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Stretch" Cursor="Hand" MinHeight="34">
+                            <ToggleButton.FocusVisualStyle><Style TargetType="Control"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Control"><Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="4" Width="22" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center"/></ControlTemplate></Setter.Value></Setter></Style></ToggleButton.FocusVisualStyle>
                             <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
-                                <Border x:Name="HeaderBorder" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Border x:Name="HeaderBorder" Background="Transparent" CornerRadius="4" Padding="4,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Path x:Name="Chevron" Data="M 0 0 L 4 4 L 0 8" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="6" Height="9" VerticalAlignment="Center" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5"/>
                                     <ContentPresenter Grid.Column="1" Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" VerticalAlignment="Center"/>
                                 </Grid></Border>
-                                <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Chevron" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90"/></Setter.Value></Setter></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="HeaderBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
+                                <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Chevron" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90"/></Setter.Value></Setter></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource AccentSoftBrush}"/></Trigger></ControlTemplate.Triggers>
                             </ControlTemplate></ToggleButton.Template>
                         </ToggleButton>
-                        <ContentPresenter x:Name="ExpandSite" ContentSource="Content" Visibility="Collapsed" Margin="24,4,0,8"/>
+                        <controls:DisclosurePanel x:Name="ExpandSite" IsExpanded="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"><ContentPresenter ContentSource="Content" Margin="28,4,0,8"/></controls:DisclosurePanel>
                     </StackPanel>
-                    <ControlTemplate.Triggers><Trigger Property="IsExpanded" Value="True"><Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers>
+                    <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers>
                 </ControlTemplate></Setter.Value></Setter>
             </Style>
 
@@ -113,6 +115,29 @@
 
             <!-- ============ 文本样式 ============ -->
             <!-- Shared section navigation for settings and maintenance. -->
+            <Style x:Key="ChoiceTabStyle" TargetType="RadioButton">
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="Normal"/>
+                <Setter Property="MinHeight" Value="36"/>
+                <Setter Property="Padding" Value="14,7"/>
+                <Setter Property="Margin" Value="0,0,8,6"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusControl}" Padding="{TemplateBinding Padding}">
+                        <Grid><ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/><Border x:Name="FocusRing" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="2" Margin="-3" Opacity="0" IsHitTestVisible="False"/></Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="Choice" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusRing" Property="Opacity" Value="1"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate></Setter.Value></Setter>
+            </Style>
             <Style x:Key="SectionNavigationStyle" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
@@ -135,12 +160,12 @@
             </Style>
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontDisplay}"/>
-                <Setter Property="FontSize" Value="26"/>
+                <Setter Property="FontSize" Value="22"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             </Style>
 
-            <!-- 分区标题：mono 小号全大写 -->
+            <!-- 分区标题与页面标题使用一致的比例字体和明确字号层级。 -->
             <Style x:Key="CardTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="16"/>
@@ -157,7 +182,7 @@
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontSize" Value="13"/>
             </Style>
 
             <Style x:Key="StatValueStyle" TargetType="TextBlock">
@@ -203,7 +228,7 @@
             <Style TargetType="controls:NavButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="12.5"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="38"/>
                 <!-- 导航钮不参与键盘焦点：点击后不再驻留焦点高亮，重复点击视觉稳定 -->
@@ -364,7 +389,7 @@
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ToolTip">
@@ -524,7 +549,7 @@
 
             <Style x:Key="MonoTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
                 <Setter Property="FontFamily" Value="{StaticResource FontCode}"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="AcceptsReturn" Value="True"/>
                 <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
                 <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
@@ -823,7 +848,7 @@
             <Style x:Key="PillRadioStyle" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="Template">

@@ -21,13 +21,13 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
                     <Image Source="/Assets/app-icon.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
                     <TextBlock Text="{DynamicResource Str.AppNameShort}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TitleVersionText" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TitleVersionText" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button x:Name="CommandSearchButton" Click="CommandSearch_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0"
                             ToolTip="{DynamicResource Str.CommandQuery}" AutomationProperties.Name="{DynamicResource Str.CommandQuery}">
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CommandSearch}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Ctrl+K" FontFamily="{StaticResource FontBody}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Ctrl+K" FontFamily="{StaticResource FontBody}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <TextBlock x:Name="AdminStatusText" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -41,7 +41,7 @@
             </Grid>
             <Grid x:Name="TabBar" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <TextBlock x:Name="NavigationHeading" Text="{DynamicResource Str.Workspace}" Margin="24,24,0,16" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                <TextBlock x:Name="NavigationHeading" Text="{DynamicResource Str.Workspace}" Margin="24,24,0,16" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
                 <StackPanel x:Name="NavigationStack" Grid.Row="1" Margin="12,0,12,0">
                     <controls:NavButton x:Name="NavHome" Tag="home" Text="{DynamicResource Str.NavHome}" IsChecked="True" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavDetect" Tag="detect" Text="{DynamicResource Str.NavDetect}" Checked="Nav_Checked"/>
@@ -54,8 +54,8 @@
                     <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Checked="Nav_Checked"/>
                 </StackPanel>
                 <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">
-                    <TextBlock Text="FPS TUNE" FontFamily="{StaticResource FontBody}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
-                    <TextBlock x:Name="SidebarVersionText" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,5,0,0"/>
+                    <TextBlock Text="FPS TUNE" FontFamily="{StaticResource FontBody}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
+                    <TextBlock x:Name="SidebarVersionText" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,5,0,0"/>
                 </StackPanel>
             </Grid>
             <ContentControl x:Name="PageHost" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Focusable="False"/>

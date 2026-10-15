@@ -11,7 +11,7 @@
                 <!-- P3-4：上次检测时间与耗时（进入页面即可见，不必先看输出框） -->
                 <TextBlock x:Name="LastDetectText" Text=""
                            Style="{StaticResource MutedTextStyle}"
-                           FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                           FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20,0,0,0">
                 <Button x:Name="RunButton"
@@ -80,10 +80,10 @@
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Border Style="{StaticResource ChipStyle}" Margin="0,0,6,0">
-                                <TextBlock x:Name="LaptopText" Text="--" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="LaptopText" Text="--" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
                             <Border Style="{StaticResource ChipStyle}">
-                                <TextBlock x:Name="AdminText" Text="--" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock x:Name="AdminText" Text="--" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
                         </StackPanel>
                     </StackPanel>
@@ -96,12 +96,12 @@
             <StackPanel>
                 <Grid Margin="0,0,0,8">
                     <TextBlock Text="{DynamicResource Str.LiveMonitor}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
-                    <TextBlock Text="{DynamicResource Str.SampleEverySecond}" Style="{StaticResource MutedTextStyle}" FontSize="12" HorizontalAlignment="Right"/>
+                    <TextBlock Text="{DynamicResource Str.SampleEverySecond}" Style="{StaticResource MutedTextStyle}" FontSize="13" HorizontalAlignment="Right"/>
                 </Grid>
                 <UniformGrid x:Name="ClassicMonitorPanel" Columns="4">
                     <StackPanel Margin="0,0,14,0">
                         <Grid Margin="0,0,0,4">
-                            <TextBlock Text="{DynamicResource Str.CpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <TextBlock Text="{DynamicResource Str.CpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                             <TextBlock x:Name="CpuNowText" Text="--" HorizontalAlignment="Right"
                                        FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"/>
                         </Grid>
@@ -109,7 +109,7 @@
                     </StackPanel>
                     <StackPanel Margin="0,0,14,0">
                         <Grid Margin="0,0,0,4">
-                            <TextBlock Text="{DynamicResource Str.MemoryUsage}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <TextBlock Text="{DynamicResource Str.MemoryUsage}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                             <TextBlock x:Name="MemNowText" Text="--" HorizontalAlignment="Right"
                                        FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource PrimaryBrush}"/>
                         </Grid>
@@ -117,7 +117,7 @@
                     </StackPanel>
                     <StackPanel Margin="0,0,14,0">
                         <Grid Margin="0,0,0,4">
-                            <TextBlock Text="{DynamicResource Str.GpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <TextBlock Text="{DynamicResource Str.GpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                             <TextBlock x:Name="GpuNowText" Text="--" HorizontalAlignment="Right"
                                        FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource OkBrush}"/>
                         </Grid>
@@ -125,12 +125,12 @@
                     </StackPanel>
                     <StackPanel ToolTipService.HasDropShadow="True">
                         <Grid Margin="0,0,0,4">
-                            <TextBlock Text="{DynamicResource Str.VramDedicated}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <TextBlock Text="{DynamicResource Str.VramDedicated}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                             <TextBlock x:Name="VramNowText" Text="--" HorizontalAlignment="Right"
                                        FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource WarningBrush}"/>
                         </Grid>
                         <Canvas x:Name="VramChart" Height="72"/>
-                        <TextBlock x:Name="VramNoteText" Text="" FontSize="12" Margin="0,3,0,0"
+                        <TextBlock x:Name="VramNoteText" Text="" FontSize="13" Margin="0,3,0,0"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
@@ -237,7 +237,7 @@
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Id}" Visibility="Collapsed"
                                            FontFamily="{StaticResource FontBody}"
-                                           FontSize="12"
+                                           FontSize="13"
                                            Foreground="{DynamicResource AccentBrush}"
                                            Margin="0,0,12,0"
                                            VerticalAlignment="Center"/>
@@ -255,7 +255,7 @@
                                         Margin="10,0,0,0"
                                         Style="{StaticResource ChipStyle}"
                                         VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding StatusText}" FontSize="12">
+                                    <TextBlock Text="{Binding StatusText}" FontSize="13">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>

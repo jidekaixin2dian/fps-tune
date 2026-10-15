@@ -783,7 +783,7 @@ public partial class AbExperimentView : UserControl
             var label = new TextBlock
             {
                 Text = Math.Round(v, 0).ToString("0"),
-                FontSize = 12,
+                FontSize = 13,
                 Foreground = muted
             };
             Canvas.SetLeft(label, 4);
@@ -810,7 +810,7 @@ public partial class AbExperimentView : UserControl
             var lb = new TextBlock
             {
                 Text = runs[i].ShortLabel,
-                FontSize = 12,
+                FontSize = 13,
                 Foreground = muted
             };
             lb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));

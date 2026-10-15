@@ -6,33 +6,17 @@
  <!-- 0.1.12：与全仓库统一为"全宽卡片"骨架（原为细线分区扁平骨架） -->
  <UserControl.Resources>
   <local:CatalogGroupLabelConverter x:Key="CatalogGroupLabel"/>
-  <Style x:Key="PresetChoiceStyle" TargetType="RadioButton">
-   <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-   <Setter Property="FontSize" Value="15"/>
-   <Setter Property="FontWeight" Value="SemiBold"/>
-   <Setter Property="MinHeight" Value="48"/>
-   <Setter Property="Margin" Value="0,0,10,0"/>
-   <Setter Property="Cursor" Value="Hand"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-    <Border x:Name="Choice" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="3" Padding="12,10">
-     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-    </Border>
-    <ControlTemplate.Triggers>
-     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Choice" Property="Background" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Choice" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/></Trigger>
-     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Choice" Property="BorderThickness" Value="2"/></Trigger>
-     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
-    </ControlTemplate.Triggers>
-   </ControlTemplate></Setter.Value></Setter>
+  <Style x:Key="PresetChoiceStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
+   <Setter Property="MinHeight" Value="38"/><Setter Property="Margin" Value="0,0,8,0"/>
   </Style>
   <Style x:Key="CategoryChoiceStyle" TargetType="RadioButton" BasedOn="{StaticResource PresetChoiceStyle}">
-   <Setter Property="MinHeight" Value="38"/><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="Normal"/><Setter Property="Margin" Value="0,0,6,0"/>
+   <Setter Property="MinHeight" Value="36"/><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="Normal"/><Setter Property="Margin" Value="0,0,6,6"/>
   </Style>
  </UserControl.Resources>
  <Grid Margin="28,22,28,24">
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <StackPanel Margin="0,0,0,14">
-   <TextBlock Text="{DynamicResource Str.OptimizeTitle}" Style="{StaticResource SectionLabelStyle}"/>
+   <TextBlock Text="{DynamicResource Str.OptimizeTitle}" Style="{StaticResource PageTitleStyle}"/>
    <TextBlock Text="{DynamicResource Str.OptIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
   </StackPanel>
   <Border x:Name="PresetControlsCard" Grid.Row="1" Style="{StaticResource CardStyle}" Padding="14,12" Margin="0,0,0,12">
@@ -89,7 +73,7 @@
                                     MinWidth="72" Height="34" Margin="8,0,0,0"
                                     Click="ClearAll_Click"/>
                         </StackPanel>
-                    </Grid><UniformGrid Columns="6" Grid.Row="1" Margin="0,0,10,8">
+                    </Grid><WrapPanel Grid.Row="1" Margin="0,0,10,2">
                         <RadioButton x:Name="AllGroups" Content="{DynamicResource Str.GroupAll}" GroupName="grpfilter" IsChecked="True" Tag=""
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                         <RadioButton Content="{DynamicResource Str.GroupKeyboardMouse}" GroupName="grpfilter" Tag="键鼠"
@@ -102,7 +86,7 @@
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                         <RadioButton Content="{DynamicResource Str.GroupSystem}" GroupName="grpfilter" Tag="系统与调度"
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
-                    </UniformGrid>
+                    </WrapPanel>
                     <WrapPanel Grid.Row="2" Margin="0,0,0,12">
                         <ComboBox x:Name="ScopeFilter" Width="170" Style="{StaticResource SelectComboBoxStyle}" SelectedIndex="0" SelectionChanged="ScopeFilter_Changed"
                                   AutomationProperties.Name="{DynamicResource Str.OptFilterLabel}">
@@ -172,7 +156,7 @@
                                             Visibility="{Binding RequiresAdmin, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="{DynamicResource Str.Admin}"
                                                    Foreground="{DynamicResource WarningBrush}"
-                                                   FontSize="12"/>
+                                                   FontSize="13"/>
                                     </Border>
                                     <Border
                                             Margin="0,6,8,0"
@@ -182,15 +166,15 @@
                                             Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="{DynamicResource Str.NeedsReboot}"
                                                    Foreground="{DynamicResource AccentBrush}"
-                                                   FontSize="12"/>
+                                                   FontSize="13"/>
                                     </Border>
                                     </WrapPanel></StackPanel>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                                        <TextBlock Text="{Binding StatusText}" FontSize="12" VerticalAlignment="Center" Margin="8,0">
+                                        <TextBlock Text="{Binding StatusText}" FontSize="13" VerticalAlignment="Center" Margin="8,0">
                                         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                         </TextBlock>
                                         <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
-                                        <TextBlock Text="{Binding VerdictBadge}" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Text="{Binding VerdictBadge}" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
                                     </StackPanel>
                                     <CheckBox Grid.Column="2"
                                               Style="{StaticResource ToggleSwitchStyle}"

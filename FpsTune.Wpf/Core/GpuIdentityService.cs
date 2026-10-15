@@ -19,6 +19,7 @@ public sealed record GpuNamePreset(string Name, string Family)
 {
     public string Description => "NVIDIA GeForce " + Name;
     public string Series => Str.T("Str.GpuIdentitySeries", Family);
+    public bool IsRecommended => Name is "GTX 750 Ti" or "GTX 1050 Ti";
 }
 public sealed record GpuIdentityResult(bool Ok, bool Changed, string Message, string? BackupFile);
 
@@ -28,8 +29,8 @@ public static class GpuIdentityService
     public const string TargetDescription = "NVIDIA GeForce GTX 1050 Ti";
     public static IReadOnlyList<GpuNamePreset> Presets { get; } = Array.AsReadOnly(new[]
     {
-        new GpuNamePreset("GTX 750 Ti", "GTX 700"), new("GTX 950", "GTX 900"),
-        new("GTX 960", "GTX 900"), new("GTX 1050 Ti", "GTX 10"),
+        new GpuNamePreset("GTX 750 Ti", "GTX 700"), new("GTX 1050 Ti", "GTX 10"),
+        new("GTX 950", "GTX 900"), new("GTX 960", "GTX 900"),
         new("GTX 1060 6GB", "GTX 10"), new("GTX 1650", "GTX 16"),
         new("GTX 1660 SUPER", "GTX 16"), new("RTX 2060", "RTX 20")
     });

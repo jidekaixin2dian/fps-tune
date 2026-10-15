@@ -456,7 +456,7 @@ public partial class MainWindow : Window
             return;
 
         // 低配模式: 跳过滑入/淡入动画
-        if (UiPerformance.LowSpec)
+        if (UiPerformance.LowSpec || !SystemParameters.ClientAreaAnimation)
         {
             PageHost.Opacity = 1;
             PageHost.Content = page;

@@ -34,14 +34,14 @@
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="WeChatNameText"
                                Text="记得开心1点"
-                               FontSize="12"
+                               FontSize="13"
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,3,0,0"/>
                 </StackPanel>
                 <Button Content="✕"
                         Style="{StaticResource CaptionButtonStyle}"
                         Width="28" Height="28"
-                        FontSize="12"
+                        FontSize="13"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
                         Click="Close_Click"/>
             </Grid>
@@ -58,12 +58,12 @@
 
             <TextBlock x:Name="WeChatIdText"
                        Text="{DynamicResource Str.WeChatId}"
-                       FontSize="12"
+                       FontSize="13"
                        Foreground="{DynamicResource TextMutedBrush}"
                        Margin="0,14,0,2"
                        HorizontalAlignment="Center"/>
             <TextBlock Text="{DynamicResource Str.WeChatPurpose}"
-                       FontSize="12"
+                       FontSize="13"
                        Foreground="{DynamicResource TextMutedBrush}"
                        Margin="0,0,0,14"
                        HorizontalAlignment="Center"/>

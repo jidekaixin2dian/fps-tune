@@ -54,7 +54,7 @@
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="SubTextBlock"
                                Text="{DynamicResource Str.AppName}"
-                               FontSize="12"
+                               FontSize="13"
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,2,0,0"/>
                 </StackPanel>

@@ -15,7 +15,7 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="{DynamicResource Str.NavBackup}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.NavBackup}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.BackupIntro}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
             </StackPanel>
@@ -49,7 +49,7 @@
                     <TextBlock Text="{DynamicResource Str.BackupDir}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="BackupDirText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
-                               FontFamily="{StaticResource FontBody}" FontSize="12"
+                               FontFamily="{StaticResource FontBody}" FontSize="13"
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <Button Content="{DynamicResource Str.OpenArrow}"
                             Style="{StaticResource GhostButtonStyle}"
@@ -63,7 +63,7 @@
                     <TextBlock Text="{DynamicResource Str.GuiTempDir}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="TempDirText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
-                               FontFamily="{StaticResource FontBody}" FontSize="12"
+                               FontFamily="{StaticResource FontBody}" FontSize="13"
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <Button Content="{DynamicResource Str.OpenArrow}"
                             Style="{StaticResource GhostButtonStyle}"
@@ -92,7 +92,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.ChangeAuditTitle}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.ChangeAuditHint}"
-                                   Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                   Style="{StaticResource MutedTextStyle}" FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Button Content="{DynamicResource Str.ChangeAuditRefresh}"
                             Style="{StaticResource GhostButtonStyle}"
@@ -112,10 +112,10 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Detail}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{Binding NowText}" FontSize="12" VerticalAlignment="Center" Margin="14,0,0,0">
+                                    <TextBlock Grid.Column="1" Text="{Binding NowText}" FontSize="13" VerticalAlignment="Center" Margin="14,0,0,0">
                                         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/><Style.Triggers><DataTrigger Binding="{Binding OptimizedNow}" Value="False"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
                                 </Grid>
                             </Border>
@@ -164,11 +164,11 @@
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="{Binding FileName}"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       FontFamily="{StaticResource FontBody}" FontSize="12"
+                                                       FontFamily="{StaticResource FontBody}" FontSize="13"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding FileName}"/>
                                             <TextBlock Text="{Binding LastWriteText}"
                                                        Foreground="{DynamicResource TextMutedBrush}"
-                                                       FontSize="12" Margin="0,2,0,0"/>
+                                                       FontSize="13" Margin="0,2,0,0"/>
                                         </StackPanel>
                                         <Border Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
                                             <Border.Style>
@@ -186,7 +186,7 @@
                                             </Border.Style>
                                             <TextBlock Text="{Binding StateText}"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"
-                                                       FontSize="12"/>
+                                                       FontSize="13"/>
                                         </Border>
                                     </Grid>
                                 </Border>

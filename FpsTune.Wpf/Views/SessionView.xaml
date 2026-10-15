@@ -16,7 +16,7 @@
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <StackPanel>
-                <TextBlock Text="{DynamicResource Str.NavSession}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.NavSession}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.SessionIntro}"
                            Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0">
@@ -85,11 +85,11 @@
                         <TextBox x:Name="TargetSecondsBox" Text="60" Width="80" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
                         <Button x:Name="ReuseConditionsButton" Content="{DynamicResource Str.ConditionReuse}" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0" Click="ReuseConditions_Click"/>
                     </WrapPanel>
-                    <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/>
+                    <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="13" Margin="0,8,0,0"/>
                 </StackPanel>
                 <TextBlock x:Name="RunStateText"
                            Text="{DynamicResource Str.SessionReady}"
-                           Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap"
+                           Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap"
                            Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
@@ -141,7 +141,7 @@
                                        FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                         <Canvas x:Name="VramChart" Height="60" Margin="0,8,0,0"/>
-                        <TextBlock x:Name="VramTotalText" Text="" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                        <TextBlock x:Name="VramTotalText" Text="" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -178,13 +178,13 @@
                                         </Ellipse>
                                         <TextBlock Text="{Binding Title}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="8,0,0,0"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding KindLabel}" FontSize="12" Margin="10,0,0,0"
+                                        <TextBlock Text="{Binding KindLabel}" FontSize="13" Margin="10,0,0,0"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextMutedBrush}"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding Detail}" TextWrapping="Wrap" Margin="15,6,0,0"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="{Binding WindowText}" FontSize="12" Margin="15,4,0,0"
+                                    <TextBlock Text="{Binding WindowText}" FontSize="13" Margin="15,4,0,0"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
                             </Border>
@@ -234,10 +234,10 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding Name}" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding MetaText}" FontSize="12"
+                                    <TextBlock Text="{Binding MetaText}" FontSize="13"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="12"
+                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="13"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
@@ -246,7 +246,7 @@
                 </ListBox>
                 <TextBlock x:Name="HistoryEmptyText" Grid.Row="1"
                            Text="{DynamicResource Str.NoSessionsYet}"
-                           FontSize="12" Foreground="{DynamicResource TextMutedBrush}"
+                           FontSize="13" Foreground="{DynamicResource TextMutedBrush}"
                            HorizontalAlignment="Center" Margin="0,18,0,18" TextWrapping="Wrap" MaxWidth="460"
                            TextAlignment="Center"/>
             </Grid>
@@ -278,7 +278,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
-                <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,8,0,0"/>
+                <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="13" Margin="0,8,0,0"/>
                 <TextBlock x:Name="CompareConditionsText" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,8,0,10" Visibility="Collapsed"/>
                 <!-- 表头：四列含义不再依赖上方提示文本反推 -->
                 <Grid Margin="0,10,0,0">
@@ -288,10 +288,10 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.CompareHeaderMetric}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Text="{DynamicResource Str.CompareHeaderMetric}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
                 </Grid>
                 <ItemsControl x:Name="CompareRows" Margin="0,4,0,0">
                     <ItemsControl.ItemTemplate>
@@ -303,16 +303,16 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Metric}" FontWeight="{StaticResource SmallEmphasisWeight}" FontSize="12"
+                                <TextBlock Text="{Binding Metric}" FontWeight="{StaticResource SmallEmphasisWeight}" FontSize="13"
                                            TextWrapping="Wrap" Margin="0,0,8,0"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock Grid.Column="1" Text="{Binding AVal}" FontSize="12" FontFamily="{StaticResource FontBody}"
+                                <TextBlock Grid.Column="1" Text="{Binding AVal}" FontSize="13" FontFamily="{StaticResource FontBody}"
                                            TextWrapping="Wrap" Margin="0,0,8,0"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Grid.Column="2" Text="{Binding BVal}" FontSize="12" FontFamily="{StaticResource FontBody}"
+                                <TextBlock Grid.Column="2" Text="{Binding BVal}" FontSize="13" FontFamily="{StaticResource FontBody}"
                                            TextWrapping="Wrap" Margin="0,0,8,0"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                <TextBlock Grid.Column="3" Text="{Binding Delta}" FontSize="12" FontFamily="{StaticResource FontBody}"
+                                <TextBlock Grid.Column="3" Text="{Binding Delta}" FontSize="13" FontFamily="{StaticResource FontBody}"
                                            Foreground="{DynamicResource AccentBrush}"/>
                             </Grid>
                         </DataTemplate>

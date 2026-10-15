@@ -828,7 +828,7 @@
     <s:String x:Key="Str.GpuIdentityAlready">当前设备已使用所选名称。</s:String>
     <s:String x:Key="Str.GpuIdentityWriteFailed">显卡名称未修改成功。</s:String>
     <s:String x:Key="Str.GpuIdentityApplied">已改为 {0}。重启电脑后生效。</s:String>
-    <s:String x:Key="Str.GpuIdentityTitle">显卡名称</s:String>
+    <s:String x:Key="Str.GpuIdentityTitle">更改显卡名称</s:String>
     <s:String x:Key="Str.GpuIdentityIntro">选择设备与目标名称，预览后应用；原名称会自动备份。</s:String>
     <s:String x:Key="Str.GpuIdentityDevice">选择显卡</s:String>
     <s:String x:Key="Str.GpuIdentityApply">应用所选名称</s:String>
@@ -1154,4 +1154,5 @@
     <s:String x:Key="Str.PowerWifiLevel">省电等级 {0}（接电）</s:String>
     <s:String x:Key="Str.PowerDiskAwake">从不休眠（接电）</s:String>
     <s:String x:Key="Str.PowerDiskTimeout">{0} 秒后休眠（接电）</s:String>
+    <s:String x:Key="Str.GpuIdentityRecommended">推荐</s:String>
 </ResourceDictionary>

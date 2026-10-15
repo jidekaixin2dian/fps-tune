@@ -16,6 +16,54 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ReadabilityAndFramesUiTests
 {
     [Fact]
+    public void Disclosure_header_hits_arrow_text_and_blank_space_and_animates_both_directions()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var guide = new Expander { Header = "展开与收起", Content = new TextBlock { Text = "内容", Height = 100 }, Margin = new Thickness(16) };
+            var window = new Window { Content = guide, Width = 640, Height = 360 };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
+            var panel = (Views.Controls.DisclosurePanel)guide.Template.FindName("ExpandSite", guide);
+            var header = (System.Windows.Controls.Primitives.ToggleButton)guide.Template.FindName("HeaderSite", guide);
+            var provider = (System.Windows.Automation.Provider.IToggleProvider)new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(header)
+                .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle);
+            void CheckHeader()
+            {
+                window.UpdateLayout();
+                foreach (var x in new[] { 7d, 42d, header.ActualWidth - 8 })
+                {
+                    var hit = (DependencyObject)header.InputHitTest(new Point(x, header.ActualHeight / 2));
+                    while (hit is not null && !ReferenceEquals(hit, header)) hit = VisualTreeHelper.GetParent(hit);
+                    Assert.Same(header, hit);
+                }
+                Assert.Equal(new Thickness(0), ((Border)header.Template.FindName("HeaderBorder", header)).BorderThickness);
+                Assert.NotNull(header.FocusVisualStyle); Assert.True(header.Focusable);
+            }
+            try
+            {
+                Views.Controls.DisclosurePanel.AnimationEnabledOverride = true;
+                CheckHeader(); provider.Toggle();
+                Assert.True(guide.IsExpanded);
+                DlssFeedbackTests.PumpUntil(() => panel.Reveal is > 0 and < 1);
+                window.UpdateLayout(); Assert.InRange(panel.ActualHeight, 0.01, 111.99);
+                DlssFeedbackTests.PumpUntil(() => panel.Reveal == 1);
+                CheckHeader(); provider.Toggle(); Assert.False(guide.IsExpanded);
+                DlssFeedbackTests.PumpUntil(() => panel.Reveal is > 0 and < 1);
+                Assert.Equal(Visibility.Visible, panel.Visibility); Assert.False(panel.IsEnabled);
+                provider.Toggle(); // Reverse a collapse in progress without hiding expanded content.
+                DlssFeedbackTests.PumpUntil(() => panel.Reveal == 1); Assert.True(guide.IsExpanded);
+                provider.Toggle(); DlssFeedbackTests.PumpUntil(() => panel.Visibility == Visibility.Collapsed);
+                CheckHeader();
+                Views.Controls.DisclosurePanel.AnimationEnabledOverride = null; // Low-spec test mode: immediate, still clickable.
+                provider.Toggle(); Assert.Equal(1, panel.Reveal); Assert.True(panel.IsEnabled);
+                provider.Toggle(); Assert.Equal(Visibility.Collapsed, panel.Visibility);
+            }
+            finally { Views.Controls.DisclosurePanel.AnimationEnabledOverride = null; window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Detection_sections_filter_without_long_page_and_gpu_presets_preview_readable_device_names()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
@@ -63,6 +111,8 @@ public sealed class ReadabilityAndFramesUiTests
                 Descendants(display).OfType<RadioButton>().Single(b => b.Tag as string == "identity").IsChecked = true;
                 var presets = (ListBox)display.FindName("GpuIdentityPresets"); presets.SelectedIndex = 0; window.UpdateLayout();
                 Assert.Equal(8, presets.Items.Count); Assert.Equal("NVIDIA GeForce GTX 750 Ti", ((TextBlock)display.FindName("GpuIdentityPreviewName")).Text);
+                Assert.Equal(new[] { "GTX 750 Ti", "GTX 1050 Ti" }, presets.Items.Cast<GpuNamePreset>().Where(p => p.IsRecommended).Select(p => p.Name));
+                Assert.All(presets.Items.Cast<GpuNamePreset>().Take(2), p => Assert.True(p.IsRecommended));
                 Assert.True(devices.ActualWidth <= 600);
                 Assert.Contains(Descendants(devices).OfType<TextBlock>(), t => t.Text == "NVIDIA GeForce RTX 4060");
                 Assert.DoesNotContain(Descendants(devices).OfType<TextBlock>(), t => t.Text.Contains("InstanceId"));
@@ -99,6 +149,10 @@ public sealed class ReadabilityAndFramesUiTests
                         window.NavigateTo(route); window.UpdateLayout();
                         var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
                         DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
+                        var titleKey = route switch { "detect" => "Str.NavDetect", "opt" => "Str.OptimizeTitle", "display" => "Str.DisplayTitle",
+                            "session" => "Str.NavSession", "ab" => "Str.NavAb", "backup" => "Str.NavBackup", "tools" => "Str.NavTools", "settings" => "Str.NavSettings", _ => null };
+                        if (titleKey is not null)
+                            Assert.Contains(Descendants(page).OfType<TextBlock>(), t => t.Text == Str.T(titleKey) && t.FontSize == 22);
                         if (page is ConsoleView)
                             foreach (var name in new[] { "CpuText", "MemoryText", "GpuText", "TunedText" })
                                 Assert.Equal("Segoe UI, Microsoft YaHei UI", ((TextBlock)page.FindName(name)).FontFamily.Source);
@@ -257,7 +311,8 @@ public sealed class ReadabilityAndFramesUiTests
                 DisplayQualityService.BackupDirOverride = Path.Combine(root, "display-quality"); DisplayTopology.Override = () => [];
                 AppState.Items = ItemCatalog.All.Where(d => d.Available).Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription,
                     d.DisplaySideEffect, d.Admin, d.Reboot, false, "test original", false, d.Group)).ToList();
-                app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown, Resources = DlssFeedbackTests.LoadResources() };
+                var compiledApp = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+                compiledApp.InitializeComponent(); app = compiledApp;
                 SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(app.Dispatcher));
                 LangService.Apply(LangService.ZhCn); DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
                 SettingsService.Current.HotkeyEnabled = false;
@@ -292,9 +347,9 @@ public sealed class ReadabilityAndFramesUiTests
     {
         window.UpdateLayout();
         var texts = Descendants(window).OfType<TextBlock>().Where(t => t.IsVisible && !string.IsNullOrWhiteSpace(t.Text)).ToArray();
-        Assert.DoesNotContain(texts, t => t.FontSize < 12);
+        Assert.DoesNotContain(texts, t => t.FontSize < 13);
         report.Add(new { page = name, count = texts.Length, minFontDip = texts.Select(t => t.FontSize).DefaultIfEmpty(12).Min(),
-            below12 = texts.Where(t => t.FontSize < 12).Select(t => new { t.Text, t.FontSize }).ToArray() });
+            below13 = texts.Where(t => t.FontSize < 13).Select(t => new { t.Text, t.FontSize }).ToArray() });
         Render((FrameworkElement)window.FindName("ChromeRoot"), name);
     }
     private static void Render(FrameworkElement element, string name)

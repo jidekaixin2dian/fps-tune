@@ -13,7 +13,7 @@
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
                     <TextBlock Text="{TemplateBinding NotificationTitle}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                    <TextBlock Text="{TemplateBinding NotificationSubtitle}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <TextBlock Text="{TemplateBinding NotificationSubtitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 </StackPanel>
                 <Button x:Name="FoldButton" Grid.Column="1" Content="{TemplateBinding FoldLabel}"
                         Style="{DynamicResource GhostButtonStyle}" Padding="8,5" VerticalAlignment="Top"/>

@@ -32,7 +32,7 @@
                               AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
                               SelectionChanged="GameSwitcher_SelectionChanged"/>
                     <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12.5" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
@@ -132,16 +132,16 @@
                                 <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" Style="{StaticResource ItemTitleStyle}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
                                     <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
-                                    <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="12"
+                                    <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="13"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
                                                Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
                                     <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
-                                    <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="12" Margin="0,3,0,0"
+                                    <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="13" Margin="0,3,0,0"
                                                Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
-                                <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="13" VerticalAlignment="Center"
                                            Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
-                                <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="12" VerticalAlignment="Center">
+                                <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="13" VerticalAlignment="Center">
                                     <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                 </TextBlock>
                                 <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" IsEnabled="{Binding Item.Available}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
@@ -159,7 +159,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                         <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
                     </Grid>

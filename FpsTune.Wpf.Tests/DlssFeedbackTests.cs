@@ -259,6 +259,8 @@ public sealed class DlssFeedbackTests
         foreach (var attribute in document.Root.Attributes().Where(a => a.IsNamespaceDeclaration))
             dictionary.SetAttributeValue(attribute.Name, attribute.Value.StartsWith("clr-namespace:", StringComparison.Ordinal)
                 ? attribute.Value + ";assembly=FpsTune" : attribute.Value);
+        foreach (var element in dictionary.Descendants().Where(e => e.Name.NamespaceName.StartsWith("clr-namespace:", StringComparison.Ordinal)).ToArray())
+            element.Name = XName.Get(element.Name.LocalName, element.Name.NamespaceName + ";assembly=FpsTune");
         foreach (var source in dictionary.Descendants().Attributes("Source"))
             source.Value = "pack://application:,,,/FpsTune;component/" + source.Value;
         return (ResourceDictionary)XamlReader.Parse(dictionary.ToString());

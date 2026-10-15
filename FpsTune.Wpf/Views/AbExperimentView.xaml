@@ -21,14 +21,14 @@
         <Grid Grid.Row="0" Margin="0,0,0,16">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <StackPanel>
-                <TextBlock Text="{DynamicResource Str.NavAb}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.NavAb}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.AbIntro}"
                            Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 <!-- P2-12：PresentMon 前置可用性（只读探测；缺失时给官方命令，不代为安装） -->
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <TextBlock x:Name="PresentMonStatusText" Text="{DynamicResource Str.PmChecking}"
                                Style="{StaticResource MutedTextStyle}"
-                               FontSize="12" VerticalAlignment="Center"/>
+                               FontSize="13" VerticalAlignment="Center"/>
                     <Button x:Name="PmCopyButton" Content="{DynamicResource Str.PmCopyCmd}"
                             Style="{StaticResource GhostButtonStyle}" MinWidth="84" Height="26" Padding="8,0"
                             Margin="10,0,0,0" Visibility="Collapsed" Click="PmCopyButton_Click"/>
@@ -95,15 +95,15 @@
                                             </Ellipse>
                                             <TextBlock Text="{Binding Title}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="8,0,0,0"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="12" Margin="10,0,0,0"
+                                            <TextBlock Text="{Binding StatusText}" FontSize="13" Margin="10,0,0,0"
                                                        VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding ResultText}" FontSize="12" Margin="15,5,0,0"
+                                        <TextBlock Text="{Binding ResultText}" FontSize="13" Margin="15,5,0,0"
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                                         <StackPanel Orientation="Horizontal" Margin="15,6,0,0">
-                                            <TextBlock Text="{DynamicResource Str.LinkSession}" FontSize="12" VerticalAlignment="Center"
+                                            <TextBlock Text="{DynamicResource Str.LinkSession}" FontSize="13" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                             <ComboBox ItemsSource="{Binding SessionOptions}"
                                                       SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
@@ -138,7 +138,7 @@
                          HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 <TextBlock x:Name="StatusText"
                            Text="{DynamicResource Str.AbReady}"
-                           FontSize="12.5"
+                           FontSize="13"
                            FontWeight="{StaticResource SmallEmphasisWeight}"
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            TextWrapping="Wrap"
@@ -209,11 +209,11 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="12" Margin="6,0,14,0"
+                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="13" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource ChartSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="1% LOW" FontSize="12" FontFamily="{StaticResource FontBody}" Margin="6,0,14,0"
+                        <TextBlock Text="1% LOW" FontSize="13" FontFamily="{StaticResource FontBody}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Click="RefreshHistory_Click"/>
@@ -223,7 +223,7 @@
                     <Canvas x:Name="HistoryCanvas"/>
                     <TextBlock x:Name="HistoryEmptyText"
                                Text="{DynamicResource Str.NoHistoryData}"
-                               FontSize="12"
+                               FontSize="13"
                                Foreground="{DynamicResource TextMutedBrush}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center"/>
@@ -238,7 +238,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.CustomRunTitle}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.CustomRunHint}"
-                                   Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                   Style="{StaticResource MutedTextStyle}" FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Button x:Name="CustomRunButton" Content="{DynamicResource Str.CustomRunButton}"
                             Style="{StaticResource PrimaryButtonStyle}" MinWidth="132" Height="36"
@@ -274,8 +274,8 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding ItemsText}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding MetaText}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0"/>
+                                        <TextBlock Text="{Binding ItemsText}" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding MetaText}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" Text="{Binding DeltaText}" FontSize="14" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                VerticalAlignment="Center" Margin="14,0,0,0">

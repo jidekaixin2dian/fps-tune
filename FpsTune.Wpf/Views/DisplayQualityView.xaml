@@ -4,28 +4,15 @@
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <!-- 预设卡片：与优化页 PresetChoice 同语言，两行内容（名称 + 说明） -->
-        <Style x:Key="PresetCard" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-            <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-            <Setter Property="Margin" Value="0,0,10,10"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                <Border x:Name="ChoiceBorder" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="14,10">
-                    <ContentPresenter VerticalAlignment="Center"/>
-                </Border>
-                <ControlTemplate.Triggers>
-                    <Trigger Property="IsChecked" Value="True"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/></Trigger>
-                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ChoiceBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate></Setter.Value></Setter>
+        <Style x:Key="PresetCard" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="16,12"/><Setter Property="Margin" Value="0,0,10,10"/>
         </Style>
         <Style x:Key="PresetCardText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="15"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
         </Style>
         <Style x:Key="PresetCardNote" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Margin" Value="0,3,0,0"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
@@ -36,24 +23,8 @@
         </Style>
         <!-- 二级页签（P2-13 反馈：卡片太多滚动太长，按组切换）。
              0.1.12：页签带状态徽标——不点进去也能看到每组的当前状态 -->
-        <Style x:Key="SubTabStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-            <Setter Property="FontSize" Value="13.5"/>
-            <Setter Property="MinHeight" Value="34"/>
-            <Setter Property="Margin" Value="0,0,8,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Focusable" Value="True"/>
-            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                <Border x:Name="Tab" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="4" Padding="14,6">
-                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <ControlTemplate.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Tab" Property="Background" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/></Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate></Setter.Value></Setter>
-        </Style>
-        <!-- 页签状态徽标：未选中 = accent 字浅底；选中（accent 实底页签）= 深字透明底保证对比 -->
+        <Style x:Key="SubTabStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}"/>
+        <!-- 页签状态徽标：使用主题强调色，选中时保持文字对比。 -->
         <Style x:Key="TabBadgeStyle" TargetType="Border">
             <Setter Property="CornerRadius" Value="{StaticResource RadiusChip}"/>
             <Setter Property="Padding" Value="6,1"/>
@@ -69,11 +40,11 @@
             </Style.Triggers>
         </Style>
         <Style x:Key="TabBadgeTextStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -98,7 +69,7 @@
                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
                         Padding="10,4" Visibility="Collapsed">
                     <TextBlock x:Name="GameChipText" Text=""
-                               FontSize="12"
+                               FontSize="13"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </Border>
             </Grid>
@@ -518,7 +489,7 @@
                         <TextBlock x:Name="DriverAdviceText" Text="" Style="{StaticResource MutedTextStyle}"
                                    Margin="0,10,0,0" TextWrapping="Wrap"/>
                         <TextBlock x:Name="DriverAdviceSourceText" Text="" Style="{StaticResource MutedTextStyle}"
-                                   Margin="0,10,0,0" TextWrapping="Wrap" FontSize="12"/>
+                                   Margin="0,10,0,0" TextWrapping="Wrap" FontSize="13"/>
                     </StackPanel>
                 </Border>
 
@@ -545,7 +516,7 @@
                             <TextBlock Text="{DynamicResource Str.ManualAmdItem5}" Style="{StaticResource ManualItem}"/>
                             <TextBlock Text="{DynamicResource Str.ManualAmdItem6}" Style="{StaticResource ManualItem}"/>
                             <TextBlock Text="{DynamicResource Str.ManualAmdItem7}" Style="{StaticResource ManualItem}"/>
-                            <TextBlock Text="{DynamicResource Str.ManualAmdNote}" Style="{StaticResource ManualItem}" FontSize="12"/>
+                            <TextBlock Text="{DynamicResource Str.ManualAmdNote}" Style="{StaticResource ManualItem}" FontSize="13"/>
                         </StackPanel>
 
                         <!-- Intel：Graphics Software 手动清单 -->
@@ -555,7 +526,7 @@
                             <TextBlock Text="{DynamicResource Str.ManualIntelItem2}" Style="{StaticResource ManualItem}"/>
                             <TextBlock Text="{DynamicResource Str.ManualIntelItem3}" Style="{StaticResource ManualItem}"/>
                             <TextBlock Text="{DynamicResource Str.ManualIntelItem4}" Style="{StaticResource ManualItem}"/>
-                            <TextBlock Text="{DynamicResource Str.ManualIntelNote}" Style="{StaticResource ManualItem}" FontSize="12"/>
+                            <TextBlock Text="{DynamicResource Str.ManualIntelNote}" Style="{StaticResource ManualItem}" FontSize="13"/>
                         </StackPanel>
 
                         <!-- 识别不出厂商：明说，指向 ICC 兜底 -->
@@ -585,7 +556,7 @@
                                     <ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
                                 </ControlTemplate></Setter.Value></Setter>
                             </Style></ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,6,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+                            <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/><TextBlock Text="{DynamicResource Str.GpuIdentityRecommended}" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="10,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsRecommended}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ListBox.ItemTemplate>
                         </ListBox>
                         <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="8" Padding="16" Margin="0,10,0,18"><StackPanel>
                             <TextBlock Text="{DynamicResource Str.GpuIdentityPreview}" Style="{StaticResource SectionLabelStyle}"/>

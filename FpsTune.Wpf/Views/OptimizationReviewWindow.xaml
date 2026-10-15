@@ -15,7 +15,7 @@
             <StackPanel Grid.Row="1" Margin="0,18,0,12">
                 <TextBlock x:Name="SummaryText" Foreground="{DynamicResource AccentBrush}" FontSize="15"/>
                 <TextBlock x:Name="HiddenSelectionText" Foreground="{DynamicResource WarningBrush}" Margin="0,8,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
-                <TextBlock Text="{DynamicResource Str.ReviewSnapshotHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="12"/>
+                <TextBlock Text="{DynamicResource Str.ReviewSnapshotHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="13"/>
             </StackPanel>
             <ListBox x:Name="ReviewItems" Grid.Row="2" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -29,13 +29,13 @@
                         <StackPanel>
                             <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" TextWrapping="Wrap" Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Requirements}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Requirements}" Foreground="{DynamicResource WarningBrush}" FontSize="13" VerticalAlignment="Center"/>
                             </Grid>
-                            <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                            <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0">
+                            <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                            <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0">
                                 <Run Text="{DynamicResource Str.ReviewCurrent}"/><Run Text=" "/><Run Text="{Binding Current, Mode=OneWay}"/>
                             </TextBlock>
-                            <TextBlock Text="{Binding SideEffect}" Foreground="{DynamicResource WarningBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                            <TextBlock Text="{Binding SideEffect}" Foreground="{DynamicResource WarningBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/>
                         </StackPanel>
                     </Border>
                 </DataTemplate></ListBox.ItemTemplate>
