@@ -35,7 +35,8 @@ public sealed class GpuIdentityTests : IDisposable
             Assert.Equal(PathPrefix + Instance, path);
             Assert.Equal("DeviceDesc", name);
             Assert.Equal(RegistryValueKind.String, kind);
-            Assert.Single(BackupService.ListBackups()); // 每一次写入之前均已持久化原值
+            Assert.Contains(BackupService.EnumeratePendingRecords(), pending =>
+                pending.Record.OldValue?.ToString() == _description || pending.Record.PostValue?.ToString() == _description);
             _writes++;
             if (_failWrite) throw new UnauthorizedAccessException("injected permission denial");
             _description = Assert.IsType<string>(value);
@@ -48,6 +49,30 @@ public sealed class GpuIdentityTests : IDisposable
         RegistryHelper.SnapshotOverride = null; RegistryHelper.SetOverride = null;
         BackupService.BackupDirOverride = null;
         if (Directory.Exists(_dir)) Directory.Delete(_dir, true);
+    }
+
+    [Fact]
+    public async Task Selected_models_can_change_twice_and_restore_the_original_description()
+    {
+        var original = _description;
+        foreach (var preset in GpuIdentityService.Presets.Take(2))
+        {
+            var result = await GpuIdentityService.ApplyAsync(Assert.Single(GpuIdentityService.GetDevices()), preset.Description);
+            Assert.True(result.Ok, result.Message); Assert.Equal(preset.Description, _description);
+        }
+        var restored = await GpuIdentityService.RestoreAsync();
+        Assert.Empty(restored.Failures); Assert.Equal(original, _description);
+    }
+
+    [Fact]
+    public void Device_labels_do_not_expose_internal_record_fields_and_unknown_presets_never_write()
+    {
+        var target = Assert.Single(GpuIdentityService.GetDevices());
+        Assert.Equal(target.DriverName, target.ToString());
+        Assert.Equal("NVIDIA GeForce RTX 3070", target.CurrentName);
+        Assert.Contains(GpuIdentityService.Presets, p => p.Name == "GTX 750 Ti");
+        Assert.Throws<ArgumentException>(() => { _ = GpuIdentityService.ApplyAsync(target, "unexpected arbitrary value"); });
+        Assert.Equal(0, _writes);
     }
 
     [Fact]

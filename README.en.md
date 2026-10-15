@@ -1,18 +1,27 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-## v0.2.8-beta: measurement, display and recovery improvements
+## v0.3.0-beta: a more consistent interface and practical controls
+
+A larger update; upgrading is recommended. Download the EXE installer first.
+
+- Consistent typography, searchable detection categories and a single status marker per check.
+- Eight GPU device-name presets including GTX 750 Ti, with a preview and original-name restoration.
+- System standby-cache cleanup, per-game frame caps, AC Wi-Fi performance and disk idle controls.
+- Beginner guides for performance sessions and A/B experiments; separate community and update prompts.
+
+## Previous updates
+
+### 0.2.8: measurement, display and recovery improvements
 
 - **Timed performance sessions**: record game resolution, quality / DLSS / frame cap and a fixed scene. Enter a duration to save automatically, or leave it blank to stop manually. Reuse past conditions and include them in JSON / CSV exports.
 - **Clearer comparisons**: compare average FPS, 1% low and P99 frame time, with explicit notices when games, scenes, quality, resolution or sampling conditions are missing or different. Conditions are user entries; a single difference does not establish an optimization benefit. Real FPS still requires official PresentMon.
 - **Multiple displays**: select the target for digital vibrance and ICC associations, preserve originals separately and restore each screen independently. Changing the primary display does not silently retarget a write; disconnected targets are disabled. ICC affects color-managed applications and some games ignore it. Configurations that cannot be switched safely, including system-level associations, remain unavailable with an explanation.
 - **Diagnostics and update recovery**: export scrubbed DLSS / 3D diagnostics with privileges, driver version, operation stage and before/after values. Protect settings and restore records before updating, then offer retry and rollback when the previous installer is available.
-
-## Previous updates
 
 ### 0.2.4: a major update
 
@@ -31,12 +40,12 @@ Available through a desktop interface and command-line tools.
 
 ## Versions and downloads
 
-Current version: **[v0.2.8-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)**. The 1.x line is unmaintained.
+Current version: **[v0.3.0-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.2.8.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/FpsTune-Setup-0.2.8.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/FpsTune-Setup-0.3.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -44,7 +53,7 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.2.8.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/SHA256SUMS-v0.2.8.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/SHA256SUMS-v0.3.0.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 From 0.2.4, portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
@@ -64,7 +73,7 @@ The branded installer lets you choose a destination, including during reinstalla
 ## Current features
 
 - **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
-- **Detection and system tuning**: 38 catalog items with current state, privileges, restart flags and side effects. Memory compression control is unavailable, with legacy restoration retained. Balanced includes 16 items; safe-only includes 4 without elevation. New AC CPU energy preference and maximum-state controls start unchecked.
+- **Detection and system tuning**: 40 catalog items with current state, privileges, restart flags and side effects. Memory compression control is unavailable, with legacy restoration retained. Balanced includes 16 items; safe-only includes 4 without elevation. New AC CPU energy preference and maximum-state controls start unchecked.
 - **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
 - **Display and quality**: per-game NVIDIA DRS / DLSS settings, digital vibrance for a selected display, 11 generated ICC presets or a custom `.icc` / `.icm`, and restoration of the original association. ICC works in color-managed applications; some games ignore it.
 - **GPU name experiment**: sets the NVIDIA Windows `DeviceDesc` to GTX 1050 Ti and backs up the original description. It does not change DXGI hardware IDs, driver capabilities or GPU performance. Whether a game uses that name needs measurement.

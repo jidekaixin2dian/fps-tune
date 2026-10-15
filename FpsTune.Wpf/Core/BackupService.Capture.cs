@@ -254,6 +254,8 @@ public static partial class BackupService
         {
             case "cpu-epp-ac":
             case "cpu-max-ac":
+            case "wifi-performance-ac":
+            case "disk-awake-ac":
             {
                 var plan = NativePowerSettings.RequireActiveGuid();
                 return new[] { new BackupRecord { Id = id, Kind = "power-setting", TargetPlanGuid = plan,

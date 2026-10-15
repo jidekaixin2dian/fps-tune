@@ -27,7 +27,7 @@
                     <Button x:Name="CommandSearchButton" Click="CommandSearch_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0"
                             ToolTip="{DynamicResource Str.CommandQuery}" AutomationProperties.Name="{DynamicResource Str.CommandQuery}">
                         <StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CommandSearch}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Ctrl+K" FontFamily="{StaticResource FontMono}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Ctrl+K" FontFamily="{StaticResource FontBody}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="16,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <TextBlock x:Name="AdminStatusText" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -54,7 +54,7 @@
                     <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Checked="Nav_Checked"/>
                 </StackPanel>
                 <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">
-                    <TextBlock Text="FPS TUNE" FontFamily="{StaticResource FontMono}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
+                    <TextBlock Text="FPS TUNE" FontFamily="{StaticResource FontBody}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/>
                     <TextBlock x:Name="SidebarVersionText" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,5,0,0"/>
                 </StackPanel>
             </Grid>

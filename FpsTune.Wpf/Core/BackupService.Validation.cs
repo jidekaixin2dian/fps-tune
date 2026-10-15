@@ -61,9 +61,11 @@ public static partial class BackupService
         {
             case "cpu-epp-ac":
             case "cpu-max-ac":
+            case "wifi-performance-ac":
+            case "disk-awake-ac":
                 EnsureNonRegistry(record, "power-setting", allowPower: true);
                 RequirePowerTarget(record);
-                Reject(record.OldPowerValue is null or < 0 or > 100 || record.PostPowerValue is < 0 or > 100,
+                Reject(record.OldPowerValue is null or < 0 || record.OldPowerValue > PowerOption.For(record.Id).Maximum || record.PostPowerValue is < 0 || record.PostPowerValue > PowerOption.For(record.Id).Maximum,
                     Str.T("Str.PowerBackupTargetInvalid"));
                 break;
             case "power-ultimate":

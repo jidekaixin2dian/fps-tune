@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +11,8 @@ namespace FpsTune.Wpf.Views;
 
 public partial class DetectView : UserControl
 {
-    private sealed record CheckItemViewModel(string Name, string Summary, Brush Foreground);
+    private sealed record CheckItemViewModel(string Name, string Summary, Brush Foreground, string Details = "");
+    private List<OptimizationItemViewModel> _detectedItems = new();
 
     private bool _hasSavedState;
     private bool _detectionInFlight;
@@ -338,7 +339,7 @@ public partial class DetectView : UserControl
     {
         AppState.DetectJson = null;
         AppState.Items = new List<OptimizationItem>();
-        DetectItemList.ItemsSource = new List<OptimizationItemViewModel>();
+        _detectedItems.Clear(); FilterDetectionItems();
         CheckList.ItemsSource = new List<object>();
         CpuText.Text = "--"; GpuText.Text = "--"; RamText.Text = "--"; OsText.Text = "--";
         LaptopText.Text = "--"; AdminText.Text = "--";
@@ -386,7 +387,7 @@ public partial class DetectView : UserControl
         var viewModels = AppState.Items
             .Select(i => new OptimizationItemViewModel(i))
             .ToList();
-        DetectItemList.ItemsSource = viewModels;
+        _detectedItems = viewModels; FilterDetectionItems();
 
         if (!showDetails)
             return;
@@ -463,32 +464,23 @@ public partial class DetectView : UserControl
         }
     }
 
-    // ---------- 页面滚轮穿透 ----------
-
-    // 概览列表在根 ScrollViewer 里按自然高度完全展开(自身永不需要滚动),
-    // 但其内部 ScrollViewer 仍会把鼠标滚轮标记为已处理, 页面因此"滚几格就停"。
-    // 统一在 Preview 阶段转发给根滚动。
-    private void ForwardWheelToRoot(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    private void DetectSection_Checked(object sender, RoutedEventArgs e)
     {
-        if (e.Delta == 0)
-            return;
-        RootScroll.ScrollToVerticalOffset(RootScroll.VerticalOffset - e.Delta);
-        e.Handled = true;
+        if (RootScroll is null || sender is not RadioButton { Tag: string section }) return;
+        RootScroll.Visibility = section == "overview" ? Visibility.Visible : Visibility.Collapsed;
+        DetectItemsSection.Visibility = section == "items" ? Visibility.Visible : Visibility.Collapsed;
+        DetectReportSection.Visibility = section == "report" ? Visibility.Visible : Visibility.Collapsed;
     }
-
-    // JSON 详情框自身可滚: 仅当已滚到对应方向的尽头时把滚轮还给页面。
-    private void TextBoxWheelToRoot(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    private void DetectFilter_Changed(object sender, RoutedEventArgs e) => FilterDetectionItems();
+    private void FilterDetectionItems()
     {
-        if (e.Delta == 0)
-            return;
-        var atTop = OutputBox.VerticalOffset <= 0.1;
-        var atBottom = OutputBox.VerticalOffset >= OutputBox.ExtentHeight - OutputBox.ViewportHeight - 0.1;
-        var leavingDown = e.Delta < 0 && atBottom;
-        var leavingUp = e.Delta > 0 && atTop;
-        if (!leavingDown && !leavingUp)
-            return; // 框内还有内容可滚, 保留默认行为
-        RootScroll.ScrollToVerticalOffset(RootScroll.VerticalOffset - e.Delta);
-        e.Handled = true;
+        if (DetectItemList is null || DetectFilterText is null || DetectGroup is null) return;
+        var query = DetectFilterText.Text.Trim();
+        var group = (DetectGroup.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
+        var filtered = _detectedItems.Where(i => (group.Length == 0 || i.Group == group)
+            && (query.Length == 0 || (i.Name + " " + i.Description).Contains(query, StringComparison.OrdinalIgnoreCase))).ToList();
+        DetectItemList.ItemsSource = filtered;
+        DetectItemCount.Text = Str.T("Str.DetectItemCount", filtered.Count, _detectedItems.Count);
     }
 
     private static IReadOnlyList<CheckItemViewModel> BuildCheckItems(JsonArray? checks)
@@ -509,8 +501,8 @@ public partial class DetectView : UserControl
             var statusLabel = status switch { "ok" => Str.T("Str.StatusOk"), "attention" => Str.T("Str.StatusPending"), "danger" => Str.T("Str.StatusError"), _ => status };
             var summary = string.IsNullOrWhiteSpace(status) && string.IsNullOrWhiteSpace(message)
                 ? Str.T("Str.StatusNotDetected")
-                : $"● {statusLabel}  {message}".Trim();
-            return new CheckItemViewModel(name, summary, GetStatusBrush(status));
+                : statusLabel;
+            return new CheckItemViewModel(name, summary, GetStatusBrush(status), message);
         }).ToList();
     }
 

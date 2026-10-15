@@ -49,7 +49,7 @@
                     <TextBlock Text="{DynamicResource Str.BackupDir}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="BackupDirText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
-                               FontFamily="{StaticResource FontMono}" FontSize="12"
+                               FontFamily="{StaticResource FontBody}" FontSize="12"
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <Button Content="{DynamicResource Str.OpenArrow}"
                             Style="{StaticResource GhostButtonStyle}"
@@ -63,7 +63,7 @@
                     <TextBlock Text="{DynamicResource Str.GuiTempDir}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="TempDirText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
-                               FontFamily="{StaticResource FontMono}" FontSize="12"
+                               FontFamily="{StaticResource FontBody}" FontSize="12"
                                TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <Button Content="{DynamicResource Str.OpenArrow}"
                             Style="{StaticResource GhostButtonStyle}"
@@ -77,7 +77,7 @@
                     <TextBlock Text="{DynamicResource Str.CurrentStatus}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="StatusText" Text="{DynamicResource Str.WaitingAction}"
                                Foreground="{DynamicResource AccentBrush}"
-                               FontFamily="{StaticResource FontMono}"
+                               FontFamily="{StaticResource FontBody}"
                                FontSize="14" FontWeight="{StaticResource SmallEmphasisWeight}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
@@ -164,7 +164,7 @@
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="{Binding FileName}"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       FontFamily="{StaticResource FontMono}" FontSize="12"
+                                                       FontFamily="{StaticResource FontBody}" FontSize="12"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding FileName}"/>
                                             <TextBlock Text="{Binding LastWriteText}"
                                                        Foreground="{DynamicResource TextMutedBrush}"

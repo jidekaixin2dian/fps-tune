@@ -14,10 +14,11 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
             <!-- ============ 设计令牌：字体 ============ -->
-            <FontFamily x:Key="FontDisplay">Segoe UI, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontBody">Segoe UI, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontMono">Cascadia Mono, Consolas, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontStat">Segoe UI, Microsoft YaHei UI</FontFamily>
+            <FontFamily x:Key="FontDisplay">Microsoft YaHei UI, Segoe UI</FontFamily>
+            <FontFamily x:Key="FontBody">Microsoft YaHei UI, Segoe UI</FontFamily>
+            <FontFamily x:Key="FontMono">Microsoft YaHei UI, Segoe UI</FontFamily>
+            <FontFamily x:Key="FontCode">Consolas, Microsoft YaHei UI</FontFamily>
+            <FontFamily x:Key="FontStat">Microsoft YaHei UI, Segoe UI</FontFamily>
             <!-- Small CJK labels must not resolve SemiBold to YaHei's full Bold face.
                  Medium retains Latin emphasis and lets CJK use its regular face. -->
             <FontWeight x:Key="SmallEmphasisWeight">Medium</FontWeight>
@@ -29,6 +30,8 @@
 
             <!-- Grayscale avoids RGB fringes on themed, translucent and wallpaper surfaces. -->
             <Style x:Key="WindowTypographyStyle" TargetType="Window">
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="14"/>
                 <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
                 <Setter Property="UseLayoutRounding" Value="True"/>
@@ -40,6 +43,25 @@
             <CornerRadius x:Key="RadiusControl">4</CornerRadius>
             <CornerRadius x:Key="RadiusNav">4</CornerRadius>
             <CornerRadius x:Key="RadiusCard">6</CornerRadius>
+
+            <Style TargetType="Expander">
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Expander">
+                    <StackPanel>
+                        <ToggleButton x:Name="HeaderSite" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Stretch" FocusVisualStyle="{x:Null}">
+                            <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
+                                <Border x:Name="HeaderBorder" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Path x:Name="Chevron" Data="M 0 0 L 4 4 L 0 8" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="6" Height="9" VerticalAlignment="Center" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5"/>
+                                    <ContentPresenter Grid.Column="1" Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" VerticalAlignment="Center"/>
+                                </Grid></Border>
+                                <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Chevron" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90"/></Setter.Value></Setter></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="HeaderBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
+                            </ControlTemplate></ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="ExpandSite" ContentSource="Content" Visibility="Collapsed" Margin="24,4,0,8"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers><Trigger Property="IsExpanded" Value="True"><Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers>
+                </ControlTemplate></Setter.Value></Setter>
+            </Style>
 
             <!-- ============ 画刷（运行时由 ThemeManager 按主题覆写；此处为深色初值） ============ -->
             <!-- 页面根背景统一透明: 渐变底铺在主窗口层, 页面在其上滑动 -->
@@ -248,6 +270,8 @@
                                 </ToggleButton>
                                 <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                                  ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
                                                   Margin="11,0,26,0" VerticalAlignment="Center" IsHitTestVisible="False"
                                                   TextBlock.Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True"
@@ -499,7 +523,7 @@
             </Style>
 
             <Style x:Key="MonoTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
-                <Setter Property="FontFamily" Value="{StaticResource FontMono}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontCode}"/>
                 <Setter Property="FontSize" Value="12"/>
                 <Setter Property="AcceptsReturn" Value="True"/>
                 <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>

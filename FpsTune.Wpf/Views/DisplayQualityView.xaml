@@ -475,7 +475,13 @@
                                     <StackPanel>
                                         <CheckBox x:Name="MainCapCheck" Content="{DynamicResource Str.FrameForeground}" Checked="FrameInputs_Changed" Unchecked="FrameInputs_Changed"/>
                                         <TextBox x:Name="MainCapBox" Text="144" MaxLength="4" Style="{StaticResource InputTextBoxStyle}" TextChanged="FrameInputs_Changed" Margin="0,6,0,0" AutomationProperties.Name="{DynamicResource Str.FrameForeground}"/>
-                                        <TextBlock x:Name="FrameBudgetText" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="FrameBudgetText" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/><WrapPanel Margin="0,10,0,0">
+                                            <Button Content="60" Tag="60" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
+                                            <Button Content="120" Tag="120" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
+                                            <Button Content="144" Tag="144" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
+                                            <Button Content="165" Tag="165" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
+                                            <Button Content="240" Tag="240" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
+                                        </WrapPanel>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <CheckBox x:Name="BackgroundCapCheck" Content="{DynamicResource Str.FrameBackground}" Checked="FrameInputs_Changed" Unchecked="FrameInputs_Changed"/>
@@ -558,18 +564,39 @@
                     </StackPanel>
                 </Border>
             </Grid>
-                <Border x:Name="CardGpuIdentity" Style="{StaticResource CardStyle}" Padding="20,18" Visibility="Collapsed">
+                <Border x:Name="CardGpuIdentity" Style="{StaticResource CardStyle}" Visibility="Collapsed">
                     <StackPanel>
-                        <TextBlock Text="{DynamicResource Str.GpuIdentityTitle}" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBlock Text="{DynamicResource Str.GpuIdentityIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,18"/>
-                        <TextBlock Text="{DynamicResource Str.GpuIdentityDevice}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,6"/>
-                        <ComboBox x:Name="GpuIdentityDevices" DisplayMemberPath="DriverName" MinWidth="280" HorizontalAlignment="Left" AutomationProperties.Name="{DynamicResource Str.GpuIdentityDevice}"/>
-                        <WrapPanel Margin="0,18,0,10">
-                            <Button x:Name="GpuIdentityApplyButton" Content="{DynamicResource Str.GpuIdentityApply}" Click="GpuIdentityApply_Click" Margin="0,0,10,8"/>
-                            <Button x:Name="GpuIdentityRestoreButton" Content="{DynamicResource Str.GpuIdentityRestore}" Click="GpuIdentityRestore_Click" Margin="0,0,10,8"/>
-                            <Button Content="{DynamicResource Str.GpuIdentityRefresh}" Click="GpuIdentityRefresh_Click" Margin="0,0,0,8"/>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityDevice}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6"/>
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <ComboBox x:Name="GpuIdentityDevices" MaxWidth="600" HorizontalAlignment="Left" MinWidth="320" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="GpuIdentitySelection_Changed" AutomationProperties.Name="{DynamicResource Str.GpuIdentityDevice}">
+                                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/></DataTemplate></ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button x:Name="GpuIdentityRefreshButton" Grid.Column="1" Content="{DynamicResource Str.GpuIdentityRefresh}" Click="GpuIdentityRefresh_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0"/>
+                        </Grid>
+                        <TextBlock Text="{DynamicResource Str.GpuIdentityChoose}" Style="{StaticResource SectionLabelStyle}" Margin="0,24,0,10"/>
+                        <ListBox x:Name="GpuIdentityPresets" Background="Transparent" BorderThickness="0" SelectionChanged="GpuIdentitySelection_Changed" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{DynamicResource Str.GpuIdentityChoose}">
+                            <ListBox.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem">
+                                <Setter Property="Margin" Value="0,0,10,10"/><Setter Property="Padding" Value="14,14"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/><Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="PresetSurface" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
+                                    <ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
+                                </ControlTemplate></Setter.Value></Setter>
+                            </Style></ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" Margin="0,6,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+                        </ListBox>
+                        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="8" Padding="16" Margin="0,10,0,18"><StackPanel>
+                            <TextBlock Text="{DynamicResource Str.GpuIdentityPreview}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="GpuIdentityCurrentName" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,4"/>
+                            <TextBlock x:Name="GpuIdentityPreviewName" Foreground="{DynamicResource AccentBrush}" FontSize="18" TextWrapping="Wrap"/>
+                        </StackPanel></Border>
+                        <WrapPanel>
+                            <Button x:Name="GpuIdentityApplyButton" Content="{DynamicResource Str.GpuIdentityApply}" Click="GpuIdentityApply_Click" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,8"/>
+                            <Button x:Name="GpuIdentityRestoreButton" Content="{DynamicResource Str.GpuIdentityRestore}" Click="GpuIdentityRestore_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8"/>
                         </WrapPanel>
-                        <TextBlock x:Name="GpuIdentityStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="GpuIdentityStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
 

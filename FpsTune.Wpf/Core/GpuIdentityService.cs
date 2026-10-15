@@ -9,13 +9,30 @@ using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
 
-public sealed record GpuIdentityTarget(string InstanceId, string DriverName, string Description, string Fingerprint);
+public sealed record GpuIdentityTarget(string InstanceId, string DriverName, string Description, string Fingerprint)
+{
+    public string DisplayName => DriverName;
+    public string CurrentName => Description[(Description.LastIndexOf(';') + 1)..];
+    public override string ToString() => DisplayName;
+}
+public sealed record GpuNamePreset(string Name, string Family)
+{
+    public string Description => "NVIDIA GeForce " + Name;
+    public string Series => Str.T("Str.GpuIdentitySeries", Family);
+}
 public sealed record GpuIdentityResult(bool Ok, bool Changed, string Message, string? BackupFile);
 
 /// <summary>社区兼容实验：只修改显示设备的 DeviceDesc，不更改硬件 ID 或驱动文件。</summary>
 public static class GpuIdentityService
 {
     public const string TargetDescription = "NVIDIA GeForce GTX 1050 Ti";
+    public static IReadOnlyList<GpuNamePreset> Presets { get; } = Array.AsReadOnly(new[]
+    {
+        new GpuNamePreset("GTX 750 Ti", "GTX 700"), new("GTX 950", "GTX 900"),
+        new("GTX 960", "GTX 900"), new("GTX 1050 Ti", "GTX 10"),
+        new("GTX 1060 6GB", "GTX 10"), new("GTX 1650", "GTX 16"),
+        new("GTX 1660 SUPER", "GTX 16"), new("RTX 2060", "RTX 20")
+    });
     internal const string BackupId = "gpu-description";
     private const string DisplayClass = "{4d36e968-e325-11ce-bfc1-08002be10318}";
     internal static Func<IEnumerable<string>>? DeviceIdsOverride { get; set; }
@@ -82,9 +99,13 @@ public static class GpuIdentityService
             throw new BackupCompatibilityException(Str.T("Str.GpuIdentityChanged"));
     }
 
-    public static Task<GpuIdentityResult> ApplyAsync(GpuIdentityTarget target) => Task.Run(() => Apply(target));
+    public static Task<GpuIdentityResult> ApplyAsync(GpuIdentityTarget target, string description = TargetDescription)
+    {
+        if (!Presets.Any(p => p.Description == description)) throw new ArgumentException("Unknown GPU name preset.", nameof(description));
+        return Task.Run(() => Apply(target, description));
+    }
 
-    private static GpuIdentityResult Apply(GpuIdentityTarget target)
+    private static GpuIdentityResult Apply(GpuIdentityTarget target, string description)
     {
         if (!(AdminCheckOverride?.Invoke() ?? AdminHelper.IsAdministrator()))
             return new(false, false, Str.T("Str.NeedsAdmin"), null);
@@ -92,7 +113,7 @@ public static class GpuIdentityService
         var current = ReadTarget(target.InstanceId);
         if (current.Fingerprint != target.Fingerprint)
             return new(false, false, Str.T("Str.GpuIdentityChanged"), null);
-        if (current.Description == TargetDescription)
+        if (current.Description == description)
             return new(true, false, Str.T("Str.GpuIdentityAlready"), null);
         BackupService.EnsureNoPendingWrites(new[] { BackupId });
         var record = new BackupRecord
@@ -107,11 +128,11 @@ public static class GpuIdentityService
         {
             VerifyIdentity(record);
             // 不修改设备权限；系统拒绝写入时直接返回，原始备份仍可审查。
-            RegistryHelper.SetValue(RegistryHive.LocalMachine, record.Path, record.Name, TargetDescription, RegistryValueKind.String);
-            if (RegistryHelper.ReadValue(RegistryHive.LocalMachine, record.Path, record.Name) as string != TargetDescription)
+            RegistryHelper.SetValue(RegistryHive.LocalMachine, record.Path, record.Name, description, RegistryValueKind.String);
+            if (RegistryHelper.ReadValue(RegistryHive.LocalMachine, record.Path, record.Name) as string != description)
                 throw new IOException(Str.T("Str.GpuIdentityWriteFailed"));
             BackupService.CompleteCapture(file, new(BackupId, BackupId, true, true, false, ""));
-            return new(true, true, Str.T("Str.GpuIdentityApplied"), file);
+            return new(true, true, Str.T("Str.GpuIdentityApplied", description), file);
         }
         catch (Exception ex)
         {

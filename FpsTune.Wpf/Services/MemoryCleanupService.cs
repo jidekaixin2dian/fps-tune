@@ -5,11 +5,11 @@ using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
-internal sealed record MemorySnapshot(ulong Total, ulong Available, ulong? LowPriorityStandby);
+internal sealed record MemorySnapshot(ulong Total, ulong Available, ulong? LowPriorityStandby, ulong? Standby = null);
 internal interface IMemoryCleanupApi
 {
     MemorySnapshot Read();
-    void PurgeLowPriorityStandby();
+    void PurgeStandby(bool allPriorities);
 }
 
 internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<bool>? isBusy = null, Func<bool>? isAdministrator = null)
@@ -20,21 +20,21 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
     internal sealed record Result(MemorySnapshot Before, MemorySnapshot? After, string? ReadError);
     internal MemorySnapshot Read() => _api.Read();
 
-    internal Result Clean()
+    internal Result Clean(bool allPriorities = false)
     {
         using var gate = SystemMutationGate.Acquire();
         if (IsBusy) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
         if (!IsAdministrator) throw new UnauthorizedAccessException(Str.T("Str.MemoryAdmin"));
         var before = Read(); // A failed pre-read must not start a system operation.
-        _api.PurgeLowPriorityStandby();
+        _api.PurgeStandby(allPriorities);
         try { return new(before, Read(), null); }
         catch (Exception ex) { return new(before, null, ex.Message); } // The purge already ran; keep that distinction.
     }
 }
 
 /// <summary>
-/// Uses the low-priority standby command also used by Mem Reduct and MemListMgr.
-/// API layout: winsiderss/phnt/ntexapi.h, SystemMemoryListInformation (80), command 5.
+/// Uses the standby commands also used by Mem Reduct and MemListMgr.
+/// API layout: winsiderss/phnt/ntexapi.h, SystemMemoryListInformation (80), commands 4 (all) and 5 (priority 0).
 /// Independently implemented interop; no third-party source or resident process is bundled.
 /// </summary>
 internal sealed class WindowsMemoryCleanupApi : IMemoryCleanupApi
@@ -47,12 +47,13 @@ internal sealed class WindowsMemoryCleanupApi : IMemoryCleanupApi
         // Five scalar SIZE_Ts, eight standby counts, eight repurposed counts, one final scalar.
         var pages = new nuint[22];
         var status = NtQuerySystemInformation(MemoryListInformation, pages, (uint)(pages.Length * IntPtr.Size), out var length);
-        ulong? low = status >= 0 && length >= 6 * IntPtr.Size
+        ulong? low = status >= 0 && length >= pages.Length * IntPtr.Size
             ? checked((ulong)pages[5] * (ulong)Environment.SystemPageSize) : null;
-        return new(memory.TotalPhysical, memory.AvailablePhysical, low);
+        var standby = low is null ? (ulong?)null : checked(pages.Skip(5).Take(8).Aggregate(0UL, (sum, count) => checked(sum + (ulong)count)) * (ulong)Environment.SystemPageSize);
+        return new(memory.TotalPhysical, memory.AvailablePhysical, low, standby);
     }
 
-    public void PurgeLowPriorityStandby()
+    public void PurgeStandby(bool allPriorities)
     {
         if (!OpenProcessToken(new IntPtr(-1), 0x20 | 0x8, out var token)) throw new Win32Exception(Marshal.GetLastWin32Error());
         using (token)
@@ -65,7 +66,7 @@ internal sealed class WindowsMemoryCleanupApi : IMemoryCleanupApi
             if (error != 0) throw new Win32Exception(error);
             try
             {
-                var command = PurgeLowPriorityStandbyCommand;
+                var command = allPriorities ? 4u : PurgeLowPriorityStandbyCommand;
                 var status = NtSetSystemInformation(MemoryListInformation, ref command, sizeof(uint));
                 if (status < 0) throw new Win32Exception((int)RtlNtStatusToDosError(status), $"{Str.T("Str.MemoryNativeFailed")} (NTSTATUS 0x{status:X8})");
             }

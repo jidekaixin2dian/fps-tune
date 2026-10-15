@@ -16,6 +16,64 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ReadabilityAndFramesUiTests
 {
     [Fact]
+    public void Detection_sections_filter_without_long_page_and_gpu_presets_preview_readable_device_names()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var data = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(new {
+                gamePath = AppState.GamePath,
+                hardware = new { cpu = "Fixture CPU", gpu = "NVIDIA GeForce RTX 4060", ramGB = 16, os = "Windows 11", isLaptop = false, isAdmin = false },
+                checks = new[] { new { name = "内存频率", status = "ok", message = "5600 MHz" }, new { name = "VC++ 运行库", status = "attention", message = "缺少 x86" } },
+                items = ItemCatalog.All.Where(d => d.Available).Select(d => new { id = d.Id, name = d.Name, desc = d.Description, sideEffect = d.SideEffect,
+                    admin = d.Admin, reboot = d.Reboot, optimized = false, current = "测试原值", group = d.Group })
+            }))!.AsObject();
+            StateStore.SaveDetect(data);
+            var window = new MainWindow { Width = 1180, Height = 800 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            GpuIdentityService.DeviceIdsOverride = () => [];
+            try
+            {
+                window.NavigateTo("detect"); window.UpdateLayout();
+                var detect = (DetectView)((ContentControl)window.FindName("PageHost")).Content;
+                DlssFeedbackTests.PumpUntil(() => detect.IsLoaded); window.UpdateLayout();
+                var checkList = (ItemsControl)detect.FindName("CheckList");
+                Assert.Equal(2, Descendants(checkList).OfType<System.Windows.Shapes.Ellipse>().Count());
+                Assert.DoesNotContain(Descendants(checkList).OfType<TextBlock>(), t => t.Text.Contains('●'));
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(detect, "detect-overview-" + theme); }
+                Assert.Equal(((System.Windows.Media.FontFamily)app.FindResource("FontBody")).Source, ((TextBlock)detect.FindName("GamePathText")).FontFamily.Source);
+                var path = (TextBlock)detect.FindName("GamePathText"); Assert.DoesNotContain("Consolas", path.FontFamily.Source);
+                Descendants(detect).OfType<RadioButton>().Single(b => b.Tag as string == "items").IsChecked = true;
+                var list = (ListBox)detect.FindName("DetectItemList");
+                ((TextBox)detect.FindName("DetectFilterText")).Text = "Wi-Fi";
+                Assert.Single(list.Items); Assert.Contains("Wi-Fi", ((OptimizationItemViewModel)list.Items[0]).Name);
+                ((TextBox)detect.FindName("DetectFilterText")).Text = "no matching item"; Assert.Empty(list.Items);
+                ((TextBox)detect.FindName("DetectFilterText")).Text = "";
+                ((ComboBox)detect.FindName("DetectGroup")).SelectedIndex = 3;
+                Assert.All(list.Items.Cast<OptimizationItemViewModel>(), item => Assert.Equal("网络", item.Group));
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(detect, "detect-items-" + theme); }
+                Descendants(detect).OfType<RadioButton>().Single(b => b.Tag as string == "report").IsChecked = true;
+                Assert.True(((Grid)detect.FindName("DetectReportSection")).IsVisible);
+                window.NavigateTo("display"); window.UpdateLayout();
+                var display = (DisplayQualityView)((ContentControl)window.FindName("PageHost")).Content;
+                DlssFeedbackTests.PumpUntil(() => ((Grid)display.FindName("FrameControls")).IsEnabled);
+                var devices = (ComboBox)display.FindName("GpuIdentityDevices");
+                DlssFeedbackTests.PumpUntil(() => ((TextBlock)display.FindName("GpuIdentityStatus")).Text.Length > 0);
+                devices.ItemsSource = new[] { new GpuIdentityTarget("PCI\\VEN_10DE&DEV_1234\\fixture", "NVIDIA GeForce RTX 4060", "@oem.inf;NVIDIA GeForce RTX 4060", "fixture") }; devices.SelectedIndex = 0;
+                Descendants(display).OfType<RadioButton>().Single(b => b.Tag as string == "identity").IsChecked = true;
+                var presets = (ListBox)display.FindName("GpuIdentityPresets"); presets.SelectedIndex = 0; window.UpdateLayout();
+                Assert.Equal(8, presets.Items.Count); Assert.Equal("NVIDIA GeForce GTX 750 Ti", ((TextBlock)display.FindName("GpuIdentityPreviewName")).Text);
+                Assert.True(devices.ActualWidth <= 600);
+                Assert.Contains(Descendants(devices).OfType<TextBlock>(), t => t.Text == "NVIDIA GeForce RTX 4060");
+                Assert.DoesNotContain(Descendants(devices).OfType<TextBlock>(), t => t.Text.Contains("InstanceId"));
+                ((TextBlock)display.FindName("GpuIdentityStatus")).Text = Str.T("Str.GpuIdentityReady");
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(display, "gpu-presets-" + theme); }
+            }
+            finally { GpuIdentityService.DeviceIdsOverride = null; window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Navigation_weight_stays_constant_and_all_pages_render_with_readable_guides_and_distinct_series()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
@@ -158,13 +216,14 @@ public sealed class ReadabilityAndFramesUiTests
                 try { button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); }
                 finally { cancel.Stop(); }
                 Assert.Equal(0, api.Purges); admin = true;
+                var mode = (ComboBox)page.FindName("MemoryMode"); mode.SelectedIndex = 1;
                 using var hold = new ManualResetEventSlim(); api.Hold = hold;
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => Volatile.Read(ref api.Purges) == 1);
-                Assert.False(button.IsEnabled); Assert.False(refresh.IsEnabled);
+                Assert.False(button.IsEnabled); Assert.False(refresh.IsEnabled); Assert.False(mode.IsEnabled); Assert.True(api.AllPriorities);
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Equal(1, api.Purges);
                 hold.Set(); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
-                Assert.Equal(Str.T("Str.MemoryCleaned", "5.00 GiB", "5.00 GiB"), status.Text);
+                Assert.Equal(Str.T("Str.MemoryCacheChange", "1024.0 MiB", "0.0 MiB", "5.00 GiB", "5.00 GiB"), status.Text);
                 foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "memory-" + theme); }
                 api.Hold = null; api.PurgeError = new System.ComponentModel.Win32Exception(1314);
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);

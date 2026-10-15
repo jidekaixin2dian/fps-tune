@@ -32,6 +32,11 @@ public partial class DisplayQualityView
     {
         null => Str.T("Str.FollowDriverGame"), 0 => Str.T("Str.FrameOff"), _ => value + " FPS"
     };
+    private void FramePreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || sender is not System.Windows.Controls.Button { Tag: string value }) return;
+        MainCapCheck.IsChecked = true; MainCapBox.Text = value;
+    }
     private void UpdateFrameBudget() => FrameBudgetText.Text = uint.TryParse(MainCapBox.Text, out var fps) && fps > 0
         && DisplayQualityService.IsValidFrameLimit(fps) ? Str.T("Str.FrameBudget", fps, 1000.0 / fps) : Str.T("Str.FrameForegroundRange");
 

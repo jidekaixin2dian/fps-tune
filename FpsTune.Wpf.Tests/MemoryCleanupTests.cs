@@ -12,17 +12,27 @@ public sealed class MemoryCleanupTests
         public int FailRead;
         public Exception? PurgeError;
         public ManualResetEventSlim? Hold;
+        public bool AllPriorities;
         public MemorySnapshot Read()
         {
             if (++Reads == FailRead) throw new InvalidOperationException("snapshot unavailable");
-            return new(16UL << 30, 5UL << 30, Purges == 0 ? 300UL << 20 : 0);
+            return new(16UL << 30, 5UL << 30, Purges == 0 ? 300UL << 20 : 0, Purges == 0 ? 1UL << 30 : 0);
         }
-        public void PurgeLowPriorityStandby()
+        public void PurgeStandby(bool allPriorities)
         {
+            AllPriorities = allPriorities;
             Purges++;
             if (Hold is not null && !Hold.Wait(TimeSpan.FromSeconds(8))) throw new TimeoutException("test cleanup not released");
             if (PurgeError is not null) throw PurgeError;
         }
+    }
+
+    [Fact]
+    public void Full_standby_mode_is_forwarded_once_without_trimming_process_working_sets()
+    {
+        var api = new FakeMemory();
+        new MemoryCleanupService(api, () => false, () => true).Clean(allPriorities: true);
+        Assert.True(api.AllPriorities); Assert.Equal(1, api.Purges);
     }
 
     [Fact]
@@ -69,6 +79,7 @@ public sealed class MemoryCleanupTests
     {
         var result = new WindowsMemoryCleanupApi().Read(); // No token privilege adjustment or purge.
         Assert.True(result.Total > 0); Assert.InRange(result.Available, 0UL, result.Total);
-        Assert.NotNull(result.LowPriorityStandby); Assert.InRange(result.LowPriorityStandby.Value, 0UL, result.Total);
+        Assert.NotNull(result.LowPriorityStandby); Assert.NotNull(result.Standby);
+        Assert.InRange(result.LowPriorityStandby.Value, 0UL, result.Standby.Value); Assert.InRange(result.Standby.Value, 0UL, result.Total);
     }
 }

@@ -40,7 +40,7 @@ description: Windows 系统设置调校与 FPS 对照测量。使用 FPS 帧律�
 & "<root>\FpsTune.exe" -Apply -Items game-mode,gpu-pref -Game "C:\Games\Game.exe" -Json
 ```
 
-`balanced` 为 16 项，`safe-only` 为 4 项无需管理员的设置，`full` 包含全部 38 项；full 包含副作用不同的手动项目，不作为默认推荐。
+`balanced` 为 16 项，`safe-only` 为 4 项无需管理员的设置，`full` 包含全部 40 项；full 包含副作用不同的手动项目，不作为默认推荐。
 说明实际选择后执行。结果包含 `operationId`、`backupFile`、逐项 `ok/changed/skipped/stateUncertain` 及重启要求。
 写入前按项保存原值和目标身份；不能读取原值时停止该项。失败或状态不确定必须保留记录并如实报告，不把局部成功当成全部完成。
 

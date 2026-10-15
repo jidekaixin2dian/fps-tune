@@ -274,7 +274,7 @@
                                                    FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                         <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="13">
                                             <Run Text="{DynamicResource Str.LabelProcess}"/>
-                                            <Run Text="{Binding ProcessName, Mode=OneWay}" FontFamily="{StaticResource FontMono}"/>
+                                            <Run Text="{Binding ProcessName, Mode=OneWay}" FontFamily="{StaticResource FontBody}"/>
                                             <Run Text="{DynamicResource Str.LabelProfile}"/>
                                             <Run Text="{Binding ProfileName, Mode=OneWay}"/>
                                         </TextBlock>
@@ -345,7 +345,7 @@
                                         <TextBlock Text="{Binding KindText}" FontSize="12"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </Border>
-                                    <TextBlock Grid.Column="1" Text="{Binding TimeText}" FontSize="13" FontFamily="{StaticResource FontMono}"
+                                    <TextBlock Grid.Column="1" Text="{Binding TimeText}" FontSize="13" FontFamily="{StaticResource FontBody}"
                                                Margin="10,0,10,0" VerticalAlignment="Top"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                     <TextBlock Grid.Column="2" Text="{Binding Detail}" FontSize="13"
@@ -450,7 +450,7 @@
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.SectionAbout}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="VersionText" Text="{DynamicResource Str.VersionLabel}"
-                               Foreground="{DynamicResource AccentBrush}" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}"/>
+                               Foreground="{DynamicResource AccentBrush}" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                     <TextBlock Text="{DynamicResource Str.AboutLine1}"
                                Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <TextBlock Text="{DynamicResource Str.AboutLine2}"

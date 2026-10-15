@@ -3,6 +3,24 @@
   "_i18n": "name/description/sideEffect 为中文（zh-CN），*En 为英文（en-US）。英文缺失时界面回退中文，绝不显示空白。详见 docs/dev/PLAN-P2-1-catalog-i18n.md。",
   "items": [
     {
+      "id": "wifi-performance-ac", "name": "接电 Wi-Fi 优先性能",
+      "nameEn": "Wi-Fi maximum performance on AC",
+      "descriptionEn": "Sets the current plan wireless power-saving mode to maximum performance when plugged in.",
+      "sideEffectEn": "May increase wireless adapter power draw; unsupported devices report an error.",
+      "description": "将当前电源计划的无线网卡省电模式设为最高性能，适合使用 Wi-Fi 联机的电脑。",
+      "sideEffect": "仅改接电模式，可能增加无线网卡功耗；不支持此选项的设备会报告原因。",
+      "admin": true, "default": false, "reboot": false, "kind": "power", "group": "网络"
+    },
+    {
+      "id": "disk-awake-ac", "name": "接电时保持机械硬盘唤醒",
+      "nameEn": "Keep hard disks awake on AC",
+      "descriptionEn": "Disables the current plan disk idle timeout on AC, reducing spin-up waits for games stored on mechanical hard disks.",
+      "sideEffectEn": "Keeping mechanical disks spinning increases power draw and noise; changes AC settings only.",
+      "description": "关闭当前电源计划的接电硬盘空闲休眠，减少机械硬盘重新起转的等待。适合游戏装在机械硬盘的电脑。",
+      "sideEffect": "仅改接电模式；机械硬盘持续转动会增加功耗与噪声。",
+      "admin": true, "default": false, "reboot": false, "kind": "power", "group": "电源"
+    },
+    {
       "id": "cpu-epp-ac",
       "name": "接电 CPU 优先性能",
       "nameEn": "CPU performance preference on AC",

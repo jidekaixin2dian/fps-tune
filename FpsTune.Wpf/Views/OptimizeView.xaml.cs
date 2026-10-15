@@ -398,7 +398,7 @@ public partial class OptimizeView : UserControl
         if (size is not null)
             r.FontSize = size.Value;
         if (mono)
-            r.FontFamily = new System.Windows.Media.FontFamily("Cascadia Mono, Consolas");
+            r.FontFamily = (System.Windows.Media.FontFamily)Application.Current.FindResource("FontCode");
         return r;
     }
 

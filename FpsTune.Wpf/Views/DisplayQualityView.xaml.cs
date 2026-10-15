@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -40,6 +40,8 @@ public partial class DisplayQualityView : UserControl
     public DisplayQualityView()
     {
         InitializeComponent();
+        GpuIdentityPresets.ItemsSource = GpuIdentityService.Presets;
+        GpuIdentityPresets.SelectedItem = GpuIdentityService.Presets.First(p => p.Description == GpuIdentityService.TargetDescription);
         var choices = Enum.GetValues<IccFilterPreset>().Select(preset =>
         {
             var keys = IccProfileGenerator.ResourceKeysFor(preset);
@@ -1047,22 +1049,41 @@ public partial class DisplayQualityView : UserControl
             Refresh();
         }
     }
-    private async Task RefreshGpuIdentityAsync()
+    private int _gpuRefreshGeneration;
+    private async Task RefreshGpuIdentityAsync(bool keepStatus = false)
     {
         if (_busy) return;
         try
         {
+            var request = ++_gpuRefreshGeneration;
+            var selected = (GpuIdentityDevices.SelectedItem as GpuIdentityTarget)?.InstanceId;
             var devices = await Task.Run(GpuIdentityService.GetDevices);
-            if (_busy) return;
+            if (_busy || request != _gpuRefreshGeneration) return;
             GpuIdentityDevices.ItemsSource = devices;
-            GpuIdentityDevices.SelectedIndex = devices.Count > 0 ? 0 : -1;
+            GpuIdentityDevices.SelectedItem = devices.FirstOrDefault(d => d.InstanceId == selected) ?? devices.FirstOrDefault();
             GpuIdentityApplyButton.IsEnabled = devices.Count > 0;
-            GpuIdentityStatus.Text = devices.Count == 0 ? Str.T("Str.GpuIdentityUnavailable") : Str.T("Str.GpuIdentityReady");
+            if (!keepStatus) GpuIdentityStatus.Text = devices.Count == 0 ? Str.T("Str.GpuIdentityUnavailable") : Str.T("Str.GpuIdentityReady");
+            UpdateGpuIdentityPreview();
         }
         catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; GpuIdentityApplyButton.IsEnabled = false; }
     }
 
     private void GpuIdentityRefresh_Click(object sender, RoutedEventArgs e) => _ = RefreshGpuIdentityAsync();
+
+    private void GpuIdentitySelection_Changed(object sender, SelectionChangedEventArgs e) => UpdateGpuIdentityPreview();
+    private void UpdateGpuIdentityPreview()
+    {
+        if (GpuIdentityCurrentName is null) return;
+        GpuIdentityCurrentName.Text = Str.T("Str.GpuIdentityCurrent", (GpuIdentityDevices.SelectedItem as GpuIdentityTarget)?.CurrentName ?? "—");
+        GpuIdentityPreviewName.Text = (GpuIdentityPresets.SelectedItem as GpuNamePreset)?.Description ?? "—";
+        GpuIdentityApplyButton.IsEnabled = !_busy && GpuIdentityDevices.SelectedItem is GpuIdentityTarget && GpuIdentityPresets.SelectedItem is GpuNamePreset;
+    }
+    private void SetGpuIdentityControls(bool enabled)
+    {
+        _gpuRefreshGeneration++;
+        GpuIdentityDevices.IsEnabled = GpuIdentityPresets.IsEnabled = GpuIdentityRefreshButton.IsEnabled = enabled;
+        GpuIdentityApplyButton.IsEnabled = GpuIdentityRestoreButton.IsEnabled = enabled;
+    }
 
     private bool CheckGpuIdentityPrerequisites()
     {
@@ -1088,18 +1109,19 @@ public partial class DisplayQualityView : UserControl
 
     private async void GpuIdentityApply_Click(object sender, RoutedEventArgs e)
     {
-        if (!CheckGpuIdentityPrerequisites() || GpuIdentityDevices.SelectedItem is not GpuIdentityTarget target) return;
-        if (!DialogService.Confirm(Str.T("Str.GpuIdentityTitle"), Str.T("Str.GpuIdentityConfirm", target.DriverName))) return;
-        _busy = true; GpuIdentityApplyButton.IsEnabled = false; GpuIdentityRestoreButton.IsEnabled = false;
-        try { var result = await GpuIdentityService.ApplyAsync(target); GpuIdentityStatus.Text = result.Message; }
+        if (!CheckGpuIdentityPrerequisites() || GpuIdentityDevices.SelectedItem is not GpuIdentityTarget target
+            || GpuIdentityPresets.SelectedItem is not GpuNamePreset preset) return;
+        if (!DialogService.Confirm(Str.T("Str.GpuIdentityTitle"), Str.T("Str.GpuIdentityConfirm", target.DriverName, preset.Description))) return;
+        _busy = true; SetGpuIdentityControls(false);
+        try { var result = await GpuIdentityService.ApplyAsync(target, preset.Description); GpuIdentityStatus.Text = result.Message; }
         catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; }
-        finally { _busy = false; GpuIdentityApplyButton.IsEnabled = true; GpuIdentityRestoreButton.IsEnabled = true; }
+        finally { _busy = false; SetGpuIdentityControls(true); await RefreshGpuIdentityAsync(keepStatus: true); }
     }
 
     private async void GpuIdentityRestore_Click(object sender, RoutedEventArgs e)
     {
         if (!CheckGpuIdentityPrerequisites()) return;
-        _busy = true; GpuIdentityApplyButton.IsEnabled = false; GpuIdentityRestoreButton.IsEnabled = false;
+        _busy = true; SetGpuIdentityControls(false);
         try
         {
             var result = await GpuIdentityService.RestoreAsync();
@@ -1107,7 +1129,7 @@ public partial class DisplayQualityView : UserControl
                 : result.Restored.Count > 0 ? Str.T("Str.GpuIdentityRestored") : Str.T("Str.GpuIdentityNoBackup");
         }
         catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; }
-        finally { _busy = false; GpuIdentityApplyButton.IsEnabled = true; GpuIdentityRestoreButton.IsEnabled = true; }
+        finally { _busy = false; SetGpuIdentityControls(true); await RefreshGpuIdentityAsync(keepStatus: true); }
     }
 
 }

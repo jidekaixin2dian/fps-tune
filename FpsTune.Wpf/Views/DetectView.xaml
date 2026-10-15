@@ -1,35 +1,19 @@
 <UserControl x:Class="FpsTune.Wpf.Views.DetectView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{DynamicResource AppBackgroundBrush}">
-    <UserControl.Resources>
-        <!-- 0.1.12：检测页不再有 console/classic 双皮肤——全仓库统一卡片语言 -->
-    </UserControl.Resources>
-    <!-- 页面根滚动: 概览列表/JSON框会把滚轮事件吞在自己身上,
-         由 code-behind 的 PreviewMouseWheel 转发保证整页可滚 -->
-    <ScrollViewer x:Name="RootScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <Grid Margin="28,22,28,24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="28,22,28,24"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <!-- 页头 -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid Grid.Row="0" Margin="0,0,0,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="{DynamicResource Str.NavDetect}" Style="{StaticResource SectionLabelStyle}"/>
+                <TextBlock Text="{DynamicResource Str.NavDetect}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.DetectIntro}"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 <!-- P3-4：上次检测时间与耗时（进入页面即可见，不必先看输出框） -->
                 <TextBlock x:Name="LastDetectText" Text=""
                            Style="{StaticResource MutedTextStyle}"
                            FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20,0,0,0">
                 <Button x:Name="RunButton"
                         Content="{DynamicResource Str.RunDetect}"
                         Style="{StaticResource PrimaryButtonStyle}"
@@ -43,8 +27,16 @@
             </StackPanel>
         </Grid>
 
+
+        <WrapPanel Grid.Row="1" Margin="0,0,0,16">
+            <RadioButton Content="{DynamicResource Str.DetectOverview}" Tag="overview" GroupName="detectSection" IsChecked="True" Checked="DetectSection_Checked" Style="{StaticResource SectionNavigationStyle}" Margin="0,0,10,0"/>
+            <RadioButton Content="{DynamicResource Str.ItemsOverview}" Tag="items" GroupName="detectSection" Checked="DetectSection_Checked" Style="{StaticResource SectionNavigationStyle}" Margin="0,0,10,0"/>
+            <RadioButton Content="{DynamicResource Str.DetectDetails}" Tag="report" GroupName="detectSection" Checked="DetectSection_Checked" Style="{StaticResource SectionNavigationStyle}" Margin="0"/>
+        </WrapPanel>
+        <Grid Grid.Row="2">
+            <ScrollViewer x:Name="RootScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel Margin="0,0,12,0">
         <!-- 硬件：发丝分隔的通栏 -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
+        <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -56,7 +48,7 @@
                     <StackPanel>
                         <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="CpuText" Text="--"
-                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
+                                   FontSize="13" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -65,7 +57,7 @@
                     <StackPanel>
                         <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="GpuText" Text="--"
-                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
+                                   FontSize="13" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -74,7 +66,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="RamText" Text="--"
-                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
+                                   FontSize="13" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                     </StackPanel>
@@ -83,7 +75,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.System}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="OsText" Text="--"
-                                   FontSize="12.5" FontWeight="{StaticResource SmallEmphasisWeight}"
+                                   FontSize="13" FontWeight="{StaticResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -100,7 +92,7 @@
         </Border>
 
         <!-- 实时监控 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
                 <Grid Margin="0,0,0,8">
                     <TextBlock Text="{DynamicResource Str.LiveMonitor}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
@@ -111,7 +103,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.CpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
                             <TextBlock x:Name="CpuNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"/>
                         </Grid>
                         <Canvas x:Name="CpuChart" Height="72"/>
                     </StackPanel>
@@ -119,7 +111,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.MemoryUsage}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
                             <TextBlock x:Name="MemNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource PrimaryBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource PrimaryBrush}"/>
                         </Grid>
                         <Canvas x:Name="MemChart" Height="72"/>
                     </StackPanel>
@@ -127,7 +119,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.GpuUsage}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
                             <TextBlock x:Name="GpuNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource OkBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource OkBrush}"/>
                         </Grid>
                         <Canvas x:Name="GpuChart" Height="72"/>
                     </StackPanel>
@@ -135,7 +127,7 @@
                         <Grid Margin="0,0,0,4">
                             <TextBlock Text="{DynamicResource Str.VramDedicated}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
                             <TextBlock x:Name="VramNowText" Text="--" HorizontalAlignment="Right"
-                                       FontSize="13" FontFamily="{StaticResource FontMono}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource WarningBrush}"/>
+                                       FontSize="13" FontFamily="{StaticResource FontBody}" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource WarningBrush}"/>
                         </Grid>
                         <Canvas x:Name="VramChart" Height="72"/>
                         <TextBlock x:Name="VramNoteText" Text="" FontSize="12" Margin="0,3,0,0"
@@ -147,7 +139,7 @@
         </Border>
 
         <!-- 游戏路径 + 体检 -->
-        <Grid Grid.Row="3" Margin="0,0,0,12">
+        <Grid Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="11*"/>
                 <ColumnDefinition Width="12"/>
@@ -167,7 +159,7 @@
                     </Grid>
                     <TextBlock x:Name="GamePathText" Text="--"
                                Foreground="{DynamicResource TextPrimaryBrush}"
-                               FontFamily="{StaticResource FontMono}" FontSize="12"
+                               FontFamily="{StaticResource FontBody}" FontSize="13"
                                TextWrapping="Wrap" Margin="0,8,0,0"/>
                     <Grid Margin="0,10,0,0">
                         <Grid.ColumnDefinitions>
@@ -193,23 +185,16 @@
                     <ItemsControl x:Name="CheckList"
                                   ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                  PreviewMouseWheel="ForwardWheelToRoot">
+                                  >
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Ellipse Grid.Column="0" Width="6" Height="6"
-                                             Fill="{DynamicResource AccentBrush}"
-                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding Name}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
-                                        <TextBlock Text="{Binding Summary}" Foreground="{Binding Foreground}"
-                                                   FontSize="12" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </Grid>
+                                <Expander Margin="0,0,0,8" Foreground="{Binding Foreground}">
+                                    <Expander.Header><Grid MinWidth="220"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0"><Ellipse Width="6" Height="6" Fill="{Binding Foreground}" VerticalAlignment="Center" Margin="0,0,6,0"/><TextBlock Text="{Binding Summary}" FontSize="13"/></StackPanel>
+                                    </Grid></Expander.Header>
+                                    <TextBlock Text="{Binding Details}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                                </Expander>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -217,21 +202,30 @@
             </Border>
         </Grid>
 
-        <!-- 优化项概览 -->
-        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,12" MinHeight="220" Padding="14,14,4,14">
+
+            </StackPanel></ScrollViewer>
+            <Grid x:Name="DetectItemsSection" Visibility="Collapsed">        <!-- 优化项概览 -->
+        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12" Padding="14,14,4,14">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{DynamicResource Str.ItemsOverview}" Style="{StaticResource CardTitleStyle}"/>
-                <ListBox x:Name="DetectItemList"
+                <StackPanel Grid.Row="0"><TextBlock Text="{DynamicResource Str.ItemsOverview}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DetectSearch}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6"/><Grid Margin="0,0,10,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="180"/></Grid.ColumnDefinitions>
+                        <TextBox Height="36" VerticalAlignment="Center" x:Name="DetectFilterText" TextChanged="DetectFilter_Changed" AutomationProperties.Name="{DynamicResource Str.DetectSearch}" ToolTip="{DynamicResource Str.DetectSearch}"/>
+                        <ComboBox x:Name="DetectGroup" Grid.Column="1" Margin="12,0,0,0" SelectionChanged="DetectFilter_Changed" SelectedIndex="0" AutomationProperties.Name="{DynamicResource Str.OptCategory}">
+                            <ComboBoxItem Content="{DynamicResource Str.AllCategories}" Tag=""/><ComboBoxItem Content="{DynamicResource Str.GroupKeyboardMouse}" Tag="键鼠"/><ComboBoxItem Content="{DynamicResource Str.GroupGraphics}" Tag="图形显示"/><ComboBoxItem Content="{DynamicResource Str.GroupNetwork}" Tag="网络"/><ComboBoxItem Content="{DynamicResource Str.GroupPower}" Tag="电源"/><ComboBoxItem Content="{DynamicResource Str.GroupSystem}" Tag="系统与调度"/>
+                        </ComboBox>
+                    </Grid><TextBlock x:Name="DetectItemCount" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,10"/>
+                </StackPanel>
+                <ListBox x:Name="DetectItemList" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                          Grid.Row="1"
                          Background="Transparent"
                          BorderThickness="0"
                          ItemContainerStyle="{StaticResource CardListItemStyle}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                         PreviewMouseWheel="ForwardWheelToRoot">
+                        >
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,0,10,0">
@@ -242,7 +236,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
                                            Text="{Binding Id}" Visibility="Collapsed"
-                                           FontFamily="{StaticResource FontMono}"
+                                           FontFamily="{StaticResource FontBody}"
                                            FontSize="12"
                                            Foreground="{DynamicResource AccentBrush}"
                                            Margin="0,0,12,0"
@@ -251,17 +245,11 @@
                                     <TextBlock Text="{Binding Name}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontWeight="{StaticResource SmallEmphasisWeight}"/>
-                                    <TextBlock Text="{Binding Description}"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"
-                                               FontSize="12"
-                                               TextWrapping="Wrap"/>
-                                    <TextBlock Foreground="{DynamicResource WarningBrush}"
-                                               FontSize="12"
-                                               TextWrapping="Wrap"
-                                               Margin="0,2,0,0"
-                                               Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}">
-                                        <Run Text="{DynamicResource Str.SideEffectLabel}"/><Run Text="{Binding SideEffect, Mode=OneWay}"/>
-                                    </TextBlock>
+                                    <Expander Header="{DynamicResource Str.DetectItemDetails}" Margin="0,6,0,0">
+                                        <StackPanel><TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding Current}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                        <TextBlock Text="{Binding SideEffect}" Foreground="{DynamicResource WarningBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="{Binding HasSideEffect, Converter={StaticResource BoolToVis}}"/></StackPanel>
+                                    </Expander>
                                 </StackPanel>
                                 <Border Grid.Column="2"
                                         Margin="10,0,0,0"
@@ -287,8 +275,9 @@
             </Grid>
         </Border>
 
-        <!-- 详情 -->
-        <Border Grid.Row="5" Style="{StaticResource CardStyle}" Height="170">
+</Grid>
+            <Grid x:Name="DetectReportSection" Visibility="Collapsed">        <!-- 详情 -->
+        <Border Style="{StaticResource CardStyle}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -307,10 +296,11 @@
                          Style="{StaticResource MonoTextBoxStyle}"
                          IsReadOnly="True"
                          Margin="0,8,0,0"
-                         PreviewMouseWheel="TextBoxWheelToRoot"
+
                          Text="{DynamicResource Str.ClickRunDetect}"/>
             </Grid>
         </Border>
+</Grid>
+        </Grid>
     </Grid>
-    </ScrollViewer>
 </UserControl>

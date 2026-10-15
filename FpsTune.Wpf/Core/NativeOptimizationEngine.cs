@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using FpsTune.Wpf.Services;
@@ -204,6 +204,8 @@ public static class NativeOptimizationEngine
                 return ApplyPowerUltimate(backup);
             case "cpu-epp-ac":
             case "cpu-max-ac":
+            case "wifi-performance-ac":
+            case "disk-awake-ac":
                 var power = PowerOption.For(item.Id);
                 if (backup?.TargetPlanGuid is null || backup.OldPowerValue is null)
                     throw new InvalidOperationException(Str.T("Str.PowerBackupTargetInvalid"));

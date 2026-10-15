@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using FpsTune.Wpf.Core;
@@ -64,10 +64,10 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
-    public void Catalog_has_38_unique_items()
+    public void Catalog_has_40_unique_items()
     {
         var (ids, _) = LoadCatalog();
-        Assert.Equal(38, ids.Count);
+        Assert.Equal(40, ids.Count);
     }
 
     [Fact]

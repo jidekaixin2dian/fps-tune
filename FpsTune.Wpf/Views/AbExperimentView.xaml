@@ -213,7 +213,7 @@
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource ChartSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="1% LOW" FontSize="12" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
+                        <TextBlock Text="1% LOW" FontSize="12" FontFamily="{StaticResource FontBody}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Click="RefreshHistory_Click"/>

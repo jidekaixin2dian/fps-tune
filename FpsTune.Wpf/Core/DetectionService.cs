@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -386,7 +386,7 @@ public static class DetectionService
             "game-mode" => GetGameModeState(),
             "dvr-off" => GetDvrOffState(),
             "power-ultimate" => GetPowerUltimateState(),
-            "cpu-epp-ac" or "cpu-max-ac" => GetProcessorPowerState(item.Id),
+            "cpu-epp-ac" or "cpu-max-ac" or "wifi-performance-ac" or "disk-awake-ac" => GetProcessorPowerState(item.Id),
             "power-tuning" => GetPowerTuningState(),
             "pcie-aspm-off" => GetPcieAspmState(),
             "nic-power-save-off" => GetNicPowerSaveState(),
@@ -413,7 +413,7 @@ public static class DetectionService
         {
             var option = PowerOption.For(id);
             var value = option.Read(NativePowerSettings.RequireActiveGuid());
-            return (value == option.Target, value + "% (AC)");
+            return (value == option.Target, id == "wifi-performance-ac" ? (value == 0 ? Str.T("Str.PowerWifiPerformance") : Str.T("Str.PowerWifiLevel", value)) : id == "disk-awake-ac" ? (value == 0 ? Str.T("Str.PowerDiskAwake") : Str.T("Str.PowerDiskTimeout", value)) : value + "% (AC)");
         }
         catch (Exception ex) { return (false, PrivacyScrub.Sanitize(ex.Message)); }
     }

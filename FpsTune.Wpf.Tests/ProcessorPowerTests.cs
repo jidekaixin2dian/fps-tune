@@ -16,15 +16,18 @@ public sealed class ProcessorPowerTests : IDisposable
     }
 
     [Theory]
+    [InlineData("wifi-performance-ac", false)] [InlineData("wifi-performance-ac", true)]
+    [InlineData("disk-awake-ac", false)] [InlineData("disk-awake-ac", true)]
     [InlineData("cpu-epp-ac", false)] [InlineData("cpu-max-ac", false)]
     [InlineData("cpu-epp-ac", true)] [InlineData("cpu-max-ac", true)]
     public void Receipt_restores_exact_AC_target_and_preserves_external_change(string id, bool externalChange)
     {
-        var option = PowerOption.For(id); var value = 50;
+        var option = PowerOption.For(id); var original = id == "wifi-performance-ac" ? 3 : 50; var value = original;
+        var external = id == "wifi-performance-ac" ? 2 : 75;
         var active = Plan; var writes = new List<string[]>();
         NativePowerSettings.ReadOverride = (plan, group, setting) =>
         {
-            Assert.Equal(Plan, plan); Assert.Equal(PowerOption.ProcessorGroup, group); Assert.Equal(option.Setting, setting);
+            Assert.Equal(Plan, plan); Assert.Equal(option.Group ?? PowerOption.ProcessorGroup, group); Assert.Equal(option.Setting, setting);
             return value;
         };
         NativeSystem.RunOverride = (_, args) =>
@@ -40,10 +43,10 @@ public sealed class ProcessorPowerTests : IDisposable
             item => { var records = BackupService.AppendCapture(file, item, null); active = Guid.NewGuid().ToString("D"); return records; },
             result => BackupService.CompleteCapture(file, result));
         Assert.True(results[0].Ok, results[0].Message); Assert.Equal(option.Target, value);
-        if (externalChange) value = 75;
+        if (externalChange) value = external;
         var restored = BackupService.RestoreAll(null, file);
-        if (externalChange) { Assert.Single(restored.Failures); Assert.Single(writes); Assert.Equal(75, value); }
-        else { Assert.Empty(restored.Failures); Assert.Equal(50, value); Assert.Equal(2, writes.Count); }
+        if (externalChange) { Assert.Single(restored.Failures); Assert.Single(writes); Assert.Equal(external, value); }
+        else { Assert.Empty(restored.Failures); Assert.Equal(original, value); Assert.Equal(2, writes.Count); }
         Assert.False(ItemCatalog.All.Single(i => i.Id == id).Default);
     }
 

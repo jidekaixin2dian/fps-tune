@@ -10,7 +10,7 @@
                     <TextBlock x:Name="StepBody" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,18"/>
                     <Button x:Name="GoToButton" Content="{DynamicResource Str.GoToStep}" Click="GoTo_Click" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left"/>
                     <Grid Margin="0,16,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock x:Name="StepProgress" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" FontFamily="{StaticResource FontMono}"/>
+                        <TextBlock x:Name="StepProgress" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" FontFamily="{StaticResource FontBody}"/>
                         <Button x:Name="PreviousButton" Grid.Column="1" Content="{DynamicResource Str.PreviousStep}" Click="Previous_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,6,0"/>
                         <Button x:Name="NextButton" Grid.Column="2" Content="{DynamicResource Str.NextStep}" Click="Next_Click" Style="{StaticResource SecondaryButtonStyle}"/>
                     </Grid>

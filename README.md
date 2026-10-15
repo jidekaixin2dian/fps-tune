@@ -1,6 +1,6 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
@@ -9,14 +9,24 @@
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
 
-## v0.2.8-beta：测量、显示器与恢复增强
+## 0.3.0 主要更新
+
+本次是一次较大的界面与功能更新，**建议更新**。
+
+- 字体与页面风格更统一，游戏路径也更容易阅读。
+- 检测页按概览、优化项目和报告分开浏览，可搜索和分类筛选，修复重复状态圆点。
+- 显卡名称支持 GTX 750 Ti 等 8 个预设，应用前可预览，也能还原原名称。
+- 新增整机待机缓存清理、游戏及后台限帧、接电 Wi-Fi 性能模式与机械硬盘保持唤醒。
+- 性能记录和 A/B 实验提供入门引导；QQ 加群反馈和更新提示独立处理。
+
+## 历史更新
+
+### 0.2.8：测量、显示器与恢复增强
 
 - **定时性能会话**：填写游戏分辨率、画质 / DLSS / 帧率上限及固定测试场景，设置目标时长后自动保存；留空仍可手动停止。支持沿用历史会话的条件，JSON / CSV 导出附带这些记录。
 - **更清楚的前后对照**：比较平均 FPS、1% low、P99 帧时间；游戏、场景、画质、分辨率或采样条件缺失 / 不一致时明确提示。条件由用户填写，单次差值不代表优化收益；真实 FPS 仍需要官方 PresentMon。
 - **多显示器控制**：选择目标屏幕调整数字振动与 ICC 关联，逐屏保留原值、独立还原。主屏变化不自动换目标，断开的屏幕禁用写入。ICC 仅影响支持色彩管理的应用，部分游戏会忽略；系统级关联等无法安全切换的配置会提示不可用。
 - **诊断与更新恢复**：DLSS / 3D 可直接导出脱敏诊断，记录权限、驱动版本、失败阶段及设置前后值；更新前保护设置和还原记录，失败后提供重试与旧版包可用时的回退入口。
-
-## 历史更新
 
 ### 0.2.4：一次大更新
 
@@ -35,12 +45,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.2.8-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta)**。
+当前版本为 **[v0.3.0-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.2.8-beta) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.2.8.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/FpsTune-Setup-0.2.8.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/FpsTune-Setup-0.3.0.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -48,7 +58,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.2.8.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.2.8-beta/SHA256SUMS-v0.2.8.txt)。
+本版校验清单：[SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/SHA256SUMS-v0.3.0.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 0.2.4 起，便携包和安装包包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -68,7 +78,7 @@
 ## 当前功能
 
 - **工作台与紧凑控制台**：深浅主题和主题切换过渡，统一选择控件，可使用本地图片作为软件背景。低配模式或 Windows 关闭动画时直接切换主题。
-- **检测与系统调校**：38 个目录项目，逐项展示当前状态、权限、重启要求和副作用；内存压缩项暂不可用，保留旧记录还原。均衡预设含 16 项；无需管理员的预设含 4 项。新增接电 CPU 能效偏好与最大状态，默认不勾选。
+- **检测与系统调校**：40 个目录项目，逐项展示当前状态、权限、重启要求和副作用；内存压缩项暂不可用，保留旧记录还原。均衡预设含 16 项；无需管理员的预设含 4 项。接电 CPU、Wi-Fi 与硬盘调校均可单独选择，默认不勾选。
 - **多游戏**：识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置、选定显示器的数字振动、11 个生成的 ICC 预设或自选 `.icc` / `.icm`，以及逐屏原始关联还原。ICC 在使用颜色管理的应用中生效，部分游戏会忽略它。
 - **显卡名称实验**：将 NVIDIA 显卡的 Windows `DeviceDesc` 改为 GTX 1050 Ti，保留原名称备份。它不改变 DXGI 硬件标识、驱动能力或显卡性能，游戏是否采用此名称需实测。
