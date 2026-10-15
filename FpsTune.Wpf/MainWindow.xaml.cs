@@ -16,10 +16,31 @@ public partial class MainWindow : Window
     private readonly CancellationTokenSource _updateLifetime = new();
     private UpdateCard? _updateCard;
     private GuideCard? _guideCard;
+    private Window? _productDialog;
+    private UpdateInfo? _pendingUpdate;
+    internal CommunityPreferences CommunityPreferenceStore { get; set; } = new();
     internal void ShowUpdateCard(UpdateInfo info)
     {
-        if (_updateCard is not null) { _updateCard.Notification.SetExpanded(true); return; }
-        AttachUpdateCard(new UpdateCard(info));
+        if (_productDialog is not null) { _pendingUpdate = info; return; }
+        ShowProductDialog(new UpdateAvailableWindow(info));
+    }
+    internal void ShowCommunityPrompt(bool automatic = false)
+    {
+        if (_productDialog is not null || (automatic && CommunityPreferenceStore.IsSuppressed)) return;
+        ShowProductDialog(new CommunityWindow(CommunityPreferenceStore.Suppress, ProductLinks.Open));
+    }
+    private void ShowProductDialog(Window dialog)
+    {
+        _productDialog = dialog;
+        dialog.Owner = this;
+        DialogService.PrepareWindowForTest?.Invoke(dialog);
+        try { dialog.ShowDialog(); }
+        finally { _productDialog = null; }
+        if (_pendingUpdate is { } pending)
+        {
+            _pendingUpdate = null;
+            Dispatcher.BeginInvoke(new Action(() => { if (IsVisible) ShowUpdateCard(pending); }));
+        }
     }
     internal void ShowUpdateRecovery(UpdateAttempt attempt)
     {
@@ -52,7 +73,7 @@ public partial class MainWindow : Window
     private void RefreshNotificationArea() => NotificationArea.Visibility = NotificationStack.Children.Count == 0
         ? Visibility.Collapsed : Visibility.Visible;
 
-    internal void ShowGuideCard(bool feedback)
+    internal void ShowGuideCard()
     {
         if (_guideCard is null)
         {
@@ -67,7 +88,7 @@ public partial class MainWindow : Window
             };
             NotificationStack.Children.Insert(0, card);
         }
-        _guideCard.ShowSection(feedback);
+        _guideCard.ShowTutorial();
         RefreshNotificationArea();
     }
     private async Task CheckStartupUpdateAsync()
@@ -75,14 +96,25 @@ public partial class MainWindow : Window
         try
         {
             await Task.Delay(2500, _updateLifetime.Token);
+            while (Application.Current.Windows.OfType<SplashWindow>().Any(w => w.IsVisible))
+                await Task.Delay(200, _updateLifetime.Token);
             UpdateAttempt? recovery = null;
             try { recovery = UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!); }
             catch { /* Recovery metadata must never block app startup. */ }
             if (recovery is not null && recovery.Status != "succeeded") { ShowUpdateRecovery(recovery); return; }
-            if (!SettingsService.Current.CheckUpdatesOnStartup) return;
-            var info = await UpdateService.CheckAsync(_updateLifetime.Token);
-            if (!_updateLifetime.IsCancellationRequested && info is not null &&
-                UpdateService.IsNewer(info.ReleaseTag ?? info.Version, UpdateService.DisplayVersion)) ShowUpdateCard(info);
+            if (SettingsService.Current.CheckUpdatesOnStartup)
+            {
+                var info = await UpdateService.CheckAsync(_updateLifetime.Token);
+                if (_updateLifetime.IsCancellationRequested) return;
+                if (info is not null && UpdateService.IsNewer(info.ReleaseTag ?? info.Version, UpdateService.DisplayVersion))
+                {
+                    if (IsVisible && WindowState != WindowState.Minimized) ShowUpdateCard(info);
+                    return; // One automatic prompt per launch; the community reminder can wait.
+                }
+            }
+            if (!_updateLifetime.IsCancellationRequested && IsVisible && WindowState != WindowState.Minimized
+                && !App.SessionService.IsRunning && !ExperimentRunner.IsRunning)
+                ShowCommunityPrompt(automatic: true);
         }
         catch (OperationCanceledException) { }
     }
@@ -489,7 +521,7 @@ public partial class MainWindow : Window
         // Legacy contact fields remain readable; community feedback is now a global entry.
     }
 
-    private void Guide_Click(object sender, RoutedEventArgs e) => ShowGuideCard(false);
-    private void Feedback_Click(object sender, RoutedEventArgs e) => ShowGuideCard(true);
+    private void Guide_Click(object sender, RoutedEventArgs e) => ShowGuideCard();
+    private void Feedback_Click(object sender, RoutedEventArgs e) => ShowCommunityPrompt();
 
 }

@@ -866,7 +866,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.LicenseTitle">Licenses and third-party notices</s:String>
     <s:String x:Key="Str.Workspace">Workspace</s:String>
     <s:String x:Key="Str.Guide">Getting started</s:String>
-    <s:String x:Key="Str.Feedback">Community &amp; feedback</s:String>
+    <s:String x:Key="Str.Feedback">QQ 加群反馈</s:String>
     <s:String x:Key="Str.GuideIntro">Choose a game → Detect → Adjust → Measure</s:String>
     <s:String x:Key="Str.GoToStep">Open page</s:String>
     <s:String x:Key="Str.CommunityTitle">FPS Tune developer community</s:String>
@@ -1082,4 +1082,16 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CommandAliasUpdate">关于 版本 更新 开源 许可 update version license about</s:String>
     <s:String x:Key="Str.OptStateAtTarget">At target</s:String>
     <s:String x:Key="Str.OptStatePending">Not applied</s:String>
+    <s:String x:Key="Str.CommunityPromptTitle">QQ 加群反馈</s:String>
+    <s:String x:Key="Str.CommunityPromptBody">遇到问题、提出建议，或交流游戏设置，都可以加入 FPS 帧律交流群。</s:String>
+    <s:String x:Key="Str.CommunityJoinHint">点击下方按钮，打开 QQ 官方加群页面。</s:String>
+    <s:String x:Key="Str.CommunityNeverRemind">不再提醒</s:String>
+    <s:String x:Key="Str.CommunityPersistenceHint">对当前 Windows 账户生效，普通卸载、重装后仍会保留。</s:String>
+    <s:String x:Key="Str.CommunitySaveFailed">无法保存“不再提醒”。请重试，或取消勾选后关闭。</s:String>
+    <s:String x:Key="Str.CommunityJoin">一键加群</s:String>
+    <s:String x:Key="Str.CommunityLater">稍后</s:String>
+    <s:String x:Key="Str.ReleaseChanges">本次主要更新</s:String>
+    <s:String x:Key="Str.ReleaseDownloadPage">前往下载页面</s:String>
+    <s:String x:Key="Str.ReleaseExeHint">优先下载 EXE 安装版，已包含所需 .NET 运行时。</s:String>
+    <s:String x:Key="Str.ReleaseNotesEmpty">此版本暂未提供更新说明，可前往下载页面查看。</s:String>
 </ResourceDictionary>

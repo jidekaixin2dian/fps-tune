@@ -5,9 +5,9 @@
     Background="Transparent" Style="{StaticResource WindowTypographyStyle}" ResizeMode="CanResizeWithGrip">
     <Border Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="24">
         <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-            <DockPanel MouseLeftButtonDown="Header_Drag">
+            <DockPanel>
                 <Button DockPanel.Dock="Right" Content="{DynamicResource Str.Close}" IsCancel="True" Style="{StaticResource GhostButtonStyle}"/>
-                <StackPanel>
+                <StackPanel MouseLeftButtonDown="Header_Drag">
                     <TextBlock Text="{DynamicResource Str.ReviewTitle}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="23" FontWeight="SemiBold"/>
                     <TextBlock x:Name="TargetText" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0" TextWrapping="Wrap"/>
                 </StackPanel>

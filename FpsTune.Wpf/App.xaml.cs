@@ -58,7 +58,7 @@ public partial class App : Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         SettingsService.Load();
         LangService.Load();
-        LangService.Apply(LangService.Current);
+        LangService.Apply(LangService.ZhCn);
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
         // 主题在启动画面显示前就位，保证 splash 第一帧就是正确配色
         ThemeManager.Initialize();

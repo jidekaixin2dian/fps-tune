@@ -22,6 +22,7 @@ public partial class UpdateCard : UserControl
         Card.SetResourceReference(NotificationCard.NotificationTitleProperty, "Str.UpdateAvailable");
         NotesText.Text = info.Notes;
         StatusText.SetResourceReference(TextBlock.TextProperty, "Str.UpdateOptional");
+        InstallButton.SetResourceReference(ContentProperty, "Str.ReleaseDownloadPage");
     }
     internal UpdateCard(UpdateAttempt attempt) : this(attempt.Target) => ShowRecovery(attempt);
     private void ShowRecovery(UpdateAttempt attempt)
@@ -54,7 +55,11 @@ public partial class UpdateCard : UserControl
     public void Cancel() => _lifetime.Cancel();
     private void Later_Click(object sender, RoutedEventArgs e) => Card.SetExpanded(false);
     private async void Install_Click(object sender, RoutedEventArgs e)
-        => await RunInstallAsync(false);
+    {
+        if (_recovery is not null) { await RunInstallAsync(false); return; }
+        try { ProductLinks.Open(ProductLinks.ReleasePage(_info)); }
+        catch { StatusText.Text = Str.T("Str.CannotOpenLink"); }
+    }
     private async void Rollback_Click(object sender, RoutedEventArgs e)
     {
         if (_recovery is null || !DialogService.Confirm(Str.T("Str.UpdateRollback"), Str.T("Str.UpdateRollbackConfirm"))) return;
@@ -62,7 +67,7 @@ public partial class UpdateCard : UserControl
     }
     private async Task RunInstallAsync(bool rollback)
     {
-        if (_running) return;
+        if (_running || _recovery is null) return;
         if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
         {
             StatusText.Text = Str.T("Str.UpdateSessionBusy");
@@ -77,8 +82,7 @@ public partial class UpdateCard : UserControl
         {
             void Progress(double value) => Dispatcher.Invoke(() => DownloadProgress.Value = value);
             if (rollback) await UpdateInstaller.RollbackAsync(_recovery!, Progress, _lifetime.Token);
-            else if (_recovery is not null) await UpdateInstaller.RetryAsync(_recovery, Progress, _lifetime.Token);
-            else await UpdateInstaller.InstallAsync(_info, Progress, _lifetime.Token);
+            else await UpdateInstaller.RetryAsync(_recovery, Progress, _lifetime.Token);
             Application.Current.Shutdown();
         }
         catch (OperationCanceledException) { StatusText.Text = Str.T("Str.UpdateCancelled"); }

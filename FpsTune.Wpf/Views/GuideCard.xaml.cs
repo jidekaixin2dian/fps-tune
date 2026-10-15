@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using FpsTune.Wpf.Services;
@@ -19,15 +18,13 @@ public partial class GuideCard : UserControl
     {
         InitializeComponent();
         _navigate = navigate;
-        ShowSection(false);
+        ShowTutorial();
     }
 
-    public void ShowSection(bool feedback)
+    public void ShowTutorial()
     {
-        TutorialBody.Visibility = feedback ? Visibility.Collapsed : Visibility.Visible;
-        FeedbackBody.Visibility = feedback ? Visibility.Visible : Visibility.Collapsed;
-        Card.SetResourceReference(NotificationCard.NotificationTitleProperty, feedback ? "Str.Feedback" : "Str.Guide");
-        Card.SetResourceReference(NotificationCard.NotificationSubtitleProperty, feedback ? "Str.CommunityTitle" : "Str.GuideIntro");
+        Card.SetResourceReference(NotificationCard.NotificationTitleProperty, "Str.Guide");
+        Card.SetResourceReference(NotificationCard.NotificationSubtitleProperty, "Str.GuideIntro");
         RefreshStep();
         Card.SetExpanded(true);
     }
@@ -55,15 +52,5 @@ public partial class GuideCard : UserControl
     {
         _navigate(Targets[_step]);
         Card.SetExpanded(false);
-    }
-    private void CopyGroup_Click(object sender, RoutedEventArgs e)
-    {
-        try { Clipboard.SetText("659528489"); CopyStatus.Text = Str.T("Str.GroupCopied"); }
-        catch (Exception ex) { CopyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-    }
-    private void OpenIssue_Click(object sender, RoutedEventArgs e)
-    {
-        try { Process.Start(new ProcessStartInfo("https://github.com/jidekaixin2dian/fps-tune/issues/new") { UseShellExecute = true }); }
-        catch { CopyStatus.Text = Str.T("Str.CannotOpenLink"); }
     }
 }

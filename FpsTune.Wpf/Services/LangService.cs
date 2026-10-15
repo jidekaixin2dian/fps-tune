@@ -4,8 +4,7 @@ using System.Windows;
 namespace FpsTune.Wpf.Services;
 
 /// <summary>
-/// 界面语言：默认中文，可在设置页切换并持久化。
-/// 文案走 ResourceDictionary（DynamicResource）；catalog 33 项说明仍为中文（issue #1 明确拆出）。
+/// 当前产品界面集中维护中文；保留语言资源设施供兼容与将来恢复。
 /// </summary>
 public static class LangService
 {

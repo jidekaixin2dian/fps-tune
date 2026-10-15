@@ -117,7 +117,7 @@
                         </RadioButton>
                     </UniformGrid>
                     <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,0,0,20"/>
-                    <StackPanel Margin="0,2,0,0">
+                    <StackPanel x:Name="LanguageOptions" Margin="0,2,0,0" Visibility="Collapsed">
                         <TextBlock Text="{DynamicResource Str.LanguageLabel}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <RadioButton x:Name="LangZhRadio" GroupName="uiLang" Content="{DynamicResource Str.LanguageZh}"
