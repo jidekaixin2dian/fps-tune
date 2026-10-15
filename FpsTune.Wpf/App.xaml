@@ -58,6 +58,7 @@
             <SolidColorBrush po:Freeze="False" x:Key="TextSecondaryBrush" Color="#9AA7BA"/>
             <SolidColorBrush po:Freeze="False" x:Key="TextMutedBrush" Color="#66738A"/>
             <SolidColorBrush po:Freeze="False" x:Key="PrimaryBrush" Color="#3B82F6"/>
+            <SolidColorBrush po:Freeze="False" x:Key="ChartSecondaryBrush" Color="#3B82F6"/>
             <SolidColorBrush po:Freeze="False" x:Key="PrimaryHoverBrush" Color="#67E8F9"/>
             <SolidColorBrush po:Freeze="False" x:Key="OnPrimaryBrush" Color="#062A30"/>
             <SolidColorBrush po:Freeze="False" x:Key="AccentBrush" Color="#22D3EE"/>
@@ -798,7 +799,7 @@
             <Style x:Key="PillRadioStyle" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="11.5"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="Template">
@@ -860,13 +861,14 @@
             <Style x:Key="StudioNavStyle" TargetType="controls:NavButton">
                 <Setter Property="Height" Value="44"/><Setter Property="Margin" Value="0,0,0,6"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/><Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="Normal"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/><Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="controls:NavButton">
                     <Border x:Name="NavSurface" CornerRadius="8" Background="Transparent" BorderThickness="1" BorderBrush="Transparent" Padding="14,0">
                         <TextBlock Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="NavSurface" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/></Trigger>
+                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="NavSurface" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/></Trigger>
                         <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavSurface" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/></Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="NavSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
                     </ControlTemplate.Triggers>

@@ -57,7 +57,7 @@
                                FontWeight="{StaticResource SmallEmphasisWeight}"
                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock x:Name="SelectionSummaryText" Text=""
-                               FontSize="11"
+                               FontSize="12"
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,2,0,0"/>
                 </StackPanel>

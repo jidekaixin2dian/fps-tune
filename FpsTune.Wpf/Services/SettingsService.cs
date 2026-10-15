@@ -85,7 +85,7 @@ public static class SettingsService
         Douyin = "jiaxindeyang",
         Email = "",
         WeChatLink = "",
-        QQLink = "https://qm.qq.com/q/jwbacnxrmU",
+        QQLink = ProductLinks.CommunityUrl,
         DouyinLink = "https://v.douyin.com/sf-DA6eLcjQ/",
         ThemeMode = "system"
     };

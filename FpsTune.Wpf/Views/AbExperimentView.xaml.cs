@@ -741,14 +741,14 @@ public partial class AbExperimentView : UserControl
             runs = runs.TakeLast(maxPoints).ToList();
 
         var accent = (Brush)Application.Current.Resources["AccentBrush"];
-        var primary = (Brush)Application.Current.Resources["PrimaryBrush"];
+        var primary = (Brush)Application.Current.Resources["ChartSecondaryBrush"];
         var warning = (Brush)Application.Current.Resources["WarningBrush"];
         var muted = (Brush)Application.Current.Resources["TextMutedBrush"];
         var border = (Brush)Application.Current.Resources["BorderBrush"];
 
         HistoryCanvas.Children.Clear();
 
-        const double left = 46, right = 16, top = 10, bottom = 24;
+        const double left = 52, right = 16, top = 10, bottom = 30;
         var w = Math.Max(HistoryCanvas.ActualWidth, 320);
         var h = Math.Max(HistoryCanvas.ActualHeight, 120);
         var plotW = w - left - right;
@@ -783,7 +783,7 @@ public partial class AbExperimentView : UserControl
             var label = new TextBlock
             {
                 Text = Math.Round(v, 0).ToString("0"),
-                FontSize = 10,
+                FontSize = 12,
                 Foreground = muted
             };
             Canvas.SetLeft(label, 4);
@@ -803,12 +803,14 @@ public partial class AbExperimentView : UserControl
         DrawSeries(runs, r => r.P1Low, primary, warning, X, Y);
 
         // 横轴标签
+        var stride = Math.Max(1, (int)Math.Ceiling((runs.Count - 1) * 80 / plotW));
         for (var i = 0; i < runs.Count; i++)
         {
+            if (i != runs.Count - 1 && (i % stride != 0 || i > 0 && X(runs.Count - 1) - X(i) < 70)) continue;
             var lb = new TextBlock
             {
                 Text = runs[i].ShortLabel,
-                FontSize = 10,
+                FontSize = 12,
                 Foreground = muted
             };
             lb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));

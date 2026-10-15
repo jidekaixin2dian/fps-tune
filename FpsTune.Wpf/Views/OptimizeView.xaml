@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FpsTune.Wpf.Views.OptimizeView"
+<UserControl x:Class="FpsTune.Wpf.Views.OptimizeView"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:local="clr-namespace:FpsTune.Wpf.Views"
@@ -190,7 +190,7 @@
                                         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                         </TextBlock>
                                         <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
-                                        <TextBlock Text="{Binding VerdictBadge}" FontSize="10.5" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Text="{Binding VerdictBadge}" FontSize="12" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentBrush}"/>
                                     </StackPanel>
                                     <CheckBox Grid.Column="2"
                                               Style="{StaticResource ToggleSwitchStyle}"

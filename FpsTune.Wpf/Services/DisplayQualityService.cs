@@ -82,7 +82,7 @@ public enum VSyncMode
 /// 若游戏尚未登记在任何 profile，才创建本工具自建（"FpsTune · " 前缀）的 profile。
 /// SettingID / 枚举值均来自 NVIDIA 官方 NvApiDriverSettings.h（NVIDIA/nvapi）。
 /// </summary>
-public static class DisplayQualityService
+public static partial class DisplayQualityService
 {
     // 官方 NvApiDriverSettings.h
     public const uint DlssSrEnableId = 0x10E41E01; // NGX_DLSS_SR_OVERRIDE_ID
@@ -117,6 +117,7 @@ public static class DisplayQualityService
         TransparencyMultisampleId, TransparencySupersampleId,
         PreRenderLimitId,
         AnisoSelectorId, AnisoLevelId, VSyncModeId, ShaderDiskCacheId,
+        FrameRateLimitId, BackgroundFrameRateLimitId,
     };
 
     /// <summary>
@@ -176,7 +177,10 @@ public static class DisplayQualityService
         bool Restorable,
         AnisoLevel? Aniso = null,
         VSyncMode? VSync = null,
-        bool? ShaderCache = null);
+        bool? ShaderCache = null,
+        uint? FrameRateLimit = null,
+        uint? BackgroundFrameRateLimit = null,
+        bool FrameLimitsRestorable = false);
 
     /// <summary>各向异性过滤。AppControlled=删除设置；16x 为社区/文档推荐（现代卡开销极低）。</summary>
     public static void ApplyAnisoLevel(string gameExe, AnisoLevel level)
@@ -254,10 +258,12 @@ public static class DisplayQualityService
         if (!api.TryInitialize())
             throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
         using var session = api.OpenSession();
-        var restorable = ReadBackup(gameExe) is not null;
+        var backup = ReadBackup(gameExe);
+        var restorable = backup is not null;
+        var frameRestorable = backup?.Settings.Any(s => IsFrameLimit(s.SettingId)) == true;
         var owner = session.FindApplicationOwner(gameExe);
         if (owner is null)
-            return new DrsGameSettings(gameExe, null, null, null, null, restorable);
+            return new DrsGameSettings(gameExe, null, null, null, null, restorable, FrameLimitsRestorable: frameRestorable);
 
         TextureFilterQuality? tex = session.TryGetSettingDword(owner, TextureQualityId, out var t)
             ? (TextureFilterQuality)t : null;
@@ -292,7 +298,9 @@ public static class DisplayQualityService
         }
         bool? shaderCache = session.TryGetSettingDword(owner, ShaderDiskCacheId, out var sc)
             ? sc != 0 : null;
-        return new DrsGameSettings(gameExe, tex, power, traa, prerender, restorable, aniso, vsync, shaderCache);
+        uint? frame = session.TryGetSettingDword(owner, FrameRateLimitId, out var cap) ? cap : null;
+        uint? background = session.TryGetSettingDword(owner, BackgroundFrameRateLimitId, out var idle) ? idle : null;
+        return new DrsGameSettings(gameExe, tex, power, traa, prerender, restorable, aniso, vsync, shaderCache, frame, background, frameRestorable);
     }
 
     /// <summary>存在本工具写入前的原值备份（任意受管设置的可还原快照）。</summary>
@@ -603,21 +611,29 @@ public static class DisplayQualityService
     /// DLSS 与 M3 二期 3D 设置共用同一份备份与还原。
     /// </summary>
     public static bool RemoveDlssOverride(string gameExe)
+        => RestoreManaged(gameExe);
+
+    private static bool RestoreManaged(string gameExe, Func<uint, bool>? filter = null)
         => OperationDiagnostics.Run("driver-restore", gameExe, BackupDirOverride, trace =>
     {
         trace.Stage("operation-lock");
         using var gate = SystemMutationGate.Acquire();
         trace.Stage("load-backup");
-        var backup = ReadBackup(gameExe);
+        var complete = ReadBackup(gameExe);
+        if (complete is null) return false;
+        var backup = filter is null ? complete : complete with
+        {
+            Settings = complete.Settings.Where(s => filter(s.SettingId)).ToList(),
+            PostSettings = complete.PostSettings?.Where(s => filter(s.SettingId)).ToList(),
+            PreviousSettings = complete.PreviousSettings?.Where(s => filter(s.SettingId)).ToList()
+        };
+        if (backup.Settings.Count == 0) return false;
         trace.Stage("initialize-driver");
         using var api = CreateApi();
         if (!api.TryInitialize())
             throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
         trace.Stage("load-driver");
         using var session = api.OpenSession();
-
-        if (backup is null)
-            return false;
 
         var target = session.FindApplicationOwner(gameExe);
         if (target is null)
@@ -644,7 +660,14 @@ public static class DisplayQualityService
         trace.Stage("readback-driver");
         VerifyPersistedSettings(api, gameExe, backup.Settings, trace);
         trace.Stage("finalize-backup");
-        DeleteBackup(gameExe);
+        var remaining = complete.Settings.Where(s => !backup.Settings.Any(restored => restored.SettingId == s.SettingId)).ToList();
+        if (remaining.Count == 0) DeleteBackup(gameExe);
+        else WriteBackup(complete with
+        {
+            Settings = remaining,
+            PostSettings = complete.PostSettings?.Where(s => remaining.Any(r => r.SettingId == s.SettingId)).ToList(),
+            PreviousSettings = complete.PreviousSettings?.Where(s => remaining.Any(r => r.SettingId == s.SettingId)).ToList()
+        });
         return true;
     });
 }

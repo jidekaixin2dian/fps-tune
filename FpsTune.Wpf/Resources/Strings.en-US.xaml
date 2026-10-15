@@ -90,14 +90,14 @@
     <s:String x:Key="Str.ItemsOverview">Optimization overview</s:String>
     <s:String x:Key="Str.MemoryUsage">Memory usage</s:String>
     <s:String x:Key="Str.Memory">Memory</s:String>
-    <s:String x:Key="Str.ReadOnlyCheckup">Read-only checkup</s:String>
-    <s:String x:Key="Str.DetectIntro">Read-only view of hardware, the game and each item. No system setting is changed.</s:String>
+    <s:String x:Key="Str.ReadOnlyCheckup">系统体检</s:String>
+    <s:String x:Key="Str.DetectIntro">查看硬件、游戏与各项当前状态</s:String>
     <s:String x:Key="Str.LiveMonitor">Live monitoring</s:String>
     <s:String x:Key="Str.CurrentGame">Current game</s:String>
     <s:String x:Key="Str.VramDedicated">VRAM usage (dedicated)</s:String>
     <s:String x:Key="Str.VramUsage">VRAM usage</s:String>
     <s:String x:Key="Str.DetectDetails">Detection details</s:String>
-    <s:String x:Key="Str.SampleEverySecond">Sampled every second · read-only performance data</s:String>
+    <s:String x:Key="Str.SampleEverySecond">按当前采样间隔更新</s:String>
     <s:String x:Key="Str.GamePath">Game path</s:String>
     <s:String x:Key="Str.ClickRunDetect">Click &quot;Run detection&quot; to start.</s:String>
     <s:String x:Key="Str.System">System</s:String>
@@ -131,7 +131,7 @@
     <s:String x:Key="Str.VersionLabel">Version: v</s:String>
 
     <!-- Full UI text (converted 2026-09-25) -->
-    <s:String x:Key="Str.AbIntro">Guided experiment: capture a baseline, then test three candidate groups in turn. Each step can link a performance session; conclusions come only from real sampling.</s:String>
+    <s:String x:Key="Str.AbIntro">先记录优化前的基线，再按向导测试候选方案，比较同一游戏场景下的表现。</s:String>
     <s:String x:Key="Str.OpenExperimentDir">Open experiment folder</s:String>
     <s:String x:Key="Str.CancelCurrentStep">Cancel current step</s:String>
     <s:String x:Key="Str.AbWizardTitle">Experiment wizard · WIZARD (keep every step in the same in-game scene)</s:String>
@@ -161,9 +161,9 @@
     <s:String x:Key="Str.MatchPrep">Match prep</s:String>
     <s:String x:Key="Str.ConsoleIntro">Locate the game, review the basic settings, then record one match's load.</s:String>
     <s:String x:Key="Str.BasicAdvice">Basic advice</s:String>
-    <s:String x:Key="Str.TipBasicAdvice">Review Game Mode, background recording and the game's GPU preference. Nothing is changed immediately.</s:String>
+    <s:String x:Key="Str.TipBasicAdvice">检查游戏模式、后台录制和游戏显卡偏好</s:String>
     <s:String x:Key="Str.FirstRunAdviceIntro">Start with a check-up, then review these {0} suggestions.</s:String>
-    <s:String x:Key="Str.TipBasicAdviceFirst">On first use this runs a read-only check-up first, then opens the optimize page for review</s:String>
+    <s:String x:Key="Str.TipBasicAdviceFirst">首次使用先完成系统体检，再进入优化页选择方案</s:String>
     <s:String x:Key="Str.RecordMatch">Record a match</s:String>
     <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load, plus FPS when the game is running and PresentMon is available</s:String>
     <s:String x:Key="Str.BackupRestore">Backup / restore</s:String>
@@ -177,19 +177,19 @@
     <s:String x:Key="Str.AdminRequired">Admin required</s:String>
     <s:String x:Key="Str.TipSelectItem">Select this item, then review before applying</s:String>
     <s:String x:Key="Str.PreparingItems">Preparing items…</s:String>
-    <s:String x:Key="Str.ToggleHint">Toggles only select items. Review, then apply; a backup is taken before any change.</s:String>
+    <s:String x:Key="Str.ToggleHint">选择项目后，点击“审阅并应用”。</s:String>
     <s:String x:Key="Str.ReviewAndApply">Review and apply →</s:String>
     <s:String x:Key="Str.HomeTitle">System-level frame rate console</s:String>
     <s:String x:Key="Str.HomeSubtitle">Detect → explain → confirm → apply → restore · never touches game files · never injects · every change is reversible</s:String>
     <s:String x:Key="Str.StartDetect">Start detection →</s:String>
-    <s:String x:Key="Str.HomeDetectDesc">Hardware, game path, checkup and item status — read-only</s:String>
+    <s:String x:Key="Str.HomeDetectDesc">查看硬件信息、游戏路径与优化项状态</s:String>
     <s:String x:Key="Str.HomeOptDesc">Presets and per-item toggles, system-level tuning, one-click restore</s:String>
     <s:String x:Key="Str.HomeSessionDesc">Samples CPU / memory / GPU / VRAM locally and builds summaries, insights and comparisons</s:String>
     <s:String x:Key="Str.HomeAbDesc">Baseline capture, candidate group comparison, keep-or-restore decisions</s:String>
     <s:String x:Key="Str.HomeBackupDesc">Backup files, restore all, logs and JSON output</s:String>
-    <s:String x:Key="Str.SessionIntro">Start a local sampling run to record CPU / memory / GPU / VRAM curves and a summary. Data stays on this machine.</s:String>
+    <s:String x:Key="Str.SessionIntro">记录游戏时的 CPU、内存、GPU 与显存变化，保存后比较帧率和流畅度。</s:String>
     <s:String x:Key="Str.SamplingControl">Sampling control</s:String>
-    <s:String x:Key="Str.StartSession">Start session</s:String>
+    <s:String x:Key="Str.StartSession">开始记录</s:String>
     <s:String x:Key="Str.StopAndSave">Stop and save</s:String>
     <s:String x:Key="Str.SessionReady">Ready. Enter a name and start; you can stop and save at any time, or cancel to discard.</s:String>
     <s:String x:Key="Str.VramDedicatedShort">VRAM (dedicated)</s:String>
@@ -273,9 +273,9 @@
     <s:String x:Key="Str.PresetJDesc">New-generation model · earlier version</s:String>
     <s:String x:Key="Str.PresetE">E preset</s:String>
     <s:String x:Key="Str.PresetEDesc">Previous-generation CNN model · retro image quality</s:String>
-    <s:String x:Key="Str.DlssNote">Only settings actually written by this tool are backed up. Restore checks current values and preserves external changes and unrelated settings. Follow in-game restores all managed settings for this game. Check model support and visual effects in the game.</s:String>
+    <s:String x:Key="Str.DlssNote">选择预设后点击“应用覆盖”。“跟随游戏内”会还原本游戏的全部工具改动。</s:String>
     <s:String x:Key="Str.VibNote">Adjust color vibrance on the selected display to suit your preference.</s:String>
-    <s:String x:Key="Str.VibNote2">The original level is saved before applying. Adjust it separately from the ICC profile.</s:String>
+    <s:String x:Key="Str.VibNote2">数字振动与 ICC 配置可以分别调整。</s:String>
     <s:String x:Key="Str.VibRecommendedSet">Try 58%</s:String>
     <s:String x:Key="Str.VibRecommendedNote">Try 58% moves the slider. Choose Apply to use the setting.</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% is a starting point for a subtle color boost. Adjust to taste.</s:String>
@@ -289,7 +289,7 @@
     <s:String x:Key="Str.IccStandard">Original profile</s:String>
     <s:String x:Key="Str.IccStandardDesc">Restores your original colour configuration</s:String>
     <s:String x:Key="Str.IccNote">ICC relies on color management; some games ignore it. Original profile restores the saved association.</s:String>
-    <s:String x:Key="Str.DrsNote">Writes per-game NVIDIA driver settings. Saves the settings managed by this tool before applying; shares restoration with DLSS.</s:String>
+    <s:String x:Key="Str.DrsNote">应用当前游戏的 3D 设置；还原按钮会恢复本工具对该游戏的全部改动。</s:String>
     <s:String x:Key="Str.TipOneClickEsports">High-quality textures + prefer maximum performance + 2x transparency AA + 1 prerendered frame; on high-end desktop cards transparency AA is raised to 4x automatically</s:String>
     <s:String x:Key="Str.DrsDefaultHint">Recommended: high-quality textures · 2x transparency AA · 1 prerendered frame</s:String>
     <s:String x:Key="Str.DrsTextureFilter">Texture filtering · quality</s:String>
@@ -329,7 +329,7 @@
     <s:String x:Key="Str.DrsShaderCache">Shader cache</s:String>
     <s:String x:Key="Str.TipShaderCache">Enabling it reduces compile-time stutter (recommended)</s:String>
     <s:String x:Key="Str.OnRecommended">On (recommended)</s:String>
-    <s:String x:Key="Str.DrsNote2">Original values are saved before applying. Prefer in-game NVIDIA Reflex when the game supports it.</s:String>
+    <s:String x:Key="Str.DrsNote2">游戏支持 NVIDIA Reflex 时，低延迟优先在游戏内调整。</s:String>
 
     <!-- Full UI text (converted 2026-09-25) -->
     <s:String x:Key="Str.Keep">Keep</s:String>
@@ -499,16 +499,16 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.RecordMatchHint">Run the game before starting a recording. Record a similar duration on the same map, quality and frame cap. FPS is included when PresentMon and the game process are available; otherwise load is still recorded and the missing FPS reason is shown.</s:String>
     <s:String x:Key="Str.BasicsOk">Basic settings are in good shape · record one match's load to keep a before/after comparison.</s:String>
     <s:String x:Key="Str.ItemDetailHint">Click an item to see its current state and side effects. Confirm and apply at the bottom; the result shows here too.</s:String>
-    <s:String x:Key="Str.ToggleHint2">Switches show what you are about to apply, not the current system state. Adjusting anything switches to Custom.</s:String>
+    <s:String x:Key="Str.ToggleHint2">选择要应用的项目；手动调整后使用自定义方案。</s:String>
     <s:String x:Key="Str.CustomSelection">Custom selection</s:String>
     <s:String x:Key="Str.DetectDoneHint">Detection is complete. Pick a preset on the left or tick the items you want, then confirm and click Apply.</s:String>
-    <s:String x:Key="Str.DetectUpdatedHint">Detection updated. Toggles only select items. Review, then apply; a backup is taken before any change.</s:String>
+    <s:String x:Key="Str.DetectUpdatedHint">检测已更新。请选择要调整的项目。</s:String>
     <s:String x:Key="Str.DetectIncomplete">Detection did not finish. Check the error on the Detect page and try again.</s:String>
     <s:String x:Key="Str.DetectIncompleteRetry">Detection did not finish. Run it again or open the Detect page to see why.</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">No items yet. Run detection on the Detect page first.</s:String>
     <s:String x:Key="Str.LoadedLastScan">Loaded the previous scan. Click Run detection to scan again.</s:String>
     <s:String x:Key="Str.LastDetectLabel">Last detection: {0} · took {1:0.0}s</s:String>
-    <s:String x:Key="Str.NeverDetected">Not detected yet — click "Run detection" to start (read-only, no system settings are changed)</s:String>
+    <s:String x:Key="Str.NeverDetected">点击“运行检测”获取当前状态</s:String>
     <s:String x:Key="Str.CopiedDetails">Detection details copied to the clipboard.</s:String>
     <s:String x:Key="Str.CopiedGamePath">Game path copied to the clipboard.</s:String>
     <s:String x:Key="Str.CannotParseDetectJson">Could not parse the detection JSON.</s:String>
@@ -577,11 +577,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DriverAltLabel">Alternatives: </s:String>
     <s:String x:Key="Str.DriverNoStable">no community-agreed stable version yet</s:String>
     <s:String x:Key="Str.DriverNoAdvice">Not recognised as an NVIDIA GPU, so there is no driver version advice.</s:String>
-    <s:String x:Key="Str.DriverSource">Source: community consensus (SMZDM, 2026-01-23) — not an official recommendation. Versions change over time, so always check NVIDIA's own site. This tool never downloads or installs drivers.</s:String>
+    <s:String x:Key="Str.DriverSource">参考：社区驱动使用反馈（什么值得买，2026-01-23）。</s:String>
 
     <!-- In-driver manual settings checklist (per vendor; read-only guidance) -->
     <s:String x:Key="Str.ManualCard">In-driver manual settings checklist</s:String>
-    <s:String x:Key="Str.ManualIntro">These settings live in your GPU driver's own control panel and you change them by hand; this tool never modifies them (read-only guidance). Read the section for your GPU vendor.</s:String>
+    <s:String x:Key="Str.ManualIntro">在显卡驱动控制面板中，按下面的路径手动调整。</s:String>
     <s:String x:Key="Str.ManualGpuLabel">Current GPU: </s:String>
     <s:String x:Key="Str.ManualNvidiaBody">No manual checklist needed for NVIDIA: the driver 3D settings (texture filtering, power management, low latency, VSync, anisotropic filtering, shader cache) can already be written and restored by the "Driver 3D settings" card above.</s:String>
     <s:String x:Key="Str.ManualAmdEntry">Where: AMD Software: Adrenalin Edition → "Gaming → Graphics" holds global settings; each game has its own profile that overrides the globals.</s:String>
@@ -705,9 +705,9 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FpsReasonNoGameProcess">No game process detected when recording started</s:String>
     <s:String x:Key="Str.FpsReasonParseFailed">PresentMon output could not be parsed</s:String>
     <s:String x:Key="Str.BottleneckTitle">Bottleneck</s:String>
-    <s:String x:Key="Str.BottleneckGpu">GPU-bound — GPU averaged {0}% with a 95th percentile of {1}%, near saturation. Raising quality-related caps usually won't add FPS in this state; look on the GPU side first (driver 3D settings, quality presets). Heuristic, not causal.</s:String>
-    <s:String x:Key="Str.BottleneckCpu">CPU-bound — GPU averaged {0}% with headroom while CPU 95th percentile is elevated ({1}%). Look on the CPU side first (background load, scheduling items). Heuristic, not causal.</s:String>
-    <s:String x:Key="Str.BottleneckBalanced">No single-sided bottleneck — GPU averaged {0}% and CPU 95th percentile is {1}%; neither threshold was reached. This doesn't mean there's no optimization headroom. Heuristic, not causal.</s:String>
+    <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
+    <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>
+    <s:String x:Key="Str.BottleneckBalanced">两侧负载较均衡：GPU 平均 {0}%，CPU 95 位 {1}%。可继续比较具体场景的帧率与帧时间。</s:String>
     <s:String x:Key="Str.CustomItemsRequired">Custom A/B requires at least one optimization item (Options.Items).</s:String>
     <s:String x:Key="Str.CustomUnknownItems">Unknown optimization items: {0}</s:String>
     <s:String x:Key="Str.CustomRebootItems">These items require a restart and cannot join an in-session A/B (a restart invalidates the baseline): {0}</s:String>
@@ -753,7 +753,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.GameSwitchNeedDetect">Switched to a new game — no detection snapshot for it yet. Click "Run detection" to build its baseline.</s:String>
     <s:String x:Key="Str.PickGameExeFilter">Game executable|*.exe</s:String>
     <s:String x:Key="Str.ChangeAuditTitle">Change overview (what this tool changed)</s:String>
-    <s:String x:Key="Str.ChangeAuditHint">Read-only: each row shows the original value recorded at write time and the live current status. To revert, use "Restore all" above or per-item actions on the Detection page — this card changes nothing.</s:String>
+    <s:String x:Key="Str.ChangeAuditHint">查看各项原值与当前状态；点击“还原全部”或在检测页逐项还原。</s:String>
     <s:String x:Key="Str.ChangeAuditRefresh">Refresh</s:String>
     <s:String x:Key="Str.ChangeAuditEmpty">No pending changes — the tool currently has no unrestored modifications.</s:String>
     <s:String x:Key="Str.ExportBackups">Export backups</s:String>
@@ -944,7 +944,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MaintenanceLowSpace">Low space</s:String>
     <s:String x:Key="Str.MaintenanceNoDrives">No readable fixed drives.</s:String>
     <s:String x:Key="Str.MaintenanceMemoryTitle">Apps using the most memory</s:String>
-    <s:String x:Key="Str.MaintenanceMemoryHint">Top 8 by working set. Shared memory may overlap; high usage alone does not mean a problem.</s:String>
+    <s:String x:Key="Str.MaintenanceMemoryHint">按工作集列出占用较高的应用，便于排查后台负载。</s:String>
     <s:String x:Key="Str.MaintenanceNoProcesses">No readable apps.</s:String>
     <s:String x:Key="Str.MaintenanceTaskManager">Task Manager</s:String>
     <s:String x:Key="Str.MaintenanceTaskManagerHint">See all apps and their CPU and memory use.</s:String>
@@ -1008,7 +1008,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ConditionDurationUnknown">Actual duration unknown</s:String>
     <s:String x:Key="Str.ConditionTargetMissed">Actual duration differs from the target</s:String>
     <s:String x:Key="Str.ConditionFpsMissing">At least one session has no real FPS capture</s:String>
-    <s:String x:Key="Str.ConditionMatch">Recorded conditions match. These are your entries, not automatically verified game settings; a single difference does not establish an optimization benefit.</s:String>
+    <s:String x:Key="Str.ConditionMatch">已记录的游戏、分辨率、画质与场景一致。</s:String>
     <s:String x:Key="Str.ConditionWarning">Compare with care: {0}. The table shows recorded differences without concluding an optimization benefit.</s:String>
     <s:String x:Key="Str.ConditionSelectPrevious">Select one past session with recorded test conditions first.</s:String>
     <s:String x:Key="Str.ConditionCopied">Conditions filled in. Confirm the current game and its actual settings before starting.</s:String>
@@ -1026,12 +1026,12 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ConditionHistoryMeta">{0} · {1} · {2} samples · {3}</s:String>
     <s:String x:Key="Str.ConditionCompareMeta">A = {0} ({1}, {2} samples) · B = {3} ({4}, {5} samples)</s:String>
     <s:String x:Key="Str.CommandTitle">Quick access</s:String>
-    <s:String x:Key="Str.CommandSubtitle">Find features, settings and tuning items, then jump to their location.</s:String>
+    <s:String x:Key="Str.CommandSubtitle">搜索页面、设置和优化项目</s:String>
     <s:String x:Key="Str.CommandSearch">Search features</s:String>
     <s:String x:Key="Str.CommandQuery">Search pages, settings or tuning items (Ctrl+K)</s:String>
     <s:String x:Key="Str.CommandResults">Search results</s:String>
     <s:String x:Key="Str.CommandEmpty">No results. Try DLSS, ICC, backup, or a tuning item&apos;s name.</s:String>
-    <s:String x:Key="Str.CommandKeys">Up / Down to select · Enter to open · Esc to return. Search never applies changes directly.</s:String>
+    <s:String x:Key="Str.CommandKeys">上 / 下键选择 · Enter 打开 · Esc 返回</s:String>
     <s:String x:Key="Str.CommandOpenHint">Open {0}</s:String>
     <s:String x:Key="Str.CommandPage">Page</s:String>
     <s:String x:Key="Str.CommandDlss">DLSS model presets</s:String>
@@ -1055,7 +1055,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReviewSummary">{0} selected · {1} require administrator · {2} require restart</s:String>
     <s:String x:Key="Str.ReviewGame">Game context: {0}</s:String>
     <s:String x:Key="Str.ReviewHidden">Includes {0} items hidden by the current filter. This list contains every pending item.</s:String>
-    <s:String x:Key="Str.ReviewSnapshotHint">These are the last detected values and item descriptions. Execution reads and backs up original values again; a pending selection is not a current state.</s:String>
+    <s:String x:Key="Str.ReviewSnapshotHint">当前检测快照 · 确认后应用所选项目</s:String>
     <s:String x:Key="Str.ReviewCurrent">Last detected: </s:String>
     <s:String x:Key="Str.ReviewBackupHint">Original values are backed up for inspection and restoration under Backup / Logs.</s:String>
     <s:String x:Key="Str.ReviewBack">Back to selection</s:String>
@@ -1094,4 +1094,31 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReleaseDownloadPage">前往下载页面</s:String>
     <s:String x:Key="Str.ReleaseExeHint">优先下载 EXE 安装版，已包含所需 .NET 运行时。</s:String>
     <s:String x:Key="Str.ReleaseNotesEmpty">此版本暂未提供更新说明，可前往下载页面查看。</s:String>
+    <s:String x:Key="Str.SessionGuideTitle">第一次使用：记录一段游戏表现</s:String>
+    <s:String x:Key="Str.SessionGuideSteps" xml:space="preserve">1. 先在“检测”页定位游戏，填写分辨率、画质和测试场景。&#x0a;2. 点击“开始记录”，切回游戏完成同一段场景；到时自动保存，也可手动停止。&#x0a;3. 在历史记录中选择两次会话，比较占用、帧率与帧时间，并导出结果。</s:String>
+    <s:String x:Key="Str.SessionChartGuide">曲线从左到右展示最近采样：CPU、内存、GPU 看占用率；显存看已用容量。曲线升高表示占用增加，帧率结果请查看保存后的会话。</s:String>
+    <s:String x:Key="Str.AbGuideTitle">第一次使用：比较优化前后的表现</s:String>
+    <s:String x:Key="Str.AbGuideSteps" xml:space="preserve">1. 选择同一个游戏、分辨率、画质与固定场景，先完成基线采样。&#x0a;2. 按下方向导应用方案，再在相同场景完成对照采样。&#x0a;3. 查看两次结果，多测几轮后决定保留设置或还原。</s:String>
+    <s:String x:Key="Str.FpsMetricsGuide">平均 FPS 看整体速度；1% Low 看较慢时刻，越高越顺畅；P99 是较慢帧的耗时（毫秒），越低越好。历史曲线的横轴是实验记录，纵轴是 FPS。</s:String>
+    <s:String x:Key="Str.DisclaimerTitle">免责声明</s:String>
+    <s:String x:Key="Str.DisclaimerBody">性能分析基于本机采样与统计，可能受到游戏场景、后台负载、驱动与硬件差异影响。占用分析用于排查方向，单次差值与相关性不能保证优化收益。测试条件由用户填写；请在相同条件下复测。系统和驱动调整前请确认目标与影响，并保留原值备份。软件按许可证所述条件提供。</s:String>
+    <s:String x:Key="Str.FrameLimitTitle">游戏帧率控制（NVIDIA）</s:String>
+    <s:String x:Key="Str.FrameLimitIntro">优先使用游戏内限帧，选择能稳定达到的帧率；驱动限帧适合补充游戏缺少的选项。勾选本次要调整的项目。</s:String>
+    <s:String x:Key="Str.FrameForeground">游戏帧率上限</s:String>
+    <s:String x:Key="Str.FrameBackground">后台帧率上限</s:String>
+    <s:String x:Key="Str.FrameBackgroundHint">切到其他应用时限制游戏帧率，减少 GPU 占用。范围：20–200 FPS；0 为关闭。</s:String>
+    <s:String x:Key="Str.FrameRange">游戏上限：20–1000 FPS；后台上限：20–200 FPS；输入 0 关闭对应限帧。</s:String>
+    <s:String x:Key="Str.FrameForegroundRange">范围：20–1000 FPS；0 为关闭。</s:String>
+    <s:String x:Key="Str.FrameSelectOne">请先勾选本次要调整的帧率上限。</s:String>
+    <s:String x:Key="Str.FrameOff">关闭限帧</s:String>
+    <s:String x:Key="Str.FrameKeep">保持当前值</s:String>
+    <s:String x:Key="Str.FrameBudget">{0} FPS ≈ 每帧 {1:0.00} ms</s:String>
+    <s:String x:Key="Str.FrameCurrent">当前驱动值 · 游戏：{0} · 后台：{1}</s:String>
+    <s:String x:Key="Str.FrameApply">应用帧率设置</s:String>
+    <s:String x:Key="Str.FrameRestore">还原帧率设置</s:String>
+    <s:String x:Key="Str.FrameConfirm">游戏：{0}&#x0a;游戏帧率上限：{1}&#x0a;后台帧率上限：{2}</s:String>
+    <s:String x:Key="Str.FrameRestoreConfirm">还原 {0} 的帧率设置到本工具修改前的值。</s:String>
+    <s:String x:Key="Str.FrameApplied">已保存并验证帧率设置。重新启动游戏后测试效果。</s:String>
+    <s:String x:Key="Str.FrameRestored">已还原帧率设置。</s:String>
+    <s:String x:Key="Str.FrameFailed">帧率操作失败：{0}</s:String>
 </ResourceDictionary>

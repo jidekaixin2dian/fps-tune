@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FpsTune.Wpf.Views.SessionView"
+<UserControl x:Class="FpsTune.Wpf.Views.SessionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
@@ -18,7 +18,15 @@
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.NavSession}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="{DynamicResource Str.SessionIntro}"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+                    <Expander x:Name="GettingStarted" Header="{DynamicResource Str.SessionGuideTitle}" IsExpanded="True" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14">
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="{DynamicResource Str.SessionGuideSteps}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23"/>
+                            <TextBlock Text="{DynamicResource Str.SessionChartGuide}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="22"/>
+                        </StackPanel>
+                    </Expander>
+                </Border>
             </StackPanel>
         </Grid>
 
@@ -77,11 +85,11 @@
                         <TextBox x:Name="TargetSecondsBox" Text="60" Width="80" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
                         <Button x:Name="ReuseConditionsButton" Content="{DynamicResource Str.ConditionReuse}" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0" Click="ReuseConditions_Click"/>
                     </WrapPanel>
-                    <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"/>
                 </StackPanel>
                 <TextBlock x:Name="RunStateText"
                            Text="{DynamicResource Str.SessionReady}"
-                           Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap"
+                           Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap"
                            Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
@@ -133,7 +141,7 @@
                                        FontSize="20" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                         <Canvas x:Name="VramChart" Height="60" Margin="0,8,0,0"/>
-                        <TextBlock x:Name="VramTotalText" Text="" Style="{StaticResource MutedTextStyle}" FontSize="10"/>
+                        <TextBlock x:Name="VramTotalText" Text="" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -143,8 +151,6 @@
         <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.PerformanceInsights}" Style="{StaticResource CardTitleStyle}"/>
-                <TextBlock Text="{DynamicResource Str.InsightsDisclaimer}"
-                           Style="{StaticResource MutedTextStyle}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,0"/>
                 <TextBlock x:Name="InsightTargetText" Text="{DynamicResource Str.SelectSessionHint}"
                            Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0"/>
                 <ItemsControl x:Name="InsightList" Margin="0,10,0,0">
@@ -172,13 +178,13 @@
                                         </Ellipse>
                                         <TextBlock Text="{Binding Title}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="8,0,0,0"
                                                    Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding KindLabel}" FontSize="10" Margin="10,0,0,0"
+                                        <TextBlock Text="{Binding KindLabel}" FontSize="12" Margin="10,0,0,0"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextMutedBrush}"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding Detail}" TextWrapping="Wrap" Margin="15,6,0,0"
                                                Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    <TextBlock Text="{Binding WindowText}" FontSize="11" Margin="15,4,0,0"
+                                    <TextBlock Text="{Binding WindowText}" FontSize="12" Margin="15,4,0,0"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
                             </Border>
@@ -228,10 +234,10 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding Name}" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding MetaText}" FontSize="11"
+                                    <TextBlock Text="{Binding MetaText}" FontSize="12"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="11"
+                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="12"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
@@ -272,7 +278,7 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                 </StackPanel>
-                <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,8,0,0"/>
+                <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,8,0,0"/>
                 <TextBlock x:Name="CompareConditionsText" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,8,0,10" Visibility="Collapsed"/>
                 <!-- 表头：四列含义不再依赖上方提示文本反推 -->
                 <Grid Margin="0,10,0,0">
@@ -282,10 +288,10 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.CompareHeaderMetric}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
-                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Text="{DynamicResource Str.CompareHeaderMetric}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.CompareHeaderSessionA}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.CompareHeaderSessionB}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
+                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.CompareHeaderDelta}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}"/>
                 </Grid>
                 <ItemsControl x:Name="CompareRows" Margin="0,4,0,0">
                     <ItemsControl.ItemTemplate>

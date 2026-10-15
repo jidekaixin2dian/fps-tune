@@ -29,7 +29,7 @@
                         <StackPanel>
                             <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" TextWrapping="Wrap" Margin="0,0,12,0"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Requirements}" Foreground="{DynamicResource WarningBrush}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Requirements}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"/>
                             </Grid>
                             <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0"/>
                             <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0">

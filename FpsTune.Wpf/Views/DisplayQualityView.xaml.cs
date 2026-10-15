@@ -782,6 +782,7 @@ public partial class DisplayQualityView : UserControl
 
     private void ApplyDrsState(StateSnapshot s)
     {
+        FrameControls.IsEnabled = FrameApplyButton.IsEnabled = FrameRestoreButton.IsEnabled = false;
         if (!s.FeatureEnabled)
         {
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
@@ -821,6 +822,7 @@ public partial class DisplayQualityView : UserControl
         }
 
         var state = s.Drs!;
+        ApplyFrameLimitState(state);
         SetDrsInputsEnabled(true);
         _drsSyncing = true;
         SelectComboByTag(TexQualityCombo, state.TextureQuality is { } t ? ((uint)t).ToString() : "");
@@ -908,6 +910,9 @@ public partial class DisplayQualityView : UserControl
 
     private void SetDrsInputsEnabled(bool enabled)
     {
+        FrameControls.IsEnabled = enabled;
+        FrameApplyButton.IsEnabled = enabled && (MainCapCheck.IsChecked == true || BackgroundCapCheck.IsChecked == true);
+        if (!enabled) FrameRestoreButton.IsEnabled = false;
         foreach (var combo in new[] { TexQualityCombo, PowerModeCombo, TransparencyCombo, PreRenderCombo, AnisoCombo, VSyncCombo, ShaderCacheCombo })
             combo.IsEnabled = enabled;
         DrsPresetButton.IsEnabled = enabled;

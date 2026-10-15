@@ -184,7 +184,7 @@ public partial class SessionView : UserControl
             return;
         var tail = buffer.Count > 60 ? buffer.TakeLast(60).ToArray() : buffer.ToArray();
         MiniChart.Draw(CpuChart, tail.Select(s => s.CpuPercent ?? double.NaN).ToList(), "AccentBrush");
-        MiniChart.Draw(MemChart, tail.Select(s => s.MemoryPercent ?? double.NaN).ToList(), "PrimaryBrush");
+        MiniChart.Draw(MemChart, tail.Select(s => s.MemoryPercent ?? double.NaN).ToList(), "ChartSecondaryBrush");
         MiniChart.Draw(GpuChart, tail.Select(s => s.GpuPercent ?? double.NaN).ToList(), "OkBrush");
 
         // 显存：容量可得时画占比，否则画窗口内相对水位

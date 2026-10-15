@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FpsTune.Wpf.Views.AbExperimentView"
+<UserControl x:Class="FpsTune.Wpf.Views.AbExperimentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource AppBackgroundBrush}">
@@ -19,10 +19,11 @@
 
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.NavAb}" Style="{StaticResource SectionLabelStyle}"/>
                 <TextBlock Text="{DynamicResource Str.AbIntro}"
-                           Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
+                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 <!-- P2-12：PresentMon 前置可用性（只读探测；缺失时给官方命令，不代为安装） -->
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <TextBlock x:Name="PresentMonStatusText" Text="{DynamicResource Str.PmChecking}"
@@ -33,19 +34,25 @@
                             Margin="10,0,0,0" Visibility="Collapsed" Click="PmCopyButton_Click"/>
                 </StackPanel>
             </StackPanel>
-             <Button x:Name="OpenDirButton"
+             <WrapPanel Grid.Row="1" Margin="0,10,0,0"><Button x:Name="OpenDirButton"
                      Content="{DynamicResource Str.OpenExperimentDir}"
                      Style="{StaticResource SecondaryButtonStyle}"
-                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                      MinWidth="130"
                      Click="OpenDirButton_Click"/>
              <Button x:Name="CancelRunButton"
                      Content="{DynamicResource Str.CancelCurrentStep}"
                      Style="{StaticResource GhostButtonStyle}"
-                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                     MinWidth="110" Margin="0,0,142,0"
+                     MinWidth="110" Margin="10,0,0,0"
                      IsEnabled="False"
-                     Click="CancelRunButton_Click"/>
+                     Click="CancelRunButton_Click"/></WrapPanel>
+            <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+                <Expander x:Name="GettingStarted" Header="{DynamicResource Str.AbGuideTitle}" IsExpanded="True" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14">
+                    <StackPanel Margin="0,12,0,0">
+                        <TextBlock Text="{DynamicResource Str.AbGuideSteps}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23"/>
+                        <TextBlock Text="{DynamicResource Str.FpsMetricsGuide}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="22"/>
+                    </StackPanel>
+                </Expander>
+            </Border>
         </Grid>
 
         <!-- 向导步骤 -->
@@ -88,15 +95,15 @@
                                             </Ellipse>
                                             <TextBlock Text="{Binding Title}" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="8,0,0,0"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding StatusText}" FontSize="11" Margin="10,0,0,0"
+                                            <TextBlock Text="{Binding StatusText}" FontSize="12" Margin="10,0,0,0"
                                                        VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding ResultText}" FontSize="11" Margin="15,5,0,0"
+                                        <TextBlock Text="{Binding ResultText}" FontSize="12" Margin="15,5,0,0"
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"/>
                                         <StackPanel Orientation="Horizontal" Margin="15,6,0,0">
-                                            <TextBlock Text="{DynamicResource Str.LinkSession}" FontSize="11" VerticalAlignment="Center"
+                                            <TextBlock Text="{DynamicResource Str.LinkSession}" FontSize="12" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource TextMutedBrush}"/>
                                             <ComboBox ItemsSource="{Binding SessionOptions}"
                                                       SelectedItem="{Binding SelectedSession, Mode=TwoWay}"
@@ -202,11 +209,11 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Width="14" Height="2"
                                 Background="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="11" Margin="6,0,14,0"
+                        <TextBlock Text="{DynamicResource Str.AvgFps}" FontSize="12" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Border Width="14" Height="2"
-                                Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="1% LOW" FontSize="11" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
+                                Background="{DynamicResource ChartSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="1% LOW" FontSize="12" FontFamily="{StaticResource FontMono}" Margin="6,0,14,0"
                                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                         <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Click="RefreshHistory_Click"/>
@@ -231,7 +238,7 @@
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.CustomRunTitle}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.CustomRunHint}"
-                                   Style="{StaticResource MutedTextStyle}" FontSize="11.5" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                   Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
                     <Button x:Name="CustomRunButton" Content="{DynamicResource Str.CustomRunButton}"
                             Style="{StaticResource PrimaryButtonStyle}" MinWidth="132" Height="36"
@@ -268,7 +275,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="{Binding ItemsText}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding MetaText}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0"/>
+                                        <TextBlock Text="{Binding MetaText}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <TextBlock Grid.Column="1" Text="{Binding DeltaText}" FontSize="14" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                VerticalAlignment="Center" Margin="14,0,0,0">

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FpsTune.Wpf.Views.ConsoleView"
+<UserControl x:Class="FpsTune.Wpf.Views.ConsoleView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource ConsoleBackgroundBrush}"
@@ -132,11 +132,11 @@
                                 <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" Style="{StaticResource ItemTitleStyle}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
                                     <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
-                                    <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="11.5"
+                                    <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="12"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
                                                Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
                                     <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
-                                    <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="10.5" Margin="0,3,0,0"
+                                    <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="12" Margin="0,3,0,0"
                                                Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
                                 <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="12" VerticalAlignment="Center"
@@ -159,7 +159,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                         <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
                     </Grid>

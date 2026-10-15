@@ -66,6 +66,7 @@ public static class ThemeManager
         SetBrush("TextSecondaryBrush", t.TextSecondary);
         SetBrush("TextMutedBrush", t.TextMuted);
         SetBrush("PrimaryBrush", studio ? accent : t.Primary);
+        SetBrush("ChartSecondaryBrush", t.Primary);
         SetBrush("PrimaryHoverBrush", studio ? Parse(resolved == "light" ? "#355826" : "#CBE9A8") : t.PrimaryHover);
         SetBrush("OnPrimaryBrush", studio ? Parse(resolved == "light" ? "#FFFFFF" : "#172113") : t.OnPrimary);
         SetBrush("AccentBrush", accent);

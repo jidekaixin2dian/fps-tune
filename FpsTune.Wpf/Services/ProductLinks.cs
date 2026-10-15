@@ -4,7 +4,7 @@ namespace FpsTune.Wpf.Services;
 
 internal static class ProductLinks
 {
-    internal const string CommunityUrl = "https://qm.qq.com/q/jwbacnxrmU";
+    internal const string CommunityUrl = "https://qm.qq.com/q/yIjLxOFGCG";
     internal const string IssueUrl = "https://github.com/jidekaixin2dian/fps-tune/issues/new";
 
     internal static void Open(string url) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });

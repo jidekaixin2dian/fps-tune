@@ -253,7 +253,7 @@ public partial class OptimizeView : UserControl
         var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
         var label = presetName == "full" ? Str.T("Str.PresetFull") : presetName == "safe-only" ? Str.T("Str.PresetSafe") : Str.T("Str.PresetBalanced");
         SetPlain($"{label} · {selected.Count} 项\n\n" +
-            "开关表示待应用的选择，不代表当前系统状态。手动调整会切换为自定义。\n\n" +
+            Str.T("Str.ToggleHint2") + "\n\n" +
             Str.T("Str.ItemDetailHint"));
     }
 

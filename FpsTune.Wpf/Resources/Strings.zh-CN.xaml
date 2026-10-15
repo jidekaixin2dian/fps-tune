@@ -90,14 +90,14 @@
     <s:String x:Key="Str.ItemsOverview">优化项概览</s:String>
     <s:String x:Key="Str.MemoryUsage">内存占用</s:String>
     <s:String x:Key="Str.Memory">内存</s:String>
-    <s:String x:Key="Str.ReadOnlyCheckup">只读体检</s:String>
-    <s:String x:Key="Str.DetectIntro">只读查看硬件、游戏与各项当前状态，不会修改任何系统设置</s:String>
+    <s:String x:Key="Str.ReadOnlyCheckup">系统体检</s:String>
+    <s:String x:Key="Str.DetectIntro">查看硬件、游戏与各项当前状态</s:String>
     <s:String x:Key="Str.LiveMonitor">实时监控</s:String>
     <s:String x:Key="Str.CurrentGame">当前游戏</s:String>
     <s:String x:Key="Str.VramDedicated">显存占用（专用）</s:String>
     <s:String x:Key="Str.VramUsage">显存占用</s:String>
     <s:String x:Key="Str.DetectDetails">检测详情</s:String>
-    <s:String x:Key="Str.SampleEverySecond">每秒采样 · 只读性能数据</s:String>
+    <s:String x:Key="Str.SampleEverySecond">按当前采样间隔更新</s:String>
     <s:String x:Key="Str.GamePath">游戏路径</s:String>
     <s:String x:Key="Str.ClickRunDetect">点击“运行检测”开始。</s:String>
     <s:String x:Key="Str.System">系统</s:String>
@@ -131,7 +131,7 @@
     <s:String x:Key="Str.VersionLabel">版本：v</s:String>
 
     <!-- 界面全量文案（2026-09-25 转换） -->
-    <s:String x:Key="Str.AbIntro">向导式实验：先采基线，再依次测试三个候选组，每步可关联一次性能会话，结论只来自实际采样</s:String>
+    <s:String x:Key="Str.AbIntro">先记录优化前的基线，再按向导测试候选方案，比较同一游戏场景下的表现。</s:String>
     <s:String x:Key="Str.OpenExperimentDir">打开实验目录</s:String>
     <s:String x:Key="Str.CancelCurrentStep">取消当前步骤</s:String>
     <s:String x:Key="Str.AbWizardTitle">实验向导 · WIZARD（每步在同一游戏场景内进行）</s:String>
@@ -161,9 +161,9 @@
     <s:String x:Key="Str.MatchPrep">开局准备</s:String>
     <s:String x:Key="Str.ConsoleIntro">定位游戏后，审阅基础设置并记录一局负载。</s:String>
     <s:String x:Key="Str.BasicAdvice">基础建议</s:String>
-    <s:String x:Key="Str.TipBasicAdvice">审阅游戏模式、后台录制和游戏显卡偏好；不会立即修改系统</s:String>
+    <s:String x:Key="Str.TipBasicAdvice">检查游戏模式、后台录制和游戏显卡偏好</s:String>
     <s:String x:Key="Str.FirstRunAdviceIntro">首次使用：先做一次体检，再审阅这 {0} 项建议。</s:String>
-    <s:String x:Key="Str.TipBasicAdviceFirst">首次使用会先跑一次只读体检建立基线，再进入优化页审阅</s:String>
+    <s:String x:Key="Str.TipBasicAdviceFirst">首次使用先完成系统体检，再进入优化页选择方案</s:String>
     <s:String x:Key="Str.RecordMatch">记录一局</s:String>
     <s:String x:Key="Str.TipRecordMatch">记录 CPU、GPU、内存负载；游戏已运行且 PresentMon 可用时同时记录 FPS</s:String>
     <s:String x:Key="Str.BackupRestore">备份还原</s:String>
@@ -177,19 +177,19 @@
     <s:String x:Key="Str.AdminRequired">需管理员</s:String>
     <s:String x:Key="Str.TipSelectItem">选择此项，审阅后再应用</s:String>
     <s:String x:Key="Str.PreparingItems">正在准备优化项…</s:String>
-    <s:String x:Key="Str.ToggleHint">开关仅选择项目，审阅后执行；修改前自动备份。</s:String>
+    <s:String x:Key="Str.ToggleHint">选择项目后，点击“审阅并应用”。</s:String>
     <s:String x:Key="Str.ReviewAndApply">审阅并应用 →</s:String>
     <s:String x:Key="Str.HomeTitle">系统层帧率优化控制台</s:String>
     <s:String x:Key="Str.HomeSubtitle">检测 → 解释 → 确认 → 执行 → 还原 · 不碰游戏文件 · 不注入进程 · 所有改动可还原</s:String>
     <s:String x:Key="Str.StartDetect">开始检测 →</s:String>
-    <s:String x:Key="Str.HomeDetectDesc">硬件信息、游戏路径、体检和优化项状态，只读不改</s:String>
+    <s:String x:Key="Str.HomeDetectDesc">查看硬件信息、游戏路径与优化项状态</s:String>
     <s:String x:Key="Str.HomeOptDesc">预设与逐项开关、系统层优化、一键还原</s:String>
     <s:String x:Key="Str.HomeSessionDesc">本地采样 CPU / 内存 / GPU / 显存，生成摘要、洞察与对比</s:String>
     <s:String x:Key="Str.HomeAbDesc">基线采样、候选组对比、保留或还原决策</s:String>
     <s:String x:Key="Str.HomeBackupDesc">备份文件、还原全部、日志和 JSON 输出</s:String>
-    <s:String x:Key="Str.SessionIntro">开始一次本地采样，记录 CPU / 内存 / GPU / 显存曲线与摘要；数据只保存在本机</s:String>
+    <s:String x:Key="Str.SessionIntro">记录游戏时的 CPU、内存、GPU 与显存变化，保存后比较帧率和流畅度。</s:String>
     <s:String x:Key="Str.SamplingControl">采样控制</s:String>
-    <s:String x:Key="Str.StartSession">开始会话</s:String>
+    <s:String x:Key="Str.StartSession">开始记录</s:String>
     <s:String x:Key="Str.StopAndSave">停止并保存</s:String>
     <s:String x:Key="Str.SessionReady">就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。</s:String>
     <s:String x:Key="Str.VramDedicatedShort">显存（专用）</s:String>
@@ -273,9 +273,9 @@
     <s:String x:Key="Str.PresetJDesc">新一代模型 · 较早版本</s:String>
     <s:String x:Key="Str.PresetE">E 预设</s:String>
     <s:String x:Key="Str.PresetEDesc">旧一代 CNN 模型 · 复古画质</s:String>
-    <s:String x:Key="Str.DlssNote">只备份本工具实际写入的驱动设置；恢复会核对当前值，保留外部更改及无关配置。选择“跟随游戏内”将恢复本游戏全部受管理设置。模型支持与画面效果需在游戏内确认。</s:String>
+    <s:String x:Key="Str.DlssNote">选择预设后点击“应用覆盖”。“跟随游戏内”会还原本游戏的全部工具改动。</s:String>
     <s:String x:Key="Str.VibNote">调整选定显示器的色彩鲜艳程度，按自己的观感选择档位。</s:String>
-    <s:String x:Key="Str.VibNote2">应用前保存原档位。可与 ICC 配置分别调整。</s:String>
+    <s:String x:Key="Str.VibNote2">数字振动与 ICC 配置可以分别调整。</s:String>
     <s:String x:Key="Str.VibRecommendedSet">试试 58%</s:String>
     <s:String x:Key="Str.VibRecommendedNote">点「试试 58%」预览滑块位置，再点「应用」生效。</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% 是轻微增强色彩的起点，可继续调整。</s:String>
@@ -289,7 +289,7 @@
     <s:String x:Key="Str.IccStandard">原始配置</s:String>
     <s:String x:Key="Str.IccStandardDesc">还原为你原始的色彩配置</s:String>
     <s:String x:Key="Str.IccNote">ICC 通过颜色管理生效，部分游戏会忽略它。选择「原始配置」可还原已保存的关联。</s:String>
-    <s:String x:Key="Str.DrsNote">按游戏写入 NVIDIA 驱动配置。应用前保存本工具涉及的设置；与 DLSS 共用还原入口。</s:String>
+    <s:String x:Key="Str.DrsNote">应用当前游戏的 3D 设置；还原按钮会恢复本工具对该游戏的全部改动。</s:String>
     <s:String x:Key="Str.TipOneClickEsports">纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧；桌面高端卡自动升透明度 4x</s:String>
     <s:String x:Key="Str.DrsDefaultHint">默认推：纹理高质量 · 透明度 2x · 预渲染 1 帧</s:String>
     <s:String x:Key="Str.DrsTextureFilter">纹理过滤 · 质量</s:String>
@@ -329,7 +329,7 @@
     <s:String x:Key="Str.DrsShaderCache">着色器缓存</s:String>
     <s:String x:Key="Str.TipShaderCache">开启可减少运行时编译卡顿（推荐）</s:String>
     <s:String x:Key="Str.OnRecommended">开启（推荐）</s:String>
-    <s:String x:Key="Str.DrsNote2">应用前保存原值。游戏支持 NVIDIA Reflex 时，优先使用游戏内设置。</s:String>
+    <s:String x:Key="Str.DrsNote2">游戏支持 NVIDIA Reflex 时，低延迟优先在游戏内调整。</s:String>
 
     <!-- 界面全量文案（2026-09-25 转换） -->
     <s:String x:Key="Str.Keep">保留</s:String>
@@ -426,7 +426,7 @@
     <s:String x:Key="Str.NvDrsAccessDeniedTitle">NVIDIA 驱动拒绝访问</s:String>
     <s:String x:Key="Str.NvDrsApplyDenied">应用失败：NVIDIA 驱动拒绝访问。备份已保留。</s:String>
     <s:String x:Key="Str.NvDrsRestoreDenied">还原失败：NVIDIA 驱动拒绝访问。备份已保留，尚未完成还原。</s:String>
-    <s:String x:Key="Str.NvDrsDeniedElevated">当前程序已以管理员身份运行，NVIDIA 驱动仍拒绝访问。再次提权重启无法解决此错误。请根据下方失败步骤检查驱动安装状态及数据库目录的访问权限：{0}。本工具不会删除数据库或重置权限。</s:String>
+    <s:String x:Key="Str.NvDrsDeniedElevated">当前程序已以管理员身份运行，NVIDIA 驱动仍拒绝访问。再次提权重启无法解决此错误。请根据下方失败步骤检查驱动安装状态及数据库目录的访问权限：{0}。</s:String>
     <s:String x:Key="Str.NvDrsDeniedStandard">NVIDIA 驱动拒绝访问，当前程序未以管理员身份运行。可以提权后重试；若仍被拒绝，请检查驱动安装状态及数据库目录的访问权限：{0}。</s:String>
     <s:String x:Key="Str.ManualSpecify">手动指定…</s:String>
     <s:String x:Key="Str.Scanning">扫描中…</s:String>
@@ -499,16 +499,16 @@
     <s:String x:Key="Str.RecordMatchHint">先运行游戏，再开始记录；在相同地图、画质和帧率上限下记录相近时长。PresentMon 与游戏进程可用时同时记录 FPS，否则保留负载记录并说明 FPS 缺失原因。</s:String>
     <s:String x:Key="Str.BasicsOk">基础设置已达标 · 可记录一局负载，保留优化前后对照。</s:String>
     <s:String x:Key="Str.ItemDetailHint">点击项目查看当前状态与副作用。确认后在底部应用，执行结果也会显示在这里。</s:String>
-    <s:String x:Key="Str.ToggleHint2">开关表示待应用的选择，不代表当前系统状态。手动调整会切换为自定义。</s:String>
+    <s:String x:Key="Str.ToggleHint2">选择要应用的项目；手动调整后使用自定义方案。</s:String>
     <s:String x:Key="Str.CustomSelection">自定义选择</s:String>
     <s:String x:Key="Str.DetectDoneHint">检测已完成。请选择左侧预设或勾选需要的优化项，确认后点击“应用”。</s:String>
-    <s:String x:Key="Str.DetectUpdatedHint">检测已更新。开关仅选择项目，审阅后执行；修改前自动备份。</s:String>
+    <s:String x:Key="Str.DetectUpdatedHint">检测已更新。请选择要调整的项目。</s:String>
     <s:String x:Key="Str.DetectIncomplete">检测未完成。请检查检测页的报错信息后重试。</s:String>
     <s:String x:Key="Str.DetectIncompleteRetry">检测未完成，可重新检测或前往检测页查看原因。</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">暂无优化项，请先在检测页运行检测。</s:String>
     <s:String x:Key="Str.LoadedLastScan">已加载上次扫描结果。点击“运行检测”可重新扫描。</s:String>
     <s:String x:Key="Str.LastDetectLabel">上次检测：{0} · 耗时 {1:0.0} 秒</s:String>
-    <s:String x:Key="Str.NeverDetected">尚未检测过——点「运行检测」开始（全程只读，不会修改任何系统设置）</s:String>
+    <s:String x:Key="Str.NeverDetected">点击“运行检测”获取当前状态</s:String>
     <s:String x:Key="Str.CopiedDetails">已将检测详情复制到剪贴板。</s:String>
     <s:String x:Key="Str.CopiedGamePath">已将游戏路径复制到剪贴板。</s:String>
     <s:String x:Key="Str.CannotParseDetectJson">无法解析检测 JSON。</s:String>
@@ -577,11 +577,11 @@
     <s:String x:Key="Str.DriverAltLabel">备选：</s:String>
     <s:String x:Key="Str.DriverNoStable">暂无公认稳定版</s:String>
     <s:String x:Key="Str.DriverNoAdvice">未能识别为 NVIDIA 显卡，暂无驱动版本建议。</s:String>
-    <s:String x:Key="Str.DriverSource">来源：社区共识（什么值得买 2026-01-23），非官方推荐；版本会随时间变化，请以 NVIDIA 官网为准。本工具不下载也不安装驱动。</s:String>
+    <s:String x:Key="Str.DriverSource">参考：社区驱动使用反馈（什么值得买，2026-01-23）。</s:String>
 
     <!-- 驱动内手动设置清单（按厂商生成；只读指引，不代改设置、不承诺帧数） -->
     <s:String x:Key="Str.ManualCard">驱动内手动设置清单</s:String>
-    <s:String x:Key="Str.ManualIntro">下面这些设置在显卡驱动自己的控制面板里，由你手动调；本工具不代改（只读指引）。按你的显卡厂商看对应部分即可。</s:String>
+    <s:String x:Key="Str.ManualIntro">在显卡驱动控制面板中，按下面的路径手动调整。</s:String>
     <s:String x:Key="Str.ManualGpuLabel">当前显卡：</s:String>
     <s:String x:Key="Str.ManualNvidiaBody">N 卡无需手动逐项调：纹理过滤、电源管理、低延迟、垂直同步、各向异性、着色器缓存等驱动 3D 设置，已可由本页上方「驱动 3D 设置」卡自动写入并还原。</s:String>
     <s:String x:Key="Str.ManualAmdEntry">入口：AMD Software：Adrenalin 版 →「游戏 → 图形」是全局设置；每个游戏还能在其配置文件里单独设置（优先于全局）。</s:String>
@@ -705,9 +705,9 @@
     <s:String x:Key="Str.FpsReasonNoGameProcess">开始记录时未检测到游戏进程</s:String>
     <s:String x:Key="Str.FpsReasonParseFailed">PresentMon 采样解析失败</s:String>
     <s:String x:Key="Str.BottleneckTitle">瓶颈判定</s:String>
-    <s:String x:Key="Str.BottleneckGpu">GPU 侧受限——GPU 平均 {0}%、95 位 {1}%，接近满载；此时提高画质相关限制通常不再增加帧率，优先在 GPU 侧找方向（驱动 3D 设置、画质档位）。启发式判断，不代表因果。</s:String>
-    <s:String x:Key="Str.BottleneckCpu">CPU 侧受限——GPU 平均 {0}% 尚有余量，而 CPU 95 位占用 {1}% 偏高。优先关注 CPU 侧（后台占用、调度类优化项）；此为启发式判断，不代表因果。</s:String>
-    <s:String x:Key="Str.BottleneckBalanced">未呈现单侧瓶颈——GPU 平均 {0}%、CPU 95 位 {1}%，两側均未达阈值；这不代表没有优化空间。启发式判断，不代表因果。</s:String>
+    <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
+    <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>
+    <s:String x:Key="Str.BottleneckBalanced">两侧负载较均衡：GPU 平均 {0}%，CPU 95 位 {1}%。可继续比较具体场景的帧率与帧时间。</s:String>
     <s:String x:Key="Str.CustomItemsRequired">自定义实测需要提供至少一个优化项（Options.Items）。</s:String>
     <s:String x:Key="Str.CustomUnknownItems">未知优化项：{0}</s:String>
     <s:String x:Key="Str.CustomRebootItems">以下优化项需要重启才能生效，不能参与会话内实测（重启后基线已失效，对比不成立）：{0}</s:String>
@@ -753,7 +753,7 @@
     <s:String x:Key="Str.GameSwitchNeedDetect">已切换到新游戏，还没有它的检测快照——点「运行检测」为它建立基线。</s:String>
     <s:String x:Key="Str.PickGameExeFilter">游戏主程序|*.exe</s:String>
     <s:String x:Key="Str.ChangeAuditTitle">改动总览（本工具改过什么）</s:String>
-    <s:String x:Key="Str.ChangeAuditHint">只读总览：每项显示工具写入时的原值与当前实时状态；还原请用上方「还原全部」或检测页逐项操作，本卡不做任何修改。</s:String>
+    <s:String x:Key="Str.ChangeAuditHint">查看各项原值与当前状态；点击“还原全部”或在检测页逐项还原。</s:String>
     <s:String x:Key="Str.ChangeAuditRefresh">刷新总览</s:String>
     <s:String x:Key="Str.ChangeAuditEmpty">没有待还原的改动记录——本工具当前没有留下任何未还原的修改。</s:String>
     <s:String x:Key="Str.ExportBackups">导出备份</s:String>
@@ -944,7 +944,7 @@
     <s:String x:Key="Str.MaintenanceLowSpace">空间较少</s:String>
     <s:String x:Key="Str.MaintenanceNoDrives">暂无可读取的固定磁盘。</s:String>
     <s:String x:Key="Str.MaintenanceMemoryTitle">当前内存占用较高的应用</s:String>
-    <s:String x:Key="Str.MaintenanceMemoryHint">按工作集排列前 8 项。工作集包含共享内存，不能直接相加；高占用本身不代表异常。</s:String>
+    <s:String x:Key="Str.MaintenanceMemoryHint">按工作集列出占用较高的应用，便于排查后台负载。</s:String>
     <s:String x:Key="Str.MaintenanceNoProcesses">暂无可读取的应用。</s:String>
     <s:String x:Key="Str.MaintenanceTaskManager">任务管理器</s:String>
     <s:String x:Key="Str.MaintenanceTaskManagerHint">查看完整应用列表、CPU 与内存占用。</s:String>
@@ -1008,7 +1008,7 @@
     <s:String x:Key="Str.ConditionDurationUnknown">实际采样时长未知</s:String>
     <s:String x:Key="Str.ConditionTargetMissed">实际时长偏离目标</s:String>
     <s:String x:Key="Str.ConditionFpsMissing">至少一个会话未取得真实 FPS</s:String>
-    <s:String x:Key="Str.ConditionMatch">已记录的条件一致。条件由你填写，并非自动核验的游戏设置；单次差值不代表优化收益。</s:String>
+    <s:String x:Key="Str.ConditionMatch">已记录的游戏、分辨率、画质与场景一致。</s:String>
     <s:String x:Key="Str.ConditionWarning">请谨慎对照：{0}。下方只展示记录差异，不据此判定优化收益。</s:String>
     <s:String x:Key="Str.ConditionSelectPrevious">先在历史记录中选中一个有测试条件的会话。</s:String>
     <s:String x:Key="Str.ConditionCopied">条件已填入；请确认当前游戏及游戏内设置，再开始采样。</s:String>
@@ -1026,12 +1026,12 @@
     <s:String x:Key="Str.ConditionHistoryMeta">{0} · {1} · {2} 样本 · {3}</s:String>
     <s:String x:Key="Str.ConditionCompareMeta">A = {0}（{1}，{2} 样本） · B = {3}（{4}，{5} 样本）</s:String>
     <s:String x:Key="Str.CommandTitle">快速访问</s:String>
-    <s:String x:Key="Str.CommandSubtitle">查找功能、设置与优化项，直接到达对应位置。</s:String>
+    <s:String x:Key="Str.CommandSubtitle">搜索页面、设置和优化项目</s:String>
     <s:String x:Key="Str.CommandSearch">搜索功能</s:String>
     <s:String x:Key="Str.CommandQuery">搜索页面、设置或优化项（Ctrl+K）</s:String>
     <s:String x:Key="Str.CommandResults">搜索结果</s:String>
     <s:String x:Key="Str.CommandEmpty">没有匹配结果。试试 DLSS、ICC、备份，或优化项名称。</s:String>
-    <s:String x:Key="Str.CommandKeys">上 / 下键选择 · Enter 打开 · Esc 返回。搜索不会直接应用任何改动。</s:String>
+    <s:String x:Key="Str.CommandKeys">上 / 下键选择 · Enter 打开 · Esc 返回</s:String>
     <s:String x:Key="Str.CommandOpenHint">打开 {0}</s:String>
     <s:String x:Key="Str.CommandPage">页面</s:String>
     <s:String x:Key="Str.CommandDlss">DLSS 模型预设</s:String>
@@ -1055,7 +1055,7 @@
     <s:String x:Key="Str.ReviewSummary">待应用 {0} 项 · {1} 项需管理员 · {2} 项需重启</s:String>
     <s:String x:Key="Str.ReviewGame">游戏上下文：{0}</s:String>
     <s:String x:Key="Str.ReviewHidden">包含当前筛选之外的 {0} 项；本清单列出了全部待应用项目。</s:String>
-    <s:String x:Key="Str.ReviewSnapshotHint">这里显示上次检测的状态与项目说明。执行时重新读取并备份原值；待应用的选择不代表当前状态。</s:String>
+    <s:String x:Key="Str.ReviewSnapshotHint">当前检测快照 · 确认后应用所选项目</s:String>
     <s:String x:Key="Str.ReviewCurrent">上次检测：</s:String>
     <s:String x:Key="Str.ReviewBackupHint">保留原值备份，之后可在“备份 / 日志”查看与还原。</s:String>
     <s:String x:Key="Str.ReviewBack">返回修改</s:String>
@@ -1094,4 +1094,31 @@
     <s:String x:Key="Str.ReleaseDownloadPage">前往下载页面</s:String>
     <s:String x:Key="Str.ReleaseExeHint">优先下载 EXE 安装版，已包含所需 .NET 运行时。</s:String>
     <s:String x:Key="Str.ReleaseNotesEmpty">此版本暂未提供更新说明，可前往下载页面查看。</s:String>
+    <s:String x:Key="Str.SessionGuideTitle">第一次使用：记录一段游戏表现</s:String>
+    <s:String x:Key="Str.SessionGuideSteps" xml:space="preserve">1. 先在“检测”页定位游戏，填写分辨率、画质和测试场景。&#x0a;2. 点击“开始记录”，切回游戏完成同一段场景；到时自动保存，也可手动停止。&#x0a;3. 在历史记录中选择两次会话，比较占用、帧率与帧时间，并导出结果。</s:String>
+    <s:String x:Key="Str.SessionChartGuide">曲线从左到右展示最近采样：CPU、内存、GPU 看占用率；显存看已用容量。曲线升高表示占用增加，帧率结果请查看保存后的会话。</s:String>
+    <s:String x:Key="Str.AbGuideTitle">第一次使用：比较优化前后的表现</s:String>
+    <s:String x:Key="Str.AbGuideSteps" xml:space="preserve">1. 选择同一个游戏、分辨率、画质与固定场景，先完成基线采样。&#x0a;2. 按下方向导应用方案，再在相同场景完成对照采样。&#x0a;3. 查看两次结果，多测几轮后决定保留设置或还原。</s:String>
+    <s:String x:Key="Str.FpsMetricsGuide">平均 FPS 看整体速度；1% Low 看较慢时刻，越高越顺畅；P99 是较慢帧的耗时（毫秒），越低越好。历史曲线的横轴是实验记录，纵轴是 FPS。</s:String>
+    <s:String x:Key="Str.DisclaimerTitle">免责声明</s:String>
+    <s:String x:Key="Str.DisclaimerBody">性能分析基于本机采样与统计，可能受到游戏场景、后台负载、驱动与硬件差异影响。占用分析用于排查方向，单次差值与相关性不能保证优化收益。测试条件由用户填写；请在相同条件下复测。系统和驱动调整前请确认目标与影响，并保留原值备份。软件按许可证所述条件提供。</s:String>
+    <s:String x:Key="Str.FrameLimitTitle">游戏帧率控制（NVIDIA）</s:String>
+    <s:String x:Key="Str.FrameLimitIntro">优先使用游戏内限帧，选择能稳定达到的帧率；驱动限帧适合补充游戏缺少的选项。勾选本次要调整的项目。</s:String>
+    <s:String x:Key="Str.FrameForeground">游戏帧率上限</s:String>
+    <s:String x:Key="Str.FrameBackground">后台帧率上限</s:String>
+    <s:String x:Key="Str.FrameBackgroundHint">切到其他应用时限制游戏帧率，减少 GPU 占用。范围：20–200 FPS；0 为关闭。</s:String>
+    <s:String x:Key="Str.FrameRange">游戏上限：20–1000 FPS；后台上限：20–200 FPS；输入 0 关闭对应限帧。</s:String>
+    <s:String x:Key="Str.FrameForegroundRange">范围：20–1000 FPS；0 为关闭。</s:String>
+    <s:String x:Key="Str.FrameSelectOne">请先勾选本次要调整的帧率上限。</s:String>
+    <s:String x:Key="Str.FrameOff">关闭限帧</s:String>
+    <s:String x:Key="Str.FrameKeep">保持当前值</s:String>
+    <s:String x:Key="Str.FrameBudget">{0} FPS ≈ 每帧 {1:0.00} ms</s:String>
+    <s:String x:Key="Str.FrameCurrent">当前驱动值 · 游戏：{0} · 后台：{1}</s:String>
+    <s:String x:Key="Str.FrameApply">应用帧率设置</s:String>
+    <s:String x:Key="Str.FrameRestore">还原帧率设置</s:String>
+    <s:String x:Key="Str.FrameConfirm">游戏：{0}&#x0a;游戏帧率上限：{1}&#x0a;后台帧率上限：{2}</s:String>
+    <s:String x:Key="Str.FrameRestoreConfirm">还原 {0} 的帧率设置到本工具修改前的值。</s:String>
+    <s:String x:Key="Str.FrameApplied">已保存并验证帧率设置。重新启动游戏后测试效果。</s:String>
+    <s:String x:Key="Str.FrameRestored">已还原帧率设置。</s:String>
+    <s:String x:Key="Str.FrameFailed">帧率操作失败：{0}</s:String>
 </ResourceDictionary>
