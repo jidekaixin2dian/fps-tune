@@ -35,6 +35,10 @@ public sealed class ProductNotificationUiTests
                     {
                         communities++;
                         RenderThemes((FrameworkElement)community.Content, "community");
+                        var checkbox = (CheckBox)community.FindName("NeverRemindCheck");
+                        checkbox.IsChecked = true;
+                        RenderThemes((FrameworkElement)community.Content, "community-checked");
+                        checkbox.IsChecked = false;
                         if (communities == 1)
                         {
                             ((CheckBox)community.FindName("NeverRemindCheck")).IsChecked = true;

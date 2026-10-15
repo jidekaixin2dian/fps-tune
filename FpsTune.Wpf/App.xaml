@@ -559,36 +559,36 @@
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="MinHeight" Value="24"/>
+                <Setter Property="UseLayoutRounding" Value="True"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="CheckBox">
-                            <Grid>
+                            <Grid Background="Transparent">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="Box"
-                                        Width="15" Height="15"
-                                        CornerRadius="3"
-                                        BorderThickness="1.5"
-                                        BorderBrush="{DynamicResource TextSecondaryBrush}"
-                                        Background="Transparent"
-                                        VerticalAlignment="Center"/>
-                                <Path x:Name="Check"
-                                      Data="M 3 8 L 7 12 L 13 4"
-                                      Stroke="{DynamicResource OnPrimaryBrush}"
-                                      StrokeThickness="2"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      Stretch="None"
-                                      Visibility="Collapsed"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"/>
+                                <Grid Width="18" Height="18" VerticalAlignment="Center">
+                                    <Border x:Name="FocusRing" Margin="-3" CornerRadius="6" BorderThickness="1.5"
+                                            BorderBrush="{DynamicResource AccentBrush}" Opacity="0" IsHitTestVisible="False"/>
+                                    <Border x:Name="Box" CornerRadius="4" BorderThickness="1.5"
+                                            BorderBrush="{DynamicResource TextSecondaryBrush}" Background="Transparent"/>
+                                    <!-- Fixed viewport keeps the full rounded stroke inside the box at every scale. -->
+                                    <Path x:Name="Check" Data="M 4 9 L 7.5 12.5 L 14 5.5"
+                                          Stroke="{DynamicResource OnPrimaryBrush}" StrokeThickness="1.8"
+                                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                          Stretch="None" Visibility="Collapsed" IsHitTestVisible="False"/>
+                                </Grid>
                                 <ContentPresenter Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="FocusRing" Property="Opacity" Value="1"/>
                                 </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentBrush}"/>
