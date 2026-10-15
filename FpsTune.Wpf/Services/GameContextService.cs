@@ -6,7 +6,11 @@ namespace FpsTune.Wpf.Services;
 /// <summary>A/B 页/概览页游戏切换器的条目（Label 直接展示）。</summary>
 public sealed record GameSwitcherItem(string Label, string? ProfileId, string? ExePath)
 {
-    public override string ToString() => Label;
+    public string DisplayLabel => ExePath is not null &&
+        (Label.Equals(Path.GetFileName(ExePath), StringComparison.OrdinalIgnoreCase) ||
+         Label.Equals(Path.GetFileNameWithoutExtension(ExePath), StringComparison.OrdinalIgnoreCase))
+        ? GamePathService.LabelFor(ExePath) : Label;
+    public override string ToString() => DisplayLabel;
 }
 
 /// <summary>
@@ -26,7 +30,7 @@ public static class GameContextService
     /// 由 MainWindow 消费后清除。</summary>
     public static bool NeedsDetection { get; private set; }
 
-    public static bool IsBusy => IsBusyProvider?.Invoke() == true;
+    public static bool IsBusy => GamePreparationService.IsRunning || IsBusyProvider?.Invoke() == true;
 
     public static void ClearNeedsDetection() => NeedsDetection = false;
 

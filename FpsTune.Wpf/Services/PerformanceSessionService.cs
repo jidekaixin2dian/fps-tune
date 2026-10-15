@@ -54,6 +54,7 @@ public sealed class PerformanceSessionService : IDisposable
 
     public bool Start(string name, SessionConditions? conditions = null)
     {
+        if (GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.PrepareBusy"));
         if (Volatile.Read(ref _disposed) != 0)
             throw new ObjectDisposedException(nameof(PerformanceSessionService));
         if (IsRunning)

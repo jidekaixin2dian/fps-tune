@@ -16,6 +16,35 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ReadabilityAndFramesUiTests
 {
     [Fact]
+    public void Eight_k_wallpaper_is_normalized_and_visible_without_modifying_source()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            var path = Environment.GetEnvironmentVariable("FPSTUNE_WALLPAPER_TEST_IMAGE");
+            if (string.IsNullOrWhiteSpace(path)) { path = Path.Combine(root, "八千像素·壁纸.jpg"); WallpaperTests.CreateEightKJpeg(path); }
+            var hash = System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path));
+            var previous = SettingsService.Current.WallpaperEnabled; var opacity = SettingsService.Current.WallpaperOpacity;
+            MainWindow? window = null;
+            try
+            {
+                WallpaperService.Import(path);
+                var image = WallpaperService.Load()!;
+                Assert.Equal(1920, image.PixelWidth); Assert.InRange(image.PixelHeight, 976, 978); Assert.True(image.IsFrozen);
+                Assert.Equal(hash, System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path)));
+                SettingsService.Current.WallpaperEnabled = true; SettingsService.Current.WallpaperOpacity = 0.25;
+                window = new MainWindow { Width = 1180, Height = 800 }; app.MainWindow = window;
+                DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
+                var backdrop = (Image)window.FindName("WallpaperBackdrop");
+                Assert.Equal(Visibility.Visible, backdrop.Visibility); Assert.Same(image, backdrop.Source);
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render((FrameworkElement)window.FindName("ChromeRoot"), "wallpaper-" + theme); }
+                File.WriteAllText(Path.Combine(Output(), "wallpaper-import.json"), JsonSerializer.Serialize(new { image.PixelWidth, image.PixelHeight, image.IsFrozen, SourceUnchanged = true, OriginalSha256 = Convert.ToHexString(hash) }));
+            }
+            finally { window?.Close(); SettingsService.Current.WallpaperEnabled = previous; SettingsService.Current.WallpaperOpacity = opacity; }
+        });
+    }
+
+    [Fact]
     public void Disclosure_header_hits_arrow_text_and_blank_space_and_animates_both_directions()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
@@ -293,6 +322,125 @@ public sealed class ReadabilityAndFramesUiTests
         });
     }
 
+    [Fact]
+    public void Unassigned_legacy_vibrance_receipt_keeps_actual_controls_available_and_new_restore_point_independent()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            using var screens = new MultiDisplayColorTests();
+            Directory.CreateDirectory(DigitalVibranceService.BackupDirOverride!);
+            var receipt = Path.Combine(DigitalVibranceService.BackupDirOverride!, "vibrance.json");
+            const string original = "{\"Level\":90}"; File.WriteAllText(receipt, original);
+            var page = new DisplayQualityView(); var window = new Window { Width = 1180, Height = 800, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            var apply = (Button)page.FindName("VibApplyButton"); var restore = (Button)page.FindName("VibRestoreButton");
+            var state = (TextBlock)page.FindName("VibStateText"); var slider = (Slider)page.FindName("VibSlider");
+            var failureShown = false;
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+            timer.Tick += (_, _) =>
+            {
+                var dialog = app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible);
+                if (dialog is not null)
+                {
+                    if (((TextBlock)dialog.FindName("TitleTextBlock")).Text == Str.T("Str.OperationFailed"))
+                    {
+                        Assert.Contains(Str.T("Str.DisplayWriteUnconfirmed"), ((TextBlock)dialog.FindName("MessageTextBlock")).Text);
+                        Assert.True(((Button)dialog.FindName("CopyDetailsButton")).IsVisible); failureShown = true;
+                    }
+                    ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+            };
+            try
+            {
+                Descendants(page).OfType<RadioButton>().Single(b => b.Tag as string == "vibicc").IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => apply.IsEnabled && slider.Value == 30);
+                Assert.True(((StackPanel)page.FindName("VibSupportedPanel")).IsVisible);
+                Assert.False(restore.IsEnabled); Assert.Contains(Str.T("Str.VibranceLegacyUnassigned"), state.Text);
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "vibrance-legacy-" + theme); }
+                foreach (var tab in Descendants(page).OfType<RadioButton>().Where(b => b.Tag is string))
+                { tab.ApplyTemplate(); Assert.Null(tab.Template.FindName("FocusRing", tab)); }
+                timer.Start(); slider.Value = 78; apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => apply.IsEnabled && slider.Value == 78 && restore.IsEnabled);
+                Assert.Equal(78, screens.Levels["A"]); Assert.Equal(original, File.ReadAllText(receipt));
+                restore.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => apply.IsEnabled && slider.Value == 30 && !restore.IsEnabled);
+                Assert.Equal(30, screens.Levels["A"]); Assert.Equal(original, File.ReadAllText(receipt));
+                screens.IgnoreVibWrite = true; slider.Value = 89; apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => apply.IsEnabled && failureShown);
+                Assert.Equal(30, screens.Levels["A"]); Assert.Equal(original, File.ReadAllText(receipt));
+                Assert.Contains(Str.T("Str.DisplayWriteUnconfirmed"), state.Text);
+            }
+            finally { timer.Stop(); window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Preparation_configuration_saves_without_writes_then_one_click_runs_and_partial_failure_shows_copyable_details()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            using var screens = new MultiDisplayColorTests(); var memory = new MemoryCleanupTests.FakeMemory();
+            var page = new ConsoleView(new GamePreparationService(new MemoryCleanupService(memory, () => false, () => true)));
+            var window = new Window { Width = 1180, Height = 800, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
+            var start = (Button)page.FindName("StartPreparationButton"); var status = (TextBlock)page.FindName("PreparationStatus");
+            var configure = (Button)page.FindName("ConfigurePreparationButton");
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+            var configured = false; var failureShown = false; string? copied = null;
+            timer.Tick += (_, _) =>
+            {
+                if (app.Windows.OfType<GamePreparationWindow>().FirstOrDefault(w => w.IsVisible) is { } dialog)
+                {
+                    var displays = (ComboBox)dialog.FindName("DisplayBox"); if (displays.Items.Count != 2) return;
+                    Assert.Contains(Str.T("Str.PrepareNeedsDetection"), ((TextBlock)dialog.FindName("BasicGuide")).Text);
+                    Assert.Contains("1.", ((TextBlock)dialog.FindName("BasicGuide")).Text);
+                    Assert.Contains("\n2.", ((TextBlock)dialog.FindName("BasicGuide")).Text);
+                    ((CheckBox)dialog.FindName("IccCheck")).IsChecked = true;
+                    ((CheckBox)dialog.FindName("VibranceCheck")).IsChecked = true;
+                    ((Slider)dialog.FindName("VibranceSlider")).Value = 76;
+                    ((ComboBox)dialog.FindName("MemoryMode")).SelectedIndex = 1; displays.SelectedIndex = 1;
+                    foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render((FrameworkElement)dialog.Content, "preparation-config-" + theme); }
+                    ((Button)dialog.FindName("SaveButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); configured = true;
+                }
+                if (app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible) is { } error)
+                {
+                    Assert.Equal(Str.T("Str.PreparePartial"), ((TextBlock)error.FindName("TitleTextBlock")).Text);
+                    var body = ((TextBlock)error.FindName("MessageTextBlock")).Text;
+                    Assert.Contains(Str.T("Str.PrepareStepDone"), body); Assert.Contains(Str.T("Str.PrepareStepAttention"), body);
+                    Assert.Contains(Str.T("Str.DisplayWriteUnconfirmed"), body);
+                    error.CopyDetails = value => copied = value;
+                    var copy = (Button)error.FindName("CopyDetailsButton"); Assert.True(copy.IsVisible);
+                    copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Contains(body, copied);
+                    Assert.Equal(Str.T("Str.ErrorCopied"), copy.Content);
+                    foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render((FrameworkElement)error.Content, "preparation-failed-" + theme); }
+                    error.CopyDetails = _ => throw new InvalidOperationException("clipboard busy");
+                    copy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Equal(Str.T("Str.ErrorCopyFailed"), copy.Content);
+                    failureShown = true; ((Button)error.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+            };
+            try
+            {
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "preparation-home-" + theme); }
+                timer.Start(); configure.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.True(configured); Assert.Equal(0, memory.Purges); Assert.Empty(screens.Writes);
+                SettingsService.Load(); var saved = SettingsService.Current.Preparation;
+                Assert.True(saved.Configured && saved.CleanMemory && saved.AllStandby && saved.ApplyIcc && saved.ApplyVibrance);
+                Assert.Equal("B", saved.DisplayIdentity); Assert.Equal(76, saved.VibrancePercent);
+                start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.False(start.IsEnabled);
+                DlssFeedbackTests.PumpUntil(() => start.IsEnabled && status.Text == Str.T("Str.PrepareDone"));
+                Assert.Equal(1, memory.Purges); Assert.Equal(76, screens.Levels["B"]); Assert.Equal(30, screens.Levels["A"]);
+                screens.IgnoreVibWrite = true; SettingsService.Current.Preparation = saved with { VibrancePercent = 83 };
+                start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => start.IsEnabled && failureShown);
+                Assert.Equal(Str.T("Str.PreparePartial"), status.Text); Assert.Equal(2, memory.Purges);
+                Assert.Equal(76, screens.Levels["B"]); Assert.True(IccFilterService.HasRestorableBackup("B"));
+            }
+            finally { timer.Stop(); window.Close(); }
+        });
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {
@@ -354,6 +502,14 @@ public sealed class ReadabilityAndFramesUiTests
     }
     private static void Render(FrameworkElement element, string name)
     {
+        if (name.EndsWith("-light") || name.EndsWith("-dark"))
+        {
+            var expected = (Color)ColorConverter.ConvertFromString(name.EndsWith("-light") ? "#F7F9FC" : "#0C1015")!;
+            DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)Application.Current.FindResource("AppBackdropBrush")).Color == expected);
+        }
+        var frame = new DispatcherFrame();
+        element.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() => frame.Continue = false));
+        Dispatcher.PushFrame(frame);
         element.UpdateLayout(); var dpi = VisualTreeHelper.GetDpi(element);
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth * dpi.DpiScaleX), (int)Math.Ceiling(element.ActualHeight * dpi.DpiScaleY),
             dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);

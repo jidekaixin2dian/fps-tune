@@ -27,16 +27,26 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
                     <!-- 0.2.0 M2：多游戏切换器（末项 = 添加游戏） -->
-                    <ComboBox x:Name="GameSwitcher" MinWidth="240" Height="30" Margin="0,0,0,8"
+                    <ComboBox x:Name="GameSwitcher" MinWidth="240" MaxWidth="360" Height="40" Margin="0,0,0,12" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}"
                               AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
-                              SelectionChanged="GameSwitcher_SelectionChanged"/>
-                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                              SelectionChanged="GameSwitcher_SelectionChanged">
+                        <ComboBox.ItemTemplate><DataTemplate><Grid ToolTip="{Binding ExePath}"><Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Path x:Name="GameIcon" Data="M 2,3 H 18 V 16 H 2 Z M 6,8 H 10 M 8,6 V 10 M 14,7 L 14.1,7 M 16,10 L 16.1,10" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DisplayLabel}" FontSize="14" FontWeight="{StaticResource SmallEmphasisWeight}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        </Grid><DataTemplate.Triggers><DataTrigger Binding="{Binding ExePath}" Value="{x:Null}"><Setter TargetName="GameIcon" Property="Data" Value="M 9,3 V 15 M 3,9 H 15"/><Setter TargetName="GameIcon" Property="Stroke" Value="{DynamicResource AccentBrush}"/></DataTrigger></DataTemplate.Triggers></DataTemplate></ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        <Button Grid.Column="1" x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Height="30" Margin="10,0,0,0" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
+                    </Grid>
                     <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
-                    <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="104" Height="36" Margin="0,0,8,0" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.TipBasicAdvice}"/>
+                    <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="104" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
+                    <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
                     <Button Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
                     <Button Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" MinWidth="88" Height="36" Click="DeltaRestore_Click"/>
                 </StackPanel>
@@ -96,9 +106,13 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="{StaticResource SmallEmphasisWeight}" VerticalAlignment="Center" Margin="0,0,16,0"/>
                         <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
-                        <RadioButton x:Name="BalancedPreset" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
-                        <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
-                        <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
+                        <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="3">
+                            <UniformGrid Columns="3" Width="240">
+                                <RadioButton x:Name="BalancedPreset" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
+                                <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
+                                <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
+                            </UniformGrid>
+                        </Border>
                     </StackPanel>
                     <Grid Grid.Column="2">
                         <TextBox x:Name="SearchBox" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"

@@ -96,6 +96,24 @@ public class DigitalVibranceTests : IDisposable
         Assert.Equal("{broken", File.ReadAllText(file));
     }
 
+    [Fact]
+    public void Unassigned_legacy_backup_does_not_block_read_or_new_monitor_bound_restore_point()
+    {
+        var file = Path.Combine(_backupDir, "vibrance.json");
+        const string original = "{\"Level\":90}";
+        File.WriteAllText(file, original); _api.Current = 21;
+        var state = DigitalVibranceService.GetState();
+        Assert.True(state.Supported); Assert.Equal(21, state.Current);
+        Assert.False(state.Restorable); Assert.NotNull(state.BackupNotice);
+        Assert.False(DigitalVibranceService.Restore("test-display"));
+        DigitalVibranceService.SetPercent(75);
+        Assert.True(DigitalVibranceService.GetState().Restorable);
+        Assert.Equal(47, _api.Current); Assert.True(DigitalVibranceService.Restore());
+        Assert.Equal(21, _api.Current); Assert.Equal(original, File.ReadAllText(file));
+        Assert.False(DigitalVibranceService.GetState().Restorable);
+        Assert.NotNull(Assert.Single(DigitalVibranceService.BackupTargets()).Error);
+    }
+
     private sealed class FakeVibranceApi : INvibranceApi
     {
         public string Display { get; set; } = "test-display";

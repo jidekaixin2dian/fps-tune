@@ -8,6 +8,13 @@ namespace FpsTune.Wpf.Tests;
 [Collection("BackupService serial")]
 public sealed class WallpaperTests : IDisposable
 {
+    internal static void CreateEightKJpeg(string path)
+    {
+        const int width = 8120, height = 4132;
+        var bitmap = BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, new byte[width * height], width);
+        var encoder = new JpegBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
+        using var file = File.Create(path); encoder.Save(file);
+    }
     private readonly string _root = Path.Combine(Path.GetTempPath(), "FpsTune-wallpaper-" + Guid.NewGuid().ToString("N"));
     private readonly string? _previous = UserDataPaths.RootOverride;
     public WallpaperTests() { Directory.CreateDirectory(_root); UserDataPaths.RootOverride = _root; }

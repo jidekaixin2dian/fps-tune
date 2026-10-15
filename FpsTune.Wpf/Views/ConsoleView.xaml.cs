@@ -41,9 +41,10 @@ public partial class ConsoleView : UserControl
             : Str.T("Str.BasicsOk");
         GameReadyText.ToolTip = AppState.GamePath ?? Str.T("Str.NoGameSelected");
         LocateDeltaButton.Content = GameLocated && !GameReady ? Str.T("Str.RefreshDetect") : "定位游戏";
-        PrepareDeltaButton.IsEnabled = GameReady && count > 0 && !_refreshing && !_locating;
+        PrepareDeltaButton.IsEnabled = GameLocated && !_refreshing && !_locating && !_preparing;
         PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
-        PrepareDeltaButton.ToolTip = Str.T(firstRun ? "Str.TipBasicAdviceFirst" : "Str.TipBasicAdvice");
+        PrepareDeltaButton.ToolTip = Str.T("Str.BasicAdviceGuideTip");
+        StartPreparationButton.IsEnabled = ConfigurePreparationButton.IsEnabled = !_preparing && !_refreshing && !_locating;
     }
 
     private async void LocateDelta_Click(object sender, RoutedEventArgs e)
@@ -88,7 +89,12 @@ public partial class ConsoleView : UserControl
         if (Window.GetWindow(this) is not MainWindow main) return;
 
         var ids = DeltaPreparation.PendingItems(AppState.Items, GameReady);
-        if (StateStore.HasSeenOnboarding)
+        if (GameReady && ids.Count == 0)
+        {
+            DialogService.Info(Str.T("Str.BasicAdvice"), Str.T("Str.BasicAdviceAllReady"));
+            return;
+        }
+        if (GameReady && StateStore.HasSeenOnboarding)
             main.ReviewSelection(ids);
         else
             // P3-9：首次先做一次只读体检（控制台概览此前直接跳优化、跳过了检测页）
@@ -105,8 +111,10 @@ public partial class ConsoleView : UserControl
         if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("backup");
     }
 
-    public ConsoleView()
+    public ConsoleView() : this(new GamePreparationService()) { }
+    internal ConsoleView(GamePreparationService preparation)
     {
+        _preparation = preparation;
         InitializeComponent();
         Loaded += OnLoaded;
         Unloaded += (_, _) =>

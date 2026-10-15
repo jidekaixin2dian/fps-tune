@@ -89,7 +89,7 @@ public partial class SettingsView : UserControl
             RefreshWallpaperPreview();
             WallpaperStatus.Text = Str.T("Str.WallpaperSaved");
         }
-        catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); DialogService.Warning(Str.T("Str.WallpaperImportFailed"), WallpaperStatus.Text); }
         finally { _wallpaperBusy = false; }
     }
     private void WallpaperRemove_Click(object sender, RoutedEventArgs e)

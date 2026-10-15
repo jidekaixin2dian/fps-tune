@@ -194,8 +194,9 @@ public partial class MainWindow : Window
 
         StateChanged += OnStateChanged;
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
-        Closing += (_, _) =>
+        Closing += (_, e) =>
         {
+            if (GamePreparationService.IsRunning) { e.Cancel = true; DialogService.Info(Str.T("Str.PrepareTitle"), Str.T("Str.PrepareBusy")); return; }
             // 只取消本窗口 A/B 页面启动的采样；不按名称影响正式安装版或其他用户进程。
             // RunningStep 留在磁盘时可在下次启动恢复。
             if (_pageCache.TryGetValue("ab", out var page) && page is AbExperimentView ab)
@@ -408,7 +409,7 @@ public partial class MainWindow : Window
             }
         }
         StateStore.MarkOnboardingSeen();
-        ReviewSelection(ids);
+        ReviewSelection(ids.Count == 0 ? DeltaPreparation.PendingItems(AppState.Items, true) : ids);
     }
 
     public async Task RunOnboardingAsync()

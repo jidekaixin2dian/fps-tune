@@ -55,6 +55,8 @@ public static class ExperimentRunner
     public static async Task<(int ExitCode, string Json)> RunAsync(
         string step, Options options, CancellationToken ct)
     {
+        if (GamePreparationService.IsRunning && !options.Simulate && step != "report")
+            return (1, ErrorJson("test", Str.T("Str.PrepareBusy")));
         // 采样目标进程默认跟随当前定位的游戏主程序（红线四：全 FPS 通用）；
         // 未定位游戏时退回历史默认（三角洲）。
         var gamePath = AppState.GamePath;

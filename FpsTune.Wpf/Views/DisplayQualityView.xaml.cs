@@ -428,6 +428,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _dlssStatus = Str.T("Str.DlssApplyFailed", ex.Message);
+            DialogService.Warning(Str.T("Str.OperationFailed"), _dlssStatus);
         }
         finally
         {
@@ -466,6 +467,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _dlssStatus = "还原失败：" + ex.Message;
+            DialogService.Warning(Str.T("Str.OperationFailed"), _dlssStatus);
         }
         finally
         {
@@ -531,6 +533,7 @@ public partial class DisplayQualityView : UserControl
         VibStateText.Text = _vibStatus ?? (state.Restorable
             ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
             : $"当前 {percent}%（驱动默认约 {PercentOf(state.Default, state)}%）");
+        if (_vibStatus is null && state.BackupNotice is not null) VibStateText.Text += "\n" + state.BackupNotice;
         SetBadge(TabStatusVib, TabBadgeVib, $"{percent}%");
     }
 
@@ -586,6 +589,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _vibStatus = Str.T("Str.DisplayApplyFailed", ex.Message);
+            DialogService.Warning(Str.T("Str.OperationFailed"), _vibStatus);
         }
         finally
         {
@@ -614,6 +618,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _vibStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
+            DialogService.Warning(Str.T("Str.OperationFailed"), _vibStatus);
         }
         finally
         {
@@ -733,6 +738,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _iccStatus = Str.T("Str.IccApplyFailed", ex.Message);
+            DialogService.Warning(Str.T("Str.OperationFailed"), _iccStatus);
         }
         finally
         {
@@ -766,6 +772,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _iccStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
+            DialogService.Warning(Str.T("Str.OperationFailed"), _iccStatus);
         }
         finally
         {
@@ -963,6 +970,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _drsStatus = "应用失败：" + ex.Message;
+            DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
         }
         finally
         {
@@ -1006,6 +1014,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _drsStatus = "应用失败：" + ex.Message;
+            DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
         }
         finally
         {
@@ -1042,6 +1051,7 @@ public partial class DisplayQualityView : UserControl
         catch (Exception ex)
         {
             _drsStatus = "还原失败：" + ex.Message;
+            DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
         }
         finally
         {
@@ -1114,7 +1124,7 @@ public partial class DisplayQualityView : UserControl
         if (!DialogService.Confirm(Str.T("Str.GpuIdentityTitle"), Str.T("Str.GpuIdentityConfirm", target.DriverName, preset.Description))) return;
         _busy = true; SetGpuIdentityControls(false);
         try { var result = await GpuIdentityService.ApplyAsync(target, preset.Description); GpuIdentityStatus.Text = result.Message; }
-        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; }
+        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; DialogService.Warning(Str.T("Str.OperationFailed"), ex.Message); }
         finally { _busy = false; SetGpuIdentityControls(true); await RefreshGpuIdentityAsync(keepStatus: true); }
     }
 
@@ -1128,7 +1138,7 @@ public partial class DisplayQualityView : UserControl
             GpuIdentityStatus.Text = result.Failures.Count > 0 ? string.Join("\n", result.Failures)
                 : result.Restored.Count > 0 ? Str.T("Str.GpuIdentityRestored") : Str.T("Str.GpuIdentityNoBackup");
         }
-        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; }
+        catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; DialogService.Warning(Str.T("Str.OperationFailed"), ex.Message); }
         finally { _busy = false; SetGpuIdentityControls(true); await RefreshGpuIdentityAsync(keepStatus: true); }
     }
 

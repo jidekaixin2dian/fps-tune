@@ -89,7 +89,7 @@ public partial class DisplayQualityView
             _frameStatus = changed ? Str.T(restore ? "Str.FrameRestored" : "Str.FrameApplied") : Str.T("Str.NothingToRestore");
         }
         catch (NvdrsException ex) when (ex.Status == -175) { _frameStatus = HandleDrsAccessDenied(ex, restoring: restore); }
-        catch (Exception ex) { _frameStatus = Str.T("Str.FrameFailed", OperationDiagnostics.Scrub(ex.Message)); }
+        catch (Exception ex) { _frameStatus = Str.T("Str.FrameFailed", OperationDiagnostics.Scrub(ex.Message)); DialogService.Warning(Str.T("Str.OperationFailed"), _frameStatus); }
         finally { _busy = false; Refresh(); }
     }
 }

@@ -12,7 +12,7 @@ namespace FpsTune.Wpf.Services;
 /// ID 与结构对齐 falahati/NvAPIWrapper（GetDVCInfo/SetDVCLevel 系列）。
 /// 调整前备份当前档位，可一键还原；作用于选定的独立 NVIDIA 显示器。
 /// </summary>
-public sealed record VibranceState(bool Supported, int Current, int Min, int Max, int Default, bool Restorable, string? UnsupportedReason = null);
+public sealed record VibranceState(bool Supported, int Current, int Min, int Max, int Default, bool Restorable, string? UnsupportedReason = null, string? BackupNotice = null);
 
 public interface INvibranceApi : IDisposable
 {
@@ -50,7 +50,10 @@ public static class DigitalVibranceService
         if (!api.TrySelectDisplay(identity)) return new VibranceState(false, 0, 0, 0, 0, false, Str.T("Str.DisplayDvcUnavailable"));
         if (!api.TryGetInfo(out var current, out var min, out var max, out var def))
             return new VibranceState(false, 0, 0, 0, 0, false, "当前显示路径不支持数字振动（DVC）。");
-        return new VibranceState(true, current, min, max, def, ReadForDisplay(api) is not null);
+        var backup = ReadForDisplay(api);
+        var unassigned = backup is null && ReadBackup() is { Display: null };
+        return new VibranceState(true, current, min, max, def, backup is not null,
+            BackupNotice: unassigned ? Str.T("Str.VibranceLegacyUnassigned") : null);
     }
 
     public static bool HasRestorableBackup(string? identity = null)
@@ -127,7 +130,9 @@ public static class DigitalVibranceService
         }
         var legacy = ReadBackup();
         if (legacy is null) return null;
-        if (legacy.Display is null) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+        // The oldest release stored only Level. It cannot identify an original for this
+        // monitor. Retain the receipt, but start a separate monitor-bound baseline on apply.
+        if (legacy.Display is null) return null;
         if (legacy.Display != api.LegacyDisplayIdentity()) return null;
         return legacy with { Display = identity };
     }
@@ -152,7 +157,8 @@ public static class DigitalVibranceService
                 var backup = System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(path)) ?? throw new InvalidDataException();
                 if (!legacy && (backup.Display is null || Path.GetFullPath(path) != Path.GetFullPath(BackupPath(backup.Display)))) throw new InvalidDataException();
                 _ = ReadBackup(legacy ? null : backup.Display);
-                result.Add(new(legacy ? null : backup.Display, backup.DisplayName ?? Str.T("Str.RecoveryDisplay")));
+                result.Add(new(legacy ? null : backup.Display, backup.DisplayName ?? Str.T("Str.RecoveryDisplay"),
+                    backup.Display is null ? Str.T("Str.VibranceLegacyRecovery") : null));
             }
             catch (Exception ex) { result.Add(new(null, Path.GetFileName(path), OperationDiagnostics.Scrub(ex.Message))); }
         }

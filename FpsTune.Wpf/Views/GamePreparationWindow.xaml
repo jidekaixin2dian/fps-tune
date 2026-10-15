@@ -1,0 +1,33 @@
+<Window x:Class="FpsTune.Wpf.Views.GamePreparationWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="{DynamicResource Str.PrepareSettings}" Style="{StaticResource WindowTypographyStyle}" Width="610" SizeToContent="Height" MaxHeight="790"
+    WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" Background="{DynamicResource AppBackdropBrush}">
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24"><Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,18"><TextBlock Text="{DynamicResource Str.PrepareSettings}" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="{DynamicResource Str.PrepareSettingsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="570"><StackPanel Margin="0,0,8,0">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16"><StackPanel>
+                <TextBlock Text="{DynamicResource Str.PrepareFirstTitle}" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock x:Name="BasicGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" LineHeight="23"/>
+                <Button x:Name="ReviewBasicsButton" Content="{DynamicResource Str.PrepareReviewBasics}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="ReviewBasics_Click"/>
+            </StackPanel></Border>
+            <CheckBox x:Name="MemoryCheck" Content="{DynamicResource Str.PrepareMemory}" FontSize="14"/>
+            <ComboBox x:Name="MemoryMode" Width="300" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=MemoryCheck}" AutomationProperties.Name="{DynamicResource Str.MemoryScope}"><ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/><ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/></ComboBox>
+            <CheckBox x:Name="IccCheck" Content="{DynamicResource Str.PrepareIcc}" FontSize="14"/>
+            <ComboBox x:Name="IccPresetBox" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=IccCheck}" AutomationProperties.Name="{DynamicResource Str.IccPresetLabel}"/>
+            <CheckBox x:Name="VibranceCheck" Content="{DynamicResource Str.PrepareVibrance}" FontSize="14"/>
+            <Grid Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=VibranceCheck}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                <Slider x:Name="VibranceSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.PrepareVibrance}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=VibranceSlider, StringFormat={}{0:0}%}" HorizontalAlignment="Right" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Grid>
+            <TextBlock Text="{DynamicResource Str.PrepareDisplay}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,8"/>
+            <ComboBox x:Name="DisplayBox" IsEnabled="False" AutomationProperties.Name="{DynamicResource Str.PrepareDisplay}"/>
+            <TextBlock x:Name="StatusText" Foreground="{DynamicResource WarningBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+        </StackPanel></ScrollViewer>
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,22,0,0">
+            <Button Content="{DynamicResource Str.Cancel}" Style="{StaticResource GhostButtonStyle}" Click="Cancel_Click" Margin="0,0,10,0"/>
+            <Button x:Name="SaveButton" Content="{DynamicResource Str.PrepareSave}" Style="{StaticResource SecondaryButtonStyle}" Click="Save_Click" Margin="0,0,10,0"/>
+            <Button x:Name="RunButton" Content="{DynamicResource Str.PrepareSaveRun}" Style="{StaticResource PrimaryButtonStyle}" Click="Run_Click"/>
+        </WrapPanel>
+    </Grid></Border>
+</Window>

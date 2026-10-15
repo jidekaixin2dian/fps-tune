@@ -7,7 +7,8 @@ namespace FpsTune.Wpf.Services;
 internal static class WallpaperService
 {
     private const long MaxBytes = 20 * 1024 * 1024;
-    private const long MaxPixels = 32_000_000;
+    // Common 8K wallpapers exceed 32 MP; the decoded copy remains bounded to 1920 px.
+    private const long MaxPixels = 64_000_000;
     private static readonly object CacheLock = new();
     private static string? _cachedPath;
     private static long _cachedWriteTime;

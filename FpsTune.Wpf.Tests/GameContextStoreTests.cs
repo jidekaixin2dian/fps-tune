@@ -1,3 +1,4 @@
+using FpsTune.Wpf.Core;
 using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -24,6 +25,16 @@ public sealed class GameContextStoreTests : IDisposable
         StateStore.BaseDirOverride = null;
         if (Directory.Exists(_dir))
             Directory.Delete(_dir, recursive: true);
+    }
+
+    [Fact]
+    public void Switcher_uses_friendly_defaults_and_preserves_user_names()
+    {
+        const string path = @"C:\Games\DeltaForceClient-Win64-Shipping.exe";
+        Assert.Equal(GamePathService.LabelFor(path), new GameSwitcherItem("DeltaForceClient-Win64-Shipping", "id", path).DisplayLabel);
+        Assert.Equal(GamePathService.LabelFor(path), new GameSwitcherItem("DeltaForceClient-Win64-Shipping.exe", "id", path).DisplayLabel);
+        Assert.Equal("My custom game", new GameSwitcherItem("My custom game", "id", path).DisplayLabel);
+        Assert.Equal("Add game", new GameSwitcherItem("Add game", null, null).DisplayLabel);
     }
 
     [Fact]
