@@ -5,6 +5,12 @@
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)
+![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
+[![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
+[![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
+[![QQ](https://img.shields.io/badge/QQ-659528489-12B7F5?style=flat)](https://qm.qq.com/q/yIjLxOFGCG)
+
 ## Versions and downloads
 
 Current version: **[v0.3.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)**. The 1.x line is unmaintained.
@@ -29,17 +35,17 @@ The branded installer lets you choose a destination, including during reinstalla
 
 ## Interface preview
 
-| Workspace | Pre-game preparation |
-|---|---|
-| ![Workspace](assets/screenshots/01-overview.png) | ![Preparation settings](assets/screenshots/08-preparation.png) |
+![Workspace · light theme](assets/screenshots/light/01-overview.png)
 
 | Display and quality | Detection |
 |---|---|
-| ![Display settings](assets/screenshots/09-display.png) | ![Detection](assets/screenshots/02-detect.png) |
+| ![Display settings](assets/screenshots/light/09-display.png) | ![Detection](assets/screenshots/light/02-detect.png) |
 
 <details>
-<summary>More: optimization, performance recording, A/B, settings and maintenance</summary>
+<summary>More: preparation, dark theme, optimization, recording and maintenance</summary>
 
+![Preparation settings · light theme](assets/screenshots/light/08-preparation.png)
+![Workspace · dark theme](assets/screenshots/01-overview.png)
 ![Optimization](assets/screenshots/03-optimize.png)
 ![Performance recording](assets/screenshots/04-session.png)
 ![A/B experiment](assets/screenshots/05-ab-experiment.png)

@@ -5,9 +5,11 @@
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
-![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
-![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)
+![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
+[![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
+[![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
+[![QQ](https://img.shields.io/badge/QQ-659528489-12B7F5?style=flat)](https://qm.qq.com/q/yIjLxOFGCG)
 
 ## 版本与下载
 
@@ -33,17 +35,17 @@
 
 ## 界面预览
 
-| 工作台 | 开局准备 |
-|---|---|
-| ![工作台](assets/screenshots/01-overview.png) | ![开局准备配置](assets/screenshots/08-preparation.png) |
+![工作台 · 亮色主题](assets/screenshots/light/01-overview.png)
 
 | 显示与画质 | 系统检测 |
 |---|---|
-| ![DLSS 与显示设置](assets/screenshots/09-display.png) | ![系统检测](assets/screenshots/02-detect.png) |
+| ![DLSS 与显示设置](assets/screenshots/light/09-display.png) | ![系统检测](assets/screenshots/light/02-detect.png) |
 
 <details>
-<summary>更多界面：优化、性能记录、A/B 实验、设置与维护</summary>
+<summary>更多界面：开局准备、深色主题、优化、性能记录与维护</summary>
 
+![开局准备配置 · 亮色主题](assets/screenshots/light/08-preparation.png)
+![工作台 · 深色主题](assets/screenshots/01-overview.png)
 ![优化与审阅](assets/screenshots/03-optimize.png)
 ![性能记录](assets/screenshots/04-session.png)
 ![A/B 实验](assets/screenshots/05-ab-experiment.png)
