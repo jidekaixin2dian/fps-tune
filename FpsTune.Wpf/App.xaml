@@ -271,6 +271,11 @@
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="Height" Value="30"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                <Setter Property="Padding" Value="11,0,28,0"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ComboBox">
@@ -279,8 +284,8 @@
                                               IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
-                                            <Border x:Name="Bd" Background="{DynamicResource InputBackgroundBrush}"
-                                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                            <Border x:Name="Bd" Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                    BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderThickness="1"
                                                     CornerRadius="{DynamicResource RadiusControl}">
                                                 <Path Data="M0 0 L4 4 L8 0" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.4"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -289,6 +294,8 @@
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
                                                 </Trigger>
+                                                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                                                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></DataTrigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </ToggleButton.Template>
@@ -297,7 +304,7 @@
                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                   ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                                   ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
-                                                  Margin="11,0,26,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center" IsHitTestVisible="False"
                                                   TextBlock.Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True"
                                        Placement="Bottom" PopupAnimation="Slide" Focusable="False">
@@ -312,6 +319,7 @@
                                     </Border>
                                 </Popup>
                             </Grid>
+                            <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger></ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -813,27 +821,14 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="CheckBox">
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Background="Transparent">
                                 <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True"/>
-                                <Grid Width="36" Height="20" Margin="12,0,0,0" VerticalAlignment="Center">
-                                    <Border x:Name="Track"
-                                            CornerRadius="10"
-                                            Background="{DynamicResource BorderBrush}"/>
-                                    <Ellipse x:Name="Thumb"
-                                             Width="14" Height="14"
-                                             HorizontalAlignment="Left"
-                                             Margin="3,0,0,0"
-                                             Fill="{DynamicResource TextSecondaryBrush}"/>
-                                </Grid>
+                                <controls:SwitchIndicator Width="36" Height="20" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"
+                                    IsChecked="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}"
+                                    OffBrush="{DynamicResource BorderBrush}" OnBrush="{DynamicResource AccentBrush}"
+                                    ThumbOffBrush="{DynamicResource TextSecondaryBrush}" ThumbOnBrush="{DynamicResource OnPrimaryBrush}"/>
                             </StackPanel>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
-                                    <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                    <Setter TargetName="Thumb" Property="Fill" Value="{DynamicResource OnPrimaryBrush}"/>
-                                    <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
-                                    <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0"/>
-                                </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter Property="Opacity" Value="0.45"/>
                                 </Trigger>

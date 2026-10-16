@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.IO;
@@ -250,10 +250,11 @@ public partial class ConsoleView : UserControl
     {
         if (GameContextService.IsBusy)
         {
+            RefreshGameSwitcher();
             DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.SwitchBlockedDetecting"));
             return;
         }
-        GameContextService.SwitchTo(exePath);
+        if (!GameContextService.SwitchTo(exePath)) RefreshGameSwitcher();
     }
 
     private void OnGameContextSwitched()
@@ -282,9 +283,10 @@ public partial class ConsoleView : UserControl
             new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts, currentGame, AppState.GamePath) })).ToList();
         foreach (var row in _rows) row.Item.PropertyChanged += ItemChanged;
         SetChecks(_preset == "custom" ? selected : OptimizationCatalog.ResolvePreset(_preset).ToHashSet());
-        var count = _source.Count(i => i.Optimized);
-        TunedText.Text = _source.Count > 0 ? $"{count}/{_source.Count}" : "—";
-        TunedMeter.Value = _source.Count > 0 ? 100.0 * count / _source.Count : 0;
+        var available = _rows.Where(r => r.Item.Available).ToArray();
+        var count = available.Count(r => r.Item.Optimized);
+        TunedText.Text = available.Length > 0 ? $"{count}/{available.Length}" : "—";
+        TunedMeter.Value = available.Length > 0 ? 100.0 * count / available.Length : 0;
         FilterRows();
     }
 
@@ -319,7 +321,7 @@ public partial class ConsoleView : UserControl
         foreach (var id in _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id))
             AppState.SelectedIds.Add(id);
         var count = _rows.Count(r => r.Item.IsChecked);
-        SelectionText.Text = _rows.Count == 0 ? Str.T("Str.NoDetectResult") : $"已选择 {count} 项 / 共 {_rows.Count} 项";
+        SelectionText.Text = _rows.Count == 0 ? Str.T("Str.NoDetectResult") : Str.T("Str.HomeSelectionCount", count, _rows.Count(r => r.Item.Available));
         ReviewButton.IsEnabled = count > 0 && !_refreshing;
     }
 

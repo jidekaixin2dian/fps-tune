@@ -122,8 +122,8 @@
     <s:String x:Key="Str.NeedsReboot">Restart required</s:String>
     <s:String x:Key="Str.ItemDetailTitle">Item details / run log</s:String>
     <s:String x:Key="Str.TipFull">Includes service and power settings — review the side effects</s:String>
-    <s:String x:Key="Str.TipSafe">Selects only the five conservative settings</s:String>
-    <s:String x:Key="Str.TipBalanced">Excludes the service and power items with larger impact</s:String>
+    <s:String x:Key="Str.TipSafe">Selects basic settings that do not require administrator rights.</s:String>
+    <s:String x:Key="Str.TipBalanced">Selects common system settings. Choose Custom for other items; frame rate and color are under Display, memory preparation is on Home.</s:String>
     <s:String x:Key="Str.SideEffectLabel">Side effect: </s:String>
 
     <!-- Detect / Optimize pages (converted 2026-09-25) -->
@@ -1195,4 +1195,5 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.WallpaperImportFailed">Wallpaper import failed</s:String>
     <s:String x:Key="Str.VibranceLegacyUnassigned">The legacy backup has no monitor identity. Applying again creates a new restore point from the current value.</s:String>
     <s:String x:Key="Str.VibranceLegacyRecovery">The legacy backup has no monitor identity. Its original file is preserved and cannot be restored automatically.</s:String>
+    <s:String x:Key="Str.HomeSelectionCount">Selected {0} / {1} available</s:String>
 </ResourceDictionary>

@@ -122,8 +122,8 @@
     <s:String x:Key="Str.NeedsReboot">需重启</s:String>
     <s:String x:Key="Str.ItemDetailTitle">项目详情 / 执行记录</s:String>
     <s:String x:Key="Str.TipFull">包含服务和电源设置，请审阅副作用</s:String>
-    <s:String x:Key="Str.TipSafe">只选择五项保守设置</s:String>
-    <s:String x:Key="Str.TipBalanced">排除影响较大的服务与电源项目</s:String>
+    <s:String x:Key="Str.TipSafe">只选择无需管理员权限的基础设置</s:String>
+    <s:String x:Key="Str.TipBalanced">预选常用系统设置；其他项目可切换“自定义”按需选择。帧率和色彩在“显示与画质”，内存整理在“开局准备”。</s:String>
     <s:String x:Key="Str.SideEffectLabel">副作用：</s:String>
 
     <!-- 检测页 / 优化页（2026-09-25 转换） -->
@@ -1195,4 +1195,5 @@
     <s:String x:Key="Str.WallpaperImportFailed">壁纸导入失败</s:String>
     <s:String x:Key="Str.VibranceLegacyUnassigned">旧版备份未记录显示器。再次应用时，将以当前值建立新的还原点。</s:String>
     <s:String x:Key="Str.VibranceLegacyRecovery">旧版备份没有显示器信息，已保留原文件，无法自动还原。</s:String>
+    <s:String x:Key="Str.HomeSelectionCount">已选择 {0} 项 / 可选 {1} 项</s:String>
 </ResourceDictionary>

@@ -441,6 +441,142 @@ public sealed class ReadabilityAndFramesUiTests
         });
     }
 
+    [Fact]
+    public void Home_actions_align_at_supported_sizes_and_selection_review_and_busy_game_choice_stay_consistent()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            var original = AppState.GamePath!;
+            var unavailable = ItemCatalog.All.Single(d => !d.Available);
+            var unavailableItem = new OptimizationItem(unavailable.Id, unavailable.DisplayName, unavailable.DisplayDescription, unavailable.DisplaySideEffect,
+                unavailable.Admin, unavailable.Reboot, false, "not available", false, unavailable.Group);
+            AppState.Items.Add(unavailableItem);
+            var second = Path.Combine(root, DeltaPreparation.GameExecutable); File.WriteAllText(second, "not executable");
+            StateStore.AddGame(original); StateStore.AddGame(second);
+            AppState.DetectJson = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(new { gamePath = original }));
+            StateStore.MarkOnboardingSeen();
+            var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
+            var page = (ConsoleView)((ContentControl)window.FindName("PageHost")).Content;
+            var combo = (ComboBox)page.FindName("GameSwitcher");
+            var availableCount = ItemCatalog.All.Count(d => d.Available);
+            Assert.Equal(Str.T("Str.HomeSelectionCount", OptimizationCatalog.ResolvePreset("balanced").Count, availableCount), ((TextBlock)page.FindName("SelectionText")).Text);
+            Assert.Equal("0/" + availableCount, ((TextBlock)page.FindName("TunedText")).Text);
+            Assert.Equal(Str.T("Str.Unavailable"), new OptimizationItemViewModel(unavailableItem).StatusText);
+            var report = new List<object>(); var oldBusy = GameContextService.IsBusyProvider;
+            try
+            {
+                foreach (var mode in new[] { "studio", "console" })
+                foreach (var theme in new[] { "light", "dark" })
+                foreach (var size in new[] { new Size(1180, 720), new Size(1360, 860) })
+                {
+                    window.Width = size.Width; window.Height = size.Height;
+                    SettingsService.Current.ThemeMode = theme; window.SetDisplayMode(mode); window.UpdateLayout();
+                    var actions = ((WrapPanel)page.FindName("PreparationActions")).Children.OfType<Button>().ToArray();
+                    Assert.Equal(6, actions.Length);
+                    var tops = actions.Select(b => b.TranslatePoint(new Point(0, 0), page).Y).ToArray();
+                    Assert.InRange(tops.Max() - tops.Min(), 0, 0.1);
+                    foreach (var action in actions)
+                    {
+                        Assert.Equal(36, action.ActualHeight); var at = action.TranslatePoint(new Point(), page);
+                        Assert.InRange(at.X, 0, page.ActualWidth - action.ActualWidth + 0.1);
+                        Assert.InRange(at.Y, 0, page.ActualHeight - action.ActualHeight + 0.1);
+                    }
+                    Assert.Single(Descendants(combo).OfType<System.Windows.Shapes.Path>()); // Dropdown arrow only.
+                    var review = (Button)page.FindName("ReviewButton"); var bottom = review.TranslatePoint(new Point(), page);
+                    Assert.True(bottom.Y + review.ActualHeight <= page.ActualHeight);
+                    Capture(window, $"home-audit-{mode}-{size.Width}-{theme}", report);
+                }
+                // Search changes visibility only; selecting a previously excluded item enters custom mode.
+                var search = (TextBox)page.FindName("SearchBox"); search.Text = "Wi-Fi"; window.UpdateLayout();
+                var list = (ListBox)page.FindName("ItemList"); Assert.Single(list.Items);
+                var toggle = Descendants(list).OfType<CheckBox>().Single();
+                ((System.Windows.Automation.Provider.IToggleProvider)new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(toggle)
+                    .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle)).Toggle();
+                Assert.True(((RadioButton)page.FindName("CustomPreset")).IsChecked); Assert.Contains("wifi-performance-ac", AppState.SelectedIds);
+                search.Text = ""; window.UpdateLayout(); Assert.Contains("wifi-performance-ac", AppState.SelectedIds);
+                ((RadioButton)page.FindName("BalancedPreset")).IsChecked = true;
+                Assert.Equal(OptimizationCatalog.ResolvePreset("balanced").Order(), AppState.SelectedIds.Order());
+                Descendants(page).OfType<RadioButton>().Single(b => b.Tag as string == "safe-only").IsChecked = true;
+                Assert.Equal(OptimizationCatalog.ResolvePreset("safe-only").Order(), AppState.SelectedIds.Order());
+                ((Button)page.FindName("PrepareDeltaButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); window.UpdateLayout();
+                var optimization = Assert.IsType<OptimizeView>(((ContentControl)window.FindName("PageHost")).Content);
+                Assert.Equal(new[] { "dvr-off", "game-mode", "gpu-pref" }, optimization.Items.Where(i => i.IsChecked).Select(i => i.Id).Order());
+                ((RadioButton)optimization.FindName("PresetFull")).IsChecked = true;
+                Assert.False(optimization.Items.Single(i => i.Id == unavailable.Id).IsChecked);
+                Assert.Equal(availableCount, optimization.Items.Count(i => i.IsChecked));
+                window.NavigateTo("home"); window.UpdateLayout();
+                Render(page, "home-before-busy-dark");
+                // Rejecting a game switch must also restore the visible selected label.
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+                timer.Tick += (_, _) =>
+                {
+                    if (app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible) is { } dialog)
+                        ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                };
+                try
+                {
+                    GameContextService.IsBusyProvider = () => true; timer.Start();
+                    combo.SelectedItem = combo.Items.OfType<GameSwitcherItem>().Single(g => g.ExePath == second);
+                    Assert.Equal(original, AppState.GamePath);
+                    Assert.Equal(original, ((GameSwitcherItem)combo.SelectedItem).ExePath);
+                }
+                finally { timer.Stop(); GameContextService.IsBusyProvider = oldBusy; }
+                File.WriteAllText(Path.Combine(Output(), "home-interaction-audit.json"), JsonSerializer.Serialize(report));
+            }
+            finally { GameContextService.IsBusyProvider = oldBusy; window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Toggle_switch_has_inset_thumb_clickable_track_and_continuous_animation_in_both_directions()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var toggle = new CheckBox { Content = "开关示例", Style = (Style)app.FindResource("ToggleSwitchStyle"), HorizontalAlignment = HorizontalAlignment.Left };
+            var panel = new StackPanel { Margin = new Thickness(24) }; panel.SetResourceReference(Panel.BackgroundProperty, "AppBackdropBrush"); panel.Children.Add(toggle);
+            var window = new Window { Width = 500, Height = 180, Content = panel }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
+            var indicator = Descendants(toggle).OfType<Views.Controls.SwitchIndicator>().Single();
+            var provider = (System.Windows.Automation.Provider.IToggleProvider)new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(toggle)
+                .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle);
+            try
+            {
+                foreach (var x in new[] { 2d, 11d, 25d, 34d })
+                {
+                    var point = indicator.TranslatePoint(new Point(x, 10), toggle);
+                    var hit = (DependencyObject)toggle.InputHitTest(point);
+                    while (hit is not null && !ReferenceEquals(hit, toggle)) hit = VisualTreeHelper.GetParent(hit);
+                    Assert.Same(toggle, hit);
+                }
+                foreach (var theme in new[] { "light", "dark" })
+                {
+                    ThemeManager.SetMode(theme); Views.Controls.SwitchIndicator.AnimationEnabledOverride = true;
+                    Assert.Equal(0, indicator.Progress); Render(panel, "switch-off-" + theme);
+                    var bitmap = new RenderTargetBitmap(36, 20, 96, 96, PixelFormats.Pbgra32);
+                    var visual = new DrawingVisual(); using (var drawing = visual.RenderOpen()) drawing.DrawRectangle(new VisualBrush(indicator), null, new Rect(0, 0, 36, 20));
+                    bitmap.Render(visual);
+                    var pixels = new byte[36 * 20 * 4]; bitmap.CopyPixels(pixels, 144, 0);
+                    Color Pixel(int x, int y) { var i = (y * 36 + x) * 4; return Color.FromArgb(pixels[i + 3], pixels[i + 2], pixels[i + 1], pixels[i]); }
+                    Assert.Equal(((SolidColorBrush)indicator.OffBrush).Color, Pixel(4, 10));
+                    Assert.Equal(((SolidColorBrush)indicator.ThumbOffBrush).Color, Pixel(11, 10));
+                    provider.Toggle(); DlssFeedbackTests.PumpUntil(() => indicator.Progress is > 0 and < 1);
+                    Render(panel, "switch-opening-" + theme); DlssFeedbackTests.PumpUntil(() => indicator.Progress == 1);
+                    Assert.True(toggle.IsChecked); Render(panel, "switch-on-" + theme);
+                    provider.Toggle(); DlssFeedbackTests.PumpUntil(() => indicator.Progress is > 0 and < 1);
+                    var before = indicator.Progress; provider.Toggle(); Assert.InRange(Math.Abs(indicator.Progress - before), 0, 0.05);
+                    DlssFeedbackTests.PumpUntil(() => indicator.Progress == 1);
+                    provider.Toggle(); DlssFeedbackTests.PumpUntil(() => indicator.Progress == 0); Assert.False(toggle.IsChecked);
+                    Views.Controls.SwitchIndicator.AnimationEnabledOverride = null; UiPerformance.LowSpec = true;
+                    provider.Toggle(); Assert.Equal(1, indicator.Progress); provider.Toggle(); Assert.Equal(0, indicator.Progress);
+                }
+            }
+            finally { Views.Controls.SwitchIndicator.AnimationEnabledOverride = null; window.Close(); }
+        });
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {
