@@ -1,51 +1,18 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-## v0.3.0-beta: a more consistent interface and practical controls
-
-A larger update; upgrading is recommended. Download the EXE installer first.
-
-- Consistent typography, searchable detection categories and a single status marker per check.
-- Eight GPU device-name presets including GTX 750 Ti, with a preview and original-name restoration.
-- System standby-cache cleanup, per-game frame caps, AC Wi-Fi performance and disk idle controls.
-- Beginner guides for performance sessions and A/B experiments; separate community and update prompts.
-
-## Previous updates
-
-### 0.2.8: measurement, display and recovery improvements
-
-- **Timed performance sessions**: record game resolution, quality / DLSS / frame cap and a fixed scene. Enter a duration to save automatically, or leave it blank to stop manually. Reuse past conditions and include them in JSON / CSV exports.
-- **Clearer comparisons**: compare average FPS, 1% low and P99 frame time, with explicit notices when games, scenes, quality, resolution or sampling conditions are missing or different. Conditions are user entries; a single difference does not establish an optimization benefit. Real FPS still requires official PresentMon.
-- **Multiple displays**: select the target for digital vibrance and ICC associations, preserve originals separately and restore each screen independently. Changing the primary display does not silently retarget a write; disconnected targets are disabled. ICC affects color-managed applications and some games ignore it. Configurations that cannot be switched safely, including system-level associations, remain unavailable with an explanation.
-- **Diagnostics and update recovery**: export scrubbed DLSS / 3D diagnostics with privileges, driver version, operation stage and before/after values. Protect settings and restore records before updating, then offer retry and rollback when the previous installer is available.
-
-### 0.2.4: a major update
-
-0.2.4 brings substantial changes across the interface, tuning options and recovery workflow:
-
-- **Redesigned interface**: studio and compact layouts, six settings categories, custom wallpaper, and inline tutorial, community and update cards.
-- **Expanded tuning**: multiple-game path detection, 11 ICC presets, AC CPU controls and shader-cache preview and cleanup.
-- **Everyday maintenance**: drive space, process memory snapshots, storage cleanup, startup apps and troubleshooting shortcuts.
-- **Recovery and updates**: improved backups for system, driver and color settings, optional updates with download verification, and complete license texts in the app and packages.
-
-**0.2.5 refines this major update** with consistent small-text weights and item-title sizes, theme transitions and a branded installer that always lets you choose the destination.
-
-**0.2.6 fixes DLSS preset saving and privilege messages**: elevated processes no longer repeatedly offer elevation, and saving handles a missing NVIDIA driver database directory. Model selection writes only the preset. Saving and restoration reload the driver settings to verify the result, retaining the original backup on failure. Applying K should report that it was saved and independently verified; restart the game and enable DLSS to confirm its in-game effect.
-
-**0.2.7 further fixes DLSS K and driver 3D apply failures**: when an old backup differs from the current driver values, it preserves the old record and backs up the current values before applying. Driver 3D choices are read on the UI thread and saved in one batch. Refreshes retain failure details and the preset selected for retry. Saving reloads the driver settings to verify the result, and restoration still checks external changes. The reporting user has confirmed success with this fix.
-
 ## Versions and downloads
 
-Current version: **[v0.3.0-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)**. The 1.x line is unmaintained.
+Current version: **[v0.3.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/FpsTune-Setup-0.3.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0/FpsTune-Setup-0.3.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -53,35 +20,48 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/SHA256SUMS-v0.3.0.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0/SHA256SUMS-v0.3.0.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
-From 0.2.4, portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
+Portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
 
-The branded installer lets you choose a destination, including during reinstallation; your existing directory remains the default. In-app updates show release notes and download progress, then open the installer after verification.
+The branded installer lets you choose a destination, including during reinstallation; your existing directory remains the default. Update prompts show the main changes and link to the official release download page.
 
 ## Interface preview
 
-| Studio | Settings |
+| Workspace | Pre-game preparation |
 |---|---|
-| ![Studio](assets/screenshots/01-overview.png) | ![Settings](assets/screenshots/06-settings.png) |
+| ![Workspace](assets/screenshots/01-overview.png) | ![Preparation settings](assets/screenshots/08-preparation.png) |
 
-| Maintenance | Detection |
+| Display and quality | Detection |
 |---|---|
-| ![Maintenance](assets/screenshots/07-maintenance.png) | ![Detection](assets/screenshots/02-detect.png) |
+| ![Display settings](assets/screenshots/09-display.png) | ![Detection](assets/screenshots/02-detect.png) |
+
+<details>
+<summary>More: optimization, performance recording, A/B, settings and maintenance</summary>
+
+![Optimization](assets/screenshots/03-optimize.png)
+![Performance recording](assets/screenshots/04-session.png)
+![A/B experiment](assets/screenshots/05-ab-experiment.png)
+![Settings](assets/screenshots/06-settings.png)
+![Maintenance](assets/screenshots/07-maintenance.png)
+
+</details>
 
 ## Current features
 
 - **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
-- **Detection and system tuning**: 40 catalog items with current state, privileges, restart flags and side effects. Memory compression control is unavailable, with legacy restoration retained. Balanced includes 16 items; safe-only includes 4 without elevation. New AC CPU energy preference and maximum-state controls start unchecked.
+- **Detection and system tuning**: 39 available items with current state, privileges, restart requirements and side effects. Balanced selects 16 items, safe-only selects 4, and Custom lets you choose.
+- **Pre-game preparation**: save system standby-memory cleanup, ICC, vibrance and display choices as a one-click routine with individual results.
+- **Frame caps**: set NVIDIA foreground and background frame limits per game and restore those settings separately.
 - **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
 - **Display and quality**: per-game NVIDIA DRS / DLSS settings, digital vibrance for a selected display, 11 generated ICC presets or a custom `.icc` / `.icm`, and restoration of the original association. ICC works in color-managed applications; some games ignore it.
-- **GPU name experiment**: sets the NVIDIA Windows `DeviceDesc` to GTX 1050 Ti and backs up the original description. It does not change DXGI hardware IDs, driver capabilities or GPU performance. Whether a game uses that name needs measurement.
+- **GPU device names**: preview eight presets including GTX 750 Ti and GTX 1050 Ti, then restore the original description when needed. This changes the Windows device description while preserving hardware capabilities.
 - **Organized settings**: appearance, wallpaper, startup and notifications, games and profiles, data and permissions, and About. Settings save automatically; wallpaper has a rounded preview and compact opacity slider.
 - **Everyday maintenance**: fixed-drive free space and the top 8 process working sets, refreshed on demand. Open Windows storage cleanup, installed apps, Task Manager, startup apps, reliability history, Resource Monitor, network and update settings. Snapshots stay in the current page and are not uploaded.
 - **Cache maintenance**: preview the current user's DirectX / NVIDIA shader caches and confirm cleanup. Busy or changed files are skipped. Deleted cache files cannot be restored; regeneration may cause temporary stutter.
 - **Performance sessions and A/B**: local CPU, RAM, GPU, VRAM and frame-time recording, exports and comparisons. Real FPS capture requires official PresentMon.
-- **Inline guidance**: tutorial, community feedback and optional update cards appear in the main window's lower-right corner and can be collapsed or closed.
+- **Guidance and feedback**: step-by-step performance recording and A/B guides, separate QQ community and update prompts, and a persistent option to dismiss community reminders.
 - **Backups and recovery**: one inventory covers system settings, game driver profiles, ICC and vibrance, with individual results and failures.
 
 The application adjusts system or driver configuration without modifying game files or injecting into game processes. Results depend on hardware, drivers, games and scenes; compare on the same machine.
@@ -132,18 +112,20 @@ This is a rule-based decision, not proof of statistical significance. Simulated 
 ## Updates and privacy
 
 Startup checks this repository's GitHub Releases by default. Disable it in Settings or check manually.
-New versions show an inline card; you control downloading and installing. Updates are optional, with no automatic installation.
+New-version prompts show the main changes and open the official download page. Choose the EXE installer first; updating remains optional.
 A third-party file host is unnecessary. Downloads use official HTTPS release assets and the same release's SHA256 manifest.
 
 Hardware readings, game paths, backups, sessions and logs stay under `%LocalAppData%\FpsTune` and are not automatically uploaded.
 Update requests disclose the network connection's IP and a `FpsTune` User-Agent to GitHub, without hardware, game lists or logs. GitHub and QQ process visits and community information under their own service rules.
 Diagnostic exports are manual and may contain device, setting and operation records; inspect them before sharing. Preserve needed backups before deleting local records.
 
+Detailed version changes are in [CHANGELOG.md](CHANGELOG.md).
+
 ## Community and feedback
 
 Join the **FPS 帧律 developer community** to discuss usage, report issues, suggest features and discuss the developer's other open-source projects.
 
-- **QQ group: 659528489**
+- **QQ group: 659528489** · [Join the group](https://qm.qq.com/q/yIjLxOFGCG)
 - **Bugs and feature requests:** [GitHub Issues](https://github.com/jidekaixin2dian/fps-tune/issues)
 
 Use, learning and sharing are welcome. Follow the open-source license when redistributing and, where practical, credit the original project.

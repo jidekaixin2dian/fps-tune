@@ -1,56 +1,22 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?include_prereleases)
+![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune)
 ![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue)
 
-## 0.3.0 主要更新
-
-本次是一次较大的界面与功能更新，**建议更新**。
-
-- 字体与页面风格更统一，游戏路径也更容易阅读。
-- 检测页按概览、优化项目和报告分开浏览，可搜索和分类筛选，修复重复状态圆点。
-- 显卡名称支持 GTX 750 Ti 等 8 个预设，应用前可预览，也能还原原名称。
-- 新增整机待机缓存清理、游戏及后台限帧、接电 Wi-Fi 性能模式与机械硬盘保持唤醒。
-- 性能记录和 A/B 实验提供入门引导；QQ 加群反馈和更新提示独立处理。
-
-## 历史更新
-
-### 0.2.8：测量、显示器与恢复增强
-
-- **定时性能会话**：填写游戏分辨率、画质 / DLSS / 帧率上限及固定测试场景，设置目标时长后自动保存；留空仍可手动停止。支持沿用历史会话的条件，JSON / CSV 导出附带这些记录。
-- **更清楚的前后对照**：比较平均 FPS、1% low、P99 帧时间；游戏、场景、画质、分辨率或采样条件缺失 / 不一致时明确提示。条件由用户填写，单次差值不代表优化收益；真实 FPS 仍需要官方 PresentMon。
-- **多显示器控制**：选择目标屏幕调整数字振动与 ICC 关联，逐屏保留原值、独立还原。主屏变化不自动换目标，断开的屏幕禁用写入。ICC 仅影响支持色彩管理的应用，部分游戏会忽略；系统级关联等无法安全切换的配置会提示不可用。
-- **诊断与更新恢复**：DLSS / 3D 可直接导出脱敏诊断，记录权限、驱动版本、失败阶段及设置前后值；更新前保护设置和还原记录，失败后提供重试与旧版包可用时的回退入口。
-
-### 0.2.4：一次大更新
-
-0.2.4 集中升级了界面、调校范围和备份恢复流程，覆盖日常使用的多个环节：
-
-- **界面重做**：工作台与紧凑控制台、六类设置、自定义壁纸；教程、社区反馈和更新提示整合到窗口右下角。
-- **调校扩展**：多游戏路径识别、11 个 ICC 预设、接电 CPU 调校项目和着色器缓存预览清理。
-- **日常维护**：磁盘空间、应用内存快照，以及存储清理、启动应用和故障排查入口。
-- **恢复与更新**：完善系统、驱动和颜色设置的备份恢复，增加非强制更新与下载校验，包内及软件内提供完整开源许可。
-
-**0.2.5 在这次大更新的基础上继续打磨体验**：统一小字号字重与标题字号，加入主题切换过渡，并提供帧律品牌安装向导和始终可选的安装路径。
-
-**0.2.6 修复 DLSS 预设保存与权限提示**：已以管理员身份运行时，不再反复要求提权；处理 NVIDIA 驱动数据库目录缺失的保存失败。模型切换只写预设，保存和还原都会重新读取驱动确认结果，失败保留原值备份。应用 K 后应显示「已保存并读回确认」；重新启动游戏并开启 DLSS 后确认游戏内效果。
-
-**0.2.7 进一步修复 DLSS K 与驱动 3D 应用失败**：旧备份与当前驱动值不一致时，先保留旧记录，再按当前值备份并应用；修复 3D 设置的界面线程访问错误，全部选择一次提交。失败信息和待重试预设不再被刷新清空；保存后重新读取驱动确认结果，还原仍核对外部改动。反馈用户已确认本次修复版本成功。
-
 ## 版本与下载
 
-当前版本为 **[v0.3.0-beta](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta)**。
+当前版本为 **[v0.3.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0-beta) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/FpsTune-Setup-0.3.0.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0/FpsTune-Setup-0.3.0.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -58,35 +24,48 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0-beta/SHA256SUMS-v0.3.0.txt)。
+本版校验清单：[SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0/SHA256SUMS-v0.3.0.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
-0.2.4 起，便携包和安装包包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
+便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
 
-安装版提供帧律品牌安装向导，可选择安装目录；再次安装时保留原目录作为默认值，也可自行调整。软件内更新先显示版本说明和下载进度，校验完成后再打开安装向导。
+安装版提供帧律品牌安装向导，可选择安装目录；再次安装时保留原目录作为默认值，也可自行调整。更新提示会展示主要变化，并提供官方下载页入口。
 
 ## 界面预览
 
-| 工作台 | 设置 |
+| 工作台 | 开局准备 |
 |---|---|
-| ![工作台](assets/screenshots/01-overview.png) | ![分类设置](assets/screenshots/06-settings.png) |
+| ![工作台](assets/screenshots/01-overview.png) | ![开局准备配置](assets/screenshots/08-preparation.png) |
 
-| 日常维护 | 检测 |
+| 显示与画质 | 系统检测 |
 |---|---|
-| ![维护与排查](assets/screenshots/07-maintenance.png) | ![系统检测](assets/screenshots/02-detect.png) |
+| ![DLSS 与显示设置](assets/screenshots/09-display.png) | ![系统检测](assets/screenshots/02-detect.png) |
+
+<details>
+<summary>更多界面：优化、性能记录、A/B 实验、设置与维护</summary>
+
+![优化与审阅](assets/screenshots/03-optimize.png)
+![性能记录](assets/screenshots/04-session.png)
+![A/B 实验](assets/screenshots/05-ab-experiment.png)
+![设置](assets/screenshots/06-settings.png)
+![维护工具](assets/screenshots/07-maintenance.png)
+
+</details>
 
 ## 当前功能
 
 - **工作台与紧凑控制台**：深浅主题和主题切换过渡，统一选择控件，可使用本地图片作为软件背景。低配模式或 Windows 关闭动画时直接切换主题。
-- **检测与系统调校**：40 个目录项目，逐项展示当前状态、权限、重启要求和副作用；内存压缩项暂不可用，保留旧记录还原。均衡预设含 16 项；无需管理员的预设含 4 项。接电 CPU、Wi-Fi 与硬盘调校均可单独选择，默认不勾选。
+- **检测与系统调校**：39 个可选项目，逐项展示当前状态、权限、重启要求和副作用。均衡预选 16 项，保守方案含 4 项；也可自定义选择。
+- **开局准备**：保存整机待机内存整理、ICC 滤镜、数字振动和目标显示器的组合，开局前一键执行，分别显示各项结果。
+- **游戏限帧**：按游戏设置 NVIDIA 前台、后台帧率上限，并可单独还原。
 - **多游戏**：识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置、选定显示器的数字振动、11 个生成的 ICC 预设或自选 `.icc` / `.icm`，以及逐屏原始关联还原。ICC 在使用颜色管理的应用中生效，部分游戏会忽略它。
-- **显卡名称实验**：将 NVIDIA 显卡的 Windows `DeviceDesc` 改为 GTX 1050 Ti，保留原名称备份。它不改变 DXGI 硬件标识、驱动能力或显卡性能，游戏是否采用此名称需实测。
+- **更改显卡名称**：提供 GTX 750 Ti、GTX 1050 Ti 等 8 个预设，应用前预览，可还原原名称。修改 Windows 设备描述，显卡能力保持原样。
 - **设置分类**：外观、壁纸、启动与通知、游戏与方案、数据与权限、关于；设置自动保存，壁纸提供圆角预览与短滑条。
 - **日常维护**：查看固定磁盘空间和内存工作集前 8 项，按需刷新；打开 Windows 存储清理、已安装应用、任务管理器、启动应用、可靠性历史、资源监视器、网络和更新页面。快照保留在当前页面，不自动上传。
 - **缓存维护**：先预览当前用户的 DirectX / NVIDIA 着色器缓存，再确认清理；跳过占用或预览后变化的文件。删除的缓存不能还原，下次运行会重建，可能短暂卡顿。
 - **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，支持报告导出与会话比较。真实 FPS 采样需要官方 PresentMon。
-- **窗口内引导**：新手教程、社区反馈和非强制更新提示位于主窗口右下角，可收起或关闭。
+- **引导与反馈**：性能记录和 A/B 实验提供入门步骤；QQ 加群反馈与更新提醒独立显示，加群提示可选择不再提醒。
 - **备份与恢复**：统一列出系统、游戏驱动配置、ICC 和数字振动的备份，保留逐项结果和失败原因。
 
 这些功能调整系统或驱动配置，不修改游戏文件、不注入游戏进程。效果取决于硬件、驱动、游戏和场景，以同机对照测量为准。
@@ -136,18 +115,20 @@ A/B 使用固定硬件、游戏、画质与路线，要求至少 3 次有效样�
 ## 更新与隐私
 
 默认启动检查本仓库 GitHub Releases，可在设置中关闭，也可手动检查。
-发现新版本只显示窗口内通知；点击「下载并安装」才下载并打开安装器，不强制更新。
+发现新版本时展示主要变化；点击「打开下载页面」前往对应版本，优先选择 EXE 安装包。更新由你决定。
 无需第三方网盘。下载使用官方 HTTPS 发布资产并核验同一 Release 的 SHA256 清单。
 
 硬件检测、游戏路径、设置备份、会话和日志保存在 `%LocalAppData%\FpsTune`，不自动上传。
 更新请求会向 GitHub 提供网络连接所需的 IP 和 `FpsTune` User-Agent，不发送硬件、游戏清单或日志。GitHub 与 QQ 各自按其服务规则处理访问和社区资料。
 诊断包由你手动导出，可能包含设备、设置与操作记录；分享前检查内容。移除本地记录前，先保留需要的备份。
 
+详细版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+
 ## 社区交流与反馈
 
 欢迎加入 **FPS 帧律开发者交流群**，交流软件使用经验、反馈问题、提出功能建议，也可以讨论开发者的其他开源软件项目。
 
-- **QQ 交流群：659528489**
+- **QQ 交流群：659528489** · [一键加群](https://qm.qq.com/q/yIjLxOFGCG)
 - **问题反馈与功能建议：** [GitHub Issues](https://github.com/jidekaixin2dian/fps-tune/issues)
 
 项目欢迎正常使用、学习和分享。转载或分发时，请遵守项目的开源许可，并尽可能注明原项目来源。
