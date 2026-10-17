@@ -25,6 +25,23 @@ public sealed class GamePreparationTests
         Assert.Equal(new[] { "b.icm" }, screens.Profiles["B"]); Assert.Equal(60, screens.Levels["B"]);
     }
 
+    [Fact]
+    public async Task Preparation_accepts_Windows_default_and_can_restore_it_without_a_custom_profile()
+    {
+        using var screens = new MultiDisplayColorTests();
+        screens.Profiles["B"].Clear();
+        var service = Service(new MemoryCleanupTests.FakeMemory());
+        var options = Combined with { CleanMemory = false, ApplyVibrance = false };
+        var applied = Assert.Single(await service.RunAsync(options));
+        Assert.True(applied.Succeeded, applied.Detail);
+        Assert.Equal("FpsTune-Warm.icc", screens.Profiles["B"].Last());
+        var restored = Assert.Single(await service.RunAsync(options with { IccPreset = null }));
+        Assert.True(restored.Succeeded, restored.Detail);
+        Assert.Empty(screens.Profiles["B"]);
+        Assert.Equal(new[] { "a.icm" }, screens.Profiles["A"]);
+        Assert.Empty(IccFilterService.BackupTargets());
+    }
+
     [Theory]
     [InlineData("busy")] [InlineData("admin")] [InlineData("unplugged")] [InlineData("invalid")]
     public async Task Failed_preflight_does_not_change_color_or_clean_memory(string reason)

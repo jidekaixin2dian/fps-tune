@@ -18,6 +18,7 @@ public sealed class MultiDisplayColorTests : IDisposable
     internal Action? BeforeVibWrite;
     internal Action? BeforeIccWrite;
     internal bool IgnoreVibWrite;
+    internal bool IgnoreIccRestore;
     internal readonly List<string> Writes = [];
     public MultiDisplayColorTests()
     {
@@ -223,6 +224,48 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(72, Marshal.SizeOf<DisplayTopology.PathInfo>());
         Assert.Equal(20, Marshal.OffsetOf<DisplayTopology.PathInfo>("Target").ToInt32());
     }
+    [Fact]
+    public void Windows_default_can_switch_presets_and_restore_empty_associations_on_only_the_selected_screen()
+    {
+        Profiles["B"].Clear();
+        var state = IccFilterService.GetState("B");
+        Assert.True(state.CanApply);
+        Assert.Null(state.CurrentProfileName);
+        Assert.False(state.Restorable);
+        IccFilterService.Apply(IccFilterPreset.Vivid, "B");
+        IccFilterService.Apply(IccFilterPreset.Warm, "B");
+        Assert.True(IccFilterService.Restore("B"));
+        Assert.Empty(Profiles["B"]);
+        Assert.Equal(new[] { "a.icm" }, Profiles["A"]);
+        Assert.Null(IccFilterService.GetState("B").CurrentProfileName);
+        Assert.True(IccFilterService.GetState("B").CanApply);
+        Assert.Empty(IccFilterService.BackupTargets());
+    }
+    [Fact]
+    public void Unconfirmed_empty_restore_keeps_backup_and_can_be_retried()
+    {
+        Profiles["B"].Clear();
+        IccFilterService.Apply(IccFilterPreset.Warm, "B");
+        IgnoreIccRestore = true;
+        Assert.Throws<InvalidOperationException>(() => IccFilterService.Restore("B"));
+        Assert.True(IccFilterService.HasRestorableBackup("B"));
+        IgnoreIccRestore = false;
+        Assert.True(IccFilterService.Restore("B"));
+        Assert.Empty(Profiles["B"]);
+        Assert.Empty(IccFilterService.BackupTargets());
+    }
+    [Fact]
+    public void Missing_profile_file_is_not_mistaken_for_an_empty_Windows_default()
+    {
+        Profiles["B"] = ["missing.icm"];
+        var state = IccFilterService.GetState("B");
+        Assert.False(state.CanApply);
+        Assert.False(string.IsNullOrWhiteSpace(state.UnsupportedReason));
+        Assert.Throws<InvalidOperationException>(() => IccFilterService.Apply(IccFilterPreset.Warm, "B"));
+        Assert.Equal(new[] { "missing.icm" }, Profiles["B"]);
+        Assert.Empty(Writes);
+        Assert.Empty(IccFilterService.BackupTargets());
+    }
     private static IntPtr _writtenHandle;
     private static int EnumDisplays(uint index, ref IntPtr handle) { handle = index == 0 ? new(100) : new(200); return index < 2 ? 0 : -7; }
     private static int DisplayName(IntPtr handle, StringBuilder name) { name.Append(handle == new IntPtr(100) ? @"\\.\DISPLAY2" : @"\\.\DISPLAY1"); return 0; }
@@ -249,6 +292,8 @@ public sealed class MultiDisplayColorTests : IDisposable
     }
     private sealed class Icc(MultiDisplayColorTests owner) : IIccSystemApi
     {
+        // Use the production capability so a missing native opt-in reproduces the regression.
+        public bool CanRestoreAbsentDefault => new MscmsIccApi().CanRestoreAbsentDefault;
         public IReadOnlyList<IccDisplayInfo> GetDisplays() => DisplayTopology.GetDisplays();
         public bool TryGetPrimaryDisplay(out IccDisplayInfo display) { display = GetDisplays().First(d => d.IsPrimary); return true; }
         public void ValidateConnection(IccDisplayInfo display) => DisplayTopology.ValidateConnection(display);
@@ -257,7 +302,7 @@ public sealed class MultiDisplayColorTests : IDisposable
         public bool SetDisplayDefaultAssociation(IccDisplayInfo display, string name)
         { owner.BeforeIccWrite?.Invoke(); ValidateConnection(display); owner.Writes.Add("icc:" + display.Identity); owner.Profiles[display.Identity!].Add(name); return true; }
         public string[] ReadAssociationList(IccDisplayInfo display) => owner.Profiles[display.Identity!].ToArray();
-        public void WriteAssociationList(IccDisplayInfo display, string[] list) { ValidateConnection(display); owner.Profiles[display.Identity!] = list.ToList(); }
+        public void WriteAssociationList(IccDisplayInfo display, string[] list) { ValidateConnection(display); if (!owner.IgnoreIccRestore) owner.Profiles[display.Identity!] = list.ToList(); }
         public bool IsProfileBytesValid(byte[] profile) => true;
     }
 }

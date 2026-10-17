@@ -22,6 +22,7 @@ public sealed class MultiDisplayUiTests
         var thread = new Thread(() =>
         {
             using var fixture = new MultiDisplayColorTests();
+            fixture.Profiles["B"].Clear();
             Application? application = null;
             Window? window = null;
             DispatcherTimer? confirm = null;
@@ -45,6 +46,10 @@ public sealed class MultiDisplayUiTests
                 subtab.IsChecked = true;
                 combo.SelectedIndex = 1;
                 DlssFeedbackTests.PumpUntil(() => vib.IsEnabled && ((Slider)page.FindName("VibSlider")).Value == 60);
+                DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccCurrentText")).Text.Contains(Str.T("Str.DisplayNoCustomIcc")));
+                Assert.True(((Button)page.FindName("IccApplyFileButton")).IsEnabled);
+                Assert.False(((Button)page.FindName("IccRestoreButton")).IsEnabled);
+                Render(page, "windows-default-B.png");
                 Assert.DoesNotContain("Identity", combo.Text);
                 confirm = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
                 confirm.Tick += (_, _) =>
@@ -90,7 +95,7 @@ public sealed class MultiDisplayUiTests
                 DlssFeedbackTests.PumpUntil(() => vib.IsEnabled && ((Slider)page.FindName("VibSlider")).Value == 60);
                 ((Button)page.FindName("IccRestoreButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccStateText")).Text == Str.T("Str.IccRestored"));
-                Assert.Equal(["b.icm"], fixture.Profiles["B"]);
+                Assert.Empty(fixture.Profiles["B"]);
                 Assert.Empty(IccFilterService.BackupTargets());
                 Assert.Empty(DigitalVibranceService.BackupTargets());
             }

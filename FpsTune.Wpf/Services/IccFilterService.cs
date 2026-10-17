@@ -102,13 +102,14 @@ public static class IccFilterService
             return new IccState(false, "无法读取系统色彩目录。", null, null, HasRestorableBackup(identity));
 
         var current = EffectiveDefault(api, display, colorDir);
+        var canApply = current is not null || api.CanRestoreAbsentDefault && api.ReadAssociationList(display).Length == 0;
         return new IccState(
             true,
-            null,
+            canApply ? null : "未读取到当前关联中的可用显示 profile。请先在 Windows 颜色管理中检查配置文件。",
             current,
             current is null ? null : Path.Combine(colorDir, current),
             ReadForDisplay(display) is not null,
-            current is not null || api.CanRestoreAbsentDefault && api.ReadAssociationList(display).Length == 0);
+            canApply);
     }
 
     /// <summary>本工具从用户文件安装的自定义 profile 统一用此前缀（漂移检查据此放行）。</summary>

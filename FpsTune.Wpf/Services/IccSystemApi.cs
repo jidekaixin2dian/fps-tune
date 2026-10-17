@@ -52,6 +52,10 @@ internal interface IIccSystemApi
 /// <summary>真实 mscms/注册表实现。</summary>
 public sealed class MscmsIccApi : IIccSystemApi
 {
+    // An empty per-user list is a restorable Windows-default state.
+    // Writing [] removes our associations without inventing an original profile.
+    public bool CanRestoreAbsentDefault => true;
+
     private const string AssociationBasePath =
         @"Software\Microsoft\Windows NT\CurrentVersion\ICM\ProfileAssociations\Display\{4d36e96e-e325-11ce-bfc1-08002be10318}";
     public IReadOnlyList<IccDisplayInfo> GetDisplays() => DisplayTopology.GetDisplays();
