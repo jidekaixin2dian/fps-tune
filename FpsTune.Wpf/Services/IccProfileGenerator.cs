@@ -87,11 +87,11 @@ public static class IccProfileGenerator
         },
         IccFilterPreset.ShadowGentle => new("FpsTune-ShadowGentle.icc", "FPS Tune - Gentle shadows") { Curve = ShadowLiftCurve(0.08) },
         IccFilterPreset.ContrastGentle => new("FpsTune-ContrastGentle.icc", "FPS Tune - Gentle contrast") { Curve = ContrastCurve(0.97) },
-        IccFilterPreset.Muted => new("FpsTune-Muted.icc", "FPS Tune - Muted")
+        IccFilterPreset.Muted => new("FpsTune-Muted-v2.icc", "FPS Tune - Muted")
         {
             RXyz = PullAway(StdRXyz, StdWXyz, 0.96), GXyz = PullAway(StdGXyz, StdWXyz, 0.96), BXyz = PullAway(StdBXyz, StdWXyz, 0.96),
         },
-        IccFilterPreset.Neutral => new("FpsTune-Neutral.icc", "FPS Tune - Neutral gamma 2.2"),
+        IccFilterPreset.Neutral => new("FpsTune-Neutral-v2.icc", "FPS Tune - Neutral gamma 2.2"),
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };
 
@@ -258,7 +258,7 @@ public static class IccProfileGenerator
         if (lut is null)
         {
             bw.Write(Be32(1)); // 单值 = u16Fixed16 gamma
-            bw.Write(Be32((uint)Math.Round(fallbackGamma * 65536.0)));
+            bw.Write(Be16((ushort)Math.Round(fallbackGamma * 256.0))); // ICC curveType uses u8Fixed8, not s15Fixed16.
         }
         else
         {

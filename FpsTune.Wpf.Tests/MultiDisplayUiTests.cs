@@ -44,6 +44,7 @@ public sealed class MultiDisplayUiTests
                 Assert.True(((Button)page.FindName("IccApplyFileButton")).IsEnabled);
                 var subtab = FindVisual<RadioButton>(page).Single(b => Equals(b.Tag, "vibicc"));
                 subtab.IsChecked = true;
+                ((Expander)page.FindName("IccAdvanced")).IsExpanded = true;
                 combo.SelectedIndex = 1;
                 DlssFeedbackTests.PumpUntil(() => vib.IsEnabled && ((Slider)page.FindName("VibSlider")).Value == 60);
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccCurrentText")).Text.Contains(Str.T("Str.DisplayNoCustomIcc")));

@@ -47,8 +47,8 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                     display = DisplayTopology.Require(options.DisplayIdentity);
                     if (options.ApplyIcc && options.IccPreset is not null)
                     {
-                        var state = IccFilterService.GetState(options.DisplayIdentity);
-                        if (!state.CanApply) throw new InvalidOperationException(state.UnsupportedReason ?? Str.T("Str.PrepareDisplayUnavailable"));
+                        var state = ScreenColorService.GetState(options.DisplayIdentity);
+                        if (!state.Supported) throw new InvalidOperationException(state.Detail);
                     }
                     if (options.ApplyVibrance)
                     {
@@ -74,10 +74,11 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                     string result;
                     if (options.IccPreset is { } value)
                     {
-                        _ = IccFilterService.Apply(value, options.DisplayIdentity);
-                        result = Str.T(IccProfileGenerator.ResourceKeysFor(value).Title);
+                        ScreenColorService.Apply(ScreenColorSettings.ForPreset(value), options.DisplayIdentity!);
+                        result = ScreenColorSettings.TitleFor(value);
                     }
-                    else result = IccFilterService.Restore(options.DisplayIdentity) ? Str.T("Str.PrepareOriginalIcc") : Str.T("Str.PrepareAlreadyOriginal");
+                    else result = (ScreenColorService.Restore(options.DisplayIdentity!) | IccFilterService.Restore(options.DisplayIdentity))
+                        ? Str.T("Str.PrepareOriginalIcc") : Str.T("Str.PrepareAlreadyOriginal");
                     return new(Str.T("Str.PrepareIcc"), true, result);
                 });
                 if (options.ApplyVibrance) Run(Str.T("Str.PrepareVibrance"), () =>

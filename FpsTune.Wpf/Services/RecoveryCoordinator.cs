@@ -20,6 +20,8 @@ public static class RecoveryCoordinator
         Read("nvidia", () => DisplayQualityService.BackupGames().Select(game => new RecoveryScope("nvidia", game, true)));
         Read("icc", () => IccFilterService.BackupTargets().Select(t => new RecoveryScope("icc", t.Name, false, t.Error)));
         Read("vibrance", () => DigitalVibranceService.BackupTargets().Select(t => new RecoveryScope("vibrance", t.Name, false, t.Error)));
+        Read("screen-color", () => ScreenColorService.BackupTargets().Select(t => new RecoveryScope("screen-color", t.Name, false, t.Error)));
+        if (AudioEqualizerService.HasBackup) scopes.Add(new("audio-equalizer", "Equalizer APO", false));
         return scopes;
     }
 
@@ -58,6 +60,8 @@ public static class RecoveryCoordinator
         }
         RecoverDisplays("ICC", IccFilterService.BackupTargets, identity => IccFilterService.Restore(identity));
         RecoverDisplays("Digital Vibrance", DigitalVibranceService.BackupTargets, identity => DigitalVibranceService.Restore(identity));
+        RecoverDisplays(Str.T("Str.ColorModule"), ScreenColorService.BackupTargets, identity => ScreenColorService.Restore(identity!));
+        Recover(Str.T("Str.EqTitle"), AudioEqualizerService.Restore);
         return result;
     }
 }

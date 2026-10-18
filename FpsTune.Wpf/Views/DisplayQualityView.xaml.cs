@@ -25,6 +25,7 @@ public partial class DisplayQualityView : UserControl
     private bool _drsSyncing;
     private string? _displayIdentity;
     private bool _displaySyncing;
+    private bool _initialColorTabChosen;
     private sealed record DisplayChoice(string Identity, string Label)
     {
         public override string ToString() => Label;
@@ -40,6 +41,7 @@ public partial class DisplayQualityView : UserControl
     public DisplayQualityView()
     {
         InitializeComponent();
+        ColorPanel.BusyChanged += busy => { _busy = busy; ++_refreshGen; SetDisplayInputEnabled(!busy); if (!busy) Refresh(); };
         GpuIdentityPresets.ItemsSource = GpuIdentityService.Presets;
         GpuIdentityPresets.SelectedItem = GpuIdentityService.Presets.First(p => p.Description == GpuIdentityService.TargetDescription);
         var choices = Enum.GetValues<IccFilterPreset>().Select(preset =>
@@ -58,6 +60,7 @@ public partial class DisplayQualityView : UserControl
     {
         if (_displaySyncing || _busy || DisplayTargetCombo.SelectedItem is not DisplayChoice choice) return;
         _displayIdentity = choice.Identity;
+        ColorPanel.PauseForTargetChange();
         _vibStatus = _iccStatus = null;
         _refreshGen++;
         Refresh();
@@ -128,6 +131,7 @@ public partial class DisplayQualityView : UserControl
 
     private async Task RefreshStatesAsync(int gen)
     {
+        ColorPanel.IsEnabled = false;
         DisplayTargetCombo.IsEnabled = DisplayRefreshButton.IsEnabled = false;
         VibApplyButton.IsEnabled = VibRestoreButton.IsEnabled = false;
         IccApplyButton.IsEnabled = IccApplyFileButton.IsEnabled = IccRestoreButton.IsEnabled = false;
@@ -153,10 +157,16 @@ public partial class DisplayQualityView : UserControl
         if (_busy || gen != _refreshGen)
             return; // 期间发生了更新的刷新，旧结果作废
         ApplySnapshot(snap);
+        await ColorPanel.RefreshFor(identity);
     }
 
     private void ApplySnapshot(StateSnapshot s)
     {
+        if (!_initialColorTabChosen)
+        {
+            _initialColorTabChosen = true;
+            if (!s.NvidiaSupported) SubTabColor.IsChecked = true;
+        }
         ApplyDlssState(s);
         ApplyVibState(s);
         ApplyIccState(s);
@@ -784,6 +794,7 @@ public partial class DisplayQualityView : UserControl
     // ---------- M3：驱动 3D（纹理/电源/透明度/预渲染） ----------
     private void SetDisplayInputEnabled(bool enabled)
     {
+        if (!enabled) ColorPanel.IsEnabled = false;
         DisplayTargetCombo.IsEnabled = DisplayRefreshButton.IsEnabled = enabled;
         VibSlider.IsEnabled = VibRecommendedButton.IsEnabled = enabled;
         IccPresetList.IsEnabled = enabled;

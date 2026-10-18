@@ -31,7 +31,7 @@
     <!-- 0.2.7-beta = 用户复测通过的 DLSS 失败反馈、备份漂移恢复及 3D 单次提交修复 -->
     <!-- 0.2.8-beta = 操作诊断、升级失败恢复、多显示器 ICC/数字振动及定时性能条件对照 -->
     <!-- 0.2.9-beta = 快捷工作区、独立通知、可读性与新手引导、按游戏帧率控制、开局前内存整理（本地开发） -->
-    <VersionPrefix>0.3.1</VersionPrefix>
+    <VersionPrefix>0.4.0</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

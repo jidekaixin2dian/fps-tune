@@ -19,6 +19,9 @@ public sealed class MultiDisplayColorTests : IDisposable
     internal Action? BeforeIccWrite;
     internal bool IgnoreVibWrite;
     internal bool IgnoreIccRestore;
+    internal readonly Dictionary<string, ushort[]> Ramps = new() { ["A"] = LinearRamp(), ["B"] = LinearRamp() };
+    internal bool IgnoreGammaWrite;
+    internal static ushort[] LinearRamp() => Enumerable.Range(0, 768).Select(i => (ushort)((i % 256) * 257)).ToArray();
     internal readonly List<string> Writes = [];
     public MultiDisplayColorTests()
     {
@@ -28,6 +31,8 @@ public sealed class MultiDisplayColorTests : IDisposable
         IccFilterService.BackupDirOverride = Path.Combine(Root, "icc");
         DigitalVibranceService.ApiOverride = () => new Dvc(this);
         IccFilterService.ApiOverride = () => new Icc(this);
+        ScreenColorService.ApiOverride = new Gamma(this);
+        ScreenColorService.BackupDirOverride = Path.Combine(Root, "screen");
         Directory.CreateDirectory(Path.Combine(Root, "colors"));
         foreach (var profile in new[] { "a.icm", "b.icm", "external.icm" })
             File.WriteAllBytes(Path.Combine(Root, "colors", profile), IccProfileGenerator.Build(IccFilterPreset.Vivid));
@@ -41,6 +46,8 @@ public sealed class MultiDisplayColorTests : IDisposable
         IccFilterService.ApiOverride = null;
         DigitalVibranceService.BackupDirOverride = null;
         IccFilterService.BackupDirOverride = null;
+        ScreenColorService.ApiOverride = null;
+        ScreenColorService.BackupDirOverride = null;
         Directory.Delete(Root, true);
     }
     [Fact]
@@ -289,6 +296,17 @@ public sealed class MultiDisplayColorTests : IDisposable
         public void SetLevel(int level)
         { owner.BeforeVibWrite?.Invoke(); DisplayTopology.ValidateConnection(_display!); owner.Writes.Add("vib:" + _display!.Identity); if (!owner.IgnoreVibWrite) owner.Levels[_display.Identity!] = level; }
         public void Dispose() { }
+    }
+    private sealed class Gamma(MultiDisplayColorTests owner) : IScreenGammaApi
+    {
+        public bool IsHdr(IccDisplayInfo display) => display.AdvancedColorEnabled != false;
+        public ushort[] Read(IccDisplayInfo display) { DisplayTopology.ValidateConnection(display); return owner.Ramps[display.Identity!].ToArray(); }
+        public void Write(IccDisplayInfo display, ushort[] ramp)
+        {
+            owner.BeforeIccWrite?.Invoke(); DisplayTopology.ValidateConnection(display);
+            owner.Writes.Add("gamma:" + display.Identity);
+            if (!owner.IgnoreGammaWrite) owner.Ramps[display.Identity!] = ramp.ToArray();
+        }
     }
     private sealed class Icc(MultiDisplayColorTests owner) : IIccSystemApi
     {

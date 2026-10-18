@@ -1,6 +1,6 @@
 <UserControl x:Class="FpsTune.Wpf.Views.DisplayQualityView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls" xmlns:views="clr-namespace:FpsTune.Wpf.Views"
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <!-- 预设卡片：与优化页 PresetChoice 同语言，两行内容（名称 + 说明） -->
@@ -85,7 +85,7 @@
                         </Border>
                     </StackPanel>
                 </RadioButton>
-                <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabVibIcc}" Style="{StaticResource SubTabStyle}" Tag="vibicc" Checked="SubTab_Checked">
+                <RadioButton x:Name="SubTabColor" GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabVibIcc}" Style="{StaticResource SubTabStyle}" Tag="vibicc" Checked="SubTab_Checked">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{DynamicResource Str.TabVibIcc}" VerticalAlignment="Center"/>
                         <Border x:Name="TabBadgeVib" Style="{StaticResource TabBadgeStyle}" Visibility="Collapsed">
@@ -258,6 +258,8 @@
                     <!-- 分区二：ICC 滤镜（系统层色彩变换，A 卡/Intel 与整体桌面观感兜底） -->
                     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
                             Margin="0,18,0,16"/>
+                    <views:ScreenColorPanel x:Name="ColorPanel" Margin="0,0,0,20"/>
+                    <Expander x:Name="IccAdvanced" Header="{DynamicResource Str.IccAdvanced}" IsExpanded="False"><StackPanel Margin="0,12,0,0">
                     <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
@@ -297,6 +299,7 @@
 
                     <TextBlock x:Name="IccUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
                                Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                    </StackPanel></Expander>
                 </StackPanel>
             </Border>
 

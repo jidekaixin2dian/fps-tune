@@ -22,7 +22,7 @@ public partial class GamePreparationWindow : Window
         IccCheck.IsChecked = _original.ApplyIcc; VibranceCheck.IsChecked = _original.ApplyVibrance;
         VibranceSlider.Value = Math.Clamp(_original.VibrancePercent, 0, 100);
         var presets = new[] { new IccChoice(null, Str.T("Str.PrepareOriginalIcc")) }
-            .Concat(Enum.GetValues<IccFilterPreset>().Select(p => new IccChoice(p, Str.T(IccProfileGenerator.ResourceKeysFor(p).Title)))).ToArray();
+            .Concat(Enum.GetValues<IccFilterPreset>().Select(p => new IccChoice(p, ScreenColorSettings.TitleFor(p)))).ToArray();
         IccPresetBox.ItemsSource = presets; IccPresetBox.SelectedItem = presets.FirstOrDefault(p => p.Preset == _original.IccPreset) ?? presets[0];
         var pending = DeltaPreparation.PendingItems(AppState.Items, true);
         var ready = AppState.Items.Count > 0 && string.Equals(AppState.DetectJson?["gamePath"]?.GetValue<string>(), AppState.GamePath, StringComparison.OrdinalIgnoreCase);

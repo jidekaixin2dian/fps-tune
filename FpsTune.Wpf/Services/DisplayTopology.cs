@@ -21,7 +21,7 @@ internal static class DisplayTopology
         var current = Require(Identity(captured));
         if (current.GdiDeviceName != captured.GdiDeviceName || current.AdapterIdLow != captured.AdapterIdLow
             || current.AdapterIdHigh != captured.AdapterIdHigh || current.SourceId != captured.SourceId
-            || current.AssociationSubKey != captured.AssociationSubKey)
+            || current.AssociationSubKey != captured.AssociationSubKey || current.AdvancedColorEnabled != captured.AdvancedColorEnabled)
             throw new InvalidOperationException(Str.T("Str.DisplayConnectionChanged"));
     }
     internal static IReadOnlyList<IccDisplayInfo> ReadNative()
@@ -54,7 +54,8 @@ internal static class DisplayTopology
                     result.Add(new(source.Name, path.Source.Adapter.Low, path.Source.Adapter.High, path.Source.Id, key,
                         MscmsIccApi.UsesPerUserProfiles(key), target.Path.ToUpperInvariant(), target.FriendlyName, primary,
                         activePaths.Count(p => (p.Flags & 1) != 0 && p.Source.Adapter.Low == path.Source.Adapter.Low
-                            && p.Source.Adapter.High == path.Source.Adapter.High && p.Source.Id == path.Source.Id) == 1));
+                            && p.Source.Adapter.High == path.Source.Adapter.High && p.Source.Id == path.Source.Id) == 1,
+                        ReadAdvancedColor(path.Target.Adapter, path.Target.Id)));
                 }
                 return MarkIndependent(result);
             }
@@ -88,6 +89,13 @@ internal static class DisplayTopology
         }
         return (null, primary);
     }
+    private static bool? ReadAdvancedColor(Luid adapter, uint target)
+    {
+        var info = new AdvancedColor { Header = Header.For(9, Marshal.SizeOf<AdvancedColor>(), adapter, target) };
+        return GetAdvancedColor(ref info) == 0 ? (info.Flags & 2) != 0 : null;
+    }
+    [StructLayout(LayoutKind.Sequential)] private struct AdvancedColor { public Header Header; public uint Flags, Encoding, Bits; }
+    [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] private static extern int GetAdvancedColor(ref AdvancedColor info);
     [StructLayout(LayoutKind.Sequential)] internal struct Luid { public uint Low; public int High; }
     [StructLayout(LayoutKind.Sequential)] internal struct Source { public Luid Adapter; public uint Id, Mode, Flags; }
     [StructLayout(LayoutKind.Sequential)] internal struct Target

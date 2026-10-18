@@ -12,7 +12,8 @@ public sealed record IccDisplayInfo(
     uint SourceId,
     string AssociationSubKey,
     bool UsePerUserProfiles,
-    string? Identity = null, string FriendlyName = "", bool IsPrimary = true, bool Independent = true);
+    string? Identity = null, string FriendlyName = "", bool IsPrimary = true, bool Independent = true,
+    bool? AdvancedColorEnabled = false);
 
 /// <summary>
 /// Profile installation/validation uses mscms. Per-user associations use the physical monitor's documented WCS store.

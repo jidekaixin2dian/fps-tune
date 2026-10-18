@@ -21,7 +21,8 @@ public sealed class GamePreparationTests
         Assert.Equal(1, memory.Purges); Assert.True(memory.AllPriorities);
         Assert.Equal(30, screens.Levels["A"]); Assert.Equal(75, screens.Levels["B"]);
         Assert.Equal(new[] { "a.icm" }, screens.Profiles["A"]);
-        Assert.True(IccFilterService.Restore("B")); Assert.True(DigitalVibranceService.Restore("B"));
+        Assert.True(ScreenColorService.Restore("B")); Assert.True(DigitalVibranceService.Restore("B"));
+        Assert.Equal(MultiDisplayColorTests.LinearRamp(), screens.Ramps["B"]);
         Assert.Equal(new[] { "b.icm" }, screens.Profiles["B"]); Assert.Equal(60, screens.Levels["B"]);
     }
 
@@ -34,12 +35,13 @@ public sealed class GamePreparationTests
         var options = Combined with { CleanMemory = false, ApplyVibrance = false };
         var applied = Assert.Single(await service.RunAsync(options));
         Assert.True(applied.Succeeded, applied.Detail);
-        Assert.Equal("FpsTune-Warm.icc", screens.Profiles["B"].Last());
+        Assert.False(ScreenColorService.Matches(MultiDisplayColorTests.LinearRamp(), screens.Ramps["B"]));
         var restored = Assert.Single(await service.RunAsync(options with { IccPreset = null }));
         Assert.True(restored.Succeeded, restored.Detail);
         Assert.Empty(screens.Profiles["B"]);
         Assert.Equal(new[] { "a.icm" }, screens.Profiles["A"]);
         Assert.Empty(IccFilterService.BackupTargets());
+        Assert.Empty(ScreenColorService.BackupTargets());
     }
 
     [Theory]
@@ -58,7 +60,7 @@ public sealed class GamePreparationTests
         using var screens = new MultiDisplayColorTests { IgnoreVibWrite = true }; var memory = new MemoryCleanupTests.FakeMemory();
         var service = Service(memory); var steps = await service.RunAsync(Combined);
         Assert.True(steps[0].Succeeded); Assert.False(steps[1].Succeeded); Assert.True(steps[2].Succeeded);
-        Assert.Equal(1, memory.Purges); Assert.True(IccFilterService.HasRestorableBackup("B"));
+        Assert.Equal(1, memory.Purges); Assert.Single(ScreenColorService.BackupTargets());
         Assert.True(DigitalVibranceService.HasRestorableBackup("B")); Assert.False(GamePreparationService.IsRunning);
         Assert.True((await service.RunAsync(new() { Configured = true })).Single().Succeeded);
     }

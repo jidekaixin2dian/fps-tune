@@ -1,0 +1,16 @@
+<UserControl x:Class="FpsTune.Wpf.Views.ScreenColorPanel"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <StackPanel>
+  <TextBlock Text="{DynamicResource Str.ColorPanelTitle}" Style="{StaticResource CardTitleStyle}"/>
+  <TextBlock Text="{DynamicResource Str.ColorPanelHint}"
+   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+  <ComboBox x:Name="ColorPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreset}"/>
+  <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,12,0,4"/>
+  <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,12"/>
+  <WrapPanel>
+   <Button x:Name="ColorApplyButton" Content="{DynamicResource Str.ColorApplyTitle}" Style="{StaticResource PrimaryButtonStyle}" Click="Apply_Click" Margin="0,0,8,8"/>
+   <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" Style="{StaticResource SecondaryButtonStyle}" Click="Reset_Click" Margin="0,0,8,8"/>
+   <Button x:Name="ColorRestoreButton" Content="{DynamicResource Str.ColorRestore}" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" Margin="0,0,0,8"/>
+  </WrapPanel>
+ </StackPanel>
+</UserControl>

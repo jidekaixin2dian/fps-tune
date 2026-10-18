@@ -1,0 +1,45 @@
+<UserControl x:Class="FpsTune.Wpf.Views.AudioEqualizerPanel"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <UserControl.Resources>
+  <Style x:Key="VerticalEqSlider" TargetType="Slider">
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider">
+    <Grid Width="28" Background="Transparent">
+     <Border Width="4" Background="{DynamicResource BorderBrush}" CornerRadius="2"/>
+     <Track x:Name="PART_Track" Orientation="Vertical" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{Binding Value,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}">
+      <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton>
+      <Track.Thumb><Thumb Width="16" Height="16"><Thumb.Template><ControlTemplate TargetType="Thumb"><Ellipse Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource SurfaceBrush}" StrokeThickness="2"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+      <Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.IncreaseRepeatButton>
+     </Track>
+    </Grid>
+   </ControlTemplate></Setter.Value></Setter>
+  </Style>
+ </UserControl.Resources>
+ <StackPanel>
+  <TextBlock Text="{DynamicResource Str.EqTitle}" Style="{StaticResource PageTitleStyle}"/>
+  <TextBlock Text="{DynamicResource Str.EqIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,20"/>
+  <Border Style="{StaticResource CardStyle}"><StackPanel>
+   <TextBlock x:Name="EngineStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+   <WrapPanel Margin="0,12,0,0">
+    <Button Content="{DynamicResource Str.EqInstall}" Style="{StaticResource SecondaryButtonStyle}" Click="Install_Click" Margin="0,0,8,8"/>
+    <Button x:Name="DeviceSetupButton" Content="{DynamicResource Str.EqDeviceSetup}" Style="{StaticResource SecondaryButtonStyle}" Click="DeviceSetup_Click" Margin="0,0,8,8"/>
+    <Button Content="{DynamicResource Str.EqRefresh}" Style="{StaticResource SecondaryButtonStyle}" Click="Refresh_Click" Margin="0,0,0,8"/>
+   </WrapPanel>
+   <ComboBox x:Name="OutputCombo" Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.EqOutput}" Margin="0,8,0,0"/>
+  </StackPanel></Border>
+  <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+   <TextBlock Text="{DynamicResource Str.EqBands}" Style="{StaticResource CardTitleStyle}"/>
+   <ComboBox x:Name="EqualizerPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.EqPreset}" Margin="0,12,0,10"/>
+   <UniformGrid x:Name="BandsGrid" Columns="10" Margin="0,8,0,0"/>
+   <TextBlock Text="{DynamicResource Str.EqPreampLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,16,0,8"/>
+   <Slider x:Name="PreampSlider" Minimum="-24" Maximum="0" TickFrequency=".5" IsSnapToTickEnabled="True" ValueChanged="Preamp_Changed" AutomationProperties.Name="{DynamicResource Str.EqPreamp}"/>
+   <TextBlock x:Name="PreampText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,14"/>
+   <CheckBox x:Name="EnabledCheck" Content="{DynamicResource Str.EqEnable}" IsChecked="True" Margin="0,0,0,14"/>
+   <WrapPanel>
+    <Button x:Name="EqApplyButton" Content="{DynamicResource Str.EqApply}" Style="{StaticResource PrimaryButtonStyle}" Click="Apply_Click" Margin="0,0,8,8"/>
+    <Button Content="{DynamicResource Str.EqSave}" Style="{StaticResource SecondaryButtonStyle}" Click="Save_Click" Margin="0,0,8,8"/>
+    <Button x:Name="EqRestoreButton" Content="{DynamicResource Str.EqRemove}" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" Margin="0,0,0,8"/>
+   </WrapPanel>
+   <TextBlock x:Name="EqStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+  </StackPanel></Border>
+ </StackPanel>
+</UserControl>

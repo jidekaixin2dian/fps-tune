@@ -88,6 +88,21 @@ public static class DiagnosticReportExporter
                 }, new JsonSerializerOptions { WriteIndented = true }));
                 AddSessionsSummary(zip);
                 AddAutoProfileEvents(zip);
+                AddText(zip, "display-audio-status.json", JsonSerializer.Serialize(TryGet(() => new
+                {
+                    displays = DisplayTopology.GetDisplays().Take(16).Select((d, index) => new
+                    {
+                        screen = index + 1, d.IsPrimary, d.Independent, d.AdvancedColorEnabled,
+                        icc = TryGet(() =>
+                        {
+                            var s = IccFilterService.GetState(DisplayTopology.Identity(d));
+                            return new { s.Supported, s.CanApply, s.Restorable, profile = s.CurrentProfileName is null ? null : Path.GetFileName(s.CurrentProfileName), reason = PrivacyScrub.Sanitize(s.UnsupportedReason ?? "") };
+                        }),
+                        screenColor = TryGet(() => ScreenColorService.GetState(DisplayTopology.Identity(d)))
+                    }).ToArray(),
+                    audioEngineInstalled = AudioEqualizerService.FindEngine() is not null,
+                    audioConfigured = AudioEqualizerService.HasBackup
+                }), new JsonSerializerOptions { WriteIndented = true }));
                 AddErrorLogTail(zip);
                 AddBackupManifest(zip);
                 AddText(zip, "operation-diagnostics.json", JsonSerializer.Serialize(OperationDiagnostics.Read(BaseDir),

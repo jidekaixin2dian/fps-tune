@@ -270,10 +270,9 @@ public static class IccFilterService
     {
         var @params = IccProfileGenerator.ParamsFor(preset);
         string installedPath = Path.Combine(colorDir, @params.FileName);
-        if (IccProfileFile.IsDisplayProfile(installedPath))
-            return @params.FileName;
-
         byte[] bytes = IccProfileGenerator.Build(@params);
+        if (File.Exists(installedPath) && File.ReadAllBytes(installedPath).SequenceEqual(bytes))
+            return @params.FileName;
         string localPath = Path.Combine(BackupDir(), "presets", @params.FileName);
         Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
         AtomicFile.WriteAllBytes(localPath, bytes);
@@ -321,7 +320,7 @@ public static class IccFilterService
     internal static string[] AllPresetFileNames()
         => Enum.GetValues<IccFilterPreset>()
             .Select(p => IccProfileGenerator.ParamsFor(p).FileName)
-            .ToArray();
+            .Concat(new[] { "FpsTune-Neutral.icc", "FpsTune-Muted.icc" }).ToArray();
 
     private static IccDisplayInfo SelectDisplay(IIccSystemApi api, string? identity)
     {

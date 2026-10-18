@@ -435,7 +435,7 @@ public sealed class ReadabilityAndFramesUiTests
                 start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => start.IsEnabled && failureShown);
                 Assert.Equal(Str.T("Str.PreparePartial"), status.Text); Assert.Equal(2, memory.Purges);
-                Assert.Equal(76, screens.Levels["B"]); Assert.True(IccFilterService.HasRestorableBackup("B"));
+                Assert.Equal(76, screens.Levels["B"]); Assert.Single(ScreenColorService.BackupTargets());
             }
             finally { timer.Stop(); window.Close(); }
         });
