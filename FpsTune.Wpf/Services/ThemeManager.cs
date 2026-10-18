@@ -75,8 +75,6 @@ public static class ThemeManager
         SetBrush("DangerBrush", t.Danger);
         SetBrush("WarningBrush", t.Warning);
         SetBrush("OkBrush", t.Ok);
-        Application.Current.Resources["RadiusCard"] = new CornerRadius(studio ? 12 : 6);
-        Application.Current.Resources["RadiusControl"] = new CornerRadius(studio ? 8 : 5);
         Application.Current.Resources["PrimaryColor"] = t.Primary;
         Application.Current.Resources["AccentColor"] = t.Accent;
         ApplyBackdrop(resolved, animate);

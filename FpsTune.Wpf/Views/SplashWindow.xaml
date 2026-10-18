@@ -22,7 +22,7 @@
             Background="{DynamicResource AppBackdropBrush}"
             BorderBrush="{DynamicResource BorderHoverBrush}"
             BorderThickness="1"
-            CornerRadius="{StaticResource RadiusCard}"
+            CornerRadius="{DynamicResource RadiusCard}"
             Padding="40,32">
         <Border.Effect>
             <DropShadowEffect BlurRadius="30"
@@ -46,7 +46,7 @@
                        AutomationProperties.Name="{DynamicResource Str.AppName}"/>
                 <TextBlock Text="{DynamicResource Str.AppName}"
                            FontSize="22"
-                           FontWeight="SemiBold"
+                           Style="{StaticResource PageTitleStyle}"
                            Foreground="{DynamicResource TextPrimaryBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,14,0,0"/>

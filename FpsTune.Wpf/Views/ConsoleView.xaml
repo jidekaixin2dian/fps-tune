@@ -97,7 +97,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="{StaticResource SmallEmphasisWeight}" VerticalAlignment="Center" Margin="0,0,16,0"/>
                         <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
-                        <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="3">
+                        <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="3">
                             <UniformGrid Columns="3" Width="240">
                                 <RadioButton x:Name="BalancedPreset" ToolTip="{DynamicResource Str.TipBalanced}" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
                                 <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>

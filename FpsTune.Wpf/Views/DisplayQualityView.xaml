@@ -26,7 +26,7 @@
         <Style x:Key="SubTabStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}"/>
         <!-- 页签状态徽标：使用主题强调色，选中时保持文字对比。 -->
         <Style x:Key="TabBadgeStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="{StaticResource RadiusChip}"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource RadiusChip}"/>
             <Setter Property="Padding" Value="6,1"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -560,13 +560,13 @@
                             <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem">
                                 <Setter Property="Margin" Value="0,0,10,10"/><Setter Property="Padding" Value="14,14"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/><Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="PresetSurface" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
+                                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="PresetSurface" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
                                     <ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
                                 </ControlTemplate></Setter.Value></Setter>
                             </Style></ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/><TextBlock Text="{DynamicResource Str.GpuIdentityRecommended}" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="10,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsRecommended}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ListBox.ItemTemplate>
                         </ListBox>
-                        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="8" Padding="16" Margin="0,10,0,18"><StackPanel>
+                        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusCard}" Padding="16" Margin="0,10,0,18"><StackPanel>
                             <TextBlock Text="{DynamicResource Str.GpuIdentityPreview}" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="GpuIdentityCurrentName" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,4"/>
                             <TextBlock x:Name="GpuIdentityPreviewName" Foreground="{DynamicResource AccentBrush}" FontSize="18" TextWrapping="Wrap"/>

@@ -16,6 +16,33 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ReadabilityAndFramesUiTests
 {
     [Fact]
+    public void Rapid_navigation_presents_cached_pages_without_a_transparent_animation()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var previous = UiPerformance.LowSpec;
+            UiPerformance.LowSpec = false;
+            var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var host = (ContentControl)window.FindName("PageHost");
+                window.NavigateTo("display");
+                var cached = host.Content;
+                window.NavigateTo("opt");
+                window.NavigateTo("settings");
+                window.NavigateTo("display");
+                Assert.Same(cached, host.Content);
+                Assert.Equal(1, host.Opacity);
+                Assert.False(host.HasAnimatedProperties);
+                Assert.Equal(0, host.RenderTransform.Value.OffsetX);
+                Assert.True(((RadioButton)window.FindName("NavDisplay")).IsChecked);
+            }
+            finally { window.Close(); UiPerformance.LowSpec = previous; }
+        });
+    }
+    [Fact]
     public void Eight_k_wallpaper_is_normalized_and_visible_without_modifying_source()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }

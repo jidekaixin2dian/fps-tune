@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Shell;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Interop;
 using FpsTune.Wpf.Services;
 using FpsTune.Wpf.Views;
@@ -121,7 +120,6 @@ public partial class MainWindow : Window
     // 页面按需创建、创建后缓存：启动只构建首页，显著降低冷启动时间与常驻内存。
     private readonly Dictionary<string, Func<UserControl>> _pageFactories;
     private readonly Dictionary<string, UserControl> _pageCache = new();
-    private readonly TranslateTransform _pageSlide = new(24, 0);
 
     // 全局热键 Ctrl+Alt+F
     private const int WM_HOTKEY = 0x0312;
@@ -170,11 +168,6 @@ public partial class MainWindow : Window
             ["settings"] = () => new SettingsView(),
         };
 
-        PageHost.RenderTransform = _pageSlide;
-        // 初始首页不走滑入动画: 若保留 X=24, 首页会永久右偏 24px,
-        // 右侧页边距被吃掉(联系条顶到窗口边框)——"首次打开界面残缺"的根因。
-        // SwitchPage 的动画显式 From=24, 不受此处归零影响。
-        _pageSlide.X = 0;
         PageHost.Content = GetPage("home");
         // 托盘图标随应用启动常驻(与最小化设置无关); 设置只控制最小化行为
         if (UserDataPaths.RootOverride is null) TrayService.EnsureCreated();
@@ -456,30 +449,9 @@ public partial class MainWindow : Window
         if (ReferenceEquals(PageHost.Content, page))
             return;
 
-        // 低配模式: 跳过滑入/淡入动画
-        if (UiPerformance.LowSpec || !SystemParameters.ClientAreaAnimation)
-        {
-            PageHost.Opacity = 1;
-            PageHost.Content = page;
-            return;
-        }
-
-        PageHost.Opacity = 0;
+        // Present cached content immediately; whole-page fades delayed every navigation
+        // and repeatedly rasterized CJK text at fractional translated positions.
         PageHost.Content = page;
-
-        // 更舒适的切换：稍从容的时长 + 减速更自然的 CubicEase；
-        // 位移量小（16px）只提供方向感，不抢内容注意力。
-        var slideAnim = new DoubleAnimation(16, 0, TimeSpan.FromMilliseconds(200))
-        {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
-        _pageSlide.BeginAnimation(TranslateTransform.XProperty, slideAnim);
-
-        var fade = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(200))
-        {
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
-        PageHost.BeginAnimation(OpacityProperty, fade);
     }
 
     private void CaptionButton_Click(object sender, RoutedEventArgs e)

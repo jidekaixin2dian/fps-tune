@@ -98,19 +98,19 @@
 
                     <UniformGrid Columns="3" Margin="0,12,0,20">
                         <RadioButton x:Name="ThemeDarkRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeDark}">
-                            <StackPanel><Border Height="26" Background="#07090B" CornerRadius="3" Margin="0,0,0,10"/>
+                            <StackPanel><Border Height="26" Background="#07090B" CornerRadius="{DynamicResource RadiusControl}" Margin="0,0,0,10"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeDarkShort}" FontSize="16" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeDarkDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="ThemeLightRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeLight}">
-                            <StackPanel><Border Height="26" Background="#F7F9FC" CornerRadius="3" Margin="0,0,0,10"/>
+                            <StackPanel><Border Height="26" Background="#F7F9FC" CornerRadius="{DynamicResource RadiusControl}" Margin="0,0,0,10"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeLightShort}" FontSize="16" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeLightDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="ThemeSystemRadio" GroupName="defaultTheme" Style="{StaticResource SettingsChoice}" AutomationProperties.Name="{DynamicResource Str.ThemeSystem}">
-                            <StackPanel><Border Height="26" Background="#64748B" CornerRadius="3" Margin="0,0,0,10"/>
+                            <StackPanel><Border Height="26" Background="#64748B" CornerRadius="{DynamicResource RadiusControl}" Margin="0,0,0,10"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeSystemShort}" FontSize="16" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{DynamicResource Str.ThemeSystemDesc}" TextWrapping="Wrap" FontSize="13" Margin="0,5,0,0"/>
                             </StackPanel>
@@ -408,17 +408,17 @@
                     <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                     <Grid Margin="0,18,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <Border x:Name="WallpaperPreviewFrame" Width="176" Height="176" CornerRadius="16"
+                        <Border x:Name="WallpaperPreviewFrame" Width="176" Height="176" CornerRadius="{DynamicResource RadiusCard}"
                                 Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                             <Grid>
-                                <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="15"
+                                <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="17"
                                         Opacity="{Binding ElementName=WallpaperOpacitySlider, Path=Value}"/>
                                 <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Path Data="M 2,22 L 12,10 L 19,18 L 25,12 L 34,22 M 24,5 A 3,3 0 1 0 30,5 A 3,3 0 1 0 24,5"
                                           Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.5" Width="36" Height="26" Stretch="Uniform" HorizontalAlignment="Center"/>
                                     <TextBlock Text="{DynamicResource Str.WallpaperChoose}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,12,0,0"/>
                                 </StackPanel>
-                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" Padding="7,3" CornerRadius="5" Background="{DynamicResource ElevatedBrush}">
+                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" Padding="7,3" CornerRadius="{DynamicResource RadiusChip}" Background="{DynamicResource ElevatedBrush}">
                                     <TextBlock Text="{DynamicResource Str.WallpaperPreview}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
                                 </Border>
                             </Grid>
@@ -427,7 +427,7 @@
                             <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
                             <Grid Margin="0,14,0,0">
                                 <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                                <Border HorizontalAlignment="Right" CornerRadius="6" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
+                                <Border HorizontalAlignment="Right" CornerRadius="{DynamicResource RadiusChip}" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
                                     <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="{StaticResource SmallEmphasisWeight}"/>
                                 </Border>
                             </Grid>

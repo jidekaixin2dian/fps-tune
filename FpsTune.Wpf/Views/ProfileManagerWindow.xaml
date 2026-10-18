@@ -19,7 +19,7 @@
             Background="{DynamicResource AppBackdropBrush}"
             BorderBrush="{DynamicResource BorderHoverBrush}"
             BorderThickness="1"
-            CornerRadius="{StaticResource RadiusCard}"
+            CornerRadius="{DynamicResource RadiusCard}"
             Padding="24,22">
         <Border.Effect>
             <DropShadowEffect BlurRadius="28"
@@ -39,7 +39,7 @@
             <!-- 标题 -->
             <StackPanel Orientation="Horizontal">
                 <Border Width="38" Height="38"
-                        CornerRadius="{StaticResource RadiusControl}"
+                        CornerRadius="{DynamicResource RadiusControl}"
                         Background="{DynamicResource AccentSoftBrush}"
                         BorderBrush="{DynamicResource AccentBrush}"
                         BorderThickness="1"
@@ -68,7 +68,7 @@
                     Background="{DynamicResource SurfaceAltBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1"
-                    CornerRadius="{StaticResource RadiusControl}"
+                    CornerRadius="{DynamicResource RadiusControl}"
                     Padding="14,12"
                     Margin="0,16,0,0">
                 <StackPanel>

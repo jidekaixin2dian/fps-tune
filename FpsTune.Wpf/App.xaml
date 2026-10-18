@@ -34,15 +34,16 @@
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                <Setter Property="TextOptions.TextHintingMode" Value="Fixed"/>
                 <Setter Property="UseLayoutRounding" Value="True"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
 
-            <!-- ============ 设计令牌：圆角（控制台 = 微圆角） ============ -->
-            <CornerRadius x:Key="RadiusChip">3</CornerRadius>
-            <CornerRadius x:Key="RadiusControl">4</CornerRadius>
-            <CornerRadius x:Key="RadiusNav">4</CornerRadius>
-            <CornerRadius x:Key="RadiusCard">6</CornerRadius>
+            <!-- Shared generous radii in both workspace modes and both color themes. -->
+            <CornerRadius x:Key="RadiusChip">8</CornerRadius>
+            <CornerRadius x:Key="RadiusControl">12</CornerRadius>
+            <CornerRadius x:Key="RadiusNav">12</CornerRadius>
+            <CornerRadius x:Key="RadiusCard">18</CornerRadius>
 
             <Style TargetType="Expander">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
@@ -50,9 +51,9 @@
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Expander">
                     <StackPanel>
                         <ToggleButton x:Name="HeaderSite" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Foreground="{TemplateBinding Foreground}" HorizontalContentAlignment="Stretch" Cursor="Hand" MinHeight="34">
-                            <ToggleButton.FocusVisualStyle><Style TargetType="Control"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Control"><Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="4" Width="22" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center"/></ControlTemplate></Setter.Value></Setter></Style></ToggleButton.FocusVisualStyle>
+                            <ToggleButton.FocusVisualStyle><Style TargetType="Control"><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Control"><Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusChip}" Width="22" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center"/></ControlTemplate></Setter.Value></Setter></Style></ToggleButton.FocusVisualStyle>
                             <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
-                                <Border x:Name="HeaderBorder" Background="Transparent" CornerRadius="4" Padding="4,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Border x:Name="HeaderBorder" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}" Padding="4,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Path x:Name="Chevron" Data="M 0 0 L 4 4 L 0 8" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="6" Height="9" VerticalAlignment="Center" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5"/>
                                     <ContentPresenter Grid.Column="1" Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" VerticalAlignment="Center"/>
                                 </Grid></Border>
@@ -127,7 +128,7 @@
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusControl}" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -161,7 +162,11 @@
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontDisplay}"/>
                 <Setter Property="FontSize" Value="22"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
+                <!-- YaHei has no SemiBold face: it resolves to full Bold for CJK. -->
+                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+                <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+                <Setter Property="TextOptions.TextHintingMode" Value="Fixed"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             </Style>
 
@@ -331,7 +336,7 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ComboBoxItem">
-                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="3">
+                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="{DynamicResource RadiusControl}">
                                             <ContentPresenter VerticalAlignment="Center"/>
                                         </Border>
                                         <ControlTemplate.Triggers>
@@ -372,7 +377,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="MenuItem">
-                            <Border x:Name="Bd" Background="Transparent" CornerRadius="3" Padding="12,7">
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}" Padding="12,7">
                                 <ContentPresenter ContentSource="Header" VerticalAlignment="Center"
                                                   TextBlock.Foreground="{TemplateBinding Foreground}"/>
                             </Border>
@@ -502,7 +507,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="Root" CornerRadius="{DynamicResource RadiusChip}"
+                            <Border x:Name="Root" CornerRadius="{DynamicResource RadiusControl}"
                                     Background="{TemplateBinding Background}">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
                             </Border>
@@ -849,7 +854,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
-                            <Border x:Name="Bg" CornerRadius="5" Padding="10,4"
+                            <Border x:Name="Bg" CornerRadius="{DynamicResource RadiusControl}" Padding="10,4"
                                     Background="Transparent"
                                     BorderBrush="Transparent" BorderThickness="1">
                                 <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
@@ -909,7 +914,7 @@
                 <Setter Property="FontWeight" Value="Normal"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/><Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="controls:NavButton">
-                    <Border x:Name="NavSurface" CornerRadius="8" Background="Transparent" BorderThickness="1" BorderBrush="Transparent" Padding="14,0">
+                    <Border x:Name="NavSurface" CornerRadius="{DynamicResource RadiusNav}" Background="Transparent" BorderThickness="1" BorderBrush="Transparent" Padding="14,0">
                         <TextBlock Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -927,7 +932,7 @@
                 <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                 <Setter Property="Padding" Value="16,10"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem">
-                    <Border x:Name="TabSurface" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="8" Padding="{TemplateBinding Padding}" Margin="0,0,8,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <Border x:Name="TabSurface" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}" Margin="0,0,8,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                         <ContentPresenter ContentSource="Header"/>
                     </Border>
                     <ControlTemplate.Triggers>

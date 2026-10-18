@@ -62,7 +62,7 @@
                 <ItemsControl x:Name="WizardStepsList" Margin="0,2,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,6" Padding="12,9" CornerRadius="{StaticResource RadiusControl}"
+                            <Border Margin="0,0,0,6" Padding="12,9" CornerRadius="{DynamicResource RadiusControl}"
                                     Background="{DynamicResource SurfaceAltBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                 <Grid>
@@ -266,7 +266,7 @@
                 <ItemsControl x:Name="VerdictList" Margin="0,8,0,0">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,6" Padding="12,8" CornerRadius="{StaticResource RadiusControl}"
+                            <Border Margin="0,0,0,6" Padding="12,8" CornerRadius="{DynamicResource RadiusControl}"
                                     Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>

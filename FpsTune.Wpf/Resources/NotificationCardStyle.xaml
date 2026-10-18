@@ -7,7 +7,7 @@
         <Setter Property="Template"><Setter.Value>
 <ControlTemplate TargetType="{x:Type controls:NotificationCard}">
     <Border Background="{DynamicResource NotificationBackgroundBrush}" BorderBrush="{DynamicResource BorderHoverBrush}"
-            BorderThickness="1" CornerRadius="12" Padding="18">
+            BorderThickness="1" CornerRadius="{DynamicResource RadiusCard}" Padding="18">
         <StackPanel>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

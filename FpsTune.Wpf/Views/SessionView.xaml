@@ -158,7 +158,7 @@
                         <DataTemplate>
                             <Border Margin="0,0,0,6"
                                     Padding="12,9"
-                                    CornerRadius="{StaticResource RadiusControl}"
+                                    CornerRadius="{DynamicResource RadiusControl}"
                                     Background="{DynamicResource SurfaceAltBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1">
