@@ -74,7 +74,6 @@ public partial class DisplayQualityView : UserControl
             return;
 
         var gen = ++_refreshGen;
-        RefreshDriverAdvice();
         RefreshManualChecklist();
         // NVAPI / ICC / 注册表读取全部移到线程池：点击切页不再被同步 IO 卡住。
         // 快速切页会并发两轮只读快照，无害；gen 保证只有最新一轮的结果落到界面。
@@ -203,30 +202,59 @@ public partial class DisplayQualityView : UserControl
     /// 驱动版本建议：只读信息。
     /// **本工具不下载、不安装任何驱动**（红线）——这里只给版本号与来源，引导用户自己去官网。
     /// </summary>
-    private void RefreshDriverAdvice()
+    private bool _driverAdviceBusy;
+    private GpuDriverAdvice? _lastDriverAdvice;
+    private async Task RefreshDriverAdviceAsync()
     {
+        if (_driverAdviceBusy) return;
         var gpu = HardwareInfoService.Get().Gpu;
-        var advice = GpuDriverAdvisor.For(gpu);
-
-        DriverAdviceSourceText.Text = Str.T("Str.DriverSource");
-        SetBadge(TabStatusAdvice, TabBadgeAdvice,
-            string.IsNullOrWhiteSpace(advice?.Series) ? "—" : advice.Series);
-
-        if (advice is null)
+        DriverOfficialButton.Tag = GpuDriverAdvisor.OfficialUrl(gpu);
+        DriverHotfixButton.Visibility = Visibility.Collapsed;
+        if (GpuDriverAdvisor.NvidiaSeries(gpu) is null)
         {
-            DriverAdviceText.Text = Str.T("Str.DriverNoAdvice");
+            DriverAdviceText.Text = Str.T("Str.DriverGpuLabel") + gpu + "\n" + Str.T("Str.DriverUseVendor");
+            DriverAdviceSourceText.Text = "";
+            SetBadge(TabStatusAdvice, TabBadgeAdvice, null);
             return;
         }
-
-        var sb = new StringBuilder();
-        sb.AppendLine(Str.T("Str.DriverGpuLabel") + gpu);
-        sb.AppendLine(Str.T("Str.DriverSeriesLabel") + advice.Series);
-        sb.AppendLine(Str.T("Str.DriverStableLabel") +
-                      (string.IsNullOrEmpty(advice.Stable) ? Str.T("Str.DriverNoStable") : advice.Stable));
-        if (!string.IsNullOrWhiteSpace(advice.Alternatives))
-            sb.AppendLine(Str.T("Str.DriverAltLabel") + advice.Alternatives);
-        sb.Append(advice.Note);
-        DriverAdviceText.Text = sb.ToString().TrimEnd();
+        _driverAdviceBusy = true;
+        DriverRefreshButton.IsEnabled = false;
+        DriverAdviceText.Text = Str.T("Str.DriverGpuLabel") + gpu + "\n" + Str.T("Str.DriverChecking");
+        DriverAdviceSourceText.Text = "";
+        try
+        {
+            var advice = await GpuDriverAdvisor.QueryAsync(gpu);
+            _lastDriverAdvice = advice;
+            var sb = new StringBuilder();
+            sb.AppendLine(Str.T("Str.DriverGpuLabel") + advice.Product);
+            sb.AppendLine(Str.T("Str.DriverRecommended", advice.Version, advice.DriverName));
+            sb.AppendLine(Str.T("Str.DriverReleased", advice.Released.ToString("yyyy-MM-dd")));
+            sb.AppendLine(Str.T("Str.DriverSelection"));
+            if (advice.Notebook) sb.AppendLine(Str.T("Str.DriverNotebook"));
+            if (GpuDriverAdvisor.ShowHotfix(advice, DateOnly.FromDateTime(DateTime.Now)))
+            {
+                sb.AppendLine(Str.T("Str.DriverHotfix"));
+                DriverHotfixButton.Visibility = Visibility.Visible;
+            }
+            DriverAdviceText.Text = sb.ToString().TrimEnd();
+            DriverAdviceSourceText.Text = Str.T("Str.DriverChecked", advice.CheckedAt.ToString("yyyy-MM-dd HH:mm"));
+            DriverOfficialButton.Tag = advice.DetailsUrl;
+            SetBadge(TabStatusAdvice, TabBadgeAdvice, advice.Version);
+        }
+        catch (Exception ex)
+        {
+            DriverAdviceText.Text = Str.T("Str.DriverQueryFailed", ex is OperationCanceledException ? Str.T("Str.DriverTimeout") : ex.Message);
+            DriverAdviceSourceText.Text = _lastDriverAdvice is null ? "" : Str.T("Str.DriverPrevious",
+                _lastDriverAdvice.Version, _lastDriverAdvice.CheckedAt.ToString("yyyy-MM-dd HH:mm"));
+            SetBadge(TabStatusAdvice, TabBadgeAdvice, null);
+        }
+        finally { _driverAdviceBusy = false; DriverRefreshButton.IsEnabled = true; }
+    }
+    private async void DriverRefresh_Click(object sender, RoutedEventArgs e) => await RefreshDriverAdviceAsync();
+    private void DriverOfficial_Click(object sender, RoutedEventArgs e)
+    {
+        var url = sender == DriverHotfixButton ? GpuDriverAdvisor.HotfixUrl : DriverOfficialButton.Tag as string;
+        if (url is not null) System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     /// <summary>
@@ -263,6 +291,7 @@ public partial class DisplayQualityView : UserControl
         CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;
         CardAdvice.Visibility = key == "advice" ? Visibility.Visible : Visibility.Collapsed;
         CardGpuIdentity.Visibility = key == "identity" ? Visibility.Visible : Visibility.Collapsed;
+        if (key == "advice") _ = RefreshDriverAdviceAsync();
     }
 
     private void ApplyDlssState(StateSnapshot s)

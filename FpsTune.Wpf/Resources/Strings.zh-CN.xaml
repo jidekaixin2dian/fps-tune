@@ -572,12 +572,24 @@
     <!-- 驱动版本建议（只读；不下载不安装） -->
     <s:String x:Key="Str.DriverCard">驱动版本建议</s:String>
     <s:String x:Key="Str.DriverGpuLabel">当前显卡：</s:String>
-    <s:String x:Key="Str.DriverSeriesLabel">系列：</s:String>
-    <s:String x:Key="Str.DriverStableLabel">稳定首选：</s:String>
-    <s:String x:Key="Str.DriverAltLabel">备选：</s:String>
-    <s:String x:Key="Str.DriverNoStable">暂无公认稳定版</s:String>
-    <s:String x:Key="Str.DriverNoAdvice">未能识别为 NVIDIA 显卡，暂无驱动版本建议。</s:String>
-    <s:String x:Key="Str.DriverSource">参考：社区驱动使用反馈（什么值得买，2026-01-23）。</s:String>
+    <s:String x:Key="Str.DriverRefresh">查询最新版本</s:String>
+    <s:String x:Key="Str.DriverOfficial">查看官方驱动页</s:String>
+    <s:String x:Key="Str.DriverHotfixLink">查看热修复适用条件</s:String>
+    <s:String x:Key="Str.DriverChecking">正在按显卡型号和 Windows 版本查询官方 WHQL 驱动…</s:String>
+    <s:String x:Key="Str.DriverRecommended">推荐正式版：{0} WHQL · {1}</s:String>
+    <s:String x:Key="Str.DriverReleased">发布日期：{0}</s:String>
+    <s:String x:Key="Str.DriverSelection">选择依据：官方目录为此型号和系统提供的最新非 Beta 游戏驱动。常规升级选此版本。</s:String>
+    <s:String x:Key="Str.DriverNotebook">笔记本：如厂商指定了定制驱动，请使用整机厂商版本；通用驱动选上面的笔记本安装包。</s:String>
+    <s:String x:Key="Str.DriverHotfix">针对性热修复（2026-10-18 核验）：617.70，仅在 360Hz QHD 黑闪或 G-SYNC Pulsar 帧率降至 320 的问题下优先考虑；其余情况选 617.42 正式版。</s:String>
+    <s:String x:Key="Str.DriverChecked">来源：NVIDIA 官方驱动目录 · 本次查询：{0}</s:String>
+    <s:String x:Key="Str.DriverPrevious">上次查询记录：{0} · {1}。本次未能更新，不能视为当前最新。</s:String>
+    <s:String x:Key="Str.DriverQueryFailed">官方驱动查询失败：{0}。请点击“查询最新版本”重试，或打开官方驱动页。</s:String>
+    <s:String x:Key="Str.DriverTimeout">连接超时</s:String>
+    <s:String x:Key="Str.DriverModelNotFound">官方目录中未找到与当前显卡完全匹配的型号</s:String>
+    <s:String x:Key="Str.DriverNoRelease">官方目录没有返回适用于此型号和系统的正式驱动</s:String>
+    <s:String x:Key="Str.DriverInvalidResponse">官方返回的驱动信息未通过型号查询或正式版本校验</s:String>
+    <s:String x:Key="Str.DriverOsUnsupported">当前系统不在 Windows 10/11 驱动查询范围内</s:String>
+    <s:String x:Key="Str.DriverUseVendor">当前型号未接入自动版本查询。点击“查看官方驱动页”，按实际型号选择对应厂商的正式驱动。</s:String>
 
     <!-- 驱动内手动设置清单（按厂商生成；只读指引，不代改设置、不承诺帧数） -->
     <s:String x:Key="Str.ManualCard">驱动内手动设置清单</s:String>

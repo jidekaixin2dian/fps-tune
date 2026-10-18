@@ -572,12 +572,24 @@ Restart as administrator and restore afterwards?</s:String>
     <!-- Driver version advice (read-only; never downloads or installs) -->
     <s:String x:Key="Str.DriverCard">Recommended driver version</s:String>
     <s:String x:Key="Str.DriverGpuLabel">GPU: </s:String>
-    <s:String x:Key="Str.DriverSeriesLabel">Series: </s:String>
-    <s:String x:Key="Str.DriverStableLabel">Recommended stable: </s:String>
-    <s:String x:Key="Str.DriverAltLabel">Alternatives: </s:String>
-    <s:String x:Key="Str.DriverNoStable">no community-agreed stable version yet</s:String>
-    <s:String x:Key="Str.DriverNoAdvice">Not recognised as an NVIDIA GPU, so there is no driver version advice.</s:String>
-    <s:String x:Key="Str.DriverSource">参考：社区驱动使用反馈（什么值得买，2026-01-23）。</s:String>
+    <s:String x:Key="Str.DriverRefresh">Check latest version</s:String>
+    <s:String x:Key="Str.DriverOfficial">Official driver page</s:String>
+    <s:String x:Key="Str.DriverHotfixLink">Hotfix conditions</s:String>
+    <s:String x:Key="Str.DriverChecking">Checking the official WHQL driver for this GPU and Windows version…</s:String>
+    <s:String x:Key="Str.DriverRecommended">Recommended release: {0} WHQL · {1}</s:String>
+    <s:String x:Key="Str.DriverReleased">Released: {0}</s:String>
+    <s:String x:Key="Str.DriverSelection">Selection: the latest non-Beta gaming driver in the official catalogue for this model and OS. Use this for a normal update.</s:String>
+    <s:String x:Key="Str.DriverNotebook">Notebook: use your OEM's custom driver when required; otherwise use the notebook package above.</s:String>
+    <s:String x:Key="Str.DriverHotfix">Targeted hotfix (checked 2026-10-18): 617.70 for 360Hz QHD black flashes or G-SYNC Pulsar FPS dropping to 320. Otherwise choose the 617.42 regular release.</s:String>
+    <s:String x:Key="Str.DriverChecked">Source: NVIDIA official driver catalogue · Checked: {0}</s:String>
+    <s:String x:Key="Str.DriverPrevious">Previous result: {0} · {1}. This check failed; the previous result is not confirmed current.</s:String>
+    <s:String x:Key="Str.DriverQueryFailed">Official driver check failed: {0}. Retry with “Check latest version” or visit the official driver page.</s:String>
+    <s:String x:Key="Str.DriverTimeout">connection timed out</s:String>
+    <s:String x:Key="Str.DriverModelNotFound">No exact model match in the official catalogue</s:String>
+    <s:String x:Key="Str.DriverNoRelease">No official release returned for this model and OS</s:String>
+    <s:String x:Key="Str.DriverInvalidResponse">The official driver data did not pass release validation</s:String>
+    <s:String x:Key="Str.DriverOsUnsupported">Only Windows 10/11 driver queries are supported</s:String>
+    <s:String x:Key="Str.DriverUseVendor">Automatic version checks are not available for this model. Open the official driver page and select the release for your exact model.</s:String>
 
     <!-- In-driver manual settings checklist (per vendor; read-only guidance) -->
     <s:String x:Key="Str.ManualCard">In-driver manual settings checklist</s:String>

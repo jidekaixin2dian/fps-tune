@@ -1,82 +1,103 @@
+using System.Globalization;
+using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace FpsTune.Wpf.Services;
 
-/// <summary>某个 N 卡系列的驱动建议。</summary>
-public sealed record GpuDriverAdvice(
-    string Series,        // "10" / "16" / "20" / "30" / "40" / "50"
-    string Stable,        // 稳定首选版本号；无公认版本时为空串
-    string Alternatives,  // 备选版本号（可为空串）
-    string Note);         // 一句话理由
+public sealed record GpuDriverAdvice(string Product, string Series, string Version, string DriverName,
+    DateOnly Released, string DetailsUrl, DateTimeOffset CheckedAt, bool Notebook);
 
-/// <summary>
-/// 按显卡型号给出**驱动版本建议**（只读信息，绝不代替用户下载或安装——这是仓库红线）。
-///
-/// 数据来源：社区文章《NVIDIA 10-50 系显卡稳帧驱动推荐 老卡也能焕新》
-/// （什么值得买，2026-01-23，https://post.smzdm.com/p/ago7p7xm/）。
-/// **这是社区共识，不是 NVIDIA 官方推荐**——版本会随时间变化，界面上必须如实标注来源与日期，
-/// 并引导用户去官网下载。不要把它当成"最优版本"来宣传。
-/// </summary>
+/// <summary>Read NVIDIA's official product catalogue and latest matching WHQL release; never install a driver.</summary>
 public static class GpuDriverAdvisor
 {
-    /// <summary>数据来源标识，界面与文档共用，避免各处写法不一致。</summary>
-    public const string SourceNote =
-        "社区共识（什么值得买 2026-01-23），非官方推荐；版本会变，请以官网为准";
+    private static readonly HttpClient Client = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private const string Catalogue = "https://www.nvidia.com/Download/API/lookupValueSearch.aspx";
+    private const string Lookup = "https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php";
+    public const string HotfixUrl = "https://www.nvidia.com/en-us/geforce/forums/g-sync-pulsar/131/591809/pulsar-hotfix-driver/";
 
-    /// <summary>
-    /// 从显卡名解析 N 卡系列号。识别 <c>RTX/GTX + 四位数字</c>，取前两位作为系列：
-    /// RTX 5070 Ti → 50、RTX 3080 → 30、GTX 1660 → 16、GTX 1080 → 10。
-    /// 非 N 卡或识别不出时返回 null（**不要猜**）。
-    /// </summary>
     public static string? NvidiaSeries(string? gpuName)
     {
-        if (string.IsNullOrWhiteSpace(gpuName))
-            return null;
-
-        // 只认 RTX/GTX 紧跟四位数字；RTX 40 系有 "SUPER"、50 系有 "Ti"，都不影响前两位
-        var m = Regex.Match(gpuName, @"\b(?:RTX|GTX)\s*(\d{2})(\d{2})\b",
-                            RegexOptions.IgnoreCase);
-        if (!m.Success)
-            return null;
-
-        var series = m.Groups[1].Value; // "50" / "40" / "30" / "20" / "16" / "10"
-        return series switch
-        {
-            "50" or "40" or "30" or "20" or "16" or "10" => series,
-            _ => null,   // 未知代号一律不猜
-        };
+        var match = Regex.Match(gpuName ?? "", @"\b(?:RTX|GTX)\s*(10|16|20|30|40|50)\d{2}\b", RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : null;
     }
 
-    /// <summary>按显卡名给出建议；识别不出或非 N 卡时返回 null。</summary>
-    public static GpuDriverAdvice? For(string? gpuName)
+    public static string OfficialUrl(string? gpu) => GpuVendor.Of(gpu) switch
     {
-        var series = NvidiaSeries(gpuName);
-        if (series is null)
-            return null;
+        GpuVendorKind.Amd => "https://www.amd.com/en/support/download/drivers.html",
+        GpuVendorKind.Intel => "https://www.intel.com/content/www/us/en/download-center/home.html",
+        _ => "https://www.nvidia.com/en-us/drivers/"
+    };
 
-        return series switch
-        {
-            // 官方对 10 系已基本停更，这两个版本是长期沿用下来的稳定选择
-            "10" => new(series, "472.12", "537.58",
-                "472.12（2021-09）主打稳定，是 10 系长期选择；537.58（2023-10）较新，兼顾帧生成时间"),
-
-            "16" => new(series, "536.99", "436.48",
-                "536.99 对 DX12 支持良好、适配主流游戏；436.48 针对 2020 年前的老游戏做过优化"),
-
-            "20" => new(series, "552.22", "576.40",
-                "552.22（2024-04）核心优势是稳定，少数游戏可能有个别问题"),
-
-            "30" => new(series, "566.36", "537.58",
-                "566.36 兼容性强、运行稳定性突出，是 30 系认可度较高的版本"),
-
-            "40" => new(series, "566.36", "591.74 / 581.08",
-                "566.36 是 40 系稳定首选；591.74 较新且支持 DLSS 4.5，581.08 可作备用"),
-
-            // 新卡还在持续优化，社区没有公认的"稳定版"
-            "50" => new(series, "", "",
-                "50 系尚未形成公认的稳定驱动版本，作为新卡优化空间较大，建议保持驱动持续更新"),
-
-            _ => null,
-        };
+    internal static string ProductName(string gpu)
+    {
+        var name = gpu.Split('·')[0];
+        name = Regex.Replace(name, @"\(\+\d+\)", "");
+        name = Regex.Replace(name, @"\b(NVIDIA|GeForce|GPU)\b", "", RegexOptions.IgnoreCase);
+        return Regex.Replace(name, @"\s+", " ").Trim().ToUpperInvariant();
     }
+
+    internal static int OperatingSystemId(int build) => build >= 22000 ? 135 : 57;
+
+    public static async Task<GpuDriverAdvice> QueryAsync(string gpu, CancellationToken cancellationToken = default)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(20));
+        return await QueryAsync(gpu, Environment.OSVersion.Version.Build,
+            async (url, token) => await Client.GetStringAsync(url, token), timeout.Token);
+    }
+
+    internal static async Task<GpuDriverAdvice> QueryAsync(string gpu, int osBuild,
+        Func<string, CancellationToken, Task<string>> read, CancellationToken cancellationToken = default)
+    {
+        if (osBuild < 10240) throw new InvalidOperationException(Str.T("Str.DriverOsUnsupported"));
+        var series = NvidiaSeries(gpu) ?? throw new InvalidOperationException(Str.T("Str.DriverModelNotFound"));
+        var productName = ProductName(gpu);
+        var notebook = productName.Contains("LAPTOP", StringComparison.Ordinal);
+        var seriesXml = await read($"{Catalogue}?TypeID=2&ParentID=1", cancellationToken);
+        var seriesEntries = Entries(seriesXml).Where(e =>
+            Regex.IsMatch(e.Name, $@"\b{series}\s+Series\b", RegexOptions.IgnoreCase)
+            && e.Name.Contains("Notebook", StringComparison.OrdinalIgnoreCase) == notebook).ToArray();
+        if (seriesEntries.Length != 1) throw new InvalidOperationException(Str.T("Str.DriverModelNotFound"));
+        var seriesId = seriesEntries[0].Id;
+        var productsXml = await read($"{Catalogue}?TypeID=3&ParentID={seriesId}", cancellationToken);
+        var products = Entries(productsXml).Where(e => ProductName(e.Name) == productName).ToArray();
+        if (products.Length != 1) throw new InvalidOperationException(Str.T("Str.DriverModelNotFound"));
+        var url = $"{Lookup}?func=DriverManualLookup&psid={seriesId}&pfid={products[0].Id}"
+            + $"&osID={OperatingSystemId(osBuild)}&languageCode=1033&isWHQL=1&beta=0&dch=1&dltype=1&sort1=0&numberOfResults=1";
+        return ParseRelease(await read(url, cancellationToken), products[0].Name, series, notebook, DateTimeOffset.Now);
+    }
+
+    private static IEnumerable<(string Name, int Id)> Entries(string xml)
+        => XDocument.Parse(xml).Descendants("LookupValue")
+            .Select(e => (Name: e.Element("Name")?.Value ?? "", Id: int.TryParse(e.Element("Value")?.Value, out var id) ? id : 0))
+            .Where(e => e.Id > 0);
+
+    internal static GpuDriverAdvice ParseRelease(string json, string product, string series, bool notebook, DateTimeOffset checkedAt)
+    {
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.GetProperty("Success").GetString() != "1") throw new InvalidOperationException(Str.T("Str.DriverNoRelease"));
+        var info = root.GetProperty("IDS").EnumerateArray().Single().GetProperty("downloadInfo");
+        string Field(string key) => info.GetProperty(key).GetString() ?? "";
+        var version = Field("Version");
+        var name = Uri.UnescapeDataString(Field("Name"));
+        var details = Field("DetailsURL");
+        if (Field("Success") != "1" || Field("IsWHQL") != "1" || Field("IsBeta") != "0"
+            || !Regex.IsMatch(version, @"^\d{3}\.\d{2}$")
+            || !name.Contains("GeForce", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Studio", StringComparison.OrdinalIgnoreCase)
+            || !Uri.TryCreate(details, UriKind.Absolute, out var uri) || uri.Scheme != "https" || uri.Host != "www.nvidia.com"
+            || !Regex.IsMatch(uri.AbsolutePath, @"^/en-us/(geforce/)?drivers/details/\d+/$")
+            || !DateOnly.TryParseExact(Field("ReleaseDateTime"), ["ddd MMM dd, yyyy", "ddd MMM d, yyyy"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var released)
+            || released > DateOnly.FromDateTime(checkedAt.UtcDateTime))
+            throw new InvalidOperationException(Str.T("Str.DriverInvalidResponse"));
+        return new(product, series, version, name, released, details, checkedAt, notebook);
+    }
+
+    // A dated, scoped supplement from the official staff post; never substitute a hotfix for the live WHQL recommendation.
+    internal static bool ShowHotfix(GpuDriverAdvice advice, DateOnly today)
+        => advice.Version == "617.42" && advice.Series is "20" or "30" or "40" or "50"
+            && today >= new DateOnly(2026, 10, 18) && today <= new DateOnly(2026, 11, 17);
 }
