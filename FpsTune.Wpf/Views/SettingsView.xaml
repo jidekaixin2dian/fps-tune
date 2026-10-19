@@ -135,6 +135,28 @@
                         <RadioButton x:Name="ConsoleModeRadio" GroupName="displayMode" Tag="console" Checked="DisplayMode_Checked" Content="{DynamicResource Str.CompactConsole}" Style="{StaticResource SettingsChoice}"/>
                         <RadioButton x:Name="StudioModeRadio" GroupName="displayMode" Tag="studio" Checked="DisplayMode_Checked" Content="{DynamicResource Str.Workspace}" Style="{StaticResource SettingsChoice}"/>
                     </UniformGrid>
+                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,20,0,16"/>
+                    <TextBlock Text="{DynamicResource Str.CornerTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <UniformGrid Columns="2" Margin="0,12,0,12">
+                        <RadioButton x:Name="CornerClassicRadio" GroupName="corners" Tag="classic" Checked="CornerPreset_Checked" Content="{DynamicResource Str.CornerClassic}" Style="{StaticResource SettingsChoice}"/>
+                        <RadioButton x:Name="CornerLargeRadio" GroupName="corners" Tag="large" Checked="CornerPreset_Checked" Content="{DynamicResource Str.CornerLarge}" Style="{StaticResource SettingsChoice}"/>
+                    </UniformGrid>
+                    <TextBlock Text="{DynamicResource Str.CornerAdjustHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    <UniformGrid Columns="2" Margin="0,8,0,0">
+                        <StackPanel Margin="0,0,16,8"><StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CornerCards}" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding Value, ElementName=CornerCardSlider, StringFormat={}  {0:0}}" Style="{StaticResource MutedTextStyle}"/></StackPanel>
+                            <Slider x:Name="CornerCardSlider" Minimum="0" Maximum="32" TickFrequency="1" Style="{StaticResource WallpaperSliderStyle}" ValueChanged="CornerValue_Changed" AutomationProperties.Name="{DynamicResource Str.CornerCards}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,8"><StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CornerControls}" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding Value, ElementName=CornerControlSlider, StringFormat={}  {0:0}}" Style="{StaticResource MutedTextStyle}"/></StackPanel>
+                            <Slider x:Name="CornerControlSlider" Minimum="0" Maximum="24" TickFrequency="1" Style="{StaticResource WallpaperSliderStyle}" ValueChanged="CornerValue_Changed" AutomationProperties.Name="{DynamicResource Str.CornerControls}"/>
+                        </StackPanel>
+                        <StackPanel Margin="0,0,16,0"><StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CornerNav}" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding Value, ElementName=CornerNavSlider, StringFormat={}  {0:0}}" Style="{StaticResource MutedTextStyle}"/></StackPanel>
+                            <Slider x:Name="CornerNavSlider" Minimum="0" Maximum="24" TickFrequency="1" Style="{StaticResource WallpaperSliderStyle}" ValueChanged="CornerValue_Changed" AutomationProperties.Name="{DynamicResource Str.CornerNav}"/>
+                        </StackPanel>
+                        <StackPanel><StackPanel Orientation="Horizontal"><TextBlock Text="{DynamicResource Str.CornerChips}" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding Value, ElementName=CornerChipSlider, StringFormat={}  {0:0}}" Style="{StaticResource MutedTextStyle}"/></StackPanel>
+                            <Slider x:Name="CornerChipSlider" Minimum="0" Maximum="16" TickFrequency="1" Style="{StaticResource WallpaperSliderStyle}" ValueChanged="CornerValue_Changed" AutomationProperties.Name="{DynamicResource Str.CornerChips}"/>
+                        </StackPanel>
+                    </UniformGrid>
+                    <TextBlock x:Name="CornerStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
 </StackPanel></Border>
 </StackPanel></ScrollViewer><ScrollViewer x:Name="Section1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0"><Border Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsStartup}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.StartupShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>

@@ -16,6 +16,35 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ReadabilityAndFramesUiTests
 {
     [Fact]
+    public void Corner_presets_and_custom_values_update_existing_pages_and_survive_reload()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                window.SetDisplayMode("studio"); window.NavigateTo("settings"); window.UpdateLayout();
+                var page = (SettingsView)((ContentControl)window.FindName("PageHost")).Content;
+                DlssFeedbackTests.PumpUntil(() => ((RadioButton)page.FindName("CornerLargeRadio")).IsChecked == true);
+                ((RadioButton)page.FindName("CornerClassicRadio")).IsChecked = true;
+                Assert.Equal(new CornerRadius(12), app.FindResource("RadiusCard"));
+                window.SetDisplayMode("console"); Assert.Equal(new CornerRadius(6), app.FindResource("RadiusCard"));
+                ((RadioButton)page.FindName("CornerLargeRadio")).IsChecked = true;
+                Assert.Equal(new CornerRadius(18), app.FindResource("RadiusCard"));
+                ((Slider)page.FindName("CornerCardSlider")).Value = 25;
+                SettingsService.Load(); Assert.Equal("custom", SettingsService.Current.Corners.Preset);
+                Assert.Equal(25, SettingsService.Current.Corners.Card);
+                ThemeManager.SetMode("light"); window.NavigateTo("display"); window.NavigateTo("settings");
+                Assert.Equal(new CornerRadius(25), app.FindResource("RadiusCard"));
+                Assert.False(((RadioButton)page.FindName("CornerLargeRadio")).IsChecked);
+                Assert.Equal(0, new CornerPreferences("custom", -5).Normalize().Card);
+            }
+            finally { window.Close(); }
+        });
+    }
+    [Fact]
     public void Rapid_navigation_presents_cached_pages_without_a_transparent_animation()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }

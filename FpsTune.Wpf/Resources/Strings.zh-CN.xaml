@@ -1213,7 +1213,7 @@
     <s:String x:Key="Str.ColorMuted">柔灰</s:String>
     <s:String x:Key="Str.ColorBackupLarge">画面备份过大，已保留原文件。</s:String>
     <s:String x:Key="Str.ColorBackupInvalid">画面备份损坏，已保留原文件。</s:String>
-    <s:String x:Key="Str.ColorHdr">此屏幕已开启 HDR / 高级颜色。请先关闭 HDR，再使用 SDR 画面调节。</s:String>
+    <s:String x:Key="Str.ColorHdr">此屏幕当前处于 HDR 模式。请先关闭 HDR，再使用 SDR 画面调节。</s:String>
     <s:String x:Key="Str.ColorChoose">选择预设或调整参数，点击应用。</s:String>
     <s:String x:Key="Str.ColorOverwritten">屏幕曲线已被系统或其他调色软件更改，请核对后再操作。</s:String>
     <s:String x:Key="Str.ColorVerified">屏幕曲线已写入并读回核对。</s:String>
@@ -1298,4 +1298,16 @@
     <s:String x:Key="Str.ColorModule">画面参数</s:String>
     <s:String x:Key="Str.EqHeadroom">实际前级 {0} dB（为提升的频段预留余量）</s:String>
     <s:String x:Key="Str.IccAdvanced">ICC 配置文件（高级）</s:String>
+    <s:String x:Key="Str.VibranceNewBaselineHint">数字振动已被其他程序或驱动更改。点击“应用”会保留旧备份，并以当前值作为新的还原点。</s:String>
+    <s:String x:Key="Str.VibranceNewBaselineSaved">已保留旧备份，“还原原始”将恢复本次应用前的值。</s:String>
+    <s:String x:Key="Str.CornerTitle">圆角</s:String>
+    <s:String x:Key="Str.CornerClassic">经典圆角（上版本）</s:String>
+    <s:String x:Key="Str.CornerLarge">大圆角（当前版本）</s:String>
+    <s:String x:Key="Str.CornerAdjustHint">也可以分别调节下面的圆角大小，实时生效并自动保存；0 为直角。</s:String>
+    <s:String x:Key="Str.CornerCards">卡片</s:String>
+    <s:String x:Key="Str.CornerControls">按钮、输入框与页签</s:String>
+    <s:String x:Key="Str.CornerNav">主导航</s:String>
+    <s:String x:Key="Str.CornerChips">徽标</s:String>
+    <s:String x:Key="Str.CornerSaved">圆角设置已保存。</s:String>
+    <s:String x:Key="Str.CornerSaveFailed">圆角已生效，但未能保存：{0}</s:String>
 </ResourceDictionary>

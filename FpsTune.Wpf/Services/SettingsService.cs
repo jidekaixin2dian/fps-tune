@@ -15,6 +15,7 @@ public sealed class AppSettings
     public string DouyinLink { get; set; } = "";
     public string ThemeMode { get; set; } = "dark";
     public string OverviewMode { get; set; } = "studio";
+    public CornerPreferences Corners { get; set; } = new();
     public bool CheckUpdatesOnStartup { get; set; } = true;
     public bool WallpaperEnabled { get; set; }
     public double WallpaperOpacity { get; set; } = 0.18;
@@ -106,6 +107,7 @@ public static class SettingsService
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
             Current.AutoProfileBindings ??= new List<AutoProfileBinding>();
             Current.Preparation ??= new();
+            Current.Corners = (Current.Corners ?? new()).Normalize();
             Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
             if (Current.OverviewMode != "console") Current.OverviewMode = "studio";
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))

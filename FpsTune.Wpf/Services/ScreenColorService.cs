@@ -166,7 +166,13 @@ internal sealed class ScreenGammaApi : IScreenGammaApi
 {
     public bool IsHdr(IccDisplayInfo d)
     {
-        return d.AdvancedColorEnabled ?? throw new InvalidOperationException(Str.T("Str.ColorHdrUnknown"));
+        return d.ColorMode switch
+        {
+            DisplayColorMode.Hdr => true,
+            DisplayColorMode.Sdr or DisplayColorMode.Wcg => false,
+            _ when d.AdvancedColorEnabled == false => false,
+            _ => throw new InvalidOperationException(Str.T("Str.ColorHdrUnknown"))
+        };
     }
     public ushort[] Read(IccDisplayInfo d)
     {

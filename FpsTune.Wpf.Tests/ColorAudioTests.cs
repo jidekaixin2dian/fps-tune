@@ -32,11 +32,25 @@ public sealed class ColorAudioTests
         Assert.Throws<InvalidOperationException>(() => ScreenColorService.Apply(new(Brightness: 10), "B"));
         Assert.Single(ScreenColorService.BackupTargets());
         Assert.True(ScreenColorService.Restore("B"));
-        screens.Displays[1] = screens.Displays[1] with { AdvancedColorEnabled = true };
+        screens.Displays[1] = screens.Displays[1] with { AdvancedColorEnabled = true, ColorMode = DisplayColorMode.Hdr };
         var count = screens.Writes.Count;
         Assert.False(ScreenColorService.GetState("B").Supported);
         Assert.Throws<InvalidOperationException>(() => ScreenColorService.Apply(new(Brightness: 10), "B"));
         Assert.Equal(count, screens.Writes.Count);
+    }
+    [Fact]
+    public void SDR_auto_color_management_is_not_HDR_and_unknown_mode_does_not_guess()
+    {
+        using var screens = new MultiDisplayColorTests();
+        screens.Displays[1] = screens.Displays[1] with { AdvancedColorEnabled = true, ColorMode = DisplayTopology.DecodeColorMode(1) };
+        Assert.True(ScreenColorService.GetState("B").Supported);
+        ScreenColorService.Apply(new(Brightness: 5), "B");
+        Assert.True(ScreenColorService.Restore("B"));
+        screens.Displays[1] = screens.Displays[1] with { ColorMode = DisplayTopology.DecodeColorMode(2) };
+        Assert.False(ScreenColorService.GetState("B").Supported);
+        screens.Displays[1] = screens.Displays[1] with { ColorMode = DisplayTopology.DecodeColorMode(99) };
+        Assert.False(ScreenColorService.GetState("B").Supported);
+        Assert.Empty(ScreenColorService.BackupTargets());
     }
     [Theory]
     [InlineData(false)] [InlineData(true)]

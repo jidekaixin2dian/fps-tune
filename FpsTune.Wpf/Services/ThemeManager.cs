@@ -77,6 +77,7 @@ public static class ThemeManager
         SetBrush("OkBrush", t.Ok);
         Application.Current.Resources["PrimaryColor"] = t.Primary;
         Application.Current.Resources["AccentColor"] = t.Accent;
+        CornerPreferences.Apply();
         ApplyBackdrop(resolved, animate);
     }
 

@@ -4,6 +4,8 @@ using System.Text;
 
 namespace FpsTune.Wpf.Services;
 
+public enum DisplayColorMode { Sdr, Wcg, Hdr }
+
 /// <summary>显示器身份与当前连接：GDI 名、LUID/source、关联键和 per-user 状态。</summary>
 public sealed record IccDisplayInfo(
     string GdiDeviceName,
@@ -13,7 +15,7 @@ public sealed record IccDisplayInfo(
     string AssociationSubKey,
     bool UsePerUserProfiles,
     string? Identity = null, string FriendlyName = "", bool IsPrimary = true, bool Independent = true,
-    bool? AdvancedColorEnabled = false);
+    bool? AdvancedColorEnabled = false, DisplayColorMode? ColorMode = null);
 
 /// <summary>
 /// Profile installation/validation uses mscms. Per-user associations use the physical monitor's documented WCS store.

@@ -93,6 +93,8 @@ public static class DiagnosticReportExporter
                     displays = DisplayTopology.GetDisplays().Take(16).Select((d, index) => new
                     {
                         screen = index + 1, d.IsPrimary, d.Independent, d.AdvancedColorEnabled,
+                        colorMode = d.ColorMode?.ToString(),
+                        vibrance = TryGet(() => DigitalVibranceService.GetState(DisplayTopology.Identity(d))),
                         icc = TryGet(() =>
                         {
                             var s = IccFilterService.GetState(DisplayTopology.Identity(d));

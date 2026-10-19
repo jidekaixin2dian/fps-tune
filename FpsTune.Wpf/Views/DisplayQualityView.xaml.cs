@@ -622,8 +622,8 @@ public partial class DisplayQualityView : UserControl
         VibStateText.Text = Str.T("Str.Writing");
         try
         {
-            await Task.Run(() => DigitalVibranceService.SetPercent(percent, identity));
-            _vibStatus = Str.T("Str.DisplayVibApplied", percent);
+            var rebased = await Task.Run(() => DigitalVibranceService.SetPercent(percent, identity, startNewBaselineOnDrift: true));
+            _vibStatus = Str.T("Str.DisplayVibApplied", percent) + (rebased ? " " + Str.T("Str.VibranceNewBaselineSaved") : "");
         }
         catch (Exception ex)
         {

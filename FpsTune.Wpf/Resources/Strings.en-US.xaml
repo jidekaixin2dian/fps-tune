@@ -1213,7 +1213,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorMuted">Soft gray</s:String>
     <s:String x:Key="Str.ColorBackupLarge">Display backup is too large. The original file was preserved.</s:String>
     <s:String x:Key="Str.ColorBackupInvalid">Display backup is invalid. The original file was preserved.</s:String>
-    <s:String x:Key="Str.ColorHdr">HDR or Advanced Color is enabled. Turn it off before using SDR display adjustments.</s:String>
+    <s:String x:Key="Str.ColorHdr">This display is currently in HDR mode. Turn HDR off before using SDR display adjustments.</s:String>
     <s:String x:Key="Str.ColorChoose">Choose a preset or adjust the parameters, then click Apply.</s:String>
     <s:String x:Key="Str.ColorOverwritten">Windows or another color application changed the display curve. Review it before continuing.</s:String>
     <s:String x:Key="Str.ColorVerified">The display curve was written and read back successfully.</s:String>
@@ -1298,4 +1298,16 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorModule">Display parameters</s:String>
     <s:String x:Key="Str.EqHeadroom">Effective preamp: {0} dB (headroom reserved for boosted bands)</s:String>
     <s:String x:Key="Str.IccAdvanced">ICC profiles (advanced)</s:String>
+    <s:String x:Key="Str.VibranceNewBaselineHint">The driver or another app changed digital vibrance. Apply keeps the previous backup and uses the current value as a new restore point.</s:String>
+    <s:String x:Key="Str.VibranceNewBaselineSaved">Previous backup retained. Restore now returns to the value before this apply.</s:String>
+    <s:String x:Key="Str.CornerTitle">Corner radius</s:String>
+    <s:String x:Key="Str.CornerClassic">Classic (previous version)</s:String>
+    <s:String x:Key="Str.CornerLarge">Rounded (current version)</s:String>
+    <s:String x:Key="Str.CornerAdjustHint">Adjust each radius below. Changes apply immediately and save automatically; 0 gives square corners.</s:String>
+    <s:String x:Key="Str.CornerCards">Cards</s:String>
+    <s:String x:Key="Str.CornerControls">Buttons, inputs and tabs</s:String>
+    <s:String x:Key="Str.CornerNav">Main navigation</s:String>
+    <s:String x:Key="Str.CornerChips">Badges</s:String>
+    <s:String x:Key="Str.CornerSaved">Corner preferences saved.</s:String>
+    <s:String x:Key="Str.CornerSaveFailed">Corners applied but could not be saved: {0}</s:String>
 </ResourceDictionary>

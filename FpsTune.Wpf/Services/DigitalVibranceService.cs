@@ -52,15 +52,16 @@ public static class DigitalVibranceService
             return new VibranceState(false, 0, 0, 0, 0, false, "当前显示路径不支持数字振动（DVC）。");
         var backup = ReadForDisplay(api);
         var unassigned = backup is null && ReadBackup() is { Display: null };
+        var changed = backup is not null && !MatchesBackup(backup, api.DisplayIdentity()!, current, min, max);
         return new VibranceState(true, current, min, max, def, backup is not null,
-            BackupNotice: unassigned ? Str.T("Str.VibranceLegacyUnassigned") : null);
+            BackupNotice: changed ? Str.T("Str.VibranceNewBaselineHint") : unassigned ? Str.T("Str.VibranceLegacyUnassigned") : null);
     }
 
     public static bool HasRestorableBackup(string? identity = null)
         => identity is null ? DisplayBackupFiles.List(BackupDir(), "vibrance").Any() : ReadBackup(identity) is not null;
 
     /// <summary>percent 为 0–100（界面量纲），映射到驱动 min–max。</summary>
-    public static void SetPercent(int percent, string? identity = null)
+    public static bool SetPercent(int percent, string? identity = null, bool startNewBaselineOnDrift = false)
     {
         using var gate = SystemMutationGate.Acquire();
         percent = Math.Clamp(percent, 0, 100);
@@ -73,6 +74,19 @@ public static class DigitalVibranceService
 
         var display = api.DisplayIdentity() ?? throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
         var backup = ReadForDisplay(api) ?? new VibranceBackup(current, display, Min: min, Max: max, DisplayName: api.DisplayName());
+        var rebased = false;
+        if (startNewBaselineOnDrift && backup.Display == display && !MatchesBackup(backup, display, current, min, max))
+        {
+            // A confirmed manual apply is a new intent. Retain the exact old receipt before
+            // rebasing; automatic preparation and Restore must still refuse external drift.
+            var path = File.Exists(BackupPath(display)) ? BackupPath(display) : BackupPath();
+            var history = Path.Combine(BackupDir(), "history");
+            Directory.CreateDirectory(history);
+            AtomicFile.WriteAllTextDurable(Path.Combine(history, $"vibrance-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.json"),
+                File.ReadAllText(path), new UTF8Encoding(false));
+            backup = new(current, display, Min: min, Max: max, DisplayName: api.DisplayName());
+            rebased = true;
+        }
         CheckRestorable(backup, display, current, min, max);
         MigrateLegacy(backup, api);
         var level = min + (int)Math.Round((max - min) * (percent / 100.0));
@@ -80,13 +94,16 @@ public static class DigitalVibranceService
         api.SetLevel(level);
         VerifyLevel(api, level, min, max);
         WriteBackup(backup with { Expected = level, Previous = null });
+        return rebased;
     }
 
+    private static bool MatchesBackup(VibranceBackup backup, string display, int current, int min, int max)
+        => backup.Display == display && backup.Min == min && backup.Max == max
+            && backup.Level >= min && backup.Level <= max
+            && (current == backup.Level || current == backup.Expected || current == backup.Previous);
     private static void CheckRestorable(VibranceBackup backup, string display, int current, int min, int max)
     {
-        if (backup.Display is null || backup.Display != display || backup.Min != min || backup.Max != max
-            || backup.Level < min || backup.Level > max
-            || current != backup.Level && current != backup.Expected && current != backup.Previous)
+        if (!MatchesBackup(backup, display, current, min, max))
             throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
     }
 

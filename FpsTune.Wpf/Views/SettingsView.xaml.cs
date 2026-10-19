@@ -18,6 +18,7 @@ public partial class SettingsView : UserControl
     private bool _autoBindingsReady;
     private bool _wallpaperReady;
     private bool _wallpaperBusy;
+    private bool _cornersReady;
     private readonly ObservableCollection<AutoProfileBinding> _autoBindings = new();
 
     public SettingsView()
@@ -152,6 +153,41 @@ public partial class SettingsView : UserControl
         ConsoleModeRadio.IsChecked = SettingsService.Current.OverviewMode == "console";
         StudioModeRadio.IsChecked = SettingsService.Current.OverviewMode != "console";
         _suppressUiEvents = false;
+        RefreshCorners();
+    }
+
+    private void RefreshCorners()
+    {
+        var previous = _suppressUiEvents;
+        _suppressUiEvents = true;
+        var p = (SettingsService.Current.Corners ?? new()).Resolve(SettingsService.Current.OverviewMode);
+        CornerClassicRadio.IsChecked = p.Preset == "classic";
+        CornerLargeRadio.IsChecked = p.Preset == "large";
+        CornerCardSlider.Value = p.Card; CornerControlSlider.Value = p.Control;
+        CornerNavSlider.Value = p.Nav; CornerChipSlider.Value = p.Chip;
+        _cornersReady = true;
+        _suppressUiEvents = previous;
+    }
+    private void CornerPreset_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents || !_cornersReady || sender is not RadioButton { Tag: string preset }) return;
+        SettingsService.Current.Corners = new(Preset: preset);
+        RefreshCorners();
+        SaveCorners();
+    }
+    private void CornerValue_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_suppressUiEvents || !_cornersReady) return;
+        SettingsService.Current.Corners = new CornerPreferences("custom", CornerCardSlider.Value,
+            CornerControlSlider.Value, CornerNavSlider.Value, CornerChipSlider.Value).Normalize();
+        RefreshCorners();
+        SaveCorners();
+    }
+    private void SaveCorners()
+    {
+        CornerPreferences.Apply();
+        try { SettingsService.Save(SettingsService.Current); CornerStatus.Text = Str.T("Str.CornerSaved"); }
+        catch (Exception ex) { CornerStatus.Text = Str.T("Str.CornerSaveFailed", PrivacyScrub.Sanitize(ex.Message)); }
     }
 
     private void DisplayMode_Checked(object sender, RoutedEventArgs e)

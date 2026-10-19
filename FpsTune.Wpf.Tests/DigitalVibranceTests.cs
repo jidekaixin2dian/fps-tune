@@ -114,6 +114,25 @@ public class DigitalVibranceTests : IDisposable
         Assert.NotNull(Assert.Single(DigitalVibranceService.BackupTargets()).Error);
     }
 
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public void Explicit_apply_recovers_changed_or_old_range_receipts_and_retains_the_previous_original(bool legacyRange)
+    {
+        _api.Current = 10;
+        DigitalVibranceService.SetPercent(75);
+        var path = Directory.GetFiles(_backupDir, "vibrance-*.json").Single();
+        if (legacyRange) File.WriteAllText(path, File.ReadAllText(path).Replace("\"Min\":0", "\"Min\":null"));
+        var original = File.ReadAllText(path);
+        _api.Current = 32;
+        Assert.NotNull(DigitalVibranceService.GetState().BackupNotice);
+        Assert.Throws<InvalidOperationException>(() => DigitalVibranceService.SetPercent(94));
+        Assert.Throws<InvalidOperationException>(() => DigitalVibranceService.Restore());
+        Assert.True(DigitalVibranceService.SetPercent(94, startNewBaselineOnDrift: true));
+        Assert.Equal(59, _api.Current);
+        Assert.Equal(original, File.ReadAllText(Directory.GetFiles(Path.Combine(_backupDir, "history")).Single()));
+        Assert.True(DigitalVibranceService.Restore()); Assert.Equal(32, _api.Current);
+    }
+
     private sealed class FakeVibranceApi : INvibranceApi
     {
         public string Display { get; set; } = "test-display";

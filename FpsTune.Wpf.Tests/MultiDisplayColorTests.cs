@@ -299,7 +299,7 @@ public sealed class MultiDisplayColorTests : IDisposable
     }
     private sealed class Gamma(MultiDisplayColorTests owner) : IScreenGammaApi
     {
-        public bool IsHdr(IccDisplayInfo display) => display.AdvancedColorEnabled != false;
+        public bool IsHdr(IccDisplayInfo display) => new ScreenGammaApi().IsHdr(display);
         public ushort[] Read(IccDisplayInfo display) { DisplayTopology.ValidateConnection(display); return owner.Ramps[display.Identity!].ToArray(); }
         public void Write(IccDisplayInfo display, ushort[] ramp)
         {

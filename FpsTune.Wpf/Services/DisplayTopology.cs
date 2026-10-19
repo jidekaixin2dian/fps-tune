@@ -21,7 +21,8 @@ internal static class DisplayTopology
         var current = Require(Identity(captured));
         if (current.GdiDeviceName != captured.GdiDeviceName || current.AdapterIdLow != captured.AdapterIdLow
             || current.AdapterIdHigh != captured.AdapterIdHigh || current.SourceId != captured.SourceId
-            || current.AssociationSubKey != captured.AssociationSubKey || current.AdvancedColorEnabled != captured.AdvancedColorEnabled)
+            || current.AssociationSubKey != captured.AssociationSubKey || current.AdvancedColorEnabled != captured.AdvancedColorEnabled
+            || current.ColorMode != captured.ColorMode)
             throw new InvalidOperationException(Str.T("Str.DisplayConnectionChanged"));
     }
     internal static IReadOnlyList<IccDisplayInfo> ReadNative()
@@ -51,11 +52,12 @@ internal static class DisplayTopology
                     if (GetSourceName(ref source) != 0 || GetTargetName(ref target) != 0 || string.IsNullOrWhiteSpace(target.Path)) continue;
                     var (key, primary) = MonitorKey(source.Name, target.Path);
                     if (key is null) continue;
+                    var color = ReadColorMode(path.Target.Adapter, path.Target.Id);
                     result.Add(new(source.Name, path.Source.Adapter.Low, path.Source.Adapter.High, path.Source.Id, key,
                         MscmsIccApi.UsesPerUserProfiles(key), target.Path.ToUpperInvariant(), target.FriendlyName, primary,
                         activePaths.Count(p => (p.Flags & 1) != 0 && p.Source.Adapter.Low == path.Source.Adapter.Low
                             && p.Source.Adapter.High == path.Source.Adapter.High && p.Source.Id == path.Source.Id) == 1,
-                        ReadAdvancedColor(path.Target.Adapter, path.Target.Id)));
+                        color.Advanced, color.Mode));
                 }
                 return MarkIndependent(result);
             }
@@ -89,13 +91,25 @@ internal static class DisplayTopology
         }
         return (null, primary);
     }
-    private static bool? ReadAdvancedColor(Luid adapter, uint target)
+    private static (bool? Advanced, DisplayColorMode? Mode) ReadColorMode(Luid adapter, uint target)
     {
+        // SDK wingdi.h: INFO_2 reports the actual SDR/WCG/HDR mode. AdvancedColorActive
+        // also includes SDR automatic color management and is not an HDR switch.
+        var modern = new AdvancedColor2 { Header = Header.For(15, Marshal.SizeOf<AdvancedColor2>(), adapter, target) };
+        if (GetAdvancedColor2(ref modern) == 0)
+            return ((modern.Flags & 2) != 0, DecodeColorMode(modern.Mode));
         var info = new AdvancedColor { Header = Header.For(9, Marshal.SizeOf<AdvancedColor>(), adapter, target) };
-        return GetAdvancedColor(ref info) == 0 ? (info.Flags & 2) != 0 : null;
+        if (GetAdvancedColor(ref info) != 0) return (null, null);
+        return ((info.Flags & 2) != 0, (info.Flags & 2) == 0 ? DisplayColorMode.Sdr
+            : (info.Flags & 4) != 0 ? DisplayColorMode.Wcg
+            : Environment.OSVersion.Version.Build < 26100 ? DisplayColorMode.Hdr : null);
     }
+    internal static DisplayColorMode? DecodeColorMode(uint mode) => mode switch
+    { 0 => DisplayColorMode.Sdr, 1 => DisplayColorMode.Wcg, 2 => DisplayColorMode.Hdr, _ => null };
     [StructLayout(LayoutKind.Sequential)] private struct AdvancedColor { public Header Header; public uint Flags, Encoding, Bits; }
+    [StructLayout(LayoutKind.Sequential)] private struct AdvancedColor2 { public Header Header; public uint Flags, Encoding, Bits, Mode; }
     [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] private static extern int GetAdvancedColor(ref AdvancedColor info);
+    [DllImport("user32.dll", EntryPoint = "DisplayConfigGetDeviceInfo")] private static extern int GetAdvancedColor2(ref AdvancedColor2 info);
     [StructLayout(LayoutKind.Sequential)] internal struct Luid { public uint Low; public int High; }
     [StructLayout(LayoutKind.Sequential)] internal struct Source { public Luid Adapter; public uint Id, Mode, Flags; }
     [StructLayout(LayoutKind.Sequential)] internal struct Target
