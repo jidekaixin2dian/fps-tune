@@ -39,10 +39,11 @@ public partial class AppDialogWindow : Window
         if (isDanger)
         {
             CopyDetailsButton.Visibility = isConfirm ? Visibility.Collapsed : Visibility.Visible;
-            StatusIconSurface.Background = Brushes.Transparent;
-            StatusIconSurface.BorderBrush = (Brush)Application.Current.Resources["DangerBrush"];
-            IconPath.Stroke = (Brush)Application.Current.Resources["DangerBrush"];
-            IconPath.Data = Geometry.Parse("M 10,2 L 19,18 H 1 Z M 10,7 V 11 M 10,14 L 10,14.1");
+            IconTint.SetResourceReference(Border.BackgroundProperty, "DangerBrush");
+            IconPath.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "DangerBrush");
+            IconDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, "DangerBrush");
+            IconPath.Data = Geometry.Parse("M 10.3,3.9 C 11.05,2.6 12.95,2.6 13.7,3.9 L 22.2,18.5 C 22.95,19.8 22,21.5 20.5,21.5 H 3.5 C 2,21.5 1.05,19.8 1.8,18.5 Z M 12,8.5 V 13");
+            Canvas.SetTop(IconDot, 16.2);
         }
         if (isDanger && isConfirm)
         {
