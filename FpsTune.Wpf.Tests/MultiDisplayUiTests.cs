@@ -40,11 +40,11 @@ public sealed class MultiDisplayUiTests
                 var combo = (ComboBox)page.FindName("DisplayTargetCombo");
                 var vib = (Button)page.FindName("VibApplyButton");
                 var icc = (Button)page.FindName("IccApplyButton");
-                DlssFeedbackTests.PumpUntil(() => combo.Items.Count == 2 && vib.IsEnabled && icc.IsEnabled);
-                Assert.True(((Button)page.FindName("IccApplyFileButton")).IsEnabled);
                 var subtab = FindVisual<RadioButton>(page).Single(b => Equals(b.Tag, "vibicc"));
                 subtab.IsChecked = true;
                 ((Expander)page.FindName("IccAdvanced")).IsExpanded = true;
+                DlssFeedbackTests.PumpUntil(() => combo.Items.Count == 2 && vib.IsEnabled && icc.IsEnabled);
+                Assert.True(((Button)page.FindName("IccApplyFileButton")).IsEnabled);
                 combo.SelectedIndex = 1;
                 DlssFeedbackTests.PumpUntil(() => vib.IsEnabled && ((Slider)page.FindName("VibSlider")).Value == 60);
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccCurrentText")).Text.Contains(Str.T("Str.DisplayNoCustomIcc")));
