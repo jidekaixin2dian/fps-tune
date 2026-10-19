@@ -161,7 +161,7 @@ public class IccFilterServiceTests : IDisposable
         _api.AssociationList.Add(other);
 
         var ex = Assert.Throws<InvalidOperationException>(() => IccFilterService.Apply(IccFilterPreset.Dehaze));
-        Assert.Contains("还原", ex.Message);
+        Assert.Equal(Str.T("Str.IccNewBaselineHint"), ex.Message);
         // 系统状态未被本工具继续改动
         Assert.Equal(other, LastValid());
     }

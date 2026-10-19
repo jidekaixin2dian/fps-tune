@@ -76,7 +76,7 @@ public static class AudioEqualizerService
         if (!File.Exists(ReceiptPath)) return null;
         if (new FileInfo(ReceiptPath).Length > 3000000) throw new InvalidDataException(Str.T("Str.EqBackupLarge"));
         var r = JsonSerializer.Deserialize<Receipt>(File.ReadAllText(ReceiptPath)) ?? throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
-        if (r.OriginalMain is null || r.Prefix is null || r.Settings is null) throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
+        if (r.OriginalMain is null || r.Prefix is null || r.Prefix.Length == 0 || r.Settings is null) throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
         r.Settings.Validate();
         return r;
     }
@@ -90,6 +90,18 @@ public static class AudioEqualizerService
     {
         if (File.Exists(path) && Hash(File.ReadAllBytes(path)) is var hash && hash != r.ContentHash && hash != r.PreviousContentHash)
             throw new InvalidOperationException(Str.T("Str.EqFileChanged"));
+    }
+    private static int FindEntry(byte[] bytes, Receipt r)
+    {
+        var index = bytes.AsSpan().IndexOf(r.Prefix);
+        var encoding = EncodingFor(bytes);
+        var newline = encoding.GetBytes("\n");
+        if (index >= 0 && index != PreambleLength(bytes, encoding)
+            && (index < newline.Length || !bytes.AsSpan(index - newline.Length, newline.Length).SequenceEqual(newline)))
+            throw new InvalidOperationException(Str.T("Str.EqEntryAmbiguous"));
+        if (index >= 0 && bytes.AsSpan(index + r.Prefix.Length).IndexOf(r.Prefix) >= 0)
+            throw new InvalidOperationException(Str.T("Str.EqEntryAmbiguous"));
+        return index;
     }
     public static void Apply(EqualizerSettings settings)
     {
@@ -112,14 +124,14 @@ public static class AudioEqualizerService
             r = new(engine.ConfigPath, bytes, encoding.GetBytes(IncludeBlock), null, settings);
         }
         CheckOwnFile(ownPath, r);
-        var attached = bytes.AsSpan(bom).StartsWith(r.Prefix);
+        var attached = FindEntry(bytes, r) >= 0;
         if (!attached && !bytes.SequenceEqual(r.OriginalMain)) throw new InvalidOperationException(Str.T("Str.EqEntryMissing"));
         var content = new UTF8Encoding(false).GetBytes(BuildConfiguration(settings));
         r = r with { Settings = settings, ContentHash = Hash(content), PreviousContentHash = File.Exists(ownPath) ? Hash(File.ReadAllBytes(ownPath)) : null };
         Save(r); // Receipt exists before the first engine write, including partial failure recovery.
         AtomicFile.WriteAllBytes(ownPath, content);
         if (!attached) AtomicFile.WriteAllBytes(mainPath, bytes[..bom].Concat(r.Prefix).Concat(bytes[bom..]).ToArray());
-        if (!File.ReadAllBytes(ownPath).SequenceEqual(content) || !File.ReadAllBytes(mainPath).AsSpan(bom).StartsWith(r.Prefix))
+        if (!File.ReadAllBytes(ownPath).SequenceEqual(content) || FindEntry(File.ReadAllBytes(mainPath), r) < 0)
             throw new IOException(Str.T("Str.EqReadback"));
         Save(r with { PreviousContentHash = null });
     }
@@ -129,10 +141,10 @@ public static class AudioEqualizerService
         var r = Load(); if (r is null) return false;
         var mainPath = Path.Combine(r.ConfigPath, "config.txt"); var ownPath = Path.Combine(r.ConfigPath, IncludeName);
         CheckOwnFile(ownPath, r);
-        var bytes = File.ReadAllBytes(mainPath); var bom = PreambleLength(bytes, EncodingFor(bytes));
-        if (bytes.AsSpan(bom).StartsWith(r.Prefix))
+        var bytes = File.ReadAllBytes(mainPath); var entry = FindEntry(bytes, r);
+        if (entry >= 0)
         {
-            var restored = bytes[..bom].Concat(bytes[(bom + r.Prefix.Length)..]).ToArray();
+            var restored = bytes[..entry].Concat(bytes[(entry + r.Prefix.Length)..]).ToArray();
             AtomicFile.WriteAllBytes(mainPath, restored);
             if (!File.ReadAllBytes(mainPath).SequenceEqual(restored)) throw new IOException(Str.T("Str.EqRestoreFailed"));
         }

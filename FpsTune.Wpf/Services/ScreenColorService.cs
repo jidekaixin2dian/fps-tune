@@ -89,7 +89,7 @@ public static class ScreenColorService
             var display = Require(id);
             var ramp = Api.Read(display);
             var r = Load(id);
-            return new(true, r is null ? Str.T("Str.ColorChoose") : !Matches(ramp, r.Expected)
+            return new(true, r is not null && !Owned(r, ramp) ? Str.T("Str.ColorNewBaselineHint") : r is null ? Str.T("Str.ColorChoose") : !Matches(ramp, r.Expected)
                 ? Str.T("Str.ColorOverwritten") : Str.T("Str.ColorVerified"),
                 r?.Settings ?? new(), r is not null);
         }
@@ -115,20 +115,25 @@ public static class ScreenColorService
         }
         return result;
     }
-    public static void Apply(ScreenColorSettings settings, string id)
+    public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false)
     {
         settings.Validate();
         using var gate = SystemMutationGate.Acquire();
         var display = Require(id);
         // Retire our old managed ICC preset before applying a scan-out effect. Preserve custom/vendor profiles.
-        var icc = IccFilterService.GetState(id);
-        if (icc.Restorable && icc.CurrentProfileName is { } name
-            && IccFilterService.AllPresetFileNames().Contains(name, StringComparer.OrdinalIgnoreCase))
+        if (IccFilterService.HasManagedPreset(id) && IccFilterService.HasRestorableBackup(id))
             IccFilterService.Restore(id);
         display = Require(id);
         var current = Api.Read(display);
         var r = Load(id) ?? new Receipt(id, display.FriendlyName, current, current, new());
-        if (!Owned(r, current)) throw new InvalidOperationException(Str.T("Str.ColorDrift"));
+        var rebased = false;
+        if (!Owned(r, current))
+        {
+            if (!startNewBaselineOnDrift) throw new InvalidOperationException(Str.T("Str.ColorDrift"));
+            DisplayBackupFiles.Archive(ReceiptPath(id));
+            r = new(id, display.FriendlyName, current, current, new());
+            rebased = true;
+        }
         var ramp = BuildRamp(settings, r.Original);
         r = r with { Expected = ramp, Settings = settings, Previous = current };
         Save(r);
@@ -136,6 +141,7 @@ public static class ScreenColorService
         Api.Write(display, ramp);
         if (!Matches(Api.Read(display), ramp)) throw new InvalidOperationException(Str.T("Str.ColorRefused"));
         Save(r with { Previous = null });
+        return rebased;
     }
     public static bool Restore(string id)
     {

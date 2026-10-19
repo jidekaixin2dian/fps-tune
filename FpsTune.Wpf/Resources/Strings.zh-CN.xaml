@@ -1310,4 +1310,8 @@
     <s:String x:Key="Str.CornerChips">徽标</s:String>
     <s:String x:Key="Str.CornerSaved">圆角设置已保存。</s:String>
     <s:String x:Key="Str.CornerSaveFailed">圆角已生效，但未能保存：{0}</s:String>
+    <s:String x:Key="Str.ColorNewBaselineHint">屏幕曲线与旧备份不同。点击“应用画面参数”会保留旧备份，并以当前曲线作为新的还原点。</s:String>
+    <s:String x:Key="Str.ColorNewBaselineSaved">旧备份已保留，“还原屏幕原值”将恢复本次应用前的画面。</s:String>
+    <s:String x:Key="Str.IccNewBaselineHint">ICC 旧备份与当前关联不一致。手动应用会保留旧备份，并以当前关联建立新的还原点。</s:String>
+    <s:String x:Key="Str.EqEntryAmbiguous">检测到重复或不完整的帧律均衡器入口。请在 Equalizer APO 配置中保留一个完整入口后重试。</s:String>
 </ResourceDictionary>

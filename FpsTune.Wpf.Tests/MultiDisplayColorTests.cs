@@ -51,6 +51,22 @@ public sealed class MultiDisplayColorTests : IDisposable
         Directory.Delete(Root, true);
     }
     [Fact]
+    public void Selecting_an_original_tool_profile_reorders_only_our_entries_and_keeps_exact_restore()
+    {
+        File.Copy(Path.Combine(Root, "colors", "a.icm"), Path.Combine(Root, "colors", "FpsTune-Warm.icc"));
+        Profiles["A"] = ["FpsTune-Warm.icc", "a.icm"];
+        IccFilterService.Apply(IccFilterPreset.Vivid, "A");
+        IccFilterService.Apply(IccFilterPreset.Warm, "A");
+        Assert.True(IccFilterService.Restore("A"));
+        Assert.Equal(new[] { "FpsTune-Warm.icc", "a.icm" }, Profiles["A"]);
+        IccFilterService.Apply(IccFilterPreset.Vivid, "A");
+        Profiles["A"].Add("external.icm"); var baseline = Profiles["A"].ToArray();
+        Assert.Throws<InvalidOperationException>(() => IccFilterService.Restore("A"));
+        IccFilterService.Apply(IccFilterPreset.Cool, "A", startNewBaselineOnDrift: true);
+        Assert.True(IccFilterService.Restore("A")); Assert.Equal(baseline, Profiles["A"]);
+        Assert.Single(Directory.GetFiles(Path.Combine(IccFilterService.BackupDirOverride!, "history")));
+    }
+    [Fact]
     public void Per_screen_originals_and_readback_remain_independent_when_primary_and_connection_names_change()
     {
         DigitalVibranceService.SetPercent(75, "A");
@@ -318,7 +334,8 @@ public sealed class MultiDisplayColorTests : IDisposable
         public string? TryGetColorDirectory() => Path.Combine(owner.Root, "colors");
         public bool InstallColorProfile(string source) { File.Copy(source, Path.Combine(TryGetColorDirectory()!, Path.GetFileName(source)), true); return true; }
         public bool SetDisplayDefaultAssociation(IccDisplayInfo display, string name)
-        { owner.BeforeIccWrite?.Invoke(); ValidateConnection(display); owner.Writes.Add("icc:" + display.Identity); owner.Profiles[display.Identity!].Add(name); return true; }
+        { owner.BeforeIccWrite?.Invoke(); ValidateConnection(display); owner.Writes.Add("icc:" + display.Identity);
+            owner.Profiles[display.Identity!] = owner.Profiles[display.Identity!].Where(n => !n.Equals(name, StringComparison.OrdinalIgnoreCase)).Append(name).ToList(); return true; }
         public string[] ReadAssociationList(IccDisplayInfo display) => owner.Profiles[display.Identity!].ToArray();
         public void WriteAssociationList(IccDisplayInfo display, string[] list) { ValidateConnection(display); if (!owner.IgnoreIccRestore) owner.Profiles[display.Identity!] = list.ToList(); }
         public bool IsProfileBytesValid(byte[] profile) => true;

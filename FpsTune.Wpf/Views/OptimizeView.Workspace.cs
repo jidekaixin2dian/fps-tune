@@ -18,6 +18,11 @@ public partial class OptimizeView
     private void ScopeFilter_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (ScopeFilter?.SelectedItem is ComboBoxItem { Tag: string mode }) _scopeFilter = mode;
+        if (ItemsView is not null)
+        {
+            ItemsView.GroupDescriptions.Clear();
+            if (_scopeFilter != "selected") ItemsView.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(OptimizationItemViewModel.Group)));
+        }
         ItemsView?.Refresh(); UpdateFilterSummary();
     }
     internal static bool MatchesScope(OptimizationItemViewModel item, string mode) => mode switch {

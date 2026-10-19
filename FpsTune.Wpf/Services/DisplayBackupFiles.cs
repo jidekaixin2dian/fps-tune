@@ -7,6 +7,9 @@ namespace FpsTune.Wpf.Services;
 internal sealed record DisplayBackupTarget(string? Identity, string Name, string? Error = null);
 internal static class DisplayBackupFiles
 {
+    internal static void Archive(string path) => AtomicFile.WriteAllTextDurable(
+        Path.Combine(Path.GetDirectoryName(path)!, "history", $"{Path.GetFileNameWithoutExtension(path)}-{Guid.NewGuid():N}.json"),
+        File.ReadAllText(path), new UTF8Encoding(false));
     internal static string PathFor(string directory, string prefix, string? identity)
         => Path.Combine(directory, identity is null ? prefix + ".json"
             : prefix + "-" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity.ToUpperInvariant()))) + ".json");

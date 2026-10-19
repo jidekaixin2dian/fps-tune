@@ -73,7 +73,10 @@ public partial class ScreenColorPanel : UserControl
         if (_busy || _identity is null) return;
         var settings = Values(); var identity = _identity;
         if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorConfirm"), confirmText: Str.T("Str.ColorApply"))) return;
-        await Run(() => { ScreenColorService.Apply(settings, identity); return Str.T("Str.ColorApplied"); });
+        await Run(() => {
+            var rebased = ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift: true);
+            return Str.T("Str.ColorApplied") + (rebased ? " " + Str.T("Str.ColorNewBaselineSaved") : "");
+        });
     }
     private async void Restore_Click(object sender, RoutedEventArgs e)
     {

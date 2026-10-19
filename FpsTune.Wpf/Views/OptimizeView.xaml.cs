@@ -55,7 +55,18 @@ public partial class OptimizeView : UserControl
         var selected = ids.ToHashSet(StringComparer.Ordinal);
         foreach (var item in Items) item.IsChecked = selected.Contains(item.Id);
         ConsentCheck.IsChecked = false;
-        SetPlain($"已带入 {selected.Count} 项选择。请审阅项目说明及副作用，勾选同意后点击“应用”。");
+        AllGroups.IsChecked = true;
+        SearchBox.Clear();
+        ScopeFilter.SelectedIndex = 2; // Show the actual recommendations, regardless of earlier filters.
+        ItemsView.Refresh();
+        UpdateFilterSummary();
+        if (Items.FirstOrDefault(i => i.IsChecked) is { } first)
+        {
+            ItemList.SelectedItem = first;
+            ItemList.ScrollIntoView(first);
+            SetItemDetail(first);
+        }
+        else SetPlain(Str.T("Str.SelectAtLeastOneItem"));
     }
     private string _groupFilter = "";
     private void ItemToggle_Click(object sender, RoutedEventArgs e)

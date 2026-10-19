@@ -1310,4 +1310,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CornerChips">Badges</s:String>
     <s:String x:Key="Str.CornerSaved">Corner preferences saved.</s:String>
     <s:String x:Key="Str.CornerSaveFailed">Corners applied but could not be saved: {0}</s:String>
+    <s:String x:Key="Str.ColorNewBaselineHint">The display curve differs from the previous backup. Apply keeps that backup and uses the current curve as a new restore point.</s:String>
+    <s:String x:Key="Str.ColorNewBaselineSaved">Previous backup retained. Restore now returns to the picture before this apply.</s:String>
+    <s:String x:Key="Str.IccNewBaselineHint">The previous ICC backup differs from the current associations. Manual apply keeps that backup and captures the current associations as a new restore point.</s:String>
+    <s:String x:Key="Str.EqEntryAmbiguous">Duplicate or incomplete FPS Tune equalizer entries found. Keep one complete entry in the Equalizer APO configuration and retry.</s:String>
 </ResourceDictionary>

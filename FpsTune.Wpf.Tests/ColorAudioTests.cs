@@ -8,6 +8,26 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ColorAudioTests
 {
     [Fact]
+    public void Manual_color_reapply_preserves_external_baseline_and_unrelated_legacy_ICC_does_not_block_it()
+    {
+        using var screens = new MultiDisplayColorTests();
+        Directory.CreateDirectory(IccFilterService.BackupDirOverride!);
+        var legacy = Path.Combine(IccFilterService.BackupDirOverride!, "backup.json");
+        var old = "{\"AssociationSubKey\":\"0002\",\"DefaultProfile\":\"b.icm\",\"ListBefore\":[\"b.icm\"],\"CreatedAt\":\"old\"}";
+        File.WriteAllText(legacy, old);
+        ScreenColorService.Apply(new(Brightness: 5), "B");
+        var external = ScreenColorService.BuildRamp(new(Gamma: 1.35), MultiDisplayColorTests.LinearRamp()); screens.Ramps["B"] = external;
+        Assert.Throws<InvalidOperationException>(() => ScreenColorService.Apply(new(Brightness: 10), "B"));
+        Assert.Throws<InvalidOperationException>(() => ScreenColorService.Restore("B"));
+        Assert.True(ScreenColorService.Apply(new(Brightness: 10), "B", startNewBaselineOnDrift: true));
+        Assert.True(ScreenColorService.Restore("B")); Assert.Equal(external, screens.Ramps["B"]);
+        Assert.Equal(old, File.ReadAllText(legacy));
+        Assert.Single(Directory.GetFiles(Path.Combine(ScreenColorService.BackupDirOverride!, "history")));
+        IccFilterService.Apply(IccFilterPreset.Warm, "B", startNewBaselineOnDrift: true);
+        Assert.True(IccFilterService.Restore("B")); Assert.Equal(new[] { "b.icm" }, screens.Profiles["B"]);
+        Assert.Equal(old, File.ReadAllText(legacy));
+    }
+    [Fact]
     public void Screen_presets_have_distinct_curves_and_restore_the_selected_screen_original()
     {
         using var screens = new MultiDisplayColorTests();
@@ -70,6 +90,9 @@ public sealed class ColorAudioTests
             var settings = new EqualizerSettings(Guid.NewGuid().ToString("B"), gains);
             AudioEqualizerService.Apply(settings);
             var own = File.ReadAllText(Path.Combine(dir, "FpsTune-Equalizer.txt"));
+            var configured = File.ReadAllBytes(main); var bom = encoding.GetPreamble().Length;
+            var comment = encoding.GetBytes("# Unrelated heading\r\n");
+            File.WriteAllBytes(main, configured[..bom].Concat(comment).Concat(configured[bom..]).ToArray());
             Assert.Contains("Preamp: -5 dB", own);
             Assert.Contains("2000 5", own);
             File.AppendAllText(Path.Combine(dir, "FpsTune-Equalizer.txt"), "# external modification");
@@ -80,7 +103,7 @@ public sealed class ColorAudioTests
             Assert.Contains("Bypass", File.ReadAllText(Path.Combine(dir, "FpsTune-Equalizer.txt")));
             File.AppendAllText(main, "# Other tool\r\n", encoding);
             Assert.True(AudioEqualizerService.Restore());
-            Assert.Equal(original.Concat(encoding.GetBytes("# Other tool\r\n")).ToArray(), File.ReadAllBytes(main));
+            Assert.Equal(original[..bom].Concat(comment).Concat(original[bom..]).Concat(encoding.GetBytes("# Other tool\r\n")).ToArray(), File.ReadAllBytes(main));
             Assert.False(File.Exists(Path.Combine(dir, "FpsTune-Equalizer.txt")));
         }
         finally { AudioEqualizerService.EngineOverride = null; AudioEqualizerService.BackupDirOverride = null; Directory.Delete(dir, true); }

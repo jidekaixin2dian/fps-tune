@@ -16,6 +16,29 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ReadabilityAndFramesUiTests
 {
     [Fact]
+    public void Basic_advice_reveals_exact_items_and_their_details_after_clearing_prior_filters()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                window.NavigateTo("opt"); window.UpdateLayout();
+                var view = (OptimizeView)((ContentControl)window.FindName("PageHost")).Content;
+                view.ReloadFromState(); ((TextBox)view.FindName("SearchBox")).Text = "Wi-Fi";
+                ((ComboBox)view.FindName("ScopeFilter")).SelectedIndex = 3;
+                window.ReviewSelection(["game-mode", "dvr-off"]); window.UpdateLayout();
+                Assert.Equal(new[] { "dvr-off", "game-mode" }, view.ItemsView.Cast<OptimizationItemViewModel>().Select(i => i.Id).Order());
+                Assert.Equal("", ((TextBox)view.FindName("SearchBox")).Text);
+                Assert.NotNull(((ListBox)view.FindName("ItemList")).SelectedItem);
+                Assert.False(((CheckBox)view.FindName("ConsentCheck")).IsChecked);
+            }
+            finally { window.Close(); }
+        });
+    }
+    [Fact]
     public void Corner_presets_and_custom_values_update_existing_pages_and_survive_reload()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }

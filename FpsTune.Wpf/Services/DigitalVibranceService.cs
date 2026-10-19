@@ -80,10 +80,7 @@ public static class DigitalVibranceService
             // A confirmed manual apply is a new intent. Retain the exact old receipt before
             // rebasing; automatic preparation and Restore must still refuse external drift.
             var path = File.Exists(BackupPath(display)) ? BackupPath(display) : BackupPath();
-            var history = Path.Combine(BackupDir(), "history");
-            Directory.CreateDirectory(history);
-            AtomicFile.WriteAllTextDurable(Path.Combine(history, $"vibrance-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.json"),
-                File.ReadAllText(path), new UTF8Encoding(false));
+            DisplayBackupFiles.Archive(path);
             backup = new(current, display, Min: min, Max: max, DisplayName: api.DisplayName());
             rebased = true;
         }

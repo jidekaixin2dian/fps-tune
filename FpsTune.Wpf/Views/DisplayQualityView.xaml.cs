@@ -21,6 +21,7 @@ public partial class DisplayQualityView : UserControl
     private bool _presetSelectionDirty;
     private string? _vibStatus;
     private string? _iccStatus;
+    private string? _iccBackupNotice;
     private string? _drsStatus;
     private bool _drsSyncing;
     private string? _displayIdentity;
@@ -680,6 +681,7 @@ public partial class DisplayQualityView : UserControl
         }
 
         var state = s.Icc!;
+        _iccBackupNotice = state.BackupNotice;
         if (!state.Supported)
         {
             IccSupportedPanel.Visibility = Visibility.Collapsed;
@@ -700,6 +702,7 @@ public partial class DisplayQualityView : UserControl
         IccStateText.Text = _iccStatus ?? (state.Restorable
             ? Str.T("Str.IccOriginalSaved")
             : "");
+        if (_iccStatus is null && state.BackupNotice is not null) IccStateText.Text = state.BackupNotice;
         SetBadge(TabStatusIcc, TabBadgeIcc, ShortProfileName(state.CurrentProfileName));
     }
 
@@ -733,7 +736,7 @@ public partial class DisplayQualityView : UserControl
         }
 
         var identity = _displayIdentity ?? "unavailable-display";
-        await IccApplyCore(() => IccFilterService.Apply(preset.Value, identity));
+        await IccApplyCore(() => IccFilterService.Apply(preset.Value, identity, startNewBaselineOnDrift: true));
     }
 
     /// <summary>P2-10：用户自选 .icc / .icm 文件。与预设共用确认与应用流程。</summary>
@@ -749,7 +752,7 @@ public partial class DisplayQualityView : UserControl
             return;
         var path = dialog.FileName;
         var identity = _displayIdentity ?? "unavailable-display";
-        _ = IccApplyCore(() => IccFilterService.ApplyFromFile(path, identity));
+        _ = IccApplyCore(() => IccFilterService.ApplyFromFile(path, identity, startNewBaselineOnDrift: true));
     }
 
     /// <summary>预设与用户文件共用的应用流程：确认 → 写入 → 状态反馈（同一套全局生效警示）。</summary>
@@ -757,7 +760,7 @@ public partial class DisplayQualityView : UserControl
     {
         var confirmed = DialogService.Confirm(
             Str.T("Str.ApplyIcc"),
-            Str.T("Str.DisplayIccConfirm", DisplayTargetCombo.Text),
+            Str.T("Str.DisplayIccConfirm", DisplayTargetCombo.Text) + (_iccBackupNotice is null ? "" : "\n\n" + _iccBackupNotice),
             confirmText: Str.T("Str.Apply"));
         if (!confirmed)
             return;
