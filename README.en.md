@@ -1,11 +1,11 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.1)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.1)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@ Available through a desktop interface and command-line tools.
 
 ## Versions and downloads
 
-Current version: **[v0.3.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0)**. The 1.x line is unmaintained.
+Current version: **[v0.3.1](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.1)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.0).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.1).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.3.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0/FpsTune-Setup-0.3.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.3.1.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.1/FpsTune-Setup-0.3.1.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -26,7 +26,7 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.3.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.0/SHA256SUMS-v0.3.0.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.3.1.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.1/SHA256SUMS-v0.3.1.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 Portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
@@ -40,6 +40,10 @@ The branded installer lets you choose a destination, including during reinstalla
 | Display and quality | Detection |
 |---|---|
 | ![Display settings](assets/screenshots/light/09-display.png) | ![Detection](assets/screenshots/light/02-detect.png) |
+
+| Screen color controls | Audio equalizer |
+|---|---|
+| ![SDR filters and color controls](assets/screenshots/light/10-color.png) | ![Equalizer APO integration](assets/screenshots/light/11-equalizer.png) |
 
 <details>
 <summary>More: preparation, dark theme, optimization, recording and maintenance</summary>
@@ -57,13 +61,15 @@ The branded installer lets you choose a destination, including during reinstalla
 ## Current features
 
 - **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
-- **Detection and system tuning**: 39 available items with current state, privileges, restart requirements and side effects. Balanced selects 16 items, safe-only selects 4, and Custom lets you choose.
-- **Pre-game preparation**: save system standby-memory cleanup, ICC, vibrance and display choices as a one-click routine with individual results.
+- **Detection and system tuning**: 40 available items with current state, privileges, restart requirements and side effects. Balanced selects 16 items, safe-only selects 4, and Custom lets you choose. Applying, one-click optimization and restoring automatically run detection again to update item status and home recommendations.
+- **Pre-game preparation**: save system standby-memory cleanup, SDR screen filters, vibrance and display choices as a one-click routine with individual results.
 - **Frame caps**: set NVIDIA foreground and background frame limits per game and restore those settings separately.
 - **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
-- **Display and quality**: per-game NVIDIA DRS / DLSS settings, digital vibrance for a selected display, 11 generated ICC presets or a custom `.icc` / `.icm`, and restoration of the original association. ICC works in color-managed applications; some games ignore it.
+- **Display and quality**: per-game NVIDIA DRS / DLSS settings and NVIDIA digital vibrance; 11 SDR screen presets, brightness, contrast, gamma, shadow lift and RGB controls with per-display restoration. The Windows screen-curve path works with AMD, NVIDIA and Intel outputs that support the interface. Advanced ICC retains presets, custom `.icc` / `.icm` files and association restoration.
+- **Audio equalizer**: adjust 10 frequency bands, preamp and presets under Maintenance → Audio equalizer, with bypass and removal of this tool's changes. Uses Equalizer APO; first install the engine, configure the output device and restart when prompted.
+- **Driver advice**: query NVIDIA's official catalog for the latest WHQL driver matching the GPU, OS and laptop/desktop type, with date and source. AMD and Intel link to their official driver pages.
 - **GPU device names**: preview eight presets including GTX 750 Ti and GTX 1050 Ti, then restore the original description when needed. This changes the Windows device description while preserving hardware capabilities.
-- **Organized settings**: appearance, wallpaper, startup and notifications, games and profiles, data and permissions, and About. Settings save automatically; wallpaper has a rounded preview and compact opacity slider.
+- **Organized settings**: appearance, wallpaper, startup and notifications, games and profiles, data and permissions, and About. Settings save automatically. Corner controls offer Classic and Large presets plus four custom radius groups; wallpaper has a rounded preview and compact opacity slider.
 - **Everyday maintenance**: fixed-drive free space and the top 8 process working sets, refreshed on demand. Open Windows storage cleanup, installed apps, Task Manager, startup apps, reliability history, Resource Monitor, network and update settings. Snapshots stay in the current page and are not uploaded.
 - **Cache maintenance**: preview the current user's DirectX / NVIDIA shader caches and confirm cleanup. Busy or changed files are skipped. Deleted cache files cannot be restored; regeneration may cause temporary stutter.
 - **Performance sessions and A/B**: local CPU, RAM, GPU, VRAM and frame-time recording, exports and comparisons. Real FPS capture requires official PresentMon.
