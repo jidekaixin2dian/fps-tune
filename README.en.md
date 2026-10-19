@@ -61,7 +61,7 @@ The branded installer lets you choose a destination, including during reinstalla
 ## Current features
 
 - **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
-- **Detection and system tuning**: 40 available items with current state, privileges, restart requirements and side effects. Balanced selects 16 items, safe-only selects 4, and Custom lets you choose. Applying, one-click optimization and restoring automatically run detection again to update item status and home recommendations.
+- **Detection and system tuning**: 39 available items with current state, privileges, restart requirements and side effects. Balanced selects 16 items, safe-only selects 4, and Custom lets you choose. Applying, one-click optimization and restoring automatically run detection again to update item status and home recommendations.
 - **Pre-game preparation**: save system standby-memory cleanup, SDR screen filters, vibrance and display choices as a one-click routine with individual results.
 - **Frame caps**: set NVIDIA foreground and background frame limits per game and restore those settings separately.
 - **Multiple games**: recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
