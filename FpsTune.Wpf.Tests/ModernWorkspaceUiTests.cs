@@ -172,6 +172,71 @@ public sealed class ModernWorkspaceUiTests
             finally { accept?.Stop(); DialogService.PrepareWindowForTest = null; window.Close(); }
         });
     }
+    [Fact]
+    public void Completed_operations_refresh_readback_keep_context_and_do_not_invent_success_when_refresh_fails()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            foreach (var scenario in new[] { "success", "partial", "refresh-failed" })
+            {
+                AppState.Items = ItemCatalog.All.Where(d => d.Id is "gpu-pref" or "dvr-off" or "game-mode").Select(d =>
+                    new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription, d.DisplaySideEffect, false, false, false, "before", false, d.Group)).ToList();
+                var before = AppState.Items;
+                var page = new OptimizeView();
+                var surface = new Border { Child = page };
+                surface.SetResourceReference(Border.BackgroundProperty, "AppBackdropBrush");
+                var window = new Window { Width = 1180, Height = 720, Content = surface };
+                app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+                var readback = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var refreshes = 0;
+                page.RefreshDetectionOverride = async () =>
+                {
+                    refreshes++;
+                    var ok = await readback.Task;
+                    if (ok) AppState.Items = before.Select(i => i.Id == "game-mode" ? i : i with
+                        { Optimized = i.Id == "gpu-pref" || scenario == "success", Current = "read back: " + i.Id }).ToList();
+                    return ok;
+                };
+                page.ApplyItemsOverride = (_, _) => Task.FromResult(new RunResult(scenario == "partial" ? 1 : 0,
+                    JsonSerializer.Serialize(new { results = new[] { new { id = "gpu-pref", ok = true, message = "receipt-" + scenario } } }), ""));
+                DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
+                var accept = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+                accept.Tick += (_, _) =>
+                {
+                    if (app.Windows.OfType<OptimizationReviewWindow>().FirstOrDefault(w => w.IsVisible) is { } review)
+                        ((Button)review.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                };
+                try
+                {
+                    page.SelectForReview(["gpu-pref", "dvr-off"]);
+                    var focus = ((OptimizationItemViewModel)((ListBox)page.FindName("ItemList")).SelectedItem).Id;
+                    var consent = (CheckBox)page.FindName("ConsentCheck"); consent.IsChecked = true;
+                    accept.Start(); ((Button)page.FindName("ApplyButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.Equal(1, refreshes);
+                    Assert.False(((FrameworkElement)page.FindName("OptimizationItemsCard")).IsEnabled);
+                    Assert.All(page.Items, i => Assert.False(i.Optimized));
+                    readback.SetResult(scenario != "refresh-failed");
+                    DlssFeedbackTests.PumpUntil(() => ((FrameworkElement)page.FindName("OptimizationItemsCard")).IsEnabled);
+                    Assert.Equal(scenario != "refresh-failed", page.Items.Single(i => i.Id == "gpu-pref").Optimized);
+                    Assert.Equal(scenario == "success", page.Items.Single(i => i.Id == "dvr-off").Optimized);
+                    Assert.Equal(2, page.Items.Count(i => i.IsChecked)); Assert.Equal(2, page.ItemsView.Cast<object>().Count());
+                    Assert.Equal(focus, ((OptimizationItemViewModel)((ListBox)page.FindName("ItemList")).SelectedItem).Id);
+                    Assert.False(consent.IsChecked);
+                    Assert.Equal(Str.T("Str.OptSelectionSummary", 2, page.Items.Count(i => i.IsChecked && i.Optimized), 0, 0),
+                        ((TextBlock)page.FindName("SelectionSummary")).Text);
+                    var doc = (System.Windows.Documents.FlowDocument)page.FindName("OutputDoc");
+                    var text = new System.Windows.Documents.TextRange(doc.ContentStart, doc.ContentEnd).Text;
+                    Assert.Contains("receipt-" + scenario, text);
+                    Assert.Equal(scenario == "refresh-failed", text.Contains(Str.T("Str.OptRefreshFailed", Str.T("Str.DetectIncompleteRetry"))));
+                    Assert.Equal(scenario != "success", DeltaPreparation.PendingItems(AppState.Items, true).Contains("dvr-off"));
+                    foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(surface, "status-refresh-" + scenario + "-" + theme); }
+                }
+                finally { accept.Stop(); window.Close(); DialogService.PrepareWindowForTest = null; }
+            }
+        });
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {

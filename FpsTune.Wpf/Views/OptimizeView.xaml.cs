@@ -93,7 +93,8 @@ public partial class OptimizeView : UserControl
         var selected = Items.Where(i => i.IsChecked).ToList();
         if (!_operationBusy) ApplyButton.IsEnabled = selected.Count > 0;
         ShowSelectedButton.IsEnabled = ClearSelectionButton.IsEnabled = selected.Count > 0;
-        SelectionSummary.Text = Str.T("Str.ReviewSummary", selected.Count, selected.Count(i => i.RequiresAdmin), selected.Count(i => i.RequiresReboot));
+        SelectionSummary.Text = Str.T("Str.OptSelectionSummary", selected.Count, selected.Count(i => i.Optimized),
+            selected.Count(i => i.RequiresAdmin), selected.Count(i => i.RequiresReboot));
         var hidden = selected.Count(i => !ItemsView.Contains(i));
         if (hidden > 0) SelectionSummary.Text += "\n" + Str.T("Str.OptHiddenSelection", hidden);
     }
@@ -166,6 +167,11 @@ public partial class OptimizeView : UserControl
     public void ReloadFromState()
     {
         if (_operationBusy) return;
+        ReloadItemsFromState();
+    }
+
+    private void ReloadItemsFromState()
+    {
         _verdicts = VerdictStore.Load();
         var currentGame = System.IO.Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
@@ -176,6 +182,7 @@ public partial class OptimizeView : UserControl
             return;
         }
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
+        var focusedId = (ItemList.SelectedItem as OptimizationItemViewModel)?.Id;
         // 分组 ListCollectionView 在集合变化时会访问 CurrentPosition，不能在
         // DeferRefresh 作用域内逐项添加。列表规模很小，且仅在快照变化时重建。
         foreach (var old in Items) old.PropertyChanged -= SelectionChanged;
@@ -201,6 +208,8 @@ public partial class OptimizeView : UserControl
         }
 
         ShowPresetContents();
+        if (Items.FirstOrDefault(i => i.Id == focusedId) is { } focused)
+            ItemList.SelectedItem = focused;
     }
 
 
@@ -326,7 +335,7 @@ public partial class OptimizeView : UserControl
         try
         {
             var result = await OneClickOptimizer.ApplyAsync();
-            SetApplyResult(result);
+            await CompleteOperationAsync(result);
         }
         catch (Exception ex)
         {
@@ -374,7 +383,7 @@ public partial class OptimizeView : UserControl
         try
         {
             var result = await OptimizationEngine.RestoreAsync();
-            SetApplyResult(result);
+            await CompleteOperationAsync(result);
         }
         catch (Exception ex)
         {

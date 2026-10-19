@@ -10,6 +10,7 @@ public partial class OptimizeView
     private bool _operationBusy;
     private string _scopeFilter = "all";
     internal Func<IReadOnlyList<string>, string?, Task<RunResult>>? ApplyItemsOverride { get; set; }
+    internal Func<Task<bool>>? RefreshDetectionOverride { get; set; }
     private void RefreshWorkspaceLabels()
     {
         foreach (var item in Items) item.RefreshLanguage();
@@ -64,6 +65,30 @@ public partial class OptimizeView
     internal OptimizationApplyPlan CaptureReviewPlan()
         => OptimizationApplyPlan.Capture(Items, item => ItemsView.Contains(item), AppState.GamePath);
 
+    private async Task CompleteOperationAsync(RunResult result)
+    {
+        string? refreshError = null;
+        try
+        {
+            var refreshed = await (RefreshDetectionOverride?.Invoke()
+                ?? (Window.GetWindow(this) as MainWindow ?? Application.Current.MainWindow as MainWindow)?.RefreshDetectionAsync()
+                ?? Task.FromResult(false));
+            if (refreshed) ReloadItemsFromState();
+            else refreshError = Str.T("Str.DetectIncompleteRetry");
+        }
+        catch (Exception ex) { refreshError = OperationDiagnostics.Scrub(ex.Message); }
+
+        ConsentCheck.IsChecked = false;
+        // Rebuilding rows may change the detail panel. Keep the operation receipt last.
+        SetApplyResult(result);
+        if (refreshError is not null)
+        {
+            var notice = NewPara(4);
+            notice.Inlines.Add(R(Str.T("Str.OptRefreshFailed", refreshError), "WarningBrush"));
+            OutputDoc.Blocks.Add(notice);
+        }
+    }
+
     private async Task ApplyReviewedAsync()
     {
         if (_operationBusy) return;
@@ -90,7 +115,7 @@ public partial class OptimizeView
             SetPlain(Str.T("Str.Applying"), "AccentBrush");
             var result = await (ApplyItemsOverride?.Invoke(plan.Ids, plan.GamePath)
                 ?? OptimizationEngine.ApplyItemsAsync(plan.Ids, plan.GamePath));
-            SetApplyResult(result);
+            await CompleteOperationAsync(result);
         }
         catch (Exception ex) { SetRawMonospace(ex.ToString()); }
         finally { SetOperationBusy(false); }

@@ -1065,6 +1065,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReviewNeedsRestart">Restart required</s:String>
     <s:String x:Key="Str.ReviewGlobal">No game selected (global system settings)</s:String>
     <s:String x:Key="Str.ReviewSummary">{0} selected · {1} require administrator · {2} require restart</s:String>
+    <s:String x:Key="Str.OptSelectionSummary">{0} selected · {1} at target · {2} require administrator · {3} require restart</s:String>
+    <s:String x:Key="Str.OptRefreshFailed">The operation result is retained, but current status could not be refreshed: {0}. Click Refresh detection on Overview.</s:String>
     <s:String x:Key="Str.ReviewGame">Game context: {0}</s:String>
     <s:String x:Key="Str.ReviewHidden">Includes {0} items hidden by the current filter. This list contains every pending item.</s:String>
     <s:String x:Key="Str.ReviewSnapshotHint">当前检测快照 · 确认后应用所选项目</s:String>

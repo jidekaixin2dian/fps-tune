@@ -1065,6 +1065,8 @@
     <s:String x:Key="Str.ReviewNeedsRestart">需要重启</s:String>
     <s:String x:Key="Str.ReviewGlobal">未选择游戏（全局系统设置）</s:String>
     <s:String x:Key="Str.ReviewSummary">待应用 {0} 项 · {1} 项需管理员 · {2} 项需重启</s:String>
+    <s:String x:Key="Str.OptSelectionSummary">已选 {0} 项 · 已达标 {1} 项 · {2} 项需管理员 · {3} 项需重启</s:String>
+    <s:String x:Key="Str.OptRefreshFailed">执行结果已保留，但当前状态刷新失败：{0}。请在概览页点击“重新检测”。</s:String>
     <s:String x:Key="Str.ReviewGame">游戏上下文：{0}</s:String>
     <s:String x:Key="Str.ReviewHidden">包含当前筛选之外的 {0} 项；本清单列出了全部待应用项目。</s:String>
     <s:String x:Key="Str.ReviewSnapshotHint">当前检测快照 · 确认后应用所选项目</s:String>
