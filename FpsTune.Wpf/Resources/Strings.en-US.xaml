@@ -1298,7 +1298,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorModule">Display parameters</s:String>
     <s:String x:Key="Str.EqHeadroom">Effective preamp: {0} dB (headroom reserved for boosted bands)</s:String>
     <s:String x:Key="Str.IccAdvanced">ICC profiles (advanced)</s:String>
-    <s:String x:Key="Str.VibranceNewBaselineHint">The driver or another app changed digital vibrance. Apply keeps the previous backup and uses the current value as a new restore point.</s:String>
+    <s:String x:Key="Str.VibranceNewBaselineHint">The previous backup does not match the current digital vibrance state. Apply keeps that backup and uses the current value as a new restore point.</s:String>
     <s:String x:Key="Str.VibranceNewBaselineSaved">Previous backup retained. Restore now returns to the value before this apply.</s:String>
     <s:String x:Key="Str.CornerTitle">Corner radius</s:String>
     <s:String x:Key="Str.CornerClassic">Classic (previous version)</s:String>

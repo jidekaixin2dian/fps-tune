@@ -1298,7 +1298,7 @@
     <s:String x:Key="Str.ColorModule">画面参数</s:String>
     <s:String x:Key="Str.EqHeadroom">实际前级 {0} dB（为提升的频段预留余量）</s:String>
     <s:String x:Key="Str.IccAdvanced">ICC 配置文件（高级）</s:String>
-    <s:String x:Key="Str.VibranceNewBaselineHint">数字振动已被其他程序或驱动更改。点击“应用”会保留旧备份，并以当前值作为新的还原点。</s:String>
+    <s:String x:Key="Str.VibranceNewBaselineHint">旧备份与当前数字振动状态不一致。点击“应用”会保留旧备份，并以当前值作为新的还原点。</s:String>
     <s:String x:Key="Str.VibranceNewBaselineSaved">已保留旧备份，“还原原始”将恢复本次应用前的值。</s:String>
     <s:String x:Key="Str.CornerTitle">圆角</s:String>
     <s:String x:Key="Str.CornerClassic">经典圆角（上版本）</s:String>
