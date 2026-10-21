@@ -32,6 +32,7 @@ public static class GamePathService
     };
 
     private static readonly string[] ExeNames = ExeLabel.Keys.ToArray();
+    internal static bool IsKnownGameExecutable(string name) => ExeLabel.ContainsKey(Path.GetFileName(name));
 
     public static string LabelFor(string exePath)
     {

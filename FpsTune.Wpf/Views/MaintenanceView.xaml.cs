@@ -16,6 +16,7 @@ public partial class MaintenanceView : UserControl
     {
         _memory = memory;
         InitializeComponent();
+        InitializeMemory();
         Loaded += async (_, _) => await RefreshSnapshotAsync();
     }
     private bool _snapshotBusy;
@@ -27,6 +28,7 @@ public partial class MaintenanceView : UserControl
         var sections = new[] { StorageSection, ProcessesSection, TroubleshootSection, AudioSection };
         for (var i = 0; i < sections.Length; i++)
             sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
+        if (tag == "1" && IsLoaded) _ = RefreshMemoryAppsAsync();
     }
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshSnapshotAsync();
     private async Task RefreshSnapshotAsync()

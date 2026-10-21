@@ -302,6 +302,8 @@ public sealed class ModernWorkspaceUiTests
             try
             {
                 var preview = (FpsTune.Wpf.Views.Controls.ColorPreviewControl)panel.FindName("ColorPreview");
+                Assert.Null(((Image)preview.FindName("BeforeImage")).Source);
+                Assert.Equal(Visibility.Visible, ((TextBlock)preview.FindName("EmptyHint")).Visibility);
                 Directory.CreateDirectory(root);
                 var path = Path.Combine(root, "comparison.png");
                 using (var file = File.Create(path))
@@ -310,8 +312,19 @@ public sealed class ModernWorkspaceUiTests
                 Assert.Equal("comparison.png", ((TextBlock)preview.FindName("ImageNameText")).Text);
                 var original = ((Image)preview.FindName("BeforeImage")).Source;
                 var before = ((Image)preview.FindName("AfterImage")).Source;
+                var image = (Image)preview.FindName("AfterImage");
+                byte[] RenderImage()
+                {
+                    image.UpdateLayout();
+                    var bitmap = new RenderTargetBitmap((int)image.ActualWidth, (int)image.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+                    bitmap.Render(image);
+                    var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4];
+                    bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0); return pixels;
+                }
+                var neutralPixels = RenderImage();
                 ((ComboBox)panel.FindName("ColorPresetCombo")).SelectedIndex = 4;
-                DlssFeedbackTests.PumpUntil(() => !ReferenceEquals(before, ((Image)preview.FindName("AfterImage")).Source));
+                Assert.Same(before, image.Source); // Sliders update shader constants, never recreate the screenshot.
+                Assert.False(neutralPixels.SequenceEqual(RenderImage()));
                 Assert.Same(original, ((Image)preview.FindName("BeforeImage")).Source);
                 ((Slider)preview.FindName("SplitSlider")).Value = 25;
                 var bounds = ((RectangleGeometry)((Grid)preview.FindName("BeforeLayer")).Clip).Rect;

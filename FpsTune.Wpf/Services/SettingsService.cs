@@ -21,6 +21,8 @@ public sealed class AppSettings
     public double WallpaperOpacity { get; set; } = 0.18;
     public GamePreparationOptions Preparation { get; set; } = new();
     public EqualizerSettings? EqualizerDraft { get; set; }
+    public MemoryAutoCleanupOptions MemoryAutoCleanup { get; set; } = new();
+    public List<string> MemoryBackgroundApps { get; set; } = [];
 
     // 托盘常驻（v1.2）：最小化到托盘 / 全局热键呼出 / 完成通知，默认全开
     public bool MinimizeToTray { get; set; } = true;
@@ -107,6 +109,8 @@ public static class SettingsService
             Current = JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
             Current.AutoProfileBindings ??= new List<AutoProfileBinding>();
             Current.Preparation ??= new();
+            Current.MemoryAutoCleanup = (Current.MemoryAutoCleanup ?? new()).Normalize();
+            Current.MemoryBackgroundApps ??= [];
             Current.Corners = (Current.Corners ?? new()).Normalize();
             Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
             if (Current.OverviewMode != "console") Current.OverviewMode = "studio";

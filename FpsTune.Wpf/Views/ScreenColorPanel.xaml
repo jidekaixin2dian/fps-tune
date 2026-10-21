@@ -4,14 +4,20 @@
   <TextBlock Text="{DynamicResource Str.ColorPanelTitle}" Style="{StaticResource CardTitleStyle}"/>
   <TextBlock Text="{DynamicResource Str.ColorPanelHint}"
    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+  <ComboBox x:Name="ColorModeCombo" SelectedIndex="0" SelectionChanged="Mode_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorMode}">
+   <ComboBoxItem Content="{DynamicResource Str.ColorScreenMode}"/>
+   <ComboBoxItem Content="{DynamicResource Str.ColorIccMode}"/>
+  </ComboBox>
   <ComboBox x:Name="ColorPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreset}"/>
   <controls:ColorPreviewControl x:Name="ColorPreview" Margin="0,16,0,4"/>
+  <ContentControl x:Name="VibranceHost" Margin="0,12,0,8"/>
   <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,12,0,4"/>
   <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,12"/>
   <WrapPanel>
    <Button x:Name="ColorApplyButton" Content="{DynamicResource Str.ColorApplyTitle}" Style="{StaticResource PrimaryButtonStyle}" Click="Apply_Click" Margin="0,0,8,8"/>
    <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" Style="{StaticResource SecondaryButtonStyle}" Click="Reset_Click" Margin="0,0,8,8"/>
-   <Button x:Name="ColorRestoreButton" Content="{DynamicResource Str.ColorRestore}" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" Margin="0,0,0,8"/>
+   <Button x:Name="ColorRestoreButton" Content="{DynamicResource Str.ColorRestoreAll}" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" Margin="0,0,0,8"/>
   </WrapPanel>
+  <ContentControl x:Name="IccHost" Margin="0,12,0,0"/>
  </StackPanel>
 </UserControl>

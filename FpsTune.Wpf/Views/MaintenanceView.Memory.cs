@@ -10,6 +10,7 @@ public partial class MaintenanceView
     private void ShowMemory(MemorySnapshot snapshot)
     {
         MemoryAvailable.Text = Str.T("Str.MemoryAvailable", MemorySize(snapshot.Available), MemorySize(snapshot.Total));
+        MemoryUsage.Value = snapshot.Total == 0 ? 0 : 100 * (1 - snapshot.Available / (double)snapshot.Total);
         MemoryStandby.Text = snapshot.Standby is { } total && snapshot.LowPriorityStandby is { } low
             ? Str.T("Str.MemoryStandbySummary", Size((long)total), Size((long)low)) : snapshot.LowPriorityStandby is { } bytes
             ? Str.T("Str.MemoryStandby", Size((long)bytes)) : Str.T("Str.MemoryStandbyUnknown");
@@ -17,21 +18,24 @@ public partial class MaintenanceView
     private async void MemoryClean_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _snapshotBusy) return;
-        if (_memory.IsBusy) { MemoryResult.Text = Str.T("Str.MemoryBusy"); return; }
+        if (_memory.IsBusy || GamePreparationService.IsRunning) { MemoryResult.Text = Str.T("Str.MemoryBusy"); return; }
         if (!_memory.IsAdministrator)
         {
             if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.MemoryAdmin"), confirmText: Str.T("Str.RestartAsAdminShort")))
                 AdminHelper.RestartAsAdministrator();
             return;
         }
+        var combined = MemoryMode.SelectedIndex == 2;
+        var targets = SelectedMemoryApps();
+        if (combined && !ConfirmMemoryApps(targets)) return;
         _busy = true;
-        var allPriorities = MemoryMode.SelectedIndex == 1;
-        MemoryMode.IsEnabled = false;
-        MemoryCleanButton.IsEnabled = RefreshButton.IsEnabled = ScanButton.IsEnabled = CleanButton.IsEnabled = false;
+        var allPriorities = MemoryMode.SelectedIndex >= 1;
+        SetMemoryBusy(true);
         MemoryResult.Text = Str.T("Str.MemoryCleaning");
+        IReadOnlyList<MemoryProcessResult>? apps = null;
         try
         {
-            var result = await Task.Run(() => _memory.Clean(allPriorities));
+            var result = await Task.Run(() => _memory.Clean(allPriorities, combined ? () => apps = _background.Trim(targets) : null));
             if (result.After is { } after)
             {
                 ShowMemory(after);
@@ -44,10 +48,9 @@ public partial class MaintenanceView
         catch (Exception ex) { MemoryResult.Text = Str.T("Str.MemoryFailed", PrivacyScrub.Sanitize(ex.Message)); }
         finally
         {
-            _busy = false;
-            MemoryMode.IsEnabled = true;
-            MemoryCleanButton.IsEnabled = RefreshButton.IsEnabled = ScanButton.IsEnabled = true;
-            CleanButton.IsEnabled = _preview is { Truncated: false, Entries.Count: > 0 };
+            if (apps is not null) ShowMemoryAppsResult(apps);
+            _busy = false; SetMemoryBusy(false);
+            if (combined) await RefreshMemoryAppsAsync();
         }
     }
 }

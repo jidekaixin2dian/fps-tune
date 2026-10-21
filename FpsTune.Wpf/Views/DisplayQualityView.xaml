@@ -208,10 +208,10 @@
             </Border>
             <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
-                    <!-- 分区一：数字振动（显示级饱和度，全桌面生效） -->
-                    <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}"/>
-
-                    <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed" Margin="0,12,0,0">
+                    <views:ScreenColorPanel x:Name="ColorPanel"/>
+                    <StackPanel x:Name="VibranceContent">
+                    <!-- Hosted in the unified color panel after namescope creation. -->
+                    <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed">
                         <TextBlock Text="{DynamicResource Str.VibNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                         <Grid Margin="0,16,0,0" HorizontalAlignment="Left">
@@ -236,7 +236,7 @@
 
                         <TextBlock x:Name="VibStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0" Visibility="Collapsed">
                             <Button x:Name="VibApplyButton" Content="{DynamicResource Str.Apply}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="VibApply_Click"/>
@@ -255,10 +255,7 @@
                     <TextBlock x:Name="VibUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
                                Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
 
-                    <!-- 分区二：ICC 滤镜（系统层色彩变换，A 卡/Intel 与整体桌面观感兜底） -->
-                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0"
-                            Margin="0,18,0,16"/>
-                    <views:ScreenColorPanel x:Name="ColorPanel" Margin="0,0,0,20"/>
+                    </StackPanel>
                     <Expander x:Name="IccAdvanced" Header="{DynamicResource Str.IccAdvanced}" IsExpanded="False"><StackPanel Margin="0,12,0,0">
                     <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
@@ -266,7 +263,7 @@
                     <StackPanel x:Name="IccSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
                         <TextBlock Text="{DynamicResource Str.IccPresetLabel}"
                                    Style="{StaticResource MutedTextStyle}"/>
-                        <ItemsControl x:Name="IccPresetList" Margin="0,10,0,0">
+                        <ItemsControl Visibility="Collapsed" x:Name="IccPresetList" Margin="0,10,0,0">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate><DataTemplate>
                                 <RadioButton GroupName="iccPreset" Style="{StaticResource PresetCard}" IsChecked="{Binding IsSelected, Mode=TwoWay}">
@@ -281,14 +278,14 @@
                                    Margin="0,10,0,0" TextWrapping="Wrap"/>
 
                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                            <Button x:Name="IccApplyButton" Content="{DynamicResource Str.ApplyPreset}"
+                            <Button Visibility="Collapsed" x:Name="IccApplyButton" Content="{DynamicResource Str.ApplyPreset}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="IccApply_Click"/>
                             <Button x:Name="IccApplyFileButton" Content="{DynamicResource Str.IccApplyFromFile}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="120" Margin="0,0,8,0" Click="IccApplyFromFile_Click"
                                     ToolTip="{DynamicResource Str.IccApplyFromFileTip}"/>
-                            <Button x:Name="IccRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
+                            <Button Visibility="Collapsed" x:Name="IccRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinWidth="110" Click="IccRestore_Click"/>
                         </StackPanel>

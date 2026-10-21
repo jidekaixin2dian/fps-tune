@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.IO;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -9,6 +10,17 @@ public partial class ScreenColorPanel : UserControl
     private string? _identity;
     private bool _syncing, _dirty, _busy;
     private int _generation;
+    private int _previewGeneration;
+    private bool _screenSupported, _iccSupported, _restorable, _vibranceRestorable;
+    private int? _vibrance;
+    private bool _vibranceDirty;
+    private string? _iccFile;
+    private string? _lastOutcome;
+    internal bool Unified { get; set; }
+    public object VibranceContent { get => VibranceHost.Content; set => VibranceHost.Content = value; }
+    public object IccContent { get => IccHost.Content; set => IccHost.Content = value; }
+    private bool IccMode => ColorModeCombo?.SelectedIndex == 1;
+    private IccFilterPreset? Preset => (ColorPresetCombo.SelectedItem as Choice)?.Preset;
     private readonly List<Slider> _sliders = [];
     public event Action<bool>? BusyChanged;
     private sealed record Choice(string Label, IccFilterPreset? Preset) { public override string ToString() => Label; }
@@ -36,7 +48,56 @@ public partial class ScreenColorPanel : UserControl
         ColorApplyButton.IsEnabled = ColorRestoreButton.IsEnabled = false;
         UpdatePreview();
     }
-    private void UpdatePreview() { if (_sliders.Count == 7) ColorPreview.SetSettings(Values()); }
+    private async void UpdatePreview()
+    {
+        if (_sliders.Count != 7) return;
+        ColorPreview.SetSettings(IccMode ? new() : Values());
+        var generation = ++_previewGeneration;
+        try
+        {
+            string? profile = null;
+            if (IccMode)
+            {
+                profile = _iccFile;
+                if (profile is null && Preset is { } preset)
+                    profile = await Task.Run(() =>
+                    {
+                        var bytes = IccProfileGenerator.Build(preset);
+                        var directory = Path.Combine(UserDataPaths.Root, "preview-profiles");
+                        Directory.CreateDirectory(directory);
+                        var path = Path.Combine(directory, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)) + ".icc");
+                        if (!File.Exists(path)) File.WriteAllBytes(path, bytes);
+                        return path;
+                    });
+            }
+            if (generation == _previewGeneration) await ColorPreview.SetIccProfileAsync(profile);
+        }
+        catch (Exception ex) { if (generation == _previewGeneration) ColorStatus.Text = ex.Message; }
+    }
+    internal void SetVibrance(int? value, bool restorable = false, bool draft = false)
+    { _vibrance = value; _vibranceRestorable = restorable; _vibranceDirty = draft; ColorPreview.SetVibrance(value ?? 50); Availability(); }
+    internal void SelectIccFile(string path)
+    {
+        _syncing = true;
+        try { _iccFile = path; ColorModeCombo.SelectedIndex = 1; ColorPresetCombo.SelectedIndex = 0; }
+        finally { _syncing = false; }
+        _dirty = true; ColorStatus.Text = Path.GetFileName(path); Availability(); UpdatePreview();
+    }
+    private void Mode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || ColorPresetCombo is null) return;
+        if (IccMode && Preset is null && _iccFile is null) ColorPresetCombo.SelectedIndex = 1;
+        Availability(); UpdatePreview();
+    }
+    private void Availability()
+    {
+        if (ColorApplyButton is null) return;
+        ColorApplyButton.IsEnabled = !_busy && (IccMode ? _iccSupported && (Preset is not null || _iccFile is not null) : _screenSupported || _vibranceDirty && _vibrance is not null);
+        ParameterGrid.IsEnabled = !_busy && _screenSupported && !IccMode;
+        ColorResetButton.IsEnabled = !_busy && _screenSupported && !IccMode;
+        ColorPresetCombo.IsEnabled = !_busy && (IccMode ? _iccSupported : _screenSupported);
+        ColorRestoreButton.IsEnabled = !_busy && (_restorable || _vibranceRestorable);
+    }
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
         _sliders[4].Value, _sliders[5].Value, _sliders[6].Value);
     private void ShowSettings(ScreenColorSettings s)
@@ -53,29 +114,41 @@ public partial class ScreenColorPanel : UserControl
     {
         if (_busy) return;
         var gen = ++_generation;
-        if (_identity != identity) { _identity = identity; _dirty = false; ColorPresetCombo.SelectedIndex = 0; }
+        if (_identity != identity)
+        {
+            _identity = identity; _syncing = true;
+            try { _iccFile = null; _lastOutcome = null; ColorModeCombo.SelectedIndex = 0; ColorPresetCombo.SelectedIndex = 0; }
+            finally { _syncing = false; _dirty = false; _vibranceDirty = false; }
+        }
         ColorApplyButton.IsEnabled = ColorRestoreButton.IsEnabled = false;
-        var s = await Task.Run(() => ScreenColorService.GetState(identity));
+        var states = await Task.Run(() => (Screen: ScreenColorService.GetState(identity), Icc: IccFilterService.GetState(identity)));
+        var s = states.Screen;
         if (gen != _generation || _identity != identity || _busy) return;
-        ColorStatus.Text = s.Detail;
+        ColorStatus.Text = _lastOutcome ?? s.Detail;
         if (!_dirty) ShowSettings(s.Settings);
-        ColorApplyButton.IsEnabled = ParameterGrid.IsEnabled = ColorPresetCombo.IsEnabled = s.Supported;
-        ColorRestoreButton.IsEnabled = s.Supported && s.Restorable;
+        _screenSupported = s.Supported; _iccSupported = states.Icc.CanApply;
+        _restorable = s.Restorable || states.Icc.Restorable;
+        Availability();
         IsEnabled = true;
     }
     public void PauseForTargetChange() { ++_generation; _identity = null; _dirty = false; IsEnabled = false; }
     private void Preset_Changed(object sender, SelectionChangedEventArgs e)
     {
-        if (_syncing || ColorPresetCombo.SelectedItem is not Choice { Preset: { } preset }) return;
-        ShowSettings(ScreenColorSettings.ForPreset(preset)); _dirty = true;
+        if (_syncing) return;
+        _iccFile = null;
+        if (ColorPresetCombo.SelectedItem is Choice { Preset: { } preset }) ShowSettings(ScreenColorSettings.ForPreset(preset));
+        _dirty = true; Availability(); UpdatePreview();
     }
     private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; _dirty = true; }
     private async void Apply_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _identity is null) return;
         var settings = Values(); var identity = _identity;
-        if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorConfirm"), confirmText: Str.T("Str.ColorApply"))) return;
+        if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorWorkspaceConfirm", IccMode ? Str.T("Str.ColorIccMode") : Str.T("Str.ColorScreenMode")), confirmText: Str.T("Str.ColorApply"))) return;
+        var iccMode = IccMode; var preset = Preset; var file = _iccFile; var vibrance = _vibranceDirty ? _vibrance : null;
+        var applyScreen = _screenSupported;
         await Run(() => {
+            if (Unified) return ColorWorkspaceService.Apply(identity, settings, iccMode, preset, file, vibrance, applyScreen);
             var rebased = ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift: true);
             return Str.T("Str.ColorApplied") + (rebased ? " " + Str.T("Str.ColorNewBaselineSaved") : "");
         });
@@ -84,7 +157,8 @@ public partial class ScreenColorPanel : UserControl
     {
         if (_busy || _identity is null) return;
         var identity = _identity;
-        await Run(() => ScreenColorService.Restore(identity) ? Str.T("Str.ColorRestored") : Str.T("Str.ColorNoBackup"));
+        await Run(() => Unified ? ColorWorkspaceService.Restore(identity)
+            : ScreenColorService.Restore(identity) ? Str.T("Str.ColorRestored") : Str.T("Str.ColorNoBackup"));
     }
     private async Task Run(Func<string> action)
     {
@@ -92,7 +166,8 @@ public partial class ScreenColorPanel : UserControl
         string result;
         try { result = await Task.Run(action); _dirty = false; }
         catch (Exception ex) { result = ex.Message; DialogService.Warning(Str.T("Str.ColorIncomplete"), result); }
-        finally { _busy = false; IsEnabled = true; BusyChanged?.Invoke(false); }
+        finally { _busy = false; IsEnabled = true; }
+        _lastOutcome = result; BusyChanged?.Invoke(false);
         if (_identity is not null) await RefreshFor(_identity);
         ColorStatus.Text = result;
     }

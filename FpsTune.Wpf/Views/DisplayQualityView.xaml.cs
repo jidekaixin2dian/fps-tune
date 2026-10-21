@@ -42,6 +42,12 @@ public partial class DisplayQualityView : UserControl
     public DisplayQualityView()
     {
         InitializeComponent();
+        // Preserve the page namescope and handlers while hosting all color controls together.
+        ((Panel)VibranceContent.Parent).Children.Remove(VibranceContent);
+        ((Panel)IccAdvanced.Parent).Children.Remove(IccAdvanced);
+        ColorPanel.VibranceContent = VibranceContent;
+        ColorPanel.IccContent = IccAdvanced;
+        ColorPanel.Unified = true;
         ColorPanel.BusyChanged += busy => { _busy = busy; ++_refreshGen; SetDisplayInputEnabled(!busy); if (!busy) Refresh(); };
         GpuIdentityPresets.ItemsSource = GpuIdentityService.Presets;
         GpuIdentityPresets.SelectedItem = GpuIdentityService.Presets.First(p => p.Description == GpuIdentityService.TargetDescription);
@@ -540,6 +546,7 @@ public partial class DisplayQualityView : UserControl
     {
         if (s.VibError is not null)
         {
+            ColorPanel.SetVibrance(null);
             VibSupportedPanel.Visibility = Visibility.Collapsed;
             VibUnsupportedText.Visibility = Visibility.Visible;
             VibUnsupportedText.Text = "读取数字振动状态失败：" + s.VibError;
@@ -551,6 +558,7 @@ public partial class DisplayQualityView : UserControl
         if (!state.Supported)
         {
             VibSupportedPanel.Visibility = Visibility.Collapsed;
+            ColorPanel.SetVibrance(null);
             VibUnsupportedText.Visibility = Visibility.Visible;
             VibUnsupportedText.Text = state.UnsupportedReason ?? Str.T("Str.VibranceUnavailable");
             SetBadge(TabStatusVib, TabBadgeVib, "—");
@@ -569,6 +577,7 @@ public partial class DisplayQualityView : UserControl
         _vibSyncing = false;
 
         VibApplyButton.IsEnabled = true;
+        ColorPanel.SetVibrance(percent, state.Restorable);
         VibRestoreButton.IsEnabled = state.Restorable;
         VibStateText.Text = _vibStatus ?? (state.Restorable
             ? $"当前 {percent}%（已记录原始档位，可还原；驱动默认约 {PercentOf(state.Default, state)}%）"
@@ -587,6 +596,7 @@ public partial class DisplayQualityView : UserControl
         if (_vibSyncing)
             return;
         VibPercentText.Text = (int)VibSlider.Value + "%";
+        ColorPanel?.SetVibrance((int)VibSlider.Value, VibRestoreButton?.IsEnabled == true, draft: true);
     }
 
     /// <summary>
@@ -600,6 +610,7 @@ public partial class DisplayQualityView : UserControl
         _vibSyncing = true;
         VibSlider.Value = RecommendedVibrancePercent;
         VibPercentText.Text = RecommendedVibrancePercent + "%";
+        ColorPanel.SetVibrance(RecommendedVibrancePercent, VibRestoreButton.IsEnabled, draft: true);
         _vibSyncing = false;
     }
 
@@ -751,8 +762,7 @@ public partial class DisplayQualityView : UserControl
         if (dialog.ShowDialog() != true)
             return;
         var path = dialog.FileName;
-        var identity = _displayIdentity ?? "unavailable-display";
-        _ = IccApplyCore(() => IccFilterService.ApplyFromFile(path, identity, startNewBaselineOnDrift: true));
+        ColorPanel.SelectIccFile(path);
     }
 
     /// <summary>预设与用户文件共用的应用流程：确认 → 写入 → 状态反馈（同一套全局生效警示）。</summary>

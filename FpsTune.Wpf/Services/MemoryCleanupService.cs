@@ -20,12 +20,13 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
     internal sealed record Result(MemorySnapshot Before, MemorySnapshot? After, string? ReadError);
     internal MemorySnapshot Read() => _api.Read();
 
-    internal Result Clean(bool allPriorities = false)
+    internal Result Clean(bool allPriorities = false, Action? prepare = null)
     {
         using var gate = SystemMutationGate.Acquire();
         if (IsBusy) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
         if (!IsAdministrator) throw new UnauthorizedAccessException(Str.T("Str.MemoryAdmin"));
         var before = Read(); // A failed pre-read must not start a system operation.
+        prepare?.Invoke();
         _api.PurgeStandby(allPriorities);
         try { return new(before, Read(), null); }
         catch (Exception ex) { return new(before, null, ex.Message); } // The purge already ran; keep that distinction.

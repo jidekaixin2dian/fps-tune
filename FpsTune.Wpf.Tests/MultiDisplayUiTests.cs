@@ -38,6 +38,8 @@ public sealed class MultiDisplayUiTests
                 DlssFeedbackTests.PrepareBackgroundWindow(window);
                 window.Show();
                 var combo = (ComboBox)page.FindName("DisplayTargetCombo");
+                var color = (ScreenColorPanel)page.FindName("ColorPanel");
+                var applyColor = (Button)color.FindName("ColorApplyButton");
                 var vib = (Button)page.FindName("VibApplyButton");
                 var icc = (Button)page.FindName("IccApplyButton");
                 var subtab = FindVisual<RadioButton>(page).Single(b => Equals(b.Tag, "vibicc"));
@@ -61,8 +63,9 @@ public sealed class MultiDisplayUiTests
                     ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 };
                 confirm.Start();
+                DlssFeedbackTests.PumpUntil(() => applyColor.IsEnabled);
                 ((Slider)page.FindName("VibSlider")).Value = 85;
-                vib.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                applyColor.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.False(combo.IsEnabled);
                 DlssFeedbackTests.PumpUntil(() => vib.IsEnabled && ((TextBlock)page.FindName("VibStateText")).Text.Contains("85"));
                 Assert.Equal(85, fixture.Levels["B"]);
@@ -71,8 +74,11 @@ public sealed class MultiDisplayUiTests
                 fixture.Displays[1] = fixture.Displays[1] with { IsPrimary = true };
                 ((Button)page.FindName("DisplayRefreshButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && combo.Text.Contains("Screen B"));
-                icc.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccStateText")).Text.Contains("Vivid"));
+                ((ComboBox)color.FindName("ColorModeCombo")).SelectedIndex = 1;
+                ((ComboBox)color.FindName("ColorPresetCombo")).SelectedIndex = 1;
+                DlssFeedbackTests.PumpUntil(() => applyColor.IsEnabled);
+                applyColor.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccCurrentText")).Text.Contains("Vivid"));
                 Assert.Equal(["a.icm"], fixture.Profiles["A"]);
                 Assert.Equal("FpsTune-Vivid.icc", fixture.Profiles["B"].Last());
                 foreach (var lang in new[] { LangService.ZhCn, LangService.EnUs })
@@ -92,10 +98,10 @@ public sealed class MultiDisplayUiTests
                 fixture.Displays.Add(b);
                 ((Button)page.FindName("DisplayRefreshButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && combo.Text.Contains("Screen B"));
-                ((Button)page.FindName("VibRestoreButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => ((Button)color.FindName("ColorRestoreButton")).IsEnabled);
+                ((Button)color.FindName("ColorRestoreButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => vib.IsEnabled && ((Slider)page.FindName("VibSlider")).Value == 60);
-                ((Button)page.FindName("IccRestoreButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccStateText")).Text == Str.T("Str.IccRestored"));
+                DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && IccFilterService.BackupTargets().Count == 0);
                 Assert.Empty(fixture.Profiles["B"]);
                 Assert.Empty(IccFilterService.BackupTargets());
                 Assert.Empty(DigitalVibranceService.BackupTargets());

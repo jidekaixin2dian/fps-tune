@@ -10,6 +10,7 @@
   </DockPanel>
   <Border Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
    <Grid x:Name="ComparisonSurface" Height="230" ClipToBounds="True" SizeChanged="Comparison_SizeChanged">
+    <TextBlock x:Name="EmptyHint" Text="{DynamicResource Str.ColorPreviewEmpty}" Foreground="#CCD2DA" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
     <Image x:Name="AfterImage" Stretch="Uniform"/>
     <Grid x:Name="BeforeLayer"><Image x:Name="BeforeImage" Stretch="Uniform"/></Grid>
     <Border x:Name="Divider" Width="2" Background="White" HorizontalAlignment="Left" IsHitTestVisible="False"/>

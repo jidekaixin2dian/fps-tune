@@ -51,6 +51,22 @@ public sealed class MultiDisplayColorTests : IDisposable
         Directory.Delete(Root, true);
     }
     [Fact]
+    public void Unified_color_switches_modes_and_restores_both_curve_profile_and_vibrance()
+    {
+        ColorWorkspaceService.Apply("A", ScreenColorSettings.ForPreset(IccFilterPreset.Warm), false, null, null, 75);
+        Assert.Equal(75, Levels["A"]); Assert.NotEqual(LinearRamp(), Ramps["A"]);
+        ColorWorkspaceService.Apply("A", new(), true, IccFilterPreset.Cool, null, null);
+        Assert.Equal(LinearRamp(), Ramps["A"]); Assert.Contains("FpsTune-Cool.icc", Profiles["A"]);
+        ColorWorkspaceService.Apply("A", new(Brightness: 5), false, null, null, null);
+        Assert.Equal(new[] { "a.icm" }, Profiles["A"]);
+        ColorWorkspaceService.Restore("A");
+        Assert.Equal(LinearRamp(), Ramps["A"]); Assert.Equal(30, Levels["A"]);
+        Assert.Equal(60, Levels["B"]); Assert.Equal(new[] { "b.icm" }, Profiles["B"]);
+        IgnoreVibWrite = true;
+        Assert.Throws<InvalidOperationException>(() => ColorWorkspaceService.Apply("A", new(Brightness: 5), false, null, null, 80));
+        Assert.True(ScreenColorService.GetState("A").Restorable); // The completed curve step remains recoverable after vibrance fails.
+    }
+    [Fact]
     public void Selecting_an_original_tool_profile_reorders_only_our_entries_and_keeps_exact_restore()
     {
         File.Copy(Path.Combine(Root, "colors", "a.icm"), Path.Combine(Root, "colors", "FpsTune-Warm.icc"));

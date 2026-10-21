@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using FpsTune.Wpf.Services;
 using Microsoft.Win32;
 
@@ -11,54 +10,80 @@ namespace FpsTune.Wpf.Views.Controls;
 
 public partial class ColorPreviewControl : UserControl
 {
-    private BitmapSource _source = ScreenColorPreview.Sample();
+    private BitmapSource? _source;
     private ScreenColorSettings _settings = new();
+    private readonly ColorPreviewEffect _effect = new();
+    private double _vibrance = 50;
+    private string? _profile;
     private int _generation;
     private int _loadGeneration;
-    private readonly DispatcherTimer _refresh = new() { Interval = TimeSpan.FromMilliseconds(120) };
 
     public ColorPreviewControl()
     {
         InitializeComponent();
         BeforeImage.Source = AfterImage.Source = _source;
-        _refresh.Tick += async (_, _) => { _refresh.Stop(); await RenderPreviewAsync(); };
-        Loaded += (_, _) => Schedule();
-        Unloaded += (_, _) => { _generation++; _loadGeneration++; _refresh.Stop(); };
+        AfterImage.Effect = _effect;
+        Unloaded += (_, _) => { ++_generation; ++_loadGeneration; };
     }
     public void SetSettings(ScreenColorSettings settings)
     {
+        settings.Validate();
         _settings = settings;
-        Schedule();
+        _effect.Set(settings, _vibrance);
     }
-    private void Schedule() { ++_generation; _refresh.Stop(); if (IsLoaded) _refresh.Start(); }
-    internal async Task RenderPreviewAsync()
+    public void SetVibrance(double percent)
     {
-        var generation = _generation;
-        var source = _source;
-        var settings = _settings;
+        _vibrance = Math.Clamp(percent, 0, 100);
+        _effect.Set(_settings, _vibrance);
+        ShowHint();
+    }
+    public async Task SetIccProfileAsync(string? path)
+    {
+        if (_profile == path) return;
+        _profile = path;
+        await RefreshImageAsync();
+    }
+    private void ShowHint()
+    {
+        PreviewStatus.Text = Str.T(_profile is null ? "Str.ColorPreviewHint" : "Str.ColorPreviewIccHint")
+            + (_vibrance == 50 ? "" : " " + Str.T("Str.ColorPreviewVibranceHint"));
+    }
+    private async Task RefreshImageAsync()
+    {
+        var generation = ++_generation;
+        var source = _source; var profile = _profile;
+        if (source is null) return;
         try
         {
-            var rendered = await Task.Run(() => ScreenColorPreview.Apply(source, settings));
+            BitmapSource image = source;
+            if (profile is not null)
+                image = await Task.Run(() =>
+                {
+                    var converted = new ColorConvertedBitmap(source, new ColorContext(PixelFormats.Bgra32),
+                        new ColorContext(new Uri(profile, UriKind.Absolute)), PixelFormats.Bgra32);
+                    converted.Freeze(); return converted;
+                });
             if (generation != _generation) return;
-            AfterImage.Source = rendered;
-            PreviewStatus.SetResourceReference(TextBlock.TextProperty, "Str.ColorPreviewHint");
+            AfterImage.Source = image;
+            ShowHint();
         }
         catch (Exception ex)
-        { if (generation == _generation) PreviewStatus.Text = ex.Message; }
+        {
+            if (generation != _generation) return;
+            AfterImage.Source = source;
+            PreviewStatus.Text = Str.T("Str.ColorPreviewIccFailed", ex.Message);
+        }
     }
     internal async Task LoadImageAsync(string path)
     {
         var generation = ++_loadGeneration;
-        ++_generation;
-        _refresh.Stop();
         var source = await Task.Run(() => WallpaperService.Decode(path));
         if (generation != _loadGeneration) return;
-        ++_generation;
-        _refresh.Stop();
         _source = source;
+        EmptyHint.Visibility = Visibility.Collapsed;
         BeforeImage.Source = source;
         ImageNameText.Text = Path.GetFileName(path);
-        await RenderPreviewAsync();
+        await RefreshImageAsync();
     }
     private async void LoadImage_Click(object sender, RoutedEventArgs e)
     {

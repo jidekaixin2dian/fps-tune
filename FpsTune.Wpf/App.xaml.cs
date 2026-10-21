@@ -10,6 +10,7 @@ namespace FpsTune.Wpf;
 public partial class App : Application
 {
     private AutoProfileService? _autoProfileService;
+    internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
     private static MetricsSampler? _liveMetrics;
     public static MetricsSampler LiveMetrics => _liveMetrics ??= new(
         TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), 120);
@@ -121,6 +122,8 @@ public partial class App : Application
             _ = CloseSplashWhenReadyAsync(splash, firstFrame.Task, homeReady.Task);
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();
+            MemoryAutomation = new MemoryAutoCleanupService();
+            MemoryAutomation.Start();
 
         }));
     }
@@ -130,6 +133,7 @@ public partial class App : Application
         _liveMetrics?.Dispose();
         SessionService.Dispose();
         _autoProfileService?.Dispose();
+        MemoryAutomation?.Dispose();
         TrayService.Dispose();
         base.OnExit(e);
     }

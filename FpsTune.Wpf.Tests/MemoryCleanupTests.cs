@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using FpsTune.Wpf.Services;
+using FpsTune.Wpf.Core;
 using Xunit;
 
 namespace FpsTune.Wpf.Tests;
@@ -13,10 +14,11 @@ public sealed class MemoryCleanupTests
         public Exception? PurgeError;
         public ManualResetEventSlim? Hold;
         public bool AllPriorities;
+        public bool KeepCache;
         public MemorySnapshot Read()
         {
             if (++Reads == FailRead) throw new InvalidOperationException("snapshot unavailable");
-            return new(16UL << 30, 5UL << 30, Purges == 0 ? 300UL << 20 : 0, Purges == 0 ? 1UL << 30 : 0);
+            return new(16UL << 30, 5UL << 30, Purges == 0 || KeepCache ? 300UL << 20 : 0, Purges == 0 ? 1UL << 30 : 0);
         }
         public void PurgeStandby(bool allPriorities)
         {
@@ -81,5 +83,44 @@ public sealed class MemoryCleanupTests
         Assert.True(result.Total > 0); Assert.InRange(result.Available, 0UL, result.Total);
         Assert.NotNull(result.LowPriorityStandby); Assert.NotNull(result.Standby);
         Assert.InRange(result.LowPriorityStandby.Value, 0UL, result.Standby.Value); Assert.InRange(result.Standby.Value, 0UL, result.Total);
+    }
+    [Fact]
+    public void Automatic_cleanup_is_opt_in_guarded_thresholded_and_observes_failure_cooldown()
+    {
+        using var gate = SystemMutationGate.Acquire();
+        var api = new FakeMemory { KeepCache = true }; var busy = false; var admin = true;
+        var options = new MemoryAutoCleanupOptions();
+        using var automation = new MemoryAutoCleanupService(new(api, () => busy, () => admin), () => options);
+        var now = DateTimeOffset.UtcNow;
+        automation.Tick(now); Assert.Equal(0, api.Reads);
+        options = new(true, 8192, 5);
+        busy = true; automation.Tick(now); Assert.Equal(0, api.Reads);
+        busy = false; admin = false; automation.Tick(now); Assert.Equal(0, api.Reads);
+        admin = true; options = options with { ThresholdMiB = 1024 };
+        automation.Tick(now); Assert.Equal(0, api.Purges);
+        options = options with { ThresholdMiB = 8192 };
+        api.PurgeError = new Win32Exception(1314);
+        automation.Tick(now); automation.Tick(now.AddMinutes(1)); Assert.Equal(1, api.Purges);
+        api.PurgeError = null; automation.Tick(now.AddMinutes(5)); Assert.Equal(2, api.Purges); Assert.False(api.AllPriorities);
+    }
+    [Fact]
+    public void Combined_cleanup_reads_before_process_trim_and_preserves_per_process_failure_results()
+    {
+        var api = new FakeMemory(); var backgroundApi = new BackgroundApi();
+        var background = new BackgroundMemoryService(backgroundApi, () => false);
+        IReadOnlyList<MemoryProcessResult>? results = null;
+        new MemoryCleanupService(api, () => false, () => true).Clean(true, () =>
+        {
+            Assert.Equal(1, api.Reads); Assert.Equal(0, api.Purges);
+            results = background.Trim([new(10, 1, "ok", "ok.exe", 100), new(11, 1, "gone", "gone.exe", 100)]);
+        });
+        Assert.Equal(1, api.Purges); Assert.Equal(2, results!.Count); Assert.Null(results[0].Error); Assert.NotNull(results[1].Error);
+        Assert.Throws<InvalidOperationException>(() => new BackgroundMemoryService(backgroundApi, () => true).Trim([]));
+    }
+    private sealed class BackgroundApi : IBackgroundMemoryApi
+    {
+        public IReadOnlyList<MemoryProcessTarget> Read() => [];
+        public MemoryProcessResult Trim(MemoryProcessTarget target) => target.Pid == 10
+            ? new(target.Name, 100, 30, null) : throw new InvalidOperationException("process exited");
     }
 }
