@@ -1,10 +1,11 @@
 <UserControl x:Class="FpsTune.Wpf.Views.ScreenColorPanel"
- xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls">
  <StackPanel>
   <TextBlock Text="{DynamicResource Str.ColorPanelTitle}" Style="{StaticResource CardTitleStyle}"/>
   <TextBlock Text="{DynamicResource Str.ColorPanelHint}"
    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
   <ComboBox x:Name="ColorPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreset}"/>
+  <controls:ColorPreviewControl x:Name="ColorPreview" Margin="0,16,0,4"/>
   <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,12,0,4"/>
   <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,12"/>
   <WrapPanel>

@@ -237,6 +237,93 @@ public sealed class ModernWorkspaceUiTests
         });
     }
 
+    [Fact]
+    public void Update_dialog_downloads_with_progress_cancels_retries_and_only_exits_after_worker_handoff()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            var mode = "cancel"; var downloads = 0; var exits = 0;
+            UpdateRecovery.InstallDirectoryOverride = Path.Combine(root, "app");
+            UpdateRecovery.ReleaseOverride = (_, _) => Task.FromResult<UpdateInfo?>(null);
+            UpdateRecovery.PackageOverride = async (info, progress, token) =>
+            {
+                downloads++; progress?.Invoke(42);
+                if (mode == "cancel") await Task.Delay(Timeout.Infinite, token);
+                var bytes = new byte[] { 1, 2, 3, 4 };
+                var package = new CachedUpdatePackage(Guid.NewGuid().ToString("N"), info.Version, info.ReleaseTag!,
+                    Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)));
+                var path = UpdateRecovery.PackagePath(package); Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                File.WriteAllBytes(path, bytes); return package;
+            };
+            UpdateRecovery.WorkerOverride = (_, _) => throw new IOException("controlled handoff failure");
+            var window = new UpdateAvailableWindow(UpdateRecoveryTests.Info("v0.3.3")) { Width = 540, Height = 460,
+                FinishInstallation = () => exits++ };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                void Click(string name) => ((Button)window.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Click("InstallButton"); Click("InstallButton");
+                Assert.True(window.IsRunning); Assert.Equal(1, downloads);
+                Assert.Equal(42, ((ProgressBar)window.FindName("DownloadProgress")).Value);
+                Assert.False(((Button)window.FindName("DownloadPageButton")).IsEnabled);
+                foreach (var theme in new[] { "light", "dark" })
+                { ThemeManager.SetMode(theme); Render((FrameworkElement)window.Content, "automatic-update-" + theme); }
+                Click("CancelDownloadButton"); DlssFeedbackTests.PumpUntil(() => !window.IsRunning);
+                Assert.Equal(0, exits); Assert.Null(UpdateRecovery.Recent());
+                Assert.Equal(Str.T("Str.UpdateCancelled"), ((TextBlock)window.FindName("StatusText")).Text);
+                mode = "failure"; Click("InstallButton"); DlssFeedbackTests.PumpUntil(() => !window.IsRunning);
+                Assert.Equal(0, exits); Assert.True(window.IsVisible);
+                Assert.Contains("controlled handoff failure", ((TextBlock)window.FindName("StatusText")).Text);
+                Assert.NotNull(UpdateRecovery.ProtectedCopy(UpdateRecovery.Recent()!));
+                UpdateRecovery.WorkerOverride = (_, _) => Task.CompletedTask;
+                Click("InstallButton"); DlssFeedbackTests.PumpUntil(() => exits == 1);
+                Assert.Equal("upgrade", UpdateRecovery.Recent()!.Mode);
+            }
+            finally
+            {
+                window.Close(); UpdateRecovery.InstallDirectoryOverride = null; UpdateRecovery.ReleaseOverride = null;
+                UpdateRecovery.PackageOverride = null; UpdateRecovery.WorkerOverride = null;
+            }
+        });
+    }
+
+    [Fact]
+    public void Color_preview_loads_local_screenshot_updates_from_parameters_and_keeps_comparison_split()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            var panel = new ScreenColorPanel();
+            var surface = new Border { Padding = new Thickness(20), Child = panel };
+            surface.SetResourceReference(Border.BackgroundProperty, "AppBackgroundBrush");
+            var window = new Window { Width = 1180, Height = 720, Content = new ScrollViewer { Content = surface } };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var preview = (FpsTune.Wpf.Views.Controls.ColorPreviewControl)panel.FindName("ColorPreview");
+                Directory.CreateDirectory(root);
+                var path = Path.Combine(root, "comparison.png");
+                using (var file = File.Create(path))
+                { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(ScreenColorPreview.Sample())); encoder.Save(file); }
+                var loading = preview.LoadImageAsync(path); DlssFeedbackTests.PumpUntil(() => loading.IsCompleted); loading.GetAwaiter().GetResult();
+                Assert.Equal("comparison.png", ((TextBlock)preview.FindName("ImageNameText")).Text);
+                var original = ((Image)preview.FindName("BeforeImage")).Source;
+                var before = ((Image)preview.FindName("AfterImage")).Source;
+                ((ComboBox)panel.FindName("ColorPresetCombo")).SelectedIndex = 4;
+                DlssFeedbackTests.PumpUntil(() => !ReferenceEquals(before, ((Image)preview.FindName("AfterImage")).Source));
+                Assert.Same(original, ((Image)preview.FindName("BeforeImage")).Source);
+                ((Slider)preview.FindName("SplitSlider")).Value = 25;
+                var bounds = ((RectangleGeometry)((Grid)preview.FindName("BeforeLayer")).Clip).Rect;
+                Assert.Equal(((Grid)preview.FindName("ComparisonSurface")).ActualWidth / 4, bounds.Width, 2);
+                Assert.False(((Button)panel.FindName("ColorApplyButton")).IsEnabled);
+                foreach (var theme in new[] { "light", "dark" })
+                { ThemeManager.SetMode(theme); Render(surface, "color-preview-" + theme); }
+            }
+            finally { window.Close(); }
+        });
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {

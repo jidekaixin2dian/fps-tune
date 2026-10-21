@@ -96,9 +96,10 @@ internal static class UpdateRecovery
             if (!UpdateService.TryReadSha256(await File.ReadAllTextAsync(manifest, token), Path.GetFileName(installer), out var hash))
                 throw new InvalidDataException(Str.T("Str.ManifestMissingEntry"));
             var cached = FindPackage(info.ReleaseTag!, hash);
-            if (cached is not null) { ready = false; return cached; }
+            if (cached is not null) { ready = false; progress?.Invoke(100); return cached; }
             await UpdateService.DownloadAsync(info.InstallerUrl!, installer, progress, token);
-            if (!UpdateService.VerifySha256(installer, hash)) throw new InvalidDataException(Str.T("Str.InstallerHashMismatch"));
+            if (!await Task.Run(() => UpdateService.VerifySha256(installer, hash), token))
+                throw new InvalidDataException(Str.T("Str.InstallerHashMismatch"));
             var package = new CachedUpdatePackage(id, info.Version, info.ReleaseTag!, hash);
             AtomicFile.WriteAllTextDurable(Path.Combine(directory, "package.json"), JsonSerializer.Serialize(package), Utf8);
             ready = true;

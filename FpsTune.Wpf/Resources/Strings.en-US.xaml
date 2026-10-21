@@ -1316,4 +1316,18 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorNewBaselineSaved">Previous backup retained. Restore now returns to the picture before this apply.</s:String>
     <s:String x:Key="Str.IccNewBaselineHint">The previous ICC backup differs from the current associations. Manual apply keeps that backup and captures the current associations as a new restore point.</s:String>
     <s:String x:Key="Str.EqEntryAmbiguous">Duplicate or incomplete FPS Tune equalizer entries found. Keep one complete entry in the Equalizer APO configuration and retry.</s:String>
+    <s:String x:Key="Str.UpdateInstallHint">Update now downloads and verifies the installer, preserves settings, installs and restarts the app.</s:String>
+    <s:String x:Key="Str.UpdateProgress">Update progress</s:String>
+    <s:String x:Key="Str.UpdateCancelDownload">Cancel download</s:String>
+    <s:String x:Key="Str.UpdatePreparingRollback">Preparing the current version for rollback…</s:String>
+    <s:String x:Key="Str.UpdatePreparingInstall">Protecting settings and backups before installation…</s:String>
+    <s:String x:Key="Str.UpdateDownloadIncomplete">Download incomplete. Please retry.</s:String>
+    <s:String x:Key="Str.ColorPreviewTitle">Filter comparison (SDR parameters)</s:String>
+    <s:String x:Key="Str.ColorPreviewLoad">Load screenshot…</s:String>
+    <s:String x:Key="Str.ColorPreviewSample">Sample · grayscale, colors and shadows</s:String>
+    <s:String x:Key="Str.ColorPreviewBefore">Original</s:String>
+    <s:String x:Key="Str.ColorPreviewAfter">Current parameters</s:String>
+    <s:String x:Key="Str.ColorPreviewSplit">Original and filter comparison split</s:String>
+    <s:String x:Key="Str.ColorPreviewHint">Move the slider to compare the original and current parameters. Load a game screenshot to preview your own scene.</s:String>
+    <s:String x:Key="Str.ColorPreviewLoadFailed">Cannot load image. Choose a valid PNG or JPG (up to 20 MB and 64 megapixels).</s:String>
 </ResourceDictionary>

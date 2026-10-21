@@ -9,28 +9,28 @@ namespace FpsTune.Wpf.Services;
 internal static class UpdateInstaller
 {
     private static readonly SemaphoreSlim Active = new(1, 1);
-    internal static Task InstallAsync(UpdateInfo info, Action<double> progress, CancellationToken token)
-        => RunAsync(info, null, "upgrade", progress, token);
-    internal static async Task RetryAsync(UpdateAttempt attempt, Action<double> progress, CancellationToken token)
+    internal static Task InstallAsync(UpdateInfo info, Action<double> progress, CancellationToken token, Action<string>? stage = null)
+        => RunAsync(info, null, "upgrade", progress, token, stage);
+    internal static async Task RetryAsync(UpdateAttempt attempt, Action<double> progress, CancellationToken token, Action<string>? stage = null)
     {
         if (UpdateRecovery.Busy(attempt)) throw new InvalidOperationException(Str.T("Str.UpdateInProgress"));
         var target = await ReleaseAsync(attempt.Target.ReleaseTag!, token)
             ?? throw new InvalidOperationException(Str.T("Str.UpdateAssetsMissing"));
-        await RunAsync(target, attempt.PreviousPackageId, attempt.Mode, progress, token);
+        await RunAsync(target, attempt.PreviousPackageId, attempt.Mode, progress, token, stage);
     }
-    internal static async Task RollbackAsync(UpdateAttempt attempt, Action<double> progress, CancellationToken token)
+    internal static async Task RollbackAsync(UpdateAttempt attempt, Action<double> progress, CancellationToken token, Action<string>? stage = null)
     {
         if (UpdateRecovery.Busy(attempt)) throw new InvalidOperationException(Str.T("Str.UpdateInProgress"));
         if (attempt.PreviousPackageId is null) throw new InvalidOperationException(Str.T("Str.UpdateRollbackUnavailable"));
         var previous = UpdateRecovery.LoadPackage(attempt.PreviousPackageId);
         var target = await ReleaseAsync(previous.Tag, token)
             ?? throw new InvalidOperationException(Str.T("Str.UpdateRollbackUnavailable"));
-        await RunAsync(target, null, "rollback", progress, token);
+        await RunAsync(target, null, "rollback", progress, token, stage);
     }
     private static Task<UpdateInfo?> ReleaseAsync(string version, CancellationToken token)
         => UpdateRecovery.ReleaseOverride?.Invoke(version, token) ?? UpdateService.GetReleaseAsync(version, token);
 
-    private static async Task RunAsync(UpdateInfo info, string? previousId, string mode, Action<double> progress, CancellationToken token)
+    private static async Task RunAsync(UpdateInfo info, string? previousId, string mode, Action<double> progress, CancellationToken token, Action<string>? stage)
     {
         UpdateRecovery.ValidateInfo(info);
         if (!await Active.WaitAsync(0, token)) throw new InvalidOperationException(Str.T("Str.UpdateInProgress"));
@@ -40,20 +40,26 @@ internal static class UpdateInstaller
             EnsureIdle();
             var recent = UpdateRecovery.Recent();
             if (recent is not null && UpdateRecovery.Busy(recent)) throw new InvalidOperationException(Str.T("Str.UpdateInProgress"));
+            stage?.Invoke(Str.T("Str.UpdateDownloading"));
+            progress(-1);
             var package = await UpdateRecovery.GetPackageAsync(info, progress, token);
             if (mode == "upgrade" && previousId is null)
             {
                 // A missing/offline previous release removes rollback availability, but does not block a verified upgrade.
                 try
                 {
+                    stage?.Invoke(Str.T("Str.UpdatePreparingRollback"));
+                    progress(-1);
                     var previous = await ReleaseAsync(UpdateRecovery.CurrentVersion, token);
                     if (previous is not null && previous.ReleaseTag != info.ReleaseTag)
-                        previousId = (await UpdateRecovery.GetPackageAsync(previous, null, token)).Id;
+                        previousId = (await UpdateRecovery.GetPackageAsync(previous, progress, token)).Id;
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
                 catch { previousId = null; }
             }
             token.ThrowIfCancellationRequested();
+            stage?.Invoke(Str.T("Str.UpdatePreparingInstall"));
+            progress(-1);
             // The mutex is acquired and released on this one synchronous worker thread.
             await Task.Run(() =>
             {

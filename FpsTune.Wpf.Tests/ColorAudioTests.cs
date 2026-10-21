@@ -8,6 +8,19 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ColorAudioTests
 {
     [Fact]
+    public void Color_preview_is_neutral_by_default_distinguishes_presets_and_does_not_modify_source()
+    {
+        var source = ScreenColorPreview.Sample();
+        byte[] Pixels(System.Windows.Media.Imaging.BitmapSource image)
+        { var bytes = new byte[image.PixelWidth * image.PixelHeight * 4]; image.CopyPixels(bytes, image.PixelWidth * 4, 0); return bytes; }
+        var original = Pixels(source);
+        Assert.Equal(original, Pixels(ScreenColorPreview.Apply(source, new())));
+        var hashes = Enum.GetValues<IccFilterPreset>().Select(p => Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(Pixels(ScreenColorPreview.Apply(source, ScreenColorSettings.ForPreset(p)))))).ToArray();
+        Assert.Equal(hashes.Length, hashes.Distinct().Count());
+        Assert.Equal(original, Pixels(source));
+    }
+    [Fact]
     public void Manual_color_reapply_preserves_external_baseline_and_unrelated_legacy_ICC_does_not_block_it()
     {
         using var screens = new MultiDisplayColorTests();

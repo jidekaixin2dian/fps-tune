@@ -1,0 +1,23 @@
+<UserControl x:Class="FpsTune.Wpf.Views.Controls.ColorPreviewControl"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <StackPanel>
+  <DockPanel Margin="0,0,0,10">
+   <Button x:Name="LoadImageButton" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorPreviewLoad}" Click="LoadImage_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+   <StackPanel VerticalAlignment="Center">
+    <TextBlock Text="{DynamicResource Str.ColorPreviewTitle}" Style="{StaticResource SectionLabelStyle}"/>
+    <TextBlock x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}" Style="{StaticResource MutedTextStyle}" Margin="0,3,10,0" TextTrimming="CharacterEllipsis"/>
+   </StackPanel>
+  </DockPanel>
+  <Border Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
+   <Grid x:Name="ComparisonSurface" Height="230" ClipToBounds="True" SizeChanged="Comparison_SizeChanged">
+    <Image x:Name="AfterImage" Stretch="Uniform"/>
+    <Grid x:Name="BeforeLayer"><Image x:Name="BeforeImage" Stretch="Uniform"/></Grid>
+    <Border x:Name="Divider" Width="2" Background="White" HorizontalAlignment="Left" IsHitTestVisible="False"/>
+    <Border HorizontalAlignment="Left" VerticalAlignment="Top" Background="#C011151B" CornerRadius="{DynamicResource RadiusChip}" Padding="8,4" Margin="10"><TextBlock Text="{DynamicResource Str.ColorPreviewBefore}" Foreground="White"/></Border>
+    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="#C011151B" CornerRadius="{DynamicResource RadiusChip}" Padding="8,4" Margin="10"><TextBlock Text="{DynamicResource Str.ColorPreviewAfter}" Foreground="White"/></Border>
+   </Grid>
+  </Border>
+  <Slider x:Name="SplitSlider" Minimum="0" Maximum="100" Value="50" Margin="0,10,0,0" ValueChanged="Split_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewSplit}"/>
+  <TextBlock x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
+ </StackPanel>
+</UserControl>

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -282,7 +282,7 @@ public static class UpdateService
         return true;
     }
 
-    /// <summary>下载安装包到指定路径; progress 报告 0-100 百分比(服务器未给长度时不回调)。</summary>
+    /// <summary>下载到新文件；-1 表示长度未知，0–100 表示实际接收进度。</summary>
     public static async Task DownloadAsync(string url, string targetFile, Action<double>? progress,
         CancellationToken cancellationToken = default, long maximumBytes = 512L * 1024 * 1024)
     {
@@ -303,14 +303,22 @@ public static class UpdateService
         await using var target = new FileStream(targetFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
         var buffer = new byte[81920];
         long written = 0;
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        long lastReport = 0;
+        progress?.Invoke(total > 0 ? 0 : -1);
         int read;
         while ((read = await source.ReadAsync(buffer, token)) > 0)
         {
             if (written + read > maximumBytes) throw new InvalidOperationException(Str.T("Str.UpdateFileTooLarge"));
             await target.WriteAsync(buffer.AsMemory(0, read), token);
             written += read;
-            if (total > 0)
+            if (total > 0 && (watch.ElapsedMilliseconds - lastReport >= 100 || written == total))
+            {
                 progress?.Invoke(written * 100.0 / total);
+                lastReport = watch.ElapsedMilliseconds;
+            }
         }
+        if (total >= 0 && written != total) throw new IOException(Str.T("Str.UpdateDownloadIncomplete"));
+        progress?.Invoke(100);
     }
 }

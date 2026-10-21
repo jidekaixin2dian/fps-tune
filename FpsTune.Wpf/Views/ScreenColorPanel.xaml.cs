@@ -26,7 +26,7 @@ public partial class ScreenColorPanel : UserControl
                 TickFrequency = i == 2 ? .01 : 1, IsSnapToTickEnabled = true, Margin = new Thickness(0,8,0,0) };
             System.Windows.Automation.AutomationProperties.SetName(slider, label);
             text.Text = label + "  " + range.Value.ToString("0.##");
-            slider.ValueChanged += (_, _) => { text.Text = label + "  " + slider.Value.ToString("0.##"); if (!_syncing) { _dirty = true; ColorPresetCombo.SelectedIndex = 0; } };
+            slider.ValueChanged += (_, _) => { text.Text = label + "  " + slider.Value.ToString("0.##"); if (!_syncing) { _dirty = true; ColorPresetCombo.SelectedIndex = 0; UpdatePreview(); } };
             row.Children.Add(text); row.Children.Add(slider); ParameterGrid.Children.Add(row); _sliders.Add(slider);
         }
         ColorPresetCombo.ItemsSource = new Choice[] { new(Str.T("Str.ColorCustom"), null), new(Str.T("Str.ColorVivid"), IccFilterPreset.Vivid), new(Str.T("Str.ColorShadowPreset"), IccFilterPreset.ShadowBoost),
@@ -34,7 +34,9 @@ public partial class ScreenColorPanel : UserControl
             new(Str.T("Str.ColorSoft"), IccFilterPreset.Soft), new(Str.T("Str.ColorGentleShadow"), IccFilterPreset.ShadowGentle), new(Str.T("Str.ColorGentleContrast"), IccFilterPreset.ContrastGentle), new(Str.T("Str.ColorMuted"), IccFilterPreset.Muted), new(Str.T("Str.ColorNeutral"), IccFilterPreset.Neutral) };
         ColorPresetCombo.SelectedIndex = 0;
         ColorApplyButton.IsEnabled = ColorRestoreButton.IsEnabled = false;
+        UpdatePreview();
     }
+    private void UpdatePreview() { if (_sliders.Count == 7) ColorPreview.SetSettings(Values()); }
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
         _sliders[4].Value, _sliders[5].Value, _sliders[6].Value);
     private void ShowSettings(ScreenColorSettings s)
@@ -45,7 +47,7 @@ public partial class ScreenColorPanel : UserControl
             var values = new[] { s.Brightness, s.Contrast, s.Gamma, s.Shadows, s.Red, s.Green, s.Blue };
             for (var i = 0; i < values.Length; i++) _sliders[i].Value = values[i];
         }
-        finally { _syncing = false; }
+        finally { _syncing = false; UpdatePreview(); }
     }
     public async Task RefreshFor(string identity)
     {

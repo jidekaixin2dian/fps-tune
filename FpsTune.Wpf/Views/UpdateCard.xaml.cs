@@ -11,6 +11,8 @@ public partial class UpdateCard : UserControl
     private readonly UpdateInfo _info;
     private UpdateAttempt? _recovery;
     private bool _running;
+    private CancellationTokenSource? _download;
+    private string _phase = "";
     private readonly CancellationTokenSource _lifetime = new();
     public NotificationCard Notification => Card;
     internal bool IsRunning => _running;
@@ -22,7 +24,7 @@ public partial class UpdateCard : UserControl
         Card.SetResourceReference(NotificationCard.NotificationTitleProperty, "Str.UpdateAvailable");
         NotesText.Text = info.Notes;
         StatusText.SetResourceReference(TextBlock.TextProperty, "Str.UpdateOptional");
-        InstallButton.SetResourceReference(ContentProperty, "Str.ReleaseDownloadPage");
+        InstallButton.SetResourceReference(ContentProperty, "Str.UpdateNow");
     }
     internal UpdateCard(UpdateAttempt attempt) : this(attempt.Target) => ShowRecovery(attempt);
     private void ShowRecovery(UpdateAttempt attempt)
@@ -56,10 +58,9 @@ public partial class UpdateCard : UserControl
     private void Later_Click(object sender, RoutedEventArgs e) => Card.SetExpanded(false);
     private async void Install_Click(object sender, RoutedEventArgs e)
     {
-        if (_recovery is not null) { await RunInstallAsync(false); return; }
-        try { ProductLinks.Open(ProductLinks.ReleasePage(_info)); }
-        catch { StatusText.Text = Str.T("Str.CannotOpenLink"); }
+        await RunInstallAsync(false);
     }
+    private void CancelDownload_Click(object sender, RoutedEventArgs e) => _download?.Cancel();
     private async void Rollback_Click(object sender, RoutedEventArgs e)
     {
         if (_recovery is null || !DialogService.Confirm(Str.T("Str.UpdateRollback"), Str.T("Str.UpdateRollbackConfirm"))) return;
@@ -67,7 +68,7 @@ public partial class UpdateCard : UserControl
     }
     private async Task RunInstallAsync(bool rollback)
     {
-        if (_running || _recovery is null) return;
+        if (_running) return;
         if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
         {
             StatusText.Text = Str.T("Str.UpdateSessionBusy");
@@ -76,13 +77,25 @@ public partial class UpdateCard : UserControl
         InstallButton.IsEnabled = false;
         RollbackButton.IsEnabled = false;
         _running = true;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _download = cancellation;
+        CancelDownloadButton.Visibility = Visibility.Visible;
         DownloadProgress.Visibility = Visibility.Visible;
+        DownloadProgress.IsIndeterminate = true;
         StatusText.Text = Str.T("Str.UpdateDownloading");
         try
         {
-            void Progress(double value) => Dispatcher.Invoke(() => DownloadProgress.Value = value);
-            if (rollback) await UpdateInstaller.RollbackAsync(_recovery!, Progress, _lifetime.Token);
-            else await UpdateInstaller.RetryAsync(_recovery, Progress, _lifetime.Token);
+            void Stage(string text) => Dispatcher.Invoke(() =>
+            { _phase = text; StatusText.Text = text; DownloadProgress.IsIndeterminate = true; });
+            void Progress(double value) => Dispatcher.Invoke(() =>
+            {
+                DownloadProgress.IsIndeterminate = value < 0;
+                if (value >= 0) DownloadProgress.Value = Math.Clamp(value, 0, 100);
+                StatusText.Text = value < 0 ? _phase : _phase + " " + value.ToString("0") + "%";
+            });
+            if (rollback) await UpdateInstaller.RollbackAsync(_recovery!, Progress, cancellation.Token, Stage);
+            else if (_recovery is not null) await UpdateInstaller.RetryAsync(_recovery, Progress, cancellation.Token, Stage);
+            else await UpdateInstaller.InstallAsync(_info, Progress, cancellation.Token, Stage);
             Application.Current.Shutdown();
         }
         catch (OperationCanceledException) { StatusText.Text = Str.T("Str.UpdateCancelled"); }
@@ -95,9 +108,11 @@ public partial class UpdateCard : UserControl
         finally
         {
             _running = false;
+            _download = null;
             InstallButton.IsEnabled = _recovery is null || !UpdateRecovery.Busy(_recovery);
             RollbackButton.IsEnabled = _recovery is { Mode: "upgrade" } && UpdateRecovery.CanRollback(_recovery) && !UpdateRecovery.Busy(_recovery);
             DownloadProgress.Visibility = Visibility.Collapsed;
+            CancelDownloadButton.Visibility = Visibility.Collapsed;
         }
     }
     private void ProtectedCopy_Click(object sender, RoutedEventArgs e)
