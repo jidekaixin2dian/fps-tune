@@ -326,6 +326,12 @@ public sealed class ModernWorkspaceUiTests
                 Assert.Same(before, image.Source); // Sliders update shader constants, never recreate the screenshot.
                 Assert.False(neutralPixels.SequenceEqual(RenderImage()));
                 Assert.Same(original, ((Image)preview.FindName("BeforeImage")).Source);
+                ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex = 1;
+                for (var i = 0; i < 8; i++) ((ComboBox)panel.FindName("ColorPresetCombo")).SelectedIndex = 5 + i % 2;
+                DlssFeedbackTests.PumpUntil(() => image.Source is ColorConvertedBitmap);
+                Assert.DoesNotContain("ICC 无法", ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex = 0;
+                DlssFeedbackTests.PumpUntil(() => ReferenceEquals(before, image.Source));
                 ((Slider)preview.FindName("SplitSlider")).Value = 25;
                 var bounds = ((RectangleGeometry)((Grid)preview.FindName("BeforeLayer")).Clip).Rect;
                 Assert.Equal(((Grid)preview.FindName("ComparisonSurface")).ActualWidth / 4, bounds.Width, 2);

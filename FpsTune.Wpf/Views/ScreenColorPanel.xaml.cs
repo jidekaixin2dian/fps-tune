@@ -11,6 +11,7 @@ public partial class ScreenColorPanel : UserControl
     private bool _syncing, _dirty, _busy;
     private int _generation;
     private int _previewGeneration;
+    private static readonly object PreviewProfileLock = new();
     private bool _screenSupported, _iccSupported, _restorable, _vibranceRestorable;
     private int? _vibrance;
     private bool _vibranceDirty;
@@ -66,7 +67,8 @@ public partial class ScreenColorPanel : UserControl
                         var directory = Path.Combine(UserDataPaths.Root, "preview-profiles");
                         Directory.CreateDirectory(directory);
                         var path = Path.Combine(directory, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)) + ".icc");
-                        if (!File.Exists(path)) File.WriteAllBytes(path, bytes);
+                        lock (PreviewProfileLock)
+                            if (!File.Exists(path)) AtomicFile.WriteAllBytes(path, bytes);
                         return path;
                     });
             }
@@ -86,7 +88,7 @@ public partial class ScreenColorPanel : UserControl
     private void Mode_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || ColorPresetCombo is null) return;
-        if (IccMode && Preset is null && _iccFile is null) ColorPresetCombo.SelectedIndex = 1;
+        if (IccMode && Preset is null && _iccFile is null) { ColorPresetCombo.SelectedIndex = 1; return; }
         Availability(); UpdatePreview();
     }
     private void Availability()
@@ -136,8 +138,9 @@ public partial class ScreenColorPanel : UserControl
     {
         if (_syncing) return;
         _iccFile = null;
+        _dirty = true; Availability();
         if (ColorPresetCombo.SelectedItem is Choice { Preset: { } preset }) ShowSettings(ScreenColorSettings.ForPreset(preset));
-        _dirty = true; Availability(); UpdatePreview();
+        else UpdatePreview();
     }
     private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; _dirty = true; }
     private async void Apply_Click(object sender, RoutedEventArgs e)
