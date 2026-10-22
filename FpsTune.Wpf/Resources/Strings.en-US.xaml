@@ -281,11 +281,11 @@
     <s:String x:Key="Str.TipVibRecommended">58% is a starting point for a subtle color boost. Adjust to taste.</s:String>
     <s:String x:Key="Str.IccPresetLabel">Select a preset above or load a profile file.</s:String>
     <s:String x:Key="Str.IccVivid">Vivid FPS</s:String>
-    <s:String x:Key="Str.IccVividDesc">Slightly higher saturation and contrast, good for competitive play</s:String>
+    <s:String x:Key="Str.IccVividDesc">Moderate color and contrast with preserved shadows</s:String>
     <s:String x:Key="Str.IccShadow">Shadow boost</s:String>
-    <s:String x:Key="Str.IccShadowDesc">Lifts the shadow range, prioritising dark corners</s:String>
+    <s:String x:Key="Str.IccShadowDesc">Lift shadows to reveal dark details</s:String>
     <s:String x:Key="Str.IccDehaze">Dehaze</s:String>
-    <s:String x:Key="Str.IccDehazeDesc">S-curve contrast with slightly reduced blue, for foggy scenes</s:String>
+    <s:String x:Key="Str.IccDehazeDesc">More tonal separation with a subtle warm balance</s:String>
     <s:String x:Key="Str.IccStandard">Original profile</s:String>
     <s:String x:Key="Str.IccStandardDesc">Restores your original colour configuration</s:String>
     <s:String x:Key="Str.IccNote">Choose an ICC profile above and adjust display parameters, then apply color settings. Restore this monitor to recover its original settings.</s:String>
@@ -562,13 +562,13 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ManifestMissingEntry">The SHA256 manifest has no entry for the current installer</s:String>
     <!-- Additional ICC presets (2026-09-25) -->
     <s:String x:Key="Str.IccNight">Night warmth</s:String>
-    <s:String x:Key="Str.IccNightDesc">Noticeably less blue, shadows lifted slightly. For night or long sessions.</s:String>
+    <s:String x:Key="Str.IccNightDesc">Reduce blue and lift shadows for darker scenes</s:String>
     <s:String x:Key="Str.IccWarm">Warm</s:String>
-    <s:String x:Key="Str.IccWarmDesc">Moderately less blue with slightly higher contrast, a warmer look</s:String>
+    <s:String x:Key="Str.IccWarmDesc">A warm balance with preserved tonal detail</s:String>
     <s:String x:Key="Str.IccCool">Cool and crisp</s:String>
-    <s:String x:Key="Str.IccCoolDesc">Cooler tint with higher contrast</s:String>
+    <s:String x:Key="Str.IccCoolDesc">A cooler balance with gentle contrast</s:String>
     <s:String x:Key="Str.IccSoft">Soft</s:String>
-    <s:String x:Key="Str.IccSoftDesc">Lower saturation and slightly lower contrast</s:String>
+    <s:String x:Key="Str.IccSoftDesc">Lower contrast and color for a softer image</s:String>
     <!-- Driver version advice (read-only; never downloads or installs) -->
     <s:String x:Key="Str.DriverCard">Recommended driver version</s:String>
     <s:String x:Key="Str.DriverGpuLabel">GPU: </s:String>
@@ -927,13 +927,13 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.WallpaperShow">Show wallpaper</s:String>
     <s:String x:Key="Str.WallpaperSizeLimit">Image limit: 20 MiB, 64 million pixels, up to 16384 pixels per side.</s:String>
     <s:String x:Key="Str.IccContrastGentle">Gentle contrast</s:String>
-    <s:String x:Key="Str.IccContrastGentleDesc">Subtle contrast adjustment</s:String>
+    <s:String x:Key="Str.IccContrastGentleDesc">A subtle contrast lift retaining dark gradations</s:String>
     <s:String x:Key="Str.IccMuted">Muted</s:String>
-    <s:String x:Key="Str.IccMutedDesc">Slightly lower saturation</s:String>
+    <s:String x:Key="Str.IccMutedDesc">Slightly reduced saturation</s:String>
     <s:String x:Key="Str.IccNeutral">Neutral</s:String>
-    <s:String x:Key="Str.IccNeutralDesc">sRGB primaries, gamma 2.2</s:String>
+    <s:String x:Key="Str.IccNeutralDesc">Neutral appearance for a comparison baseline</s:String>
     <s:String x:Key="Str.IccShadowGentle">Gentle shadows</s:String>
-    <s:String x:Key="Str.IccShadowGentleDesc">A milder shadow curve</s:String>
+    <s:String x:Key="Str.IccShadowGentleDesc">A subtle shadow lift close to the original image</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">Memory compression control is unavailable; no write performed.</s:String>
     <s:String x:Key="Str.StartupHint">Open FPS Tune when you sign in to Windows.</s:String>
     <s:String x:Key="Str.TrayHint">Hide the minimized window in the system tray.</s:String>
@@ -1279,7 +1279,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.EqNoBackup">There are no FPS Tune audio changes to remove.</s:String>
     <s:String x:Key="Str.EqPermission">The audio configuration directory is not writable. Run FPS Tune as administrator to apply. Your saved preset is retained.</s:String>
     <s:String x:Key="Str.ColorPanelTitle">Picture and color</s:String>
-    <s:String x:Key="Str.ColorPanelHint">Choose an ICC profile, fine-tune display parameters, then apply them together.</s:String>
+    <s:String x:Key="Str.ColorPanelHint">Choose a filter, fine-tune, then apply. The screenshot updates as you adjust.</s:String>
     <s:String x:Key="Str.ColorPreset">Display preset</s:String>
     <s:String x:Key="Str.ColorReset">Reset parameters</s:String>
     <s:String x:Key="Str.ColorRestore">Restore original display curve</s:String>
@@ -1326,7 +1326,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewLoad">Load screenshot…</s:String>
     <s:String x:Key="Str.ColorPreviewSample">Waiting for a game screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">Original</s:String>
-    <s:String x:Key="Str.ColorPreviewAfter">Current parameters</s:String>
+    <s:String x:Key="Str.ColorPreviewAfter">Adjusted</s:String>
     <s:String x:Key="Str.ColorPreviewSplit">Original and filter comparison split</s:String>
     <s:String x:Key="Str.ColorPreviewHint">Adjust the display parameters to update the screenshot immediately.</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">Cannot load image. Choose a valid PNG or JPG (up to 20 MB and 64 megapixels).</s:String>
@@ -1370,7 +1370,13 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewValorant">VALORANT · gameplay screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">Custom screenshot</s:String>
     <s:String x:Key="Str.ColorIccLayer">ICC color profile</s:String>
-    <s:String x:Key="Str.ColorParametersLayer">Display parameters · combine with ICC</s:String>
+    <s:String x:Key="Str.ColorParametersLayer">2 · Fine-tune display</s:String>
     <s:String x:Key="Str.ColorIccFile">ICC loaded from file</s:String>
     <s:String x:Key="Str.ColorPreviewDrag">Drag the handle on the image to compare, or focus it and use the arrow keys.</s:String>
+    <s:String x:Key="Str.ColorChooseFilter">1 · Choose a filter</s:String>
+    <s:String x:Key="Str.ColorIccEnabled">Enable ICC filter</s:String>
+    <s:String x:Key="Str.ColorParameterPresets">More display parameter presets</s:String>
+    <s:String x:Key="Str.ColorPreviewPending">Previewing · Apply color settings to use them on this display</s:String>
+    <s:String x:Key="Str.ColorExactValue">numeric value</s:String>
+    <s:String x:Key="Str.ColorLegacyFilterUpdate">Previewing the updated shadow-preserving filter. Apply color settings to update the old filter; original settings remain restorable.</s:String>
 </ResourceDictionary>

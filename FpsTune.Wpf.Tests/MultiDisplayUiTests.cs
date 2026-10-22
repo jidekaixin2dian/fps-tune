@@ -80,7 +80,7 @@ public sealed class MultiDisplayUiTests
                 applyColor.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccCurrentText")).Text.Contains("Vivid"));
                 Assert.Equal(["a.icm"], fixture.Profiles["A"]);
-                Assert.Equal("FpsTune-Vivid.icc", fixture.Profiles["B"].Last());
+                Assert.Equal("FpsTune-Vivid-v3.icc", fixture.Profiles["B"].Last());
                 foreach (var lang in new[] { LangService.ZhCn, LangService.EnUs })
                 {
                     LangService.Apply(lang);

@@ -104,7 +104,7 @@ public partial class ColorPreviewControl : UserControl
                     if (new FileInfo(profile).Length > 16 * 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
                     var snapshot = ScreenColorPreview.CacheIccProfile(File.ReadAllBytes(profile));
                     var converted = new ColorConvertedBitmap(source, new ColorContext(PixelFormats.Bgra32),
-                        new ColorContext(new Uri(snapshot, UriKind.Absolute)), PixelFormats.Bgra32);
+                        new ColorContext(new Uri(snapshot, UriKind.Absolute)), PixelFormats.Rgba64);
                     converted.Freeze(); return converted;
                 });
             if (generation != _generation) return;

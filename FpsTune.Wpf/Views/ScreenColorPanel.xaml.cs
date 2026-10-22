@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.IO;
+using System.Globalization;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -11,6 +12,7 @@ public partial class ScreenColorPanel : UserControl
     private bool _syncing, _dirty, _busy;
     private int _generation;
     private int _previewGeneration;
+    private readonly Dictionary<IccFilterPreset, Task<string>> _profileTasks = [];
     private bool _screenSupported, _iccSupported, _restorable, _vibranceRestorable;
     private int? _vibrance;
     private bool _vibranceDirty;
@@ -32,14 +34,32 @@ public partial class ScreenColorPanel : UserControl
         for (var i = 0; i < names.Length; i++)
         {
             var row = new StackPanel { Margin = new Thickness(0, 0, 16, 16) };
-            var text = new TextBlock(); text.SetResourceReference(StyleProperty, "MutedTextStyle");
+            var text = new TextBlock { VerticalAlignment = VerticalAlignment.Center }; text.SetResourceReference(StyleProperty, "MutedTextStyle");
             var range = ranges[i]; var label = names[i];
             var slider = new Slider { Minimum = range.Min, Maximum = range.Max, Value = range.Value,
                 TickFrequency = i == 2 ? .01 : 1, IsSnapToTickEnabled = true, Margin = new Thickness(0,8,0,0) };
             System.Windows.Automation.AutomationProperties.SetName(slider, label);
-            text.Text = label + "  " + range.Value.ToString("0.##");
-            slider.ValueChanged += (_, _) => { text.Text = label + "  " + slider.Value.ToString("0.##"); if (!_syncing) { _dirty = true; ColorPresetCombo.SelectedIndex = 0; UpdatePreview(); } };
-            row.Children.Add(text); row.Children.Add(slider); ParameterGrid.Children.Add(row); _sliders.Add(slider);
+            text.Text = label;
+            var entry = new TextBox { Text = range.Value.ToString("0.##", CultureInfo.InvariantCulture), Width = 58, Padding = new Thickness(5,3,5,3), HorizontalContentAlignment = HorizontalAlignment.Right };
+            System.Windows.Automation.AutomationProperties.SetName(entry, label + " " + Str.T("Str.ColorExactValue"));
+            entry.TextChanged += (_, _) =>
+            {
+                if (entry.IsKeyboardFocusWithin && double.TryParse(entry.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+                    && double.IsFinite(value) && value >= slider.Minimum && value <= slider.Maximum) slider.Value = value;
+            };
+            entry.LostKeyboardFocus += (_, _) =>
+            {
+                if (double.TryParse(entry.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value) && double.IsFinite(value))
+                    slider.Value = Math.Clamp(value, slider.Minimum, slider.Maximum);
+                entry.Text = slider.Value.ToString("0.##", CultureInfo.InvariantCulture);
+            };
+            slider.ValueChanged += (_, _) =>
+            {
+                if (!entry.IsKeyboardFocusWithin) entry.Text = slider.Value.ToString("0.##", CultureInfo.InvariantCulture);
+                if (!_syncing) { MarkDraft(); ColorPresetCombo.SelectedIndex = 0; UpdatePreview(); }
+            };
+            var header = new DockPanel(); DockPanel.SetDock(entry, Dock.Right); header.Children.Add(entry); header.Children.Add(text);
+            row.Children.Add(header); row.Children.Add(slider); ParameterGrid.Children.Add(row); _sliders.Add(slider);
         }
         ColorPresetCombo.ItemsSource = new Choice[] { new(Str.T("Str.ColorCustom"), null), new(Str.T("Str.ColorVivid"), IccFilterPreset.Vivid), new(Str.T("Str.ColorShadowPreset"), IccFilterPreset.ShadowBoost),
             new(Str.T("Str.ColorDehaze"), IccFilterPreset.Dehaze), new(Str.T("Str.ColorNight"), IccFilterPreset.NightGuard), new(Str.T("Str.ColorWarm"), IccFilterPreset.Warm), new(Str.T("Str.ColorCool"), IccFilterPreset.Cool),
@@ -63,17 +83,19 @@ public partial class ScreenColorPanel : UserControl
             {
                 profile = _iccFile;
                 if (profile is null && Preset is { } preset)
-                    profile = await Task.Run(() =>
-                    {
-                        return ScreenColorPreview.CacheIccProfile(IccProfileGenerator.Build(preset));
-                    });
+                {
+                    if (!_profileTasks.TryGetValue(preset, out var pending))
+                        _profileTasks[preset] = pending = Task.Run(() => ScreenColorPreview.CacheIccProfile(IccProfileGenerator.Build(preset)));
+                    try { profile = await pending; }
+                    catch { _profileTasks.Remove(preset); throw; }
+                }
             }
             if (generation == _previewGeneration) await ColorPreview.SetIccProfileAsync(profile);
         }
         catch (Exception ex) { if (generation == _previewGeneration) ColorStatus.Text = ex.Message; }
     }
     internal void SetVibrance(int? value, bool restorable = false, bool draft = false)
-    { _vibrance = value; _vibranceRestorable = restorable; _vibranceDirty = draft; ColorPreview.SetVibrance(value ?? 50); Availability(); }
+    { _vibrance = value; _vibranceRestorable = restorable; _vibranceDirty = draft; if (draft) MarkDraft(); ColorPreview.SetVibrance(value ?? 50); Availability(); }
     internal void SelectIccFile(string path)
     {
         _syncing = true;
@@ -85,7 +107,7 @@ public partial class ScreenColorPanel : UserControl
     {
         if (_syncing || ColorPresetCombo is null) return;
         if (IccMode && Preset is null && _iccFile is null) { IccPresetCombo.SelectedIndex = 1; return; }
-        _dirty = true; Availability(); UpdatePreview();
+        MarkDraft(); Availability(); UpdatePreview();
     }
     private void Availability()
     {
@@ -94,7 +116,12 @@ public partial class ScreenColorPanel : UserControl
         ParameterGrid.IsEnabled = !_busy && _screenSupported;
         ColorResetButton.IsEnabled = !_busy && _screenSupported;
         ColorPresetCombo.IsEnabled = !_busy && _screenSupported;
-        IccPresetCombo.IsEnabled = !_busy && IccMode && _iccSupported;
+        IccPresetCombo.IsEnabled = !_busy && _iccSupported;
+        FilterChips.IsEnabled = !_busy && _iccSupported;
+        IccEnabledCheck.IsEnabled = !_busy && _iccSupported;
+        IccEnabledCheck.IsChecked = IccMode;
+        FilterChips.Opacity = IccMode ? 1 : .65;
+        FilterDescription.Text = Preset is { } selected ? Str.T(IccProfileGenerator.ResourceKeysFor(selected).Description) : Str.T("Str.ColorIccFile");
         IccFileText.Text = _iccFile is null ? "" : Path.GetFileName(_iccFile);
         IccFileText.Visibility = IccMode && _iccFile is not null ? Visibility.Visible : Visibility.Collapsed;
         ColorRestoreButton.IsEnabled = !_busy && (_restorable || _vibranceRestorable);
@@ -133,7 +160,21 @@ public partial class ScreenColorPanel : UserControl
             {
                 _iccFile = states.Icc.Restorable ? states.Icc.CurrentProfilePath : null;
                 ColorModeCombo.SelectedIndex = _iccFile is null ? 0 : 1;
-                if (_iccFile is not null) IccPresetCombo.SelectedIndex = 0;
+                if (_iccFile is not null)
+                {
+                    var name = Path.GetFileName(_iccFile);
+                    var known = Enum.GetValues<IccFilterPreset>().Cast<IccFilterPreset?>().FirstOrDefault(p =>
+                        string.Equals(name, IccProfileGenerator.FileNameFor(p!.Value), StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(name, $"FpsTune-{p}.icc", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(name, $"FpsTune-{p}-v2.icc", StringComparison.OrdinalIgnoreCase));
+                    if (known is { } selected)
+                    {
+                        _iccFile = null; IccPresetCombo.SelectedIndex = (int)selected + 1;
+                        if (!string.Equals(name, IccProfileGenerator.FileNameFor(selected), StringComparison.OrdinalIgnoreCase))
+                        { _dirty = true; ColorStatus.Text = Str.T("Str.ColorLegacyFilterUpdate"); }
+                    }
+                    else IccPresetCombo.SelectedIndex = 0;
+                }
             }
             finally { _syncing = false; }
             ShowSettings(s.Settings);
@@ -147,14 +188,29 @@ public partial class ScreenColorPanel : UserControl
     private void Preset_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing) return;
-        _dirty = true; Availability();
+        MarkDraft(); Availability();
         if (ColorPresetCombo.SelectedItem is Choice { Preset: { } preset }) ShowSettings(ScreenColorSettings.ForPreset(preset));
         else UpdatePreview();
     }
     private void IccPreset_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || ColorPreview is null) return;
-        _iccFile = null; _dirty = true; Availability(); UpdatePreview();
+        _iccFile = null; MarkDraft();
+        if (Preset is not null) ColorModeCombo.SelectedIndex = 1;
+        Availability(); UpdatePreview();
+    }
+    private void FilterChips_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (!_busy && _iccSupported && Preset is not null) ColorModeCombo.SelectedIndex = 1;
+    }
+    private void MarkDraft()
+    {
+        _dirty = true; _lastOutcome = null;
+        ColorStatus.Text = Str.T("Str.ColorPreviewPending");
+    }
+    private void IccToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_syncing && ColorModeCombo is not null) ColorModeCombo.SelectedIndex = IccEnabledCheck.IsChecked == true ? 1 : 0;
     }
     private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -163,7 +219,7 @@ public partial class ScreenColorPanel : UserControl
         Grid.SetColumn(ControlsPane, wide ? 1 : 0); Grid.SetRow(ControlsPane, wide ? 0 : 1);
         PreviewPane.Margin = new Thickness(0, 0, wide ? 24 : 0, wide ? 0 : 20);
     }
-    private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; _dirty = true; }
+    private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; MarkDraft(); }
     private async void Apply_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _identity is null) return;

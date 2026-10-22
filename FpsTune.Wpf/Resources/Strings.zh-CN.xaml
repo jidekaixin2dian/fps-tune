@@ -281,11 +281,11 @@
     <s:String x:Key="Str.TipVibRecommended">58% 是轻微增强色彩的起点，可继续调整。</s:String>
     <s:String x:Key="Str.IccPresetLabel">预设在上方统一选择，或从文件载入。</s:String>
     <s:String x:Key="Str.IccVivid">FPS 鲜艳</s:String>
-    <s:String x:Key="Str.IccVividDesc">微增饱和与对比，通用竞技</s:String>
+    <s:String x:Key="Str.IccVividDesc">适度增强色彩与层次，保留暗部细节</s:String>
     <s:String x:Key="Str.IccShadow">暗部增强</s:String>
-    <s:String x:Key="Str.IccShadowDesc">阴影段上抬，死角优先</s:String>
+    <s:String x:Key="Str.IccShadowDesc">提亮暗部，方便辨认阴影中的细节</s:String>
     <s:String x:Key="Str.IccDehaze">去雾</s:String>
-    <s:String x:Key="Str.IccDehazeDesc">S 型对比 + 微降蓝，雾天场景</s:String>
+    <s:String x:Key="Str.IccDehazeDesc">增加层次与清晰感，轻微暖色</s:String>
     <s:String x:Key="Str.IccStandard">原始配置</s:String>
     <s:String x:Key="Str.IccStandardDesc">还原为你原始的色彩配置</s:String>
     <s:String x:Key="Str.IccNote">在上方选择 ICC 并调整画面参数，再点击“应用色彩设置”；可用“还原本屏色彩改动”恢复原值。</s:String>
@@ -562,13 +562,13 @@
     <s:String x:Key="Str.ManifestMissingEntry">SHA256 清单缺少当前安装包记录</s:String>
     <!-- ICC 滤镜新增预设（2026-09-25） -->
     <s:String x:Key="Str.IccNight">夜间暖色</s:String>
-    <s:String x:Key="Str.IccNightDesc">明显降蓝 + 暗部微抬，夜间或长时间使用</s:String>
+    <s:String x:Key="Str.IccNightDesc">减少蓝色并提亮暗部，适合较暗场景</s:String>
     <s:String x:Key="Str.IccWarm">暖色</s:String>
-    <s:String x:Key="Str.IccWarmDesc">中度降蓝 + 对比微升，偏暖观感</s:String>
+    <s:String x:Key="Str.IccWarmDesc">轻微偏暖，保留黑白层次</s:String>
     <s:String x:Key="Str.IccCool">冷色清晰</s:String>
-    <s:String x:Key="Str.IccCoolDesc">偏冷色调 + 对比提升</s:String>
+    <s:String x:Key="Str.IccCoolDesc">轻微偏冷，增加层次</s:String>
     <s:String x:Key="Str.IccSoft">柔和</s:String>
-    <s:String x:Key="Str.IccSoftDesc">降饱和 + 对比微降</s:String>
+    <s:String x:Key="Str.IccSoftDesc">减弱对比与色彩，更柔和</s:String>
     <!-- 驱动版本建议（只读；不下载不安装） -->
     <s:String x:Key="Str.DriverCard">驱动版本建议</s:String>
     <s:String x:Key="Str.DriverGpuLabel">当前显卡：</s:String>
@@ -927,13 +927,13 @@
     <s:String x:Key="Str.WallpaperShow">显示壁纸</s:String>
     <s:String x:Key="Str.WallpaperSizeLimit">图片上限为 20 MiB、6400 万像素，单边不超过 16384 像素。</s:String>
     <s:String x:Key="Str.IccContrastGentle">轻度对比</s:String>
-    <s:String x:Key="Str.IccContrastGentleDesc">保留色调，微调对比</s:String>
+    <s:String x:Key="Str.IccContrastGentleDesc">轻微增强对比，保留暗阶</s:String>
     <s:String x:Key="Str.IccMuted">低饱和</s:String>
     <s:String x:Key="Str.IccMutedDesc">轻微降低饱和度</s:String>
     <s:String x:Key="Str.IccNeutral">中性曲线</s:String>
-    <s:String x:Key="Str.IccNeutralDesc">sRGB 原色与 gamma 2.2</s:String>
+    <s:String x:Key="Str.IccNeutralDesc">保持中性，作为对比起点</s:String>
     <s:String x:Key="Str.IccShadowGentle">轻度暗部</s:String>
-    <s:String x:Key="Str.IccShadowGentleDesc">比暗部增强更轻的曲线</s:String>
+    <s:String x:Key="Str.IccShadowGentleDesc">轻度提亮阴影，接近原图观感</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">内存压缩控制暂不可用，未执行写入。</s:String>
     <s:String x:Key="Str.StartupHint">登录 Windows 时打开帧律。</s:String>
     <s:String x:Key="Str.TrayHint">最小化时隐藏到系统托盘。</s:String>
@@ -1279,7 +1279,7 @@
     <s:String x:Key="Str.EqNoBackup">没有帧律音频改动需要移除。</s:String>
     <s:String x:Key="Str.EqPermission">音频引擎配置目录不可写，请以管理员身份启动帧律后应用；已保存的方案会保留。</s:String>
     <s:String x:Key="Str.ColorPanelTitle">画面与色彩</s:String>
-    <s:String x:Key="Str.ColorPanelHint">先选 ICC，再微调亮度、对比度等参数，可叠加预览并一起应用到选定屏幕。</s:String>
+    <s:String x:Key="Str.ColorPanelHint">选滤镜 → 微调参数 → 应用；下方截图随调整实时变化。</s:String>
     <s:String x:Key="Str.ColorPreset">画面预设</s:String>
     <s:String x:Key="Str.ColorReset">参数归零</s:String>
     <s:String x:Key="Str.ColorRestore">还原屏幕原值</s:String>
@@ -1326,9 +1326,9 @@
     <s:String x:Key="Str.ColorPreviewLoad">载入截图…</s:String>
     <s:String x:Key="Str.ColorPreviewSample">等待载入游戏截图</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">原图</s:String>
-    <s:String x:Key="Str.ColorPreviewAfter">当前参数预览</s:String>
+    <s:String x:Key="Str.ColorPreviewAfter">调整后</s:String>
     <s:String x:Key="Str.ColorPreviewSplit">原图与滤镜对比分隔位置</s:String>
-    <s:String x:Key="Str.ColorPreviewHint">调整右侧参数，截图实时更新。</s:String>
+    <s:String x:Key="Str.ColorPreviewHint">调整画面参数，截图实时更新。</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">无法载入图片，请选择有效的 PNG / JPG（不超过 20 MB、6400 万像素）。</s:String>
     <s:String x:Key="Str.ColorSelectIcc">请选择 ICC 预设或载入配置文件。</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">数字振动已应用：{0}%。</s:String>
@@ -1370,7 +1370,13 @@
     <s:String x:Key="Str.ColorPreviewValorant">无畏契约 · 实机截图</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">自选截图</s:String>
     <s:String x:Key="Str.ColorIccLayer">ICC 色彩配置</s:String>
-    <s:String x:Key="Str.ColorParametersLayer">画面参数 · 可与 ICC 叠加</s:String>
+    <s:String x:Key="Str.ColorParametersLayer">2 · 微调画面</s:String>
     <s:String x:Key="Str.ColorIccFile">从文件载入的 ICC</s:String>
     <s:String x:Key="Str.ColorPreviewDrag">拖动图中分界手柄对比；选中后也可用 ← / → 微调。</s:String>
+    <s:String x:Key="Str.ColorChooseFilter">1 · 选择滤镜</s:String>
+    <s:String x:Key="Str.ColorIccEnabled">启用 ICC 滤镜</s:String>
+    <s:String x:Key="Str.ColorParameterPresets">更多画面参数预设</s:String>
+    <s:String x:Key="Str.ColorPreviewPending">正在预览 · 点击“应用色彩设置”使屏幕生效</s:String>
+    <s:String x:Key="Str.ColorExactValue">数值输入</s:String>
+    <s:String x:Key="Str.ColorLegacyFilterUpdate">已载入新版保暗部滤镜预览；点击“应用色彩设置”更新旧版滤镜，原值仍可还原。</s:String>
 </ResourceDictionary>

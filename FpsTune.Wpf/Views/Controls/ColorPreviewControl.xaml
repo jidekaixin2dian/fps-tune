@@ -30,11 +30,11 @@
            <Thumb.Template><ControlTemplate TargetType="Thumb">
             <Grid Background="Transparent">
              <Border Width="2" Background="#F2FFFFFF"/>
-             <Border x:Name="Grip" Width="36" Height="36" CornerRadius="18" Background="#EE11151B" BorderBrush="White" BorderThickness="2" VerticalAlignment="Center">
-              <Path Data="M 11,12 L 6,17 L 11,22 M 21,12 L 26,17 L 21,22" Stroke="White" StrokeThickness="2" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+             <Border x:Name="Grip" Width="22" Height="46" CornerRadius="11" Background="#FAFFFFFF" BorderBrush="#50000000" BorderThickness="1" VerticalAlignment="Center">
+              <Path Data="M 0,0 L 0,14 M 5,0 L 5,14" Stroke="#4B5563" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
              </Border>
             </Grid>
-            <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="Background" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
+            <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
            </ControlTemplate></Thumb.Template>
           </Thumb>
          </Track.Thumb>

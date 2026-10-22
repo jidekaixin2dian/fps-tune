@@ -78,6 +78,42 @@ public class IccProfileGeneratorTests
             $"{preset} 生成的 profile 未通过 mscms IsColorProfileValid");
     }
 
+    [Fact]
+    public void All_presets_preserve_black_white_and_visible_shadow_steps_in_real_color_conversion()
+    {
+        var directory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../work/icc-shadow-check-" + Guid.NewGuid().ToString("N")));
+        Directory.CreateDirectory(directory);
+        var ramp = Enumerable.Range(0, 256).SelectMany(i => new byte[] { (byte)i, (byte)i, (byte)i, 255 }).ToArray();
+        var source = System.Windows.Media.Imaging.BitmapSource.Create(256, 1, 96, 96,
+            System.Windows.Media.PixelFormats.Bgra32, null, ramp, 256 * 4);
+        var hashes = new HashSet<string>();
+        foreach (var preset in Enum.GetValues<IccFilterPreset>())
+        {
+            var path = Path.Combine(directory, IccProfileGenerator.ParamsFor(preset).FileName);
+            File.WriteAllBytes(path, IccProfileGenerator.Build(preset));
+            var converted = new System.Windows.Media.Imaging.ColorConvertedBitmap(source,
+                new System.Windows.Media.ColorContext(System.Windows.Media.PixelFormats.Bgra32),
+                new System.Windows.Media.ColorContext(new Uri(path)), System.Windows.Media.PixelFormats.Rgba64);
+            var image = new System.Windows.Media.Imaging.FormatConvertedBitmap(converted, System.Windows.Media.PixelFormats.Bgra32, null, 0);
+            var pixels = new byte[256 * 4]; image.CopyPixels(pixels, pixels.Length, 0);
+            hashes.Add(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(pixels)));
+            for (var c = 0; c < 3; c++)
+            {
+                Assert.InRange(pixels[c], 0, 1); Assert.InRange(pixels[255 * 4 + c], 253, 255);
+                for (var i = 8; i <= 64; i++)
+                {
+                    Assert.True(pixels[i * 4 + c] >= i / 2, $"{preset} crushed gray {i}, channel {c}");
+                    Assert.True(pixels[i * 4 + c] >= pixels[(i - 1) * 4 + c], $"{preset} reversed shadows");
+                }
+            }
+            if (preset is IccFilterPreset.ShadowBoost or IccFilterPreset.ShadowGentle)
+                Assert.True(pixels[32 * 4 + 1] > 32, $"{preset} must lift shadows");
+            if (preset == IccFilterPreset.Neutral)
+                for (var i = 0; i < 256; i++) Assert.InRange((int)pixels[i * 4 + 1] - i, -2, 2);
+        }
+        Assert.Equal(11, hashes.Count);
+    }
+
     private static uint ReadBe32(byte[] b, int off)
         => (uint)((b[off] << 24) | (b[off + 1] << 16) | (b[off + 2] << 8) | b[off + 3]);
 
@@ -122,12 +158,12 @@ public class IccFilterServiceTests : IDisposable
         IccFilterService.Apply(IccFilterPreset.Vivid);
 
         // 预设被安装进色彩目录并成为列表末位（默认）
-        Assert.Contains("FpsTune-Vivid.icc", _api.InstalledProfiles);
-        Assert.Equal("FpsTune-Vivid.icc", LastValid());
+        Assert.Contains("FpsTune-Vivid-v3.icc", _api.InstalledProfiles);
+        Assert.Equal("FpsTune-Vivid-v3.icc", LastValid());
 
         var state = IccFilterService.GetState();
         Assert.True(state.Supported);
-        Assert.Equal("FpsTune-Vivid.icc", state.CurrentProfileName);
+        Assert.Equal("FpsTune-Vivid-v3.icc", state.CurrentProfileName);
         Assert.True(state.Restorable);
     }
 
@@ -140,7 +176,7 @@ public class IccFilterServiceTests : IDisposable
         IccFilterService.Apply(IccFilterPreset.Vivid);
         IccFilterService.Apply(IccFilterPreset.ShadowBoost);
 
-        Assert.Equal("FpsTune-ShadowBoost.icc", LastValid());
+        Assert.Equal("FpsTune-ShadowBoost-v3.icc", LastValid());
 
         // 还原必须回到"从未覆盖过"的原点（sRGB），而不是上一次的 Vivid
         Assert.True(IccFilterService.Restore());
@@ -175,7 +211,7 @@ public class IccFilterServiceTests : IDisposable
         _api.AssociationList.AddRange(new[] { "sRGB.icm", "已删除.icm", "校色.icm" });
 
         IccFilterService.Apply(IccFilterPreset.Vivid);
-        Assert.Equal("FpsTune-Vivid.icc", LastValid());
+        Assert.Equal("FpsTune-Vivid-v3.icc", LastValid());
 
         Assert.True(IccFilterService.Restore());
 
@@ -315,7 +351,7 @@ public class IccFilterServiceTests : IDisposable
         var second = IccFilterService.ApplyFromFile(fileB);
         Assert.Equal(second, LastValid());
         IccFilterService.Apply(IccFilterPreset.Dehaze);
-        Assert.Equal("FpsTune-Dehaze.icc", LastValid());
+        Assert.Equal("FpsTune-Dehaze-v3.icc", LastValid());
     }
 
     [Fact]

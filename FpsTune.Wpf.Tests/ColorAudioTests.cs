@@ -47,6 +47,13 @@ public sealed class ColorAudioTests
         var original = MultiDisplayColorTests.LinearRamp();
         var curves = Enum.GetValues<IccFilterPreset>().Select(p => ScreenColorService.BuildRamp(ScreenColorSettings.ForPreset(p), original)).ToArray();
         Assert.Equal(curves.Length, curves.Select(c => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Runtime.InteropServices.MemoryMarshal.AsBytes(c.AsSpan())))).Distinct().Count());
+        foreach (var curve in curves)
+            for (var c = 0; c < 3; c++)
+            {
+                Assert.Equal((ushort)0, curve[c * 256]); Assert.Equal(ushort.MaxValue, curve[c * 256 + 255]);
+                Assert.True(curve[c * 256 + 16] >= 8 * 257); // Every built-in keeps the visible dark range.
+                for (var i = 1; i < 256; i++) Assert.True(curve[c * 256 + i] > curve[c * 256 + i - 1]);
+            }
         screens.Displays[1] = screens.Displays[1] with { FriendlyName = "AMD Radeon display" };
         IccFilterService.Apply(IccFilterPreset.Neutral, "B"); // Migrate an old managed ICC receipt, not the vendor's profile.
         ScreenColorService.Apply(new(Brightness: 5, Contrast: 110, Gamma: 1.1, Blue: 90), "B");
@@ -124,7 +131,7 @@ public sealed class ColorAudioTests
     [Fact]
     public void ICC_single_gamma_uses_two_byte_u8fixed8_value()
     {
-        var bytes = IccProfileGenerator.Build(IccFilterPreset.Neutral);
+        var bytes = IccProfileGenerator.Build(new IccProfileGenerator.PresetParams("single-gamma.icc", "Single gamma fallback"));
         static int Be(byte[] b, int offset) => System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(b.AsSpan(offset, 4));
         var count = Be(bytes, 128);
         var tag = Enumerable.Range(0, count).Select(i => 132 + i * 12).Single(o => Encoding.ASCII.GetString(bytes, o, 4) == "rTRC");

@@ -18,12 +18,12 @@ public sealed record ScreenColorSettings(double Brightness = 0, double Contrast 
     }
     public static ScreenColorSettings ForPreset(IccFilterPreset preset) => preset switch
     {
-        IccFilterPreset.Vivid => new(Contrast: 112, Gamma: 1.04),
+        IccFilterPreset.Vivid => new(Contrast: 108, Gamma: 1.06, Shadows: 4),
         IccFilterPreset.ShadowBoost => new(Gamma: 1.12, Shadows: 20),
-        IccFilterPreset.Dehaze => new(Contrast: 118, Blue: 97),
-        IccFilterPreset.NightGuard => new(Gamma: 1.06, Shadows: 8, Green: 95, Blue: 82),
-        IccFilterPreset.Warm => new(Contrast: 105, Green: 98, Blue: 91),
-        IccFilterPreset.Cool => new(Contrast: 108, Red: 92, Green: 97),
+        IccFilterPreset.Dehaze => new(Contrast: 112, Gamma: 1.04, Shadows: 3, Blue: 98),
+        IccFilterPreset.NightGuard => new(Gamma: 1.06, Shadows: 8, Green: 97, Blue: 88),
+        IccFilterPreset.Warm => new(Contrast: 105, Gamma: 1.02, Green: 98, Blue: 94),
+        IccFilterPreset.Cool => new(Contrast: 106, Gamma: 1.04, Red: 96, Green: 99),
         IccFilterPreset.Soft => new(Contrast: 90, Gamma: 1.02, Blue: 97),
         IccFilterPreset.ShadowGentle => new(Shadows: 8),
         IccFilterPreset.ContrastGentle => new(Contrast: 106),
@@ -104,16 +104,23 @@ public static class ScreenColorService
         for (var c = 0; c < 3; c++)
         for (var i = 0; i < 256; i++)
         {
-            var x = i / 255d;
-            var y = Math.Pow(x, 1 / settings.Gamma);
-            y += settings.Shadows / 100 * 4 * x * Math.Pow(1 - x, 2);
-            y = Math.Clamp(((y - .5) * settings.Contrast / 100 + .5 + settings.Brightness / 100) * gains[c] / 100, 0, 1);
+            var y = MapTone(i / 255d, settings, gains[c]);
             var index = y * 255;
             var lo = (int)index;
             result[c * 256 + i] = (ushort)Math.Round(baseline[c * 256 + lo] * (1 - (index - lo))
                 + baseline[c * 256 + Math.Min(255, lo + 1)] * (index - lo));
         }
         return result;
+    }
+    // Endpoint-preserving curves keep contrast/brightness from flattening a range of
+    // shadow values to black. The ICC inverse and preview shader use the same mapping.
+    internal static double MapTone(double x, ScreenColorSettings settings, double gain)
+    {
+        var y = Math.Pow(x, 1 / settings.Gamma);
+        y += settings.Shadows / 100 * 4 * y * Math.Pow(1 - y, 2);
+        y += (settings.Contrast / 100 - 1) * 2 * y * (1 - y) * (2 * y - 1);
+        y += settings.Brightness / 100 * 4 * y * (1 - y);
+        return Math.Pow(Math.Clamp(y, 0, 1), 100 / gain);
     }
     public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false, bool preserveIcc = false)
     {

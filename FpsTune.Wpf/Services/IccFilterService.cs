@@ -319,8 +319,9 @@ public static class IccFilterService
     /// <summary>本工具生成的全部预设文件名（含尚未生成的）。</summary>
     internal static string[] AllPresetFileNames()
         => Enum.GetValues<IccFilterPreset>()
-            .Select(p => IccProfileGenerator.ParamsFor(p).FileName)
-            .Concat(new[] { "FpsTune-Neutral.icc", "FpsTune-Muted.icc" }).ToArray();
+            .Select(p => IccProfileGenerator.FileNameFor(p))
+            .Concat(Enum.GetValues<IccFilterPreset>().Select(p => $"FpsTune-{p}.icc"))
+            .Concat(new[] { "FpsTune-Neutral-v2.icc", "FpsTune-Muted-v2.icc" }).ToArray();
 
     private static IccDisplayInfo SelectDisplay(IIccSystemApi api, string? identity)
     {

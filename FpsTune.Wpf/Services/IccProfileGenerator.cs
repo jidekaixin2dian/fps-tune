@@ -34,66 +34,32 @@ public static class IccProfileGenerator
         public double[] GXyz { get; init; } = { 0.3851, 0.7169, 0.0971 };
         public double[] BXyz { get; init; } = { 0.1431, 0.0606, 0.7141 };
 
-        /// <summary>设备编码(0..1) → 线性亮度的 TRC 曲线查找表（256 项）。空 = 使用固定 gamma 2.2 单值曲线。</summary>
+        /// <summary>设备编码(0..1) → 线性亮度的 TRC 曲线查找表。空 = 使用固定 gamma 2.2 单值曲线。</summary>
         public ushort[]? Curve { get; init; }
+        public ushort[]? RedCurve { get; init; }
+        public ushort[]? GreenCurve { get; init; }
+        public ushort[]? BlueCurve { get; init; }
     }
 
-    public static PresetParams ParamsFor(IccFilterPreset preset) => preset switch
+    // Bump this suffix when changing preset transforms; keep active older profiles intact.
+    internal static string FileNameFor(IccFilterPreset preset) => $"FpsTune-{preset}-v3.icc";
+
+    public static PresetParams ParamsFor(IccFilterPreset preset)
     {
-        // 饱和：矩阵列远离白点 10%
-        IccFilterPreset.Vivid => new("FpsTune-Vivid.icc", "FPS 帧律 · FPS 鲜艳（微增饱和与对比）")
+        var settings = ScreenColorSettings.ForPreset(preset);
+        var saturation = preset switch { IccFilterPreset.Vivid => 1.06, IccFilterPreset.Soft => .94, IccFilterPreset.Muted => .96, _ => 1d };
+        // A destination profile is inverted by the CMM: store the inverse desired
+        // saturation matrix and inverse desired display curves, preserving D50 white.
+        double[] Column(double[] primary, double luminance) => Enumerable.Range(0, 3)
+            .Select(i => primary[i] / saturation + (1 - 1 / saturation) * luminance * (StdRXyz[i] + StdGXyz[i] + StdBXyz[i])).ToArray();
+        return new(FileNameFor(preset), $"FPS Tune - {preset} - shadow-preserving v3")
         {
-            RXyz = PullAway(StdRXyz, StdWXyz, 1.10),
-            GXyz = PullAway(StdGXyz, StdWXyz, 1.10),
-            BXyz = PullAway(StdBXyz, StdWXyz, 1.10),
-            Curve = ContrastCurve(0.94),
-        },
-        // 暗部：阴影段声称更亮（系统补偿后屏幕阴影提亮）
-        IccFilterPreset.ShadowBoost => new("FpsTune-ShadowBoost.icc", "FPS 帧律 · 暗部增强（阴影段上抬）")
-        {
-            Curve = ShadowLiftCurve(0.30),
-        },
-        // 去雾：声称的中灰对比略降（屏幕对比增强）+ 蓝矩阵列 Z 分量放大（屏幕微降蓝）
-        IccFilterPreset.Dehaze => new("FpsTune-Dehaze.icc", "FPS 帧律 · 去雾（S 型对比 + 微降蓝）")
-        {
-            Curve = ContrastCurve(0.85),
-            BXyz = ScaleB(StdBXyz, 1.04),
-        },
-        // 夜战护眼：蓝列 Z 明显放大（屏幕明显降蓝）+ 暗部微抬，夜间/长时间用
-        IccFilterPreset.NightGuard => new("FpsTune-NightGuard.icc", "FPS 帧律 · 夜间暖色（降蓝 + 暗部微抬）")
-        {
-            Curve = ShadowLiftCurve(0.12),
-            BXyz = ScaleB(StdBXyz, 1.10),
-        },
-        // 暖色：蓝列中度放大 + 对比微升，偏暖观感
-        IccFilterPreset.Warm => new("FpsTune-Warm.icc", "FPS 帧律 · 暖色（中度降蓝 + 对比微升）")
-        {
-            Curve = ContrastCurve(1.06),
-            BXyz = ScaleB(StdBXyz, 1.07),
-        },
-        // 冷色清晰：蓝列 Z 略缩（屏幕偏冷）+ 对比升
-        IccFilterPreset.Cool => new("FpsTune-Cool.icc", "FPS 帧律 · 冷色清晰（偏冷 + 对比升）")
-        {
-            Curve = ContrastCurve(1.10),
-            BXyz = ScaleB(StdBXyz, 0.96),
-        },
-        // 柔和：矩阵列向白点收拢（降饱和）+ 对比微降，久看不累
-        IccFilterPreset.Soft => new("FpsTune-Soft.icc", "FPS 帧律 · 柔和（降饱和 + 对比微降）")
-        {
-            RXyz = PullAway(StdRXyz, StdWXyz, 0.92),
-            GXyz = PullAway(StdGXyz, StdWXyz, 0.92),
-            BXyz = PullAway(StdBXyz, StdWXyz, 0.92),
-            Curve = ContrastCurve(0.94),
-        },
-        IccFilterPreset.ShadowGentle => new("FpsTune-ShadowGentle.icc", "FPS Tune - Gentle shadows") { Curve = ShadowLiftCurve(0.08) },
-        IccFilterPreset.ContrastGentle => new("FpsTune-ContrastGentle.icc", "FPS Tune - Gentle contrast") { Curve = ContrastCurve(0.97) },
-        IccFilterPreset.Muted => new("FpsTune-Muted-v2.icc", "FPS Tune - Muted")
-        {
-            RXyz = PullAway(StdRXyz, StdWXyz, 0.96), GXyz = PullAway(StdGXyz, StdWXyz, 0.96), BXyz = PullAway(StdBXyz, StdWXyz, 0.96),
-        },
-        IccFilterPreset.Neutral => new("FpsTune-Neutral-v2.icc", "FPS Tune - Neutral gamma 2.2"),
-        _ => throw new ArgumentOutOfRangeException(nameof(preset)),
-    };
+            RXyz = Column(StdRXyz, .2126), GXyz = Column(StdGXyz, .7152), BXyz = Column(StdBXyz, .0722),
+            RedCurve = InverseDisplayCurve(settings, settings.Red),
+            GreenCurve = InverseDisplayCurve(settings, settings.Green),
+            BlueCurve = InverseDisplayCurve(settings, settings.Blue),
+        };
+    }
 
     internal static (string Title, string Description) ResourceKeysFor(IccFilterPreset preset) => preset switch
     {
@@ -111,42 +77,30 @@ public static class IccProfileGenerator
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };
 
-    private static readonly double[] StdWXyz = { 0.9642, 1.0000, 0.8249 };
     private static readonly double[] StdRXyz = { 0.4360, 0.2225, 0.0139 };
     private static readonly double[] StdGXyz = { 0.3851, 0.7169, 0.0971 };
     private static readonly double[] StdBXyz = { 0.1431, 0.0606, 0.7141 };
 
-    private static double[] PullAway(double[] col, double[] w, double k)
-        => new[] { w[0] + (col[0] - w[0]) * k, w[1] + (col[1] - w[1]) * k, w[2] + (col[2] - w[2]) * k };
-
-    private static double[] ScaleB(double[] col, double zScale)
-        => new[] { col[0], col[1], col[2] * zScale };
-
-    /// <summary>以 sRGB(≈gamma 2.2) 为基准的对比调整：slope&lt;1 = 声称对比降低（屏幕观感增强），slope&gt;1 反之。</summary>
-    internal static ushort[] ContrastCurve(double slope)
+    private static ushort[] InverseDisplayCurve(ScreenColorSettings settings, double gain)
     {
-        var lut = new ushort[256];
-        for (int i = 0; i < 256; i++)
+        const int count = 1024;
+        var curve = new ushort[count];
+        for (var i = 1; i < count - 1; i++)
         {
-            double x = i / 255.0;
-            double lin = Math.Pow(x, 2.2);
-            double adjusted = 0.5 + (lin - 0.5) * slope;
-            lut[i] = ToU16Fixed(adjusted);
+            var output = i / (count - 1d);
+            double low = 0, high = 1;
+            for (var step = 0; step < 28; step++)
+            {
+                var mid = (low + high) / 2;
+                if (ScreenColorService.MapTone(mid, settings, gain) < output) low = mid; else high = mid;
+            }
+            var input = (low + high) / 2;
+            // Exact sRGB EOTF, including the linear toe, avoids a second shadow shift.
+            var linear = input <= .04045 ? input / 12.92 : Math.Pow((input + .055) / 1.055, 2.4);
+            curve[i] = ToU16Fixed(linear);
         }
-        return lut;
-    }
-
-    /// <summary>阴影段上抬：线性值乘 (1 + s·(1-x))，暗部增益最大、高光趋近不变。</summary>
-    internal static ushort[] ShadowLiftCurve(double strength)
-    {
-        var lut = new ushort[256];
-        for (int i = 0; i < 256; i++)
-        {
-            double x = i / 255.0;
-            double lin = Math.Pow(x, 2.2) * (1.0 + strength * (1.0 - x));
-            lut[i] = ToU16Fixed(lin);
-        }
-        return lut;
+        curve[^1] = ushort.MaxValue;
+        return curve;
     }
 
     private static ushort ToU16Fixed(double v) => (ushort)Math.Clamp(Math.Round(v * 65535.0), 0, 65535);
@@ -163,9 +117,9 @@ public static class IccProfileGenerator
             ("rXYZ", XyzTag(p.RXyz)),
             ("gXYZ", XyzTag(p.GXyz)),
             ("bXYZ", XyzTag(p.BXyz)),
-            ("rTRC", CurveTag(p.Curve, 2.2)),
-            ("gTRC", CurveTag(p.Curve, 2.2)),
-            ("bTRC", CurveTag(p.Curve, 2.2)),
+            ("rTRC", CurveTag(p.RedCurve ?? p.Curve, 2.2)),
+            ("gTRC", CurveTag(p.GreenCurve ?? p.Curve, 2.2)),
+            ("bTRC", CurveTag(p.BlueCurve ?? p.Curve, 2.2)),
             ("cprt", Encoding.ASCII.GetBytes("text\0\0\0\0" + "FpsTune\0")),
         };
 
