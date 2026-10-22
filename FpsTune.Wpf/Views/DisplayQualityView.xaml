@@ -206,7 +206,7 @@
                     <TextBlock x:Name="DisplayTargetState" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
-            <Border x:Name="CardVib" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
+            <Border x:Name="CardVib" MaxWidth="1560" HorizontalAlignment="Stretch" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
                 <StackPanel>
                     <views:ScreenColorPanel x:Name="ColorPanel"/>
                     <StackPanel x:Name="VibranceContent">
@@ -214,10 +214,10 @@
                     <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed">
                         <TextBlock Text="{DynamicResource Str.VibNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <Grid Margin="0,16,0,0" HorizontalAlignment="Left">
+                        <Grid Margin="0,12,0,0" HorizontalAlignment="Stretch">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="300"/>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" x:Name="VibPercentText" Text="—"
@@ -230,7 +230,7 @@
                                     VerticalAlignment="Center" Margin="14,0,18,0"/>
                             <Button Grid.Column="2" x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
                                     Style="{StaticResource SecondaryButtonStyle}"
-                                    MinWidth="120" VerticalAlignment="Center" Click="VibRecommended_Click"
+                                    MinWidth="90" Padding="10,8" VerticalAlignment="Center" Click="VibRecommended_Click"
                                     ToolTip="{DynamicResource Str.TipVibRecommended}"/>
                         </Grid>
 
@@ -245,11 +245,7 @@
                                     MinWidth="110" Click="VibRestore_Click"/>
                         </StackPanel>
 
-                        <TextBlock Text="{DynamicResource Str.VibRecommendedNote}"
-                                   Style="{StaticResource MutedTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
 
-                        <TextBlock Text="{DynamicResource Str.VibNote2}"
-                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <TextBlock x:Name="VibUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"

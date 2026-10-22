@@ -1279,7 +1279,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.EqNoBackup">There are no FPS Tune audio changes to remove.</s:String>
     <s:String x:Key="Str.EqPermission">The audio configuration directory is not writable. Run FPS Tune as administrator to apply. Your saved preset is retained.</s:String>
     <s:String x:Key="Str.ColorPanelTitle">Picture and color</s:String>
-    <s:String x:Key="Str.ColorPanelHint">Choose screen filters or ICC mode, adjust parameters and vibrance, then apply to the selected monitor.</s:String>
+    <s:String x:Key="Str.ColorPanelHint">Choose an ICC profile, fine-tune display parameters, then apply them together.</s:String>
     <s:String x:Key="Str.ColorPreset">Display preset</s:String>
     <s:String x:Key="Str.ColorReset">Reset parameters</s:String>
     <s:String x:Key="Str.ColorRestore">Restore original display curve</s:String>
@@ -1328,17 +1328,17 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">Original</s:String>
     <s:String x:Key="Str.ColorPreviewAfter">Current parameters</s:String>
     <s:String x:Key="Str.ColorPreviewSplit">Original and filter comparison split</s:String>
-    <s:String x:Key="Str.ColorPreviewHint">Move the slider to compare the original and current parameters. Load a game screenshot to preview your own scene.</s:String>
+    <s:String x:Key="Str.ColorPreviewHint">Adjust the display parameters to update the screenshot immediately.</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">Cannot load image. Choose a valid PNG or JPG (up to 20 MB and 64 megapixels).</s:String>
     <s:String x:Key="Str.ColorSelectIcc">Select an ICC preset or load a profile.</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">Digital vibrance applied: {0}%.</s:String>
     <s:String x:Key="Str.ColorWorkspaceFailed">Step incomplete: {0}</s:String>
-    <s:String x:Key="Str.ColorMode">Color mode</s:String>
-    <s:String x:Key="Str.ColorScreenMode">Screen filters and parameters (SDR)</s:String>
-    <s:String x:Key="Str.ColorIccMode">ICC color management</s:String>
+    <s:String x:Key="Str.ColorMode">ICC layer mode</s:String>
+    <s:String x:Key="Str.ColorScreenMode">Display parameters only</s:String>
+    <s:String x:Key="Str.ColorIccMode">ICC + display parameters</s:String>
     <s:String x:Key="Str.ColorRestoreAll">Restore screen color changes</s:String>
-    <s:String x:Key="Str.ColorWorkspaceConfirm">Apply {0} and edited digital vibrance to the selected monitor, saving originals.</s:String>
-    <s:String x:Key="Str.ColorPreviewIccHint">Preview the selected ICC color conversion for color-managed applications.</s:String>
+    <s:String x:Key="Str.ColorWorkspaceConfirm">Apply {0} and edited vibrance together to the selected monitor, saving originals.</s:String>
+    <s:String x:Key="Str.ColorPreviewIccHint">Preview combines ICC and display parameters; the ICC association applies to color-managed applications.</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">Screenshot saturation is approximate; the GPU driver controls the actual level.</s:String>
     <s:String x:Key="Str.ColorPreviewIccFailed">ICC preview failed: {0}</s:String>
     <s:String x:Key="Str.ColorPreviewEmpty">Load a game screenshot to compare color changes</s:String>
@@ -1369,4 +1369,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewDelta">Delta Force · gameplay screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewValorant">VALORANT · gameplay screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">Custom screenshot</s:String>
+    <s:String x:Key="Str.ColorIccLayer">ICC color profile</s:String>
+    <s:String x:Key="Str.ColorParametersLayer">Display parameters · combine with ICC</s:String>
+    <s:String x:Key="Str.ColorIccFile">ICC loaded from file</s:String>
+    <s:String x:Key="Str.ColorPreviewDrag">Drag the handle on the image to compare, or focus it and use the arrow keys.</s:String>
 </ResourceDictionary>

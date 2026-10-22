@@ -75,7 +75,7 @@ public sealed class MultiDisplayUiTests
                 ((Button)page.FindName("DisplayRefreshButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && combo.Text.Contains("Screen B"));
                 ((ComboBox)color.FindName("ColorModeCombo")).SelectedIndex = 1;
-                ((ComboBox)color.FindName("ColorPresetCombo")).SelectedIndex = 1;
+                ((ComboBox)color.FindName("IccPresetCombo")).SelectedIndex = 1;
                 DlssFeedbackTests.PumpUntil(() => applyColor.IsEnabled);
                 applyColor.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => icc.IsEnabled && ((TextBlock)page.FindName("IccCurrentText")).Text.Contains("Vivid"));
@@ -107,7 +107,14 @@ public sealed class MultiDisplayUiTests
                 Assert.Empty(DigitalVibranceService.BackupTargets());
             }
             catch (Exception ex) { error = ex; }
-            finally { confirm?.Stop(); window?.Close(); application?.Shutdown(); UserDataPaths.RootOverride = null; DialogService.PrepareWindowForTest = null; }
+            finally
+            {
+                confirm?.Stop(); window?.Close();
+                if (window is not null) window.Content = null;
+                application?.Shutdown(); UserDataPaths.RootOverride = null; DialogService.PrepareWindowForTest = null;
+                // WIC color contexts release immutable preview snapshot handles via finalization.
+                GC.Collect(); GC.WaitForPendingFinalizers();
+            }
         }) { IsBackground = true };
         thread.SetApartmentState(ApartmentState.STA); thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(35)), "Multi-display WPF test did not finish.");

@@ -29,7 +29,7 @@ public partial class ColorPreviewControl : UserControl
         AfterImage.Effect = _effect;
         ScreenshotCombo.SelectedIndex = 0;
         Loaded += async (_, _) => { if (_source is null) await SelectScreenshotAsync(); else await RefreshImageAsync(); };
-        Unloaded += (_, _) => { ++_generation; ++_loadGeneration; };
+        Unloaded += (_, _) => { ++_generation; ++_loadGeneration; AfterImage.Source = _source; };
     }
     private async void Screenshot_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -101,8 +101,10 @@ public partial class ColorPreviewControl : UserControl
             if (profile is not null)
                 image = await Task.Run(() =>
                 {
+                    if (new FileInfo(profile).Length > 16 * 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
+                    var snapshot = ScreenColorPreview.CacheIccProfile(File.ReadAllBytes(profile));
                     var converted = new ColorConvertedBitmap(source, new ColorContext(PixelFormats.Bgra32),
-                        new ColorContext(new Uri(profile, UriKind.Absolute)), PixelFormats.Bgra32);
+                        new ColorContext(new Uri(snapshot, UriKind.Absolute)), PixelFormats.Bgra32);
                     converted.Freeze(); return converted;
                 });
             if (generation != _generation) return;
@@ -136,11 +138,15 @@ public partial class ColorPreviewControl : UserControl
         catch { PreviewStatus.Text = Str.T("Str.ColorPreviewLoadFailed"); }
         finally { LoadImageButton.IsEnabled = true; }
     }
-    private void Comparison_SizeChanged(object sender, SizeChangedEventArgs e) { if (e.WidthChanged) UpdatePreviewHeight(); UpdateSplit(); }
+    private void Comparison_SizeChanged(object sender, SizeChangedEventArgs e) => UpdatePreviewHeight();
     private void UpdatePreviewHeight()
     {
-        if (_source is not null && ComparisonSurface.ActualWidth > 0)
-            ComparisonSurface.Height = Math.Clamp(ComparisonSurface.ActualWidth * _source.PixelHeight / _source.PixelWidth, 230, 440);
+        if (_source is null || ComparisonViewport.ActualWidth <= 2) return;
+        var aspect = (double)_source.PixelWidth / _source.PixelHeight;
+        var height = Math.Min((ComparisonViewport.ActualWidth - 4) / aspect, 520);
+        ComparisonSurface.Width = height * aspect;
+        ComparisonSurface.Height = height;
+        ComparisonSurface.UpdateLayout(); UpdateSplit();
     }
     private void Split_Changed(object sender, RoutedPropertyChangedEventArgs<double> e) => UpdateSplit();
     private void UpdateSplit()
@@ -148,6 +154,6 @@ public partial class ColorPreviewControl : UserControl
         if (BeforeLayer is null || SplitSlider is null) return;
         var x = ComparisonSurface.ActualWidth * SplitSlider.Value / 100;
         BeforeLayer.Clip = new RectangleGeometry(new Rect(0, 0, x, ComparisonSurface.ActualHeight));
-        Divider.Margin = new Thickness(Math.Max(0, x - 1), 0, 0, 0);
+
     }
 }

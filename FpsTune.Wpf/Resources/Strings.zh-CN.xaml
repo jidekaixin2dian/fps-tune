@@ -1279,7 +1279,7 @@
     <s:String x:Key="Str.EqNoBackup">没有帧律音频改动需要移除。</s:String>
     <s:String x:Key="Str.EqPermission">音频引擎配置目录不可写，请以管理员身份启动帧律后应用；已保存的方案会保留。</s:String>
     <s:String x:Key="Str.ColorPanelTitle">画面与色彩</s:String>
-    <s:String x:Key="Str.ColorPanelHint">选择整屏滤镜或 ICC 模式，统一调整预设、参数和数字振动，再应用到选定屏幕。</s:String>
+    <s:String x:Key="Str.ColorPanelHint">先选 ICC，再微调亮度、对比度等参数，可叠加预览并一起应用到选定屏幕。</s:String>
     <s:String x:Key="Str.ColorPreset">画面预设</s:String>
     <s:String x:Key="Str.ColorReset">参数归零</s:String>
     <s:String x:Key="Str.ColorRestore">还原屏幕原值</s:String>
@@ -1328,17 +1328,17 @@
     <s:String x:Key="Str.ColorPreviewBefore">原图</s:String>
     <s:String x:Key="Str.ColorPreviewAfter">当前参数预览</s:String>
     <s:String x:Key="Str.ColorPreviewSplit">原图与滤镜对比分隔位置</s:String>
-    <s:String x:Key="Str.ColorPreviewHint">拖动滑条对比原图与当前参数效果；载入游戏截图可查看自己的画面。</s:String>
+    <s:String x:Key="Str.ColorPreviewHint">调整右侧参数，截图实时更新。</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">无法载入图片，请选择有效的 PNG / JPG（不超过 20 MB、6400 万像素）。</s:String>
     <s:String x:Key="Str.ColorSelectIcc">请选择 ICC 预设或载入配置文件。</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">数字振动已应用：{0}%。</s:String>
     <s:String x:Key="Str.ColorWorkspaceFailed">此步骤未完成：{0}</s:String>
-    <s:String x:Key="Str.ColorMode">色彩模式</s:String>
-    <s:String x:Key="Str.ColorScreenMode">整屏滤镜与参数（SDR）</s:String>
-    <s:String x:Key="Str.ColorIccMode">ICC 色彩管理</s:String>
+    <s:String x:Key="Str.ColorMode">ICC 叠加方式</s:String>
+    <s:String x:Key="Str.ColorScreenMode">仅调整画面参数</s:String>
+    <s:String x:Key="Str.ColorIccMode">ICC + 画面参数</s:String>
     <s:String x:Key="Str.ColorRestoreAll">还原本屏色彩改动</s:String>
-    <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”及已调整的数字振动应用到选定显示器，并保存原值。</s:String>
-    <s:String x:Key="Str.ColorPreviewIccHint">预览所选 ICC 的颜色转换；支持颜色管理的应用使用该配置。</s:String>
+    <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”和已调整的数字振动一起应用到选定显示器，并保存原值。</s:String>
+    <s:String x:Key="Str.ColorPreviewIccHint">当前预览叠加 ICC 与画面参数；ICC 关联用于支持颜色管理的应用。</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">截图饱和度为近似预览，实际档位由显卡驱动处理。</s:String>
     <s:String x:Key="Str.ColorPreviewIccFailed">ICC 无法预览：{0}</s:String>
     <s:String x:Key="Str.ColorPreviewEmpty">载入游戏实机截图，查看调整前后的变化</s:String>
@@ -1369,4 +1369,8 @@
     <s:String x:Key="Str.ColorPreviewDelta">三角洲行动 · 实机截图</s:String>
     <s:String x:Key="Str.ColorPreviewValorant">无畏契约 · 实机截图</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">自选截图</s:String>
+    <s:String x:Key="Str.ColorIccLayer">ICC 色彩配置</s:String>
+    <s:String x:Key="Str.ColorParametersLayer">画面参数 · 可与 ICC 叠加</s:String>
+    <s:String x:Key="Str.ColorIccFile">从文件载入的 ICC</s:String>
+    <s:String x:Key="Str.ColorPreviewDrag">拖动图中分界手柄对比；选中后也可用 ← / → 微调。</s:String>
 </ResourceDictionary>

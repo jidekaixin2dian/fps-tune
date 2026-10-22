@@ -115,13 +115,13 @@ public static class ScreenColorService
         }
         return result;
     }
-    public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false)
+    public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false, bool preserveIcc = false)
     {
         settings.Validate();
         using var gate = SystemMutationGate.Acquire();
         var display = Require(id);
         // Retire our old managed ICC preset before applying a scan-out effect. Preserve custom/vendor profiles.
-        if (IccFilterService.HasManagedPreset(id) && IccFilterService.HasRestorableBackup(id))
+        if (!preserveIcc && IccFilterService.HasManagedPreset(id) && IccFilterService.HasRestorableBackup(id))
             IccFilterService.Restore(id);
         display = Require(id);
         var current = Api.Read(display);

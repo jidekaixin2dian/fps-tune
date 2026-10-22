@@ -334,9 +334,19 @@ public sealed class ModernWorkspaceUiTests
                 Assert.False(neutralPixels.SequenceEqual(RenderImage()));
                 Assert.Same(original, ((Image)preview.FindName("BeforeImage")).Source);
                 ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex = 1;
-                for (var i = 0; i < 8; i++) ((ComboBox)panel.FindName("ColorPresetCombo")).SelectedIndex = 5 + i % 2;
+                var parameterGrid = (System.Windows.Controls.Primitives.UniformGrid)panel.FindName("ParameterGrid");
+                var brightness = ((StackPanel)parameterGrid.Children[0]).Children.OfType<Slider>().Single();
+                var brightnessValue = brightness.Value;
+                for (var i = 0; i < 8; i++) ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5 + i % 2;
+                Assert.Equal(brightnessValue, brightness.Value);
                 DlssFeedbackTests.PumpUntil(() => image.Source is ColorConvertedBitmap);
                 Assert.DoesNotContain("ICC 无法", ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                var iccPixels = RenderImage(); var iccSource = image.Source;
+                brightness.Value = 10;
+                Assert.False(iccPixels.SequenceEqual(RenderImage()));
+                Assert.Same(iccSource, image.Source);
+                Assert.Equal(1, ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex);
+                Assert.Equal(6, ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex);
                 foreach (var index in new[] { 0, 1 })
                 {
                     scene.SelectedIndex = index;
@@ -354,6 +364,19 @@ public sealed class ModernWorkspaceUiTests
                 ((Slider)preview.FindName("SplitSlider")).Value = 25;
                 var bounds = ((RectangleGeometry)((Grid)preview.FindName("BeforeLayer")).Clip).Rect;
                 Assert.Equal(((Grid)preview.FindName("ComparisonSurface")).ActualWidth / 4, bounds.Width, 2);
+                var comparison = (Grid)preview.FindName("ComparisonSurface");
+                var source = (BitmapSource)((Image)preview.FindName("BeforeImage")).Source;
+                Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 3);
+                preview.UpdateLayout();
+                var track = (System.Windows.Controls.Primitives.Track)((Slider)preview.FindName("SplitSlider")).Template.FindName("PART_Track", (Slider)preview.FindName("SplitSlider"));
+                Assert.Equal(comparison.ActualHeight, track.Thumb.ActualHeight, 2);
+                Assert.Equal(comparison.ActualWidth / 4, track.Thumb.TranslatePoint(new Point(18, 0), comparison).X, 2);
+                window.Width = 760; window.UpdateLayout();
+                Assert.Equal(1, Grid.GetRow((FrameworkElement)panel.FindName("ControlsPane")));
+                window.Width = 2000; window.UpdateLayout();
+                Assert.Equal(0, Grid.GetRow((FrameworkElement)panel.FindName("ControlsPane")));
+                Assert.True(panel.ActualWidth <= 1960);
+                Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 3);
                 Assert.False(((Button)panel.FindName("ColorApplyButton")).IsEnabled);
                 foreach (var theme in new[] { "light", "dark" })
                 { ThemeManager.SetMode(theme); Render(surface, "color-preview-" + theme); }

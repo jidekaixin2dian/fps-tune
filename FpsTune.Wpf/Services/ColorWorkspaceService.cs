@@ -16,7 +16,7 @@ internal static class ColorWorkspaceService
             if (!state.CanApply) throw new InvalidOperationException(state.UnsupportedReason);
             if (preset is null && file is null) throw new InvalidOperationException(Str.T("Str.ColorSelectIcc"));
         }
-        else if (applyScreen)
+        if (applyScreen)
         {
             var state = ScreenColorService.GetState(identity);
             if (!state.Supported) throw new InvalidOperationException(state.Detail);
@@ -30,15 +30,13 @@ internal static class ColorWorkspaceService
         {
             if (iccMode)
             {
-                if (ScreenColorService.GetState(identity).Restorable)
-                { ScreenColorService.Restore(identity); outcomes.Add(Str.T("Str.ColorRestored")); }
                 var name = file is not null ? IccFilterService.ApplyFromFile(file, identity, true)
                     : IccFilterService.Apply(preset!.Value, identity, true);
                 outcomes.Add(Str.T("Str.IccApplied", System.IO.Path.GetFileName(name)));
             }
-            else if (applyScreen)
+            if (applyScreen)
             {
-                ScreenColorService.Apply(settings, identity, true);
+                ScreenColorService.Apply(settings, identity, true, preserveIcc: iccMode);
                 outcomes.Add(Str.T("Str.ColorApplied"));
             }
             if (vibrance is { } percent)

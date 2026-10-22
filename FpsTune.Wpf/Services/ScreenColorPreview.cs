@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -6,6 +7,19 @@ namespace FpsTune.Wpf.Services;
 /// <summary>Local SDR image preview using the same curve as screen calibration; never writes display state.</summary>
 internal static class ScreenColorPreview
 {
+    private static readonly object ProfileLock = new();
+    // WPF color contexts can retain a file handle. Use an immutable snapshot so that
+    // previewing never locks a user's profile or the installed system color directory.
+    internal static string CacheIccProfile(byte[] bytes)
+    {
+        var directory = Path.Combine(UserDataPaths.Root, "preview-profiles");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)) + ".icc");
+        lock (ProfileLock)
+            if (!File.Exists(path)) AtomicFile.WriteAllBytes(path, bytes);
+        return path;
+    }
+
     internal static BitmapSource Apply(BitmapSource source, ScreenColorSettings settings)
     {
         var image = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
