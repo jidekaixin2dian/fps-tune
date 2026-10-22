@@ -1365,4 +1365,8 @@
     <s:String x:Key="Str.MemoryAutoDone">{0} 自动整理：可用内存 {1} → {2} MiB</s:String>
     <s:String x:Key="Str.MemoryAutoWaiting">已开启，等待达到阈值。</s:String>
     <s:String x:Key="Str.MemoryAutoOff">自动整理已关闭。</s:String>
+    <s:String x:Key="Str.ColorPreviewScene">预览游戏截图</s:String>
+    <s:String x:Key="Str.ColorPreviewDelta">三角洲行动 · 实机截图</s:String>
+    <s:String x:Key="Str.ColorPreviewValorant">无畏契约 · 实机截图</s:String>
+    <s:String x:Key="Str.ColorPreviewCustom">自选截图</s:String>
 </ResourceDictionary>

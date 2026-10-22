@@ -106,6 +106,7 @@ public sealed class MemoryCleanupTests
     [Fact]
     public void Combined_cleanup_reads_before_process_trim_and_preserves_per_process_failure_results()
     {
+        using var gate = SystemMutationGate.Acquire();
         var api = new FakeMemory(); var backgroundApi = new BackgroundApi();
         var background = new BackgroundMemoryService(backgroundApi, () => false);
         IReadOnlyList<MemoryProcessResult>? results = null;

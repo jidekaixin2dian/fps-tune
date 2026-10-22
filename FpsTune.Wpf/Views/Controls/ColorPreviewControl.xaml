@@ -8,6 +8,11 @@
     <TextBlock x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}" Style="{StaticResource MutedTextStyle}" Margin="0,3,10,0" TextTrimming="CharacterEllipsis"/>
    </StackPanel>
   </DockPanel>
+  <ComboBox x:Name="ScreenshotCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Screenshot_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorPreviewScene}">
+   <ComboBoxItem Content="{DynamicResource Str.ColorPreviewDelta}"/>
+   <ComboBoxItem Content="{DynamicResource Str.ColorPreviewValorant}"/>
+   <ComboBoxItem x:Name="CustomSceneItem" Content="{DynamicResource Str.ColorPreviewCustom}" Visibility="Collapsed"/>
+  </ComboBox>
   <Border Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
    <Grid x:Name="ComparisonSurface" Height="230" ClipToBounds="True" SizeChanged="Comparison_SizeChanged">
     <TextBlock x:Name="EmptyHint" Text="{DynamicResource Str.ColorPreviewEmpty}" Foreground="#CCD2DA" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>

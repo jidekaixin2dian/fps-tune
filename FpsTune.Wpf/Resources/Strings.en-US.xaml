@@ -1365,4 +1365,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryAutoDone">{0} automatic cleanup: available {1} → {2} MiB</s:String>
     <s:String x:Key="Str.MemoryAutoWaiting">Enabled; waiting for the threshold.</s:String>
     <s:String x:Key="Str.MemoryAutoOff">Automatic cleanup is off.</s:String>
+    <s:String x:Key="Str.ColorPreviewScene">Game screenshot</s:String>
+    <s:String x:Key="Str.ColorPreviewDelta">Delta Force · gameplay screenshot</s:String>
+    <s:String x:Key="Str.ColorPreviewValorant">VALORANT · gameplay screenshot</s:String>
+    <s:String x:Key="Str.ColorPreviewCustom">Custom screenshot</s:String>
 </ResourceDictionary>

@@ -39,6 +39,8 @@
     <Resource Include="Assets\app-icon.png" />
     <Resource Include="Assets\wechat-qr.jpg" />
     <Resource Include="Assets\Shaders\ColorPreview.ps" />
+    <Resource Include="Assets\PreviewScenes\delta-force.png" />
+    <Resource Include="Assets\PreviewScenes\valorant.png" />
   </ItemGroup>
 
   <Target Name="VerifyLicenseInventory" BeforeTargets="BeforeBuild;Publish">

@@ -17,13 +17,55 @@ public partial class ColorPreviewControl : UserControl
     private string? _profile;
     private int _generation;
     private int _loadGeneration;
+    private readonly BitmapSource?[] _scenes = new BitmapSource?[2];
+    private BitmapSource? _customSource;
+    private string? _customName;
+    private bool _selecting;
 
     public ColorPreviewControl()
     {
         InitializeComponent();
         BeforeImage.Source = AfterImage.Source = _source;
         AfterImage.Effect = _effect;
+        ScreenshotCombo.SelectedIndex = 0;
+        Loaded += async (_, _) => { if (_source is null) await SelectScreenshotAsync(); else await RefreshImageAsync(); };
         Unloaded += (_, _) => { ++_generation; ++_loadGeneration; };
+    }
+    private async void Screenshot_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_selecting && IsLoaded) await SelectScreenshotAsync();
+    }
+    private async Task SelectScreenshotAsync()
+    {
+        var index = ScreenshotCombo.SelectedIndex;
+        if (index < 0 || index > 2) return;
+        var generation = ++_loadGeneration;
+        try
+        {
+            BitmapSource? source;
+            if (index == 2) source = _customSource;
+            else source = _scenes[index] ??= await Task.Run(() =>
+            {
+                var image = new BitmapImage(); image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.DecodePixelWidth = 1920;
+                image.UriSource = new Uri("pack://application:,,,/FpsTune;component/Assets/PreviewScenes/"
+                    + (index == 0 ? "delta-force.png" : "valorant.png"));
+                image.EndInit(); image.Freeze(); return image;
+            });
+            if (source is null || generation != _loadGeneration) return;
+            await ShowSourceAsync(source, index == 2 ? _customName! : Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
+        }
+        catch { if (generation == _loadGeneration) PreviewStatus.Text = Str.T("Str.ColorPreviewLoadFailed"); }
+    }
+    private async Task ShowSourceAsync(BitmapSource source, string name)
+    {
+        _source = source;
+        EmptyHint.Visibility = Visibility.Collapsed;
+        BeforeImage.Source = AfterImage.Source = source;
+        ImageNameText.Text = name;
+        UpdatePreviewHeight();
+        await RefreshImageAsync();
     }
     public void SetSettings(ScreenColorSettings settings)
     {
@@ -79,11 +121,11 @@ public partial class ColorPreviewControl : UserControl
         var generation = ++_loadGeneration;
         var source = await Task.Run(() => WallpaperService.Decode(path));
         if (generation != _loadGeneration) return;
-        _source = source;
-        EmptyHint.Visibility = Visibility.Collapsed;
-        BeforeImage.Source = source;
-        ImageNameText.Text = Path.GetFileName(path);
-        await RefreshImageAsync();
+        _customSource = source; _customName = Path.GetFileName(path);
+        _selecting = true;
+        try { CustomSceneItem.Visibility = Visibility.Visible; ScreenshotCombo.SelectedIndex = 2; }
+        finally { _selecting = false; }
+        await ShowSourceAsync(source, _customName);
     }
     private async void LoadImage_Click(object sender, RoutedEventArgs e)
     {
@@ -94,7 +136,12 @@ public partial class ColorPreviewControl : UserControl
         catch { PreviewStatus.Text = Str.T("Str.ColorPreviewLoadFailed"); }
         finally { LoadImageButton.IsEnabled = true; }
     }
-    private void Comparison_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateSplit();
+    private void Comparison_SizeChanged(object sender, SizeChangedEventArgs e) { if (e.WidthChanged) UpdatePreviewHeight(); UpdateSplit(); }
+    private void UpdatePreviewHeight()
+    {
+        if (_source is not null && ComparisonSurface.ActualWidth > 0)
+            ComparisonSurface.Height = Math.Clamp(ComparisonSurface.ActualWidth * _source.PixelHeight / _source.PixelWidth, 230, 440);
+    }
     private void Split_Changed(object sender, RoutedPropertyChangedEventArgs<double> e) => UpdateSplit();
     private void UpdateSplit()
     {
