@@ -16,7 +16,7 @@
        <ComboBoxItem Content="{DynamicResource Str.ColorScreenMode}"/>
        <ComboBoxItem Content="{DynamicResource Str.ColorIccMode}"/>
       </ComboBox>
-      <ComboBox Grid.Row="1" Grid.Column="1" x:Name="IccPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="IccPreset_Changed" AutomationProperties.Name="{DynamicResource Str.IccPresetLabel}"/>
+      <ComboBox Grid.Row="1" Grid.Column="1" x:Name="IccPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="IccPreset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorIccLayer}"/>
       <TextBlock Grid.Row="2" Grid.ColumnSpan="2" x:Name="IccFileText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
       <ContentControl Grid.Row="3" Grid.ColumnSpan="2" x:Name="IccHost" Margin="0,10,0,0"/>
      </Grid>

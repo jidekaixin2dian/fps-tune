@@ -288,7 +288,7 @@
     <s:String x:Key="Str.IccDehazeDesc">S-curve contrast with slightly reduced blue, for foggy scenes</s:String>
     <s:String x:Key="Str.IccStandard">Original profile</s:String>
     <s:String x:Key="Str.IccStandardDesc">Restores your original colour configuration</s:String>
-    <s:String x:Key="Str.IccNote">Requires a color-managed application; use screen filters for screen-wide adjustments.</s:String>
+    <s:String x:Key="Str.IccNote">Choose an ICC profile above and adjust display parameters, then apply color settings. Restore this monitor to recover its original settings.</s:String>
     <s:String x:Key="Str.DrsNote">应用当前游戏的 3D 设置；还原按钮会恢复本工具对该游戏的全部改动。</s:String>
     <s:String x:Key="Str.TipOneClickEsports">High-quality textures + prefer maximum performance + 2x transparency AA + 1 prerendered frame; on high-end desktop cards transparency AA is raised to 4x automatically</s:String>
     <s:String x:Key="Str.DrsDefaultHint">Recommended: high-quality textures · 2x transparency AA · 1 prerendered frame</s:String>

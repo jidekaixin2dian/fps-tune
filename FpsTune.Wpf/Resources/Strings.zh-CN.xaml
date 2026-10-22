@@ -288,7 +288,7 @@
     <s:String x:Key="Str.IccDehazeDesc">S 型对比 + 微降蓝，雾天场景</s:String>
     <s:String x:Key="Str.IccStandard">原始配置</s:String>
     <s:String x:Key="Str.IccStandardDesc">还原为你原始的色彩配置</s:String>
-    <s:String x:Key="Str.IccNote">需要支持 ICC 的应用；整屏调整请选择上方“整屏滤镜与参数（SDR）”。</s:String>
+    <s:String x:Key="Str.IccNote">在上方选择 ICC 并调整画面参数，再点击“应用色彩设置”；可用“还原本屏色彩改动”恢复原值。</s:String>
     <s:String x:Key="Str.DrsNote">应用当前游戏的 3D 设置；还原按钮会恢复本工具对该游戏的全部改动。</s:String>
     <s:String x:Key="Str.TipOneClickEsports">纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧；桌面高端卡自动升透明度 4x</s:String>
     <s:String x:Key="Str.DrsDefaultHint">默认推：纹理高质量 · 透明度 2x · 预渲染 1 帧</s:String>
