@@ -13,7 +13,7 @@ public partial class ScreenColorPanel : UserControl
     private int _generation;
     private int _previewGeneration;
     private readonly Dictionary<IccFilterPreset, Task<string>> _profileTasks = [];
-    private bool _screenSupported, _iccSupported, _restorable, _vibranceRestorable;
+    private bool _screenSupported, _iccSupported, _iccRestorable, _restorable, _vibranceRestorable;
     private int? _vibrance;
     private bool _vibranceDirty;
     private string? _iccFile;
@@ -112,7 +112,7 @@ public partial class ScreenColorPanel : UserControl
     private void Availability()
     {
         if (ColorApplyButton is null) return;
-        ColorApplyButton.IsEnabled = !_busy && (IccMode ? _iccSupported && (Preset is not null || _iccFile is not null) : _screenSupported || _vibranceDirty && _vibrance is not null);
+        ColorApplyButton.IsEnabled = !_busy && (IccMode ? _iccSupported && (Preset is not null || _iccFile is not null) : _screenSupported || _iccRestorable || _vibranceDirty && _vibrance is not null);
         ParameterGrid.IsEnabled = !_busy && _screenSupported;
         ColorResetButton.IsEnabled = !_busy && _screenSupported;
         ColorPresetCombo.IsEnabled = !_busy && _screenSupported;
@@ -179,7 +179,7 @@ public partial class ScreenColorPanel : UserControl
             finally { _syncing = false; }
             ShowSettings(s.Settings);
         }
-        _screenSupported = s.Supported; _iccSupported = states.Icc.CanApply;
+        _screenSupported = s.Supported; _iccSupported = states.Icc.CanApply; _iccRestorable = states.Icc.Restorable;
         _restorable = s.Restorable || states.Icc.Restorable;
         Availability();
         IsEnabled = true;
@@ -224,11 +224,12 @@ public partial class ScreenColorPanel : UserControl
     {
         if (_busy || _identity is null) return;
         var settings = Values(); var identity = _identity;
-        if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorWorkspaceConfirm", IccMode ? Str.T("Str.ColorIccMode") : Str.T("Str.ColorScreenMode")), confirmText: Str.T("Str.ColorApply"))) return;
+        var restoreIcc = !IccMode && _iccRestorable;
+        if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorWorkspaceConfirm", IccMode ? Str.T("Str.ColorIccMode") : Str.T(restoreIcc ? "Str.ColorIccOffMode" : "Str.ColorScreenMode")), confirmText: Str.T("Str.ColorApply"))) return;
         var iccMode = IccMode; var preset = Preset; var file = _iccFile; var vibrance = _vibranceDirty ? _vibrance : null;
         var applyScreen = _screenSupported;
         await Run(() => {
-            if (Unified) return ColorWorkspaceService.Apply(identity, settings, iccMode, preset, file, vibrance, applyScreen);
+            if (Unified) return ColorWorkspaceService.Apply(identity, settings, iccMode, preset, file, vibrance, applyScreen, restoreIcc);
             var rebased = ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift: true);
             return Str.T("Str.ColorApplied") + (rebased ? " " + Str.T("Str.ColorNewBaselineSaved") : "");
         });

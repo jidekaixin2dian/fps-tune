@@ -5,7 +5,7 @@ namespace FpsTune.Wpf.Services;
 internal static class ColorWorkspaceService
 {
     internal static string Apply(string identity, ScreenColorSettings settings, bool iccMode,
-        IccFilterPreset? preset, string? file, int? vibrance, bool applyScreen = true)
+        IccFilterPreset? preset, string? file, int? vibrance, bool applyScreen = true, bool restoreIcc = false)
     {
         settings.Validate();
         using var gate = SystemMutationGate.Acquire();
@@ -23,11 +23,14 @@ internal static class ColorWorkspaceService
         }
         if (vibrance is not null && !DigitalVibranceService.GetState(identity).Supported)
             throw new InvalidOperationException(Str.T("Str.DisplayDvcUnavailable"));
-        if (!iccMode && !applyScreen && vibrance is null)
+        restoreIcc &= !iccMode;
+        if (!iccMode && !applyScreen && vibrance is null && !restoreIcc)
             throw new InvalidOperationException(Str.T("Str.ColorReadFailed"));
         var outcomes = new List<string>();
         try
         {
+            if (restoreIcc && IccFilterService.Restore(identity))
+                outcomes.Add("ICC: " + Str.T("Str.ColorRestored"));
             if (iccMode)
             {
                 var name = file is not null ? IccFilterService.ApplyFromFile(file, identity, true)

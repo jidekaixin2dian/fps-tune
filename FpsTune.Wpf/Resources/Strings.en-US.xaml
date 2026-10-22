@@ -1379,4 +1379,5 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewPending">Previewing · Apply color settings to use them on this display</s:String>
     <s:String x:Key="Str.ColorExactValue">numeric value</s:String>
     <s:String x:Key="Str.ColorLegacyFilterUpdate">Previewing the updated shadow-preserving filter. Apply color settings to update the old filter; original settings remain restorable.</s:String>
+    <s:String x:Key="Str.ColorIccOffMode">Disable ICC filter + display parameters</s:String>
 </ResourceDictionary>

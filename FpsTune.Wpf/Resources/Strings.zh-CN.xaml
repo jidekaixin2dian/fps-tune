@@ -1379,4 +1379,5 @@
     <s:String x:Key="Str.ColorPreviewPending">正在预览 · 点击“应用色彩设置”使屏幕生效</s:String>
     <s:String x:Key="Str.ColorExactValue">数值输入</s:String>
     <s:String x:Key="Str.ColorLegacyFilterUpdate">已载入新版保暗部滤镜预览；点击“应用色彩设置”更新旧版滤镜，原值仍可还原。</s:String>
+    <s:String x:Key="Str.ColorIccOffMode">关闭 ICC 滤镜 + 画面参数</s:String>
 </ResourceDictionary>

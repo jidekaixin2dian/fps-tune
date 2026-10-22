@@ -69,6 +69,12 @@ public sealed class MultiDisplayColorTests : IDisposable
         ColorWorkspaceService.Restore("A");
         Assert.Equal(LinearRamp(), Ramps["A"]); Assert.Equal(30, Levels["A"]);
         Assert.Equal(60, Levels["B"]); Assert.Equal(new[] { "b.icm" }, Profiles["B"]);
+        Displays[0] = Displays[0] with { AdvancedColorEnabled = true, ColorMode = DisplayColorMode.Hdr };
+        ColorWorkspaceService.Apply("A", new(), true, null, Path.Combine(Root, "colors", "external.icm"), null, applyScreen: false);
+        Assert.StartsWith(IccFilterService.CustomProfilePrefix, Profiles["A"].Last());
+        ColorWorkspaceService.Apply("A", new(), false, null, null, null, applyScreen: false, restoreIcc: true);
+        Assert.Equal(new[] { "a.icm" }, Profiles["A"]); Assert.Equal(LinearRamp(), Ramps["A"]);
+        Displays[0] = Displays[0] with { AdvancedColorEnabled = false, ColorMode = DisplayColorMode.Sdr };
         IgnoreVibWrite = true;
         Assert.Throws<InvalidOperationException>(() => ColorWorkspaceService.Apply("A", new(Brightness: 5), false, null, null, 80));
         Assert.True(ScreenColorService.GetState("A").Restorable); // The completed curve step remains recoverable after vibrance fails.
