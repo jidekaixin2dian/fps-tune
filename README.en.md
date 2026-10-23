@@ -143,7 +143,7 @@ Join the **FPS 帧律 developer community** to discuss usage, report issues, sug
 
 Use, learning and sharing are welcome. Follow the open-source license when redistributing and, where practical, credit the original project.
 The group is for community discussion and does not promise real-time support. Do not post vulnerabilities or private information publicly.
-Private vulnerability reporting is currently disabled on this repository. Start with a contact request containing no exploit details or personal information, then share details through a private channel supplied by the maintainer.
+Please report security vulnerabilities privately via the repository's private vulnerability reporting; see [SECURITY.md](SECURITY.md) for the process.
 
 ## License and redistribution
 
