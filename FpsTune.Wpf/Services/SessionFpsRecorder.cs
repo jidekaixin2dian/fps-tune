@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Globalization;
 
 namespace FpsTune.Wpf.Services;
 
@@ -56,7 +57,7 @@ public sealed class SessionFpsRecorder
     }
 
     /// <summary>不可用原因的资源键（Start 失败或 Stop 解析失败时非空）。</summary>
-    public string? UnavailableReasonKey => Volatile.Read(ref _limitReached) != 0 ? "Str.FpsReasonLimit" : _unavailableReasonKey;
+    public string? UnavailableReasonKey => Volatile.Read(ref _limitReached) != 0 ? "Str.FpsReasonLimit" : Volatile.Read(ref _unavailableReasonKey);
     /// <summary>解析失败的原始细节（随 FpsNote 落库，供诊断）。</summary>
     public string? ParseError => _parseError;
 
@@ -115,10 +116,24 @@ public sealed class SessionFpsRecorder
                 _outputFile = new FileStream(Path.Combine(Path.GetTempPath(), "FpsTune-frames-" + Guid.NewGuid().ToString("N") + ".csv"),
                     FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read | FileShare.Delete, 65536,
                     FileOptions.Asynchronous | FileOptions.DeleteOnClose);
-                _captureTask = CaptureOutputAsync(process.StandardOutput, _outputFile, MaxOutputBytes, MaxOutputLines, () =>
+                var output = _outputFile;
+                _captureTask = Task.Run(async () =>
                 {
-                    Interlocked.Exchange(ref _limitReached, 1);
-                    _kill(process);
+                    try
+                    {
+                        await CaptureOutputAsync(process.StandardOutput, output, MaxOutputBytes, MaxOutputLines, () =>
+                        {
+                            Interlocked.Exchange(ref _limitReached, 1);
+                            _kill(process);
+                        }).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        _unavailableReasonKey = "Str.FpsReasonParseFailed";
+                        _parseError = "capture-output";
+                        _kill(process);
+                        throw;
+                    }
                 });
                 _errorTask = DrainErrorsAsync(process);
             }
@@ -190,7 +205,7 @@ public sealed class SessionFpsRecorder
         if (parsed.Frame is null)
         {
             _unavailableReasonKey = "Str.FpsReasonParseFailed";
-            _parseError = parsed.Error switch
+            _parseError ??= parsed.Error switch
             {
                 FrameParseError.TooFewFrames => $"frames={parsed.FrameCount}",
                 FrameParseError.UnknownColumns => "header=" + string.Join(";", parsed.Header),
@@ -205,23 +220,55 @@ public sealed class SessionFpsRecorder
 
     internal static async Task CaptureOutputAsync(TextReader input, Stream output, long maxBytes, int maxLines, Action limitReached)
     {
-        // Fixed chunks also bound a malformed single CSV line; ReadLineAsync alone does not.
-        using var writer = new StreamWriter(output, new UTF8Encoding(false), 65536, leaveOpen: true);
+        // Store only round-trip frame times, using the same column/conversion rules as experiments.
+        // Unrelated PresentMon columns consume no disk; fixed input chunks bound malformed single lines.
+        using var writer = new StreamWriter(output, new UTF8Encoding(false), 65536, leaveOpen: true) { NewLine = "\n" };
         var buffer = new char[4096];
         long bytes = 0;
         var lines = 0;
-        var lineLength = 0;
+        var line = new StringBuilder();
+        var column = -1;
+        var isFps = false;
         int count;
         while ((count = await input.ReadAsync(buffer.AsMemory()).ConfigureAwait(false)) > 0)
         {
-            bytes += Encoding.UTF8.GetByteCount(buffer, 0, count);
             for (var i = 0; i < count; i++)
             {
-                if (buffer[i] == '\n') { lines++; lineLength = 0; }
-                else if (++lineLength > 16384) { limitReached(); return; }
+                if (buffer[i] == '\n')
+                {
+                    if (!WriteRecord(line.ToString().TrimEnd('\r'))) return;
+                    line.Clear();
+                }
+                else
+                {
+                    if (line.Length >= 16384) { limitReached(); return; }
+                    line.Append(buffer[i]);
+                }
             }
-            if (bytes > maxBytes || lines > maxLines) { limitReached(); return; }
-            await writer.WriteAsync(buffer.AsMemory(0, count)).ConfigureAwait(false);
+        }
+        if (line.Length > 0) WriteRecord(line.ToString().TrimEnd('\r'));
+
+        bool WriteRecord(string record)
+        {
+            string value;
+            if (column < 0)
+            {
+                var header = FrameTimeStats.ReadHeader(record);
+                column = FrameTimeStats.FindColumn(header);
+                if (column < 0) throw new InvalidDataException("Unrecognized PresentMon frame column.");
+                isFps = header[column].Equals("FPS", StringComparison.OrdinalIgnoreCase);
+                value = "FrameTime";
+            }
+            else
+            {
+                if (!FrameTimeStats.TryReadFrame(record, column, isFps, out var ms)) return true;
+                value = ms.ToString("R", CultureInfo.InvariantCulture);
+            }
+            if (lines >= maxLines || bytes + value.Length + 1 > maxBytes) { limitReached(); return false; }
+            writer.WriteLine(value);
+            bytes += value.Length + 1;
+            lines++;
+            return true;
         }
     }
 

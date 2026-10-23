@@ -264,7 +264,9 @@ public sealed class ModernWorkspaceUiTests
             {
                 void Click(string name) => ((Button)window.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Click("InstallButton"); Click("InstallButton");
-                Assert.True(window.IsRunning); Assert.Equal(1, downloads);
+                Assert.True(window.IsRunning);
+                DlssFeedbackTests.PumpUntil(() => downloads == 1); // Cache preparation now runs off the UI thread.
+                Assert.Equal(1, downloads);
                 Assert.Equal(42, ((ProgressBar)window.FindName("DownloadProgress")).Value);
                 Assert.False(((Button)window.FindName("DownloadPageButton")).IsEnabled);
                 foreach (var theme in new[] { "light", "dark" })

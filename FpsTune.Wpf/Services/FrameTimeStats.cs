@@ -37,16 +37,10 @@ public static class FrameTimeStats
         using var rows = lines.GetEnumerator();
         if (!rows.MoveNext())
             return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
-        var header = rows.Current.Split(',');
+        var header = ReadHeader(rows.Current);
         if (!rows.MoveNext())
             return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
-        var col = -1;
-        foreach (var candidate in ColumnCandidates)
-        {
-            col = Array.FindIndex(header, h => h.Trim().Equals(candidate, StringComparison.OrdinalIgnoreCase));
-            if (col >= 0)
-                break;
-        }
+        var col = FindColumn(header);
         if (col < 0)
             return new FrameParseResult(null, FrameParseError.UnknownColumns, 0, header);
 
@@ -54,18 +48,7 @@ public static class FrameTimeStats
         var isFps = header[col].Trim().Equals("FPS", StringComparison.OrdinalIgnoreCase);
         do
         {
-            var line = rows.Current;
-            if (line.Length == 0)
-                continue;
-            var fields = line.Split(',');
-            if (col >= fields.Length)
-                continue;
-            if (double.TryParse(fields[col], NumberStyles.Float, CultureInfo.InvariantCulture, out var n)
-                && double.IsFinite(n) && n > 0)
-            {
-                var ms = isFps ? 1000.0 / n : n;
-                if (double.IsFinite(ms) && ms > 0) frameTimes.Add(ms);
-            }
+            if (TryReadFrame(rows.Current, col, isFps, out var ms)) frameTimes.Add(ms);
         } while (rows.MoveNext());
         if (frameTimes.Count < MinFrames)
             return new FrameParseResult(null, FrameParseError.TooFewFrames, frameTimes.Count, header);
@@ -88,5 +71,54 @@ public static class FrameTimeStats
             null,
             frameTimes.Count,
             header);
+    }
+
+    internal static string[] ReadHeader(string line)
+    {
+        var fields = new List<string>(); var position = 0;
+        var text = line.AsSpan().TrimStart('\uFEFF');
+        while (NextField(text, ref position, out var field)) fields.Add(field.ToString());
+        return fields.ToArray();
+    }
+
+    internal static int FindColumn(string[] header)
+    {
+        foreach (var candidate in ColumnCandidates)
+        {
+            var column = Array.FindIndex(header, h => h.Equals(candidate, StringComparison.OrdinalIgnoreCase));
+            if (column >= 0) return column;
+        }
+        return -1;
+    }
+
+    internal static bool TryReadFrame(string line, int column, bool isFps, out double milliseconds)
+    {
+        milliseconds = 0; var position = 0;
+        for (var index = 0; NextField(line, ref position, out var field); index++)
+        {
+            if (index != column) continue;
+            if (!double.TryParse(field, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+                || !double.IsFinite(value) || value <= 0) return false;
+            milliseconds = isFps ? 1000.0 / value : value;
+            return double.IsFinite(milliseconds) && milliseconds > 0;
+        }
+        return false;
+    }
+
+    // PresentMon records are single-line. Commas inside quoted application/extra fields must not shift the frame column.
+    private static bool NextField(ReadOnlySpan<char> line, ref int position, out ReadOnlySpan<char> field)
+    {
+        field = default;
+        if (position > line.Length) return false;
+        var start = position; var quoted = false;
+        for (; position < line.Length; position++)
+        {
+            if (line[position] == '"') quoted = !quoted;
+            else if (line[position] == ',' && !quoted) break;
+        }
+        if (quoted) { position = line.Length + 1; return false; }
+        field = line[start..position].Trim(); position++;
+        if (field.Length >= 2 && field[0] == '"' && field[^1] == '"') field = field[1..^1].Trim();
+        return true;
     }
 }

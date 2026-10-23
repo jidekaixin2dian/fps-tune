@@ -8,9 +8,9 @@ namespace FpsTune.Wpf.Tests;
 public sealed class SessionFpsTests
 {
     [Fact]
-    public async Task Raw_capture_bounds_bytes_rows_and_unterminated_lines_without_silently_claiming_completion()
+    public async Task Compact_capture_bounds_bytes_frames_and_unterminated_lines_without_silently_claiming_completion()
     {
-        foreach (var (text, bytes, lines) in new[] { (new string('a', 5000), 128L, 100), (string.Concat(Enumerable.Repeat("8\n", 100)), 4096L, 50), (new string('a', 20000), 65536L, 100) })
+        foreach (var (text, bytes, lines) in new[] { ("FrameTime\n" + string.Concat(Enumerable.Repeat("8\n", 100)), 128L, 100), ("FrameTime\n" + string.Concat(Enumerable.Repeat("8\n", 100)), 4096L, 50), ("FrameTime\n" + new string('a', 20000), 65536L, 100) })
         {
             using var output = new MemoryStream(); var limited = false;
             await SessionFpsRecorder.CaptureOutputAsync(new StringReader(text), output, bytes, lines, () => limited = true);
@@ -19,6 +19,34 @@ public sealed class SessionFpsTests
         using var normal = new MemoryStream();
         await SessionFpsRecorder.CaptureOutputAsync(new StringReader("FrameTime\n8\n"), normal, 1024, 100, () => Assert.Fail("Normal capture was truncated"));
         Assert.Equal("FrameTime\n8\n", System.Text.Encoding.UTF8.GetString(normal.ToArray()));
+    }
+
+    [Theory]
+    [InlineData("FrameTime", "8.123456789012345")]
+    [InlineData("FPS", "123.456789012345")]
+    public async Task Compact_capture_preserves_exact_statistics_from_wide_quoted_csv_and_counts_only_valid_frames(string column, string value)
+    {
+        var csv = new[] { $"\uFEFF\"Application\",\"extra,label\",\"{column}\",Unused" }
+            .Concat(Enumerable.Repeat($"\"game,edition\",\"{new string('x', 800)}\",\"{value}\",ignored", 39))
+            .Concat(["\"game,edition\",unused,60,ignored", "game,unused,NaN", "game,unused,0", "game,unused,Infinity", "short"]);
+        var text = string.Join("\r\n", csv); // No final newline; both readers must include the last valid record.
+        using var compact = new MemoryStream();
+        await SessionFpsRecorder.CaptureOutputAsync(new StringReader(text), compact, 4096, 41, () => Assert.Fail("Unrelated columns consumed frame storage"));
+        var saved = System.Text.Encoding.UTF8.GetString(compact.ToArray());
+        Assert.Equal(FrameTimeStats.Parse(csv).Frame, FrameTimeStats.Parse(saved.Split('\n')).Frame);
+        Assert.Equal(40, FrameTimeStats.Parse(saved.Split('\n')).Frame!.Samples);
+        Assert.True(compact.Length < 1024); Assert.True(text.Length > 30000);
+        Assert.DoesNotContain("game", saved); Assert.DoesNotContain("ignored", saved);
+    }
+
+    [Fact]
+    public async Task Compact_capture_rejects_unknown_columns_and_accepts_exact_limit_and_final_record()
+    {
+        using var invalid = new MemoryStream();
+        await Assert.ThrowsAsync<InvalidDataException>(() => SessionFpsRecorder.CaptureOutputAsync(new StringReader("a,b\n1,2\n"), invalid, 1024, 100, () => Assert.Fail("Not a capacity error")));
+        using var compact = new MemoryStream();
+        await SessionFpsRecorder.CaptureOutputAsync(new StringReader("FrameTime\r\n8"), compact, 12, 2, () => Assert.Fail("Exact limit must fit"));
+        Assert.Equal("FrameTime\n8\n", System.Text.Encoding.UTF8.GetString(compact.ToArray()));
     }
 
     private static string[] MakeCsv(int frameCount, double ms = 7.0)
