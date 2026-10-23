@@ -10,6 +10,10 @@ $proj = Join-Path $root 'FpsTune.Wpf\FpsTune.Wpf.csproj'
 $propsPath = Join-Path $root 'Directory.Build.props'
 $dist = Join-Path $root 'dist'
 
+# 单文件 exe 以 UTF-8 输出许可文本；按本机 ANSI 代码页（如 GBK）解码会让 © 等字符
+# 变成乱码，导致 -License 全文比对随调用环境时好时坏。统一按 UTF-8 解码 native stdout。
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'git not found. A release build requires a clean committed HEAD.'
 }
