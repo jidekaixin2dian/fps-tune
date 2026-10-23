@@ -826,7 +826,7 @@
     <s:String x:Key="Str.PowerBackupTargetInvalid">电源备份的目标或原值不完整。</s:String>
     <s:String x:Key="Str.PowerLegacyTargetUnknown">旧备份没有记录目标电源计划，请人工核查；其他设置仍可恢复。</s:String>
     <s:String x:Key="Str.PowerRestoreSetting">恢复电源设置</s:String>
-    <s:String x:Key="Str.BackupPendingWrite">上次写入尚未完成确认，请先核查这项设置。</s:String>
+    <s:String x:Key="Str.BackupPendingWrite">上次写入尚未完成确认，请在“备份与日志”中点击“核验未完成操作”。</s:String>
     <s:String x:Key="Str.BackupTargetChanged">这项设置后来发生了变化，已保留备份供核查。</s:String>
     <s:String x:Key="Str.ExperimentContextMismatch">采样条件已变化，请重新采集基线。</s:String>
     <s:String x:Key="Str.ExperimentApplyFailed">应用未完成：{0}。恢复结果：{1}</s:String>
@@ -1380,4 +1380,21 @@
     <s:String x:Key="Str.ColorExactValue">数值输入</s:String>
     <s:String x:Key="Str.ColorLegacyFilterUpdate">已载入新版保暗部滤镜预览；点击“应用色彩设置”更新旧版滤镜，原值仍可还原。</s:String>
     <s:String x:Key="Str.ColorIccOffMode">关闭 ICC 滤镜 + 画面参数</s:String>
+    <s:String x:Key="Str.RecoveryReviewTitle">核验未完成操作</s:String>
+    <s:String x:Key="Str.RecoveryReviewChanged">备份或当前系统状态已变化，请重新核验后再确认。</s:String>
+    <s:String x:Key="Str.RecoveryReviewOriginal">备份原值：</s:String>
+    <s:String x:Key="Str.RecoveryReviewCurrent">当前检测：</s:String>
+    <s:String x:Key="Str.RecoveryReviewAlreadyRestored">此项已记录为还原完成，将清理遗留标记。</s:String>
+    <s:String x:Key="Str.RecoveryReviewEmpty">没有需要核验的未完成操作。</s:String>
+    <s:String x:Key="Str.RecoveryReviewBody">请核对下方原值与当前检测值。确认后将登记当前状态，保留原始备份和核验记录，再解除中断锁。随后可选择“还原全部”恢复备份原值，或重新应用优化。</s:String>
+    <s:String x:Key="Str.RecoveryReviewConfirm">确认并登记当前状态</s:String>
+    <s:String x:Key="Str.RecoveryReviewDone">已核验 {0} 项，原始备份已留档。现在可以还原或重新应用。</s:String>
+    <s:String x:Key="Str.BundleIdentityUnavailable">无法确认当前电脑和 Windows 用户，未创建迁移备份。</s:String>
+    <s:String x:Key="Str.BundleLinkedPath">备份目录包含文件系统链接，请移除链接后重试。</s:String>
+    <s:String x:Key="Str.BundleOtherMachine">此备份包属于其他电脑或 Windows 用户，未导入。请使用当前电脑与用户导出的备份。</s:String>
+    <s:String x:Key="Str.BundleHashMismatch">备份包内容校验失败，未导入。请重新导出或传输原始 ZIP。</s:String>
+    <s:String x:Key="Str.BundleConflict">本地已有内容不同的备份：{0}。已保留本地文件，请先核对后再导入。</s:String>
+    <s:String x:Key="Str.RecoveryReviewAbsent">未设置</s:String>
+    <s:String x:Key="Str.RecoveryReviewService">启动类型 {0} · 状态 {1} · 延迟启动 {2}</s:String>
+    <s:String x:Key="Str.RecoveryReviewPlan">活动计划 {0} · 工具创建计划 {1}</s:String>
 </ResourceDictionary>

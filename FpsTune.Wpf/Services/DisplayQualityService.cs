@@ -553,26 +553,41 @@ public static partial class DisplayQualityService
         try
         {
             if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
-            var backup = JsonSerializer.Deserialize<OverrideBackup>(File.ReadAllText(path))
-                ?? throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
-            if (backup.GameExe != gameExe || backup.Settings is null || backup.Settings.Count > ManagedSettingIds.Length
-                || backup.Settings.Select(x => x.SettingId).Distinct().Count() != backup.Settings.Count
-                || backup.Settings.Any(x => !ManagedSettingIds.Contains(x.SettingId))
-                || backup.SchemaVersion == 2 && (backup.PostSettings is null || backup.PostSettings.Count != backup.Settings.Count)
-                || backup.PreviousSettings is not null && (backup.PreviousSettings.Count > backup.Settings.Count
-                    || backup.PreviousSettings.Select(x => x.SettingId).Distinct().Count() != backup.PreviousSettings.Count
-                    || backup.PreviousSettings.Any(x => !backup.Settings.Any(s => s.SettingId == x.SettingId)))
-                || backup.PostSettings is not null && (backup.PostSettings.Count > ManagedSettingIds.Length
-                    || backup.PostSettings.Select(x => x.SettingId).Distinct().Count() != backup.PostSettings.Count
-                    || backup.PostSettings.Any(x => !backup.Settings.Any(y => y.SettingId == x.SettingId))))
-                throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
-            return backup;
+            return ParseBackup(gameExe, File.ReadAllText(path));
         }
         catch (Exception ex)
         {
             throw new InvalidDataException(Str.T("Str.NvBackupInvalid"), ex);
         }
     }
+
+    internal static void ValidateTransferredBackup(string name, byte[] bytes)
+    {
+        if (!name.StartsWith("backup-", StringComparison.Ordinal) || !name.EndsWith(".exe.json", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+        var game = name[7..^5];
+        ValidateGameExe(game);
+        _ = ParseBackup(game, System.Text.Encoding.UTF8.GetString(bytes));
+    }
+
+    private static OverrideBackup ParseBackup(string gameExe, string json)
+    {
+        var backup = JsonSerializer.Deserialize<OverrideBackup>(json)
+            ?? throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+        if (backup.GameExe != gameExe || backup.Settings is null || backup.Settings.Count > ManagedSettingIds.Length
+            || backup.Settings.Select(x => x.SettingId).Distinct().Count() != backup.Settings.Count
+            || backup.Settings.Any(x => !ManagedSettingIds.Contains(x.SettingId))
+            || backup.SchemaVersion == 2 && (backup.PostSettings is null || backup.PostSettings.Count != backup.Settings.Count)
+            || backup.PreviousSettings is not null && (backup.PreviousSettings.Count > backup.Settings.Count
+                || backup.PreviousSettings.Select(x => x.SettingId).Distinct().Count() != backup.PreviousSettings.Count
+                || backup.PreviousSettings.Any(x => !backup.Settings.Any(s => s.SettingId == x.SettingId)))
+            || backup.PostSettings is not null && (backup.PostSettings.Count > ManagedSettingIds.Length
+                || backup.PostSettings.Select(x => x.SettingId).Distinct().Count() != backup.PostSettings.Count
+                || backup.PostSettings.Any(x => !backup.Settings.Any(y => y.SettingId == x.SettingId))))
+            throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+        return backup;
+    }
+
 
     private static void WriteBackup(OverrideBackup backup)
     {

@@ -10,6 +10,7 @@ internal sealed class BackupDocument
     public int SchemaVersion { get; set; } = 2;
     public string OperationId { get; set; } = Guid.NewGuid().ToString("N");
     public string OriginId { get; set; } = "";
+    public string? ImportedOriginId { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public List<BackupRecord> Records { get; set; } = new();
 }
@@ -118,45 +119,51 @@ public static partial class BackupService
         {
             if (result.Ok && !result.Changed) { record.Restored = true; record.MutationState = "unchanged"; continue; }
             record.MutationState = result.Ok ? "applied" : "uncertain";
-            if (record.Kind == "registry")
-            {
-                var snapshot = RegistryHelper.ReadSnapshot(Enum.Parse<Microsoft.Win32.RegistryHive>(record.Hive), record.Path, record.Name);
-                record.PostExisted = snapshot.Existed; record.PostValue = snapshot.Value;
-                if (record.SecondaryExisted.HasValue)
-                {
-                    var second = RegistryHelper.ReadSnapshot(Enum.Parse<Microsoft.Win32.RegistryHive>(record.SecondaryHive!), record.SecondaryPath!, record.SecondaryName!);
-                    record.SecondaryPostExisted = second.Existed; record.SecondaryPostValue = second.Value;
-                }
-            }
-            else if (record.Kind == "power-plan")
-            {
-                record.PostActiveGuid = NativePowerSettings.RequireActiveGuid();
-                if (result.Ok && result.Changed && record.CreatedPlanGuid is not null)
-                    record.CreatedPlanFingerprint = NativePowerSettings.Fingerprint(record.CreatedPlanGuid);
-            }
-            else if (record.Kind == "power-setting") record.PostPowerValue = PowerOption.For(record.Id).Read(record.TargetPlanGuid!);
-            else if (record.Kind == "power-tuning")
-            {
-                record.PostUsbValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226");
-                record.PostBoostValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7");
-            }
-            else if (record.Kind == "power-aspm") record.PostAspmValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5");
-            else if (record.Kind == "service")
-            {
-                record.PostStartValue = NativeSystem.GetServiceStartValue(record.ServiceName!);
-                record.PostState = NativeSystem.GetServiceState(record.ServiceName!);
-                var delayed = RegistryHelper.ReadSnapshot(Microsoft.Win32.RegistryHive.LocalMachine,
-                    @"SYSTEM\CurrentControlSet\Services\" + record.ServiceName, "DelayedAutostart");
-                if (delayed.Existed && (delayed.Kind != Microsoft.Win32.RegistryValueKind.DWord || delayed.Value is not int))
-                    throw new InvalidDataException(Str.T("Str.BackupTargetChanged"));
-                record.PostDelayedExisted = delayed.Existed;
-                record.PostDelayedValue = delayed.Existed ? (int)delayed.Value! : null;
-            }
-            else if (record.Kind == "bcdedit") record.PostState = NativeSystem.GetDynamicTickState().ToString().ToLowerInvariant();
-            else if (record.Kind == "hibernate") record.PostState = NativeSystem.IsHibernateEnabled() ? "on" : "off";
+            CapturePostState(record);
+            if (record.Kind == "power-plan" && result.Ok && result.Changed && record.CreatedPlanGuid is not null)
+                record.CreatedPlanFingerprint = NativePowerSettings.Fingerprint(record.CreatedPlanGuid);
         }
         AtomicFile.WriteAllTextDurable(file, SerializeRecords(file, records), new UTF8Encoding(false));
     }
+
+    private static void CapturePostState(BackupRecord record)
+    {
+        if (record.Kind == "registry")
+        {
+            var snapshot = RegistryHelper.ReadSnapshot(Enum.Parse<Microsoft.Win32.RegistryHive>(record.Hive), record.Path, record.Name);
+            record.PostExisted = snapshot.Existed; record.PostValue = snapshot.Value;
+            if (record.SecondaryExisted.HasValue)
+            {
+                var second = RegistryHelper.ReadSnapshot(Enum.Parse<Microsoft.Win32.RegistryHive>(record.SecondaryHive!), record.SecondaryPath!, record.SecondaryName!);
+                record.SecondaryPostExisted = second.Existed; record.SecondaryPostValue = second.Value;
+            }
+        }
+        else if (record.Kind == "power-plan")
+        {
+            record.PostActiveGuid = NativePowerSettings.RequireActiveGuid();
+        }
+        else if (record.Kind == "power-setting") record.PostPowerValue = PowerOption.For(record.Id).Read(record.TargetPlanGuid!);
+        else if (record.Kind == "power-tuning")
+        {
+            record.PostUsbValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226");
+            record.PostBoostValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7");
+        }
+        else if (record.Kind == "power-aspm") record.PostAspmValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5");
+        else if (record.Kind == "service")
+        {
+            record.PostStartValue = NativeSystem.GetServiceStartValue(record.ServiceName!);
+            record.PostState = NativeSystem.GetServiceState(record.ServiceName!);
+            var delayed = RegistryHelper.ReadSnapshot(Microsoft.Win32.RegistryHive.LocalMachine,
+                @"SYSTEM\CurrentControlSet\Services\" + record.ServiceName, "DelayedAutostart");
+            if (delayed.Existed && (delayed.Kind != Microsoft.Win32.RegistryValueKind.DWord || delayed.Value is not int))
+                throw new InvalidDataException(Str.T("Str.BackupTargetChanged"));
+            record.PostDelayedExisted = delayed.Existed;
+            record.PostDelayedValue = delayed.Existed ? (int)delayed.Value! : null;
+        }
+        else if (record.Kind == "bcdedit") record.PostState = NativeSystem.GetDynamicTickState().ToString().ToLowerInvariant();
+        else if (record.Kind == "hibernate") record.PostState = NativeSystem.IsHibernateEnabled() ? "on" : "off";
+    }
+
 
     private static bool SameValue(object? a, object? b)
         => JsonSerializer.Serialize(a) == JsonSerializer.Serialize(b);

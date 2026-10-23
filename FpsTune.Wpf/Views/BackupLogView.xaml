@@ -132,8 +132,11 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <TextBlock Text="{DynamicResource Str.BackupFilesCard}" Style="{StaticResource CardTitleStyle}"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="ReviewInterruptedButton" Content="{DynamicResource Str.RecoveryReviewTitle}"
+                            Style="{StaticResource GhostButtonStyle}" Margin="0,0,8,0" Click="ReviewInterrupted_Click"/>
                     <Button Content="{DynamicResource Str.ExportBackups}"
                             Style="{StaticResource GhostButtonStyle}" Margin="0,0,8,0"
                             Click="ExportBackups_Click"/>
@@ -145,7 +148,7 @@
                             MinWidth="60" Height="26" Padding="8,0"
                             HorizontalAlignment="Right"
                             Click="RefreshBackupList_Click"/>
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
                 <TextBlock Grid.Row="1" x:Name="BackupEmptyHint"
                            Text="{DynamicResource Str.BackupNoFiles}"

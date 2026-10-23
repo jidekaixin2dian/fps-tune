@@ -58,16 +58,30 @@ public static class ScreenColorService
     private sealed record Receipt(string Identity, string DisplayName, ushort[] Original, ushort[] Expected,
         ScreenColorSettings Settings, ushort[]? Previous = null);
 
+    internal static void ValidateTransferredBackup(string name, byte[] bytes)
+    {
+        var r = ParseReceipt(System.Text.Encoding.UTF8.GetString(bytes));
+        if (name != Path.GetFileName(ReceiptPath(r.Identity))) throw new InvalidDataException(Str.T("Str.ColorBackupInvalid"));
+    }
+
+    private static Receipt ParseReceipt(string json)
+    {
+        var r = JsonSerializer.Deserialize<Receipt>(json);
+        if (r is null || string.IsNullOrWhiteSpace(r.Identity) || r.Identity.Length > 4096 || r.Original?.Length != 768 || r.Expected?.Length != 768
+            || r.Previous is not null && r.Previous.Length != 768 || r.Settings is null)
+            throw new InvalidDataException(Str.T("Str.ColorBackupInvalid"));
+        r.Settings.Validate();
+        return r;
+    }
+
     private static Receipt? Load(string id)
     {
         var path = ReceiptPath(id);
         if (!File.Exists(path)) return null;
         if (new FileInfo(path).Length > 100000) throw new InvalidDataException(Str.T("Str.ColorBackupLarge"));
-        var r = JsonSerializer.Deserialize<Receipt>(File.ReadAllText(path));
-        if (r is null || r.Identity != id || r.Original?.Length != 768 || r.Expected?.Length != 768
-            || r.Previous is not null && r.Previous.Length != 768 || r.Settings is null)
+        var r = ParseReceipt(File.ReadAllText(path));
+        if (r.Identity != id)
             throw new InvalidDataException(Str.T("Str.ColorBackupInvalid"));
-        r.Settings.Validate();
         return r;
     }
     private static void Save(Receipt r) => AtomicFile.WriteAllTextDurable(ReceiptPath(r.Identity), JsonSerializer.Serialize(r), new System.Text.UTF8Encoding(false));

@@ -42,6 +42,15 @@ public static class DigitalVibranceService
 
     private sealed record VibranceBackup(int Level, string? Display = null, int? Expected = null, int? Previous = null, int? Min = null, int? Max = null, string? DisplayName = null);
 
+    internal static void ValidateTransferredBackup(string name, byte[] bytes)
+    {
+        var r = System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(bytes) ?? throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+        if (name != Path.GetFileName(BackupPath(r.Display)) || r.Display?.Length > 4096
+            || r.Min is { } min && r.Max is { } max && (min >= max || r.Level < min || r.Level > max
+                || r.Expected is { } e && (e < min || e > max) || r.Previous is { } p && (p < min || p > max)))
+            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+    }
+
     public static VibranceState GetState(string? identity = null)
     {
         using var api = CreateApi();

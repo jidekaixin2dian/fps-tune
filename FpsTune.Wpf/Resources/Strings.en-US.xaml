@@ -1380,4 +1380,21 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorExactValue">numeric value</s:String>
     <s:String x:Key="Str.ColorLegacyFilterUpdate">Previewing the updated shadow-preserving filter. Apply color settings to update the old filter; original settings remain restorable.</s:String>
     <s:String x:Key="Str.ColorIccOffMode">Disable ICC filter + display parameters</s:String>
+    <s:String x:Key="Str.RecoveryReviewTitle">Review interrupted operations</s:String>
+    <s:String x:Key="Str.RecoveryReviewChanged">Backup or system state changed. Review again before confirming.</s:String>
+    <s:String x:Key="Str.RecoveryReviewOriginal">Original: </s:String>
+    <s:String x:Key="Str.RecoveryReviewCurrent">Observed: </s:String>
+    <s:String x:Key="Str.RecoveryReviewAlreadyRestored">Already recorded as restored; clear the leftover marker.</s:String>
+    <s:String x:Key="Str.RecoveryReviewEmpty">No interrupted operation needs review.</s:String>
+    <s:String x:Key="Str.RecoveryReviewBody">Compare the original and observed values below. Confirmation records the observed state, preserves the original receipts, and unlocks interrupted operations. Then restore the originals or apply your choices again.</s:String>
+    <s:String x:Key="Str.RecoveryReviewConfirm">Confirm observed state</s:String>
+    <s:String x:Key="Str.RecoveryReviewDone">Reviewed {0} items and retained originals. Restore or reapply is now available.</s:String>
+    <s:String x:Key="Str.BundleIdentityUnavailable">Cannot identify this computer and Windows user. No migration bundle was created.</s:String>
+    <s:String x:Key="Str.BundleLinkedPath">Backup paths contain filesystem links. Remove the links before retrying.</s:String>
+    <s:String x:Key="Str.BundleOtherMachine">This bundle belongs to a different computer or Windows user. Nothing was imported.</s:String>
+    <s:String x:Key="Str.BundleHashMismatch">Bundle integrity verification failed. Nothing was imported. Export or transfer the original ZIP again.</s:String>
+    <s:String x:Key="Str.BundleConflict">A different local backup already exists: {0}. Local files were retained. Review before importing.</s:String>
+    <s:String x:Key="Str.RecoveryReviewAbsent">Not set</s:String>
+    <s:String x:Key="Str.RecoveryReviewService">Startup {0} · State {1} · Delayed startup {2}</s:String>
+    <s:String x:Key="Str.RecoveryReviewPlan">Active plan {0} · Tool-created plan {1}</s:String>
 </ResourceDictionary>

@@ -107,6 +107,7 @@ public partial class BackupLogView : UserControl
 
     private async Task Run(Func<Task<RunResult>> action)
     {
+        ReviewInterruptedButton.IsEnabled = false;
         ListBackupButton.IsEnabled = false;
         RestoreAllButton.IsEnabled = false;
         LogBox.Text = Str.T("Str.Executing");
@@ -127,6 +128,7 @@ public partial class BackupLogView : UserControl
         {
             ListBackupButton.IsEnabled = true;
             RestoreAllButton.IsEnabled = true;
+            ReviewInterruptedButton.IsEnabled = true;
             _ = RefreshBackupListAsync(); // 列表/还原之后，文件状态可能已变化
         }
     }
@@ -146,7 +148,31 @@ public partial class BackupLogView : UserControl
             r.OptimizedNow)).ToList();
     }
 
-    private void ExportBackups_Click(object sender, RoutedEventArgs e)
+    private async void ReviewInterrupted_Click(object sender, RoutedEventArgs e)
+    {
+        if (!AdminHelper.IsAdministrator() && BackupService.RestoreNeedsAdmin())
+        {
+            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.RestoreNeedsAdminBody"), confirmText: Str.T("Str.RestartAsAdminShort")))
+                AdminHelper.RestartAsAdministrator();
+            return;
+        }
+        IsEnabled = false;
+        try
+        {
+            var review = await Task.Run(BackupService.ReviewInterrupted);
+            if (review.Count == 0) { StatusText.Text = Str.T("Str.RecoveryReviewEmpty"); return; }
+            if (!DialogService.Confirm(Str.T("Str.RecoveryReviewTitle"), Str.T("Str.RecoveryReviewBody") + "\n\n" + review.Summary,
+                confirmText: Str.T("Str.RecoveryReviewConfirm"))) return;
+            var count = await Task.Run(() => BackupService.ConfirmInterruptedReview(review));
+            StatusText.Text = Str.T("Str.RecoveryReviewDone", count);
+            await RefreshBackupListAsync();
+            RefreshAudit();
+        }
+        catch (Exception ex) { DialogService.Warning(Str.T("Str.RecoveryReviewTitle"), ex.Message); }
+        finally { IsEnabled = true; }
+    }
+
+    private async void ExportBackups_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
@@ -156,18 +182,20 @@ public partial class BackupLogView : UserControl
         };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true)
             return;
+        IsEnabled = false;
         try
         {
-            var count = BackupService.ExportBackups(dialog.FileName);
+            var count = await Task.Run(() => BackupService.ExportBackups(dialog.FileName));
             StatusText.Text = Str.T("Str.BackupsExported", count, dialog.FileName);
         }
         catch (Exception ex)
         {
             DialogService.Warning(Str.T("Str.ExportBackups"), Str.T("Str.BackupTransferFailed", ex.Message));
         }
+        finally { IsEnabled = true; }
     }
 
-    private void ImportBackups_Click(object sender, RoutedEventArgs e)
+    private async void ImportBackups_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
@@ -176,9 +204,10 @@ public partial class BackupLogView : UserControl
         };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true)
             return;
+        IsEnabled = false;
         try
         {
-            var (imported, dup, invalid) = BackupService.ImportBackups(dialog.FileName);
+            var (imported, dup, invalid) = await Task.Run(() => BackupService.ImportBackups(dialog.FileName));
             StatusText.Text = Str.T("Str.BackupsImported", imported, dup, invalid);
             _ = RefreshBackupListAsync();
             RefreshAudit();
@@ -187,6 +216,7 @@ public partial class BackupLogView : UserControl
         {
             DialogService.Warning(Str.T("Str.ImportBackups"), Str.T("Str.BackupTransferFailed", ex.Message));
         }
+        finally { IsEnabled = true; }
     }
 
     private sealed record AuditVm(string Title, string Detail, string NowText, bool OptimizedNow);

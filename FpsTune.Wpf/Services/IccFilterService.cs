@@ -44,6 +44,24 @@ public static class IccFilterService
 
     private sealed record Backup(string AssociationSubKey, string? DefaultProfile, string[] ListBefore, string CreatedAt, string? ExpectedProfile = null, string? PreviousProfile = null, string? Identity = null, string? DisplayName = null);
 
+    private static Backup ParseBackup(string json)
+    {
+        var backup = JsonSerializer.Deserialize<Backup>(json);
+        if (backup is null || backup.ListBefore is null || backup.ListBefore.Length > 1000
+            || string.IsNullOrWhiteSpace(backup.AssociationSubKey)
+            || string.IsNullOrWhiteSpace(backup.DefaultProfile) && (backup.Identity is null || backup.ListBefore.Length != 0))
+            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+        return backup;
+    }
+
+    internal static void ValidateTransferredBackup(string name, byte[] bytes)
+    {
+        var backup = ParseBackup(System.Text.Encoding.UTF8.GetString(bytes));
+        if (name != Path.GetFileName(BackupPath(backup.Identity))
+            || backup.ListBefore.Any(p => string.IsNullOrWhiteSpace(p) || p != Path.GetFileName(p)))
+            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+    }
+
     private static Backup? ReadBackup(string? identity = null)
     {
         var path = BackupPath(identity);
@@ -52,12 +70,7 @@ public static class IccFilterService
         try
         {
             if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
-            var backup = JsonSerializer.Deserialize<Backup>(File.ReadAllText(path));
-            if (backup is null || backup.ListBefore is null || backup.ListBefore.Length > 1000
-                || string.IsNullOrWhiteSpace(backup.AssociationSubKey)
-                || string.IsNullOrWhiteSpace(backup.DefaultProfile) && (backup.Identity is null || backup.ListBefore.Length != 0))
-                throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
-            return backup;
+            return ParseBackup(File.ReadAllText(path));
         }
         catch (Exception ex)
         {

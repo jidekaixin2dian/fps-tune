@@ -31,6 +31,28 @@ public static class AudioEqualizerService
     private const string IncludeName = "FpsTune-Equalizer.txt";
     private const string IncludeBlock = "# BEGIN FpsTune Equalizer\r\nInclude: FpsTune-Equalizer.txt\r\n# END FpsTune Equalizer\r\n";
     private sealed record Receipt(string ConfigPath, byte[] OriginalMain, byte[] Prefix, string? ContentHash, EqualizerSettings Settings, string? PreviousContentHash = null);
+
+    internal static void ValidateTransferredBackup(byte[] bytes, bool importing)
+    {
+        var r = ParseReceipt(System.Text.Encoding.UTF8.GetString(bytes));
+        if (!r.Prefix.SequenceEqual(EncodingFor(r.OriginalMain).GetBytes(IncludeBlock)))
+            throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
+        if (importing)
+        {
+            var engine = FindEngine() ?? throw new InvalidDataException(Str.T("Str.EqInstallFirst"));
+            if (!Path.GetFullPath(r.ConfigPath).Equals(Path.GetFullPath(engine.ConfigPath), StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException(Str.T("Str.EqMoved"));
+        }
+    }
+
+    private static Receipt ParseReceipt(string json)
+    {
+        var r = JsonSerializer.Deserialize<Receipt>(json) ?? throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
+        if (!Path.IsPathFullyQualified(r.ConfigPath) || r.OriginalMain is null || r.Prefix is null || r.Prefix.Length == 0 || r.Settings is null)
+            throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
+        r.Settings.Validate();
+        return r;
+    }
     public static EqualizerEngine? FindEngine()
     {
         if (EngineOverride is not null) return EngineOverride;
@@ -75,10 +97,7 @@ public static class AudioEqualizerService
     {
         if (!File.Exists(ReceiptPath)) return null;
         if (new FileInfo(ReceiptPath).Length > 3000000) throw new InvalidDataException(Str.T("Str.EqBackupLarge"));
-        var r = JsonSerializer.Deserialize<Receipt>(File.ReadAllText(ReceiptPath)) ?? throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
-        if (r.OriginalMain is null || r.Prefix is null || r.Prefix.Length == 0 || r.Settings is null) throw new InvalidDataException(Str.T("Str.EqBackupInvalid"));
-        r.Settings.Validate();
-        return r;
+        return ParseReceipt(File.ReadAllText(ReceiptPath));
     }
     private static void Save(Receipt r) => AtomicFile.WriteAllTextDurable(ReceiptPath, JsonSerializer.Serialize(r), new UTF8Encoding(false));
     public static EqualizerSettings? SavedSettings() => Load()?.Settings;

@@ -97,26 +97,13 @@ public static partial class BackupService
 
     /// <summary>0.2.2 C-B：把全部备份文件（含 .restored 审计）打包导出为 zip，返回导出的文件数。</summary>
     public static int ExportBackups(string zipPath)
-    {
-        Directory.CreateDirectory(BackupDir);
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(zipPath))!);
-        if (File.Exists(zipPath))
-            File.Delete(zipPath);
-        using var archive = System.IO.Compression.ZipFile.Open(zipPath, System.IO.Compression.ZipArchiveMode.Create);
-        var count = 0;
-        foreach (var file in Directory.EnumerateFiles(BackupDir, "*")
-                     .Where(file => IsBackupTransferName(Path.GetFileName(file)) && IsCSharpBackupFile(file)))
-        {
-            archive.CreateEntryFromFile(file, Path.GetFileName(file));
-            count++;
-        }
-        return count;
-    }
+        => ExportBundle(zipPath);
 
     /// <summary>0.2.2 C-B：从 zip 导入备份。逐条过 ValidateRecord 校验（目标必须在 Capture 白名单内），
     /// 同名文件跳过（重复导入幂等），校验失败的单文件跳过并计数。返回 (导入, 跳过重复, 校验失败)。</summary>
     public static (int Imported, int SkippedDuplicate, int SkippedInvalid) ImportBackups(string zipPath)
     {
+        using var gate = SystemMutationGate.Acquire();
         const long totalLimit = 100L * 1024 * 1024;
         const int fileLimit = 10 * 1024 * 1024;
         if (new FileInfo(zipPath).Length > totalLimit)
@@ -125,6 +112,7 @@ public static partial class BackupService
         if (archive.Entries.Count > 1000 || archive.Entries.Any(e => e.Length > totalLimit) ||
             archive.Entries.Sum(e => e.Length) > totalLimit)
             throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
+        if (archive.Entries.Any(e => e.FullName == BundleManifestName)) return ImportBundle(archive);
         int imported = 0, dup = 0, invalid = 0;
         long actualRead = 0;
         Directory.CreateDirectory(BackupDir);
@@ -171,6 +159,8 @@ public static partial class BackupService
                     throw new InvalidOperationException("empty backup file");
                 foreach (var r in records)
                     ValidateRecord(r);
+                if (name.StartsWith(V2BackupPrefix, StringComparison.OrdinalIgnoreCase) && DecodeDocument(json).OriginId != GetOriginId())
+                    throw new BackupCompatibilityException(Str.T("Str.BackupOtherOrigin"));
             }
             catch
             {
