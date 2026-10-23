@@ -22,7 +22,7 @@ jobs:
       - name: Reject tracked development documents
         shell: pwsh
         run: |
-          $allowed = @('README.md', 'README.en.md', 'SKILL.md', 'CHANGELOG.md')
+          $allowed = @('README.md', 'README.en.md', 'SKILL.md', 'CHANGELOG.md', 'SECURITY.md')
           $blocked = @(git -c core.quotePath=false ls-files | Where-Object {
             $_ -match '^(docs|dev-docs|development|\.agents|\.codex)/' -or
             ($_ -match '\.(md|rst|adoc|docx?|pdf|html?)$' -and $_ -notin $allowed)
@@ -57,6 +57,9 @@ jobs:
           }
 
       - name: Upload artifact
+        # 公开仓库的 PR 构建产物可被任何人下载；未签名的 PR exe 会被冒充为官方版本，
+        # 因此只在 main 推送与手动触发时上传，PR 仅保留构建与测试结果。
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: FpsTune-windows-x64

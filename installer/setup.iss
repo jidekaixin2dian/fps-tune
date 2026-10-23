@@ -46,7 +46,9 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: nowait postinstall skipifsilent; Check: NotManagedUpdate
+; runasoriginaluser：安装器以管理员运行，末尾“立即运行”必须回到原用户权限，
+; 避免整个 GUI 在无感知的提权上下文中启动。
+Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: nowait postinstall skipifsilent runasoriginaluser; Check: NotManagedUpdate
 
 [Messages]
 WelcomeLabel1=安装 FPS 帧律
