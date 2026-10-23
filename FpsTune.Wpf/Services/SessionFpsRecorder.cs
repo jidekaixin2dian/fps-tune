@@ -16,7 +16,7 @@ public sealed record SessionFpsStats(int Samples, double AvgFps, double P1Low, d
 public sealed class SessionFpsRecorder
 {
     internal const long MaxOutputBytes = 64L * 1024 * 1024;
-    internal const int MaxOutputLines = 2_000_001;
+    internal const int MaxOutputLines = FrameTimeStats.MaxFrameCount + 1;
     private readonly Func<string?> _findPresentMon;
     private readonly Func<string?, Process?> _findGameProcess;
     private readonly Func<ProcessStartInfo, Process?> _start;
@@ -241,7 +241,7 @@ public sealed class SessionFpsRecorder
                 }
                 else
                 {
-                    if (line.Length >= 16384) { limitReached(); return; }
+                    if (line.Length >= FrameTimeStats.MaxCsvLineChars) { limitReached(); return; }
                     line.Append(buffer[i]);
                 }
             }

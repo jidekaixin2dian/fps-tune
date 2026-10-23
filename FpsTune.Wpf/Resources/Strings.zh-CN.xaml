@@ -720,6 +720,11 @@
     <s:String x:Key="Str.SessionSaving">正在结束采集并保存会话，请稍候…</s:String>
     <s:String x:Key="Str.SessionSaveFailed">保存会话失败</s:String>
     <s:String x:Key="Str.SessionSaveFailedHint">请检查本地磁盘；已有的恢复快照已保留。</s:String>
+    <s:String x:Key="Str.CsvInputInvalid">无法解析采样 CSV，请选择包含至少 30 个有效帧的 PresentMon CSV。</s:String>
+    <s:String x:Key="Str.CsvInputTooLarge">采样 CSV 超过 256 MiB，请缩短采样时长或选择较小的 CSV。</s:String>
+    <s:String x:Key="Str.CsvInputLineTooLong">采样 CSV 单行超过 16384 个字符，请检查文件格式和分隔符。</s:String>
+    <s:String x:Key="Str.CsvInputTooManyFrames">采样 CSV 超过 200 万个有效帧，请选择较短的采样记录。</s:String>
+    <s:String x:Key="Str.CsvInputReadFailed">无法读取采样 CSV，请检查文件权限及是否被其他程序占用。</s:String>
     <s:String x:Key="Str.BottleneckTitle">瓶颈判定</s:String>
     <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>

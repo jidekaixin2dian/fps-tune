@@ -720,6 +720,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SessionSaving">Finishing capture and saving the session. Please wait…</s:String>
     <s:String x:Key="Str.SessionSaveFailed">Could not save the session</s:String>
     <s:String x:Key="Str.SessionSaveFailedHint">Check the local disk. Existing recovery snapshots have been preserved.</s:String>
+    <s:String x:Key="Str.CsvInputInvalid">Could not parse the capture CSV. Select a PresentMon CSV with at least 30 valid frames.</s:String>
+    <s:String x:Key="Str.CsvInputTooLarge">The capture CSV exceeds 256 MiB. Use a shorter capture or a smaller CSV.</s:String>
+    <s:String x:Key="Str.CsvInputLineTooLong">A CSV line exceeds 16384 characters. Check the file format and delimiters.</s:String>
+    <s:String x:Key="Str.CsvInputTooManyFrames">The capture CSV exceeds two million valid frames. Select a shorter capture.</s:String>
+    <s:String x:Key="Str.CsvInputReadFailed">Could not read the capture CSV. Check file permissions and whether another application has locked it.</s:String>
     <s:String x:Key="Str.BottleneckTitle">Bottleneck</s:String>
     <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>

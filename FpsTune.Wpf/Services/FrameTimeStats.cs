@@ -14,6 +14,8 @@ public enum FrameParseError
     UnknownColumns,
     /// <summary>正帧数 &lt; 30（FrameCount 携带实际数量）。</summary>
     TooFewFrames,
+    /// <summary>超过调用方的完整统计容量；不返回截断统计。</summary>
+    TooManyFrames,
 }
 
 public sealed record FrameParseResult(
@@ -29,11 +31,17 @@ public sealed record FrameParseResult(
 /// </summary>
 public static class FrameTimeStats
 {
+    internal const int MaxFrameCount = 2_000_000;
+    internal const int MaxCsvLineChars = 16384;
     private static readonly string[] ColumnCandidates = ["msBetweenPresents", "FrameTime", "frame_time", "FPS"];
     private const int MinFrames = 30;
 
     public static FrameParseResult Parse(IEnumerable<string> lines)
+        => Parse(lines, CancellationToken.None, int.MaxValue);
+
+    internal static FrameParseResult Parse(IEnumerable<string> lines, CancellationToken token, int maxFrames)
     {
+        token.ThrowIfCancellationRequested();
         using var rows = lines.GetEnumerator();
         if (!rows.MoveNext())
             return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
@@ -48,18 +56,28 @@ public static class FrameTimeStats
         var isFps = header[col].Trim().Equals("FPS", StringComparison.OrdinalIgnoreCase);
         do
         {
-            if (TryReadFrame(rows.Current, col, isFps, out var ms)) frameTimes.Add(ms);
+            token.ThrowIfCancellationRequested();
+            if (TryReadFrame(rows.Current, col, isFps, out var ms))
+            {
+                if (frameTimes.Count >= maxFrames)
+                    return new(null, FrameParseError.TooManyFrames, frameTimes.Count + 1, header);
+                frameTimes.Add(ms);
+            }
         } while (rows.MoveNext());
+        token.ThrowIfCancellationRequested();
         if (frameTimes.Count < MinFrames)
             return new FrameParseResult(null, FrameParseError.TooFewFrames, frameTimes.Count, header);
 
+        token.ThrowIfCancellationRequested();
         frameTimes.Sort();
+        token.ThrowIfCancellationRequested();
         var sorted = frameTimes;
         var p99Ms = sorted[Math.Min((int)Math.Floor(sorted.Count * 0.99), sorted.Count - 1)];
         var avgMs = frameTimes.Average();
         var avgFps = 1000.0 / avgMs;
         var p1Fps = 1000.0 / p99Ms;
         var stutters = sorted.Count(v => v > 50);
+        token.ThrowIfCancellationRequested();
 
         return new FrameParseResult(
             new FrameSummary(

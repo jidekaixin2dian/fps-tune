@@ -191,7 +191,9 @@ public sealed class OperationReceiptTests : IDisposable
         var experimentDir = Path.Combine(_dir, "experiment");
         Directory.CreateDirectory(experimentDir);
         ExperimentRunner.StateDirOverride = experimentDir;
-        var options = new ExperimentRunner.Options(CsvPath: "unused.csv", GameName: "mock", Items: ["transparency-off"]);
+        var csv = Path.Combine(experimentDir, "sample.csv");
+        File.WriteAllLines(csv, new[] { "FrameTime" }.Concat(Enumerable.Repeat("8", 40)));
+        var options = new ExperimentRunner.Options(CsvPath: csv, GameName: "mock", Items: ["transparency-off"]);
         var value = 1;
         RegistryHelper.SnapshotOverride = (_, _, name) => name == "DriverVersion"
             ? new(true, "test-driver", RegistryValueKind.String) : new(true, value, RegistryValueKind.DWord);

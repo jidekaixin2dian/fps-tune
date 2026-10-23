@@ -86,11 +86,19 @@ public static class ExperimentRunner
         {
             if (!options.Simulate && mode != "report" && HasInterruptedOperation())
                 return (1, ErrorJson(mode, Str.T("Str.ExperimentInterrupted")));
+            JsonObject? manualSample = null;
+            if (!options.Simulate && mode != "report" && options.CsvPath is { } csv)
+            {
+                manualSample = await Task.Run(() => ParsePresentMonCsv(csv, ct), ct);
+                ct.ThrowIfCancellationRequested();
+                if (manualSample is null || manualSample.ContainsKey("error"))
+                    return (1, ErrorJson(mode, manualSample?["error"]?.GetValue<string>() ?? Str.T("Str.CsvInputInvalid")));
+            }
             JsonObject result = mode switch
             {
-                "baseline" => await RunBaselineAsync(options, ct, gamePath),
+                "baseline" => await RunBaselineAsync(options, ct, gamePath, manualSample),
                 "report" => RunReport(options),
-                _ => await RunTestGroupAsync(groupId!, options, ct, gamePath),
+                _ => await RunTestGroupAsync(groupId!, options, ct, gamePath, manualSample),
             };
             var json = result.ToJsonString(JsonOpts);
             return (result["ok"]?.GetValue<bool>() == true ? 0 : 1, json);
@@ -114,9 +122,9 @@ public static class ExperimentRunner
     // 基线
     // ------------------------------------------------------------------
 
-    private static async Task<JsonObject> RunBaselineAsync(Options options, CancellationToken ct, string? gamePath)
+    private static async Task<JsonObject> RunBaselineAsync(Options options, CancellationToken ct, string? gamePath, JsonObject? manualSample)
     {
-        var samples = await CollectSamplesAsync(3, options, ct);
+        var samples = await CollectSamplesAsync(3, options, ct, manualSample);
         if (samples.Ok is false)
             return Fail("baseline", samples.Error!);
         var summary = Summarize(samples.Samples!);
@@ -136,6 +144,7 @@ public static class ExperimentRunner
             },
             ["groups"] = new JsonArray(),
         };
+        ct.ThrowIfCancellationRequested();
         WriteState(newState, options);
         AppendHistory(new JsonObject
         {
@@ -170,7 +179,7 @@ public static class ExperimentRunner
     // 候选组测试
     // ------------------------------------------------------------------
 
-    private static async Task<JsonObject> RunTestGroupAsync(string groupId, Options options, CancellationToken ct, string? gamePath)
+    private static async Task<JsonObject> RunTestGroupAsync(string groupId, Options options, CancellationToken ct, string? gamePath, JsonObject? manualSample)
     {
         // 0.2.0 M1：已知组沿用硬编码清单；"custom" 组从 Options.Items 取项集合。
         var known = Groups.FirstOrDefault(g => g.Id == groupId);
@@ -273,7 +282,7 @@ public static class ExperimentRunner
         }
         else
         {
-            samples = await CollectSamplesAsync(3, options, ct);
+            samples = await CollectSamplesAsync(3, options, ct, manualSample);
         }
 
         if (samples.Ok is false)
@@ -510,7 +519,7 @@ public static class ExperimentRunner
 
     private sealed record SamplesResult(bool? Ok, string? Error = null, string? Mode = null, List<JsonObject>? Samples = null);
 
-    private static async Task<SamplesResult> CollectSamplesAsync(int count, Options options, CancellationToken ct)
+    private static async Task<SamplesResult> CollectSamplesAsync(int count, Options options, CancellationToken ct, JsonObject? manualSample)
     {
         var results = new List<JsonObject>();
         var mode = options.Simulate ? "simulated" : options.CsvPath is not null ? "manual" : "auto";
@@ -532,28 +541,23 @@ public static class ExperimentRunner
             }
             return new SamplesResult(true, Mode: mode, Samples: results);
         }
+        if (mode == "manual")
+        {
+            ct.ThrowIfCancellationRequested();
+            // Parsed once before any experimental mutation; one CSV remains one observation.
+            return new SamplesResult(true, Mode: mode, Samples: [manualSample!]);
+        }
 
         for (var i = 1; i <= count; i++)
         {
             ct.ThrowIfCancellationRequested();
-            string csv;
-            if (mode == "manual")
-            {
-                // 手动模式只有一份 CSV，解析一次作为单次样本；
-                // 不再像旧脚本那样把它当 3 次样本算出 CV=0 的假稳定。
-                csv = options.CsvPath!;
-                if (i > 1)
-                    break;
-            }
-            else
-            {
-                csv = Path.Combine(StateDir(), $"sample-{i}.csv");
-                var ok = await InvokePresentMonAutoAsync(options, options.DurationSec, csv, ct);
-                if (!ok)
-                    return new SamplesResult(false,
-                        "PresentMon 自动采样失败（未找到 PresentMon 或游戏未运行）。请安装官方 PresentMon（winget install Intel.PresentMon.Console）后用手动模式提供采样 CSV，或用模拟模式试跑。");
-            }
-            var stat = ParsePresentMonCsv(csv);
+            var csv = Path.Combine(StateDir(), $"sample-{i}.csv");
+            var ok = await InvokePresentMonAutoAsync(options, options.DurationSec, csv, ct);
+            if (!ok)
+                return new SamplesResult(false,
+                    "PresentMon 自动采样失败（未找到 PresentMon 或游戏未运行）。请安装官方 PresentMon（winget install Intel.PresentMon.Console）后用手动模式提供采样 CSV，或用模拟模式试跑。");
+            var stat = await Task.Run(() => ParsePresentMonCsv(csv, ct), ct);
+            ct.ThrowIfCancellationRequested();
             if (stat is null)
                 return new SamplesResult(false, $"第 {i} 次采样解析失败: 无法解析 CSV");
             if (stat.ContainsKey("error"))
@@ -702,21 +706,35 @@ public static class ExperimentRunner
 
     /// <summary>解析 PresentMon CSV → 帧统计（JsonObject 或含 error 键）。兼容 v1/v2 列名。internal 供测试。
     /// 0.2.0 C-E：解析逻辑抽到 FrameTimeStats 共用（实验与会话同口径），此处只做 JSON 映射与中文文案。</summary>
-    internal static JsonObject? ParsePresentMonCsv(string csvPath)
+    internal const long MaxCsvInputBytes = 256L * 1024 * 1024;
+    private sealed class CsvInputLimitException(string message) : IOException(message);
+
+    internal static JsonObject? ParsePresentMonCsv(string csvPath) => ParsePresentMonCsv(csvPath, CancellationToken.None);
+
+    internal static JsonObject? ParsePresentMonCsv(string csvPath, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
         if (!File.Exists(csvPath))
             return null;
-        string[] lines;
+        FrameParseResult parsed;
         try
         {
-            lines = File.ReadAllLines(csvPath);
+            // The read lease also prevents another writer from growing/changing the validated file.
+            using var file = new FileStream(csvPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.SequentialScan | FileOptions.Asynchronous);
+            if (file.Length > MaxCsvInputBytes)
+                return new JsonObject { ["error"] = Str.T("Str.CsvInputTooLarge") };
+            using var reader = new StreamReader(file);
+            parsed = FrameTimeStats.Parse(ReadCsvLines(reader, token), token, FrameTimeStats.MaxFrameCount);
         }
-        catch
+        catch (CsvInputLimitException ex)
         {
-            return null;
+            return new JsonObject { ["error"] = ex.Message };
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return new JsonObject { ["error"] = Str.T("Str.CsvInputReadFailed") };
         }
 
-        var parsed = FrameTimeStats.Parse(lines);
         if (parsed.Frame is { } frame)
         {
             return new JsonObject
@@ -734,11 +752,43 @@ public static class ExperimentRunner
         return new JsonObject { ["error"] = DescribeFrameParseError(err, parsed) };
     }
 
+    private static IEnumerable<string> ReadCsvLines(TextReader reader, CancellationToken token)
+    {
+        var buffer = new char[4096]; var line = new StringBuilder(); var skipLf = false;
+        while (true)
+        {
+            token.ThrowIfCancellationRequested();
+            // Statistics enumerate on a worker; cancellable reads can also abort pending file I/O.
+            var read = reader.ReadAsync(buffer.AsMemory(), token);
+            var count = read.IsCompletedSuccessfully ? read.Result : read.AsTask().GetAwaiter().GetResult();
+            token.ThrowIfCancellationRequested();
+            if (count == 0) break;
+            for (var i = 0; i < count; i++)
+            {
+                var character = buffer[i];
+                if (character == '\r' || character == '\n')
+                {
+                    if (!(character == '\n' && skipLf)) { yield return line.ToString(); line.Clear(); }
+                    skipLf = character == '\r';
+                }
+                else
+                {
+                    skipLf = false;
+                    if (line.Length >= FrameTimeStats.MaxCsvLineChars)
+                        throw new CsvInputLimitException(Str.T("Str.CsvInputLineTooLong"));
+                    line.Append(character);
+                }
+            }
+        }
+        if (line.Length > 0) yield return line.ToString();
+    }
+
     private static string DescribeFrameParseError(FrameParseError err, FrameParseResult parsed) => err switch
     {
         FrameParseError.UnknownColumns => "无法识别 CSV 列名，找到的表头: " + string.Join(", ", parsed.Header),
         FrameParseError.TooFewFrames => $"有效帧样本不足（{parsed.FrameCount}）",
-        // 枚举只有三个值且上方已覆盖全部已知项；到达此处说明枚举被扩展而映射漏写。
+        FrameParseError.TooManyFrames => Str.T("Str.CsvInputTooManyFrames"),
+        // 到达此处说明枚举被扩展而映射漏写。
         _ => throw new UnreachableException(nameof(DescribeFrameParseError)),
     };
 

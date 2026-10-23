@@ -15,6 +15,55 @@ namespace FpsTune.Wpf.Tests;
 [Collection("BackupService serial")]
 public class ExperimentRunnerTests
 {
+    [Fact]
+    public void Bounded_frame_parser_rejects_partial_results_and_observes_cancellation_during_enumeration()
+    {
+        var lines = new[] { "FrameTime" }.Concat(Enumerable.Repeat("8", 31));
+        var limited = FrameTimeStats.Parse(lines, CancellationToken.None, 30);
+        Assert.Null(limited.Frame); Assert.Equal(FrameParseError.TooManyFrames, limited.Error); Assert.Equal(31, limited.FrameCount);
+        Assert.Equal(30, FrameTimeStats.Parse(lines.Take(31), CancellationToken.None, 30).Frame!.Samples);
+        using var cancellation = new CancellationTokenSource();
+        IEnumerable<string> Interrupted()
+        {
+            yield return "FrameTime";
+            for (var i = 0; i < 100; i++) { if (i == 35) cancellation.Cancel(); yield return "8"; }
+        }
+        Assert.Throws<OperationCanceledException>(() => FrameTimeStats.Parse(Interrupted(), cancellation.Token, 100));
+    }
+
+    [Theory]
+    [InlineData("\n")] [InlineData("\r\n")] [InlineData("\r")]
+    public void Streaming_csv_preserves_bom_quoted_fields_and_all_line_endings(string newline)
+    {
+        using var scope = TempStateDir.Create(); var path = Path.Combine(scope.Dir, "quoted.csv");
+        File.WriteAllText(path, string.Join(newline, new[] { "\"App,name\",\"FrameTime\"" }.Concat(Enumerable.Repeat("\"game,edition\",8", 40))), Encoding.Unicode);
+        var result = ExperimentRunner.ParsePresentMonCsv(path)!;
+        Assert.Equal(40, result["samples"]!.GetValue<int>()); Assert.Equal(125, result["avgFps"]!.GetValue<double>());
+    }
+
+    [Fact]
+    public async Task Invalid_csv_is_rejected_before_experiment_mutation_and_preserves_existing_state()
+    {
+        using var scope = TempStateDir.Create(); var state = Path.Combine(scope.Dir, "state-v2.json");
+        var history = Path.Combine(scope.Dir, "history-v2.jsonl"); File.WriteAllText(state, "{\"original\":true}"); File.WriteAllText(history, "original history");
+        var large = Path.Combine(scope.Dir, "large.csv"); using (var file = File.Create(large)) file.SetLength(ExperimentRunner.MaxCsvInputBytes + 1);
+        var wide = Path.Combine(scope.Dir, "wide.csv"); File.WriteAllText(wide, "FrameTime\n" + string.Concat(Enumerable.Repeat("8\n", 40)) + new string('x', FrameTimeStats.MaxCsvLineChars + 1));
+        var lockedPath = Path.Combine(scope.Dir, "locked.csv"); File.WriteAllText(lockedPath, "FrameTime\n8\n");
+        using var locked = new FileStream(lockedPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var writes = 0; FpsTune.Wpf.Core.RegistryHelper.SetOverride = (_, _, _, _, _) => { writes++; throw new Exception("Unexpected mutation"); };
+        try
+        {
+            foreach (var (path, key) in new[] { (large, "Str.CsvInputTooLarge"), (wide, "Str.CsvInputLineTooLong"), (lockedPath, "Str.CsvInputReadFailed") })
+            {
+                var result = await ExperimentRunner.RunAsync("custom", new(CsvPath: path, Items: ["transparency-off"]), CancellationToken.None);
+                Assert.Equal(1, result.ExitCode); Assert.Equal(Str.T(key), ParseJson(result.Json).GetProperty("error").GetString());
+                Assert.Equal("{\"original\":true}", File.ReadAllText(state)); Assert.Equal("original history", File.ReadAllText(history));
+            }
+            Assert.Equal(0, writes); Assert.False(File.Exists(Path.Combine(scope.Dir, "in-flight-v2.json")));
+        }
+        finally { FpsTune.Wpf.Core.RegistryHelper.SetOverride = null; }
+    }
+
     private static readonly ExperimentRunner.Options Simulate = new(Simulate: true);
 
     [Fact]
