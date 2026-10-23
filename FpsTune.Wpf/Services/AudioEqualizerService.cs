@@ -102,6 +102,14 @@ public static class AudioEqualizerService
     private static void Save(Receipt r) => AtomicFile.WriteAllTextDurable(ReceiptPath, JsonSerializer.Serialize(r), new UTF8Encoding(false));
     public static EqualizerSettings? SavedSettings() => Load()?.Settings;
     public static bool HasBackup => File.Exists(ReceiptPath);
+    internal static Func<string, bool>? RestoreAccessDeniedOverride;
+    public static bool RestoreNeedsAdmin()
+    {
+        var receipt = Load();
+        if (receipt is null) return false;
+        return RestoreAccessDeniedOverride?.Invoke(receipt.ConfigPath)
+            ?? RestoreFileAccess.RequiresElevation(receipt.ConfigPath, "config.txt", IncludeName);
+    }
     private static Encoding EncodingFor(byte[] bytes) => bytes.AsSpan().StartsWith(Encoding.Unicode.GetPreamble()) ? Encoding.Unicode
         : bytes.AsSpan().StartsWith(Encoding.BigEndianUnicode.GetPreamble()) ? Encoding.BigEndianUnicode : new UTF8Encoding(bytes.AsSpan().StartsWith(Encoding.UTF8.GetPreamble()));
     private static int PreambleLength(byte[] bytes, Encoding encoding) => bytes.AsSpan().StartsWith(encoding.GetPreamble()) ? encoding.GetPreamble().Length : 0;

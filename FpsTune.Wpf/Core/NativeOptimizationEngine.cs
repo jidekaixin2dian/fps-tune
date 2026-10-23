@@ -135,10 +135,16 @@ public static class NativeOptimizationEngine
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", 2, RegistryValueKind.DWord, "已开启 HAGS");
             case "game-mode":
                 var gameModeCurrent = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled");
-                if (gameModeCurrent?.ToString() == "1")
+                var allowGameMode = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode");
+                if (gameModeCurrent?.ToString() == "1" && allowGameMode?.ToString() == "1")
                     return (true, false, false, "游戏模式本就开启");
-                RegistryHelper.SetValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled", 1, RegistryValueKind.DWord);
-                RegistryHelper.SetValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode", 1, RegistryValueKind.DWord);
+                if (gameModeCurrent?.ToString() != "1")
+                    RegistryHelper.SetValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled", 1, RegistryValueKind.DWord);
+                if (allowGameMode?.ToString() != "1")
+                    RegistryHelper.SetValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode", 1, RegistryValueKind.DWord);
+                if (RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled")?.ToString() != "1"
+                    || RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode")?.ToString() != "1")
+                    throw new IOException("游戏模式写入后读回不一致，已保留还原备份。");
                 return (true, true, false, "已开启游戏模式");
             case "dvr-off":
                 return ApplyDvrOff();

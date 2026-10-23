@@ -9,6 +9,22 @@ namespace FpsTune.Wpf.Tests;
 [Collection("BackupService serial")]
 public sealed class OperationReceiptTests : IDisposable
 {
+    [Fact]
+    public void Partially_enabled_game_mode_repairs_both_switches_and_restores_the_original_pair()
+    {
+        var values = new Dictionary<string, object> { ["AutoGameModeEnabled"] = 1, ["AllowAutoGameMode"] = 0 };
+        RegistryHelper.SnapshotOverride = (_, _, name) => new(true, values[name], RegistryValueKind.DWord);
+        RegistryHelper.SetOverride = (_, _, name, value, _) => values[name] = value;
+        var file = BackupService.Capture([], null);
+        var applied = NativeOptimizationEngine.ApplyAll(["game-mode"], null,
+            id => BackupService.AppendCapture(file, id, null), r => BackupService.CompleteCapture(file, r));
+        Assert.True(applied[0].Ok); Assert.True(applied[0].Changed); Assert.Equal(1, values["AllowAutoGameMode"]);
+        var restored = BackupService.RestoreAll(["game-mode"], file);
+        Assert.Empty(restored.Failures); Assert.Equal(1, values["AutoGameModeEnabled"]); Assert.Equal(0, values["AllowAutoGameMode"]);
+        RegistryHelper.SetOverride = (_, _, _, _, _) => { };
+        Assert.False(NativeOptimizationEngine.ApplyAll(["game-mode"], null)[0].Ok);
+    }
+
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "fpstune-receipt-" + Guid.NewGuid().ToString("N"));
     public OperationReceiptTests() { BackupService.BackupDirOverride = _dir; }
     public void Dispose()

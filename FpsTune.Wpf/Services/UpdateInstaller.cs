@@ -35,11 +35,14 @@ internal static class UpdateInstaller
         UpdateRecovery.ValidateInfo(info);
         if (!await Active.WaitAsync(0, token)) throw new InvalidOperationException(Str.T("Str.UpdateInProgress"));
         UpdateAttempt? attempt = null;
+        string? unpublishedId = null;
         try
         {
+            using var cacheLease = UpdateRecovery.AcquireCacheLease();
             EnsureIdle();
             var recent = UpdateRecovery.Recent();
             if (recent is not null && UpdateRecovery.Busy(recent)) throw new InvalidOperationException(Str.T("Str.UpdateInProgress"));
+            await Task.Run(() => UpdateRecovery.PruneCacheOwned(), token);
             stage?.Invoke(Str.T("Str.UpdateDownloading"));
             progress(-1);
             var package = await UpdateRecovery.GetPackageAsync(info, progress, token);
@@ -71,6 +74,7 @@ internal static class UpdateInstaller
                     throw new InvalidDataException(Str.T("Str.InstallerHashMismatch"));
                 using var parent = Process.GetCurrentProcess();
                 var id = Guid.NewGuid().ToString("N");
+                unpublishedId = id;
                 var directory = Path.GetFullPath(UpdateRecovery.InstallDirectoryOverride
                     ?? Path.GetDirectoryName(Environment.ProcessPath) ?? AppContext.BaseDirectory);
                 if (directory.Contains('"')) throw new InvalidDataException(Str.T("Str.UpdateUrlInvalid"));
@@ -79,6 +83,7 @@ internal static class UpdateInstaller
                 attempt = new(id, UpdateRecovery.CurrentVersion, info, previousId, package.Id, directory, parent.Id,
                     parent.StartTime.ToUniversalTime().Ticks, snapshotHash, DateTimeOffset.UtcNow, package.Hash, mode);
                 UpdateRecovery.SaveAttempt(attempt);
+                unpublishedId = null;
                 if (UpdateRecovery.WorkerOverride is not null) UpdateRecovery.WorkerOverride(attempt, token).GetAwaiter().GetResult();
                 else UpdateWorker.Start(attempt, token);
             }, token);
@@ -87,6 +92,7 @@ internal static class UpdateInstaller
         }
         catch (Exception ex)
         {
+            if (unpublishedId is not null) UpdateRecovery.DiscardUnpublishedAttempt(unpublishedId);
             if (attempt is not null)
             {
                 try { File.WriteAllText(UpdateRecovery.AttemptPath(attempt.Id, "abort"), "abort"); }
@@ -97,7 +103,11 @@ internal static class UpdateInstaller
             }
             throw;
         }
-        finally { Active.Release(); }
+        finally
+        {
+            try { await Task.Run(UpdateRecovery.PruneCache); }
+            finally { Active.Release(); }
+        }
     }
     private static void EnsureIdle()
     {

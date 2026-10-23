@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace FpsTune.Wpf.Services;
 
@@ -13,6 +14,8 @@ public sealed record SessionFpsStats(int Samples, double AvgFps, double P1Low, d
 /// </summary>
 public sealed class SessionFpsRecorder
 {
+    internal const long MaxOutputBytes = 64L * 1024 * 1024;
+    internal const int MaxOutputLines = 2_000_001;
     private readonly Func<string?> _findPresentMon;
     private readonly Func<string?, Process?> _findGameProcess;
     private readonly Func<ProcessStartInfo, Process?> _start;
@@ -24,7 +27,8 @@ public sealed class SessionFpsRecorder
     private Task<string[]>? _readTask;
     private Task? _captureTask;
     private Task? _errorTask;
-    private string? _outputPath;
+    private FileStream? _outputFile;
+    private int _limitReached;
     private string? _unavailableReasonKey;
     private string? _parseError;
 
@@ -52,7 +56,7 @@ public sealed class SessionFpsRecorder
     }
 
     /// <summary>不可用原因的资源键（Start 失败或 Stop 解析失败时非空）。</summary>
-    public string? UnavailableReasonKey => _unavailableReasonKey;
+    public string? UnavailableReasonKey => Volatile.Read(ref _limitReached) != 0 ? "Str.FpsReasonLimit" : _unavailableReasonKey;
     /// <summary>解析失败的原始细节（随 FpsNote 落库，供诊断）。</summary>
     public string? ParseError => _parseError;
 
@@ -62,6 +66,7 @@ public sealed class SessionFpsRecorder
         if (_proc is not null) return false;
         _unavailableReasonKey = null;
         _parseError = null;
+        _limitReached = 0;
         var pm = _findPresentMon();
         if (pm is null)
         {
@@ -105,9 +110,17 @@ public sealed class SessionFpsRecorder
                 _readTask = _readOutput(_proc);
             else
             {
-                _outputPath = Path.Combine(Path.GetTempPath(), "FpsTune-frames-" + Guid.NewGuid().ToString("N") + ".csv");
-                _captureTask = CaptureOutputAsync(_proc, _outputPath);
-                _errorTask = DrainErrorsAsync(_proc);
+                var process = _proc;
+                // The OS deletes this owned scratch file when its last handle closes, including a crash.
+                _outputFile = new FileStream(Path.Combine(Path.GetTempPath(), "FpsTune-frames-" + Guid.NewGuid().ToString("N") + ".csv"),
+                    FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read | FileShare.Delete, 65536,
+                    FileOptions.Asynchronous | FileOptions.DeleteOnClose);
+                _captureTask = CaptureOutputAsync(process.StandardOutput, _outputFile, MaxOutputBytes, MaxOutputLines, () =>
+                {
+                    Interlocked.Exchange(ref _limitReached, 1);
+                    _kill(process);
+                });
+                _errorTask = DrainErrorsAsync(process);
             }
             return true;
         }
@@ -117,24 +130,27 @@ public sealed class SessionFpsRecorder
             if (_proc is not null) _kill(_proc);
             _proc?.Dispose();
             _proc = null;
-            CleanupOutput(_outputPath, _captureTask);
+            CleanupOutput(_outputFile, _captureTask);
+            _outputFile = null;
             return false;
         }
     }
 
     /// <summary>会话结束时调用：终止 PresentMon 并解析全程帧时间。未启动过返回 null。</summary>
-    public SessionFpsStats? Stop()
+    public SessionFpsStats? Stop() => Stop(parse: true);
+
+    internal SessionFpsStats? Stop(bool parse)
     {
         var proc = _proc;
         var readTask = _readTask;
         var capture = _captureTask;
         var errors = _errorTask;
-        var path = _outputPath;
+        var file = _outputFile;
         _proc = null;
         _readTask = null;
         _captureTask = null;
         _errorTask = null;
-        _outputPath = null;
+        _outputFile = null;
         if (proc is null)
             return null;
 
@@ -142,11 +158,16 @@ public sealed class SessionFpsRecorder
         try
         {
             _kill(proc);
+            if (!parse) return null;
             if (readTask is not null)
                 parsed = FrameTimeStats.Parse(readTask.Wait(TimeSpan.FromSeconds(10)) ? readTask.Result : []);
-            else if (capture is not null && path is not null
+            else if (capture is not null && file is not null
                 && Task.WhenAll(capture, errors ?? Task.CompletedTask).Wait(TimeSpan.FromSeconds(10)))
-                parsed = FrameTimeStats.Parse(File.ReadLines(path));
+            {
+                file.Position = 0;
+                using var reader = new StreamReader(file, leaveOpen: true);
+                parsed = Volatile.Read(ref _limitReached) != 0 ? FrameTimeStats.Parse([]) : FrameTimeStats.Parse(Lines(reader));
+            }
             else
                 parsed = FrameTimeStats.Parse([]);
         }
@@ -157,9 +178,15 @@ public sealed class SessionFpsRecorder
         finally
         {
             proc.Dispose();
-            CleanupOutput(path, capture);
+            CleanupOutput(file, capture);
         }
 
+        if (Volatile.Read(ref _limitReached) != 0)
+        {
+            _unavailableReasonKey = "Str.FpsReasonLimit";
+            _parseError = "output-limit";
+            return null;
+        }
         if (parsed.Frame is null)
         {
             _unavailableReasonKey = "Str.FpsReasonParseFailed";
@@ -176,13 +203,31 @@ public sealed class SessionFpsRecorder
         return new SessionFpsStats(frame.Samples, frame.AvgFps, frame.P1Low, frame.P99Ms, frame.Stutters);
     }
 
-    private static async Task CaptureOutputAsync(Process process, string path)
+    internal static async Task CaptureOutputAsync(TextReader input, Stream output, long maxBytes, int maxLines, Action limitReached)
     {
-        await using var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write,
-            FileShare.Read, 65536, useAsync: true);
-        await using var writer = new StreamWriter(file);
-        while (await process.StandardOutput.ReadLineAsync().ConfigureAwait(false) is { } line)
-            await writer.WriteLineAsync(line).ConfigureAwait(false);
+        // Fixed chunks also bound a malformed single CSV line; ReadLineAsync alone does not.
+        using var writer = new StreamWriter(output, new UTF8Encoding(false), 65536, leaveOpen: true);
+        var buffer = new char[4096];
+        long bytes = 0;
+        var lines = 0;
+        var lineLength = 0;
+        int count;
+        while ((count = await input.ReadAsync(buffer.AsMemory()).ConfigureAwait(false)) > 0)
+        {
+            bytes += Encoding.UTF8.GetByteCount(buffer, 0, count);
+            for (var i = 0; i < count; i++)
+            {
+                if (buffer[i] == '\n') { lines++; lineLength = 0; }
+                else if (++lineLength > 16384) { limitReached(); return; }
+            }
+            if (bytes > maxBytes || lines > maxLines) { limitReached(); return; }
+            await writer.WriteAsync(buffer.AsMemory(0, count)).ConfigureAwait(false);
+        }
+    }
+
+    private static IEnumerable<string> Lines(TextReader reader)
+    {
+        while (reader.ReadLine() is { } line) yield return line;
     }
 
     private static async Task DrainErrorsAsync(Process process)
@@ -191,16 +236,16 @@ public sealed class SessionFpsRecorder
         while (await process.StandardError.ReadAsync(buffer).ConfigureAwait(false) > 0) { }
     }
 
-    private static void CleanupOutput(string? path, Task? capture)
+    private static void CleanupOutput(FileStream? file, Task? capture)
     {
-        if (path is null) return;
+        if (file is null) return;
         if (capture is { IsCompleted: false })
         {
-            _ = capture.ContinueWith(_ => CleanupOutput(path, null), TaskScheduler.Default);
+            _ = capture.ContinueWith(_ => CleanupOutput(file, null), TaskScheduler.Default);
             return;
         }
-        try { File.Delete(path); }
-        catch (IOException) { /* Only this recorder's scratch file; never delete user data. */ }
+        try { file.Dispose(); }
+        catch (IOException) { }
         catch (UnauthorizedAccessException) { }
     }
 

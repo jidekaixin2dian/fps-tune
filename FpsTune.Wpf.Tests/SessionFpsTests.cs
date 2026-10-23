@@ -7,6 +7,20 @@ namespace FpsTune.Wpf.Tests;
 /// <summary>0.2.0 C-E：帧时间解析（实验/会话共用口径）与会话 FPS 采集器的降级语义。</summary>
 public sealed class SessionFpsTests
 {
+    [Fact]
+    public async Task Raw_capture_bounds_bytes_rows_and_unterminated_lines_without_silently_claiming_completion()
+    {
+        foreach (var (text, bytes, lines) in new[] { (new string('a', 5000), 128L, 100), (string.Concat(Enumerable.Repeat("8\n", 100)), 4096L, 50), (new string('a', 20000), 65536L, 100) })
+        {
+            using var output = new MemoryStream(); var limited = false;
+            await SessionFpsRecorder.CaptureOutputAsync(new StringReader(text), output, bytes, lines, () => limited = true);
+            Assert.True(limited); Assert.True(output.Length <= bytes);
+        }
+        using var normal = new MemoryStream();
+        await SessionFpsRecorder.CaptureOutputAsync(new StringReader("FrameTime\n8\n"), normal, 1024, 100, () => Assert.Fail("Normal capture was truncated"));
+        Assert.Equal("FrameTime\n8\n", System.Text.Encoding.UTF8.GetString(normal.ToArray()));
+    }
+
     private static string[] MakeCsv(int frameCount, double ms = 7.0)
     {
         var lines = new List<string> { "Application,msBetweenPresents" };

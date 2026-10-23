@@ -120,7 +120,9 @@ public partial class SessionView : UserControl
     private void UpdateRunState()
     {
         if (!IsVisible || Window.GetWindow(this)?.WindowState == WindowState.Minimized) return;
-        if (Service.IsRunning)
+        if (Service.IsStopping)
+            RunStateText.Text = Str.T("Str.SessionSaving");
+        else if (Service.IsRunning)
         {
             var unavailable = Service.CurrentUnavailableReasons;
             var missing = unavailable.Count == 0 ? Str.T("Str.None") : string.Join("；", unavailable.Keys);
@@ -139,8 +141,8 @@ public partial class SessionView : UserControl
     {
         var running = Service.IsRunning;
         StartButton.IsEnabled = !running;
-        StopButton.IsEnabled = running;
-        CancelButton.IsEnabled = running;
+        StopButton.IsEnabled = running && !Service.IsStopping;
+        CancelButton.IsEnabled = running && !Service.IsStopping;
         SessionNameBox.IsEnabled = !running;
         ConditionsPanel.IsEnabled = !running;
         UpdateConditionGame();
@@ -299,17 +301,24 @@ public partial class SessionView : UserControl
         RunStateText.Text = Str.T("Str.ConditionCopied");
     }
 
-    private void Stop_Click(object sender, RoutedEventArgs e)
+    private async void Stop_Click(object sender, RoutedEventArgs e)
     {
         if (!Service.IsRunning)
             return;
-        var session = Service.Stop(save: true);
-        RefreshAll();
-        if (session is not null)
-            ShowInsights(session);
+        try
+        {
+            var session = await Service.StopAsync(save: true);
+            RefreshAll();
+            if (session is not null) ShowInsights(session);
+        }
+        catch (Exception ex)
+        {
+            RefreshAll();
+            DialogService.Warning(Str.T("Str.SessionSaveFailed"), Str.T("Str.SessionSaveFailedHint") + "\n\n" + ex.Message);
+        }
     }
 
-    private void Cancel_Click(object sender, RoutedEventArgs e)
+    private async void Cancel_Click(object sender, RoutedEventArgs e)
     {
         if (!Service.IsRunning)
             return;
@@ -317,7 +326,7 @@ public partial class SessionView : UserControl
             return;
         try
         {
-            Service.Cancel();
+            await Service.StopAsync(save: false);
             RefreshAll();
         }
         catch (Exception ex)

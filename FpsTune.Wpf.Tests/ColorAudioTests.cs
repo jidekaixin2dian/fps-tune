@@ -8,6 +8,27 @@ namespace FpsTune.Wpf.Tests;
 public sealed class ColorAudioTests
 {
     [Fact]
+    public void Equalizer_restore_inventory_uses_target_permissions_without_writing_during_preflight()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "fpstune-eq-access-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root); UserDataPaths.RootOverride = root;
+        var main = Path.Combine(root, "config.txt"); File.WriteAllText(main, "# original\n");
+        AudioEqualizerService.EngineOverride = new(root, root, "unused");
+        try
+        {
+            AudioEqualizerService.Apply(new(Guid.NewGuid().ToString(), new double[10]));
+            var before = File.ReadAllBytes(main);
+            Assert.False(AudioEqualizerService.RestoreNeedsAdmin());
+            AudioEqualizerService.RestoreAccessDeniedOverride = directory => { Assert.Equal(root, directory); return true; };
+            Assert.True(Assert.Single(RecoveryCoordinator.Inventory(), s => s.Module == "audio-equalizer").NeedsAdmin);
+            Assert.True(RecoveryCoordinator.NeedsAdmin()); Assert.Equal(before, File.ReadAllBytes(main));
+            AudioEqualizerService.RestoreAccessDeniedOverride = null;
+            Assert.False(Assert.Single(RecoveryCoordinator.Inventory(), s => s.Module == "audio-equalizer").NeedsAdmin);
+        }
+        finally { AudioEqualizerService.RestoreAccessDeniedOverride = null; AudioEqualizerService.EngineOverride = null; UserDataPaths.RootOverride = null; Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void Color_preview_is_neutral_by_default_distinguishes_presets_and_does_not_modify_source()
     {
         var source = ScreenColorPreview.Sample();

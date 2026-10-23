@@ -70,6 +70,64 @@ public sealed class UpdateRecoveryTests : IDisposable
         return attempt;
     }
     [Fact]
+    public void Snapshot_excludes_large_recordings_and_cache_but_preserves_every_recovery_module()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, "sessions"));
+        using (var large = File.Create(Path.Combine(_root, "sessions", "large.json"))) large.SetLength(300L * 1024 * 1024);
+        foreach (var module in new[] { "backup", "display-icc", "screen-color", "audio-equalizer" })
+        { Directory.CreateDirectory(Path.Combine(_root, module)); File.WriteAllText(Path.Combine(_root, module, "anchor.json"), "original"); }
+        var id = Guid.NewGuid().ToString("N");
+        UpdateRecovery.Snapshot(id);
+        using var zip = ZipFile.OpenRead(UpdateRecovery.AttemptPath(id, "settings-backups.zip"));
+        Assert.Equal(6, zip.Entries.Count);
+        Assert.DoesNotContain(zip.Entries, e => e.FullName.StartsWith("sessions/"));
+        Assert.Equal(300L * 1024 * 1024, new FileInfo(Path.Combine(_root, "sessions", "large.json")).Length);
+    }
+    [Fact]
+    public void Failed_snapshot_removes_its_partial_copy_and_preserves_existing_recovery_points()
+    {
+        var previous = Attempt(); var id = Guid.NewGuid().ToString("N");
+        using var locked = new FileStream(Path.Combine(_root, "settings.json"), FileMode.Open, FileAccess.Read, FileShare.None);
+        Assert.Throws<IOException>(() => UpdateRecovery.Snapshot(id));
+        Assert.False(Directory.Exists(Path.GetDirectoryName(UpdateRecovery.AttemptPath(id, "settings-backups.zip"))));
+        Assert.NotNull(UpdateRecovery.ProtectedCopy(previous)); Assert.Equal(previous.Id, UpdateRecovery.Recent()!.Id);
+    }
+    [Fact]
+    public void Retention_bounds_completed_cache_keeps_recent_rollback_and_skips_files_in_use()
+    {
+        var previous = Package(Info("v0.2.7-beta"));
+        var attempts = Enumerable.Range(0, 5).Select(_ =>
+        {
+            var attempt = Attempt() with { PreviousPackageId = previous.Id };
+            UpdateRecovery.SaveAttempt(attempt); UpdateRecovery.SaveOutcome(new(attempt.Id, "failed", "installer-exit", 4));
+            return attempt;
+        }).ToArray();
+        using (var lease = new FileStream(UpdateRecovery.AttemptPath(attempts[0].Id, "settings-backups.zip"), FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            UpdateRecovery.PruneCache(); Assert.NotNull(UpdateRecovery.ProtectedCopy(attempts[0]));
+        }
+        UpdateRecovery.PruneCache();
+        Assert.Equal(UpdateRecovery.RetainedAttempts, Directory.GetDirectories(UpdateRecovery.OwnedPath("attempts")).Length);
+        Assert.Equal(4, Directory.GetDirectories(UpdateRecovery.OwnedPath("packages")).Length);
+        Assert.True(UpdateRecovery.CanRollback(UpdateRecovery.Recent()!));
+        Assert.NotNull(UpdateRecovery.ProtectedCopy(attempts[^1]));
+        Assert.Equal("original settings", File.ReadAllText(Path.Combine(_root, "settings.json")));
+        using var cacheLease = UpdateRecovery.AcquireCacheLease();
+        Assert.Throws<IOException>(() => UpdateRecovery.AcquireCacheLease());
+    }
+    [Fact]
+    public void Expired_installer_is_removed_but_unique_restore_evidence_is_preserved()
+    {
+        var unique = Attempt(); UpdateRecovery.SaveOutcome(new(unique.Id, "failed", "installer-exit", 4));
+        var oldInstaller = UpdateRecovery.PackagePath(UpdateRecovery.LoadPackage(unique.PackageId));
+        File.WriteAllText(Path.Combine(_root, "display-quality", "original.json"), "a later different original");
+        for (var i = 0; i < 4; i++)
+        { var newer = Attempt(); UpdateRecovery.SaveOutcome(new(newer.Id, "failed", "installer-exit", 4)); }
+        UpdateRecovery.PruneCache();
+        Assert.NotNull(UpdateRecovery.ProtectedCopy(unique));
+        Assert.False(File.Exists(oldInstaller));
+    }
+    [Fact]
     public async Task Failure_keeps_original_settings_receipts_verified_previous_package_and_complete_protection_copy()
     {
         await UpdateInstaller.InstallAsync(Info(), _ => { }, default);

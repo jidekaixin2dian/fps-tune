@@ -1,7 +1,6 @@
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
-using System.Windows.Threading;
 
 namespace FpsTune.Wpf.Services;
 
@@ -17,18 +16,22 @@ public sealed class PerformanceSessionService : IDisposable
     public const int AutosaveEverySamples = 60;
 
     private MetricsSampler? _sampler;
+    private readonly Func<TimeSpan, int, MetricsSampler> _createSampler;
+    private readonly Func<SessionFpsRecorder> _createFpsRecorder;
     private SessionFpsRecorder? _fpsRecorder;
     private string _name = "";
     private DateTime _startedAt;
     private int _sampleCount;
     private int _disposed;
     private IDisposable? _activeOwner;
+    private Task<PerformanceSession?>? _stopTask;
     private readonly Stopwatch _clock = new();
     public double SampleIntervalSeconds { get; private set; }
     public SessionConditions? Conditions { get; private set; }
     public event Action<string>? AutomaticStopFailed;
 
     public bool IsRunning { get; private set; }
+    public bool IsStopping { get; private set; }
     public string SessionName => _name;
     public DateTime StartedAt => _startedAt;
     public MetricSample? LatestSample { get; private set; }
@@ -41,6 +44,10 @@ public sealed class PerformanceSessionService : IDisposable
     public event Action<MetricSample>? Sampled;
     /// <summary>开始/结束等状态变化。</summary>
     public event Action? StateChanged;
+
+    public PerformanceSessionService() : this((interval, capacity) => new MetricsSampler(interval, capacity), () => new SessionFpsRecorder()) { }
+    internal PerformanceSessionService(Func<TimeSpan, int, MetricsSampler> createSampler, Func<SessionFpsRecorder> createFpsRecorder)
+    { _createSampler = createSampler; _createFpsRecorder = createFpsRecorder; }
 
     /// <summary>运行中最近一次各指标不可用原因（空字典 = 全部可用）。</summary>
     public IReadOnlyDictionary<string, string> CurrentUnavailableReasons
@@ -84,10 +91,10 @@ public sealed class PerformanceSessionService : IDisposable
             _sampleCount = 0;
             var interval = CurrentInterval;
             SampleIntervalSeconds = interval.TotalSeconds;
-            _sampler = new MetricsSampler(interval, CurrentBufferCapacity);
+            _sampler = _createSampler(interval, CurrentBufferCapacity);
             _sampler.Sampled += OnSample;
             // 0.2.0 C-E：会话期间同步跑 PresentMon（可选能力，失败降级并记录原因键）。
-            _fpsRecorder = new SessionFpsRecorder();
+            _fpsRecorder = _createFpsRecorder();
             _fpsRecorder.Start(AppState.GamePath);
             IsRunning = true;
             _sampler.Start();
@@ -111,47 +118,64 @@ public sealed class PerformanceSessionService : IDisposable
     /// <summary>结束会话；save=false 等价取消（丢弃数据）。返回保存或构造出的会话，未保存时返回 null。</summary>
     public PerformanceSession? Stop(bool save = true)
     {
-        if (!IsRunning)
-            return null;
+        if (IsStopping) throw new InvalidOperationException(Str.T("Str.SessionSaving"));
+        if (!IsRunning) return null;
+        var (session, recorder) = BeginStop();
+        return CompleteStop(session, recorder, save);
+    }
 
+    /// <summary>在创建线程冻结采样快照，后台结束 FPS 与写盘；重复请求等待同一次保存。</summary>
+    public Task<PerformanceSession?> StopAsync(bool save = true)
+    {
+        if (IsStopping) return _stopTask!;
+        if (!IsRunning) return Task.FromResult<PerformanceSession?>(null);
+        var (session, recorder) = BeginStop();
+        _stopTask = CompleteStopAsync(session, recorder, save);
+        StateChanged?.Invoke();
+        return _stopTask;
+    }
+
+    private async Task<PerformanceSession?> CompleteStopAsync(PerformanceSession session, SessionFpsRecorder? recorder, bool save)
+    {
+        try { return await Task.Run(() => CompleteStop(session, recorder, save, notify: false)); }
+        finally { StateChanged?.Invoke(); }
+    }
+
+    private (PerformanceSession Session, SessionFpsRecorder? Recorder) BeginStop()
+    {
         var sampler = _sampler;
-        PerformanceSession? session = null;
+        sampler?.Stop();
+        if (sampler is not null) sampler.Sampled -= OnSample;
+        var session = ToSession(DateTime.Now);
+        var recorder = _fpsRecorder;
+        IsStopping = true;
+        _clock.Stop();
+        // Dispose only touches the timer on this thread; counter disposal is already deferred.
+        sampler?.Dispose();
+        _sampler = null;
+        _fpsRecorder = null;
+        LatestSample = null;
+        return (session, recorder);
+    }
+
+    private PerformanceSession? CompleteStop(PerformanceSession session, SessionFpsRecorder? recorder, bool save, bool notify = true)
+    {
         Exception? failure = null;
         try
         {
-            // Stop the timer before taking the final snapshot. This keeps the
-            // sampler from ticking while persistence is in progress.
-            sampler?.Stop();
-            SessionFpsStats? fps = null;
-            string? fpsNote = null;
-            if (_fpsRecorder is not null)
+            // Keep the final hardware samples recoverable even if FPS draining or saving is interrupted.
+            if (save) PerformanceSessionStore.SaveActiveSnapshotOwned(session with { Id = "active-snapshot" });
+            if (recorder is not null)
             {
-                fps = _fpsRecorder.Stop();
-                fpsNote = fps is null ? _fpsRecorder.UnavailableReasonKey : null;
-            }
-            if (sampler is not null)
-            {
-                sampler.Sampled -= OnSample;
-                session = ToSession(DateTime.Now, fps, fpsNote);
+                var fps = recorder.Stop(parse: save);
+                session = session with { Fps = fps, FpsNote = fps is null ? recorder.UnavailableReasonKey : null };
             }
         }
         catch (Exception ex)
         {
             failure = ex;
         }
-        finally
-        {
-            // Cleanup is unconditional: a full disk or a malformed callback must
-            // never leave a live DispatcherTimer/event subscription behind.
-            IsRunning = false;
-            _clock.Stop();
-            sampler?.Dispose();
-            _sampler = null;
-            _fpsRecorder = null;
-            LatestSample = null;
-        }
-
-        if (save && session is not null && failure is null)
+        if (save && failure is null)
         {
             var sessionPersisted = false;
             try
@@ -206,7 +230,9 @@ public sealed class PerformanceSessionService : IDisposable
 
         try
         {
-            StateChanged?.Invoke();
+            IsRunning = false;
+            IsStopping = false;
+            if (notify) StateChanged?.Invoke();
         }
         catch (Exception ex)
         {
@@ -228,18 +254,18 @@ public sealed class PerformanceSessionService : IDisposable
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
             return;
+        // A normal window close awaits StopAsync. Never release its ownership underneath a pending save.
+        if (IsStopping) return;
         if (IsRunning)
         {
             try
             {
-                Stop(save: false);
+                Stop(save: true);
             }
             catch
             {
                 // Dispose is used by application shutdown and must not abort
-                // exit. Stop has already released the sampler and owner; when
-                // the durable cancel tombstone failed it deliberately leaves
-                // _active.json in place for the next launch to recover.
+                // exit. Saving failures leave the active snapshot for startup recovery.
             }
         }
         _sampler?.Dispose();
@@ -277,7 +303,7 @@ public sealed class PerformanceSessionService : IDisposable
             Conditions);
     }
 
-    private void OnSample(MetricSample sample)
+    private async void OnSample(MetricSample sample)
     {
         LatestSample = sample;
         _sampleCount++;
@@ -292,9 +318,9 @@ public sealed class PerformanceSessionService : IDisposable
             PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
         }
         Sampled?.Invoke(sample);
-        if (IsRunning && Conditions?.TargetSeconds is { } target && _clock.Elapsed.TotalSeconds >= target)
+        if (IsRunning && !IsStopping && Conditions?.TargetSeconds is { } target && _clock.Elapsed.TotalSeconds >= target)
         {
-            try { Stop(save: true); }
+            try { await StopAsync(save: true); }
             catch (Exception ex) { AutomaticStopFailed?.Invoke(ex.Message); }
         }
     }

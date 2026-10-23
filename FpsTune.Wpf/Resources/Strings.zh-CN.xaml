@@ -716,6 +716,10 @@
     <s:String x:Key="Str.FpsReasonNoPresentMon">未找到 PresentMon（安装官方 PresentMon 后可记录帧率）</s:String>
     <s:String x:Key="Str.FpsReasonNoGameProcess">开始记录时未检测到游戏进程</s:String>
     <s:String x:Key="Str.FpsReasonParseFailed">PresentMon 采样解析失败</s:String>
+    <s:String x:Key="Str.FpsReasonLimit">FPS 采集达到容量上限，未生成不完整统计；硬件指标继续记录</s:String>
+    <s:String x:Key="Str.SessionSaving">正在结束采集并保存会话，请稍候…</s:String>
+    <s:String x:Key="Str.SessionSaveFailed">保存会话失败</s:String>
+    <s:String x:Key="Str.SessionSaveFailedHint">请检查本地磁盘；已有的恢复快照已保留。</s:String>
     <s:String x:Key="Str.BottleneckTitle">瓶颈判定</s:String>
     <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>

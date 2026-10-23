@@ -716,6 +716,10 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FpsReasonNoPresentMon">PresentMon not found (install the official PresentMon to record frame rate)</s:String>
     <s:String x:Key="Str.FpsReasonNoGameProcess">No game process detected when recording started</s:String>
     <s:String x:Key="Str.FpsReasonParseFailed">PresentMon output could not be parsed</s:String>
+    <s:String x:Key="Str.FpsReasonLimit">FPS capture reached its capacity limit; incomplete statistics are omitted. Hardware recording continues.</s:String>
+    <s:String x:Key="Str.SessionSaving">Finishing capture and saving the session. Please wait…</s:String>
+    <s:String x:Key="Str.SessionSaveFailed">Could not save the session</s:String>
+    <s:String x:Key="Str.SessionSaveFailedHint">Check the local disk. Existing recovery snapshots have been preserved.</s:String>
     <s:String x:Key="Str.BottleneckTitle">Bottleneck</s:String>
     <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>

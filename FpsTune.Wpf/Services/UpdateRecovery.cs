@@ -16,7 +16,7 @@ internal sealed record UpdateOutcome(string Id, string Status, string Stage, int
     string? Error = null, int? WorkerId = null, long? WorkerStartedTicks = null);
 
 /// <summary>Immutable launch receipts, verified package cache and local protection copies. Never restores data automatically.</summary>
-internal static class UpdateRecovery
+internal static partial class UpdateRecovery
 {
     internal static string Root => Path.Combine(UserDataPaths.Root, "updates");
     internal static Func<UpdateInfo, Action<double>?, CancellationToken, Task<CachedUpdatePackage>>? PackageOverride;
@@ -30,6 +30,7 @@ internal static class UpdateRecovery
     internal static string OwnedPath(params string[] parts)
     {
         var root = Path.GetFullPath(Root);
+        RequireSnapshotPath(root);
         var path = Path.GetFullPath(Path.Combine([root, .. parts]));
         if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("Update path is outside its cache.");
@@ -150,21 +151,39 @@ internal static class UpdateRecovery
         var source = Path.GetFullPath(UserDataPaths.Root);
         long total = 0;
         var files = 0;
-        using (var output = new FileStream(destination, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
-        using (var zip = new ZipArchive(output, ZipArchiveMode.Create))
+        var created = false;
+        try
         {
-            var queue = new Queue<string>();
-            queue.Enqueue(source);
-            while (queue.TryDequeue(out var directory))
+            using (var output = new FileStream(destination, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+            using (var zip = new ZipArchive(output, ZipArchiveMode.Create))
             {
-                if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
-                    throw new InvalidDataException(Str.T("Str.UpdateSnapshotLink"));
-                foreach (var child in Directory.EnumerateDirectories(directory).Order())
-                    if (!Path.GetFullPath(child).Equals(Path.GetFullPath(Root), StringComparison.OrdinalIgnoreCase)) queue.Enqueue(child);
-                foreach (var file in Directory.EnumerateFiles(directory).Order())
+                created = true;
+                // Installation preserves all user data in place. Only mutable settings and recovery anchors
+                // need an extra protection copy; recordings, logs, wallpapers and caches are never removed.
+                RequireSnapshotPath(source);
+                var queue = new Queue<string>();
+                foreach (var module in new[] { "backup", "display-quality", "display-icc", "screen-color", "audio-equalizer" })
                 {
-                    if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
-                        throw new InvalidDataException(Str.T("Str.UpdateSnapshotLink"));
+                    var directory = Path.Combine(source, module);
+                    if (Directory.Exists(directory)) queue.Enqueue(directory);
+                }
+                foreach (var name in new[] { "settings.json", "profiles.json", "games.json", "game-path.txt", "lang.txt", "onboarding.done",
+                    "experiment/state.json", "experiment/state-v2.json", "experiment/in-flight-v2.json", "experiment/wizard.json" })
+                {
+                    var file = Path.Combine(source, name);
+                    if (File.Exists(file)) Copy(file);
+                }
+                while (queue.TryDequeue(out var directory))
+                {
+                    RequireSnapshotPath(directory);
+                    foreach (var child in Directory.EnumerateDirectories(directory).Order())
+                        queue.Enqueue(child);
+                    foreach (var file in Directory.EnumerateFiles(directory).Order())
+                        Copy(file);
+                }
+                void Copy(string file)
+                {
+                    RequireSnapshotPath(file);
                     if (++files > 5000) throw new IOException(Str.T("Str.UpdateSnapshotLarge"));
                     var relative = Path.GetRelativePath(source, file).Replace('\\', '/');
                     using var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -179,9 +198,20 @@ internal static class UpdateRecovery
                     }
                 }
             }
+            using var saved = File.OpenRead(destination);
+            return Convert.ToHexString(SHA256.HashData(saved));
         }
-        using var saved = File.OpenRead(destination);
-        return Convert.ToHexString(SHA256.HashData(saved));
+        catch
+        {
+            if (created) DiscardUnpublishedAttempt(id);
+            throw;
+        }
+    }
+    private static void RequireSnapshotPath(string path)
+    {
+        for (var current = Path.GetFullPath(path); !string.IsNullOrEmpty(current); current = Path.GetDirectoryName(current))
+            if ((File.Exists(current) || Directory.Exists(current)) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                throw new InvalidDataException(Str.T("Str.UpdateSnapshotLink"));
     }
     internal static string? ProtectedCopy(UpdateAttempt attempt)
     {
@@ -203,6 +233,14 @@ internal static class UpdateRecovery
             var pointer = OwnedPath("last-attempt.txt");
             if (!File.Exists(pointer) || new FileInfo(pointer).Length > 64) return null;
             var id = File.ReadAllText(pointer).Trim();
+            return ReadAttempt(id);
+        }
+        catch { return null; }
+    }
+    private static UpdateAttempt? ReadAttempt(string id)
+    {
+        try
+        {
             var path = AttemptPath(id, "launch.json");
             if (new FileInfo(path).Length > 64 * 1024) return null;
             var attempt = JsonSerializer.Deserialize<UpdateAttempt>(File.ReadAllText(path));
@@ -241,7 +279,7 @@ internal static class UpdateRecovery
     internal static UpdateAttempt? ResolveStartup(string version, string executable)
     {
         var attempt = Recent();
-        if (attempt is null) return null;
+        if (attempt is null) { PruneCache(); return null; }
         if (attempt.Status == "awaiting-startup")
         {
             var sameVersion = UpdateService.TryNormalizeVersion(version, out _) && !UpdateService.IsNewer(version, attempt.Target.ReleaseTag!)
@@ -253,6 +291,7 @@ internal static class UpdateRecovery
         }
         else if ((attempt.Status is "prepared" or "waiting-for-exit" or "installing") && !Busy(attempt))
             SaveOutcome(new(attempt.Id, "interrupted", attempt.Stage, attempt.ExitCode, Str.T("Str.UpdateInterrupted")));
+        PruneCache();
         return Recent();
     }
     internal static object DiagnosticSummary(string? root = null)

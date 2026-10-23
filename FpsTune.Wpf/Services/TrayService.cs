@@ -347,9 +347,9 @@ public static class TrayService
                 exit.Foreground = danger;
             exit.Click += (_, _) =>
             {
-                Dispose();
-                Application.Current.MainWindow?.Close();
-                Application.Current.Shutdown();
+                // Closing coordinates recording persistence and may reject exit while an operation is busy.
+                if (Application.Current.MainWindow is { } main) main.Close();
+                else Application.Current.Shutdown();
             };
 
             menu.Items.Add(open);

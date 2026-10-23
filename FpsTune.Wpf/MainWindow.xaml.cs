@@ -98,7 +98,7 @@ public partial class MainWindow : Window
             while (Application.Current.Windows.OfType<SplashWindow>().Any(w => w.IsVisible))
                 await Task.Delay(200, _updateLifetime.Token);
             UpdateAttempt? recovery = null;
-            try { recovery = UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!); }
+            try { recovery = await Task.Run(() => UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!), _updateLifetime.Token); }
             catch { /* Recovery metadata must never block app startup. */ }
             if (recovery is not null && recovery.Status != "succeeded") { ShowUpdateRecovery(recovery); return; }
             if (SettingsService.Current.CheckUpdatesOnStartup)
@@ -187,9 +187,27 @@ public partial class MainWindow : Window
 
         StateChanged += OnStateChanged;
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
-        Closing += (_, e) =>
+        Closing += async (_, e) =>
         {
             if (GamePreparationService.IsRunning) { e.Cancel = true; DialogService.Info(Str.T("Str.PrepareTitle"), Str.T("Str.PrepareBusy")); return; }
+            if (App.SessionService.IsRunning)
+            {
+                e.Cancel = true;
+                if (_savingSessionOnExit) return;
+                _savingSessionOnExit = true;
+                try
+                {
+                    await App.SessionService.StopAsync();
+                    // Close only after this Closing callback has returned, even for an already finished save.
+                    _ = Dispatcher.BeginInvoke(Close);
+                }
+                catch (Exception ex)
+                {
+                    DialogService.Warning(Str.T("Str.SessionSaveFailed"), Str.T("Str.SessionSaveFailedHint") + "\n\n" + ex.Message);
+                }
+                finally { _savingSessionOnExit = false; }
+                return;
+            }
             // 只取消本窗口 A/B 页面启动的采样；不按名称影响正式安装版或其他用户进程。
             // RunningStep 留在磁盘时可在下次启动恢复。
             if (_pageCache.TryGetValue("ab", out var page) && page is AbExperimentView ab)
@@ -221,6 +239,7 @@ public partial class MainWindow : Window
     private static extern uint NativeGetDpiForWindow(nint hwnd);
 
     private HwndSource? _hwndSource;
+    private bool _savingSessionOnExit;
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {

@@ -748,11 +748,11 @@ public partial class SettingsView : UserControl
         }
     }
 
-    private void UpdateRecovery_Click(object sender, RoutedEventArgs e)
+    private async void UpdateRecovery_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var attempt = UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!);
+            var attempt = await Task.Run(() => UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!));
             if (attempt is null) DialogService.Info(Str.T("Str.UpdateRecovery"), Str.T("Str.UpdateNoRecords"));
             else (Application.Current.MainWindow as MainWindow)?.ShowUpdateRecovery(attempt);
         }

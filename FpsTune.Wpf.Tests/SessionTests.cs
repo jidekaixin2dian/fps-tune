@@ -463,7 +463,7 @@ public sealed class SessionTests : IDisposable
     }
 
     [Fact]
-    public void Service_dispose_swallows_cancel_marker_failure_and_keeps_active()
+    public void Service_dispose_saves_history_even_when_handled_marker_fails_and_keeps_active()
     {
         var service = new PerformanceSessionService();
         Assert.True(service.Start("退出时取消标记失败"));
@@ -480,6 +480,7 @@ public sealed class SessionTests : IDisposable
         }
 
         Assert.False(service.IsRunning);
+        Assert.Single(PerformanceSessionStore.LoadAll());
         Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
         Assert.False(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
 
@@ -630,6 +631,42 @@ public sealed class SessionTests : IDisposable
     }
 
     // ---------- 会话服务 ----------
+
+    [Fact]
+    public void Dispose_saves_final_samples_instead_of_discarding_them()
+    {
+        var sampler = new MetricsSampler(TimeSpan.FromSeconds(1), 10, () => new(DateTime.Now, 42, 50, 80, null, null));
+        var service = new PerformanceSessionService((_, _) => sampler, () => new SessionFpsRecorder(findPresentMon: () => null));
+        Assert.True(service.Start("退出自动保存"));
+        sampler.PublishExternal(new(DateTime.Now, 42, 50, 80, null, null), new Dictionary<string, string>());
+        service.Dispose();
+        var saved = Assert.Single(PerformanceSessionStore.LoadAll());
+        Assert.Equal("退出自动保存", saved.Name); Assert.Equal(42, Assert.Single(saved.Samples).CpuPct);
+        Assert.False(PerformanceSessionStore.HasActiveSnapshot); Assert.False(File.Exists(PerformanceSessionStore.ActiveLockPath));
+    }
+
+    [Fact]
+    public async Task Async_stop_returns_while_fps_is_pending_keeps_ownership_and_joins_duplicate_requests()
+    {
+        var output = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var process = new System.Diagnostics.Process();
+        var service = new PerformanceSessionService((interval, size) => new MetricsSampler(interval, size, () => new(DateTime.Now, 1, 2, 3, null, null)),
+            () => new SessionFpsRecorder(() => "fake.exe", _ => new System.Diagnostics.Process(), _ => process, _ => output.Task, _ => { }));
+        try
+        {
+            Assert.True(service.Start("后台保存"));
+            var pending = service.StopAsync();
+            Assert.False(pending.IsCompleted); Assert.True(service.IsStopping);
+            Assert.Same(pending, service.StopAsync()); Assert.False(service.Start("不能覆盖"));
+            Assert.True(PerformanceSessionStore.HasActiveSessionOwnership);
+            service.Dispose(); Assert.True(PerformanceSessionStore.HasActiveSessionOwnership);
+            output.SetResult(["FrameTime", .. Enumerable.Repeat("8", 40)]);
+            var saved = await pending;
+            Assert.Equal(40, saved!.Fps!.Samples); Assert.Single(PerformanceSessionStore.LoadAll());
+            Assert.False(service.IsRunning); Assert.False(PerformanceSessionStore.HasActiveSessionOwnership);
+        }
+        finally { output.TrySetResult([]); service.Dispose(); }
+    }
 
     [Fact]
     public void Service_start_stop_saves_and_cancel_discards()
