@@ -283,6 +283,8 @@ public static class NativeOptimizationEngine
     {
         if (string.IsNullOrWhiteSpace(gamePath))
             return (false, false, true, "缺少游戏路径，已跳过");
+        if (!BackupService.IsValidExecutablePath(gamePath))
+            return (false, false, true, Str.T("Str.GamePathInvalid"));
 
         const string flag = "DISABLEDXMAXIMIZEDWINDOWEDMODE";
         const string layersPath = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
@@ -299,6 +301,8 @@ public static class NativeOptimizationEngine
     {
         if (string.IsNullOrWhiteSpace(gamePath))
             return (false, false, true, "缺少游戏路径，已跳过");
+        if (!BackupService.IsValidExecutablePath(gamePath))
+            return (false, false, true, Str.T("Str.GamePathInvalid"));
 
         const string prefPath = @"Software\Microsoft\DirectX\UserGpuPreferences";
         var current = RegistryHelper.ReadValue(RegistryHive.CurrentUser, prefPath, gamePath)?.ToString() ?? "";
@@ -319,6 +323,8 @@ public static class NativeOptimizationEngine
     {
         if (string.IsNullOrWhiteSpace(gamePath))
             return (false, false, true, "缺少游戏路径，已跳过");
+        if (!BackupService.IsValidExecutablePath(gamePath))
+            return (false, false, true, Str.T("Str.GamePathInvalid"));
 
         var gameName = Path.GetFileName(gamePath);
         var perfPath = $@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{gameName}\PerfOptions";

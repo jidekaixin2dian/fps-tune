@@ -559,6 +559,9 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CannotStartInstaller">Could not start the installer</s:String>
     <s:String x:Key="Str.CannotOpenLink">Could not open the link.</s:String>
     <s:String x:Key="Str.InstallerHashMismatch">Installer SHA256 mismatch</s:String>
+    <s:String x:Key="Str.InstallerSignatureInvalid">Installer signature verification failed</s:String>
+    <s:String x:Key="Str.GamePathInvalid">Invalid game path (must be a fully qualified .exe file); skipped</s:String>
+    <s:String x:Key="Str.CliGameInvalid">-Game must be a fully qualified path to the game .exe</s:String>
     <s:String x:Key="Str.ManifestMissingEntry">The SHA256 manifest has no entry for the current installer</s:String>
     <!-- Additional ICC presets (2026-09-25) -->
     <s:String x:Key="Str.IccNight">Night warmth</s:String>

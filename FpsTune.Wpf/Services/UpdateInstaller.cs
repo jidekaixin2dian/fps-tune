@@ -9,6 +9,11 @@ namespace FpsTune.Wpf.Services;
 internal static class UpdateInstaller
 {
     private static readonly SemaphoreSlim Active = new(1, 1);
+
+    /// <summary>官方产物启用 Authenticode 签名后填入证书主体名（X509 SimpleName）。
+    /// 未固定时只拒绝已损坏的签名（未签名包按现有流程放行）；固定后未签名与
+    /// 非该发布者的安装包一律拒绝——仓库/账号被接管也换不掉可执行的分发内容。</summary>
+    internal static string? RequiredInstallerPublisher;
     internal static Task InstallAsync(UpdateInfo info, Action<double> progress, CancellationToken token, Action<string>? stage = null)
         => RunAsync(info, null, "upgrade", progress, token, stage);
     internal static async Task RetryAsync(UpdateAttempt attempt, Action<double> progress, CancellationToken token, Action<string>? stage = null)
@@ -72,6 +77,15 @@ internal static class UpdateInstaller
                 using var verified = new FileStream(UpdateRecovery.PackagePath(package), FileMode.Open, FileAccess.Read, FileShare.Read);
                 if (!Convert.ToHexString(SHA256.HashData(verified)).Equals(package.Hash, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException(Str.T("Str.InstallerHashMismatch"));
+                verified.Dispose();
+                // 哈希与清单同源（同一 GitHub Release），只能证明下载完整；签名校验是独立于
+                // 哈希通道的第二道防线，策略见 RequiredInstallerPublisher。
+                var signature = TrustedCaptureTool.InspectSignature(UpdateRecovery.PackagePath(package));
+                if (signature.State == TrustedCaptureTool.FileSignatureState.Invalid ||
+                    (RequiredInstallerPublisher is not null &&
+                     (signature.State != TrustedCaptureTool.FileSignatureState.Valid ||
+                      !string.Equals(signature.Publisher, RequiredInstallerPublisher, StringComparison.OrdinalIgnoreCase))))
+                    throw new InvalidDataException(Str.T("Str.InstallerSignatureInvalid"));
                 using var parent = Process.GetCurrentProcess();
                 var id = Guid.NewGuid().ToString("N");
                 unpublishedId = id;

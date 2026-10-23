@@ -754,6 +754,17 @@ public class CoreLogicTests
         Assert.Contains("-Preset 缺少值", preset.Output);
     }
 
+    [Fact]
+    public void Cli_game_option_requires_fully_qualified_exe_path()
+    {
+        // 文案走 Str.T（测试环境回退 !键名!），这里只断言拒绝行为，不断言文案本身。
+        var relative = RunCli("-Detect", "-Game=game.exe");
+        var nonExe = RunCli("-Detect", @"-Game=C:\Games\launcher.txt");
+
+        Assert.Equal(1, relative.ExitCode);
+        Assert.Equal(1, nonExe.ExitCode);
+    }
+
     // ---------- AtomicFile ----------
 
     [Fact]

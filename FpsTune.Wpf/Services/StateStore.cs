@@ -152,6 +152,9 @@ public static class StateStore
     public static GameProfile AddGame(string exePath)
     {
         var path = exePath.Trim();
+        // 与引擎写入端（fso-off/gpu-pref/game-priority）和还原端校验保持同一标准：
+        // 必须是完全限定的 .exe 路径，否则后续写入会产生还原端拒绝的残留。
+        FpsTune.Wpf.Core.BackupService.EnsureExecutablePath(path);
         var existing = FindGameByPath(path);
         if (existing is not null)
             return existing;

@@ -328,6 +328,9 @@ public static partial class BackupService
             {
                 if (string.IsNullOrWhiteSpace(gamePath))
                     return Array.Empty<BackupRecord>();
+                // 备份目标必须能通过还原端的 ValidateRecord；写入前先拒绝非法路径，
+                // 抛出让 ApplyAll 按单项失败处理，不落任何记录、不写注册表。
+                EnsureExecutablePath(gamePath);
                 return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser,
                     @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", gamePath, RegistryValueKind.String) };
             }
@@ -335,6 +338,7 @@ public static partial class BackupService
             {
                 if (string.IsNullOrWhiteSpace(gamePath))
                     return Array.Empty<BackupRecord>();
+                EnsureExecutablePath(gamePath);
                 return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser,
                     @"Software\Microsoft\DirectX\UserGpuPreferences", gamePath, RegistryValueKind.String) };
             }
@@ -342,6 +346,7 @@ public static partial class BackupService
             {
                 if (string.IsNullOrWhiteSpace(gamePath))
                     return Array.Empty<BackupRecord>();
+                EnsureExecutablePath(gamePath);
                 var gameName = Path.GetFileName(gamePath);
                 var perfPath = $@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{gameName}\PerfOptions";
                 return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, perfPath, "CpuPriorityClass", RegistryValueKind.DWord) };

@@ -535,6 +535,8 @@ public static class CliHost
         var hasApplyOnly = options.ItemsSpecified || options.PresetSpecified;
         var hasGame = options.GameSpecified;
         var hasBackupFile = options.BackupFileSpecified;
+        if (options.GameSpecified && !FpsTune.Wpf.Core.BackupService.IsValidExecutablePath(options.GamePath))
+            return Str.T("Str.CliGameInvalid");
         return verb switch
         {
             "Detect" when hasApplyOnly || hasBackupFile => "-Detect 只接受 -Game 和 -Json",

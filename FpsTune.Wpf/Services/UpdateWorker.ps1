@@ -48,6 +48,9 @@ try {
         $attempt.Target.Version -notmatch '^\d+\.\d+\.\d+$' -or
         $attempt.PackageHash -notmatch '^[a-fA-F0-9]{64}$' -or
         ![IO.Path]::IsPathRooted($attempt.InstallDirectory)) { throw 'Invalid update receipt.' }
+    # /DIR 参数由字符串拼接构造；引号或 NUL 会截断参数注入额外安装器开关。
+    # C# 侧已拒绝同样的字符，这里是 worker 独立的第二道防线。
+    if ($attempt.InstallDirectory.IndexOfAny([char[]]@([char]34, [char]0)) -ge 0) { throw 'Invalid install directory.' }
     $installer = Join-Path (Join-Path (Join-Path $root 'packages') $attempt.PackageId) ('FpsTune-Setup-' + $attempt.Target.Version + '.exe')
     # Reject filesystem redirects in every existing cache path component.
     $current = $installer

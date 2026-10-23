@@ -234,16 +234,26 @@ public static partial class BackupService
             !string.IsNullOrEmpty(record.SecondaryPath) || !string.IsNullOrEmpty(record.SecondaryName) ||
             record.SecondaryValue is not null, "备份包含不匹配的关联字段");
 
-    private static void EnsureExecutablePath(string path)
+    // 还原端与写入端共用同一套游戏可执行文件校验：写入端若比还原端宽松，
+    // 会产生还原端拒绝、永远残留的注册表目标（fso-off/gpu-pref/game-priority）。
+    internal static void EnsureExecutablePath(string path)
     {
         Reject(!Path.IsPathFullyQualified(path) || path.Contains('\0'), "游戏可执行文件目标不合法");
         EnsureExecutableFileName(Path.GetFileName(path));
     }
 
-    private static void EnsureExecutableFileName(string name)
+    internal static void EnsureExecutableFileName(string name)
         => Reject(string.IsNullOrWhiteSpace(name) || name.Contains('\\') || name.Contains('/') ||
             !string.Equals(Path.GetExtension(name), ".exe", StringComparison.OrdinalIgnoreCase) || name.Contains('\0'),
             "游戏可执行文件目标不合法");
+
+    internal static bool IsValidExecutablePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+        try { EnsureExecutablePath(path); return true; }
+        catch (InvalidOperationException) { return false; }
+    }
 
     private static void Reject(bool invalid, string message)
     {
