@@ -44,7 +44,7 @@ function Assert-CleanSource {
             [Environment]::NewLine + ($unexpected -join [Environment]::NewLine))
     }
 
-    $allowed = @('README.md', 'README.en.md', 'SKILL.md', 'CHANGELOG.md')
+    $allowed = @('README.md', 'README.en.md', 'SKILL.md', 'CHANGELOG.md', 'SECURITY.md')
     $trackedDocs = @(& git -C $root -c core.quotePath=false ls-files | Where-Object {
         $_ -match '^(docs|dev-docs|development|\.agents|\.codex)/' -or
         ($_ -match '\.(md|rst|adoc|docx?|pdf|html?)$' -and $_ -notin $allowed)
