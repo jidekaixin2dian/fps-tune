@@ -47,8 +47,23 @@ public sealed class SessionFpsRecorder
                 return null;
             var name = Path.GetFileNameWithoutExtension(path);
             var procs = Process.GetProcessesByName(name);
-            foreach (var process in procs.Skip(1)) process.Dispose();
-            return procs.FirstOrDefault();
+            try
+            {
+                // 进程名命中后还要求完整路径与档案一致：改名冒充的进程不允许进入会话采样。
+                foreach (var process in procs)
+                {
+                    if (ProcessIdentity.MatchesPath(process, path))
+                        return process;
+                    process.Dispose();
+                }
+                return null;
+            }
+            catch
+            {
+                foreach (var process in procs)
+                    process.Dispose();
+                return null;
+            }
         });
         _start = startProcess ?? Process.Start;
         _verifyExecutable = startProcess is null;
@@ -80,16 +95,20 @@ public sealed class SessionFpsRecorder
             _unavailableReasonKey = "Str.FpsReasonNoGameProcess";
             return false;
         }
-        // PresentMon 要的是进程名：优先取游戏路径的文件名（真实 Process 的 ProcessName
-        // 在测试替身/极端时机下可能取不到），两者都没有时兜底。
-        var procName = !string.IsNullOrWhiteSpace(gamePath)
-            ? Path.GetFileNameWithoutExtension(gamePath)
-            : SafeProcessName(game);
+        // 目标进程退出瞬间 Id 可能取不到：没有可靠 PID 就不启动采样，绝不回退按名捕获。
+        int gameId;
+        try { gameId = game.Id; }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            _unavailableReasonKey = "Str.FpsReasonNoGameProcess";
+            return false;
+        }
 
         try
         {
             // 不带 --timed：持续输出直到 Stop 终止。stdout 由后台任务持续排空，
             // 防止长会话把管道缓冲写满导致 PresentMon 阻塞。
+            // game 是通过完整路径身份校验的具体进程：按 PID 捕获，与真游戏同名的改名进程不会进入采样。
             var psi = new ProcessStartInfo
             {
                 FileName = pm,
@@ -98,7 +117,7 @@ public sealed class SessionFpsRecorder
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
-            foreach (var a in new[] { "--session_name", "FpsTune-Session", "--process_name", procName, "--no_console_stats", "--output_stdout" })
+            foreach (var a in new[] { "--session_name", "FpsTune-Session", "--process_id", gameId.ToString(), "--no_console_stats", "--output_stdout" })
                 psi.ArgumentList.Add(a);
             using var verified = _verifyExecutable ? TrustedCaptureTool.OpenVerified(pm) : null;
             _proc = _start(psi);
@@ -294,17 +313,5 @@ public sealed class SessionFpsRecorder
         try { file.Dispose(); }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
-    }
-
-    private static string SafeProcessName(Process game)
-    {
-        try
-        {
-            return game.ProcessName;
-        }
-        catch
-        {
-            return "game";
-        }
     }
 }

@@ -141,10 +141,11 @@ public sealed class SessionFpsTests
     public void Recorder_parses_stdout_frames_on_stop()
     {
         // 成功路径用注入的假进程验证解析链路（真实 PresentMon 链路随候选部署目检）。
+        // game 用当前测试进程（Id 可读，Start 需要 PID 定位采样目标）；PresentMon 侧仍用假进程。
         var proc = new FakeProcess();
         var rec = new SessionFpsRecorder(
             findPresentMon: () => @"C:\pm.exe",
-            findGameProcess: _ => proc,
+            findGameProcess: _ => Process.GetCurrentProcess(),
             startProcess: _ => proc,
             readOutput: _ => Task.FromResult(MakeCsv(40)),
             kill: _ => { });
@@ -158,12 +159,37 @@ public sealed class SessionFpsTests
     }
 
     [Fact]
+    public void Recorder_targets_the_verified_process_pid_not_the_process_name()
+    {
+        // 进程身份按完整路径校验后，采样必须锁定该具体进程的 PID；
+        // 按名捕获会让与真游戏同名的改名进程混进会话帧数据。
+        var self = Process.GetCurrentProcess();
+        var expectedId = self.Id.ToString();
+        var proc = new FakeProcess();
+        ProcessStartInfo? launched = null;
+        var rec = new SessionFpsRecorder(
+            findPresentMon: () => @"C:\pm.exe",
+            findGameProcess: _ => self,
+            startProcess: psi => { launched = psi; return proc; },
+            readOutput: _ => Task.FromResult(MakeCsv(40)),
+            kill: _ => { });
+        Assert.True(rec.Start(@"C:\Games\Real.exe"));
+
+        var args = launched!.ArgumentList.Cast<string>().ToArray();
+        var idIndex = Array.IndexOf(args, "--process_id");
+        Assert.True(idIndex >= 0, "PresentMon 必须按 --process_id 捕获");
+        Assert.Equal(expectedId, args[idIndex + 1]);
+        Assert.DoesNotContain("--process_name", args);
+        rec.Stop();
+    }
+
+    [Fact]
     public void Recorder_reports_parse_failure_with_ascii_detail()
     {
         var proc = new FakeProcess();
         var rec = new SessionFpsRecorder(
             findPresentMon: () => @"C:\pm.exe",
-            findGameProcess: _ => proc,
+            findGameProcess: _ => Process.GetCurrentProcess(),
             startProcess: _ => proc,
             readOutput: _ => Task.FromResult(MakeCsv(5)),
             kill: _ => { });

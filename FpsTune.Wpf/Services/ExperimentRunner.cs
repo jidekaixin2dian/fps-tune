@@ -124,7 +124,7 @@ public static class ExperimentRunner
 
     private static async Task<JsonObject> RunBaselineAsync(Options options, CancellationToken ct, string? gamePath, JsonObject? manualSample)
     {
-        var samples = await CollectSamplesAsync(3, options, ct, manualSample);
+        var samples = await CollectSamplesAsync(3, options, ct, manualSample, gamePath);
         if (samples.Ok is false)
             return Fail("baseline", samples.Error!);
         var summary = Summarize(samples.Samples!);
@@ -282,7 +282,7 @@ public static class ExperimentRunner
         }
         else
         {
-            samples = await CollectSamplesAsync(3, options, ct, manualSample);
+            samples = await CollectSamplesAsync(3, options, ct, manualSample, gamePath);
         }
 
         if (samples.Ok is false)
@@ -519,7 +519,7 @@ public static class ExperimentRunner
 
     private sealed record SamplesResult(bool? Ok, string? Error = null, string? Mode = null, List<JsonObject>? Samples = null);
 
-    private static async Task<SamplesResult> CollectSamplesAsync(int count, Options options, CancellationToken ct, JsonObject? manualSample)
+    private static async Task<SamplesResult> CollectSamplesAsync(int count, Options options, CancellationToken ct, JsonObject? manualSample, string? gamePath)
     {
         var results = new List<JsonObject>();
         var mode = options.Simulate ? "simulated" : options.CsvPath is not null ? "manual" : "auto";
@@ -552,7 +552,7 @@ public static class ExperimentRunner
         {
             ct.ThrowIfCancellationRequested();
             var csv = Path.Combine(StateDir(), $"sample-{i}.csv");
-            var ok = await InvokePresentMonAutoAsync(options, options.DurationSec, csv, ct);
+            var ok = await InvokePresentMonAutoAsync(options, options.DurationSec, csv, ct, gamePath);
             if (!ok)
                 return new SamplesResult(false,
                     "PresentMon 自动采样失败（未找到 PresentMon 或游戏未运行）。请安装官方 PresentMon（winget install Intel.PresentMon.Console）后用手动模式提供采样 CSV，或用模拟模式试跑。");
@@ -595,18 +595,50 @@ public static class ExperimentRunner
     /// <summary>
     /// 按进程名找游戏进程。GameName 可空（未定位游戏时为 null），
     /// 而 <c>Process.GetProcessesByName(null)</c> 会抛 ArgumentNullException，故这里先挡掉。
+    /// 身份校验：expectedGamePath 非空时必须与进程可执行文件完整路径一致，防止改名进程污染采样；
+    /// 未定位游戏（无锚定路径）时只接受唯一同名进程——与真游戏并存的改名冒充者会被拒绝。
     /// </summary>
-    private static Process? FindGameProcess(string? gameName)
+    private static Process? FindGameProcess(string? gameName, string? expectedGamePath)
     {
         if (string.IsNullOrWhiteSpace(gameName))
             return null;
-        var p = Process.GetProcessesByName(gameName).FirstOrDefault()
-                ?? Process.GetProcessesByName(gameName.Replace("-Win64-Shipping", "")).FirstOrDefault();
-        return p;
+        foreach (var candidateName in new[] { gameName, gameName.Replace("-Win64-Shipping", "") })
+        {
+            if (string.IsNullOrWhiteSpace(candidateName))
+                continue;
+            var processes = Process.GetProcessesByName(candidateName);
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(expectedGamePath))
+                {
+                    foreach (var process in processes)
+                    {
+                        if (ProcessIdentity.MatchesPath(process, expectedGamePath))
+                            return process;
+                        process.Dispose();
+                    }
+                }
+                else if (processes.Length == 1)
+                {
+                    return processes[0];
+                }
+                else
+                {
+                    foreach (var process in processes)
+                        process.Dispose();
+                }
+            }
+            catch
+            {
+                foreach (var process in processes)
+                    process.Dispose();
+            }
+        }
+        return null;
     }
 
     /// <summary>自动调用 PresentMon 采集一次，落盘 CSV；失败返回 false。</summary>
-    private static async Task<bool> InvokePresentMonAutoAsync(Options options, int seconds, string csvOut, CancellationToken ct)
+    private static async Task<bool> InvokePresentMonAutoAsync(Options options, int seconds, string csvOut, CancellationToken ct, string? expectedGamePath)
     {
         var pm = FindPresentMon(options);
         if (pm is null)
@@ -618,21 +650,22 @@ public static class ExperimentRunner
         var gameName = options.GameName;
         if (string.IsNullOrWhiteSpace(gameName))
             return false;
-        var game = FindGameProcess(gameName);
+        var game = FindGameProcess(gameName, expectedGamePath);
         if (game is null)
             return false;
 
         // 先试官方 v2 参数（--timed / --terminate_after_timed），优先 --output_stdout（由本进程落盘，
         // 避免部分版本 --output_file 不落盘），再回退 --output_file 与 v1 参数（--duration）。
+        // game 是通过完整路径身份校验的具体进程，--process_id 优先于按名捕获，同名改名进程不再进入采样。
         // 使用独立 session 名，避免与 NVIDIA FrameView 服务已启动的默认 "PresentMon" 会话冲突。
         var attempts = new[]
         {
-            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
             new[] { "--session_name", "FpsTune", "--process_id", game.Id.ToString(), "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
-            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
+            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
             new[] { "--session_name", "FpsTune", "--process_id", game.Id.ToString(), "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
+            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
+            new[] { "--process", game.Id.ToString(), "--duration", seconds.ToString(), "--output-file", csvOut },
             new[] { "--process-name", gameName, "--duration", seconds.ToString(), "--output-file", csvOut },
-            new[] { "--process", game.Id.ToString(), "--duration", seconds.ToString(), "--output_file", csvOut },
         };
 
         foreach (var args in attempts)

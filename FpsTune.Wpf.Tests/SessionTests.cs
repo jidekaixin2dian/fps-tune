@@ -650,8 +650,9 @@ public sealed class SessionTests : IDisposable
     {
         var output = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var process = new System.Diagnostics.Process();
+        // game 用当前进程（Start 需要可读 PID 定位采样目标）；PresentMon 侧用挂起的假进程。
         var service = new PerformanceSessionService((interval, size) => new MetricsSampler(interval, size, () => new(DateTime.Now, 1, 2, 3, null, null)),
-            () => new SessionFpsRecorder(() => "fake.exe", _ => new System.Diagnostics.Process(), _ => process, _ => output.Task, _ => { }));
+            () => new SessionFpsRecorder(() => "fake.exe", _ => System.Diagnostics.Process.GetCurrentProcess(), _ => process, _ => output.Task, _ => { }));
         try
         {
             Assert.True(service.Start("后台保存"));

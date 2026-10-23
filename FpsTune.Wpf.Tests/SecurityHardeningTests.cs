@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
 using FpsTune.Wpf.Core;
@@ -103,7 +104,7 @@ public sealed class InstallerSignaturePolicyTests : IDisposable
         UpdateRecovery.InstallDirectoryOverride = Path.Combine(_root, "app");
         Directory.CreateDirectory(UpdateRecovery.InstallDirectoryOverride);
         UpdateRecovery.PackageOverride = (info, _, _) => Task.FromResult(Package(info));
-        UpdateRecovery.ReleaseOverride = (tag, _) => Task.FromResult(Info(tag));
+        UpdateRecovery.ReleaseOverride = (tag, _) => Task.FromResult<UpdateInfo?>(Info(tag));
         UpdateRecovery.WorkerOverride = (_, _) => Task.CompletedTask;
     }
 
@@ -162,4 +163,45 @@ public sealed class InstallerSignaturePolicyTests : IDisposable
         UpdateInstaller.RequiredInstallerPublisher = "FPS 帧律";
         await Assert.ThrowsAsync<InvalidDataException>(() => UpdateInstaller.InstallAsync(Info(), _ => { }, default));
     }
+}
+
+public sealed class ProcessIdentityTests : IDisposable
+{
+    public ProcessIdentityTests()
+    {
+        using var self = Process.GetCurrentProcess();
+        _self = self.Id;
+    }
+    private readonly int _self;
+
+    [Fact]
+    public void Matches_only_when_the_executable_path_is_identical()
+    {
+        ProcessIdentity.ImagePathOverride = _ => @"C:\Games\Install\Game.exe";
+        try
+        {
+            using var probe = Process.GetProcessById(_self);
+            Assert.True(ProcessIdentity.MatchesPath(probe, @"C:\Games\Install\Game.exe"));
+            Assert.True(ProcessIdentity.MatchesPath(probe, @"c:\games\install\GAME.EXE"));   // 忽略大小写
+            Assert.False(ProcessIdentity.MatchesPath(probe, @"C:\Games\Other\Game.exe"));    // 同名不同目录
+            Assert.False(ProcessIdentity.MatchesPath(probe, @"C:\Games\Install\Renamed.exe"));// 同目录不同名
+        }
+        finally { ProcessIdentity.ImagePathOverride = null; }
+    }
+
+    [Fact]
+    public void Empty_or_unreadable_paths_never_match()
+    {
+        ProcessIdentity.ImagePathOverride = _ => null;
+        try
+        {
+            using var probe = Process.GetProcessById(_self);
+            Assert.False(ProcessIdentity.MatchesPath(probe, @"C:\Games\Game.exe")); // 取不到路径：按不匹配处理
+            Assert.False(ProcessIdentity.MatchesPath(probe, null));
+            Assert.False(ProcessIdentity.MatchesPath(probe, "  "));
+        }
+        finally { ProcessIdentity.ImagePathOverride = null; }
+    }
+
+    public void Dispose() => ProcessIdentity.ImagePathOverride = null;
 }

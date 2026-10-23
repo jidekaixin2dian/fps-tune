@@ -147,7 +147,7 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
             if (states.ContainsKey(binding.ProcessName))
                 continue;
 
-            var probe = ProbeProcess(binding.ProcessName);
+            var probe = ProbeProcess(binding.ProcessName, binding.ExePath);
             states[binding.ProcessName] = probe.Running;
             if (probe.Error is { } error)
             {
@@ -221,13 +221,24 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
 
     private sealed record ProcessProbe(bool? Running, string? Error);
 
-    private static ProcessProbe ProbeProcess(string processName)
+    private static ProcessProbe ProbeProcess(string processName, string? expectedExePath)
     {
         Process[]? processes = null;
         try
         {
             processes = Process.GetProcessesByName(processName);
-            return new ProcessProbe(processes.Length > 0, null);
+            // 进程名命中后还要求可执行文件完整路径与绑定档案一致：
+            // 改名冒充的进程不允许触发上下文切换与自动应用。绑定缺少路径时一律视为未运行。
+            var running = false;
+            foreach (var process in processes)
+            {
+                if (ProcessIdentity.MatchesPath(process, expectedExePath))
+                {
+                    running = true;
+                    break;
+                }
+            }
+            return new ProcessProbe(running, null);
         }
         catch (Exception ex)
         {
