@@ -11,7 +11,7 @@ internal sealed record ResolutionSnapshot(IccDisplayInfo Display, DisplayMode Cu
     uint? Scaling, string ScalingDetail, bool Restorable, bool Pending);
 
 /// <summary>Durable per-monitor transaction. A separate process rolls back even if the UI stops pumping.</summary>
-internal static class ResolutionService
+internal static partial class ResolutionService
 {
     internal static IDisplayModeApi? ApiOverride;
     internal static INvidiaDisplayModes? NvidiaOverride;
@@ -107,6 +107,8 @@ internal static class ResolutionService
         var fresh = Plan(id, plan.Mode.Width, plan.Mode.Height, plan.Mode.Hz, plan.Scaling);
         if (fresh != plan) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.21"));
         var display = DisplayTopology.Require(id); var before = Api.Read(display); var old = Load(id);
+        foreach (var target in BackupTargets().Where(t => t.Identity is not null && t.Identity != id))
+            if (Load(target.Identity!)?.Pending == true) throw new InvalidOperationException(Str.T("Str.ResolutionOtherTrialPending"));
         if (old?.Pending == true) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.22"));
         if (old is not null)
         {
@@ -128,7 +130,8 @@ internal static class ResolutionService
         Save(r);
         try
         {
-            StartGuard(r.Token); _ = Require(r); DisplayTopology.ValidateConnection(display);
+            SaveTrial(new(id, r.Token, ResolutionTrialPhase.Starting));
+            StartGuard(r); _ = Require(r); DisplayTopology.ValidateConnection(display);
             if (plan.CreateCustom) Nvidia.TryCustom(display, plan.Mode); else Api.Apply(display, plan.Mode);
             if (plan.Scaling is { } scaling) Nvidia.SetScaling(display, scaling);
             Verify(display, r.Expected, r.ExpectedScaling);
@@ -137,7 +140,11 @@ internal static class ResolutionService
         catch (Exception original)
         {
             try { RollbackCore(r, false); }
-            catch (Exception rollback) { throw new InvalidOperationException(original.Message + Str.T("Str.Resolution.ResolutionService.24") + rollback.Message + Str.T("Str.Resolution.ResolutionService.25"), original); }
+            catch (Exception rollback)
+            {
+                RecordTrialFailure(r, ResolutionTrialPhase.RetryNeeded, rollback);
+                throw new InvalidOperationException(original.Message + Str.T("Str.Resolution.ResolutionService.24") + rollback.Message + Str.T("Str.Resolution.ResolutionService.25"), original);
+            }
             throw new InvalidOperationException(original.Message + Str.T("Str.Resolution.ResolutionService.26"), original);
         }
     }
@@ -156,16 +163,27 @@ internal static class ResolutionService
     {
         using var gate = SystemMutationGate.Acquire();
         var r = Load(id) ?? throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.30"));
-        if (!r.Pending || r.Token != token || DateTimeOffset.UtcNow >= r.Deadline) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.31"));
+        if (!r.Pending || r.Token != token || !TrialState(id).CanConfirm) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.31"));
         var display = Require(r); Verify(display, r.Expected, r.ExpectedScaling);
         if (r.CustomTrial) Nvidia.SaveCustom(display); // Save only while the verified trial is still on hardware.
         Save(r with { Pending = false, CustomTrial = false });
+        RecordTrial(r, ResolutionTrialPhase.Confirmed);
     }
     internal static bool Restore(string? id)
+        => RestoreTrial(id, null);
+    internal static bool RestoreTrial(string? id, string? token)
     {
         if (id is null) return false;
         using var gate = SystemMutationGate.Acquire(); var r = Load(id); if (r is null) return false;
-        RollbackCore(r, !r.Pending); return true;
+        if (token is not null && (r.Token != token || !r.Pending)) return false;
+        try { RollbackCore(r, !r.Pending); return true; }
+        catch (Exception ex) { RecordTrialFailure(r, ResolutionTrialPhase.RetryNeeded, ex); throw; }
+    }
+    private static void FinishRollback(Receipt r, DisplayMode goal, uint? scaling)
+    {
+        RecordTrial(r, ResolutionTrialPhase.Reverted);
+        if (goal == r.Original && scaling == r.OriginalScaling) Complete(r);
+        else Save(r with { Expected = goal, ExpectedScaling = scaling, Pending = false, CustomTrial = false });
     }
     private static void RollbackCore(Receipt r, bool original)
     {
@@ -181,16 +199,14 @@ internal static class ResolutionService
         }
         if (current == goal && (scaling is null || Nvidia.ReadScaling(display) == scaling))
         {
-            if (goal == r.Original && scaling == r.OriginalScaling) Complete(r);
-            else Save(r with { Expected = goal, ExpectedScaling = scaling, Pending = false, CustomTrial = false });
+            FinishRollback(r, goal, scaling);
             return;
         }
         if (r.CustomTrial && current == r.Expected) Nvidia.RevertTrial(display);
         DisplayTopology.ValidateConnection(display); Api.Test(display, goal); Api.Apply(display, goal);
         if (scaling is not null) Nvidia.SetScaling(display, scaling.Value);
         Verify(display, goal, scaling);
-        if (goal == r.Original && scaling == r.OriginalScaling) Complete(r);
-        else Save(r with { Expected = goal, ExpectedScaling = scaling, Pending = false, CustomTrial = false });
+        FinishRollback(r, goal, scaling);
     }
     internal static IReadOnlyList<DisplayBackupTarget> BackupTargets()
     {
@@ -202,36 +218,51 @@ internal static class ResolutionService
         }
         return targets;
     }
-    private static void StartGuard(string token)
+    private static void StartGuard(Receipt receipt)
     {
-        if (GuardOverride is not null) { GuardOverride(token); return; }
+        var token = receipt.Token;
+        if (GuardOverride is not null)
+        { GuardOverride(token); SaveTrial(new(receipt.Identity, token, ResolutionTrialPhase.Waiting)); return; }
         using var ready = new EventWaitHandle(false, EventResetMode.ManualReset, "Local\\FpsTune.Resolution." + token);
         var start = new ProcessStartInfo(Environment.ProcessPath ?? throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.34")))
         { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
         start.ArgumentList.Add("-ResolutionGuard"); start.ArgumentList.Add(token);
         using var process = Process.Start(start) ?? throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.35"));
         if (!ready.WaitOne(TimeSpan.FromSeconds(5))) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.36"));
+        SaveTrial(new(receipt.Identity, token, ResolutionTrialPhase.Waiting, GuardPid: process.Id,
+            GuardStartedTicks: process.StartTime.ToUniversalTime().Ticks, GuardPath: start.FileName));
     }
-    internal static int RunGuard(string token)
+    internal static int RunGuard(string token, int attempts = 70)
     {
         if (!Guid.TryParseExact(token, "N", out _)) return 2;
-        var r = DisplayBackupFiles.List(DirectoryPath, "resolution").Select(file => Parse(File.ReadAllText(file)))
-            .SingleOrDefault(r => r.Pending && r.Token == token);
+        Receipt? r = null;
+        foreach (var file in DisplayBackupFiles.List(DirectoryPath, "resolution"))
+        {
+            try
+            {
+                if (new FileInfo(file).Length > 128 * 1024) continue;
+                var candidate = Parse(File.ReadAllText(file));
+                if (candidate.Pending && candidate.Token == token && PathFor(candidate.Identity) == file)
+                { r = candidate; break; }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { }
+        }
         if (r is null) return 0;
         using var ready = EventWaitHandle.OpenExisting("Local\\FpsTune.Resolution." + token); ready.Set();
-        for (var i = 0; i < 70; i++)
+        Exception? failure = null;
+        for (var i = 0; i < Math.Clamp(attempts, 1, 70); i++)
         {
             Thread.Sleep(1000);
             var current = Load(r.Identity);
             if (current is null || !current.Pending || current.Token != token) return 0;
             if (DateTimeOffset.UtcNow < current.Deadline) continue;
-            try { Restore(r.Identity); return 0; }
-            catch (Exception ex)
-            {
-                // Hotplug may be transient. Keep retrying against the captured identity, never another screen.
-                AtomicFile.WriteAllTextDurable(Path.Combine(DirectoryPath, "guard-error.txt"), PrivacyScrub.Sanitize(ex.Message), new UTF8Encoding(false));
-            }
+            try { RestoreTrial(r.Identity, token); return 0; }
+            catch (Exception ex) { failure = ex; }
         }
+        // Mark only this trial. A delayed old guard must not alter the next trial's state.
+        using (SystemMutationGate.Acquire())
+            if (Load(r.Identity) is { Pending: true } current && current.Token == token)
+                RecordTrialFailure(current, ResolutionTrialPhase.Failed, failure ?? new InvalidOperationException(Str.T("Str.ResolutionGuardStopped")));
         return 1;
     }
     internal static DateTimeOffset? Deadline(string id) => Load(id) is { Pending: true } r ? r.Deadline : null;

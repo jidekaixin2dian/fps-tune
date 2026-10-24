@@ -1412,7 +1412,7 @@ Restart as administrator and restore afterwards?</s:String>
 
     <!-- Resolution workspace -->
     <s:String x:Key="Str.ResolutionTitle">分辨率</s:String>
-    <s:String x:Key="Str.ResolutionScope">调整所选屏幕的桌面模式。无边框游戏通常跟随桌面；独占全屏仍由游戏内设置决定。创建的 NVIDIA 模式会保留在驱动列表，一键还原恢复桌面与缩放。</s:String>
+    <s:String x:Key="Str.ResolutionScope">调整本次登录会话的桌面模式。无边框游戏通常跟随桌面；独占全屏以游戏内设置为准。确认创建的 NVIDIA 模式保留在驱动列表，一键还原恢复桌面与缩放。</s:String>
     <s:String x:Key="Str.Resolution.DisplayModeApi.1">模式参数无效：宽 320–16384、高 200–16384、刷新率 24–1000 Hz。</s:String>
     <s:String x:Key="Str.Resolution.DisplayModeApi.2">驱动未返回显示模式。</s:String>
     <s:String x:Key="Str.Resolution.DisplayModeApi.3">驱动不支持此分辨率与刷新率组合。</s:String>
@@ -1520,4 +1520,18 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.Resolution.UI.16">保留此模式</s:String>
     <s:String x:Key="Str.Resolution.UI.17">立即回退</s:String>
     <s:String x:Key="Str.ResolutionUnavailable">当前刷新率不可用 · 查看原因</s:String>
+    <s:String x:Key="Str.ResolutionTrialInvalid">分辨率试用状态记录无效，原恢复点已保留。</s:String>
+    <s:String x:Key="Str.ResolutionGuardStopped">自动回退守护已停止，请点击“重试回退”。</s:String>
+    <s:String x:Key="Str.ResolutionDisconnectedBackup"> · 未连接（有恢复记录）</s:String>
+    <s:String x:Key="Str.ResolutionUnfinishedTrial">检测到未完成的试用，请先确认或回退。</s:String>
+    <s:String x:Key="Str.ResolutionReverting">正在自动回退…</s:String>
+    <s:String x:Key="Str.ResolutionRetrying">自动回退受阻，仍在重试：{0}</s:String>
+    <s:String x:Key="Str.ResolutionRecoveryNeeded">回退尚未完成：{0}</s:String>
+    <s:String x:Key="Str.ResolutionRetryRestore">重试回退</s:String>
+    <s:String x:Key="Str.ResolutionTrialUnknown">未找到完整试用结果，无法确认是否已回退。请检查当前模式和恢复记录。</s:String>
+    <s:String x:Key="Str.ResolutionOtherTrialPending">另一台显示器仍有未完成试用，请先回退该试用再调整此屏幕。</s:String>
+    <s:String x:Key="Str.Resolution.resolutionTrialMode">试用模式：{0} × {1} · {2} Hz</s:String>
+    <s:String x:Key="Str.ResolutionEscape">按 Esc 可立即回退；Tab 可切换确认与回退按钮。</s:String>
+    <s:String x:Key="Str.ResolutionReconnectRetry">接回原显示器连接后，点击“重试回退”。</s:String>
+    <s:String x:Key="Str.ResolutionOriginalDisconnected">原显示器未连接或无法唯一识别。请接回原连接后重试回退。</s:String>
 </ResourceDictionary>
