@@ -76,6 +76,9 @@
 
             <!-- 二级页签（用户反馈：数字振动与 ICC 合并一签）：一次只看一组卡片，徽标显示当前状态 -->
             <WrapPanel Margin="0,0,0,14">
+                <RadioButton x:Name="SubTabResolution" GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.ResolutionTitle}" Style="{StaticResource SubTabStyle}" Tag="resolution" Checked="SubTab_Checked">
+                    <TextBlock Text="{DynamicResource Str.ResolutionTitle}"/>
+                </RadioButton>
                 <RadioButton x:Name="SubTabDlss" AutomationProperties.Name="{DynamicResource Str.TabDlss}" GroupName="dqSub"
                              IsChecked="True" Style="{StaticResource SubTabStyle}" Tag="dlss" Checked="SubTab_Checked">
                     <StackPanel Orientation="Horizontal">
@@ -118,6 +121,7 @@
             </WrapPanel>
 
             <!-- 主体卡片 -->
+            <views:ResolutionPanel x:Name="ResolutionContent" Visibility="Collapsed"/>
             <Border x:Name="CardDlss" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.DlssCard}" Style="{StaticResource CardTitleStyle}"/>

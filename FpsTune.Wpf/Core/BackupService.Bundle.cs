@@ -33,7 +33,7 @@ public static partial class BackupService
         var roots = new Dictionary<string, string>(StringComparer.Ordinal) { ["backup"] = BackupDir };
         // Legacy tests that redirect only the core backup directory must never touch real module data.
         if (BackupDirOverride is null || UserDataPaths.RootOverride is not null)
-            foreach (var module in new[] { "display-quality", "display-icc", "screen-color", "audio-equalizer" })
+            foreach (var module in new[] { "display-quality", "display-icc", "screen-color", "audio-equalizer", "display-resolution" })
                 roots.Add(module, Path.Combine(UserDataPaths.Root, module));
         return roots;
     }
@@ -72,6 +72,7 @@ public static partial class BackupService
                 || name.StartsWith("vibrance", StringComparison.Ordinal) && name.EndsWith(".json", StringComparison.Ordinal),
             "display-icc" => name.StartsWith("backup", StringComparison.Ordinal) && name.EndsWith(".json", StringComparison.Ordinal),
             "screen-color" => name.StartsWith("color-", StringComparison.Ordinal) && name.EndsWith(".json", StringComparison.Ordinal),
+            "display-resolution" => name.StartsWith("resolution-", StringComparison.Ordinal) && name.EndsWith(".json", StringComparison.Ordinal),
             "audio-equalizer" => name == "receipt.json",
             _ => false
         };
@@ -107,6 +108,7 @@ public static partial class BackupService
                 break;
             case "display-icc": IccFilterService.ValidateTransferredBackup(name, bytes); break;
             case "screen-color": ScreenColorService.ValidateTransferredBackup(name, bytes); break;
+            case "display-resolution": ResolutionService.ValidateTransferredBackup(name, bytes); break;
             case "audio-equalizer": AudioEqualizerService.ValidateTransferredBackup(bytes, importing); break;
         }
     }

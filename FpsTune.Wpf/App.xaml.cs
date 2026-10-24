@@ -42,6 +42,13 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args is ["-ResolutionGuard", var token])
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            try { Shutdown(ResolutionService.RunGuard(token)); }
+            catch { Shutdown(1); } // Headless recovery never opens a competing window.
+            return;
+        }
         // In-process render verification never starts tray, updates, profiles or migrations.
         if (UserDataPaths.RootOverride is not null)
         {

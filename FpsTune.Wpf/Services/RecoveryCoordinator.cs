@@ -21,6 +21,7 @@ public static class RecoveryCoordinator
         Read("icc", () => IccFilterService.BackupTargets().Select(t => new RecoveryScope("icc", t.Name, false, t.Error)));
         Read("vibrance", () => DigitalVibranceService.BackupTargets().Select(t => new RecoveryScope("vibrance", t.Name, false, t.Error)));
         Read("screen-color", () => ScreenColorService.BackupTargets().Select(t => new RecoveryScope("screen-color", t.Name, false, t.Error)));
+        Read("display-resolution", () => ResolutionService.BackupTargets().Select(t => new RecoveryScope("display-resolution", t.Name, false, t.Error)));
         Read("audio-equalizer", () => AudioEqualizerService.HasBackup
             ? [new RecoveryScope("audio-equalizer", "Equalizer APO", AudioEqualizerService.RestoreNeedsAdmin())] : []);
         return scopes;
@@ -62,6 +63,7 @@ public static class RecoveryCoordinator
         RecoverDisplays("ICC", IccFilterService.BackupTargets, identity => IccFilterService.Restore(identity));
         RecoverDisplays("Digital Vibrance", DigitalVibranceService.BackupTargets, identity => DigitalVibranceService.Restore(identity));
         RecoverDisplays(Str.T("Str.ColorModule"), ScreenColorService.BackupTargets, identity => ScreenColorService.Restore(identity!));
+        RecoverDisplays(Str.T("Str.ResolutionTitle"), ResolutionService.BackupTargets, ResolutionService.Restore);
         Recover(Str.T("Str.EqTitle"), AudioEqualizerService.Restore);
         return result;
     }

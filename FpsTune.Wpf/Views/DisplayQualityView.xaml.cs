@@ -171,7 +171,7 @@ public partial class DisplayQualityView : UserControl
         if (!_initialColorTabChosen)
         {
             _initialColorTabChosen = true;
-            if (!s.NvidiaSupported) SubTabColor.IsChecked = true;
+            if (!s.NvidiaSupported && SubTabDlss.IsChecked == true) SubTabColor.IsChecked = true;
         }
         ApplyDlssState(s);
         ApplyVibState(s);
@@ -293,6 +293,7 @@ public partial class DisplayQualityView : UserControl
             return;
 
         CardDlss.Visibility = key == "dlss" ? Visibility.Visible : Visibility.Collapsed;
+        ResolutionContent.Visibility = key == "resolution" ? Visibility.Visible : Visibility.Collapsed;
         CardVib.Visibility = key == "vibicc" ? Visibility.Visible : Visibility.Collapsed;
         CardDisplayTarget.Visibility = CardVib.Visibility;
         CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;

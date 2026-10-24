@@ -162,7 +162,7 @@ internal static partial class UpdateRecovery
                 // need an extra protection copy; recordings, logs, wallpapers and caches are never removed.
                 RequireSnapshotPath(source);
                 var queue = new Queue<string>();
-                foreach (var module in new[] { "backup", "display-quality", "display-icc", "screen-color", "audio-equalizer" })
+                foreach (var module in new[] { "backup", "display-quality", "display-icc", "screen-color", "audio-equalizer", "display-resolution" })
                 {
                     var directory = Path.Combine(source, module);
                     if (Directory.Exists(directory)) queue.Enqueue(directory);

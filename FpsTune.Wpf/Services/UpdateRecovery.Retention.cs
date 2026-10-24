@@ -103,7 +103,7 @@ internal static partial class UpdateRecovery
             foreach (var entry in zip.Entries)
             {
                 var module = entry.FullName.Split('/')[0];
-                if (module is not ("backup" or "display-quality" or "display-icc" or "screen-color" or "audio-equalizer")) continue;
+                if (module is not ("backup" or "display-quality" or "display-icc" or "screen-color" or "audio-equalizer" or "display-resolution")) continue;
                 using var input = entry.Open(); using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 int count;
                 while ((count = input.Read(buffer)) > 0)

@@ -75,12 +75,16 @@
         {
           "Sha256": "84726b60c17fe0f71f92a6c074c3d4087370886eba5d21ccc4ec55db37d6c8ba",
           "Path": "licenses/nvapi/LICENSE.txt"
+        },
+        {
+          "Sha256": "8f993239889d099beb9ba5dddc9cfe59879a0bdf8e140d6b2797f3b0ead3c61e",
+          "Path": "licenses/nvapi/HEADERS-LICENSE.txt"
         }
       ],
       "Name": "nvapi",
-      "Version": "34fa4289b1e2e1934b535f022d2b1ae51338791d",
-      "Source": "https://github.com/NVIDIA/nvapi/blob/main/License.txt",
-      "Scope": "NVAPI SDK reference; driver DLL loaded from Windows System32, not bundled"
+      "Version": "70d337db9186e968eab622f7e786de7e437faf3d",
+      "Source": "https://github.com/NVIDIA/nvapi/tree/70d337db9186e968eab622f7e786de7e437faf3d",
+      "Scope": "Public NVAPI ABI and driver timing/configuration reference; driver DLL loaded from Windows System32, not bundled"
     },
     {
       "License": "MIT",
