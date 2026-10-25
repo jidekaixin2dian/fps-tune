@@ -1,11 +1,11 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.2)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.2)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.3.2](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.2)**。
+当前版本为 **[v0.3.4](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.2) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.3.2.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.2/FpsTune-Setup-0.3.2.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.3.4.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.4/FpsTune-Setup-0.3.4.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -26,7 +26,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.3.2.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.2/SHA256SUMS-v0.3.2.txt)。
+本版校验清单：[SHA256SUMS-v0.3.4.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.4/SHA256SUMS-v0.3.4.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -66,6 +66,7 @@
 - **游戏限帧**：按游戏设置 NVIDIA 前台、后台帧率上限，并可单独还原。
 - **多游戏**：识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置和 N 卡数字振动；整屏 SDR 支持 11 种画面预设、亮度、对比度、Gamma、暗部提亮及 RGB 调节，逐屏保存原值并可还原。通用屏幕曲线路径适用于支持该接口的 AMD、NVIDIA、Intel 输出；ICC、画面参数与数字振动集中在同一工作区，可叠加调整；用内置已打码实机截图或自己的图片即时对比，直接拖动图中分界查看效果。高级 ICC 支持自选 `.icc` / `.icm` 和关联还原。
+- **分辨率**：在“显示与画质 → 分辨率”选择屏幕，点选 4:3 预设或编辑宽高、锁定比例，默认沿用当前刷新率。支持试用驱动已有模式与创建 NVIDIA 自定义模式；限时确认、小型确认窗口、独立守护回退和一键还原。缩放由驱动验证，未采用请求时说明原因并回退。
 - **声音均衡器**：在“维护工具 → 声音均衡器”调整 10 段频率、前级增益和音效预设，支持旁路与移除帧律改动。复用 Equalizer APO 引擎，首次需安装引擎、配置输出设备，并按提示重启。
 - **驱动版本建议**：按具体 NVIDIA 型号、系统和笔记本/台式机查询官方最新 WHQL 正式驱动，显示日期和来源；AMD、Intel 提供对应官方入口。
 - **更改显卡名称**：提供 GTX 750 Ti、GTX 1050 Ti 等 8 个预设，应用前预览，可还原原名称。修改 Windows 设备描述，显卡能力保持原样。
@@ -75,7 +76,7 @@
 - **缓存维护**：先预览当前用户的 DirectX / NVIDIA 着色器缓存，再确认清理；跳过占用或预览后变化的文件。删除的缓存不能还原，下次运行会重建，可能短暂卡顿。
 - **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，支持报告导出与会话比较。真实 FPS 采样需要官方 PresentMon。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。A/B 手动 CSV 后台校验，可取消，失败保留已有结果。
 - **引导与反馈**：性能记录和 A/B 实验提供入门步骤；QQ 加群反馈与更新提醒独立显示，加群提示可选择不再提醒。
-- **备份与恢复**：统一列出系统、游戏驱动配置、ICC、数字振动、画面参数及均衡器的备份；可核验中断操作，导出完整恢复资料，并在同机同 Windows 用户下导入。
+- **备份与恢复**：统一列出系统、游戏驱动配置、ICC、数字振动、画面参数、分辨率及均衡器的备份；可核验中断操作，导出完整恢复资料，并在同机同 Windows 用户下导入。
 
 这些功能调整系统或驱动配置，不修改游戏文件、不注入游戏进程。效果取决于硬件、驱动、游戏和场景，以同机对照测量为准。
 
@@ -107,6 +108,8 @@ AI 助手操作流程见 [SKILL.md](SKILL.md)。
 ## 备份与实测的边界
 
 每次受支持的系统或驱动设置写入前保存原值，读取原值失败时停止该项写入。恢复仅处理本工具记录的目标；外部修改、设备或驱动身份变化、旧备份信息不足时，会保留备份并报告需要核对的项目。
+分辨率调整作用于当前登录会话的桌面，无边框游戏通常跟随桌面，独占全屏仍以游戏内设置为准；确认创建的 NVIDIA 模式保留在驱动列表。目前已完成单屏实测，双屏与拔插尚未实测；本机全屏拉伸请求未被驱动采用，已检测并回退。
+
 备份导入用于保存记录，不把其他机器或重装前的备份当成本机可直接执行的恢复指令。
 关闭休眠可重新启用，但删除的休眠文件内容和原文件类型、大小不属于恢复范围；缓存清理同样不属于可逆设置。
 
