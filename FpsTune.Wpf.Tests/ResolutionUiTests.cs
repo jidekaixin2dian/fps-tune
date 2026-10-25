@@ -118,8 +118,11 @@ public sealed class ResolutionUiTests
                 ((RadioButton)reopened.FindName("SubTabResolution")).IsChecked = true;
                 var recovery = (ResolutionPanel)reopened.FindName("ResolutionContent");
                 var reload = recovery.RefreshAsync(); DlssFeedbackTests.PumpUntil(() => reload.IsCompleted); reload.GetAwaiter().GetResult();
+                // Loaded can supersede the explicit refresh. ShowTrial precedes the asynchronous
+                // disconnected read, so wait for the final explanation as well as the countdown.
                 DlssFeedbackTests.PumpUntil(() => ((Border)recovery.FindName("Confirmation")).Visibility == Visibility.Visible
-                    && ((TextBlock)recovery.FindName("CountdownText")).Text.Contains("回退尚未完成"));
+                    && ((TextBlock)recovery.FindName("CountdownText")).Text.Contains("回退尚未完成")
+                    && ((TextBlock)recovery.FindName("CurrentText")).Text.Contains("原显示器"));
                 Assert.False(((Button)recovery.FindName("KeepButton")).IsEnabled);
                 Assert.True(((Button)recovery.FindName("RevertButton")).IsEnabled);
                 Assert.Equal(Visibility.Visible, ((Border)recovery.FindName("Confirmation")).Visibility);
