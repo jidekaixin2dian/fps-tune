@@ -18,6 +18,7 @@ public partial class ResolutionPanel : UserControl
     private ResolutionSnapshot? _state;
     private ResolutionPlan? _plan;
     private string? _identity, _token;
+    private string? _scalingFailure;
     private bool _syncing = true, _busy, _trial, _polling;
     private Window? _owner;
     private int _generation, _presetGeneration;
@@ -53,7 +54,7 @@ public partial class ResolutionPanel : UserControl
     private async void TargetChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || _busy || _trial || Target.SelectedItem is not TargetChoice target) return;
-        _identity = target.Identity; ResultText.Text = ""; await RefreshAsync();
+        _identity = target.Identity; _scalingFailure = null; ResultText.Text = ""; await RefreshAsync();
     }
     internal async Task RefreshAsync()
     {
@@ -93,7 +94,7 @@ public partial class ResolutionPanel : UserControl
             LockRatio.IsChecked = draftMode.Width * 3 == draftMode.Height * 4;
             Scaling.ItemsSource = new[] { new ScaleChoice(null, Str.T("Str.Resolution.ResolutionPanel.xaml.7")), new ScaleChoice(2, Str.T("Str.Resolution.ResolutionPanel.xaml.8")), new ScaleChoice(5, Str.T("Str.Resolution.ResolutionPanel.xaml.9")), new ScaleChoice(3, Str.T("Str.Resolution.ResolutionPanel.xaml.10")) };
             Scaling.SelectedIndex = 0; Scaling.IsEnabled = state.Scaling is not null;
-            ScalingText.Text = state.ScalingDetail;
+            ScalingText.Text = state.ScalingDetail + (_scalingFailure is null ? "" : "\n" + _scalingFailure);
             RefreshRate.ItemsSource = null;
             UpdateRates();
             _syncing = false;
@@ -149,6 +150,7 @@ public partial class ResolutionPanel : UserControl
             ? "Str.ResolutionRetryRestore" : "Str.Resolution.UI.17");
         if (state.Phase == ResolutionTrialPhase.Failed) _countdown.Stop();
         else _countdown.Start();
+        ShowTrialPrompt();
     }
     internal async Task PollTrialAsync()
     {
@@ -163,6 +165,7 @@ public partial class ResolutionPanel : UserControl
                 ShowTrial(state); return;
             }
             _countdown.Stop(); _trial = false; _token = null; Confirmation.Visibility = Visibility.Collapsed;
+            CloseTrialPrompt();
             ResultText.Text = state.Token == token ? state.Phase switch
             {
                 ResolutionTrialPhase.Reverted => Str.T("Str.Resolution.ResolutionPanel.xaml.1"),
@@ -236,8 +239,9 @@ public partial class ResolutionPanel : UserControl
     private void DimensionLostFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         if (_syncing || _busy || _trial || LockRatio.IsChecked != true || sender is not TextBox box || !int.TryParse(box.Text, out var value) || value is < 200 or > 16384) return;
-        _syncing = true;
         var unit = box == WidthInput ? (int)Math.Round(value / 4.0) : (int)Math.Round(value / 3.0);
+        if (WidthInput.Text == (unit * 4).ToString() && HeightInput.Text == (unit * 3).ToString()) return;
+        _syncing = true;
         WidthInput.Text = (unit * 4).ToString(); HeightInput.Text = (unit * 3).ToString(); UpdateRates(); _syncing = false; QueueDraft();
     }
     private void RatioChanged(object sender, RoutedEventArgs e)
@@ -292,6 +296,7 @@ public partial class ResolutionPanel : UserControl
         try
         {
             _token = await Task.Run(() => ResolutionService.Begin(id, plan));
+            _scalingFailure = null;
             ShowTrial(await Task.Run(() => ResolutionService.TrialState(id)));
             var actual = await Task.Run(() => ResolutionService.Read(id));
             ResultText.Text = Str.T("Str.Resolution.ResolutionPanel.xaml.21") + actual.Current;
@@ -300,10 +305,14 @@ public partial class ResolutionPanel : UserControl
             _ = Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
                 Confirmation.BringIntoView();
-                if (Window.GetWindow(this)?.ShowActivated != false) RevertButton.Focus();
+                if (_trialPrompt is null && Window.GetWindow(this)?.ShowActivated != false) RevertButton.Focus();
             }));
         }
-        catch (Exception ex) { ResultText.Text = ex.Message; }
+        catch (Exception ex)
+        {
+            ResultText.Text = ex.Message;
+            if (plan.Scaling is not null) _scalingFailure = ex.Message;
+        }
         finally { SetBusy(false); if (_trial) await PollTrialAsync(); else await RefreshAsync(); }
     }
     private async void KeepClick(object sender, RoutedEventArgs e)
@@ -314,6 +323,7 @@ public partial class ResolutionPanel : UserControl
         {
             await Task.Run(() => ResolutionService.Confirm(_identity, _token));
             _trial = false; _countdown.Stop(); Confirmation.Visibility = Visibility.Collapsed;
+            CloseTrialPrompt();
             ResultText.Text = Str.T("Str.Resolution.ResolutionPanel.xaml.22");
         }
         catch (Exception ex) { ResultText.Text = ex.Message; }
@@ -328,6 +338,7 @@ public partial class ResolutionPanel : UserControl
             var id = _identity; var token = _trial ? _token : null;
             var restored = await Task.Run(() => token is null ? ResolutionService.Restore(id) : ResolutionService.RestoreTrial(id, token));
             _trial = false; _token = null; _countdown.Stop(); Confirmation.Visibility = Visibility.Collapsed;
+            CloseTrialPrompt();
             ResultText.Text = restored ? Str.T("Str.Resolution.ResolutionPanel.xaml.23") : Str.T("Str.Resolution.ResolutionPanel.xaml.24");
         }
         catch (Exception ex) { ResultText.Text = ex.Message; }

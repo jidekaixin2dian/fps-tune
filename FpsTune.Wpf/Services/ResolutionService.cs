@@ -72,7 +72,7 @@ internal static partial class ResolutionService
             if (scaling is not (1 or 2 or 3 or 5 or 6 or 7 or 8)) { detail += Str.T("Str.Resolution.ResolutionService.8"); scaling = null; }
         }
         catch (Exception ex) { detail = Str.T("Str.Resolution.ResolutionService.9") + ex.Message; }
-        var r = Load(id); DisplayTopology.ValidateConnection(display);
+        var r = Load(id); DisplayTopology.ValidatePhysicalConnection(display);
         return new(display, current, modes, scaling, detail, r is not null, r?.Pending == true);
     }
     internal static string ScalingName(uint scaling) => scaling switch
@@ -94,10 +94,10 @@ internal static partial class ResolutionService
         var match = Api.Modes(display).FirstOrDefault(m => m.Width == width && m.Height == height && m.Hz == hz);
         if (match is not null)
         {
-            Api.Test(display, match); DisplayTopology.ValidateConnection(display);
+            Api.Test(display, match); DisplayTopology.ValidatePhysicalConnection(display);
             return new(match, false, scaling, Str.T("Str.Resolution.ResolutionService.19"));
         }
-        Nvidia.ProbeCustom(display, requested); DisplayTopology.ValidateConnection(display);
+        Nvidia.ProbeCustom(display, requested); DisplayTopology.ValidatePhysicalConnection(display);
         return new(requested, true, scaling, Str.T("Str.Resolution.ResolutionService.20"));
     }
     internal static string Begin(string id, ResolutionPlan plan)
@@ -125,16 +125,23 @@ internal static partial class ResolutionService
         }
         var r = new Receipt(id, string.IsNullOrEmpty(display.FriendlyName) ? display.GdiDeviceName : display.FriendlyName, Connection(), old?.Original ?? before, plan.Mode,
             old?.OriginalScaling ?? beforeScaling, plan.Scaling ?? beforeScaling, before, beforeScaling,
-            plan.CreateCustom, true, Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow.AddSeconds(25));
+            false, true, Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow.AddSeconds(25));
         if (old is not null) DisplayBackupFiles.Archive(PathFor(id));
         Save(r);
         try
         {
             SaveTrial(new(id, r.Token, ResolutionTrialPhase.Starting));
-            StartGuard(r); _ = Require(r); DisplayTopology.ValidateConnection(display);
-            if (plan.CreateCustom) Nvidia.TryCustom(display, plan.Mode); else Api.Apply(display, plan.Mode);
+            StartGuard(r); _ = Require(r); DisplayTopology.ValidatePhysicalConnection(display);
+            if (plan.CreateCustom)
+            {
+                // Durable before the native call: an error or process exit can still leave a hardware trial.
+                r = r with { CustomTrial = true }; Save(r);
+                Nvidia.TryCustom(display, plan.Mode);
+            }
+            else Api.Apply(display, plan.Mode);
+            WaitForMode(display, r.Expected, null);
             if (plan.Scaling is { } scaling) Nvidia.SetScaling(display, scaling);
-            Verify(display, r.Expected, r.ExpectedScaling);
+            WaitForMode(display, r.Expected, r.ExpectedScaling);
             return r.Token;
         }
         catch (Exception original)
@@ -155,9 +162,21 @@ internal static partial class ResolutionService
     }
     private static void Verify(IccDisplayInfo display, DisplayMode expected, uint? scaling)
     {
-        DisplayTopology.ValidateConnection(display);
+        DisplayTopology.ValidatePhysicalConnection(display);
         if (Api.Read(display) != expected) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.28"));
         if (scaling is not null && Nvidia.ReadScaling(display) != scaling) throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.29"));
+    }
+    private static void WaitForMode(IccDisplayInfo display, DisplayMode expected, uint? scaling)
+    {
+        // NVAPI may return before Windows finishes rebuilding its display state.
+        // A mode switch can legitimately change SDR/WCG; retain every physical identity check.
+        // Color tools continue using ValidateConnection, including its color-mode guard.
+        var elapsed = Stopwatch.StartNew();
+        while (true)
+        {
+            try { Verify(display, expected, scaling); return; }
+            catch (InvalidOperationException) when (elapsed.Elapsed < TimeSpan.FromSeconds(3)) { Thread.Sleep(100); }
+        }
     }
     internal static void Confirm(string id, string token)
     {
@@ -197,15 +216,24 @@ internal static partial class ResolutionService
             if (now != r.ExpectedScaling && now != r.PreviousScaling && now != r.OriginalScaling)
                 throw new InvalidOperationException(Str.T("Str.Resolution.ResolutionService.33"));
         }
+        if (r.CustomTrial)
+        {
+            // A driver can restore the Windows mode itself while retaining an unsaved custom trial.
+            // Retire that trial even when the OS already reports the previous/original mode.
+            Nvidia.RevertTrial(display);
+            r = r with { CustomTrial = false }; Save(r);
+            WaitForMode(display, r.Previous, null);
+            current = Api.Read(display);
+        }
         if (current == goal && (scaling is null || Nvidia.ReadScaling(display) == scaling))
         {
             FinishRollback(r, goal, scaling);
             return;
         }
-        if (r.CustomTrial && current == r.Expected) Nvidia.RevertTrial(display);
-        DisplayTopology.ValidateConnection(display); Api.Test(display, goal); Api.Apply(display, goal);
+        DisplayTopology.ValidatePhysicalConnection(display); Api.Test(display, goal); Api.Apply(display, goal);
+        WaitForMode(display, goal, null);
         if (scaling is not null) Nvidia.SetScaling(display, scaling.Value);
-        Verify(display, goal, scaling);
+        WaitForMode(display, goal, scaling);
         FinishRollback(r, goal, scaling);
     }
     internal static IReadOnlyList<DisplayBackupTarget> BackupTargets()

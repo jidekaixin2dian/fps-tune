@@ -18,12 +18,18 @@ internal static class DisplayTopology
     }
     internal static void ValidateConnection(IccDisplayInfo captured)
     {
+        var current = ValidatePhysicalConnection(captured);
+        if (current.AdvancedColorEnabled != captured.AdvancedColorEnabled || current.ColorMode != captured.ColorMode)
+            throw new InvalidOperationException(Str.T("Str.DisplayConnectionChanged"));
+    }
+    internal static IccDisplayInfo ValidatePhysicalConnection(IccDisplayInfo captured)
+    {
         var current = Require(Identity(captured));
         if (current.GdiDeviceName != captured.GdiDeviceName || current.AdapterIdLow != captured.AdapterIdLow
             || current.AdapterIdHigh != captured.AdapterIdHigh || current.SourceId != captured.SourceId
-            || current.AssociationSubKey != captured.AssociationSubKey || current.AdvancedColorEnabled != captured.AdvancedColorEnabled
-            || current.ColorMode != captured.ColorMode)
+            || current.AssociationSubKey != captured.AssociationSubKey)
             throw new InvalidOperationException(Str.T("Str.DisplayConnectionChanged"));
+        return current;
     }
     internal static IReadOnlyList<IccDisplayInfo> ReadNative()
     {

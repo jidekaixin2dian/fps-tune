@@ -69,6 +69,10 @@ public sealed class ResolutionUiTests
                 ((ComboBox)control.FindName("Scaling")).SelectedIndex = 1;
                 DlssFeedbackTests.PumpUntil(() => ((Button)control.FindName("ApplyButton")).IsEnabled);
                 var apply = (Button)control.FindName("ApplyButton");
+                var width = (TextBox)control.FindName("WidthInput");
+                width.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, width, apply)
+                    { RoutedEvent = Keyboard.LostKeyboardFocusEvent });
+                Assert.True(apply.IsEnabled); // Leaving an already-normalized field must not discard the ready plan.
                 apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.False(((StackPanel)control.FindName("Inputs")).IsEnabled);
                 apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); // Busy calls must be ignored.
@@ -93,6 +97,13 @@ public sealed class ResolutionUiTests
                 ((ComboBox)control.FindName("Target")).SelectedIndex = 0;
                 DlssFeedbackTests.PumpUntil(() => ((TextBlock)control.FindName("CurrentText")).Text.Contains("2560"));
                 Assert.Equal(240, ((ComboBox)control.FindName("RefreshRate")).SelectedItem);
+                f.IgnoreScaling = true;
+                ((ComboBox)control.FindName("Scaling")).SelectedIndex = 1;
+                DlssFeedbackTests.PumpUntil(() => ((Button)control.FindName("ApplyButton")).IsEnabled);
+                apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => ((TextBlock)control.FindName("ScalingText")).Text.Contains(Str.T("Str.Resolution.ResolutionService.29")));
+                Assert.Equal(ResolutionTests.Fixture.Native, f.Current);
+                f.IgnoreScaling = false;
                 f.RejectCustom = true;
                 ((TextBox)control.FindName("WidthInput")).Text = "1664";
                 ((TextBox)control.FindName("HeightInput")).Text = "1248";

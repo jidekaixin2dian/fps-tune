@@ -19,6 +19,8 @@ public sealed class ResolutionTests
         internal uint Scale = 5;
         internal bool Connected = true, FailApply, FailGuard, RejectCustom;
         internal int Trials, Saves, Reverts, Writes, Validations;
+        internal int UnsettledReads;
+        internal bool CustomKeepsWindowsMode, CustomChangesColor, IgnoreScaling;
         internal string Root = Path.Combine(DlssFeedbackTests.RepoRoot(), "work", "resolution-20261024", "tests", Guid.NewGuid().ToString("N"));
         internal Fixture()
         {
@@ -27,17 +29,26 @@ public sealed class ResolutionTests
             ResolutionService.ApiOverride = this; ResolutionService.NvidiaOverride = this;
             ResolutionService.GuardOverride = _ => { if (FailGuard) throw new InvalidOperationException("guard refused"); };
         }
-        public DisplayMode Read(IccDisplayInfo display) => display.Identity == Display.Identity ? Current : OtherCurrent;
+        public DisplayMode Read(IccDisplayInfo display)
+        {
+            if (UnsettledReads > 0) { UnsettledReads--; throw new InvalidOperationException("display is rebuilding"); }
+            return display.Identity == Display.Identity ? Current : OtherCurrent;
+        }
         public IReadOnlyList<DisplayMode> Modes(IccDisplayInfo display) => [Current, Native, new(1024, 768, 240), new(1280, 960, 240), new(1280, 960, 144)];
         public void Test(IccDisplayInfo display, DisplayMode mode) { mode.Validate(); Validations++; }
         public void Apply(IccDisplayInfo display, DisplayMode mode)
         { Assert.Equal(Display.Identity, display.Identity); if (FailApply) { FailApply = false; throw new InvalidOperationException("driver refused"); } Current = mode; Writes++; }
         public void ProbeCustom(IccDisplayInfo display, DisplayMode mode) { if (RejectCustom) throw new InvalidOperationException("custom timing unavailable"); }
-        public void TryCustom(IccDisplayInfo display, DisplayMode mode) { Trials++; Current = mode; }
+        public void TryCustom(IccDisplayInfo display, DisplayMode mode)
+        {
+            Trials++; if (!CustomKeepsWindowsMode) Current = mode; UnsettledReads = 2;
+            if (CustomChangesColor) Display = Display with { AdvancedColorEnabled = false, ColorMode = DisplayColorMode.Sdr };
+        }
         public void SaveCustom(IccDisplayInfo display) { Saves++; }
         public void RevertTrial(IccDisplayInfo display) { Reverts++; Current = Native; }
         public uint ReadScaling(IccDisplayInfo display) => Scale;
-        public void SetScaling(IccDisplayInfo display, uint scaling, bool testOnly = false) { if (!testOnly) { Scale = scaling; Writes++; } }
+        public void SetScaling(IccDisplayInfo display, uint scaling, bool testOnly = false)
+        { if (!testOnly) { if (!IgnoreScaling) Scale = scaling; Writes++; } }
         internal string Begin(int w, int h, int hz = 240, uint? scale = null) => ResolutionService.Begin("monitor-A", ResolutionService.Plan("monitor-A", w, h, hz, scale));
         internal string Receipt => Directory.GetFiles(ResolutionService.DirectoryPath, "resolution-*.json").Single();
         public void Dispose()
@@ -66,6 +77,47 @@ public sealed class ResolutionTests
         ResolutionService.Restore("monitor-A"); Assert.Equal(1, f.Reverts); Assert.Equal(Fixture.Native, f.Current);
         token = f.Begin(1920, 1440); ResolutionService.Confirm("monitor-A", token);
         Assert.Equal(1, f.Saves); ResolutionService.Restore("monitor-A"); Assert.Equal(Fixture.Native, f.Current);
+    }
+    [Fact]
+    public void Custom_trial_waits_for_mode_rebuild_and_reverts_even_if_Windows_already_restored_itself()
+    {
+        using var f = new Fixture(); var token = f.Begin(1440, 1080);
+        Assert.True(ResolutionService.TrialState("monitor-A").CanConfirm);
+        f.Current = Fixture.Native;
+        Assert.True(ResolutionService.RestoreTrial("monitor-A", token));
+        Assert.Equal(1, f.Reverts); Assert.Empty(ResolutionService.BackupTargets());
+        f.FailGuard = true;
+        Assert.Throws<InvalidOperationException>(() => f.Begin(1440, 1080));
+        Assert.Equal(1, f.Reverts); // No native trial was attempted after the failed guard startup.
+    }
+    [Fact]
+    public void A_custom_trial_that_never_reaches_the_requested_mode_is_reverted_without_saving()
+    {
+        using var f = new Fixture(); f.CustomKeepsWindowsMode = true;
+        Assert.Throws<InvalidOperationException>(() => f.Begin(1440, 1080));
+        Assert.Equal(1, f.Reverts); Assert.Equal(0, f.Saves);
+        Assert.Empty(ResolutionService.BackupTargets()); Assert.Equal(Fixture.Native, f.Current);
+    }
+    [Fact]
+    public void Resolution_accepts_a_mode_induced_color_change_without_relaxing_color_tool_guards()
+    {
+        using var f = new Fixture();
+        f.Display = f.Display with { AdvancedColorEnabled = true, ColorMode = DisplayColorMode.Wcg };
+        var captured = f.Display; f.CustomChangesColor = true;
+        var token = f.Begin(1440, 1080);
+        Assert.Throws<InvalidOperationException>(() => DisplayTopology.ValidateConnection(captured));
+        Assert.Equal(f.Display, DisplayTopology.ValidatePhysicalConnection(captured));
+        ResolutionService.Confirm("monitor-A", token); Assert.Equal(1, f.Saves);
+        ResolutionService.Restore("monitor-A"); Assert.Equal(Fixture.Native, f.Current);
+    }
+    [Fact]
+    public void A_driver_ignoring_scaling_is_not_confirmed_and_the_original_desktop_is_restored()
+    {
+        using var f = new Fixture(); f.IgnoreScaling = true;
+        Assert.Throws<InvalidOperationException>(() => f.Begin(1280, 960, scale: 2));
+        Assert.Equal(Fixture.Native, f.Current); Assert.Equal(5u, f.Scale);
+        Assert.Empty(ResolutionService.BackupTargets());
+        Assert.Equal(ResolutionTrialPhase.Reverted, ResolutionService.TrialState("monitor-A").Phase);
     }
     [Fact]
     public void Hotplug_identity_reuse_external_modes_and_scaling_preserve_receipts_without_writes()

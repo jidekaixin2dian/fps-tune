@@ -54,7 +54,7 @@ internal sealed class NvidiaDisplayModes : INvidiaDisplayModes
     private static uint Version<T>(uint v = 1) => (uint)Marshal.SizeOf<T>() | (v << 16);
     private uint Id(IccDisplayInfo display)
     {
-        DisplayTopology.ValidateConnection(display);
+        DisplayTopology.ValidatePhysicalConnection(display);
         Check(_query.Resolve<DisplayId>(0xae457190)(display.GdiDeviceName, out var id), Str.T("Str.Resolution.NvidiaDisplayModes.2"));
         if (id == 0) throw new InvalidOperationException(Str.T("Str.Resolution.NvidiaDisplayModes.3"));
         return id;
@@ -169,7 +169,7 @@ internal sealed class NvidiaDisplayModes : INvidiaDisplayModes
         var id = Id(display); using var config = ReadConfig(); var p = Find(config, id);
         var details = Marshal.PtrToStructure<Advanced>(p); details.Scaling = scaling;
         Marshal.StructureToPtr(details, p, false);
-        DisplayTopology.ValidateConnection(display);
+        DisplayTopology.ValidatePhysicalConnection(display);
         Check(_query.Resolve<SetConfig>(0x5d8cf8de)(config.Count, config.Paths, testOnly ? 1u : 0u), testOnly ? Str.T("Str.Resolution.NvidiaDisplayModes.21") : Str.T("Str.Resolution.NvidiaDisplayModes.22"));
     }
 }
