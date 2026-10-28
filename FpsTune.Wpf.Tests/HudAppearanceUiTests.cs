@@ -55,6 +55,8 @@ public sealed class HudAppearanceUiTests
                 Click("SaveHudAppearanceButton"); SettingsService.Load();
                 Assert.Equal(new HudAppearance("strip", 100, "top-left"), SettingsService.Current.HudAppearance);
                 Assert.Equal(new HudAppearance("strip", 35, "top-center"), new HudAppearance("invalid", double.NaN, "invalid").Normalize());
+                hud.RecoveryAvailableOverride = () => false; Assert.False(hud.SetClickThrough(true));
+                Assert.Equal(Visibility.Visible, ((TextBlock)hud.FindName("ScopeText")).Visibility);
                 hud.RecoveryAvailableOverride = () => true; Assert.True(hud.SetClickThrough(true));
                 Assert.False(((Button)hud.FindName("CloseHudButton")).IsVisible);
                 Assert.Equal(Visibility.Visible, ((FrameworkElement)hud.FindName("LockedHint")).Visibility);

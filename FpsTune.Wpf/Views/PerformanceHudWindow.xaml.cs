@@ -85,6 +85,7 @@ public partial class PerformanceHudWindow : Window
         LowText.Text = fps is null ? "—" : fps.P1Low.ToString("F0");
         ScopeText.Text = _interactionError ?? (_through ? Str.T("Str.HudLocked") : _session.IsRunning
             ? Str.T("Str.HudRecording", _session.Conditions?.GameName ?? _session.SessionName) : Str.T("Str.HudIdle"));
+        ScopeText.Visibility = _appearance.Layout == "strip" && _interactionError is null ? Visibility.Collapsed : Visibility.Visible;
         CaptureStatus.Text = !_session.IsRunning ? Str.T("Str.HudRecordForFps")
             : _session.CurrentFpsUnavailableReasonKey is { } reason ? Str.T(reason)
             : fps is null ? Str.T("Str.HudWaitingFrames") : Str.T("Str.HudWindow", fps.WindowSeconds.ToString("F1"), fps.Samples);
