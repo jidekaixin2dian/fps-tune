@@ -700,15 +700,21 @@ public sealed class ReadabilityAndFramesUiTests
                 Assert.Contains(Glyphs(VisualTreeHelper.GetDrawing(selection)), g => g.GlyphRun.GlyphTypeface.FamilyNames.Values.Contains("FpsTune Text"));
                 foreach (var dpi in new[] { 96d, 144d, 192d })
                 {
-                    var bitmap = new RenderTargetBitmap((int)(selection.ActualWidth * dpi / 96), (int)(selection.ActualHeight * dpi / 96), dpi, dpi, PixelFormats.Pbgra32);
+                    var text = new FormattedText(selection.Text, System.Globalization.CultureInfo.GetCultureInfo("zh-CN"), FlowDirection.LeftToRight,
+                        new Typeface(selection.FontFamily, selection.FontStyle, selection.FontWeight, selection.FontStretch), selection.FontSize,
+                        selection.Foreground, dpi / 96);
+                    var size = new Size(text.WidthIncludingTrailingWhitespace + 16, text.Height + 16);
+                    var bitmap = new RenderTargetBitmap((int)Math.Ceiling(size.Width * dpi / 96), (int)Math.Ceiling(size.Height * dpi / 96), dpi, dpi, PixelFormats.Pbgra32);
                     var visual = new DrawingVisual();
                     using (var drawing = visual.RenderOpen())
                     {
-                        var bounds = new Rect(0, 0, selection.ActualWidth, selection.ActualHeight);
+                        var bounds = new Rect(new Point(), size);
                         drawing.DrawRectangle((Brush)app.FindResource("AppBackdropBrush"), null, bounds);
-                        drawing.DrawRectangle(new VisualBrush(selection) { ViewboxUnits = BrushMappingMode.Absolute, Viewbox = bounds }, null, bounds);
+                        drawing.DrawText(text, new Point(8, 8));
                     }
                     bitmap.Render(visual);
+                    var pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4]; bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0);
+                    Assert.True(pixels.Chunk(4).Select(p => BitConverter.ToInt32(p)).Distinct().Take(20).Count() > 10, "Font render must contain actual glyph pixels.");
                     using var stream = File.Create(Path.Combine(Output(), "memory-font-" + dpi + ".png"));
                     var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); encoder.Save(stream);
                 }
