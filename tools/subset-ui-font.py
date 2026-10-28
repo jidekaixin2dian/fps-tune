@@ -47,6 +47,7 @@ for weight, face in ((400, 'Regular'), (500, 'Medium'), (600, 'SemiBold')):
         if record.nameID in names:
             record.string = names[record.nameID].encode(record.getEncoding())
     font.flavor = None
+    font.recalcTimestamp = False
     path = output / ('FpsTuneText-' + face + '.ttf')
     font.save(path)
     manifest['files'].append({'name': path.name, 'bytes': path.stat().st_size,

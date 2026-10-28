@@ -169,4 +169,15 @@ public sealed class MemoryCleanupTests
     }
     private sealed class InlineProgress(Action<MemoryCleanupProgress> report) : IProgress<MemoryCleanupProgress>
     { public void Report(MemoryCleanupProgress value) => report(value); }
+
+    [Fact]
+    public void Full_cleanup_trims_available_targets_without_saved_selections_and_handles_empty_background()
+    {
+        var api = new FakeMemory(); var background = new BackgroundMemoryService(new BackgroundApi(), () => false);
+        var service = new MemoryCleanupService(api, () => false, () => true);
+        var result = service.Run(MemoryCleanupMode.Full, [new(10, 1, "ok", "ok.exe", 100)], background);
+        Assert.Single(result.Apps); Assert.True(result.StandbyCompleted); Assert.True(api.AllPriorities);
+        var empty = service.Run(MemoryCleanupMode.Full, [], background);
+        Assert.Empty(empty.Apps); Assert.True(empty.StandbyCompleted); Assert.Equal(2, api.Purges);
+    }
 }

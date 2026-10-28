@@ -33,6 +33,7 @@ public partial class MaintenanceView
     private async void MemoryClean_Click(object sender, RoutedEventArgs e)
         => await RunMemoryAsync(MemoryMode.SelectedIndex == 0 ? MemoryCleanupMode.LowStandby : MemoryCleanupMode.Standby);
     private async void MemoryCombined_Click(object sender, RoutedEventArgs e) => await RunMemoryAsync(MemoryCleanupMode.Combined);
+    private async void MemoryFull_Click(object sender, RoutedEventArgs e) => await RunMemoryAsync(MemoryCleanupMode.Full);
     private void MemoryCancel_Click(object sender, RoutedEventArgs e)
     {
         _memoryCancellation?.Cancel(); MemoryCancel.IsEnabled = false;
@@ -49,8 +50,20 @@ public partial class MaintenanceView
             return;
         }
         var targets = SelectedMemoryApps();
-        var hasApps = mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined;
-        if (hasApps && !ConfirmMemoryApps(targets)) { MemoryResult.Text = MemoryAppsResult.Text; return; }
+        var hasApps = mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined or MemoryCleanupMode.Full;
+        if (mode == MemoryCleanupMode.Full)
+        {
+            _busy = true; SetMemoryBusy(true); MemoryResult.Text = Str.T("Str.MemoryFindingApps");
+            try { targets = (await Task.Run(_background.Read)).ToArray(); }
+            catch (Exception ex) { MemoryResult.Text = Str.T("Str.MemoryFailed", PrivacyScrub.Sanitize(ex.Message)); return; }
+            finally { _busy = false; SetMemoryBusy(false); }
+            MemoryResult.Text = "";
+            if (!IsLoaded || !ProcessesSection.IsVisible) return;
+            if (!DialogService.Confirm(Str.T("Str.MemoryFullAction"),
+                Str.T("Str.MemoryFullConfirm", targets.Select(t => t.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count(), targets.Length),
+                confirmText: Str.T("Str.MemoryFullAction"))) return;
+        }
+        else if (hasApps && !ConfirmMemoryApps(targets)) { MemoryResult.Text = MemoryAppsResult.Text; return; }
         _busy = true; _memoryGeneration++; SetMemoryBusy(true);
         using var cancellation = new CancellationTokenSource(); _memoryCancellation = cancellation;
         var clock = Stopwatch.StartNew();

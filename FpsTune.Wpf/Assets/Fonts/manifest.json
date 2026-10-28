@@ -1283,17 +1283,17 @@
     {
       "name": "FpsTuneText-Regular.ttf",
       "bytes": 326748,
-      "sha256": "9ee631c606ead8924f70859e057e576172dd19241fade6b798b6fdf34df363dc"
+      "sha256": "59d85d8415b711824cb8cbba882912ff9b9013534727f08c191ba3ee3cf18f6f"
     },
     {
       "name": "FpsTuneText-Medium.ttf",
       "bytes": 326656,
-      "sha256": "dd286a865016b4594772fd05c940635aeb4d5a41624ffb2f0f7e538e3d2ae8c6"
+      "sha256": "11a27944d991c49baa26f983d6c8c2be8181bbbf43f7ab176867622b0e49567c"
     },
     {
       "name": "FpsTuneText-SemiBold.ttf",
       "bytes": 326564,
-      "sha256": "74f7bf57b5d1a96793884306d925e0c0549ab444fc01f69cd8864475698b5be2"
+      "sha256": "e178b91a11266c64492bace83050bc6acda6a69581a3bdd913112958295d65f9"
     }
   ]
 }

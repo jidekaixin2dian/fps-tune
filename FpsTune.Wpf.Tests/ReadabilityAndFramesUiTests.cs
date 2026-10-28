@@ -681,20 +681,35 @@ public sealed class ReadabilityAndFramesUiTests
                 var combined = (Button)page.FindName("MemoryCombinedButton");
                 var status = (TextBlock)page.FindName("MemoryResult");
                 var apps = (ItemsControl)page.FindName("MemoryApps");
-                DlssFeedbackTests.PumpUntil(() => combined.IsEnabled && apps.Items.Count == 2);
+                var full = (Button)page.FindName("MemoryFullButton");
+                DlssFeedbackTests.PumpUntil(() => full.IsEnabled && apps.Items.Count == 2);
+                Assert.Equal(1, ((ComboBox)page.FindName("MemoryMode")).SelectedIndex);
+                Assert.Equal(TextRenderingMode.ClearType, TextOptions.GetTextRenderingMode(window));
                 ((Button)page.FindName("MemoryWorkingSetsButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.Equal(Str.T("Str.MemorySelectApps"), status.Text); Assert.Equal(0, background.Trims);
                 window.UpdateLayout();
-                foreach (var check in Descendants(apps).OfType<CheckBox>()) check.IsChecked = true;
+                ((Button)page.FindName("MemorySelectAll")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.Equal(Str.T("Str.MemorySelectedCount", 2, 2), ((TextBlock)page.FindName("MemorySelection")).Text);
+                ((Button)page.FindName("MemorySelectNone")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(Str.T("Str.MemorySelectedCount", 0, 0), ((TextBlock)page.FindName("MemorySelection")).Text);
+                confirm.Start(); full.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => full.IsEnabled && api.Purges == 1);
+                Assert.Equal(2, background.Trims); Assert.True(api.AllPriorities);
+                Assert.Contains(Str.T("Str.MemoryAppsSummary", 2, 0, 0), status.Text);
+                Assert.Empty(SettingsService.Current.MemoryBackgroundApps); // Full does not overwrite manual selections.
+                background.Trims = api.Purges = 0;
+                status.Text = "";
+                ((Button)page.FindName("MemorySelectAll")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 foreach (var mode in new[] { "studio", "console" })
                 foreach (var theme in new[] { "light", "dark" })
                 {
                     window.SetDisplayMode(mode); ThemeManager.SetMode(theme);
                     ((FrameworkElement)page.FindName("MemoryRefresh")).BringIntoView(); window.UpdateLayout();
-                    Assert.True(combined.ActualWidth > 100); Assert.True(combined.IsVisible);
+                    Assert.True(full.ActualWidth > 100); Assert.True(full.IsVisible);
                     Render((FrameworkElement)window.FindName("ChromeRoot"), "memory-workspace-" + mode + "-" + theme);
                 }
+                ((TextBlock)page.FindName("MemoryResult")).Text = "";
+                apps.BringIntoView(); window.UpdateLayout(); Render(page, "memory-app-alignment-dark");
                 // Verify actual glyph selection, rather than only the resource's family string.
                 var selection = (TextBlock)page.FindName("MemorySelection");
                 Assert.Contains(Glyphs(VisualTreeHelper.GetDrawing(selection)), g => g.GlyphRun.GlyphTypeface.FamilyNames.Values.Contains("FpsTune Text"));
@@ -725,7 +740,9 @@ public sealed class ReadabilityAndFramesUiTests
                     Assert.Equal(weight, glyph.Weight); Assert.Contains("FpsTune Text", glyph.FamilyNames.Values);
                     Assert.True(glyph.CharacterToGlyphMap.ContainsKey('帧'));
                 }
-                using var hold = new ManualResetEventSlim(); background.Hold = hold; confirm.Start();
+                ((Expander)page.FindName("MemoryOptions")).IsExpanded = true; window.UpdateLayout();
+                DlssFeedbackTests.PumpUntil(() => combined.IsEnabled && ((ComboBox)page.FindName("MemoryMode")).IsVisible);
+                using var hold = new ManualResetEventSlim(); background.Hold = hold;
                 combined.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => Volatile.Read(ref background.Trims) == 1);
                 Assert.False(combined.IsEnabled); Assert.False(((Button)page.FindName("MemoryAppsRefresh")).IsEnabled);

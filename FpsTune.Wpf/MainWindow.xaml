@@ -11,7 +11,7 @@
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="58" GlassFrameThickness="0" ResizeBorderThickness="7" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
-    <Border x:Name="ChromeRoot" Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1" CornerRadius="8">
+    <Border x:Name="ChromeRoot" Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1" CornerRadius="8" RenderOptions.ClearTypeHint="Enabled">
         <Grid x:Name="ChromeGrid">
             <Grid.ColumnDefinitions><ColumnDefinition x:Name="NavigationColumn" Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <Grid.RowDefinitions><RowDefinition Height="58"/><RowDefinition x:Name="NavigationRow" Height="0"/><RowDefinition Height="*"/></Grid.RowDefinitions>

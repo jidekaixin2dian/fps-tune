@@ -38,7 +38,7 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
         var standbyCompleted = false;
         try
         {
-            if (mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined)
+            if (mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined or MemoryCleanupMode.Full)
                 apps = background.Trim(targets, p => progress?.Report(p), cancellation);
             cancellation.ThrowIfCancellationRequested();
             if (IsBusy || GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));

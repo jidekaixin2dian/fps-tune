@@ -1538,7 +1538,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryRefreshAction">刷新</s:String>
     <s:String x:Key="Str.MemoryWorkingSetsAction">仅收缩所选后台</s:String>
     <s:String x:Key="Str.MemoryCombinedAction">所选后台 + 全部待机</s:String>
-    <s:String x:Key="Str.MemorySelectedCount">已选 {0} 个后台应用 / {1} 个进程；在下方勾选。</s:String>
+    <s:String x:Key="Str.MemorySelectedCount">手动选择 {0} 个应用 / {1} 个进程；勾选结果自动保存。</s:String>
     <s:String x:Key="Str.MemoryCommit">已提交内存 {0} / 上限 {1}</s:String>
     <s:String x:Key="Str.MemoryCommitUnknown">已提交内存：暂无法读取</s:String>
     <s:String x:Key="Str.MemoryStop">停止后续步骤</s:String>
@@ -1559,4 +1559,15 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryAvailableDecreased">本次采样可用内存减少 {0}。</s:String>
     <s:String x:Key="Str.MemoryStandbyChange">待机缓存：{0} → {1}</s:String>
     <s:String x:Key="Str.MemoryRunReadFailed">最新内存状态读取失败：{0}。请点击“刷新”重试。</s:String>
+    <s:String x:Key="Str.MemoryFullAction">一键完整整理</s:String>
+    <s:String x:Key="Str.MemoryPhysicalUsed">物理内存已用</s:String>
+    <s:String x:Key="Str.MemoryFullScope">{0} 个可整理应用 / {1} 个进程 + 全部待机缓存</s:String>
+    <s:String x:Key="Str.MemoryFindingApps">正在读取可整理后台…</s:String>
+    <s:String x:Key="Str.MemoryAppsUnavailable">后台列表读取失败，点击完整整理可重新读取。</s:String>
+    <s:String x:Key="Str.MemoryFullConfirm">将收缩 {0} 个可整理后台应用（{1} 个进程），并整理全部待机缓存。
+不会关闭应用，再次使用时可能重新载入。</s:String>
+    <s:String x:Key="Str.MemorySelectAll">全选</s:String>
+    <s:String x:Key="Str.MemorySelectNone">清空选择</s:String>
+    <s:String x:Key="Str.MemoryMoreOptions">更多整理选项</s:String>
+    <s:String x:Key="Str.MemoryAppAmount">{0} 个进程 · {1}</s:String>
 </ResourceDictionary>

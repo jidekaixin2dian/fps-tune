@@ -28,11 +28,11 @@
                 <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
             </Style>
 
-            <!-- Grayscale avoids RGB fringes on themed, translucent and wallpaper surfaces. -->
+            <!-- Opaque native windows allow LCD subpixel antialiasing and natural glyph spacing. -->
             <Style x:Key="WindowTypographyStyle" TargetType="Window">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="14"/>
-                <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
                 <Setter Property="TextOptions.TextHintingMode" Value="Fixed"/>
                 <Setter Property="UseLayoutRounding" Value="True"/>
@@ -165,7 +165,7 @@
                 <!-- YaHei has no SemiBold face: it resolves to full Bold for CJK. -->
                 <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
-                <Setter Property="TextOptions.TextRenderingMode" Value="Grayscale"/>
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
                 <Setter Property="TextOptions.TextHintingMode" Value="Fixed"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             </Style>

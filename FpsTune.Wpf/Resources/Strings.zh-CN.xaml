@@ -1147,7 +1147,7 @@
     <s:String x:Key="Str.FrameApplied">已保存并验证帧率设置。重新启动游戏后测试效果。</s:String>
     <s:String x:Key="Str.FrameRestored">已还原帧率设置。</s:String>
     <s:String x:Key="Str.FrameFailed">帧率操作失败：{0}</s:String>
-    <s:String x:Key="Str.MemoryTitle">开局前整理整机内存</s:String>
+    <s:String x:Key="Str.MemoryTitle">内存整理</s:String>
     <s:String x:Key="Str.MemoryHint">实时查看内存，按需整理待机缓存；可组合整理所选后台应用。</s:String>
     <s:String x:Key="Str.MemoryAvailable">可用内存 {0} / {1}</s:String>
     <s:String x:Key="Str.MemoryStandby">低优先级待机缓存：{0}</s:String>
@@ -1359,7 +1359,7 @@
     <s:String x:Key="Str.MemoryProcessReadFailed">已整理，但无法读取整理后占用：{0}</s:String>
     <s:String x:Key="Str.MemoryUsed">内存使用率</s:String>
     <s:String x:Key="Str.MemoryCombinedMode">所选后台应用 + 全部待机缓存</s:String>
-    <s:String x:Key="Str.MemoryBackgroundTitle">定制后台应用整理</s:String>
+    <s:String x:Key="Str.MemoryBackgroundTitle">选择后台应用</s:String>
     <s:String x:Key="Str.MemoryBackgroundHint">勾选需要整理的后台应用。会收缩常驻内存，应用继续使用时可能重新载入；游戏、系统关键进程不列入。</s:String>
     <s:String x:Key="Str.MemoryTrimSelected">整理所选应用</s:String>
     <s:String x:Key="Str.MemorySelectApps">请先勾选后台应用。</s:String>
@@ -1381,7 +1381,7 @@
     <s:String x:Key="Str.MemoryRefreshAction">刷新</s:String>
     <s:String x:Key="Str.MemoryWorkingSetsAction">仅收缩所选后台</s:String>
     <s:String x:Key="Str.MemoryCombinedAction">所选后台 + 全部待机</s:String>
-    <s:String x:Key="Str.MemorySelectedCount">已选 {0} 个后台应用 / {1} 个进程；在下方勾选。</s:String>
+    <s:String x:Key="Str.MemorySelectedCount">手动选择 {0} 个应用 / {1} 个进程；勾选结果自动保存。</s:String>
     <s:String x:Key="Str.MemoryCommit">已提交内存 {0} / 上限 {1}</s:String>
     <s:String x:Key="Str.MemoryCommitUnknown">已提交内存：暂无法读取</s:String>
     <s:String x:Key="Str.MemoryStop">停止后续步骤</s:String>
@@ -1559,4 +1559,15 @@
     <s:String x:Key="Str.ResolutionEscape">按 Esc 可立即回退；Tab 可切换确认与回退按钮。</s:String>
     <s:String x:Key="Str.ResolutionReconnectRetry">接回原显示器连接后，点击“重试回退”。</s:String>
     <s:String x:Key="Str.ResolutionOriginalDisconnected">原显示器未连接或无法唯一识别。请接回原连接后重试回退。</s:String>
+    <s:String x:Key="Str.MemoryFullAction">一键完整整理</s:String>
+    <s:String x:Key="Str.MemoryPhysicalUsed">物理内存已用</s:String>
+    <s:String x:Key="Str.MemoryFullScope">{0} 个可整理应用 / {1} 个进程 + 全部待机缓存</s:String>
+    <s:String x:Key="Str.MemoryFindingApps">正在读取可整理后台…</s:String>
+    <s:String x:Key="Str.MemoryAppsUnavailable">后台列表读取失败，点击完整整理可重新读取。</s:String>
+    <s:String x:Key="Str.MemoryFullConfirm">将收缩 {0} 个可整理后台应用（{1} 个进程），并整理全部待机缓存。
+不会关闭应用，再次使用时可能重新载入。</s:String>
+    <s:String x:Key="Str.MemorySelectAll">全选</s:String>
+    <s:String x:Key="Str.MemorySelectNone">清空选择</s:String>
+    <s:String x:Key="Str.MemoryMoreOptions">更多整理选项</s:String>
+    <s:String x:Key="Str.MemoryAppAmount">{0} 个进程 · {1}</s:String>
 </ResourceDictionary>

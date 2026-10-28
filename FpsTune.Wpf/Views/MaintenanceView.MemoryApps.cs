@@ -10,12 +10,14 @@ public partial class MaintenanceView
 {
     private readonly BackgroundMemoryService _background;
     private readonly DispatcherTimer _memoryTimer = new() { Interval = TimeSpan.FromSeconds(3) };
-    private bool _memoryReading, _appsReading, _appsSyncing;
+    private bool _memoryReading, _appsReading, _appsSyncing, _appsLoaded;
     private sealed class MemoryAppRow(string path, IReadOnlyList<MemoryProcessTarget> targets, bool selected)
     {
         public string Path { get; } = path;
         public IReadOnlyList<MemoryProcessTarget> Targets { get; } = targets;
         public bool Selected { get; set; } = selected;
+        public string Name => System.IO.Path.GetFileName(Path);
+        public string Amount => Str.T("Str.MemoryAppAmount", Targets.Count, Size(Targets.Sum(t => t.WorkingSet)));
         public string Label => Str.T("Str.MemoryAppLabel", System.IO.Path.GetFileName(Path), Targets.Count, Size(Targets.Sum(t => t.WorkingSet)));
     }
     private void InitializeMemory()
@@ -68,10 +70,10 @@ public partial class MaintenanceView
             _appsSyncing = true;
             try { MemoryApps.ItemsSource = rows; }
             finally { _appsSyncing = false; }
-            MemoryAppsStatus.Text = Str.T("Str.MemoryAppCount", rows.Length);
+            _appsLoaded = true; MemoryAppsStatus.Text = Str.T("Str.MemoryAppCount", rows.Length);
             UpdateMemorySelection();
         }
-        catch (Exception ex) { MemoryAppsStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        catch (Exception ex) { MemoryAppsStatus.Text = PrivacyScrub.Sanitize(ex.Message); MemoryFullScope.Text = Str.T("Str.MemoryAppsUnavailable"); }
         finally { _appsReading = false; SetMemoryBusy(_busy || _snapshotBusy); }
     }
     private void MemoryAppSelection_Changed(object sender, RoutedEventArgs e)
@@ -98,8 +100,28 @@ public partial class MaintenanceView
     {
         var rows = MemoryApps.Items.Cast<MemoryAppRow>().Where(r => r.Selected).ToArray();
         MemorySelection.Text = Str.T("Str.MemorySelectedCount", rows.Length, rows.Sum(r => r.Targets.Count));
+        var all = MemoryApps.Items.Cast<MemoryAppRow>().ToArray();
+        MemoryFullScope.Text = !_appsLoaded ? Str.T("Str.MemoryFindingApps")
+            : Str.T("Str.MemoryFullScope", all.Length, all.Sum(r => r.Targets.Count));
         if (rows.Length > 0 && MemoryResult.Text == Str.T("Str.MemorySelectApps")) MemoryResult.Text = "";
         if (rows.Length > 0 && MemoryAppsResult.Text == Str.T("Str.MemorySelectApps")) MemoryAppsResult.Text = "";
+    }
+    private void MemorySelectAll_Click(object sender, RoutedEventArgs e) => SelectMemoryApps(true);
+    private void MemorySelectNone_Click(object sender, RoutedEventArgs e) => SelectMemoryApps(false);
+    private void SelectMemoryApps(bool selected)
+    {
+        if (_busy || _snapshotBusy || _appsReading) return;
+        var rows = MemoryApps.Items.Cast<MemoryAppRow>().ToArray();
+        var settings = SettingsService.Current; var before = settings.MemoryBackgroundApps;
+        var paths = before.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in rows) { if (selected) paths.Add(row.Path); else paths.Remove(row.Path); }
+        settings.MemoryBackgroundApps = paths.ToList();
+        try { SettingsService.Save(settings); }
+        catch (Exception ex) { settings.MemoryBackgroundApps = before; MemoryAppsStatus.Text = PrivacyScrub.Sanitize(ex.Message); return; }
+        _appsSyncing = true;
+        try { foreach (var row in rows) row.Selected = selected; MemoryApps.Items.Refresh(); }
+        finally { _appsSyncing = false; }
+        UpdateMemorySelection();
     }
     private MemoryProcessTarget[] SelectedMemoryApps() => MemoryApps.Items.Cast<MemoryAppRow>()
         .Where(r => r.Selected).SelectMany(r => r.Targets).ToArray();
@@ -120,6 +142,7 @@ public partial class MaintenanceView
     {
         MemoryMode.IsEnabled = MemoryApps.IsEnabled = MemoryAppsTrim.IsEnabled = MemoryAppsRefresh.IsEnabled = !busy && !_appsReading;
         MemoryCleanButton.IsEnabled = MemoryWorkingSetsButton.IsEnabled = MemoryCombinedButton.IsEnabled = !busy && !_appsReading;
+        MemoryFullButton.IsEnabled = MemorySelectAll.IsEnabled = MemorySelectNone.IsEnabled = !busy && !_appsReading;
         MemoryRefresh.IsEnabled = RefreshButton.IsEnabled = ScanButton.IsEnabled = !busy;
         CleanButton.IsEnabled = !busy && _preview is { Truncated: false, Entries.Count: > 0 };
     }
