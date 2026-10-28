@@ -1,11 +1,11 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@ Available through a desktop interface and command-line tools.
 
 ## Versions and downloads
 
-Current version: **[v0.3.4](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)**. The 1.x line is unmaintained.
+Current version: **[v0.3.5](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.3.4.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.4/FpsTune-Setup-0.3.4.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.3.5.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.5/FpsTune-Setup-0.3.5.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -26,7 +26,7 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.3.4.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.4/SHA256SUMS-v0.3.4.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.3.5.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.5/SHA256SUMS-v0.3.5.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 Portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
@@ -58,6 +58,12 @@ The branded installer lets you choose a destination, including during reinstalla
 
 </details>
 
+Card and transparent-strip HUDs (interface examples with demonstration values):
+
+![Card HUD · interface example](assets/screenshots/hud/card-light.png)
+
+![Transparent strip · interface example](assets/screenshots/hud/strip-transparent.png)
+
 ## Current features
 
 - **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
@@ -72,9 +78,10 @@ The branded installer lets you choose a destination, including during reinstalla
 - **GPU device names**: preview eight presets including GTX 750 Ti and GTX 1050 Ti, then restore the original description when needed. This changes the Windows device description while preserving hardware capabilities.
 - **Organized settings**: appearance, wallpaper, startup and notifications, games and profiles, data and permissions, and About. Settings save automatically. Corner controls offer Classic and Large presets plus four custom radius groups; wallpaper has a rounded preview and compact opacity slider.
 - **Everyday maintenance**: fixed-drive free space and the top 8 process working sets, refreshed on demand. Open Windows storage cleanup, installed apps, Task Manager, startup apps, reliability history, Resource Monitor, network and update settings. Snapshots stay in the current page and are not uploaded.
-- **Memory cleanup**: monitor RAM, select background applications to trim working sets and clear standby cache when needed. Optional low-memory automation is off by default, supports thresholds and cooldowns, and pauses during recording and experiments.
+- **Memory cleanup**: one-click full cleanup trims eligible background working sets and clears all standby priorities. Run standby-only, selected-background or combined cleanup, with stages, counts, elapsed time, before/after readings and a stop action. Game, system and anti-cheat protections remain; low-memory automation stays off by default.
 - **Cache maintenance**: preview the current user's DirectX / NVIDIA shader caches and confirm cleanup. Busy or changed files are skipped. Deleted cache files cannot be restored; regeneration may cause temporary stutter.
 - **Performance sessions and A/B**: local CPU, RAM, GPU, VRAM and frame-time recording, exports and comparisons. Real FPS capture requires official PresentMon. Recordings save on exit and have explicit capacity limits. Manual A/B CSV validation runs in the background, supports cancellation and preserves existing results on failure.
+- **Performance HUD and automatic recording**: open the HUD from the global title bar on any page. Choose card or strip layout, 0–100% background transparency, position, pinning and click-through. Recent FPS and 1% LOW appear during recording. Opt-in game bindings start a recording on the next launch and save it on exit, without taking over manual sessions.
 - **Guidance and feedback**: step-by-step performance recording and A/B guides, separate QQ community and update prompts, and a persistent option to dismiss community reminders.
 - **Backups and recovery**: one inventory covers system settings, game driver profiles, ICC, vibrance, screen controls, resolution and the equalizer. Review interrupted operations and export recovery data for import on the same PC and Windows account.
 

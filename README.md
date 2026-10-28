@@ -1,11 +1,11 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.3.4](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4)**。
+当前版本为 **[v0.3.5](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.4) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.3.4.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.4/FpsTune-Setup-0.3.4.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.3.5.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.5/FpsTune-Setup-0.3.5.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -26,7 +26,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.3.4.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.4/SHA256SUMS-v0.3.4.txt)。
+本版校验清单：[SHA256SUMS-v0.3.5.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.5/SHA256SUMS-v0.3.5.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -58,6 +58,12 @@
 
 </details>
 
+悬浮窗卡片与透明长条（界面示例，数值为演示数据）：
+
+![悬浮窗卡片 · 界面示例](assets/screenshots/hud/card-light.png)
+
+![透明长条 · 界面示例](assets/screenshots/hud/strip-transparent.png)
+
 ## 当前功能
 
 - **工作台与紧凑控制台**：深浅主题和主题切换过渡，统一选择控件，可使用本地图片作为软件背景。低配模式或 Windows 关闭动画时直接切换主题。
@@ -72,9 +78,10 @@
 - **更改显卡名称**：提供 GTX 750 Ti、GTX 1050 Ti 等 8 个预设，应用前预览，可还原原名称。修改 Windows 设备描述，显卡能力保持原样。
 - **设置分类**：外观、壁纸、启动与通知、游戏与方案、数据与权限、关于；设置自动保存。圆角提供上版经典、当前大圆角两个预设及四组自定义调节，壁纸提供圆角预览与短滑条。
 - **日常维护**：查看固定磁盘空间和内存工作集前 8 项，按需刷新；打开 Windows 存储清理、已安装应用、任务管理器、启动应用、可靠性历史、资源监视器、网络和更新页面。快照保留在当前页面，不自动上传。
-- **内存整理**：实时查看内存占用，选择后台应用收缩工作集，并按需整理待机缓存；低内存自动整理默认关闭，可设置阈值与冷却间隔，录制和实验期间暂停自动整理。
+- **内存整理**：一键完整整理可收缩可整理后台的工作集并整理全部待机缓存；也可仅整理待机、仅处理所选后台或组合执行。显示阶段、数量、耗时与前后读数，可停止后续步骤。保留游戏、系统与反作弊保护；低内存自动整理仍默认关闭。
 - **缓存维护**：先预览当前用户的 DirectX / NVIDIA 着色器缓存，再确认清理；跳过占用或预览后变化的文件。删除的缓存不能还原，下次运行会重建，可能短暂卡顿。
 - **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，支持报告导出与会话比较。真实 FPS 采样需要官方 PresentMon。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。A/B 手动 CSV 后台校验，可取消，失败保留已有结果。
+- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；录制时同步显示近期 FPS 与 1% LOW。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
 - **引导与反馈**：性能记录和 A/B 实验提供入门步骤；QQ 加群反馈与更新提醒独立显示，加群提示可选择不再提醒。
 - **备份与恢复**：统一列出系统、游戏驱动配置、ICC、数字振动、画面参数、分辨率及均衡器的备份；可核验中断操作，导出完整恢复资料，并在同机同 Windows 用户下导入。
 
