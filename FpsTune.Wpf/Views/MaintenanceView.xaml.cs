@@ -12,9 +12,10 @@ public partial class MaintenanceView : UserControl
     private bool _busy;
     private sealed record FolderRow(string Name, string Amount, string Path);
     public MaintenanceView() : this(new MemoryCleanupService()) { }
-    internal MaintenanceView(MemoryCleanupService memory)
+    internal MaintenanceView(MemoryCleanupService memory, BackgroundMemoryService? background = null)
     {
         _memory = memory;
+        _background = background ?? new();
         InitializeComponent();
         InitializeMemory();
         Loaded += async (_, _) => await RefreshSnapshotAsync();
@@ -28,14 +29,14 @@ public partial class MaintenanceView : UserControl
         var sections = new[] { StorageSection, ProcessesSection, TroubleshootSection, AudioSection };
         for (var i = 0; i < sections.Length; i++)
             sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
-        if (tag == "1" && IsLoaded) _ = RefreshMemoryAppsAsync();
+        if (tag == "1" && IsLoaded) { _ = RefreshMemoryAppsAsync(); _ = RefreshMemoryLiveAsync(); }
     }
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshSnapshotAsync();
     private async Task RefreshSnapshotAsync()
     {
         if (_snapshotBusy || _busy) return;
         _snapshotBusy = true;
-        RefreshButton.IsEnabled = MemoryCleanButton.IsEnabled = false;
+        SetMemoryBusy(true);
         SnapshotStatus.Text = Str.T("Str.MaintenanceLoading");
         try
         {
@@ -47,10 +48,10 @@ public partial class MaintenanceView : UserControl
             NoProcesses.Visibility = snapshot.Processes.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             SnapshotStatus.Text = Str.T("Str.MaintenanceReady", DateTime.Now.ToString("HH:mm:ss"), snapshot.Drives.Unavailable + snapshot.Processes.Unavailable);
             try { ShowMemory(await Task.Run(_memory.Read)); }
-            catch (Exception ex) { MemoryAvailable.Text = Str.T("Str.MemoryReadFailed", PrivacyScrub.Sanitize(ex.Message)); MemoryStandby.Text = ""; }
+            catch (Exception ex) { ShowMemoryUnavailable(ex.Message); }
         }
         catch (Exception ex) { SnapshotStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { _snapshotBusy = false; RefreshButton.IsEnabled = MemoryCleanButton.IsEnabled = true; }
+        finally { _snapshotBusy = false; SetMemoryBusy(false); }
     }
     private void OpenTool_Click(object sender, RoutedEventArgs e)
     {

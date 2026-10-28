@@ -7,7 +7,7 @@
     Title="{DynamicResource Str.AppName}" WindowStartupLocation="CenterScreen"
     SourceInitialized="OnSourceInitialized" ResizeMode="CanResize" AllowsTransparency="False"
     Background="{DynamicResource AppBackdropBrush}" FontFamily="{StaticResource FontBody}" Style="{StaticResource WindowTypographyStyle}"
-    TextOptions.TextFormattingMode="Display" UseLayoutRounding="True" SnapsToDevicePixels="True">
+    TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True" SnapsToDevicePixels="True">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="58" GlassFrameThickness="0" ResizeBorderThickness="7" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>

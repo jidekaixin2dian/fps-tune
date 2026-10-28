@@ -113,6 +113,24 @@
       "Version": "95017c711e6afc1085133d440e42b4bd78155701",
       "Source": "https://github.com/dotnet/dotnet/blob/95017c711e6afc1085133d440e42b4bd78155701/LICENSE.TXT",
       "Scope": "License source for System.Management and System.CodeDom"
+    },
+    {
+      "Name": "Noto Sans SC (FpsTune Text subset)",
+      "Version": "2.004",
+      "License": "OFL-1.1",
+      "Directory": "noto-sans-sc",
+      "Source": "https://github.com/google/fonts/tree/main/ofl/notosanssc",
+      "Scope": "Embedded static Chinese UI font subsets (400/500/600)",
+      "Files": [
+        {
+          "Path": "licenses/noto-sans-sc/OFL.txt",
+          "Sha256": "babcfe66c8a098b2fa279bc724a3a342f8124f77ce18941fbcc1bbb39823cded"
+        },
+        {
+          "Path": "licenses/noto-sans-sc/NOTICE.txt",
+          "Sha256": "6c6ad02d2b3c2e299782c245893524d0333b76112a29a2959bcdc1385a0f613b"
+        }
+      ]
     }
   ],
   "RuntimeVersion": "10.0.12",

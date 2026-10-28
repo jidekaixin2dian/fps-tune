@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Windows;
+using System.Windows.Threading;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -6,51 +8,106 @@ namespace FpsTune.Wpf.Views;
 public partial class MaintenanceView
 {
     private readonly MemoryCleanupService _memory;
+    private CancellationTokenSource? _memoryCancellation;
+    private int _memoryGeneration;
     private static string MemorySize(ulong bytes) => $"{bytes / (1024d * 1024 * 1024):F2} GiB";
     private void ShowMemory(MemorySnapshot snapshot)
     {
         MemoryAvailable.Text = Str.T("Str.MemoryAvailable", MemorySize(snapshot.Available), MemorySize(snapshot.Total));
-        MemoryUsage.Value = snapshot.Total == 0 ? 0 : 100 * (1 - snapshot.Available / (double)snapshot.Total);
+        MemoryUsage.Visibility = Visibility.Visible;
+        MemoryUsage.Value = snapshot.Total == 0 ? 0 : Math.Clamp(100 * (1 - snapshot.Available / (double)snapshot.Total), 0, 100);
+        MemoryPercent.Text = $"{MemoryUsage.Value:F0}%";
+        MemoryCommit.Text = snapshot.Committed is { } used && snapshot.CommitLimit is { } limit
+            ? Str.T("Str.MemoryCommit", MemorySize(used), MemorySize(limit)) : Str.T("Str.MemoryCommitUnknown");
         MemoryStandby.Text = snapshot.Standby is { } total && snapshot.LowPriorityStandby is { } low
             ? Str.T("Str.MemoryStandbySummary", Size((long)total), Size((long)low)) : snapshot.LowPriorityStandby is { } bytes
             ? Str.T("Str.MemoryStandby", Size((long)bytes)) : Str.T("Str.MemoryStandbyUnknown");
     }
-    private async void MemoryClean_Click(object sender, RoutedEventArgs e)
+    private void ShowMemoryUnavailable(string error)
     {
-        if (_busy || _snapshotBusy) return;
+        MemoryAvailable.Text = Str.T("Str.MemoryReadFailed", PrivacyScrub.Sanitize(error));
+        MemoryPercent.Text = "—"; MemoryCommit.Text = MemoryStandby.Text = "";
+        MemoryUsage.Visibility = Visibility.Collapsed;
+    }
+    private async void MemoryRefresh_Click(object sender, RoutedEventArgs e) => await RefreshMemoryLiveAsync();
+    private async void MemoryClean_Click(object sender, RoutedEventArgs e)
+        => await RunMemoryAsync(MemoryMode.SelectedIndex == 0 ? MemoryCleanupMode.LowStandby : MemoryCleanupMode.Standby);
+    private async void MemoryCombined_Click(object sender, RoutedEventArgs e) => await RunMemoryAsync(MemoryCleanupMode.Combined);
+    private void MemoryCancel_Click(object sender, RoutedEventArgs e)
+    {
+        _memoryCancellation?.Cancel(); MemoryCancel.IsEnabled = false;
+        MemoryStage.Text = Str.T("Str.MemoryStopping");
+    }
+    private async Task RunMemoryAsync(MemoryCleanupMode mode)
+    {
+        if (_busy || _snapshotBusy || _appsReading) return;
         if (_memory.IsBusy || GamePreparationService.IsRunning) { MemoryResult.Text = Str.T("Str.MemoryBusy"); return; }
-        if (!_memory.IsAdministrator)
+        if (mode != MemoryCleanupMode.WorkingSets && !_memory.IsAdministrator)
         {
             if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.MemoryAdmin"), confirmText: Str.T("Str.RestartAsAdminShort")))
                 AdminHelper.RestartAsAdministrator();
             return;
         }
-        var combined = MemoryMode.SelectedIndex == 2;
         var targets = SelectedMemoryApps();
-        if (combined && !ConfirmMemoryApps(targets)) return;
-        _busy = true;
-        var allPriorities = MemoryMode.SelectedIndex >= 1;
-        SetMemoryBusy(true);
-        MemoryResult.Text = Str.T("Str.MemoryCleaning");
-        IReadOnlyList<MemoryProcessResult>? apps = null;
+        var hasApps = mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined;
+        if (hasApps && !ConfirmMemoryApps(targets)) { MemoryResult.Text = MemoryAppsResult.Text; return; }
+        _busy = true; _memoryGeneration++; SetMemoryBusy(true);
+        using var cancellation = new CancellationTokenSource(); _memoryCancellation = cancellation;
+        var clock = Stopwatch.StartNew();
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        void UpdateElapsed() => MemoryElapsed.Text = Str.T("Str.MemoryElapsed", clock.Elapsed.TotalSeconds.ToString("F1"));
+        timer.Tick += (_, _) => UpdateElapsed(); timer.Start(); UpdateElapsed();
+        MemoryResult.Text = ""; if (hasApps) MemoryAppsResult.Text = "";
+        MemoryStage.Text = Str.T("Str.MemoryMeasureStage"); MemoryCancel.IsEnabled = true;
+        MemoryProgressPanel.Visibility = Visibility.Visible;
+        _ = MemoryProgressPanel.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        { if (_busy && ProcessesSection.IsVisible) MemoryProgressPanel.BringIntoView(); }));
+        var progress = new Progress<MemoryCleanupProgress>(p =>
+        {
+            if (!_busy || cancellation.IsCancellationRequested) return;
+            MemoryStage.Text = p.Stage switch
+            {
+                "apps" => Str.T("Str.MemoryAppsStage", p.Completed, p.Total, p.Name),
+                "standby" => Str.T("Str.MemoryStandbyStage"),
+                _ => Str.T("Str.MemoryMeasureStage")
+            };
+        });
         try
         {
-            var result = await Task.Run(() => _memory.Clean(allPriorities, combined ? () => apps = _background.Trim(targets) : null));
-            if (result.After is { } after)
+            var result = await Task.Run(() => _memory.Run(mode, targets, _background, progress, cancellation.Token));
+            if (result.After is { } after) ShowMemory(after);
+            else ShowMemoryUnavailable(result.ReadError ?? "");
+            var lines = new List<string> { Str.T(result.Canceled ? "Str.MemoryStopped" : result.Error is not null
+                ? "Str.MemoryRunFailed" : result.Apps.Any(r => r.Error is not null) ? "Str.MemoryRunPartial" : "Str.MemoryRunDone",
+                clock.Elapsed.TotalSeconds.ToString("F1")) };
+            if (hasApps)
             {
-                ShowMemory(after);
-                MemoryResult.Text = result.Before.Standby is { } beforeCache && after.Standby is { } afterCache
-                    ? Str.T("Str.MemoryCacheChange", Size((long)beforeCache), Size((long)afterCache), MemorySize(result.Before.Available), MemorySize(after.Available))
-                    : Str.T("Str.MemoryCleaned", MemorySize(result.Before.Available), MemorySize(after.Available));
+                lines.Add(Str.T("Str.MemoryAppsSummary", result.Apps.Count(r => r.Error is null),
+                    result.Apps.Count(r => r.Error is not null), Math.Max(0, targets.Length - result.Apps.Count)));
+                ShowMemoryAppsResult(result.Apps);
             }
-            else MemoryResult.Text = Str.T("Str.MemoryCleanedReadFailed", PrivacyScrub.Sanitize(result.ReadError ?? ""));
+            if (mode != MemoryCleanupMode.WorkingSets)
+                lines.Add(Str.T(result.StandbyCompleted ? "Str.MemoryStandbyDone" : "Str.MemoryStandbyIncomplete"));
+            if (result.Error is not null) lines.Add(PrivacyScrub.Sanitize(result.Error));
+            if (result.After is { } measured)
+            {
+                lines.Add(Str.T("Str.MemoryAvailableChange", MemorySize(result.Before.Available), MemorySize(measured.Available)));
+                var delta = (double)measured.Available - result.Before.Available;
+                lines.Add(Str.T(delta >= 0 ? "Str.MemoryAvailableIncreased" : "Str.MemoryAvailableDecreased", MemorySize((ulong)Math.Abs(delta))));
+                if (result.Before.Standby is { } beforeCache && measured.Standby is { } afterCache)
+                    lines.Add(Str.T("Str.MemoryStandbyChange", Size((long)beforeCache), Size((long)afterCache)));
+            }
+            else lines.Add(Str.T("Str.MemoryRunReadFailed", PrivacyScrub.Sanitize(result.ReadError ?? "")));
+            MemoryResult.Text = string.Join("\n", lines);
+            if (ProcessesSection.IsVisible) MemoryResult.BringIntoView();
         }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { MemoryResult.Text = Str.T("Str.MemoryStopped", clock.Elapsed.TotalSeconds.ToString("F1")); }
         catch (Exception ex) { MemoryResult.Text = Str.T("Str.MemoryFailed", PrivacyScrub.Sanitize(ex.Message)); }
         finally
         {
-            if (apps is not null) ShowMemoryAppsResult(apps);
+            timer.Stop(); _memoryCancellation = null; MemoryProgressPanel.Visibility = Visibility.Collapsed;
             _busy = false; SetMemoryBusy(false);
-            if (combined) await RefreshMemoryAppsAsync();
+            if (hasApps) await RefreshMemoryAppsAsync();
         }
     }
 }

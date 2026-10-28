@@ -1,0 +1,10 @@
+Noto Sans SC - Version 2.004
+Source: https://github.com/google/fonts/tree/main/ofl/notosanssc
+License: SIL Open Font License 1.1 (see OFL.txt).
+
+FPS Tune bundles modified static character subsets named FpsTune Text,
+at weights 400, 500 and 600. Font outlines are unchanged; subsetting,
+static weight instantiation and family renaming use tools/subset-ui-font.py.
+Original copyright and license metadata are retained in each font.
+These fonts retain their own OFL license; FPS Tune source remains MIT.
+Uncovered user-provided characters fall back to installed Windows fonts.

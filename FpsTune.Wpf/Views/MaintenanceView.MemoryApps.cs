@@ -8,7 +8,7 @@ namespace FpsTune.Wpf.Views;
 
 public partial class MaintenanceView
 {
-    private readonly BackgroundMemoryService _background = new();
+    private readonly BackgroundMemoryService _background;
     private readonly DispatcherTimer _memoryTimer = new() { Interval = TimeSpan.FromSeconds(3) };
     private bool _memoryReading, _appsReading, _appsSyncing;
     private sealed class MemoryAppRow(string path, IReadOnlyList<MemoryProcessTarget> targets, bool selected)
@@ -22,11 +22,12 @@ public partial class MaintenanceView
     {
         var policy = SettingsService.Current.MemoryAutoCleanup.Normalize();
         MemoryAutoEnabled.IsChecked = policy.Enabled;
+        UpdateMemorySelection();
         SelectValue(MemoryThreshold, policy.ThresholdMiB);
         SelectValue(MemoryCooldown, policy.CooldownMinutes);
         _memoryTimer.Tick += async (_, _) => await RefreshMemoryLiveAsync();
         Loaded += async (_, _) => { _memoryTimer.Start(); if (ProcessesSection.IsVisible) await RefreshMemoryAppsAsync(); };
-        Unloaded += (_, _) => _memoryTimer.Stop();
+        Unloaded += (_, _) => { _memoryTimer.Stop(); _memoryCancellation?.Cancel(); };
     }
     private static void SelectValue(ComboBox combo, int value)
     {
@@ -41,22 +42,23 @@ public partial class MaintenanceView
     {
         if (!IsLoaded || !ProcessesSection.IsVisible || _memoryReading || _busy || _snapshotBusy) return;
         _memoryReading = true;
+        var generation = _memoryGeneration;
         try
         {
             var snapshot = await Task.Run(_memory.Read);
-            if (!IsLoaded) return;
+            if (!IsLoaded || _busy || generation != _memoryGeneration) return;
             ShowMemory(snapshot);
             MemoryAutoStatus.Text = App.MemoryAutomation?.LastStatus ?? Str.T(SettingsService.Current.MemoryAutoCleanup.Enabled
                 ? "Str.MemoryAutoWaiting" : "Str.MemoryAutoOff");
         }
-        catch (Exception ex) { MemoryAvailable.Text = Str.T("Str.MemoryReadFailed", PrivacyScrub.Sanitize(ex.Message)); }
+        catch (Exception ex) { if (!_busy && generation == _memoryGeneration) ShowMemoryUnavailable(ex.Message); }
         finally { _memoryReading = false; }
     }
     private async void MemoryAppsRefresh_Click(object sender, RoutedEventArgs e) => await RefreshMemoryAppsAsync();
     private async Task RefreshMemoryAppsAsync()
     {
         if (_appsReading || _busy) return;
-        _appsReading = true; MemoryAppsRefresh.IsEnabled = false;
+        _appsReading = true; SetMemoryBusy(_busy || _snapshotBusy);
         try
         {
             var targets = await Task.Run(_background.Read);
@@ -67,9 +69,10 @@ public partial class MaintenanceView
             try { MemoryApps.ItemsSource = rows; }
             finally { _appsSyncing = false; }
             MemoryAppsStatus.Text = Str.T("Str.MemoryAppCount", rows.Length);
+            UpdateMemorySelection();
         }
         catch (Exception ex) { MemoryAppsStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { _appsReading = false; MemoryAppsRefresh.IsEnabled = true; }
+        finally { _appsReading = false; SetMemoryBusy(_busy || _snapshotBusy); }
     }
     private void MemoryAppSelection_Changed(object sender, RoutedEventArgs e)
     {
@@ -89,6 +92,14 @@ public partial class MaintenanceView
             finally { _appsSyncing = false; }
             MemoryAppsStatus.Text = PrivacyScrub.Sanitize(ex.Message);
         }
+        UpdateMemorySelection();
+    }
+    private void UpdateMemorySelection()
+    {
+        var rows = MemoryApps.Items.Cast<MemoryAppRow>().Where(r => r.Selected).ToArray();
+        MemorySelection.Text = Str.T("Str.MemorySelectedCount", rows.Length, rows.Sum(r => r.Targets.Count));
+        if (rows.Length > 0 && MemoryResult.Text == Str.T("Str.MemorySelectApps")) MemoryResult.Text = "";
+        if (rows.Length > 0 && MemoryAppsResult.Text == Str.T("Str.MemorySelectApps")) MemoryAppsResult.Text = "";
     }
     private MemoryProcessTarget[] SelectedMemoryApps() => MemoryApps.Items.Cast<MemoryAppRow>()
         .Where(r => r.Selected).SelectMany(r => r.Targets).ToArray();
@@ -104,34 +115,12 @@ public partial class MaintenanceView
             ? Str.T("Str.MemoryAppFailed", r.Name, PrivacyScrub.Sanitize(r.Error))
             : Str.T("Str.MemoryAppDone", r.Name, Size(r.Before), r.After is { } bytes ? Size(bytes) : "—")));
     }
-    private async void MemoryAppsTrim_Click(object sender, RoutedEventArgs e)
-    {
-        if (_busy || _snapshotBusy || _appsReading) return;
-        var targets = SelectedMemoryApps();
-        if (!ConfirmMemoryApps(targets)) return;
-        _busy = true; SetMemoryBusy(true);
-        try
-        {
-            var result = await Task.Run(() =>
-            {
-                using var gate = SystemMutationGate.Acquire();
-                var before = _memory.Read(); var rows = _background.Trim(targets);
-                MemorySnapshot? after = null; string? readError = null;
-                try { after = _memory.Read(); } catch (Exception ex) { readError = ex.Message; }
-                return (before, rows, after, readError);
-            });
-            ShowMemoryAppsResult(result.rows);
-            if (result.after is { } after)
-            { ShowMemory(after); MemoryResult.Text = Str.T("Str.MemoryCleaned", MemorySize(result.before.Available), MemorySize(after.Available)); }
-            else MemoryResult.Text = Str.T("Str.MemoryCleanedReadFailed", PrivacyScrub.Sanitize(result.readError ?? ""));
-        }
-        catch (Exception ex) { MemoryAppsResult.Text = Str.T("Str.MemoryFailed", PrivacyScrub.Sanitize(ex.Message)); }
-        finally { _busy = false; SetMemoryBusy(false); await RefreshMemoryAppsAsync(); }
-    }
+    private async void MemoryAppsTrim_Click(object sender, RoutedEventArgs e) => await RunMemoryAsync(MemoryCleanupMode.WorkingSets);
     private void SetMemoryBusy(bool busy)
     {
-        MemoryMode.IsEnabled = MemoryApps.IsEnabled = MemoryAppsTrim.IsEnabled = MemoryAppsRefresh.IsEnabled = !busy;
-        MemoryCleanButton.IsEnabled = RefreshButton.IsEnabled = ScanButton.IsEnabled = !busy;
+        MemoryMode.IsEnabled = MemoryApps.IsEnabled = MemoryAppsTrim.IsEnabled = MemoryAppsRefresh.IsEnabled = !busy && !_appsReading;
+        MemoryCleanButton.IsEnabled = MemoryWorkingSetsButton.IsEnabled = MemoryCombinedButton.IsEnabled = !busy && !_appsReading;
+        MemoryRefresh.IsEnabled = RefreshButton.IsEnabled = ScanButton.IsEnabled = !busy;
         CleanButton.IsEnabled = !busy && _preview is { Truncated: false, Entries.Count: > 0 };
     }
     private void MemoryAutoSave_Click(object sender, RoutedEventArgs e)

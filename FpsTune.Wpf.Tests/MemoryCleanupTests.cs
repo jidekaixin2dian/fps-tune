@@ -5,6 +5,7 @@ using Xunit;
 
 namespace FpsTune.Wpf.Tests;
 
+[Collection("BackupService serial")]
 public sealed class MemoryCleanupTests
 {
     internal sealed class FakeMemory : IMemoryCleanupApi
@@ -83,6 +84,8 @@ public sealed class MemoryCleanupTests
         Assert.True(result.Total > 0); Assert.InRange(result.Available, 0UL, result.Total);
         Assert.NotNull(result.LowPriorityStandby); Assert.NotNull(result.Standby);
         Assert.InRange(result.LowPriorityStandby.Value, 0UL, result.Standby.Value); Assert.InRange(result.Standby.Value, 0UL, result.Total);
+        Assert.NotNull(result.Committed); Assert.NotNull(result.CommitLimit);
+        Assert.InRange(result.Committed.Value, 1UL, result.CommitLimit.Value);
     }
     [Fact]
     public void Automatic_cleanup_is_opt_in_guarded_thresholded_and_observes_failure_cooldown()
@@ -124,4 +127,46 @@ public sealed class MemoryCleanupTests
         public MemoryProcessResult Trim(MemoryProcessTarget target) => target.Pid == 10
             ? new(target.Name, 100, 30, null) : throw new InvalidOperationException("process exited");
     }
+
+    [Fact]
+    public void Combined_run_retains_app_outcomes_and_final_measurement_when_standby_fails()
+    {
+        var api = new FakeMemory { PurgeError = new Win32Exception(1314) };
+        var service = new MemoryCleanupService(api, () => false, () => true);
+        var result = service.Run(MemoryCleanupMode.Combined,
+            [new(10, 1, "ok", "ok.exe", 100), new(11, 1, "gone", "gone.exe", 100)], new(new BackgroundApi(), () => false));
+        Assert.Equal(2, result.Apps.Count); Assert.Null(result.Apps[0].Error); Assert.NotNull(result.Apps[1].Error);
+        Assert.False(result.StandbyCompleted); Assert.NotNull(result.Error); Assert.NotNull(result.After);
+        Assert.Equal(result.Before.Available, result.After.Available); Assert.Equal(2, api.Reads); Assert.Equal(1, api.Purges);
+    }
+
+    [Fact]
+    public void Cancel_after_first_app_keeps_its_result_and_skips_remaining_apps_and_standby()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var api = new FakeMemory(); var stages = new List<MemoryCleanupProgress>();
+        var progress = new InlineProgress(p => { stages.Add(p); if (p.Stage == "apps" && p.Completed == 1) cancellation.Cancel(); });
+        var result = new MemoryCleanupService(api, () => false, () => true).Run(MemoryCleanupMode.Combined,
+            [new(10, 1, "ok", "ok.exe", 100), new(11, 1, "gone", "gone.exe", 100)], new(new BackgroundApi(), () => false), progress, cancellation.Token);
+        Assert.True(result.Canceled); Assert.Single(result.Apps); Assert.Null(result.Apps[0].Error);
+        Assert.Equal(0, api.Purges); Assert.NotNull(result.After);
+        Assert.Contains(stages, p => p.Stage == "apps" && p.Completed == 1 && p.Total == 2);
+        Assert.DoesNotContain(stages, p => p.Stage == "standby");
+    }
+
+    [Fact]
+    public void Working_sets_only_does_not_require_purge_privilege_and_failed_baseline_prevents_any_trim()
+    {
+        var api = new FakeMemory(); var background = new BackgroundMemoryService(new BackgroundApi(), () => false);
+        var service = new MemoryCleanupService(api, () => false, () => false);
+        var targets = new[] { new MemoryProcessTarget(10, 1, "ok", "ok.exe", 100) };
+        var result = service.Run(MemoryCleanupMode.WorkingSets, targets, background);
+        Assert.Single(result.Apps); Assert.Equal(0, api.Purges); Assert.NotNull(result.After);
+        api.FailRead = api.Reads + 1;
+        Assert.Throws<InvalidOperationException>(() => service.Run(MemoryCleanupMode.WorkingSets, targets, background));
+        Assert.Throws<UnauthorizedAccessException>(() => service.Run(MemoryCleanupMode.Combined, targets, background));
+        Assert.Equal(0, api.Purges);
+    }
+    private sealed class InlineProgress(Action<MemoryCleanupProgress> report) : IProgress<MemoryCleanupProgress>
+    { public void Report(MemoryCleanupProgress value) => report(value); }
 }

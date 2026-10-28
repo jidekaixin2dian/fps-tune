@@ -41,6 +41,7 @@
     <Resource Include="Assets\Shaders\ColorPreview.ps" />
     <Resource Include="Assets\PreviewScenes\delta-force.png" />
     <Resource Include="Assets\PreviewScenes\valorant.png" />
+    <Resource Include="Assets\Fonts\*.ttf" />
   </ItemGroup>
 
   <Target Name="VerifyLicenseInventory" BeforeTargets="BeforeBuild;Publish">

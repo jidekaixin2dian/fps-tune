@@ -8,7 +8,7 @@
         MinWidth="440"
         MinHeight="460"
         WindowStartupLocation="CenterOwner"
-        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextFormattingMode="Ideal"
         UseLayoutRounding="True"
         ShowInTaskbar="False"
         WindowStyle="None"

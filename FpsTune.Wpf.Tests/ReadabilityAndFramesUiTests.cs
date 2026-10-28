@@ -263,7 +263,7 @@ public sealed class ReadabilityAndFramesUiTests
                             Assert.Contains(Descendants(page).OfType<TextBlock>(), t => t.Text == Str.T(titleKey) && t.FontSize == 22);
                         if (page is ConsoleView)
                             foreach (var name in new[] { "CpuText", "MemoryText", "GpuText", "TunedText" })
-                                Assert.Equal("Segoe UI, Microsoft YaHei UI", ((TextBlock)page.FindName(name)).FontFamily.Source);
+                                Assert.Equal(((FontFamily)app.FindResource("FontBody")).Source, ((TextBlock)page.FindName(name)).FontFamily.Source);
                         if (page is DisplayQualityView)
                             DlssFeedbackTests.PumpUntil(() => ((Grid)page.FindName("FrameControls")).IsEnabled);
                         if (page is SessionView or AbExperimentView)
@@ -388,11 +388,13 @@ public sealed class ReadabilityAndFramesUiTests
                 Assert.False(button.IsEnabled); Assert.False(refresh.IsEnabled); Assert.False(mode.IsEnabled); Assert.True(api.AllPriorities);
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.Equal(1, api.Purges);
                 hold.Set(); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
-                Assert.Equal(Str.T("Str.MemoryCacheChange", "1024.0 MiB", "0.0 MiB", "5.00 GiB", "5.00 GiB"), status.Text);
+                Assert.Contains(Str.T("Str.MemoryStandbyDone"), status.Text);
+                Assert.Contains(Str.T("Str.MemoryStandbyChange", "1024.0 MiB", "0.0 MiB"), status.Text);
+                Assert.Contains(Str.T("Str.MemoryAvailableChange", "5.00 GiB", "5.00 GiB"), status.Text);
                 foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "memory-" + theme); }
                 api.Hold = null; api.PurgeError = new System.ComponentModel.Win32Exception(1314);
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
-                Assert.StartsWith(Str.T("Str.MemoryFailed", ""), status.Text); Assert.True(refresh.IsEnabled);
+                Assert.Contains(Str.T("Str.MemoryStandbyIncomplete"), status.Text); Assert.Contains(api.PurgeError.Message, status.Text); Assert.True(refresh.IsEnabled);
                 api.PurgeError = null; api.FailRead = api.Reads + 2;
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); DlssFeedbackTests.PumpUntil(() => button.IsEnabled);
                 Assert.Contains("snapshot unavailable", status.Text); Assert.Contains("刷新", status.Text);
@@ -654,6 +656,116 @@ public sealed class ReadabilityAndFramesUiTests
             }
             finally { Views.Controls.SwitchIndicator.AnimationEnabledOverride = null; window.Close(); }
         });
+    }
+
+    [Fact]
+    public void Memory_workspace_keeps_partial_results_supports_stop_and_uses_embedded_CJK_faces()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var api = new MemoryCleanupTests.FakeMemory(); var background = new MemoryWorkspaceApi();
+            var page = new MaintenanceView(new MemoryCleanupService(api, () => false, () => true), new(background, () => false));
+            var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.NavigateTo("tools");
+            ((ContentControl)window.FindName("PageHost")).Content = page;
+            var confirm = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+            confirm.Tick += (_, _) =>
+            {
+                if (app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible) is { } dialog)
+                    ((Button)dialog.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            };
+            try
+            {
+                ((RadioButton)page.FindName("ProcessesNav")).IsChecked = true;
+                var combined = (Button)page.FindName("MemoryCombinedButton");
+                var status = (TextBlock)page.FindName("MemoryResult");
+                var apps = (ItemsControl)page.FindName("MemoryApps");
+                DlssFeedbackTests.PumpUntil(() => combined.IsEnabled && apps.Items.Count == 2);
+                ((Button)page.FindName("MemoryWorkingSetsButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(Str.T("Str.MemorySelectApps"), status.Text); Assert.Equal(0, background.Trims);
+                window.UpdateLayout();
+                foreach (var check in Descendants(apps).OfType<CheckBox>()) check.IsChecked = true;
+                Assert.Equal(Str.T("Str.MemorySelectedCount", 2, 2), ((TextBlock)page.FindName("MemorySelection")).Text);
+                foreach (var mode in new[] { "studio", "console" })
+                foreach (var theme in new[] { "light", "dark" })
+                {
+                    window.SetDisplayMode(mode); ThemeManager.SetMode(theme);
+                    ((FrameworkElement)page.FindName("MemoryRefresh")).BringIntoView(); window.UpdateLayout();
+                    Assert.True(combined.ActualWidth > 100); Assert.True(combined.IsVisible);
+                    Render((FrameworkElement)window.FindName("ChromeRoot"), "memory-workspace-" + mode + "-" + theme);
+                }
+                // Verify actual glyph selection, rather than only the resource's family string.
+                var selection = (TextBlock)page.FindName("MemorySelection");
+                Assert.Contains(Glyphs(VisualTreeHelper.GetDrawing(selection)), g => g.GlyphRun.GlyphTypeface.FamilyNames.Values.Contains("FpsTune Text"));
+                foreach (var dpi in new[] { 96d, 144d, 192d })
+                {
+                    var bitmap = new RenderTargetBitmap((int)(selection.ActualWidth * dpi / 96), (int)(selection.ActualHeight * dpi / 96), dpi, dpi, PixelFormats.Pbgra32);
+                    var visual = new DrawingVisual();
+                    using (var drawing = visual.RenderOpen())
+                    {
+                        var bounds = new Rect(0, 0, selection.ActualWidth, selection.ActualHeight);
+                        drawing.DrawRectangle((Brush)app.FindResource("AppBackdropBrush"), null, bounds);
+                        drawing.DrawRectangle(new VisualBrush(selection) { ViewboxUnits = BrushMappingMode.Absolute, Viewbox = bounds }, null, bounds);
+                    }
+                    bitmap.Render(visual);
+                    using var stream = File.Create(Path.Combine(Output(), "memory-font-" + dpi + ".png"));
+                    var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); encoder.Save(stream);
+                }
+                var family = new FontFamily(new Uri("pack://application:,,,/"), "./FpsTune;component/Assets/Fonts/#FpsTune Text");
+                foreach (var weight in new[] { FontWeights.Normal, FontWeights.Medium, FontWeights.SemiBold })
+                {
+                    Assert.True(new Typeface(family, FontStyles.Normal, weight, FontStretches.Normal).TryGetGlyphTypeface(out var glyph));
+                    Assert.Equal(weight, glyph.Weight); Assert.Contains("FpsTune Text", glyph.FamilyNames.Values);
+                    Assert.True(glyph.CharacterToGlyphMap.ContainsKey('帧'));
+                }
+                using var hold = new ManualResetEventSlim(); background.Hold = hold; confirm.Start();
+                combined.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => Volatile.Read(ref background.Trims) == 1);
+                Assert.False(combined.IsEnabled); Assert.False(((Button)page.FindName("MemoryAppsRefresh")).IsEnabled);
+                Assert.Equal(Visibility.Visible, ((Border)page.FindName("MemoryProgressPanel")).Visibility);
+                DlssFeedbackTests.PumpUntil(() => ((TextBlock)page.FindName("MemoryStage")).Text.Contains("0 / 2"));
+                Render(page, "memory-progress-dark");
+                ((Button)page.FindName("MemoryCancel")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                hold.Set(); DlssFeedbackTests.PumpUntil(() => combined.IsEnabled);
+                Assert.Equal(1, background.Trims); Assert.Equal(0, api.Purges);
+                Assert.Contains(Str.T("Str.MemoryAppsSummary", 1, 0, 1), status.Text);
+                Assert.Contains(Str.T("Str.MemoryStandbyIncomplete"), status.Text);
+                background.Hold = null; background.FailSecond = true; api.PurgeError = new InvalidOperationException("standby denied");
+                combined.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); DlssFeedbackTests.PumpUntil(() => combined.IsEnabled);
+                Assert.Contains(Str.T("Str.MemoryAppsSummary", 1, 1, 0), status.Text);
+                Assert.Contains("standby denied", status.Text);
+                Assert.Contains("process exited", ((TextBlock)page.FindName("MemoryAppsResult")).Text);
+                Render(page, "memory-partial-dark");
+                api.PurgeError = null; api.FailRead = api.Reads + 2;
+                ((Button)page.FindName("MemoryCleanButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => combined.IsEnabled);
+                Assert.Contains("snapshot unavailable", status.Text);
+                Assert.Equal("—", ((TextBlock)page.FindName("MemoryPercent")).Text);
+                Assert.Equal(Visibility.Collapsed, ((ProgressBar)page.FindName("MemoryUsage")).Visibility);
+                ((Button)page.FindName("MemoryRefresh")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => ((TextBlock)page.FindName("MemoryPercent")).Text != "—");
+            }
+            finally { confirm.Stop(); window.Close(); }
+        });
+    }
+    private sealed class MemoryWorkspaceApi : IBackgroundMemoryApi
+    {
+        public int Trims; public bool FailSecond; public ManualResetEventSlim? Hold;
+        public IReadOnlyList<MemoryProcessTarget> Read() => [new(10, 1, "Browser", "C:/Fixture/Browser.exe", 200 << 20), new(11, 1, "Chat", "C:/Fixture/Chat.exe", 100 << 20)];
+        public MemoryProcessResult Trim(MemoryProcessTarget target)
+        {
+            Interlocked.Increment(ref Trims);
+            if (Hold is not null && !Hold.Wait(TimeSpan.FromSeconds(8))) throw new TimeoutException("test hold expired");
+            return new(target.Name, target.WorkingSet, target.WorkingSet / 2, FailSecond && target.Pid == 11 ? "process exited" : null);
+        }
+    }
+    private static IEnumerable<GlyphRunDrawing> Glyphs(Drawing drawing)
+    {
+        if (drawing is GlyphRunDrawing glyph) yield return glyph;
+        if (drawing is DrawingGroup group)
+            foreach (var child in group.Children)
+            foreach (var nested in Glyphs(child)) yield return nested;
     }
 
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";

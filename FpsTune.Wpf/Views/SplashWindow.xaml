@@ -7,7 +7,7 @@
         Height="280"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextFormattingMode="Ideal"
         UseLayoutRounding="True"
         ShowInTaskbar="False"
         ShowActivated="False"

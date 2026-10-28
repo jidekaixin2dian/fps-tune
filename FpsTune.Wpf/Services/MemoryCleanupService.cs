@@ -5,7 +5,8 @@ using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
-internal sealed record MemorySnapshot(ulong Total, ulong Available, ulong? LowPriorityStandby, ulong? Standby = null);
+internal sealed record MemorySnapshot(ulong Total, ulong Available, ulong? LowPriorityStandby, ulong? Standby = null,
+    ulong? Committed = null, ulong? CommitLimit = null);
 internal interface IMemoryCleanupApi
 {
     MemorySnapshot Read();
@@ -19,6 +20,42 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
     internal bool IsBusy => (isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning))();
     internal sealed record Result(MemorySnapshot Before, MemorySnapshot? After, string? ReadError);
     internal MemorySnapshot Read() => _api.Read();
+
+    internal MemoryCleanupRun Run(MemoryCleanupMode mode, IReadOnlyList<MemoryProcessTarget> targets,
+        BackgroundMemoryService background, IProgress<MemoryCleanupProgress>? progress = null, CancellationToken cancellation = default)
+    {
+        using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
+        if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
+        if (IsBusy || GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
+        if (mode != MemoryCleanupMode.WorkingSets && !IsAdministrator)
+            throw new UnauthorizedAccessException(Str.T("Str.MemoryAdmin"));
+        if (mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined && targets.Count == 0)
+            throw new InvalidOperationException(Str.T("Str.MemorySelectApps"));
+        cancellation.ThrowIfCancellationRequested();
+        var before = Read(); // Never write if the baseline cannot be measured.
+        IReadOnlyList<MemoryProcessResult> apps = [];
+        string? operationError = null, readError = null;
+        var standbyCompleted = false;
+        try
+        {
+            if (mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined)
+                apps = background.Trim(targets, p => progress?.Report(p), cancellation);
+            cancellation.ThrowIfCancellationRequested();
+            if (IsBusy || GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
+            if (mode != MemoryCleanupMode.WorkingSets)
+            {
+                progress?.Report(new("standby", 0, 0));
+                _api.PurgeStandby(mode != MemoryCleanupMode.LowStandby);
+                standbyCompleted = true;
+            }
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
+        catch (Exception ex) { operationError = ex.Message; }
+        progress?.Report(new("measurement", apps.Count, targets.Count));
+        MemorySnapshot? after = null;
+        try { after = Read(); } catch (Exception ex) { readError = ex.Message; }
+        return new(before, after, apps, standbyCompleted, operationError, readError, cancellation.IsCancellationRequested);
+    }
 
     internal Result Clean(bool allPriorities = false, Action? prepare = null)
     {
@@ -51,7 +88,12 @@ internal sealed class WindowsMemoryCleanupApi : IMemoryCleanupApi
         ulong? low = status >= 0 && length >= pages.Length * IntPtr.Size
             ? checked((ulong)pages[5] * (ulong)Environment.SystemPageSize) : null;
         var standby = low is null ? (ulong?)null : checked(pages.Skip(5).Take(8).Aggregate(0UL, (sum, count) => checked(sum + (ulong)count)) * (ulong)Environment.SystemPageSize);
-        return new(memory.TotalPhysical, memory.AvailablePhysical, low, standby);
+        var performance = new PerformanceInformation { Size = (uint)Marshal.SizeOf<PerformanceInformation>() };
+        var measured = GetPerformanceInfo(ref performance, performance.Size);
+        return new(measured ? (ulong)performance.PhysicalTotal * (ulong)performance.PageSize : memory.TotalPhysical,
+            measured ? (ulong)performance.PhysicalAvailable * (ulong)performance.PageSize : memory.AvailablePhysical, low, standby,
+            measured ? (ulong)performance.CommitTotal * (ulong)performance.PageSize : null,
+            measured ? (ulong)performance.CommitLimit * (ulong)performance.PageSize : null);
     }
 
     public void PurgeStandby(bool allPriorities)
@@ -89,6 +131,17 @@ internal sealed class WindowsMemoryCleanupApi : IMemoryCleanupApi
         public uint Length, Load;
         public ulong TotalPhysical, AvailablePhysical, TotalPageFile, AvailablePageFile, TotalVirtual, AvailableVirtual, AvailableExtendedVirtual;
     }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PerformanceInformation
+    {
+        public uint Size;
+        public nuint CommitTotal, CommitLimit, CommitPeak, PhysicalTotal, PhysicalAvailable, SystemCache,
+            KernelTotal, KernelPaged, KernelNonpaged, PageSize;
+        public uint HandleCount, ProcessCount, ThreadCount;
+    }
+    [DllImport("kernel32.dll", EntryPoint = "K32GetPerformanceInfo", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetPerformanceInfo(ref PerformanceInformation information, uint size);
     [StructLayout(LayoutKind.Sequential)]
     private struct Luid { public uint Low; public int High; }
     [StructLayout(LayoutKind.Sequential)]

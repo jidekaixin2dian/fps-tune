@@ -61,19 +61,32 @@
                 </StackPanel></ScrollViewer>
                 <ScrollViewer x:Name="ProcessesSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">
                     <Border Style="{StaticResource CardStyle}" Margin="0,0,0,14"><StackPanel>
-                        <TextBlock Text="{DynamicResource Str.MemoryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <DockPanel LastChildFill="True"><Button x:Name="MemoryRefresh" DockPanel.Dock="Right" Content="{DynamicResource Str.MemoryRefreshAction}" Style="{StaticResource SecondaryButtonStyle}" Click="MemoryRefresh_Click"/>
+                            <TextBlock Text="{DynamicResource Str.MemoryTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/></DockPanel>
                         <TextBlock Text="{DynamicResource Str.MemoryHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="MemoryAvailable" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" Margin="0,18,0,6" TextWrapping="Wrap"/>
+                        <WrapPanel Margin="0,18,0,6"><TextBlock x:Name="MemoryPercent" Style="{StaticResource StatValueStyle}" Margin="0,0,12,0"/>
+                            <TextBlock x:Name="MemoryAvailable" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" VerticalAlignment="Center" TextWrapping="Wrap"/></WrapPanel>
                         <ProgressBar x:Name="MemoryUsage" Maximum="100" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.MemoryUsed}"/>
+                        <TextBlock x:Name="MemoryCommit" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,5"/>
                         <TextBlock x:Name="MemoryStandby" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
                         <TextBlock Text="{DynamicResource Str.MemoryScope}" Style="{StaticResource SectionLabelStyle}" Margin="0,18,0,6"/>
                         <ComboBox x:Name="MemoryMode" MinWidth="260" HorizontalAlignment="Left" SelectedIndex="0" AutomationProperties.Name="{DynamicResource Str.MemoryScope}">
                             <ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/>
                             <ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/>
-                            <ComboBoxItem Content="{DynamicResource Str.MemoryCombinedMode}"/>
                         </ComboBox>
-                        <Button x:Name="MemoryCleanButton" Content="{DynamicResource Str.MemoryClean}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,18,0,0" Click="MemoryClean_Click"/>
-                        <TextBlock x:Name="MemoryResult" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button x:Name="MemoryCleanButton" Content="{DynamicResource Str.MemoryStandbyAction}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8" Click="MemoryClean_Click"/>
+                            <Button x:Name="MemoryWorkingSetsButton" Content="{DynamicResource Str.MemoryWorkingSetsAction}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Click="MemoryAppsTrim_Click"/>
+                            <Button x:Name="MemoryCombinedButton" Content="{DynamicResource Str.MemoryCombinedAction}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8" Click="MemoryCombined_Click"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="MemorySelection" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                        <Border x:Name="MemoryProgressPanel" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,14,0,0"><StackPanel>
+                            <DockPanel><Button x:Name="MemoryCancel" DockPanel.Dock="Right" Content="{DynamicResource Str.MemoryStop}" Style="{StaticResource SecondaryButtonStyle}" Click="MemoryCancel_Click" Margin="12,0,0,0"/>
+                                <StackPanel><TextBlock x:Name="MemoryStage" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="MemoryElapsed" Style="{StaticResource MutedTextStyle}" Margin="0,5,0,0"/></StackPanel></DockPanel>
+                            <ProgressBar IsIndeterminate="True" Height="4" Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource BorderBrush}" Margin="0,12,0,0" AutomationProperties.Name="{DynamicResource Str.MemoryCleaning}"/>
+                        </StackPanel></Border>
+                        <TextBlock x:Name="MemoryResult" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite"/>
                     </StackPanel></Border>
                     <Border Style="{StaticResource CardStyle}" Margin="0,0,0,14"><StackPanel>
                         <TextBlock Text="{DynamicResource Str.MemoryBackgroundTitle}" Style="{StaticResource CardTitleStyle}"/>

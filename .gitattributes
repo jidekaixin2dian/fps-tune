@@ -13,3 +13,4 @@
 *.pdb binary
 *.zip binary
 *.snk binary
+*.ttf binary

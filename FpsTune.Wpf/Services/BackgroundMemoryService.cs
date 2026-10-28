@@ -20,16 +20,23 @@ internal sealed class BackgroundMemoryService(IBackgroundMemoryApi? api = null, 
 {
     private readonly IBackgroundMemoryApi _api = api ?? new WindowsBackgroundMemoryApi();
     internal IReadOnlyList<MemoryProcessTarget> Read() => _api.Read();
-    internal IReadOnlyList<MemoryProcessResult> Trim(IEnumerable<MemoryProcessTarget> targets)
+    internal IReadOnlyList<MemoryProcessResult> Trim(IEnumerable<MemoryProcessTarget> targets,
+        Action<MemoryCleanupProgress>? progress = null, CancellationToken cancellation = default)
     {
         using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
         if ((isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning || GamePreparationService.IsRunning))())
             throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
-        return targets.DistinctBy(t => t.Pid).Take(200).Select(target =>
+        var selected = targets.DistinctBy(t => t.Pid).Take(200).ToArray();
+        var results = new List<MemoryProcessResult>();
+        foreach (var target in selected)
         {
-            try { return _api.Trim(target); }
-            catch (Exception ex) { return new MemoryProcessResult(target.Name, target.WorkingSet, null, ex.Message); }
-        }).ToArray();
+            if (cancellation.IsCancellationRequested) break;
+            progress?.Invoke(new("apps", results.Count, selected.Length, target.Name));
+            try { results.Add(_api.Trim(target)); }
+            catch (Exception ex) { results.Add(new(target.Name, target.WorkingSet, null, ex.Message)); }
+            progress?.Invoke(new("apps", results.Count, selected.Length, target.Name));
+        }
+        return results;
     }
 }
 

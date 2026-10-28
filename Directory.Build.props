@@ -36,7 +36,8 @@
          安装器 postinstall 降回普通权限、CI PR 不再产出下载包、错误日志脱敏、
          游戏路径 .exe 校验前移、新增 SECURITY.md 与私密漏洞报告 -->
     <!-- 0.3.4 = 逐屏分辨率、NVIDIA 自定义模式与缩放、限时确认及独立回退守护 -->
-    <VersionPrefix>0.3.4</VersionPrefix>
+    <!-- 0.3.5 = 内存整理工作区、真实阶段与结果反馈、本地中文字体 -->
+    <VersionPrefix>0.3.5</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
