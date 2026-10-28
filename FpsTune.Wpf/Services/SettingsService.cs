@@ -25,6 +25,7 @@ public sealed class AppSettings
     public List<string> MemoryBackgroundApps { get; set; } = [];
     public bool AutoRecordEnabled { get; set; }
     public List<string> AutoRecordGames { get; set; } = [];
+    public HudAppearance HudAppearance { get; set; } = new();
 
     // 托盘常驻（v1.2）：最小化到托盘 / 全局热键呼出 / 完成通知，默认全开
     public bool MinimizeToTray { get; set; } = true;
@@ -114,6 +115,7 @@ public static class SettingsService
             Current.MemoryAutoCleanup = (Current.MemoryAutoCleanup ?? new()).Normalize();
             Current.MemoryBackgroundApps ??= [];
             Current.AutoRecordGames = AutoRecordingService.NormalizePaths(Current.AutoRecordGames).ToList();
+            Current.HudAppearance = (Current.HudAppearance ?? new()).Normalize();
             Current.Corners = (Current.Corners ?? new()).Normalize();
             Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
             if (Current.OverviewMode != "console") Current.OverviewMode = "studio";

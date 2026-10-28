@@ -22,7 +22,6 @@
                 <TextBlock Text="{DynamicResource Str.SessionIntro}"
                            Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
             </StackPanel>
-            <Button x:Name="ShowHudButton" Grid.Column="1" Content="{DynamicResource Str.HudShow}" Style="{StaticResource SecondaryButtonStyle}" Click="HudShow_Click" VerticalAlignment="Top" Margin="16,0,0,0"/>
                 <Border Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
                     <Expander x:Name="GettingStarted" Header="{DynamicResource Str.SessionGuideTitle}" IsExpanded="True" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14">
                         <StackPanel Margin="0,12,0,0">
@@ -95,12 +94,6 @@
                            Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap"
                            Margin="0,10,0,0"/>
                 <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0"><StackPanel>
-                    <TextBlock Text="{DynamicResource Str.HudTitle}" Style="{StaticResource ItemTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{DynamicResource Str.HudHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,10"/>
-                    <WrapPanel>
-                        <Button x:Name="RestoreHudButton" Content="{DynamicResource Str.HudUnlock}" Style="{StaticResource SecondaryButtonStyle}" Click="HudUnlock_Click" Margin="0,0,8,0"/>
-                        <Button Content="{DynamicResource Str.HudHide}" Style="{StaticResource GhostButtonStyle}" Click="HudHide_Click"/>
-                    </WrapPanel>
                     <Expander x:Name="AutoRecordOptions" Header="{DynamicResource Str.AutoRecordTitle}" Margin="0,14,0,0"><StackPanel Margin="0,10,0,0">
                         <TextBlock Text="{DynamicResource Str.AutoRecordHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                         <CheckBox x:Name="AutoRecordEnabled" Content="{DynamicResource Str.AutoRecordEnable}" Margin="0,12,0,8"/>

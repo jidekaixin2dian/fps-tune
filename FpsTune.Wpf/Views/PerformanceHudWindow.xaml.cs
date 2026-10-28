@@ -2,6 +2,9 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using FpsTune.Wpf.Services;
 
@@ -18,7 +21,9 @@ public partial class PerformanceHudWindow : Window
     private long _sampleReceived;
     private nint _handle;
     private bool _registered, _through;
+    private bool _closePressed;
     private string? _interactionError;
+    private HudAppearance _appearance = new();
     internal Func<bool>? RecoveryAvailableOverride;
     // Physical pixels; an offscreen work area keeps native placement tests away from the user's apps.
     internal (int Left, int Top, int Right, int Bottom)? RecoveryWorkAreaOverride;
@@ -41,7 +46,7 @@ public partial class PerformanceHudWindow : Window
         {
             _metrics.Sampled += OnSample; _session.StateChanged += Refresh;
             UpdateVisibility(); Refresh();
-            if (UserDataPaths.RootOverride is null) PlaceInWorkArea();
+            if (UserDataPaths.RootOverride is null) PositionInWorkArea(true);
         };
         DpiChanged += (_, _) => { if (UserDataPaths.RootOverride is null) _ = Dispatcher.BeginInvoke(PlaceInWorkArea); };
         IsVisibleChanged += (_, _) => UpdateVisibility();
@@ -73,7 +78,8 @@ public partial class PerformanceHudWindow : Window
         CpuText.Text = "CPU  " + Percent(current?.CpuPercent);
         GpuText.Text = "GPU  " + Percent(current?.GpuPercent);
         var vram = current?.VramUsedBytes is { } bytes ? $"{bytes / (1024d * 1024 * 1024):F1} GiB" : "—";
-        MemoryText.Text = Str.T("Str.HudMemory", Percent(current?.MemoryPercent), vram);
+        MemoryText.Text = Str.T("Str.HudRam", Percent(current?.MemoryPercent));
+        VramText.Text = Str.T("Str.HudVram", vram);
         var fps = _session.CurrentLiveFps;
         FpsText.Text = fps is null ? "—" : fps.Fps.ToString("F0");
         LowText.Text = fps is null ? "—" : fps.P1Low.ToString("F0");
@@ -84,6 +90,40 @@ public partial class PerformanceHudWindow : Window
             : fps is null ? Str.T("Str.HudWaitingFrames") : Str.T("Str.HudWindow", fps.WindowSeconds.ToString("F1"), fps.Samples);
     }
     private static string Percent(double? value) => value is { } number && double.IsFinite(number) ? $"{number:F0}%" : "—";
+    internal void ApplyAppearance(HudAppearance appearance)
+    {
+        _appearance = appearance.Normalize();
+        var strip = _appearance.Layout == "strip";
+        Width = strip ? 720 : 360; HudMetrics.Columns = strip ? 6 : 2;
+        HudBackdrop.Opacity = 1 - _appearance.Transparency / 100;
+        ScopeText.Visibility = strip ? Visibility.Collapsed : Visibility.Visible;
+        var clear = _appearance.Transparency >= 75;
+        foreach (var text in MetricText(HudMetrics).Append(CaptureStatus).Append(ScopeText))
+        {
+            if (clear) text.Foreground = Brushes.White;
+            else text.SetResourceReference(Control.ForegroundProperty, text == CaptureStatus || text == ScopeText ? "TextSecondaryBrush" : "TextPrimaryBrush");
+        }
+        HudMetrics.Effect = clear ? new DropShadowEffect { Color = Colors.Black, BlurRadius = 3, ShadowDepth = 1, Opacity = .9 } : null;
+        if (IsLoaded)
+        {
+            UpdateLayout();
+            if (UserDataPaths.RootOverride is null || RecoveryWorkAreaOverride is not null) PositionInWorkArea(true);
+        }
+    }
+    private static IEnumerable<TextBlock> MetricText(DependencyObject root)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is TextBlock text) yield return text;
+            foreach (var nested in MetricText(child)) yield return nested;
+        }
+    }
+    private void ShowInteractionState()
+    {
+        HudActions.Visibility = _through ? Visibility.Collapsed : Visibility.Visible;
+        LockedHint.Visibility = _through ? Visibility.Visible : Visibility.Collapsed;
+    }
     internal bool SetClickThrough(bool enabled)
     {
         if (enabled && !(RecoveryAvailableOverride?.Invoke() ?? (_registered || TrayService.IsTrayVisible)))
@@ -91,11 +131,11 @@ public partial class PerformanceHudWindow : Window
         if (_handle == 0) return false;
         var style = GetWindowLongPtr(_handle, ExtendedStyle);
         if (((style & Transparent) != 0) == enabled)
-        { _interactionError = null; _through = enabled; Refresh(); return true; }
+        { _interactionError = null; _through = enabled; ShowInteractionState(); Refresh(); return true; }
         SetWindowLongPtr(_handle, ExtendedStyle, enabled ? style | Transparent : style & ~Transparent);
         if (((GetWindowLongPtr(_handle, ExtendedStyle) & Transparent) != 0) != enabled)
         { _interactionError = Str.T("Str.HudThroughFailed"); Refresh(); return false; }
-        _interactionError = null; _through = enabled; Refresh(); return true;
+        _interactionError = null; _through = enabled; ShowInteractionState(); Refresh(); return true;
     }
     private void Through_Click(object sender, RoutedEventArgs e) => SetClickThrough(true);
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
@@ -108,9 +148,30 @@ public partial class PerformanceHudWindow : Window
     }
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
+        if (msg == 0x0021) { handled = true; return 3; } // MA_NOACTIVATE: deliver the first click without taking focus.
+        if (msg is 0x001f or 0x0215) _closePressed = false;
+        if (msg == 0x0201) _closePressed = HitCloseButton(lParam);
+        if (msg == 0x0202)
+        {
+            var close = _closePressed && HitCloseButton(lParam); _closePressed = false;
+            if (close)
+            {
+                handled = true;
+                _ = Dispatcher.BeginInvoke(() => { if (_handle != 0) Close(); });
+                return 0;
+            }
+        }
         if (msg == 0x0312 && wParam == Hotkey) { SetClickThrough(!_through); handled = true; }
         if (msg == 0x007E && UserDataPaths.RootOverride is null) _ = Dispatcher.BeginInvoke(PlaceInWorkArea); // display topology changed
         return 0;
+    }
+    private bool HitCloseButton(nint coordinates)
+    {
+        if (_through || !CloseHudButton.IsVisible || !CloseHudButton.IsEnabled) return false;
+        var point = new Point((short)(coordinates.ToInt64() & 0xffff), (short)((coordinates.ToInt64() >> 16) & 0xffff));
+        if (HwndSource.FromHwnd(_handle)?.CompositionTarget is not { } target) return false;
+        point = target.TransformFromDevice.Transform(point);
+        return new Rect(CloseHudButton.TranslatePoint(new Point(), this), CloseHudButton.RenderSize).Contains(point);
     }
     internal bool RestoreForInteraction()
     {
@@ -135,7 +196,9 @@ public partial class PerformanceHudWindow : Window
         }
         var right = Math.Max(work.Left, work.Right - (rect.Right - rect.Left));
         var bottom = Math.Max(work.Top, work.Bottom - (rect.Bottom - rect.Top));
-        var x = Math.Clamp(restore ? right - 16 : rect.Left, work.Left, right);
+        var preferredX = _appearance.Position == "top-left" ? work.Left + 16
+            : _appearance.Position == "top-right" ? right - 16 : work.Left + (right - work.Left) / 2;
+        var x = Math.Clamp(restore ? preferredX : rect.Left, work.Left, right);
         var y = Math.Clamp(restore ? work.Top + 16 : rect.Top, work.Top, bottom);
         // Explicit recovery raises within the selected pin group without activation or resizing.
         return SetWindowPos(_handle, restore ? (Topmost ? -1 : -2) : 0, x, y, 0, 0, restore ? 0x51u : 0x15u);

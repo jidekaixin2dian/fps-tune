@@ -24,6 +24,7 @@
                     <TextBlock x:Name="TitleVersionText" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button x:Name="HudEntryButton" Content="{DynamicResource Str.HudEntry}" Click="HudEntry_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0" Padding="14,0" Height="34"/>
                     <Button x:Name="CommandSearchButton" Click="CommandSearch_Click" Style="{StaticResource GhostButtonStyle}" Width="34" Height="34" Padding="0" Margin="0,0,12,0"
                             ToolTip="{DynamicResource Str.CommandSearch}" AutomationProperties.Name="{DynamicResource Str.CommandSearch}">
                         <Path Data="M 10.5,4.5 A 6,6 0 1 0 10.5,16.5 A 6,6 0 1 0 10.5,4.5 M 15,15 L 20,20" Width="18" Height="18" Stretch="Uniform"
@@ -58,6 +59,23 @@
                 </StackPanel>
             </Grid>
             <ContentControl x:Name="PageHost" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Focusable="False"/>
+            <Border x:Name="HudOptionsPanel" Grid.RowSpan="3" Grid.ColumnSpan="2" Panel.ZIndex="210" Style="{StaticResource CardStyle}"
+                    Background="{DynamicResource NotificationBackgroundBrush}" Width="380" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,68,24,0" Visibility="Collapsed">
+                <StackPanel>
+                    <DockPanel><Button Content="{DynamicResource Str.HudOptionsDismiss}" DockPanel.Dock="Right" HorizontalAlignment="Right" Style="{StaticResource GhostButtonStyle}" Click="HudOptionsDismiss_Click"/><TextBlock Text="{DynamicResource Str.HudTitle}" Foreground="{DynamicResource TextPrimaryBrush}" Style="{StaticResource ItemTitleStyle}" VerticalAlignment="Center"/></DockPanel>
+                    <WrapPanel Margin="0,12,0,16"><Button x:Name="RestoreHudButton" Content="{DynamicResource Str.HudUnlock}" Click="HudRestore_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/><Button x:Name="HideHudButton" Content="{DynamicResource Str.HudHide}" Click="HudClose_Click" Style="{StaticResource GhostButtonStyle}"/></WrapPanel>
+                    <TextBlock Text="{DynamicResource Str.HudLayout}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,14"><RadioButton x:Name="HudStripOption" GroupName="HudLayout" Content="{DynamicResource Str.HudStrip}" Tag="strip" Checked="HudAppearance_Changed" Margin="0,0,22,0"/><RadioButton x:Name="HudCardOption" GroupName="HudLayout" Content="{DynamicResource Str.HudCard}" Tag="card" Checked="HudAppearance_Changed"/></StackPanel>
+                    <TextBlock x:Name="HudTransparencyLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <Slider x:Name="HudTransparencySlider" Minimum="0" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="HudTransparency_Changed" Margin="0,8,0,8"/>
+                    <WrapPanel Margin="0,0,0,14"><Button Content="{DynamicResource Str.HudOpaque}" Tag="0" Click="HudTransparencyPreset_Click" Style="{StaticResource GhostButtonStyle}"/><Button Content="{DynamicResource Str.HudTranslucent}" Tag="50" Click="HudTransparencyPreset_Click" Style="{StaticResource GhostButtonStyle}"/><Button x:Name="HudNoBackgroundButton" Content="{DynamicResource Str.HudNoBackground}" Tag="100" Click="HudTransparencyPreset_Click" Style="{StaticResource GhostButtonStyle}"/></WrapPanel>
+                    <TextBlock Text="{DynamicResource Str.HudPosition}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,14"><RadioButton x:Name="HudLeftOption" GroupName="HudPosition" Content="{DynamicResource Str.HudTopLeft}" Checked="HudAppearance_Changed" Margin="0,0,16,0"/><RadioButton x:Name="HudCenterOption" GroupName="HudPosition" Content="{DynamicResource Str.HudTopCenter}" Checked="HudAppearance_Changed" Margin="0,0,16,0"/><RadioButton x:Name="HudRightOption" GroupName="HudPosition" Content="{DynamicResource Str.HudTopRight}" Checked="HudAppearance_Changed"/></StackPanel>
+                    <TextBlock Text="{DynamicResource Str.HudAppearanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <Button x:Name="SaveHudAppearanceButton" Content="{DynamicResource Str.HudSaveAppearance}" Click="HudAppearanceSave_Click" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="HudOptionsStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
             <ScrollViewer x:Name="NotificationArea" Grid.Row="2" Grid.Column="1" Panel.ZIndex="100"
                           Width="440" Margin="20" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"

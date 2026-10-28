@@ -70,8 +70,9 @@ public sealed class HudAutomationUiTests
             using var metrics = new MetricsSampler(TimeSpan.FromSeconds(1), 60, () => new(DateTime.Now, 42, 55, 64, 2UL << 30, 8UL << 30));
             using var automation = new AutoRecordingService(session);
             var controller = new PerformanceHudService(session, metrics, DlssFeedbackTests.PrepareBackgroundWindow);
-            var page = new SessionView(session, automation, controller);
-            var main = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = main;
+            var page = new SessionView(session, automation);
+            controller.PreviewAppearance(new("card", 0, "top-right"));
+            var main = new MainWindow { Width = 1180, Height = 720, HudController = controller }; app.MainWindow = main;
             DlssFeedbackTests.PrepareBackgroundWindow(main); main.Show(); main.NavigateTo("session");
             ((ContentControl)main.FindName("PageHost")).Content = page;
             try
@@ -92,7 +93,7 @@ public sealed class HudAutomationUiTests
                 Assert.Contains(AppState.GamePath!, SettingsService.Current.AutoRecordGames);
                 ((CheckBox)page.FindName("AutoRecordEnabled")).IsChecked = false;
                 ((Button)page.FindName("AutoRecordSave")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                ((Button)main.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.NotNull(controller.Window);
                 var hud = controller.Window!; DlssFeedbackTests.AssertBackgroundWindow(hud);
                 Assert.True(metrics.HasSubscribers); Assert.False(metrics.IsRunning);
@@ -114,7 +115,7 @@ public sealed class HudAutomationUiTests
                 {
                     main.SetDisplayMode(mode); ThemeManager.SetMode(theme); main.UpdateLayout(); hud.UpdateLayout();
                     ReadabilityAndFramesUiTests.Render((FrameworkElement)hud.FindName("HudRoot"), "hud-" + mode + "-" + theme);
-                    ((FrameworkElement)page.FindName("ShowHudButton")).BringIntoView(); main.UpdateLayout();
+                    ((FrameworkElement)main.FindName("HudEntryButton")).BringIntoView(); main.UpdateLayout();
                     ReadabilityAndFramesUiTests.Render((FrameworkElement)main.FindName("ChromeRoot"), "session-hud-entry-" + mode + "-" + theme);
                     ((FrameworkElement)page.FindName("AutoRecordOptions")).BringIntoView(); main.UpdateLayout();
                     ReadabilityAndFramesUiTests.Render((FrameworkElement)main.FindName("ChromeRoot"), "session-automation-" + mode + "-" + theme);
@@ -131,16 +132,16 @@ public sealed class HudAutomationUiTests
                 Assert.True(GetWindowRect(handle, out var restored));
                 Assert.InRange(restored.Left, -24000, -22001); Assert.Equal(-22016, restored.Right); Assert.Equal(-23984, restored.Top);
                 hud.Hide(); Assert.Null(session.CurrentLiveFps);
-                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Feed();
+                ((Button)main.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Feed();
                 Assert.True(hud.IsVisible); Assert.False(hud.IsActive);
                 Assert.Equal("125", ((TextBlock)hud.FindName("FpsText")).Text);
                 hud.WindowState = WindowState.Minimized;
-                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                ((Button)main.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.Equal(WindowState.Normal, hud.WindowState); Assert.True(hud.IsVisible);
                 var run = session.RunId; controller.Close();
                 Assert.True(session.IsRunning); Assert.Equal(run, session.RunId);
                 Assert.False(metrics.HasSubscribers); Assert.Null(session.CurrentLiveFps);
-                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                ((Button)main.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 hud = controller.Window!; Feed();
                 Assert.Equal("125", ((TextBlock)hud.FindName("FpsText")).Text);
                 Wait(session.StopAsync(false)); Assert.Equal("—", ((TextBlock)hud.FindName("FpsText")).Text);

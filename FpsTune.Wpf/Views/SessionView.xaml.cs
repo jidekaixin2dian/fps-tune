@@ -24,11 +24,10 @@ public partial class SessionView : UserControl
 
     private readonly PerformanceSessionService _service;
     private readonly AutoRecordingService? _automation;
-    private readonly PerformanceHudService _hud;
     public SessionView() : this(App.SessionService, App.AutomaticRecording) { }
-    internal SessionView(PerformanceSessionService service, AutoRecordingService? automation = null, PerformanceHudService? hud = null)
+    internal SessionView(PerformanceSessionService service, AutoRecordingService? automation = null)
     {
-        _service = service; _automation = automation; _hud = hud ?? App.Hud;
+        _service = service; _automation = automation;
         InitializeComponent();
         _ticker = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _ticker.Tick += (_, _) => UpdateRunState();

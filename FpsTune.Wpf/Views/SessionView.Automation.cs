@@ -54,7 +54,4 @@ public partial class SessionView
         if (!Dispatcher.CheckAccess()) { _ = Dispatcher.BeginInvoke(UpdateAutoRecordStatus); return; }
         AutoRecordStatus.Text = _automation?.Status ?? Str.T(SettingsService.Current.AutoRecordEnabled ? "Str.AutoRecordWaiting" : "Str.AutoRecordOff");
     }
-    private void HudShow_Click(object sender, RoutedEventArgs e) => _hud.Show();
-    private void HudHide_Click(object sender, RoutedEventArgs e) => _hud.Close();
-    private void HudUnlock_Click(object sender, RoutedEventArgs e) => _hud.Restore();
 }
