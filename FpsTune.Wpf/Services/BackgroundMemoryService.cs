@@ -24,13 +24,14 @@ internal sealed class BackgroundMemoryService(IBackgroundMemoryApi? api = null, 
         Action<MemoryCleanupProgress>? progress = null, CancellationToken cancellation = default)
     {
         using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
-        if ((isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning || GamePreparationService.IsRunning))())
+        var busy = isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning || GamePreparationService.IsRunning);
+        if (busy())
             throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
         var selected = targets.DistinctBy(t => t.Pid).Take(200).ToArray();
         var results = new List<MemoryProcessResult>();
         foreach (var target in selected)
         {
-            if (cancellation.IsCancellationRequested) break;
+            if (cancellation.IsCancellationRequested || busy()) break;
             progress?.Invoke(new("apps", results.Count, selected.Length, target.Name));
             try { results.Add(_api.Trim(target)); }
             catch (Exception ex) { results.Add(new(target.Name, target.WorkingSet, null, ex.Message)); }

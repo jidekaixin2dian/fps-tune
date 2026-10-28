@@ -180,4 +180,16 @@ public sealed class MemoryCleanupTests
         var empty = service.Run(MemoryCleanupMode.Full, [], background);
         Assert.Empty(empty.Apps); Assert.True(empty.StandbyCompleted); Assert.Equal(2, api.Purges);
     }
+
+    [Fact]
+    public void Recording_started_between_apps_stops_remaining_targets_and_retains_completed_results()
+    {
+        var api = new FakeMemory(); var busy = false;
+        var service = new MemoryCleanupService(api, () => busy, () => true);
+        var progress = new InlineProgress(p => { if (p.Stage == "apps" && p.Completed == 1) busy = true; });
+        var result = service.Run(MemoryCleanupMode.Full,
+            [new(10, 1, "ok", "ok.exe", 100), new(11, 1, "gone", "gone.exe", 100)], new(new BackgroundApi(), () => busy), progress);
+        Assert.Single(result.Apps); Assert.Null(result.Apps[0].Error); Assert.Equal(0, api.Purges);
+        Assert.Equal(Str.T("Str.MemoryBusy"), result.Error); Assert.NotNull(result.After);
+    }
 }
