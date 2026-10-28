@@ -26,6 +26,10 @@ public sealed class PerformanceSessionService : IDisposable
     private IDisposable? _activeOwner;
     private Task<PerformanceSession?>? _stopTask;
     private readonly Stopwatch _clock = new();
+    private bool _liveFpsRequested;
+    internal Guid RunId { get; private set; }
+    public LiveFpsSnapshot? CurrentLiveFps => _fpsRecorder?.ReadLive();
+    internal void RequestLiveFps(bool enabled) { _liveFpsRequested = enabled; _fpsRecorder?.SetLiveMonitoring(enabled); }
     public double SampleIntervalSeconds { get; private set; }
     public SessionConditions? Conditions { get; private set; }
     public event Action<string>? AutomaticStopFailed;
@@ -60,13 +64,18 @@ public sealed class PerformanceSessionService : IDisposable
     public IReadOnlyList<MetricSample> RunningBuffer => _sampler?.Buffer ?? Array.Empty<MetricSample>();
 
     public bool Start(string name, SessionConditions? conditions = null)
+        => StartCore(name, AppState.GamePath, conditions);
+
+    internal bool StartForGame(string name, string gamePath, GameProcessRun? run = null) => StartCore(name, gamePath, null, run);
+
+    private bool StartCore(string name, string? gamePath, SessionConditions? conditions, GameProcessRun? run = null)
     {
         if (GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.PrepareBusy"));
         if (Volatile.Read(ref _disposed) != 0)
             throw new ObjectDisposedException(nameof(PerformanceSessionService));
-        if (IsRunning)
+        if (IsRunning || IsStopping)
             return false;
-        var captured = SessionConditionRules.CaptureGame(AppState.GamePath, conditions);
+        var captured = SessionConditionRules.CaptureGame(gamePath, conditions);
         if (!SessionConditionRules.IsValid(captured))
             throw new ArgumentException(Str.T("Str.ConditionInvalid"), nameof(conditions));
 
@@ -85,6 +94,7 @@ public sealed class PerformanceSessionService : IDisposable
             }
 
             _name = string.IsNullOrWhiteSpace(name) ? DefaultSessionName() : name.Trim();
+            RunId = Guid.NewGuid();
             _startedAt = DateTime.Now;
             Conditions = captured;
             _clock.Restart();
@@ -95,7 +105,8 @@ public sealed class PerformanceSessionService : IDisposable
             _sampler.Sampled += OnSample;
             // 0.2.0 C-E：会话期间同步跑 PresentMon（可选能力，失败降级并记录原因键）。
             _fpsRecorder = _createFpsRecorder();
-            _fpsRecorder.Start(AppState.GamePath);
+            _fpsRecorder.SetLiveMonitoring(_liveFpsRequested);
+            _fpsRecorder.Start(gamePath, run);
             IsRunning = true;
             _sampler.Start();
             StateChanged?.Invoke();

@@ -11,6 +11,10 @@ public partial class App : Application
 {
     private AutoProfileService? _autoProfileService;
     internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
+    internal static AutoRecordingService? AutomaticRecording { get; private set; }
+    private static PerformanceHudService? _hud;
+    internal static PerformanceHudService Hud => _hud ??= new();
+    internal static void CloseHud() => _hud?.Close();
     private static MetricsSampler? _liveMetrics;
     public static MetricsSampler LiveMetrics => _liveMetrics ??= new(
         TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), 120);
@@ -28,7 +32,7 @@ public partial class App : Application
         };
     }
 
-    private static bool PreviewWindowVisible => Current?.MainWindow is { IsVisible: true } window
+    private static bool PreviewWindowVisible => _hud?.IsVisible == true || Current?.MainWindow is { IsVisible: true } window
         && window.WindowState != WindowState.Minimized;
 
     internal static void UpdateLiveMetrics()
@@ -89,6 +93,7 @@ public partial class App : Application
             }
         });
 
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
         base.OnStartup(e);
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
         {
@@ -131,12 +136,16 @@ public partial class App : Application
             _autoProfileService.Start();
             MemoryAutomation = new MemoryAutoCleanupService();
             MemoryAutomation.Start();
+            AutomaticRecording = new AutoRecordingService(SessionService);
+            AutomaticRecording.ApplySettings();
 
         }));
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        AutomaticRecording?.Dispose();
+        CloseHud();
         _liveMetrics?.Dispose();
         SessionService.Dispose();
         _autoProfileService?.Dispose();

@@ -342,6 +342,12 @@ public static class TrayService
             opt.Click += (_, _) => ShowMainWindow("opt");
             var ab = new MenuItem { Header = "打开 A/B 实验" };
             ab.Click += (_, _) => ShowMainWindow("ab");
+            var hud = new MenuItem { Header = Str.T("Str.HudShow") };
+            hud.Click += (_, _) => App.Hud.Show();
+            var unlockHud = new MenuItem { Header = Str.T("Str.HudUnlock") };
+            unlockHud.Click += (_, _) => App.Hud.Unlock();
+            var closeHud = new MenuItem { Header = Str.T("Str.HudHide") };
+            closeHud.Click += (_, _) => App.CloseHud();
             var exit = new MenuItem { Header = "退出" };
             if (danger is not null)
                 exit.Foreground = danger;
@@ -355,6 +361,9 @@ public static class TrayService
             menu.Items.Add(open);
             menu.Items.Add(opt);
             menu.Items.Add(ab);
+            menu.Items.Add(hud);
+            menu.Items.Add(unlockHud);
+            menu.Items.Add(closeHud);
             menu.Items.Add(new Separator());
             menu.Items.Add(exit);
             menu.IsOpen = true;

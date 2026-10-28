@@ -32,6 +32,10 @@ public sealed class SessionFpsRecorder
     private int _limitReached;
     private string? _unavailableReasonKey;
     private string? _parseError;
+    private readonly LiveFrameWindow _live = new();
+    internal void SetLiveMonitoring(bool enabled) => _live.SetEnabled(enabled);
+    internal LiveFpsSnapshot? ReadLive() => UnavailableReasonKey is null ? _live.Read() : null;
+    internal void ObserveFrame(double ms) => _live.Add(ms);
 
     public SessionFpsRecorder(
         Func<string?>? findPresentMon = null,
@@ -77,7 +81,9 @@ public sealed class SessionFpsRecorder
     public string? ParseError => _parseError;
 
     /// <summary>会话开始时调用。成功后 PresentMon 在后台持续采样；失败时记录降级原因并返回 false。</summary>
-    public bool Start(string? gamePath)
+    public bool Start(string? gamePath) => Start(gamePath, null);
+
+    internal bool Start(string? gamePath, GameProcessRun? expected)
     {
         if (_proc is not null) return false;
         _unavailableReasonKey = null;
@@ -89,7 +95,10 @@ public sealed class SessionFpsRecorder
             _unavailableReasonKey = "Str.FpsReasonNoPresentMon";
             return false;
         }
-        using var game = _findGameProcess(gamePath);
+        Process? target;
+        try { target = expected is null ? _findGameProcess(gamePath) : Process.GetProcessById(expected.Pid); }
+        catch { target = null; }
+        using var game = target;
         if (game is null)
         {
             _unavailableReasonKey = "Str.FpsReasonNoGameProcess";
@@ -97,7 +106,13 @@ public sealed class SessionFpsRecorder
         }
         // 目标进程退出瞬间 Id 可能取不到：没有可靠 PID 就不启动采样，绝不回退按名捕获。
         int gameId;
-        try { gameId = game.Id; }
+        try
+        {
+            gameId = game.Id;
+            if (expected is not null && (!ProcessIdentity.MatchesPath(game, gamePath)
+                || game.StartTime.ToUniversalTime().Ticks != expected.Started))
+            { _unavailableReasonKey = "Str.FpsReasonNoGameProcess"; return false; }
+        }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             _unavailableReasonKey = "Str.FpsReasonNoGameProcess";
@@ -144,7 +159,7 @@ public sealed class SessionFpsRecorder
                         {
                             Interlocked.Exchange(ref _limitReached, 1);
                             _kill(process);
-                        }).ConfigureAwait(false);
+                        }, ObserveFrame).ConfigureAwait(false);
                     }
                     catch
                     {
@@ -185,6 +200,7 @@ public sealed class SessionFpsRecorder
         _captureTask = null;
         _errorTask = null;
         _outputFile = null;
+        _live.SetEnabled(false);
         if (proc is null)
             return null;
 
@@ -237,7 +253,8 @@ public sealed class SessionFpsRecorder
         return new SessionFpsStats(frame.Samples, frame.AvgFps, frame.P1Low, frame.P99Ms, frame.Stutters);
     }
 
-    internal static async Task CaptureOutputAsync(TextReader input, Stream output, long maxBytes, int maxLines, Action limitReached)
+    internal static async Task CaptureOutputAsync(TextReader input, Stream output, long maxBytes, int maxLines, Action limitReached,
+        Action<double>? frameReceived = null)
     {
         // Store only round-trip frame times, using the same column/conversion rules as experiments.
         // Unrelated PresentMon columns consume no disk; fixed input chunks bound malformed single lines.
@@ -270,6 +287,7 @@ public sealed class SessionFpsRecorder
         bool WriteRecord(string record)
         {
             string value;
+            double? frame = null;
             if (column < 0)
             {
                 var header = FrameTimeStats.ReadHeader(record);
@@ -282,11 +300,13 @@ public sealed class SessionFpsRecorder
             {
                 if (!FrameTimeStats.TryReadFrame(record, column, isFps, out var ms)) return true;
                 value = ms.ToString("R", CultureInfo.InvariantCulture);
+                frame = ms;
             }
             if (lines >= maxLines || bytes + value.Length + 1 > maxBytes) { limitReached(); return false; }
             writer.WriteLine(value);
             bytes += value.Length + 1;
             lines++;
+            if (frame is { } valid) frameReceived?.Invoke(valid);
             return true;
         }
     }

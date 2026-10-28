@@ -22,8 +22,13 @@ public partial class SessionView : UserControl
     private IReadOnlyList<PerformanceSession> _sessions = Array.Empty<PerformanceSession>();
     private IReadOnlyDictionary<string, SessionSummary> _summaries = new Dictionary<string, SessionSummary>();
 
-    public SessionView()
+    private readonly PerformanceSessionService _service;
+    private readonly AutoRecordingService? _automation;
+    private readonly PerformanceHudService _hud;
+    public SessionView() : this(App.SessionService, App.AutomaticRecording) { }
+    internal SessionView(PerformanceSessionService service, AutoRecordingService? automation = null, PerformanceHudService? hud = null)
     {
+        _service = service; _automation = automation; _hud = hud ?? App.Hud;
         InitializeComponent();
         _ticker = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _ticker.Tick += (_, _) => UpdateRunState();
@@ -31,7 +36,7 @@ public partial class SessionView : UserControl
         Unloaded += OnUnloaded;
     }
 
-    private PerformanceSessionService Service => App.SessionService;
+    private PerformanceSessionService Service => _service;
 
     internal void PrepareDeltaSession()
     {
@@ -54,6 +59,8 @@ public partial class SessionView : UserControl
         Service.StateChanged += Service_StateChanged;
         Service.AutomaticStopFailed += Service_AutomaticStopFailed;
         GameContextService.GameSwitched += UpdateConditionGame;
+        if (_automation is not null) _automation.Changed += UpdateAutoRecordStatus;
+        InitializeAutoRecording();
         UpdateConditionGame();
         if (Service.IsRunning) FillConditions(Service.Conditions);
         RefreshAll();
@@ -67,6 +74,7 @@ public partial class SessionView : UserControl
         Service.StateChanged -= Service_StateChanged;
         Service.AutomaticStopFailed -= Service_AutomaticStopFailed;
         GameContextService.GameSwitched -= UpdateConditionGame;
+        if (_automation is not null) _automation.Changed -= UpdateAutoRecordStatus;
         _ticker.Stop();
         _historyGeneration++;
         _refreshing = false;
@@ -87,7 +95,10 @@ public partial class SessionView : UserControl
         }
         RefreshControlState();
         if (Service.IsRunning)
+        {
+            FillConditions(Service.Conditions);
             _ticker.Start();
+        }
         else
         {
             _ticker.Stop();

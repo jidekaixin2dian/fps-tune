@@ -792,7 +792,7 @@ public sealed class ReadabilityAndFramesUiTests
     }
 
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
-    private static void RunUi(Action<Application, string> test)
+    internal static void RunUi(Action<Application, string> test)
     {
         Exception? error = null;
         var thread = new Thread(() =>
@@ -829,7 +829,7 @@ public sealed class ReadabilityAndFramesUiTests
         if (error is not null) ExceptionDispatchInfo.Capture(error).Throw();
     }
     private static readonly DisplayQualityTests.FakeNvdrsApi Api = new();
-    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    internal static IEnumerable<DependencyObject> Descendants(DependencyObject root)
     {
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
         {
@@ -850,7 +850,7 @@ public sealed class ReadabilityAndFramesUiTests
             below13 = texts.Where(t => t.FontSize < 13).Select(t => new { t.Text, t.FontSize }).ToArray() });
         Render((FrameworkElement)window.FindName("ChromeRoot"), name);
     }
-    private static void Render(FrameworkElement element, string name)
+    internal static void Render(FrameworkElement element, string name)
     {
         if (name.EndsWith("-light") || name.EndsWith("-dark"))
         {

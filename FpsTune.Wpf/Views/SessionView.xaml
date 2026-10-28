@@ -15,11 +15,15 @@
 
         <!-- 页头 -->
         <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.NavSession}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.SessionIntro}"
                            Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+            </StackPanel>
+            <Button x:Name="ShowHudButton" Grid.Column="1" Content="{DynamicResource Str.HudShow}" Style="{StaticResource SecondaryButtonStyle}" Click="HudShow_Click" VerticalAlignment="Top" Margin="16,0,0,0"/>
+                <Border Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
                     <Expander x:Name="GettingStarted" Header="{DynamicResource Str.SessionGuideTitle}" IsExpanded="True" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14">
                         <StackPanel Margin="0,12,0,0">
                             <TextBlock Text="{DynamicResource Str.SessionGuideSteps}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23"/>
@@ -27,7 +31,6 @@
                         </StackPanel>
                     </Expander>
                 </Border>
-            </StackPanel>
         </Grid>
 
         <!-- 采样控制 -->
@@ -91,6 +94,30 @@
                            Text="{DynamicResource Str.SessionReady}"
                            Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap"
                            Margin="0,10,0,0"/>
+                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.HudTitle}" Style="{StaticResource ItemTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="{DynamicResource Str.HudHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                    <WrapPanel>
+                        <Button Content="{DynamicResource Str.HudUnlock}" Style="{StaticResource SecondaryButtonStyle}" Click="HudUnlock_Click" Margin="0,0,8,0"/>
+                        <Button Content="{DynamicResource Str.HudHide}" Style="{StaticResource GhostButtonStyle}" Click="HudHide_Click"/>
+                    </WrapPanel>
+                    <Expander x:Name="AutoRecordOptions" Header="{DynamicResource Str.AutoRecordTitle}" Margin="0,14,0,0"><StackPanel Margin="0,10,0,0">
+                        <TextBlock Text="{DynamicResource Str.AutoRecordHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <CheckBox x:Name="AutoRecordEnabled" Content="{DynamicResource Str.AutoRecordEnable}" Margin="0,12,0,8"/>
+                        <ItemsControl x:Name="AutoRecordGames"><ItemsControl.ItemTemplate><DataTemplate>
+                            <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" Margin="0,6"><StackPanel>
+                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+                                <TextBlock Text="{Binding Path}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextTrimming="CharacterEllipsis" MaxWidth="680" HorizontalAlignment="Left"/>
+                            </StackPanel></CheckBox>
+                        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                        <TextBlock x:Name="AutoRecordEmpty" Text="{DynamicResource Str.AutoRecordEmpty}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <WrapPanel Margin="0,12,0,0">
+                            <Button x:Name="AutoRecordSave" Content="{DynamicResource Str.Save}" Style="{StaticResource SecondaryButtonStyle}" Click="AutoRecordSave_Click" Margin="0,0,8,0"/>
+                            <Button Content="{DynamicResource Str.AutoRecordRefresh}" Style="{StaticResource GhostButtonStyle}" Click="AutoGamesRefresh_Click"/>
+                        </WrapPanel>
+                    </StackPanel></Expander>
+                    <TextBlock x:Name="AutoRecordStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite"/>
+                </StackPanel></Border>
             </StackPanel>
         </Border>
 

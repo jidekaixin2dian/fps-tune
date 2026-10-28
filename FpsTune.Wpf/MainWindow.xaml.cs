@@ -215,6 +215,8 @@ public partial class MainWindow : Window
         };
         Closed += (_, _) =>
         {
+            App.AutomaticRecording?.Dispose();
+            App.CloseHud();
             _updateLifetime.Cancel();
             _updateCard?.Cancel();
             TrayService.Dispose();

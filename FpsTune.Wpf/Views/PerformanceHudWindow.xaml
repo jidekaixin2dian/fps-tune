@@ -1,0 +1,30 @@
+<Window x:Class="FpsTune.Wpf.Views.PerformanceHudWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="{DynamicResource Str.HudTitle}" Width="344" SizeToContent="Height" WindowStyle="None" ResizeMode="NoResize"
+    AllowsTransparency="True" Background="Transparent" ShowActivated="False" ShowInTaskbar="False" Topmost="True"
+    Style="{StaticResource WindowTypographyStyle}" TextOptions.TextRenderingMode="Grayscale" WindowStartupLocation="Manual">
+    <Border x:Name="HudRoot" Background="{DynamicResource NotificationBackgroundBrush}" BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusCard}" Padding="16">
+        <StackPanel>
+            <Grid x:Name="DragArea" Background="Transparent" MouseLeftButtonDown="DragArea_MouseLeftButtonDown"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock x:Name="HudCaption" Text="{DynamicResource Str.AppNameShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" Cursor="SizeAll"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <CheckBox x:Name="Pin" Content="{DynamicResource Str.HudPin}" IsChecked="True" Checked="Pin_Changed" Unchecked="Pin_Changed" Margin="0,0,8,0"/>
+                    <Button x:Name="ThroughButton" Content="{DynamicResource Str.HudThrough}" Style="{StaticResource GhostButtonStyle}" Padding="8,3" MinHeight="28" Click="Through_Click"/>
+                    <Button x:Name="CloseHudButton" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Padding="8,3" MinHeight="28" Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+            <Grid Margin="0,14,0,12"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <StackPanel><TextBlock Text="FPS" Style="{StaticResource SectionLabelStyle}"/><TextBlock x:Name="FpsText" Text="—" Style="{StaticResource StatValueStyle}" FontSize="30"/></StackPanel>
+                <StackPanel Grid.Column="1"><TextBlock Text="1% LOW" Style="{StaticResource SectionLabelStyle}"/><TextBlock x:Name="LowText" Text="—" Style="{StaticResource StatValueStyle}" FontSize="30"/></StackPanel>
+            </Grid>
+            <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <TextBlock x:Name="CpuText" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+                <TextBlock x:Name="GpuText" Grid.Column="1" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            </Grid>
+            <TextBlock x:Name="MemoryText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,7,0,0"/>
+            <TextBlock x:Name="ScopeText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+            <TextBlock x:Name="CaptureStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/>
+        </StackPanel>
+    </Border>
+</Window>

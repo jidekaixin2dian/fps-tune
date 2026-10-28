@@ -833,6 +833,7 @@
     27973,
     27979,
     27983,
+    28014,
     28040,
     28041,
     28096,
@@ -946,6 +947,7 @@
     31283,
     31295,
     31354,
+    31359,
     31361,
     31383,
     31435,
@@ -1282,18 +1284,18 @@
   "files": [
     {
       "name": "FpsTuneText-Regular.ttf",
-      "bytes": 326748,
-      "sha256": "59d85d8415b711824cb8cbba882912ff9b9013534727f08c191ba3ee3cf18f6f"
+      "bytes": 327408,
+      "sha256": "e5c7bd9fdb901cc2c4894ac5ed3189549f8deb5a55b413e8a357c7524ff61be4"
     },
     {
       "name": "FpsTuneText-Medium.ttf",
-      "bytes": 326656,
-      "sha256": "11a27944d991c49baa26f983d6c8c2be8181bbbf43f7ab176867622b0e49567c"
+      "bytes": 327316,
+      "sha256": "08d68d9041014a9a4932513d0c56eb0f75fe23aa0b590302e73fa9ad795f616f"
     },
     {
       "name": "FpsTuneText-SemiBold.ttf",
-      "bytes": 326564,
-      "sha256": "e178b91a11266c64492bace83050bc6acda6a69581a3bdd913112958295d65f9"
+      "bytes": 327224,
+      "sha256": "6e540125d9d47d56192b4d45b50cf6bc753ceb86f973d03127d83695255eb223"
     }
   ]
 }
