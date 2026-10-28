@@ -98,7 +98,7 @@
                     <TextBlock Text="{DynamicResource Str.HudTitle}" Style="{StaticResource ItemTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <TextBlock Text="{DynamicResource Str.HudHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,10"/>
                     <WrapPanel>
-                        <Button Content="{DynamicResource Str.HudUnlock}" Style="{StaticResource SecondaryButtonStyle}" Click="HudUnlock_Click" Margin="0,0,8,0"/>
+                        <Button x:Name="RestoreHudButton" Content="{DynamicResource Str.HudUnlock}" Style="{StaticResource SecondaryButtonStyle}" Click="HudUnlock_Click" Margin="0,0,8,0"/>
                         <Button Content="{DynamicResource Str.HudHide}" Style="{StaticResource GhostButtonStyle}" Click="HudHide_Click"/>
                     </WrapPanel>
                     <Expander x:Name="AutoRecordOptions" Header="{DynamicResource Str.AutoRecordTitle}" Margin="0,14,0,0"><StackPanel Margin="0,10,0,0">

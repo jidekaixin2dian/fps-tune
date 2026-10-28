@@ -1573,7 +1573,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.HudTitle">性能悬浮窗</s:String>
     <s:String x:Key="Str.HudShow">打开悬浮窗</s:String>
     <s:String x:Key="Str.HudHide">关闭悬浮窗</s:String>
-    <s:String x:Key="Str.HudUnlock">恢复悬浮窗点击</s:String>
+    <s:String x:Key="Str.HudUnlock">找回悬浮窗</s:String>
     <s:String x:Key="Str.HudPin">置顶</s:String>
     <s:String x:Key="Str.HudThrough">穿透</s:String>
     <s:String x:Key="Str.HudLocked">点击穿透中 · Ctrl+Alt+H 或托盘菜单恢复点击</s:String>
@@ -1585,7 +1585,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.HudMemory">内存 {0} · 显存 {1}</s:String>
     <s:String x:Key="Str.HudRecoveryUnavailable">快捷键与托盘入口均不可用，暂不启用点击穿透。</s:String>
     <s:String x:Key="Str.HudThroughFailed">Windows 未能切换点击穿透，请重开悬浮窗。</s:String>
-    <s:String x:Key="Str.HudHint">独立桌面小窗，可拖动、置顶和穿透；录制时显示近期 FPS 与 1% LOW。独占全屏游戏可能覆盖此窗口。</s:String>
+    <s:String x:Key="Str.HudHint">可拖动、置顶或穿透；录制时显示近期 FPS 与 1% LOW。“找回悬浮窗”会在当前屏幕右上角重新显示并恢复点击。独占全屏游戏可能覆盖此窗口。</s:String>
+    <s:String x:Key="Str.HudRestoreFailed">未能找回悬浮窗，请关闭后重新打开。</s:String>
     <s:String x:Key="Str.AutoRecordTitle">自动记录一局</s:String>
     <s:String x:Key="Str.AutoRecordHint">勾选游戏并保存，从下次启动开始记录，退出自动保存；已有录制、实验或开局准备时跳过本次启动。</s:String>
     <s:String x:Key="Str.AutoRecordEnable">启用自动记录（默认关闭）</s:String>

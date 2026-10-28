@@ -345,7 +345,7 @@ public static class TrayService
             var hud = new MenuItem { Header = Str.T("Str.HudShow") };
             hud.Click += (_, _) => App.Hud.Show();
             var unlockHud = new MenuItem { Header = Str.T("Str.HudUnlock") };
-            unlockHud.Click += (_, _) => App.Hud.Unlock();
+            unlockHud.Click += (_, _) => App.Hud.Restore();
             var closeHud = new MenuItem { Header = Str.T("Str.HudHide") };
             closeHud.Click += (_, _) => App.CloseHud();
             var exit = new MenuItem { Header = "退出" };

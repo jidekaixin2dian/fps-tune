@@ -20,6 +20,8 @@ public partial class PerformanceHudWindow : Window
     private bool _registered, _through;
     private string? _interactionError;
     internal Func<bool>? RecoveryAvailableOverride;
+    // Physical pixels; an offscreen work area keeps native placement tests away from the user's apps.
+    internal (int Left, int Top, int Right, int Bottom)? RecoveryWorkAreaOverride;
     internal bool IsClickThrough => _through;
 
     internal PerformanceHudWindow(PerformanceSessionService session, MetricsSampler metrics)
@@ -41,7 +43,7 @@ public partial class PerformanceHudWindow : Window
             UpdateVisibility(); Refresh();
             if (UserDataPaths.RootOverride is null) PlaceInWorkArea();
         };
-        DpiChanged += (_, _) => _ = Dispatcher.BeginInvoke(PlaceInWorkArea);
+        DpiChanged += (_, _) => { if (UserDataPaths.RootOverride is null) _ = Dispatcher.BeginInvoke(PlaceInWorkArea); };
         IsVisibleChanged += (_, _) => UpdateVisibility();
         StateChanged += (_, _) => UpdateVisibility();
         Closed += (_, _) =>
@@ -88,6 +90,8 @@ public partial class PerformanceHudWindow : Window
         { _interactionError = Str.T("Str.HudRecoveryUnavailable"); Refresh(); return false; }
         if (_handle == 0) return false;
         var style = GetWindowLongPtr(_handle, ExtendedStyle);
+        if (((style & Transparent) != 0) == enabled)
+        { _interactionError = null; _through = enabled; Refresh(); return true; }
         SetWindowLongPtr(_handle, ExtendedStyle, enabled ? style | Transparent : style & ~Transparent);
         if (((GetWindowLongPtr(_handle, ExtendedStyle) & Transparent) != 0) != enabled)
         { _interactionError = Str.T("Str.HudThroughFailed"); Refresh(); return false; }
@@ -105,18 +109,36 @@ public partial class PerformanceHudWindow : Window
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
         if (msg == 0x0312 && wParam == Hotkey) { SetClickThrough(!_through); handled = true; }
-        if (msg == 0x007E) _ = Dispatcher.BeginInvoke(PlaceInWorkArea); // display topology changed
+        if (msg == 0x007E && UserDataPaths.RootOverride is null) _ = Dispatcher.BeginInvoke(PlaceInWorkArea); // display topology changed
         return 0;
     }
-    private void PlaceInWorkArea()
+    internal bool RestoreForInteraction()
     {
-        if (_handle == 0 || !GetWindowRect(_handle, out var rect)) return;
-        var monitor = MonitorFromWindow(_handle, 2);
-        var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
-        if (!GetMonitorInfo(monitor, ref info)) return;
-        var x = Math.Clamp(rect.Left, info.Work.Left, Math.Max(info.Work.Left, info.Work.Right - (rect.Right - rect.Left)));
-        var y = Math.Clamp(rect.Top, info.Work.Top, Math.Max(info.Work.Top, info.Work.Bottom - (rect.Bottom - rect.Top)));
-        SetWindowPos(_handle, 0, x, y, 0, 0, 0x15); // No activate, no size, no z-order change.
+        if (!SetClickThrough(false)) return false;
+        if (UserDataPaths.RootOverride is not null && RecoveryWorkAreaOverride is null) return true;
+        return PositionInWorkArea(true);
+    }
+    private void PlaceInWorkArea() => PositionInWorkArea(false);
+    private bool PositionInWorkArea(bool restore)
+    {
+        if (_handle == 0 || !GetWindowRect(_handle, out var rect)) return false;
+        RectI work;
+        if (restore && RecoveryWorkAreaOverride is { } testArea)
+            work = new() { Left = testArea.Left, Top = testArea.Top, Right = testArea.Right, Bottom = testArea.Bottom };
+        else
+        {
+            var reference = restore && Application.Current.MainWindow is { } main
+                ? new WindowInteropHelper(main).Handle : _handle;
+            var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+            if (!GetMonitorInfo(MonitorFromWindow(reference, 2), ref info)) return false;
+            work = info.Work;
+        }
+        var right = Math.Max(work.Left, work.Right - (rect.Right - rect.Left));
+        var bottom = Math.Max(work.Top, work.Bottom - (rect.Bottom - rect.Top));
+        var x = Math.Clamp(restore ? right - 16 : rect.Left, work.Left, right);
+        var y = Math.Clamp(restore ? work.Top + 16 : rect.Top, work.Top, bottom);
+        // Explicit recovery raises within the selected pin group without activation or resizing.
+        return SetWindowPos(_handle, restore ? (Topmost ? -1 : -2) : 0, x, y, 0, 0, restore ? 0x51u : 0x15u);
     }
     [StructLayout(LayoutKind.Sequential)] private struct RectI { public int Left, Top, Right, Bottom; }
     [StructLayout(LayoutKind.Sequential)] private struct MonitorInfo { public int Size; public RectI Monitor, Work; public uint Flags; }

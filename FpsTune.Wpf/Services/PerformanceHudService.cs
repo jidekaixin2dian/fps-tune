@@ -25,5 +25,10 @@ internal sealed class PerformanceHudService(PerformanceSessionService? session =
         App.UpdateLiveMetrics();
     }
     internal void Close() => Window?.Close();
-    internal void Unlock() => Window?.SetClickThrough(false);
+    internal void Restore()
+    {
+        Show();
+        if (Window is { } window && !window.RestoreForInteraction())
+            DialogService.Warning(Str.T("Str.HudTitle"), Str.T("Str.HudRestoreFailed"));
+    }
 }

@@ -56,5 +56,5 @@ public partial class SessionView
     }
     private void HudShow_Click(object sender, RoutedEventArgs e) => _hud.Show();
     private void HudHide_Click(object sender, RoutedEventArgs e) => _hud.Close();
-    private void HudUnlock_Click(object sender, RoutedEventArgs e) => _hud.Unlock();
+    private void HudUnlock_Click(object sender, RoutedEventArgs e) => _hud.Restore();
 }

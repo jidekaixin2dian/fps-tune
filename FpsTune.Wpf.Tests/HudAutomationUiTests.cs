@@ -92,7 +92,8 @@ public sealed class HudAutomationUiTests
                 Assert.Contains(AppState.GamePath!, SettingsService.Current.AutoRecordGames);
                 ((CheckBox)page.FindName("AutoRecordEnabled")).IsChecked = false;
                 ((Button)page.FindName("AutoRecordSave")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                ((Button)page.FindName("ShowHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.NotNull(controller.Window);
                 var hud = controller.Window!; DlssFeedbackTests.AssertBackgroundWindow(hud);
                 Assert.True(metrics.HasSubscribers); Assert.False(metrics.IsRunning);
                 controller.Show(); Assert.Same(hud, controller.Window);
@@ -124,13 +125,23 @@ public sealed class HudAutomationUiTests
                 hud.RecoveryAvailableOverride = () => true; Assert.True(hud.SetClickThrough(true));
                 var handle = new System.Windows.Interop.WindowInteropHelper(hud).Handle;
                 Assert.NotEqual(0, GetWindowLongPtr(handle, -20) & 0x20);
-                controller.Unlock(); Assert.False(hud.IsClickThrough); Assert.Equal(0, GetWindowLongPtr(handle, -20) & 0x20);
-                hud.Hide(); Assert.Null(session.CurrentLiveFps); controller.Show(); Feed();
+                hud.RecoveryWorkAreaOverride = (-24000, -24000, -22000, -22000);
+                controller.Restore(); Assert.False(hud.IsClickThrough); Assert.Equal(0, GetWindowLongPtr(handle, -20) & 0x20);
+                Assert.False(hud.Topmost); DlssFeedbackTests.AssertBackgroundWindow(hud);
+                Assert.True(GetWindowRect(handle, out var restored));
+                Assert.InRange(restored.Left, -24000, -22001); Assert.Equal(-22016, restored.Right); Assert.Equal(-23984, restored.Top);
+                hud.Hide(); Assert.Null(session.CurrentLiveFps);
+                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Feed();
+                Assert.True(hud.IsVisible); Assert.False(hud.IsActive);
                 Assert.Equal("125", ((TextBlock)hud.FindName("FpsText")).Text);
+                hud.WindowState = WindowState.Minimized;
+                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(WindowState.Normal, hud.WindowState); Assert.True(hud.IsVisible);
                 var run = session.RunId; controller.Close();
                 Assert.True(session.IsRunning); Assert.Equal(run, session.RunId);
                 Assert.False(metrics.HasSubscribers); Assert.Null(session.CurrentLiveFps);
-                controller.Show(); hud = controller.Window!; Feed();
+                ((Button)page.FindName("RestoreHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                hud = controller.Window!; Feed();
                 Assert.Equal("125", ((TextBlock)hud.FindName("FpsText")).Text);
                 Wait(session.StopAsync(false)); Assert.Equal("—", ((TextBlock)hud.FindName("FpsText")).Text);
                 ((Button)hud.FindName("CloseHudButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -140,4 +151,6 @@ public sealed class HudAutomationUiTests
         });
     }
     [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] private static extern nint GetWindowLongPtr(nint window, int index);
+    [StructLayout(LayoutKind.Sequential)] private struct NativeRect { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool GetWindowRect(nint window, out NativeRect rect);
 }
