@@ -21,7 +21,7 @@
         <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,18,0"/>
@@ -40,7 +40,8 @@
                     <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,8,0" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
                     <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Height="36" Click="DeltaRestore_Click"/>
                 </WrapPanel>
-                <TextBlock Grid.Row="3" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                <TextBlock Grid.Row="3" x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                <TextBlock Grid.Row="4" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
             </Grid>
         </Border>
 

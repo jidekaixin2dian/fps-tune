@@ -112,7 +112,7 @@ public partial class SessionView : UserControl
     private void UpdateConditionGame()
     {
         var name = Service.IsRunning ? Service.Conditions?.GameName :
-            string.IsNullOrWhiteSpace(AppState.GamePath) ? null : GamePathService.LabelFor(AppState.GamePath);
+            string.IsNullOrWhiteSpace(AppState.GamePath) ? null : GameContextService.DisplayNameFor(AppState.GamePath);
         ConditionGameText.Text = Str.T("Str.ConditionGameValue", name ?? Str.T("Str.ConditionsUnknown"));
         UpdateTemplateState();
     }
@@ -420,6 +420,7 @@ public partial class SessionView : UserControl
         ExportJsonButton.IsEnabled = selected.Count == 1;
         ExportCsvButton.IsEnabled = selected.Count == 1;
         DeleteButton.IsEnabled = selected.Count > 0;
+        CompareSelectedButton.IsEnabled = selected.Count == 2;
         if (selected.Count == 1)
         {
             var store = _sessions.FirstOrDefault(s => s.Id == selected[0].Id);
@@ -618,6 +619,10 @@ public partial class SessionView : UserControl
 
     private void RebuildCompare()
     {
+        _comparison = null;
+        ComparisonExportStatus.Text = "";
+        CompareHighlights.ItemsSource = null;
+        SwapComparisonButton.IsEnabled = ExportComparisonButton.IsEnabled = false;
         if (CompareA.SelectedItem is not CompareSourceVm va || CompareB.SelectedItem is not CompareSourceVm vb)
         {
             CompareConditionsText.Visibility = Visibility.Collapsed;
@@ -648,44 +653,11 @@ public partial class SessionView : UserControl
             Str.T("Str.ConditionWarning", string.Join("; ", differences));
         CompareConditionsText.SetResourceReference(TextBlock.ForegroundProperty, differences.Count == 0 ? "TextMutedBrush" : "WarningBrush");
 
-        var rows = new List<CompareRowVm>
-        {
-            Row(Str.T("Str.Duration"), FormatDuration(sa.Duration), FormatDuration(sb.Duration), null),
-            Row(Str.T("Str.SampleCount"), sa.SampleCount.ToString(), sb.SampleCount.ToString(), null)
-        };
-        rows.Add(Row(Str.T("Str.ConditionTarget"), a.Conditions?.TargetSeconds?.ToString() ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.TargetSeconds?.ToString() ?? Str.T("Str.ConditionsUnknown"), null));
-        rows.Add(Row(Str.T("Str.ConditionInterval"), a.IntervalSeconds.ToString("0.#"), b.IntervalSeconds.ToString("0.#"), null));
-        rows.Add(PercentRow(Str.T("Str.ConditionCpuAvg"), sa.Cpu?.Avg, sb.Cpu?.Avg));
-        rows.Add(Row(Str.T("Str.ConditionGame"), a.Conditions?.GameName ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.GameName ?? Str.T("Str.ConditionsUnknown"), null));
-        rows.Add(Row(Str.T("Str.ConditionResolution"), SessionConditionRules.Resolution(a.Conditions), SessionConditionRules.Resolution(b.Conditions), null));
-        rows.Add(Row(Str.T("Str.ConditionQuality"), a.Conditions?.Quality ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.Quality ?? Str.T("Str.ConditionsUnknown"), null));
-        rows.Add(Row(Str.T("Str.ConditionScene"), a.Conditions?.Scene ?? Str.T("Str.ConditionsUnknown"), b.Conditions?.Scene ?? Str.T("Str.ConditionsUnknown"), null));
-        rows.Add(PercentRow(Str.T("Str.ConditionAverageFps"), a.Fps?.AvgFps, b.Fps?.AvgFps));
-        rows.Add(PercentRow(Str.T("Str.ReportColP1Low"), a.Fps?.P1Low, b.Fps?.P1Low));
-        rows.Add(PercentRow("P99 (ms)", a.Fps?.P99Ms, b.Fps?.P99Ms));
-        rows.Add(PercentRow(Str.T("Str.ConditionCpu95"), sa.Cpu?.HighP95, sb.Cpu?.HighP95));
-        rows.Add(PercentRow(Str.T("Str.ConditionMemAvg"), sa.Mem?.Avg, sb.Mem?.Avg));
-        rows.Add(PercentRow(Str.T("Str.ConditionGpuAvg"), sa.Gpu?.Avg, sb.Gpu?.Avg));
-        rows.Add(PercentRow(Str.T("Str.ConditionGpu95"), sa.Gpu?.HighP95, sb.Gpu?.HighP95));
-        rows.Add(new CompareRowVm(
-            Str.T("Str.ConditionVramAvg"),
-            sa.VramAvgMib?.ToString("0") ?? Str.T("Str.Unavailable"),
-            sb.VramAvgMib?.ToString("0") ?? Str.T("Str.Unavailable"),
-            sa.VramAvgMib is { } x && sb.VramAvgMib is { } y ? $"{y - x:+0;-0;0} MiB" : Str.T("Str.Unavailable")));
-        CompareRows.ItemsSource = rows;
+        _comparison = SessionComparison.Create(a, b, sa, sb);
+        CompareRows.ItemsSource = _comparison.Rows;
+        CompareHighlights.ItemsSource = _comparison.Highlights;
+        SwapComparisonButton.IsEnabled = ExportComparisonButton.IsEnabled = true;
     }
-
-    private static CompareRowVm Row(string metric, string a, string b, string? delta)
-        => new(metric, a, b, delta ?? "--");
-
-    private static CompareRowVm PercentRow(string metric, double? a, double? b)
-        => new(
-            metric,
-            a is { } av ? av.ToString("0.#") : Str.T("Str.Unavailable"),
-            b is { } bv ? bv.ToString("0.#") : Str.T("Str.Unavailable"),
-            a is { } av2 && b is { } bv2 ? $"{bv2 - av2:+0.#;-0.#;0}" : Str.T("Str.Unavailable"));
-
-    private sealed record CompareRowVm(string Metric, string AVal, string BVal, string Delta);
 
     private static string FormatDuration(TimeSpan d)
         => d.TotalHours >= 1 ? Str.T("Str.ConditionDurationHours", (int)d.TotalHours, d.Minutes)

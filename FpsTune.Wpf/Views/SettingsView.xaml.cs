@@ -276,7 +276,9 @@ public partial class SettingsView : UserControl
             GamePathHint.Foreground = (System.Windows.Media.Brush)Application.Current.Resources["WarningBrush"];
             return;
         }
-        var path = text.Length > 0 ? StateStore.AddGame(text).ExePath : null;
+        string? path;
+        try { path = text.Length > 0 ? StateStore.AddGame(text).ExePath : null; }
+        catch (Exception ex) { GamePathHint.Text = PrivacyScrub.Sanitize(ex.Message); return; }
         if (!GameContextService.SwitchTo(path, detectIfMissing: true))
         {
             GamePathBox.Text = AppState.GamePath ?? "";

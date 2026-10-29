@@ -18,7 +18,7 @@ public static class SessionConditionRules
         var normalized = string.IsNullOrWhiteSpace(path) ? null : Path.GetFullPath(path).ToUpperInvariant();
         return conditions with {
             GameKey = normalized is null ? null : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))),
-            GameName = normalized is null ? null : GamePathService.LabelFor(path!),
+            GameName = normalized is null ? null : GameContextService.DisplayNameFor(path!),
             Quality = Clean(conditions.Quality), Scene = Clean(conditions.Scene)
         };
     }
@@ -62,7 +62,7 @@ public static class SessionConditionRules
                 || y?.TargetSeconds is { } bt && Math.Abs(bd - bt) > Math.Max(2, bt * 0.05))
                 issues.Add(Str.T("Str.ConditionTargetMissed"));
         }
-        if (a.Fps is null || b.Fps is null) issues.Add(Str.T("Str.ConditionFpsMissing"));
+        if (a.Fps is not { Samples: > 0 } || b.Fps is not { Samples: > 0 }) issues.Add(Str.T("Str.ConditionFpsMissing"));
         return issues;
 
         void Check(string label, string? av, string? bv)

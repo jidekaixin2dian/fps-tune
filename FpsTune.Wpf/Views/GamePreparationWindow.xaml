@@ -4,8 +4,15 @@
     WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" Background="{DynamicResource AppBackdropBrush}">
     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24"><Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <StackPanel Margin="0,0,0,18"><TextBlock Text="{DynamicResource Str.PrepareSettings}" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="{DynamicResource Str.PrepareSettingsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel>
+        <StackPanel Margin="0,0,0,18"><TextBlock Text="{DynamicResource Str.PrepareSettings}" Style="{StaticResource PageTitleStyle}"/><TextBlock x:Name="PlanGameText" Style="{StaticResource ItemTitleStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/><TextBlock Text="{DynamicResource Str.PrepareSettingsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="570"><StackPanel Margin="0,0,8,0">
+            <TextBlock Text="{DynamicResource Str.PlanSaveScope}" Style="{StaticResource MutedTextStyle}"/>
+            <WrapPanel Margin="0,8,0,8">
+                <RadioButton x:Name="GameScope" GroupName="planScope" Content="{DynamicResource Str.PlanCurrentGame}" Margin="0,0,22,0"/>
+                <RadioButton x:Name="DefaultScope" GroupName="planScope" Content="{DynamicResource Str.PlanSharedDefault}"/>
+            </WrapPanel>
+            <TextBlock Text="{DynamicResource Str.PlanScopeHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <Button x:Name="UseDefaultButton" Content="{DynamicResource Str.PlanUseDefault}" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="0,0,0,12" Click="UseDefault_Click"/>
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16"><StackPanel>
                 <TextBlock Text="{DynamicResource Str.PrepareFirstTitle}" Style="{StaticResource CardTitleStyle}"/>
                 <TextBlock x:Name="BasicGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" LineHeight="23"/>

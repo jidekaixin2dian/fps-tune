@@ -12,27 +12,31 @@ public partial class ConsoleView
     private async void StartPreparation_Click(object sender, RoutedEventArgs e)
     {
         if (_preparing || _refreshing || _locating) return;
-        if (!SettingsService.Current.Preparation.Configured) await ConfigurePreparationAsync();
+        if (!TryGetPreparation(out var options)) return;
+        if (!options.Configured) await ConfigurePreparationAsync();
         else await RunPreparationAsync();
     }
     private async void ConfigurePreparation_Click(object sender, RoutedEventArgs e) => await ConfigurePreparationAsync();
 
-    private async Task ConfigurePreparationAsync()
+    internal async Task ConfigurePreparationAsync()
     {
         if (_preparing || GamePreparationService.IsRunning) return;
         var dialog = new GamePreparationWindow { Owner = Window.GetWindow(this) };
         DialogService.PrepareWindowForTest?.Invoke(dialog);
         if (dialog.ShowDialog() == true)
         {
+            UpdatePreparation();
             PreparationStatus.Visibility = Visibility.Visible; PreparationStatus.Text = Str.T("Str.PrepareConfigured");
-            if (dialog.RunNow) await RunPreparationAsync();
+            if (dialog.RunNow) await RunPreparationAsync(dialog.SavedOptions);
         }
         else if (dialog.ReviewBasics) PrepareDelta_Click(this, new RoutedEventArgs());
     }
 
-    private async Task RunPreparationAsync()
+    private async Task RunPreparationAsync(GamePreparationOptions? savedOptions = null)
     {
-        var options = SettingsService.Current.Preparation;
+        GamePreparationOptions options;
+        if (savedOptions is not null) options = savedOptions;
+        else if (!TryGetPreparation(out options)) return;
         if (_preparing) return;
         if (_preparation.IsBusy) { DialogService.Warning(Str.T("Str.PrepareFailed"), Str.T("Str.MemoryBusy")); return; }
         if (_preparation.NeedsAdministrator(options))
@@ -67,6 +71,16 @@ public partial class ConsoleView
             _preparing = false;
             GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = RefreshButton.IsEnabled = true;
             UpdatePreparation();
+        }
+    }
+    private bool TryGetPreparation(out GamePreparationOptions options)
+    {
+        try { options = PreparationPlanStore.Resolve(AppState.GamePath).Options; return true; }
+        catch (Exception ex)
+        {
+            options = new(); PreparationStatus.Visibility = Visibility.Visible;
+            PreparationStatus.Text = PrivacyScrub.Sanitize(ex.Message);
+            return false;
         }
     }
 }

@@ -93,6 +93,7 @@ public static class StateStore
     // 的同一结构、有测试逐字节依赖——逐游戏快照另存（last-detect-<id>.json），绝不写它。
 
     private static string GamesFile => Path.Combine(BaseDir, "games.json");
+    internal static string GamesFilePath => GamesFile;
 
     public sealed record GameProfile(string Id, string ExePath, string Name, DateTime AddedAt);
 
@@ -150,24 +151,7 @@ public static class StateStore
     }
 
     public static GameProfile AddGame(string exePath)
-    {
-        var path = exePath.Trim();
-        // 与引擎写入端（fso-off/gpu-pref/game-priority）和还原端校验保持同一标准：
-        // 必须是完全限定的 .exe 路径，否则后续写入会产生还原端拒绝的残留。
-        FpsTune.Wpf.Core.BackupService.EnsureExecutablePath(path);
-        var existing = FindGameByPath(path);
-        if (existing is not null)
-            return existing;
-        var profile = new GameProfile(
-            "g" + Guid.NewGuid().ToString("N")[..8],
-            path,
-            Path.GetFileNameWithoutExtension(path),
-            DateTime.Now);
-        var games = LoadGames();
-        games.Add(profile);
-        SaveGames(games);
-        return profile;
-    }
+        => GameLibraryService.Add(exePath);
 
     private static void EnsureGamesMigrated()
     {

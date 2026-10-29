@@ -158,6 +158,7 @@ public partial class MainWindow : Window
         _pageFactories = new Dictionary<string, Func<UserControl>>
         {
             ["home"] = () => new ConsoleView(),
+            ["games"] = () => new GameLibraryView(),
             ["detect"] = () => new DetectView(),
             ["opt"] = () => new OptimizeView(),
             ["display"] = () => new DisplayQualityView(),
@@ -337,7 +338,7 @@ public partial class MainWindow : Window
         NavigationStack.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
         NavigationStack.Margin = new Thickness(12, studio ? 0 : 6, 12, 0);
         NavigationHeading.Visibility = NavigationFooter.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var nav in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
+        foreach (var nav in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
             nav.SetResourceReference(StyleProperty, studio ? "StudioNavStyle" : typeof(Views.Controls.NavButton));
     }
 
@@ -406,6 +407,17 @@ public partial class MainWindow : Window
         NavigateTo("session");
         ((SessionView)GetPage("session")).PrepareDeltaSession();
     }
+    internal async Task OpenPreparationSettingsAsync()
+    {
+        NavigateTo("home");
+        await ((ConsoleView)GetPage("home")).ConfigurePreparationAsync();
+    }
+    internal void OpenRecordingOptions(string? targetPath = null)
+    {
+        NavigateTo("session");
+        var session = (SessionView)GetPage("session");
+        session.OpenAutomationOptions(targetPath);
+    }
 
     internal void ReviewSelection(IEnumerable<string> ids)
     {
@@ -460,7 +472,7 @@ public partial class MainWindow : Window
         {
             // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
             // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in new[] { NavHome, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
+            foreach (var radio in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
             {
                 if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
                     radio.IsChecked = false;
@@ -506,6 +518,7 @@ public partial class MainWindow : Window
         switch (key)
         {
             case "home": NavHome.IsChecked = true; break;
+            case "games": NavGames.IsChecked = true; break;
             case "detect": NavDetect.IsChecked = true; break;
             case "opt": NavOpt.IsChecked = true; break;
             case "display": NavDisplay.IsChecked = true; break;

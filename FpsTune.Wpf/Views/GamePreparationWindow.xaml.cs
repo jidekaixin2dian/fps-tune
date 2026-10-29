@@ -10,14 +10,23 @@ public partial class GamePreparationWindow : Window
     private sealed record DisplayChoice(string Identity, string Label) { public override string ToString() => Label; }
     private sealed record IccChoice(IccFilterPreset? Preset, string Label) { public override string ToString() => Label; }
     private readonly GamePreparationOptions _original;
+    private readonly string? _gamePath = AppState.GamePath;
+    private string? _planError;
     private bool _loaded;
     internal bool RunNow { get; private set; }
+    internal GamePreparationOptions? SavedOptions { get; private set; }
     internal bool ReviewBasics { get; private set; }
 
     public GamePreparationWindow()
     {
         InitializeComponent();
-        _original = SettingsService.Current.Preparation;
+        try { _original = PreparationPlanStore.Resolve(_gamePath).Options; }
+        catch (Exception ex) { _original = SettingsService.Current.Preparation; _planError = PrivacyScrub.Sanitize(ex.Message); }
+        GameScope.IsEnabled = !string.IsNullOrWhiteSpace(_gamePath);
+        GameScope.IsChecked = GameScope.IsEnabled; DefaultScope.IsChecked = !GameScope.IsEnabled;
+        PlanGameText.Text = Str.T("Str.PlanTarget", _gamePath is null ? Str.T("Str.PlanSharedDefault") : GamePathService.LabelFor(_gamePath));
+        try { UseDefaultButton.IsEnabled = _gamePath is not null && System.IO.File.Exists(PreparationPlanStore.FileFor(_gamePath)); }
+        catch (ArgumentException) { UseDefaultButton.IsEnabled = GameScope.IsEnabled = false; DefaultScope.IsChecked = true; }
         MemoryCheck.IsChecked = _original.CleanMemory; MemoryMode.SelectedIndex = _original.AllStandby ? 1 : 0;
         IccCheck.IsChecked = _original.ApplyIcc; VibranceCheck.IsChecked = _original.ApplyVibrance;
         VibranceSlider.Value = Math.Clamp(_original.VibrancePercent, 0, 100);
@@ -46,12 +55,16 @@ public partial class GamePreparationWindow : Window
             if (choices.Length == 0 || DisplayBox.SelectedItem is null) StatusText.Text = Str.T("Str.PrepareSelectDisplay");
         }
         catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { _loaded = true; SaveButton.IsEnabled = RunButton.IsEnabled = true; }
+        finally
+        {
+            _loaded = true; SaveButton.IsEnabled = RunButton.IsEnabled = _planError is null;
+            if (_planError is not null) StatusText.Text = _planError;
+        }
     }
 
     private void Save(bool run)
     {
-        if (!_loaded) return;
+        if (!_loaded || _planError is not null || !SameGame()) return;
         var selected = new GamePreparationOptions { Configured = true, CleanMemory = MemoryCheck.IsChecked == true,
             AllStandby = MemoryMode.SelectedIndex == 1, ApplyIcc = IccCheck.IsChecked == true,
             IccPreset = (IccPresetBox.SelectedItem as IccChoice)?.Preset, ApplyVibrance = VibranceCheck.IsChecked == true,
@@ -61,12 +74,11 @@ public partial class GamePreparationWindow : Window
         { StatusText.Text = Str.T("Str.PrepareSelectDisplay"); return; }
         try
         {
-            SettingsService.Current.Preparation = selected; SettingsService.Save(SettingsService.Current);
-            RunNow = run; DialogResult = true;
+            PreparationPlanStore.Save(GameScope.IsChecked == true ? _gamePath : null, selected);
+            SavedOptions = selected; RunNow = run; DialogResult = true;
         }
         catch (Exception ex)
         {
-            SettingsService.Current.Preparation = _original;
             DialogService.Warning(Str.T("Str.PrepareSaveFailed"), ex.Message);
         }
     }
@@ -74,4 +86,15 @@ public partial class GamePreparationWindow : Window
     private void Run_Click(object sender, RoutedEventArgs e) => Save(true);
     private void ReviewBasics_Click(object sender, RoutedEventArgs e) { ReviewBasics = true; DialogResult = false; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+    private bool SameGame()
+    {
+        if (string.Equals(_gamePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) return true;
+        StatusText.Text = Str.T("Str.PlanGameChanged"); return false;
+    }
+    private void UseDefault_Click(object sender, RoutedEventArgs e)
+    {
+        if (_gamePath is null || !SameGame()) return;
+        try { PreparationPlanStore.UseDefault(_gamePath); DialogResult = true; }
+        catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
 }

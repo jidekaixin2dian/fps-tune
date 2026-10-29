@@ -217,7 +217,9 @@ public partial class DetectView : UserControl
 
     private void ApplyGame(string path)
     {
-        var game = StateStore.AddGame(path);
+        StateStore.GameProfile game;
+        try { game = StateStore.AddGame(path); }
+        catch (Exception ex) { DialogService.Warning(Str.T("Str.LibraryAdd"), PrivacyScrub.Sanitize(ex.Message)); return; }
         if (!GameContextService.SwitchTo(game.ExePath, detectIfMissing: true))
             DialogService.Warning(Str.T("Str.AppName"), Str.T("Str.SwitchBlockedDetecting"));
         RefreshGamePathText();

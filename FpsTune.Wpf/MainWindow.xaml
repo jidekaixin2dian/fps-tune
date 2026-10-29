@@ -51,6 +51,7 @@
                 <TextBlock x:Name="NavigationHeading" Text="{DynamicResource Str.Workspace}" Margin="24,24,0,16" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
                 <StackPanel x:Name="NavigationStack" Grid.Row="1" Margin="12,0,12,0">
                     <controls:NavButton x:Name="NavHome" Tag="home" Text="{DynamicResource Str.NavHome}" IsChecked="True" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavGames" Tag="games" Text="{DynamicResource Str.NavGames}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavDetect" Tag="detect" Text="{DynamicResource Str.NavDetect}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavDisplay" Tag="display" Text="{DynamicResource Str.NavDisplay}" Checked="Nav_Checked"/>

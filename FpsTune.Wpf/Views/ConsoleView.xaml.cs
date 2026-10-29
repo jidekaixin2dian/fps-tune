@@ -31,7 +31,7 @@ public partial class ConsoleView : UserControl
         var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
         var firstRun = !StateStore.HasSeenOnboarding;
         GameReadyTitle.Text = GameLocated
-            ? $"{GamePathService.LabelFor(AppState.GamePath!)} · 开局准备"
+            ? $"{GameContextService.DisplayNameFor(AppState.GamePath!)} · 开局准备"
             : "开局准备";
         GameReadyText.Text = _locating ? Str.T("Str.LocatingAndDetecting") : !GameReady
             ? GameLocated ? Str.T("Str.GameSelectedRefreshDetect") : Str.T("Str.LocateGameForAdvice")
@@ -45,6 +45,12 @@ public partial class ConsoleView : UserControl
         PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
         PrepareDeltaButton.ToolTip = Str.T("Str.BasicAdviceGuideTip");
         StartPreparationButton.IsEnabled = ConfigurePreparationButton.IsEnabled = !_preparing && !_refreshing && !_locating;
+        try { PreparationPlanText.Text = PreparationPlanStore.Describe(PreparationPlanStore.Resolve(AppState.GamePath)); }
+        catch (Exception ex)
+        {
+            PreparationPlanText.Text = PrivacyScrub.Sanitize(ex.Message);
+            StartPreparationButton.IsEnabled = false;
+        }
     }
 
     private async void LocateDelta_Click(object sender, RoutedEventArgs e)

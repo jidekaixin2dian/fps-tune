@@ -233,6 +233,7 @@
                 <Grid Grid.Row="0" Margin="0,0,10,10">
                     <TextBlock Text="{DynamicResource Str.HistorySessions}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="CompareSelectedButton" Content="{DynamicResource Str.ComparisonSelected}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" IsEnabled="False" Click="CompareSelected_Click"/>
                         <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Margin="0,0,8,0" Click="Refresh_Click"/>
                         <Button x:Name="ExportJsonButton" Content="{DynamicResource Str.ExportJson}"
@@ -300,10 +301,18 @@
         <!-- 并排比较 -->
         <Border x:Name="ComparisonCard" Grid.Row="5" Style="{StaticResource CardStyle}">
             <StackPanel>
-                <TextBlock Text="{DynamicResource Str.SessionCompare}" Style="{StaticResource CardTitleStyle}"/>
-                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                <DockPanel Margin="0,0,0,12">
+                    <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                        <Button x:Name="SwapComparisonButton" Content="{DynamicResource Str.ComparisonSwap}" Style="{StaticResource GhostButtonStyle}" Click="SwapComparison_Click" IsEnabled="False" Margin="0,0,8,0"/>
+                        <Button x:Name="ExportComparisonButton" Content="{DynamicResource Str.ComparisonExport}" Style="{StaticResource SecondaryButtonStyle}" Click="ExportComparison_Click" IsEnabled="False"/>
+                    </WrapPanel>
+                    <TextBlock Text="{DynamicResource Str.SessionCompare}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+                </DockPanel>
+                <TextBlock Text="{DynamicResource Str.ComparisonSelectionHint}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                <WrapPanel Margin="0,2,0,0">
+                    <StackPanel Margin="0,0,12,8"><TextBlock Text="{DynamicResource Str.ComparisonBaseline}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,5"/>
                     <ComboBox x:Name="CompareA" Style="{StaticResource SelectComboBoxStyle}"
-                              MinHeight="34" Width="240" MaxWidth="240" Margin="0,0,10,0"
+                              MinHeight="34" Width="240" MaxWidth="240" AutomationProperties.Name="{DynamicResource Str.ComparisonBaseline}"
                               SelectionChanged="Compare_SelectionChanged">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -312,8 +321,9 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
+                    </StackPanel><StackPanel Margin="0,0,0,8"><TextBlock Text="{DynamicResource Str.ComparisonCandidate}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,5"/>
                     <ComboBox x:Name="CompareB" Style="{StaticResource SelectComboBoxStyle}"
-                              MinHeight="34" Width="240" MaxWidth="240"
+                              MinHeight="34" Width="240" MaxWidth="240" AutomationProperties.Name="{DynamicResource Str.ComparisonCandidate}"
                               SelectionChanged="Compare_SelectionChanged">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -322,10 +332,34 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                </StackPanel>
+                    </StackPanel>
+                </WrapPanel>
                 <TextBlock x:Name="CompareHint" Text="{DynamicResource Str.SelectTwoSessions}" Style="{StaticResource MutedTextStyle}" FontSize="13" Margin="0,8,0,0"/>
                 <TextBlock x:Name="CompareConditionsText" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,8,0,10" Visibility="Collapsed"/>
+                <TextBlock x:Name="ComparisonExportStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+                <ItemsControl x:Name="CompareHighlights" Margin="0,12,0,8">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                        <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Metric}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+                                <TextBlock Text="{Binding Delta}" FontSize="22" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="0,8,0,0" TextWrapping="Wrap">
+                                    <TextBlock.Style><Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                        <Style.Triggers><DataTrigger Binding="{Binding Trend}" Value="good"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger><DataTrigger Binding="{Binding Trend}" Value="attention"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></DataTrigger></Style.Triggers>
+                                    </Style></TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,3,0,12" TextWrapping="Wrap"><Run Text="{DynamicResource Str.ComparisonRelativeShort}"/><Run Text="{Binding Relative, Mode=OneWay}"/></TextBlock>
+                                <DockPanel><TextBlock Text="A" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding AVal}" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" FontSize="13"/></DockPanel>
+                                <ProgressBar Style="{StaticResource ThinMeterStyle}" Maximum="{Binding Maximum}" Value="{Binding AChartValue}" Foreground="{DynamicResource ChartSecondaryBrush}" Margin="0,6,0,10"/>
+                                <DockPanel><TextBlock Text="B" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding BVal}" HorizontalAlignment="Right" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" FontSize="13"/></DockPanel>
+                                <ProgressBar Style="{StaticResource ThinMeterStyle}" Maximum="{Binding Maximum}" Value="{Binding BChartValue}" Foreground="{DynamicResource AccentBrush}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
                 <!-- 表头：四列含义不再依赖上方提示文本反推 -->
+                <Expander x:Name="ComparisonDetails" Header="{DynamicResource Str.ComparisonDetails}" Margin="0,8,0,0"><StackPanel>
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110"/>
@@ -363,6 +397,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                </StackPanel></Expander>
             </StackPanel>
         </Border>
     </Grid>

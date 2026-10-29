@@ -33,6 +33,16 @@ public static class GameContextService
     public static bool IsBusy => GamePreparationService.IsRunning || IsBusyProvider?.Invoke() == true;
 
     public static void ClearNeedsDetection() => NeedsDetection = false;
+    internal static string DisplayNameFor(string path)
+    {
+        var profile = StateStore.FindGameByPath(path);
+        return profile is null ? GamePathService.LabelFor(path) : new GameSwitcherItem(profile.Name, profile.Id, profile.ExePath).DisplayLabel;
+    }
+    internal static void NotifyLibraryChanged()
+    {
+        if (AppState.GamePath is { } path && StateStore.FindGameByPath(path) is null) { SwitchTo(null); return; }
+        GameSwitched?.Invoke();
+    }
 
     /// <summary>首页创建前恢复已保存的选择；不加载旧检测快照，控制台仍按原流程刷新检测。</summary>
     internal static void RestoreSavedSelection()
@@ -103,6 +113,10 @@ public static class GameContextService
             FpsTune.Wpf.Services.DialogService.Warning(Str.T("Str.PickGameExeTitle"), Str.T("Str.MustPickGameExe"));
             return null;
         }
-        return StateStore.AddGame(path);
+        try { return StateStore.AddGame(path); }
+        catch (Exception ex)
+        {
+            DialogService.Warning(Str.T("Str.LibraryAdd"), PrivacyScrub.Sanitize(ex.Message)); return null;
+        }
     }
 }

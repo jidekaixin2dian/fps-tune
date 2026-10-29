@@ -506,13 +506,14 @@ public sealed class ReadabilityAndFramesUiTests
                 foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "preparation-home-" + theme); }
                 timer.Start(); configure.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.True(configured); Assert.Equal(0, memory.Purges); Assert.Empty(screens.Writes);
-                SettingsService.Load(); var saved = SettingsService.Current.Preparation;
+                SettingsService.Load(); var saved = PreparationPlanStore.Resolve(AppState.GamePath).Options;
+                Assert.True(PreparationPlanStore.Resolve(AppState.GamePath).IsGameSpecific);
                 Assert.True(saved.Configured && saved.CleanMemory && saved.AllStandby && saved.ApplyIcc && saved.ApplyVibrance);
                 Assert.Equal("B", saved.DisplayIdentity); Assert.Equal(76, saved.VibrancePercent);
                 start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert.False(start.IsEnabled);
                 DlssFeedbackTests.PumpUntil(() => start.IsEnabled && status.Text == Str.T("Str.PrepareDone"));
                 Assert.Equal(1, memory.Purges); Assert.Equal(76, screens.Levels["B"]); Assert.Equal(30, screens.Levels["A"]);
-                screens.IgnoreVibWrite = true; SettingsService.Current.Preparation = saved with { VibrancePercent = 83 };
+                screens.IgnoreVibWrite = true; PreparationPlanStore.Save(AppState.GamePath, saved with { VibrancePercent = 83 });
                 start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => start.IsEnabled && failureShown);
                 Assert.Equal(Str.T("Str.PreparePartial"), status.Text); Assert.Equal(2, memory.Purges);

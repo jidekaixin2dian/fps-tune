@@ -10,8 +10,20 @@ public partial class SessionView
     private sealed class AutoGameRow(string path, bool selected)
     {
         public string Path { get; } = path;
-        public string Name => GamePathService.LabelFor(Path);
+        public string Name => GameContextService.DisplayNameFor(Path);
         public bool Selected { get; set; } = selected;
+    }
+    internal void OpenAutomationOptions(string? targetPath = null)
+    {
+        AutoRecordOptions.IsExpanded = true;
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (!IsLoaded) return;
+            UpdateLayout();
+            var row = AutoRecordGames.Items.OfType<AutoGameRow>().FirstOrDefault(r => r.Path.Equals(targetPath, StringComparison.OrdinalIgnoreCase));
+            var target = row is null ? null : AutoRecordGames.ItemContainerGenerator.ContainerFromItem(row) as FrameworkElement;
+            (target ?? AutoRecordEnabled).BringIntoView();
+        });
     }
     private void InitializeAutoRecording()
     {
