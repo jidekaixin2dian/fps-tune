@@ -146,6 +146,7 @@ public partial class MainWindow : Window
     /// 首帧时页面仍是占位内容。页面对应工作完成后调用 <see cref="NotifyHomeDataReady"/>。
     /// </summary>
     public event EventHandler? HomeDataReady;
+    internal event EventHandler? StartupNavigationRequested;
 
     internal void NotifyHomeDataReady() => HomeDataReady?.Invoke(this, EventArgs.Empty);
 
@@ -492,6 +493,7 @@ public partial class MainWindow : Window
         // Present cached content immediately; whole-page fades delayed every navigation
         // and repeatedly rasterized CJK text at fractional translated positions.
         PageHost.Content = page;
+        if (!ReferenceEquals(page, GetPage("home"))) StartupNavigationRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void CaptionButton_Click(object sender, RoutedEventArgs e)

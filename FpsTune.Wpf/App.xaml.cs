@@ -121,17 +121,14 @@ public partial class App : Application
             mainWindow.StateChanged += (_, _) => UpdateLiveMetrics();
             // 首帧渲染 ≠ 首页数据就绪（控制台概览首启要跑后台检测、经典概览要等 WMI）。
             // splash 等到「首帧 + 首页数据就绪信号」双条件齐备才放行，超时兜底防启动卡死。
-            var firstFrame = new TaskCompletionSource();
-            var homeReady = new TaskCompletionSource();
-            mainWindow.ContentRendered += (_, _) => firstFrame.TrySetResult();
-            mainWindow.HomeDataReady += (_, _) => homeReady.TrySetResult();
+            _ = StartupPresentation.CompleteAsync(mainWindow, splash);
             mainWindow.Closed += (_, _) =>
             {
                 try { splash.Close(); } catch { /* 已关闭则忽略 */ }
             };
             mainWindow.Show();
+            splash.Owner = mainWindow;
             splash.SetPhase(92, Str.T("Str.SplashPhaseData"));
-            _ = CloseSplashWhenReadyAsync(splash, firstFrame.Task, homeReady.Task);
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();
             MemoryAutomation = new MemoryAutoCleanupService();
@@ -154,16 +151,6 @@ public partial class App : Application
         base.OnExit(e);
     }
 
-    /// <summary>splash 数据阶段最长等待：超时放行，首页在后台继续加载，绝不卡死启动。</summary>
-    private static readonly TimeSpan SplashDataTimeout = TimeSpan.FromSeconds(15);
-
-    private static async Task CloseSplashWhenReadyAsync(
-        Views.SplashWindow splash, Task firstFrame, Task homeReady)
-    {
-        var ready = Task.WhenAll(firstFrame, homeReady);
-        _ = await Task.WhenAny(ready, Task.Delay(SplashDataTimeout));
-        try { splash.CloseWithFade(); } catch { /* 已关闭则忽略 */ }
-    }
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         LogException(e.Exception);

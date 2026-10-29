@@ -26,10 +26,17 @@ public partial class MaintenanceView : UserControl
     private void Section_Checked(object sender, RoutedEventArgs e)
     {
         if (StorageSection is null || sender is not RadioButton { Tag: string tag }) return;
-        var sections = new[] { StorageSection, ProcessesSection, TroubleshootSection, AudioSection };
+        FrameworkElement[] sections = [StorageSection, ProcessesSection, TroubleshootSection, AudioSection, NetworkSection];
         for (var i = 0; i < sections.Length; i++)
             sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
+        if (tag == "4" && NetworkSection.Content is null) NetworkSection.Content = new NetworkToolsPanel();
+        foreach (var section in sections.Where(s => s.Visibility == Visibility.Visible)) Controls.UiMotion.Enter(section);
         if (tag == "1" && IsLoaded) { _ = RefreshMemoryAppsAsync(); _ = RefreshMemoryLiveAsync(); }
+    }
+    internal void OpenNetworkTool(string target)
+    {
+        NetworkNav.IsChecked = true;
+        if (NetworkSection.Content is NetworkToolsPanel panel) panel.ShowPorts(target == "ports");
     }
     private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshSnapshotAsync();
     private async Task RefreshSnapshotAsync()

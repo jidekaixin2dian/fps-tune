@@ -21,8 +21,10 @@
                 <RadioButton x:Name="ProcessesNav" Content="{DynamicResource Str.MaintenanceProcesses}" GroupName="maintenanceSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
                 <RadioButton x:Name="TroubleshootNav" Content="{DynamicResource Str.MaintenanceTroubleshoot}" GroupName="maintenanceSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
                 <RadioButton x:Name="AudioNav" Content="{DynamicResource Str.EqTitle}" GroupName="maintenanceSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+                <RadioButton x:Name="NetworkNav" Content="网络与端口" GroupName="maintenanceSection" Tag="4" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
             </StackPanel>
             <Grid Grid.Column="1">
+                <ContentControl x:Name="NetworkSection" Visibility="Collapsed"/>
                 <ScrollViewer x:Name="AudioSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><views:AudioEqualizerPanel Margin="0,0,14,0"/></ScrollViewer>
                 <ScrollViewer x:Name="StorageSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,14,0">
                     <Border Style="{StaticResource CardStyle}"><StackPanel>

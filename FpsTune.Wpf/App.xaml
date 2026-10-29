@@ -38,6 +38,7 @@
 
             <!-- Opaque native windows allow LCD subpixel antialiasing and natural glyph spacing. -->
             <Style x:Key="WindowTypographyStyle" TargetType="Window">
+                <Setter Property="controls:UiMotion.AnimateEntrance" Value="True"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
@@ -427,6 +428,7 @@
             <!-- ============ 按钮 ============ -->
             <!-- 主按钮：实心青色块 + 深字，控制台的动作出口 -->
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+                <Setter Property="controls:UiMotion.ButtonFeedback" Value="True"/>
                 <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
                 <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
@@ -460,6 +462,7 @@
             </Style>
 
             <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+                <Setter Property="controls:UiMotion.ButtonFeedback" Value="True"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -505,6 +508,7 @@
 
             <!-- 幽灵按钮：纯文本，悬停转青 -->
             <Style x:Key="GhostButtonStyle" TargetType="Button">
+                <Setter Property="controls:UiMotion.ButtonFeedback" Value="True"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>

@@ -34,6 +34,8 @@ public sealed class WorkspaceCommands
         foreach (var item in ItemCatalog.All)
             entries.Add(new("item:" + item.Id, item.DisplayName, item.DisplayDescription, Str.T("Str.ItemsTitle"),
                 "opt", item.Id, string.Join(" ", item.Id, item.Name, item.NameEn, item.Description, item.DescriptionEn, item.Group)));
+        entries.Add(new("tools:network", "网络诊断", "网卡、DNS、延迟与连接测试", Str.T("Str.NavTools"), "tools", "network", "网络 ping DNS TCP 延迟 丢包 抖动 网关"));
+        entries.Add(new("tools:ports", "端口占用", "按端口或进程查看 TCP / UDP 快照", Str.T("Str.NavTools"), "tools", "ports", "端口 PID 连接 TCP UDP 网络 进程"));
         return entries;
 
         void Add(string id, string title, string group, string route, string? target, string aliases)
