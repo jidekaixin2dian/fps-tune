@@ -17,8 +17,8 @@ public partial class ColorPreviewControl : UserControl
     private string? _profile;
     private int _generation;
     private int _loadGeneration;
-    private readonly BitmapSource?[] _scenes = new BitmapSource?[2];
-    private BitmapSource? _customSource;
+    private string? _customPath;
+    private string? _loadingKey;
     private string? _customName;
     private bool _selecting;
 
@@ -28,8 +28,19 @@ public partial class ColorPreviewControl : UserControl
         BeforeImage.Source = AfterImage.Source = _source;
         AfterImage.Effect = _effect;
         ScreenshotCombo.SelectedIndex = 0;
-        Loaded += async (_, _) => { if (_source is null) await SelectScreenshotAsync(); else await RefreshImageAsync(); };
-        Unloaded += (_, _) => { ++_generation; ++_loadGeneration; AfterImage.Source = _source; };
+        Loaded += async (_, _) => { if (IsVisible) await SelectScreenshotAsync(); };
+        IsVisibleChanged += async (_, _) =>
+        {
+            if (!IsVisible) ReleaseImages();
+            else if (IsLoaded && _source is null) await SelectScreenshotAsync();
+        };
+        Unloaded += (_, _) => ReleaseImages();
+    }
+    private void ReleaseImages()
+    {
+        ++_generation; ++_loadGeneration; _loadingKey = null;
+        _source = null; BeforeImage.Source = AfterImage.Source = null;
+        EmptyHint.Visibility = Visibility.Visible;
     }
     private async void Screenshot_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -38,13 +49,19 @@ public partial class ColorPreviewControl : UserControl
     private async Task SelectScreenshotAsync()
     {
         var index = ScreenshotCombo.SelectedIndex;
-        if (index < 0 || index > 2) return;
-        var generation = ++_loadGeneration;
+        if (index < 0 || index > 2 || !IsVisible) return;
+        var key = index == 2 ? _customPath : index.ToString();
+        if (key == _loadingKey && key is not null) return;
+        var generation = ++_loadGeneration; _loadingKey = key;
         try
         {
             BitmapSource? source;
-            if (index == 2) source = _customSource;
-            else source = _scenes[index] ??= await Task.Run(() =>
+            if (index == 2)
+            {
+                var path = _customPath;
+                source = path is null ? null : await Task.Run(() => WallpaperService.Decode(path));
+            }
+            else source = await Task.Run(() =>
             {
                 var image = new BitmapImage(); image.BeginInit();
                 image.CacheOption = BitmapCacheOption.OnLoad;
@@ -53,10 +70,11 @@ public partial class ColorPreviewControl : UserControl
                     + (index == 0 ? "delta-force.png" : "valorant.png"));
                 image.EndInit(); image.Freeze(); return image;
             });
-            if (source is null || generation != _loadGeneration) return;
+            if (source is null || generation != _loadGeneration || !IsVisible) return;
             await ShowSourceAsync(source, index == 2 ? _customName! : Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
         }
         catch { if (generation == _loadGeneration) PreviewStatus.Text = Str.T("Str.ColorPreviewLoadFailed"); }
+        finally { if (generation == _loadGeneration) _loadingKey = null; }
     }
     private async Task ShowSourceAsync(BitmapSource source, string name)
     {
@@ -94,7 +112,7 @@ public partial class ColorPreviewControl : UserControl
     {
         var generation = ++_generation;
         var source = _source; var profile = _profile;
-        if (source is null) return;
+        if (source is null || !IsVisible) return;
         try
         {
             BitmapSource image = source;
@@ -121,9 +139,10 @@ public partial class ColorPreviewControl : UserControl
     internal async Task LoadImageAsync(string path)
     {
         var generation = ++_loadGeneration;
+        _loadingKey = null;
         var source = await Task.Run(() => WallpaperService.Decode(path));
-        if (generation != _loadGeneration) return;
-        _customSource = source; _customName = Path.GetFileName(path);
+        if (generation != _loadGeneration || !IsVisible) return;
+        _customPath = Path.GetFullPath(path); _customName = Path.GetFileName(path);
         _selecting = true;
         try { CustomSceneItem.Visibility = Visibility.Visible; ScreenshotCombo.SelectedIndex = 2; }
         finally { _selecting = false; }

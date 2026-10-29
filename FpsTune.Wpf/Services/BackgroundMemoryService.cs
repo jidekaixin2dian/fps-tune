@@ -24,7 +24,7 @@ internal sealed class BackgroundMemoryService(IBackgroundMemoryApi? api = null, 
         Action<MemoryCleanupProgress>? progress = null, CancellationToken cancellation = default)
     {
         using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
-        var busy = isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning || GamePreparationService.IsRunning);
+        var busy = isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning || GamePreparationService.BlocksMemoryCleanup);
         if (busy())
             throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
         var selected = targets.DistinctBy(t => t.Pid).Take(200).ToArray();

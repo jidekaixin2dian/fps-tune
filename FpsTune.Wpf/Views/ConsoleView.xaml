@@ -1,14 +1,14 @@
 <UserControl x:Class="FpsTune.Wpf.Views.ConsoleView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{DynamicResource ConsoleBackgroundBrush}"
+             Background="{DynamicResource AppBackgroundBrush}"
              FontFamily="{StaticResource FontBody}">
     <!-- 0.1.16：卡片化（用户批准的布局提案）——开局准备卡 / 指标通栏卡 / 优化项卡（含底部动作条），
          组件与色值沿用全站卡片语言（CardStyle + 发丝分隔），与检测/会话等页一致 -->
     <UserControl.Resources>
         <Style x:Key="MetricNumber" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">
-            <Setter Property="FontSize" Value="32"/>
-            <Setter Property="Margin" Value="0,10,0,15"/>
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="Margin" Value="0,6,0,8"/>
         </Style>
     </UserControl.Resources>
     <Grid Margin="28,14,28,18">
@@ -21,10 +21,10 @@
         <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
         <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
             <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" FontSize="17" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,18,0"/>
+                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,18,0"/>
                     <ComboBox Grid.Column="1" x:Name="GameSwitcher" Width="300" Height="38" FontSize="14" Padding="14,0,34,0" Background="{DynamicResource SurfaceBrush}" HorizontalContentAlignment="Stretch"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
                               SelectionChanged="GameSwitcher_SelectionChanged">
@@ -32,44 +32,54 @@
                     </ComboBox>
                 </Grid>
                 <TextBlock Grid.Row="1" x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"/>
-                <WrapPanel Grid.Row="2" x:Name="PreparationActions" Margin="0,14,0,0" VerticalAlignment="Center">
-                    <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="104" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
-                    <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
-                    <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="94" Height="36" Margin="0,0,8,0" Click="LocateDelta_Click"/>
-                    <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,8,0" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
-                    <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,8,0" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
-                    <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Height="36" Click="DeltaRestore_Click"/>
+                <Grid Grid.Row="2" Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <WrapPanel x:Name="PreparationActions">
+                        <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="112" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
+                        <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
+                        <Button x:Name="CancelPreparationButton" Content="{DynamicResource Str.PrepareStop}" Style="{StaticResource GhostButtonStyle}" Height="36" Visibility="Collapsed" Click="CancelPreparation_Click"/>
+                    </WrapPanel>
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
+                        <Button x:Name="GameLibraryButton" Content="{DynamicResource Str.NavGames}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="GameLibrary_Click"/>
+                        <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
+                    </WrapPanel>
+                </Grid>
+                <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,8" Margin="0,12,0,0">
+                    <TextBlock x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                </Border>
+                <WrapPanel Grid.Row="4" Margin="-10,6,0,-4">
+                    <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource GhostButtonStyle}" Click="LocateDelta_Click"/>
+                    <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
+                    <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Click="DeltaRestore_Click"/>
                 </WrapPanel>
-                <TextBlock Grid.Row="3" x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap"/>
-                <TextBlock Grid.Row="4" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                <TextBlock Grid.Row="5" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
             </Grid>
         </Border>
 
         <!-- 卡 2：指标通栏（发丝分隔四格，与检测页硬件条同构） -->
         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
             <UniformGrid Columns="4">
-                <Border Padding="24,20,24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
                         <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="CpuText" Text="—" Style="{StaticResource MetricNumber}"/>
                         <ProgressBar x:Name="CpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
                     </StackPanel>
                 </Border>
-                <Border Padding="24,20,24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
                         <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
                     </StackPanel>
                 </Border>
-                <Border Padding="24,20,24,16" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                     <StackPanel>
                         <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="GpuText" Text="—" Style="{StaticResource MetricNumber}"/>
                         <ProgressBar x:Name="GpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
                     </StackPanel>
                 </Border>
-                <Border Padding="24,20,24,16">
+                <Border Padding="20,12,20,10">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
                         <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>

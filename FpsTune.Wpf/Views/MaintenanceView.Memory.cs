@@ -78,40 +78,16 @@ public partial class MaintenanceView
         var progress = new Progress<MemoryCleanupProgress>(p =>
         {
             if (!_busy || cancellation.IsCancellationRequested) return;
-            MemoryStage.Text = p.Stage switch
-            {
-                "apps" => Str.T("Str.MemoryAppsStage", p.Completed, p.Total, p.Name),
-                "standby" => Str.T("Str.MemoryStandbyStage"),
-                _ => Str.T("Str.MemoryMeasureStage")
-            };
+            MemoryStage.Text = MemoryCleanupSummary.Stage(p);
         });
         try
         {
             var result = await Task.Run(() => _memory.Run(mode, targets, _background, progress, cancellation.Token));
             if (result.After is { } after) ShowMemory(after);
             else ShowMemoryUnavailable(result.ReadError ?? "");
-            var lines = new List<string> { Str.T(result.Canceled ? "Str.MemoryStopped" : result.Error is not null
-                ? "Str.MemoryRunFailed" : result.Apps.Any(r => r.Error is not null) ? "Str.MemoryRunPartial" : "Str.MemoryRunDone",
-                clock.Elapsed.TotalSeconds.ToString("F1")) };
-            if (hasApps)
-            {
-                lines.Add(Str.T("Str.MemoryAppsSummary", result.Apps.Count(r => r.Error is null),
-                    result.Apps.Count(r => r.Error is not null), Math.Max(0, targets.Length - result.Apps.Count)));
-                ShowMemoryAppsResult(result.Apps);
-            }
-            if (mode != MemoryCleanupMode.WorkingSets)
-                lines.Add(Str.T(result.StandbyCompleted ? "Str.MemoryStandbyDone" : "Str.MemoryStandbyIncomplete"));
-            if (result.Error is not null) lines.Add(PrivacyScrub.Sanitize(result.Error));
-            if (result.After is { } measured)
-            {
-                lines.Add(Str.T("Str.MemoryAvailableChange", MemorySize(result.Before.Available), MemorySize(measured.Available)));
-                var delta = (double)measured.Available - result.Before.Available;
-                lines.Add(Str.T(delta >= 0 ? "Str.MemoryAvailableIncreased" : "Str.MemoryAvailableDecreased", MemorySize((ulong)Math.Abs(delta))));
-                if (result.Before.Standby is { } beforeCache && measured.Standby is { } afterCache)
-                    lines.Add(Str.T("Str.MemoryStandbyChange", Size((long)beforeCache), Size((long)afterCache)));
-            }
-            else lines.Add(Str.T("Str.MemoryRunReadFailed", PrivacyScrub.Sanitize(result.ReadError ?? "")));
-            MemoryResult.Text = string.Join("\n", lines);
+            if (hasApps) ShowMemoryAppsResult(result.Apps);
+            MemoryResult.Text = MemoryCleanupSummary.Format(result, targets.Length, hasApps,
+                mode != MemoryCleanupMode.WorkingSets, clock.Elapsed.TotalSeconds);
             if (ProcessesSection.IsVisible) MemoryResult.BringIntoView();
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { MemoryResult.Text = Str.T("Str.MemoryStopped", clock.Elapsed.TotalSeconds.ToString("F1")); }

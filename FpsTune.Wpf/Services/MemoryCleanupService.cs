@@ -26,7 +26,7 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
     {
         using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
         if (!Enum.IsDefined(mode)) throw new ArgumentOutOfRangeException(nameof(mode));
-        if (IsBusy || GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
+        if (IsBusy || GamePreparationService.BlocksMemoryCleanup) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
         if (mode != MemoryCleanupMode.WorkingSets && !IsAdministrator)
             throw new UnauthorizedAccessException(Str.T("Str.MemoryAdmin"));
         if (mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined && targets.Count == 0)
@@ -41,7 +41,7 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
             if (mode is MemoryCleanupMode.WorkingSets or MemoryCleanupMode.Combined or MemoryCleanupMode.Full)
                 apps = background.Trim(targets, p => progress?.Report(p), cancellation);
             cancellation.ThrowIfCancellationRequested();
-            if (IsBusy || GamePreparationService.IsRunning) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
+            if (IsBusy || GamePreparationService.BlocksMemoryCleanup) throw new InvalidOperationException(Str.T("Str.MemoryBusy"));
             if (mode != MemoryCleanupMode.WorkingSets)
             {
                 progress?.Report(new("standby", 0, 0));

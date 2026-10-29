@@ -6,21 +6,21 @@
     Style="{StaticResource WindowTypographyStyle}" TextOptions.TextRenderingMode="Grayscale" WindowStartupLocation="Manual">
     <Grid x:Name="HudRoot">
         <Border x:Name="HudBackdrop" Background="{DynamicResource NotificationBackgroundBrush}" BorderBrush="{DynamicResource WindowBorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusCard}" IsHitTestVisible="False"/>
-        <StackPanel Margin="12">
-            <Border Background="{DynamicResource NotificationBackgroundBrush}" CornerRadius="8" Padding="6,2">
+        <StackPanel x:Name="HudBody" Margin="8">
+            <Border x:Name="InteractionBar" Background="{DynamicResource NotificationBackgroundBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="4,0">
             <Grid x:Name="DragArea" Background="Transparent" MouseLeftButtonDown="DragArea_MouseLeftButtonDown"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock x:Name="HudCaption" Text="{DynamicResource Str.AppNameShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" Cursor="SizeAll"/>
                 <StackPanel x:Name="HudActions" Grid.Column="1" Orientation="Horizontal">
                     <CheckBox x:Name="Pin" Content="{DynamicResource Str.HudPin}" IsChecked="True" Checked="Pin_Changed" Unchecked="Pin_Changed" Margin="0,0,8,0"/>
-                    <Button x:Name="ThroughButton" Content="{DynamicResource Str.HudThrough}" Style="{StaticResource GhostButtonStyle}" Padding="10,3" MinHeight="30" Click="Through_Click" Focusable="False"/>
-                    <Button x:Name="CloseHudButton" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Background="{DynamicResource NotificationBackgroundBrush}" Padding="12,3" MinHeight="30" Click="Close_Click" Focusable="False"/>
+                    <Button x:Name="ThroughButton" Content="{DynamicResource Str.HudThrough}" Style="{StaticResource GhostButtonStyle}" Padding="8,0" Height="26" MinHeight="26" Click="Through_Click" Focusable="False"/>
+                    <Button x:Name="CloseHudButton" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Background="{DynamicResource NotificationBackgroundBrush}" Padding="8,0" Height="26" MinHeight="26" Click="Close_Click" Focusable="False"/>
                 </StackPanel>
                 <TextBlock x:Name="LockedHint" Grid.Column="1" Text="{DynamicResource Str.HudLockedShort}" Visibility="Collapsed" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
             </Grid>
             </Border>
-            <UniformGrid x:Name="HudMetrics" Columns="2" Margin="6,8,6,4">
-                <StackPanel><TextBlock Text="FPS" Style="{StaticResource SectionLabelStyle}"/><TextBlock x:Name="FpsText" Text="—" Style="{StaticResource StatValueStyle}" FontSize="30"/></StackPanel>
-                <StackPanel><TextBlock Text="1% LOW" Style="{StaticResource SectionLabelStyle}"/><TextBlock x:Name="LowText" Text="—" Style="{StaticResource StatValueStyle}" FontSize="30"/></StackPanel>
+            <UniformGrid x:Name="HudMetrics" Columns="2" Margin="4,6,4,2">
+                <StackPanel x:Name="FpsPanel"><TextBlock x:Name="FpsLabel" Text="FPS" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/><TextBlock x:Name="FpsText" Text="—" Style="{StaticResource StatValueStyle}" FontSize="24"/></StackPanel>
+                <StackPanel x:Name="LowPanel"><TextBlock x:Name="LowLabel" Text="1% LOW" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/><TextBlock x:Name="LowText" Text="—" Style="{StaticResource StatValueStyle}" FontSize="24"/></StackPanel>
                 <TextBlock x:Name="CpuText" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" VerticalAlignment="Center" Margin="0,6"/>
                 <TextBlock x:Name="GpuText" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" VerticalAlignment="Center" Margin="0,6"/>
                 <TextBlock x:Name="MemoryText" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center" Margin="0,6"/>

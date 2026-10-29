@@ -15,6 +15,7 @@ public partial class MainWindow
         _loadingHudAppearance = true;
         var appearance = HudController.Appearance;
         HudStripOption.IsChecked = appearance.Layout == "strip"; HudCardOption.IsChecked = appearance.Layout == "card";
+        HudCompactOption.IsChecked = appearance.Layout == "compact";
         HudTransparencySlider.Value = appearance.Transparency;
         HudLeftOption.IsChecked = appearance.Position == "top-left"; HudCenterOption.IsChecked = appearance.Position == "top-center";
         HudRightOption.IsChecked = appearance.Position == "top-right";
@@ -33,9 +34,15 @@ public partial class MainWindow
     {
         if (_loadingHudAppearance || HudTransparencyLabel is null || HudCenterOption is null || HudOptionsStatus is null) return;
         HudTransparencyLabel.Text = Str.T("Str.HudTransparency", HudTransparencySlider.Value.ToString("F0"));
-        HudController.PreviewAppearance(new(HudCardOption.IsChecked == true ? "card" : "strip", HudTransparencySlider.Value,
+        HudController.PreviewAppearance(new(HudCompactOption.IsChecked == true ? "compact" : HudCardOption.IsChecked == true ? "card" : "strip", HudTransparencySlider.Value,
             HudLeftOption.IsChecked == true ? "top-left" : HudRightOption.IsChecked == true ? "top-right" : "top-center"));
         HudOptionsStatus.Text = "";
+    }
+    private void HudGamePreset_Click(object sender, RoutedEventArgs e)
+    {
+        HudCompactOption.IsChecked = true; HudTransparencySlider.Value = 100; HudRightOption.IsChecked = true;
+        HudController.Show();
+        HudOptionsStatus.Text = HudController.Window?.SetClickThrough(true) == true ? Str.T("Str.HudGameActive") : Str.T("Str.HudGameUnavailable");
     }
     private void HudAppearanceSave_Click(object sender, RoutedEventArgs e)
     {

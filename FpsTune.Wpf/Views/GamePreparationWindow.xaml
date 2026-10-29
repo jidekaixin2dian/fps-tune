@@ -18,8 +18,8 @@
                 <TextBlock x:Name="BasicGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" LineHeight="23"/>
                 <Button x:Name="ReviewBasicsButton" Content="{DynamicResource Str.PrepareReviewBasics}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="ReviewBasics_Click"/>
             </StackPanel></Border>
-            <CheckBox x:Name="MemoryCheck" Content="{DynamicResource Str.PrepareMemory}" FontSize="14"/>
-            <ComboBox x:Name="MemoryMode" Width="300" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=MemoryCheck}" AutomationProperties.Name="{DynamicResource Str.MemoryScope}"><ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/><ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/></ComboBox>
+            <CheckBox x:Name="MemoryCheck" Content="{DynamicResource Str.PrepareMemoryScope}" FontSize="14"/>
+            <ComboBox x:Name="MemoryMode" Width="420" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=MemoryCheck}" AutomationProperties.Name="{DynamicResource Str.MemoryScope}"><ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/><ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/><ComboBoxItem Content="{DynamicResource Str.PrepareFullMode}"/></ComboBox>
             <CheckBox x:Name="IccCheck" Content="{DynamicResource Str.PrepareIcc}" FontSize="14"/>
             <ComboBox x:Name="IccPresetBox" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=IccCheck}" AutomationProperties.Name="{DynamicResource Str.IccPresetLabel}"/>
             <CheckBox x:Name="VibranceCheck" Content="{DynamicResource Str.PrepareVibrance}" FontSize="14"/>

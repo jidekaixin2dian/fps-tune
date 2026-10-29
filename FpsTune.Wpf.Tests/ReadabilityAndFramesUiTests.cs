@@ -555,13 +555,15 @@ public sealed class ReadabilityAndFramesUiTests
                 {
                     window.Width = size.Width; window.Height = size.Height;
                     SettingsService.Current.ThemeMode = theme; window.SetDisplayMode(mode); window.UpdateLayout();
-                    var actions = ((WrapPanel)page.FindName("PreparationActions")).Children.OfType<Button>().ToArray();
-                    Assert.Equal(6, actions.Length);
-                    var tops = actions.Select(b => b.TranslatePoint(new Point(0, 0), page).Y).ToArray();
+                    var primary = ((WrapPanel)page.FindName("PreparationActions")).Children.OfType<Button>().Where(b => b.IsVisible).ToArray();
+                    Assert.Equal(2, primary.Length); Assert.All(primary, b => Assert.Equal(36, b.ActualHeight));
+                    var actions = new[] { "StartPreparationButton", "ConfigurePreparationButton", "LocateDeltaButton", "PrepareDeltaButton", "RecordMatchButton", "PreparationRestoreButton", "GameLibraryButton" }
+                        .Select(name => (Button)page.FindName(name)).ToArray();
+                    var tops = primary.Select(b => b.TranslatePoint(new Point(0, 0), page).Y).ToArray();
                     Assert.InRange(tops.Max() - tops.Min(), 0, 0.1);
                     foreach (var action in actions)
                     {
-                        Assert.Equal(36, action.ActualHeight); var at = action.TranslatePoint(new Point(), page);
+                        Assert.InRange(action.ActualHeight, 30, 36); var at = action.TranslatePoint(new Point(), page);
                         Assert.InRange(at.X, 0, page.ActualWidth - action.ActualWidth + 0.1);
                         Assert.InRange(at.Y, 0, page.ActualHeight - action.ActualHeight + 0.1);
                     }

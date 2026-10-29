@@ -116,6 +116,8 @@ public partial class ConsoleView : UserControl
     {
         if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("backup");
     }
+    private void GameLibrary_Click(object sender, RoutedEventArgs e)
+    { if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("games"); }
 
     public ConsoleView() : this(new GamePreparationService()) { }
     internal ConsoleView(GamePreparationService preparation)

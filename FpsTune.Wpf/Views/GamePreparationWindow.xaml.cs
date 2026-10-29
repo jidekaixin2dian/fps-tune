@@ -27,7 +27,7 @@ public partial class GamePreparationWindow : Window
         PlanGameText.Text = Str.T("Str.PlanTarget", _gamePath is null ? Str.T("Str.PlanSharedDefault") : GamePathService.LabelFor(_gamePath));
         try { UseDefaultButton.IsEnabled = _gamePath is not null && System.IO.File.Exists(PreparationPlanStore.FileFor(_gamePath)); }
         catch (ArgumentException) { UseDefaultButton.IsEnabled = GameScope.IsEnabled = false; DefaultScope.IsChecked = true; }
-        MemoryCheck.IsChecked = _original.CleanMemory; MemoryMode.SelectedIndex = _original.AllStandby ? 1 : 0;
+        MemoryCheck.IsChecked = _original.CleanMemory; MemoryMode.SelectedIndex = _original.FullMemoryCleanup ? 2 : _original.AllStandby ? 1 : 0;
         IccCheck.IsChecked = _original.ApplyIcc; VibranceCheck.IsChecked = _original.ApplyVibrance;
         VibranceSlider.Value = Math.Clamp(_original.VibrancePercent, 0, 100);
         var presets = new[] { new IccChoice(null, Str.T("Str.PrepareOriginalIcc")) }
@@ -66,7 +66,7 @@ public partial class GamePreparationWindow : Window
     {
         if (!_loaded || _planError is not null || !SameGame()) return;
         var selected = new GamePreparationOptions { Configured = true, CleanMemory = MemoryCheck.IsChecked == true,
-            AllStandby = MemoryMode.SelectedIndex == 1, ApplyIcc = IccCheck.IsChecked == true,
+            AllStandby = MemoryMode.SelectedIndex >= 1, FullMemoryCleanup = MemoryMode.SelectedIndex == 2, ApplyIcc = IccCheck.IsChecked == true,
             IccPreset = (IccPresetBox.SelectedItem as IccChoice)?.Preset, ApplyVibrance = VibranceCheck.IsChecked == true,
             VibrancePercent = (int)VibranceSlider.Value, DisplayIdentity = (DisplayBox.SelectedItem as DisplayChoice)?.Identity };
         if (!selected.HasActions) { StatusText.Text = Str.T("Str.PrepareChoose"); return; }

@@ -41,7 +41,7 @@ public sealed class HudAppearanceUiTests
                     ThemeManager.SetMode(theme);
                     ((RadioButton)main.FindName(layout == "card" ? "HudCardOption" : "HudStripOption")).IsChecked = true;
                     slider.Value = transparency; hud.UpdateLayout();
-                    Assert.Equal(layout == "strip" ? 720 : 360, hud.Width);
+                    Assert.Equal(layout == "strip" ? 560 : 300, hud.Width);
                     Assert.Equal(1 - transparency / 100d, ((FrameworkElement)hud.FindName("HudBackdrop")).Opacity);
                     Assert.Equal(1, ((TextBlock)hud.FindName("FpsText")).Opacity);
                     Assert.True(((Button)hud.FindName("CloseHudButton")).IsVisible);
@@ -54,7 +54,7 @@ public sealed class HudAppearanceUiTests
                 Click("HudNoBackgroundButton"); ((RadioButton)main.FindName("HudLeftOption")).IsChecked = true;
                 Click("SaveHudAppearanceButton"); SettingsService.Load();
                 Assert.Equal(new HudAppearance("strip", 100, "top-left"), SettingsService.Current.HudAppearance);
-                Assert.Equal(new HudAppearance("strip", 35, "top-center"), new HudAppearance("invalid", double.NaN, "invalid").Normalize());
+                Assert.Equal(new HudAppearance("compact", 75, "top-right"), new HudAppearance("invalid", double.NaN, "invalid").Normalize());
                 hud.RecoveryAvailableOverride = () => false; Assert.False(hud.SetClickThrough(true));
                 Assert.Equal(Visibility.Visible, ((TextBlock)hud.FindName("ScopeText")).Visibility);
                 hud.RecoveryAvailableOverride = () => true; Assert.True(hud.SetClickThrough(true));

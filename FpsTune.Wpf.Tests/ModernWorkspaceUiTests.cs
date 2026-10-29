@@ -355,7 +355,14 @@ public sealed class ModernWorkspaceUiTests
                     DlssFeedbackTests.PumpUntil(() => image.Source is ColorConvertedBitmap
                         && ((TextBlock)preview.FindName("ImageNameText")).Text == Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
                     var active = ((Image)preview.FindName("BeforeImage")).Source;
-                    if (index == 0) Assert.Same(delta, active);
+                    if (index == 0)
+                    {
+                        var first = (BitmapSource)delta; var second = (BitmapSource)active;
+                        Assert.Equal(first.PixelWidth, second.PixelWidth); Assert.Equal(first.PixelHeight, second.PixelHeight); Assert.Equal(first.Format, second.Format);
+                        var stride = (first.PixelWidth * first.Format.BitsPerPixel + 7) / 8;
+                        var a = new byte[stride * first.PixelHeight]; var b = new byte[a.Length];
+                        first.CopyPixels(a, stride, 0); second.CopyPixels(b, stride, 0); Assert.Equal(a, b);
+                    }
                     Assert.NotSame(active, image.Source);
                     foreach (var theme in new[] { "light", "dark" })
                     { ThemeManager.SetMode(theme); Render(surface, "game-icc-" + index + "-" + theme); }

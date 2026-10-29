@@ -21,6 +21,7 @@ public partial class PerformanceHudWindow : Window
     private long _sampleReceived;
     private nint _handle;
     private bool _registered, _through;
+    private bool _observing;
     private bool _closePressed;
     private string? _interactionError;
     private HudAppearance _appearance = new();
@@ -44,7 +45,6 @@ public partial class PerformanceHudWindow : Window
         };
         Loaded += (_, _) =>
         {
-            _metrics.Sampled += OnSample; _session.StateChanged += Refresh;
             UpdateVisibility(); Refresh();
             if (UserDataPaths.RootOverride is null) PositionInWorkArea(true);
         };
@@ -53,7 +53,7 @@ public partial class PerformanceHudWindow : Window
         StateChanged += (_, _) => UpdateVisibility();
         Closed += (_, _) =>
         {
-            _ticker.Stop(); _metrics.Sampled -= OnSample; _session.StateChanged -= Refresh;
+            _ticker.Stop(); Observe(false);
             _session.RequestLiveFps(false);
             if (_registered) UnregisterHotKey(_handle, Hotkey);
             _handle = 0;
@@ -62,9 +62,25 @@ public partial class PerformanceHudWindow : Window
     private void UpdateVisibility()
     {
         var visible = IsLoaded && IsVisible && WindowState != WindowState.Minimized;
+        Observe(visible);
         _session.RequestLiveFps(visible);
         if (visible) _ticker.Start(); else _ticker.Stop();
         App.UpdateLiveMetrics();
+    }
+    private void Observe(bool visible)
+    {
+        if (_observing == visible) return;
+        _observing = visible;
+        if (visible)
+        {
+            _metrics.Sampled += OnSample; _session.StateChanged += Refresh;
+            if (_metrics.Buffer.LastOrDefault() is { } latest)
+            {
+                var age = DateTime.Now - latest.Timestamp;
+                if (age >= TimeSpan.Zero && age.TotalMilliseconds <= Math.Max(5000, _metrics.Interval.TotalMilliseconds * 2)) OnSample(latest);
+            }
+        }
+        else { _metrics.Sampled -= OnSample; _session.StateChanged -= Refresh; _sample = null; }
     }
     private void OnSample(MetricSample sample)
     {
@@ -85,19 +101,28 @@ public partial class PerformanceHudWindow : Window
         LowText.Text = fps is null ? "—" : fps.P1Low.ToString("F0");
         ScopeText.Text = _interactionError ?? (_through ? Str.T("Str.HudLocked") : _session.IsRunning
             ? Str.T("Str.HudRecording", _session.Conditions?.GameName ?? _session.SessionName) : Str.T("Str.HudIdle"));
-        ScopeText.Visibility = _appearance.Layout == "strip" && _interactionError is null ? Visibility.Collapsed : Visibility.Visible;
+        ScopeText.Visibility = _appearance.Layout != "card" && _interactionError is null ? Visibility.Collapsed : Visibility.Visible;
         CaptureStatus.Text = !_session.IsRunning ? Str.T("Str.HudRecordForFps")
             : _session.CurrentFpsUnavailableReasonKey is { } reason ? Str.T(reason)
             : fps is null ? Str.T("Str.HudWaitingFrames") : Str.T("Str.HudWindow", fps.WindowSeconds.ToString("F1"), fps.Samples);
+        HudRoot.ToolTip = CaptureStatus.Text + "\n" + ScopeText.Text;
     }
     private static string Percent(double? value) => value is { } number && double.IsFinite(number) ? $"{number:F0}%" : "—";
     internal void ApplyAppearance(HudAppearance appearance)
     {
         _appearance = appearance.Normalize();
-        var strip = _appearance.Layout == "strip";
-        Width = strip ? 720 : 360; HudMetrics.Columns = strip ? 6 : 2;
+        var layout = HudLayout.For(_appearance.Layout);
+        Width = layout.Width; HudMetrics.Columns = layout.Columns;
+        FpsText.FontSize = LowText.FontSize = layout.FpsSize;
+        FpsPanel.Orientation = LowPanel.Orientation = layout.Compact ? System.Windows.Controls.Orientation.Horizontal : System.Windows.Controls.Orientation.Vertical;
+        FpsText.Margin = LowText.Margin = layout.Compact ? new Thickness(5, 0, 0, 0) : default;
+        MemoryText.Visibility = VramText.Visibility = layout.Compact ? Visibility.Collapsed : Visibility.Visible;
+        CpuText.Margin = GpuText.Margin = layout.Compact ? default : new Thickness(0, 4, 0, 4);
+        CaptureStatus.Visibility = layout.Compact ? Visibility.Collapsed : Visibility.Visible;
+        HudBody.Margin = new Thickness(layout.Compact ? 6 : 8);
         HudBackdrop.Opacity = 1 - _appearance.Transparency / 100;
-        ScopeText.Visibility = strip ? Visibility.Collapsed : Visibility.Visible;
+        ScopeText.Visibility = _appearance.Layout == "card" ? Visibility.Visible : Visibility.Collapsed;
+        ShowInteractionState();
         var clear = _appearance.Transparency >= 75;
         foreach (var text in MetricText(HudMetrics).Append(CaptureStatus).Append(ScopeText))
         {
@@ -124,6 +149,7 @@ public partial class PerformanceHudWindow : Window
     {
         HudActions.Visibility = _through ? Visibility.Collapsed : Visibility.Visible;
         LockedHint.Visibility = _through ? Visibility.Visible : Visibility.Collapsed;
+        InteractionBar.Visibility = _through && _appearance.Layout == "compact" ? Visibility.Collapsed : Visibility.Visible;
     }
     internal bool SetClickThrough(bool enabled)
     {

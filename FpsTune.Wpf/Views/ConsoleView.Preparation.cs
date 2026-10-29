@@ -8,6 +8,12 @@ public partial class ConsoleView
 {
     private readonly GamePreparationService _preparation;
     private bool _preparing;
+    private CancellationTokenSource? _preparationCancellation;
+    private void CancelPreparation_Click(object sender, RoutedEventArgs e)
+    {
+        _preparationCancellation?.Cancel(); CancelPreparationButton.IsEnabled = false;
+        PreparationStatus.Text = Str.T("Str.PrepareStopping");
+    }
 
     private async void StartPreparation_Click(object sender, RoutedEventArgs e)
     {
@@ -46,20 +52,25 @@ public partial class ConsoleView
             return;
         }
         _preparing = true;
+        using var cancellation = new CancellationTokenSource(); _preparationCancellation = cancellation;
+        CancelPreparationButton.Visibility = Visibility.Visible; CancelPreparationButton.IsEnabled = true;
         GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = RefreshButton.IsEnabled = false;
         UpdatePreparation();
         PreparationStatus.Visibility = Visibility.Visible; PreparationStatus.Text = Str.T("Str.PrepareRunning");
         PreparationStatus.Foreground = (Brush)FindResource("TextSecondaryBrush");
         try
         {
-            var results = await _preparation.RunAsync(options);
+            var progress = new Progress<MemoryCleanupProgress>(p =>
+            { if (_preparing && !cancellation.IsCancellationRequested) PreparationStatus.Text = MemoryCleanupSummary.Stage(p); });
+            var results = await _preparation.RunAsync(options, memoryProgress: progress, cancellation: cancellation.Token);
             var ok = results.All(r => r.Succeeded);
             var details = string.Join("\n\n", results.Select(r => Str.T("Str.PrepareStepResult", r.Name,
                 Str.T(r.Succeeded ? "Str.PrepareStepDone" : "Str.PrepareStepAttention"), r.Detail)));
-            PreparationStatus.Text = Str.T(ok ? "Str.PrepareDone" : "Str.PreparePartial"); PreparationStatus.ToolTip = details;
+            PreparationStatus.Text = cancellation.IsCancellationRequested ? Str.T("Str.PrepareStopped") : Str.T(ok ? "Str.PrepareDone" : "Str.PreparePartial"); PreparationStatus.ToolTip = details;
             PreparationStatus.Foreground = (Brush)FindResource(ok ? "OkBrush" : "WarningBrush");
-            if (!ok) DialogService.Warning(Str.T("Str.PreparePartial"), details + "\n\n" + Str.T("Str.PrepareRecovery"));
+            if (!ok && !cancellation.IsCancellationRequested) DialogService.Warning(Str.T("Str.PreparePartial"), details + "\n\n" + Str.T("Str.PrepareRecovery"));
         }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { PreparationStatus.Text = Str.T("Str.PrepareStopped"); }
         catch (Exception ex)
         {
             PreparationStatus.Text = Str.T("Str.PrepareFailed"); PreparationStatus.ToolTip = PrivacyScrub.Sanitize(ex.Message);
@@ -69,6 +80,7 @@ public partial class ConsoleView
         finally
         {
             _preparing = false;
+            _preparationCancellation = null; CancelPreparationButton.Visibility = Visibility.Collapsed;
             GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = RefreshButton.IsEnabled = true;
             UpdatePreparation();
         }
