@@ -66,7 +66,12 @@ public sealed class PerformanceSessionService : IDisposable
     public bool Start(string name, SessionConditions? conditions = null)
         => StartCore(name, AppState.GamePath, conditions);
 
-    internal bool StartForGame(string name, string gamePath, GameProcessRun? run = null) => StartCore(name, gamePath, null, run);
+    internal bool StartForGame(string name, string gamePath, GameProcessRun? run = null)
+    {
+        var template = SessionTemplateStore.Load(gamePath);
+        // Launch/exit sessions run until exit; a manual template's timer must not truncate them.
+        return StartCore(name, gamePath, template is null ? null : template with { TargetSeconds = null }, run);
+    }
 
     private bool StartCore(string name, string? gamePath, SessionConditions? conditions, GameProcessRun? run = null)
     {

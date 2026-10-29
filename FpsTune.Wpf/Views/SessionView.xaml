@@ -88,6 +88,13 @@
                         <Button x:Name="ReuseConditionsButton" Content="{DynamicResource Str.ConditionReuse}" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0" Click="ReuseConditions_Click"/>
                     </WrapPanel>
                     <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="13" Margin="0,8,0,0"/>
+                    <WrapPanel Margin="0,12,0,0">
+                        <Button x:Name="SaveTemplateButton" Content="{DynamicResource Str.SessionTemplateSave}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveTemplate_Click" Margin="0,0,8,6"/>
+                        <Button x:Name="LoadTemplateButton" Content="{DynamicResource Str.SessionTemplateLoad}" Style="{StaticResource SecondaryButtonStyle}" Click="LoadTemplate_Click" Margin="0,0,8,6"/>
+                        <Button x:Name="DeleteTemplateButton" Content="{DynamicResource Str.SessionTemplateDelete}" Style="{StaticResource GhostButtonStyle}" Click="DeleteTemplate_Click" Margin="0,0,0,6"/>
+                    </WrapPanel>
+                    <TextBlock Text="{DynamicResource Str.SessionTemplateHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="13"/>
+                    <TextBlock x:Name="TemplateStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="13" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite"/>
                 </StackPanel>
                 <TextBlock x:Name="RunStateText"
                            Text="{DynamicResource Str.SessionReady}"
@@ -215,9 +222,11 @@
         </Border>
 
         <!-- 历史会话 -->
-        <Border Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,12" Padding="14,14,4,14">
+        <Border x:Name="HistoryCard" Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,12" Padding="14,14,4,14">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -237,7 +246,23 @@
                                 MinWidth="76" IsEnabled="False" Click="Delete_Click"/>
                     </StackPanel>
                 </Grid>
-                <ListBox x:Name="HistoryList" Grid.Row="1"
+                <Grid Grid.Row="1" Margin="0,0,10,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,12,0">
+                        <TextBlock Text="{DynamicResource Str.SessionHistorySearch}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,5"/>
+                        <TextBox x:Name="HistorySearchBox" Style="{StaticResource InputTextBoxStyle}" MaxLength="160" TextChanged="HistorySearch_Changed" AutomationProperties.Name="{DynamicResource Str.SessionHistorySearch}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{DynamicResource Str.ConditionGame}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="HistoryGameFilter" Style="{StaticResource SelectComboBoxStyle}" Height="{Binding ActualHeight, ElementName=HistorySearchBox}" DisplayMemberPath="Label" SelectionChanged="HistoryFilter_Changed" AutomationProperties.Name="{DynamicResource Str.ConditionGame}"/>
+                    </StackPanel>
+                </Grid>
+                <DockPanel Grid.Row="2" Margin="0,0,10,10" LastChildFill="False">
+                    <TextBlock x:Name="HistoryCountText" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" DockPanel.Dock="Right" AutomationProperties.LiveSetting="Polite"/>
+                    <CheckBox x:Name="HistoryFpsOnly" Content="{DynamicResource Str.SessionHistoryFpsOnly}" VerticalAlignment="Center" Checked="HistoryFilter_Changed" Unchecked="HistoryFilter_Changed" Margin="0,0,12,0"/>
+                    <Button Content="{DynamicResource Str.SessionHistoryReset}" x:Name="ResetHistoryFiltersButton" Style="{StaticResource GhostButtonStyle}" Click="ResetHistoryFilters_Click"/>
+                </DockPanel>
+                <ListBox x:Name="HistoryList" Grid.Row="3" SelectionMode="Extended"
                          Background="Transparent"
                          BorderThickness="0"
                          ItemContainerStyle="{StaticResource CardListItemStyle}"
@@ -252,19 +277,19 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Name}" FontWeight="{StaticResource SmallEmphasisWeight}"
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" FontWeight="{StaticResource SmallEmphasisWeight}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding MetaText}" FontSize="13"
+                                    <TextBlock Text="{Binding MetaText}" TextTrimming="CharacterEllipsis" ToolTip="{Binding MetaText}" FontSize="13"
                                                Foreground="{DynamicResource TextMutedBrush}"/>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="13"
+                                <TextBlock Grid.Column="1" Text="{Binding AvgText}" FontSize="13" MaxWidth="300" TextWrapping="Wrap" Margin="12,0,0,0"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock x:Name="HistoryEmptyText" Grid.Row="1"
+                <TextBlock x:Name="HistoryEmptyText" Grid.Row="3"
                            Text="{DynamicResource Str.NoSessionsYet}"
                            FontSize="13" Foreground="{DynamicResource TextMutedBrush}"
                            HorizontalAlignment="Center" Margin="0,18,0,18" TextWrapping="Wrap" MaxWidth="460"

@@ -79,6 +79,7 @@ public partial class SessionView : UserControl
         _refreshing = false;
         _sessions = Array.Empty<PerformanceSession>();
         _summaries = new Dictionary<string, SessionSummary>();
+        _visibleSessions = []; _historyRows = [];
         HistoryList.ItemsSource = CompareA.ItemsSource = CompareB.ItemsSource = null;
         CompareRows.ItemsSource = InsightList.ItemsSource = null;
     }
@@ -113,6 +114,7 @@ public partial class SessionView : UserControl
         var name = Service.IsRunning ? Service.Conditions?.GameName :
             string.IsNullOrWhiteSpace(AppState.GamePath) ? null : GamePathService.LabelFor(AppState.GamePath);
         ConditionGameText.Text = Str.T("Str.ConditionGameValue", name ?? Str.T("Str.ConditionsUnknown"));
+        UpdateTemplateState();
     }
 
     private void Service_Sampled(MetricSample sample)
@@ -371,9 +373,9 @@ public partial class SessionView : UserControl
             if (generation != _historyGeneration || !IsLoaded) return;
             _sessions = snapshot.Sessions;
             _summaries = snapshot.Summaries;
-            HistoryList.ItemsSource = snapshot.Rows;
-            HistoryEmptyText.Visibility = _sessions.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-            RefreshCompareSources();
+            _historyRows = snapshot.Rows;
+            RebuildHistoryGames();
+            ApplyHistoryFilters();
             UpdateTiles(null);
             if (Service.IsRunning)
                 DrawCharts();
@@ -598,10 +600,13 @@ public partial class SessionView : UserControl
 
     private void RefreshCompareSources()
     {
-        var sessions = _sessions;
-        var items = sessions.Select(s => new CompareSourceVm(s.Id, s.Name, s.StartedAt)).ToList();
+        var a = (CompareA.SelectedItem as CompareSourceVm)?.Id;
+        var b = (CompareB.SelectedItem as CompareSourceVm)?.Id;
+        var items = _visibleSessions.Select(s => new CompareSourceVm(s.Id, s.Name, s.StartedAt)).ToList();
         CompareA.ItemsSource = items;
         CompareB.ItemsSource = items;
+        CompareA.SelectedItem = items.FirstOrDefault(s => s.Id == a);
+        CompareB.SelectedItem = items.FirstOrDefault(s => s.Id == b);
     }
 
     private sealed record CompareSourceVm(string Id, string Name, DateTime StartedAt)

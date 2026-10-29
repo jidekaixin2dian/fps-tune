@@ -1623,4 +1623,22 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AutoRecordTooMany">最多选择 32 款游戏。</s:String>
     <s:String x:Key="Str.AutoRecordEmpty">尚无游戏档案，请先添加游戏，再刷新清单。</s:String>
     <s:String x:Key="Str.AutoRecordRefresh">刷新游戏清单</s:String>
+    <s:String x:Key="Str.SessionTemplateSave">保存当前游戏模板</s:String>
+    <s:String x:Key="Str.SessionTemplateLoad">载入模板</s:String>
+    <s:String x:Key="Str.SessionTemplateDelete">删除模板</s:String>
+    <s:String x:Key="Str.SessionTemplateHint">模板保存本页条件；自动记录沿用分辨率、画质和场景，持续到游戏退出。参数仅用于记录，不修改游戏或显示设置。</s:String>
+    <s:String x:Key="Str.SessionTemplateSelectGame">请先在首页选择游戏，再管理录制条件模板。</s:String>
+    <s:String x:Key="Str.SessionTemplateBusy">录制期间保留本次条件，结束后可管理模板。</s:String>
+    <s:String x:Key="Str.SessionTemplateSaved">已保存「{0}」的录制条件模板。</s:String>
+    <s:String x:Key="Str.SessionTemplateLoaded">已载入「{0}」的模板，请核对条件后开始记录。</s:String>
+    <s:String x:Key="Str.SessionTemplateMissing">当前游戏尚未保存模板。</s:String>
+    <s:String x:Key="Str.SessionTemplateDeleted">已删除当前游戏模板，现有会话与本页输入保留。</s:String>
+    <s:String x:Key="Str.SessionTemplateFailed">模板操作未完成：{0}</s:String>
+    <s:String x:Key="Str.SessionTemplateUnreadable">模板损坏或来自较新版本，原文件已保留。可删除此模板后重新保存。</s:String>
+    <s:String x:Key="Str.SessionHistorySearch">搜索名称、场景或画质</s:String>
+    <s:String x:Key="Str.SessionHistoryAllGames">全部游戏</s:String>
+    <s:String x:Key="Str.SessionHistoryFpsOnly">仅有 FPS 数据</s:String>
+    <s:String x:Key="Str.SessionHistoryReset">清除筛选</s:String>
+    <s:String x:Key="Str.SessionHistoryCount">显示 {0} / {1} 条</s:String>
+    <s:String x:Key="Str.SessionHistoryNoMatch">没有匹配记录，请调整搜索或清除筛选。</s:String>
 </ResourceDictionary>
