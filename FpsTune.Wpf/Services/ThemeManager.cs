@@ -41,6 +41,8 @@ public static class ThemeManager
 
     public static void Apply(string mode, bool animate = false)
     {
+        Application.Current.Resources["ComboPopupAnimation"] = !UiPerformance.LowSpec && SystemParameters.ClientAreaAnimation
+            ? System.Windows.Controls.Primitives.PopupAnimation.Fade : System.Windows.Controls.Primitives.PopupAnimation.None;
         animate = animate && !UiPerformance.LowSpec && SystemParameters.ClientAreaAnimation
             && Application.Current.MainWindow is { IsLoaded: true, IsVisible: true };
         void SetBrush(string key, Color target) => UpdateResourceBrush(key, target, animate);

@@ -327,7 +327,7 @@ public partial class MainWindow : Window
     private void UpdateOverviewModeLabel()
     {
         var studio = SettingsService.Current.OverviewMode != "console";
-        OverviewModeButton.Content = Str.T(studio ? "Str.CompactConsole" : "Str.Workspace");
+        OverviewModeButton.Header = Str.T(studio ? "Str.CompactConsole" : "Str.Workspace");
         NavigationColumn.Width = new GridLength(studio ? 180 : 0);
         NavigationRow.Height = new GridLength(studio ? 0 : 50);
         Grid.SetRowSpan(TabBar, studio ? 2 : 1);
@@ -343,6 +343,13 @@ public partial class MainWindow : Window
 
     private void OverviewMode_Click(object sender, RoutedEventArgs e)
     => SetDisplayMode(SettingsService.Current.OverviewMode == "console" ? "studio" : "console");
+
+    private void More_Click(object sender, RoutedEventArgs e)
+    {
+        MoreMenu.PlacementTarget = MoreButton;
+        MoreMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        MoreMenu.IsOpen = !MoreMenu.IsOpen;
+    }
 
     internal void RefreshWallpaper()
     {

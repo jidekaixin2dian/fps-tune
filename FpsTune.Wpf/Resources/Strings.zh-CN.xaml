@@ -1641,4 +1641,6 @@
     <s:String x:Key="Str.SessionHistoryReset">清除筛选</s:String>
     <s:String x:Key="Str.SessionHistoryCount">显示 {0} / {1} 条</s:String>
     <s:String x:Key="Str.SessionHistoryNoMatch">没有匹配记录，请调整搜索或清除筛选。</s:String>
+    <s:String x:Key="Str.MoreActions">更多</s:String>
+    <s:String x:Key="Str.WallpaperEmpty">尚未选择壁纸</s:String>
 </ResourceDictionary>

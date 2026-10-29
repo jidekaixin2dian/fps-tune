@@ -425,22 +425,26 @@
             </Border>
 
 </StackPanel></ScrollViewer>
-<ScrollViewer x:Name="Section4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">                <Border Style="{StaticResource CardStyle}" Margin="0"><StackPanel>
+<ScrollViewer x:Name="Section4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">                <Border x:Name="WallpaperCard" Style="{StaticResource CardStyle}" Margin="0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.Wallpaper}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                     <Grid Margin="0,18,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                        <Border x:Name="WallpaperPreviewFrame" Width="176" Height="176" CornerRadius="{DynamicResource RadiusCard}"
+                        <Border x:Name="WallpaperPreviewFrame" Width="200" Height="144" CornerRadius="{DynamicResource RadiusCard}"
                                 Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                             <Grid>
                                 <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="17"
                                         Opacity="{Binding ElementName=WallpaperOpacitySlider, Path=Value}"/>
-                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Path Data="M 2,22 L 12,10 L 19,18 L 25,12 L 34,22 M 24,5 A 3,3 0 1 0 30,5 A 3,3 0 1 0 24,5"
-                                          Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.5" Width="36" Height="26" Stretch="Uniform" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{DynamicResource Str.WallpaperChoose}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,12,0,0"/>
+                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,12">
+                                    <Grid Width="64" Height="48" HorizontalAlignment="Center">
+                                        <Border Margin="8,0,0,8" CornerRadius="9" Background="{DynamicResource AccentSoftBrush}"/>
+                                        <Border Margin="0,8,8,0" CornerRadius="9" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"/>
+                                        <Path Data="M 12,35 L 23,24 L 32,32 L 39,25 L 48,35 M 37,18 A 3,3 0 1 0 43,18 A 3,3 0 1 0 37,18"
+                                              Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                                    </Grid>
+                                    <TextBlock Text="{DynamicResource Str.WallpaperEmpty}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" HorizontalAlignment="Center"/>
                                 </StackPanel>
-                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12" Padding="7,3" CornerRadius="{DynamicResource RadiusChip}" Background="{DynamicResource ElevatedBrush}">
+                                <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10" Padding="6,2" CornerRadius="{DynamicResource RadiusChip}" Background="{DynamicResource ElevatedBrush}">
                                     <TextBlock Text="{DynamicResource Str.WallpaperPreview}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
                                 </Border>
                             </Grid>

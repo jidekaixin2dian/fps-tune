@@ -12,6 +12,14 @@
             </ResourceDictionary.MergedDictionaries>
 
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <!-- Replace the Windows dotted keyboard adorner across controls, keeping focus visible. -->
+            <Style x:Key="KeyboardFocusStyle" TargetType="Control">
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Control">
+                    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Margin="1"/>
+                </ControlTemplate></Setter.Value></Setter>
+            </Style>
+            <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="Control" BasedOn="{StaticResource KeyboardFocusStyle}"/>
+            <PopupAnimation x:Key="ComboPopupAnimation">Fade</PopupAnimation>
 
             <!-- ============ 设计令牌：字体 ============ -->
             <FontFamily x:Key="FontDisplay">Segoe UI, /FpsTune;component/Assets/Fonts/#FpsTune Text, Microsoft YaHei UI</FontFamily>
@@ -312,7 +320,7 @@
                                                   Margin="{TemplateBinding Padding}" VerticalAlignment="Center" IsHitTestVisible="False"
                                                   TextBlock.Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True"
-                                       Placement="Bottom" PopupAnimation="Slide" Focusable="False">
+                                       Placement="Bottom" PopupAnimation="{DynamicResource ComboPopupAnimation}" Focusable="False">
                                     <Border Background="{DynamicResource SurfaceBrush}"
                                             BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"
                                             CornerRadius="{DynamicResource RadiusControl}" Margin="0,4,0,0"
@@ -877,6 +885,7 @@
 
             <!-- ============ 列表行（控制台行式：悬停提亮、选中青底+左线） ============ -->
             <Style x:Key="CardListItemStyle" TargetType="ListBoxItem">
+                <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusStyle}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <Setter Property="Padding" Value="10,9"/>

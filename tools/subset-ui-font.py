@@ -20,6 +20,9 @@ for path in (root / 'FpsTune.Wpf').rglob('*'):
     if path.suffix not in ('.xaml', '.cs') or {'bin', 'obj'} & set(path.parts):
         continue
     characters.update(map(ord, path.read_text(encoding='utf-8-sig')))
+# Optimization titles/descriptions come from the catalog, not XAML resources.
+for path in (root / 'catalog').glob('*.json'):
+    characters.update(map(ord, path.read_text(encoding='utf-8-sig')))
 source = TTFont(args.source)
 cmap = source.getBestCmap()
 characters &= cmap.keys()
