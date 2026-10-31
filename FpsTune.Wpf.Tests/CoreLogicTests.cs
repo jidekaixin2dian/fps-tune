@@ -118,10 +118,10 @@ public class CoreLogicTests
     // ---------- ItemCatalog 完整性 ----------
 
     [Fact]
-    public void ItemCatalog_has_40_unique_items()
+    public void ItemCatalog_has_42_unique_items()
     {
         var ids = ItemCatalog.All.Select(x => x.Id).ToList();
-        Assert.Equal(40, ids.Count);
+        Assert.Equal(42, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 
@@ -134,8 +134,9 @@ public class CoreLogicTests
     [Fact]
     public void Balanced_preset_is_an_explicit_default_allowlist()
     {
+        // 2026-10-31 用户确认的修订：均衡预设只含推荐 4 项（此前断言还停在旧 16 项）。
         var ids = OptimizationEngine.GetPresetIds("balanced");
-        Assert.Equal(16, ids.Count);
+        Assert.Equal(new[] { "game-mode", "dvr-off", "gpu-pref", "transparency-off" }.OrderBy(x => x).ToArray(), ids.OrderBy(x => x).ToArray());
         Assert.All(ids, id => Assert.True(ItemCatalog.All.Single(x => x.Id == id).Default));
         Assert.DoesNotContain("mouse-accel-off", ids);
         Assert.DoesNotContain("sticky-keys-off", ids);
@@ -145,9 +146,12 @@ public class CoreLogicTests
 
     [Fact]
     public void SafeOnly_preset_contains_only_non_admin_items()
-        => Assert.Equal(
-            new[] { "fso-off", "game-mode", "gpu-pref", "transparency-off" },
-            OptimizationEngine.GetPresetIds("safe-only").OrderBy(x => x).ToArray());
+    {
+        // 保守预设 3 项，全部无需管理员（此前断言还停在含 fso-off 的旧清单）。
+        var ids = OptimizationEngine.GetPresetIds("safe-only");
+        Assert.Equal(new[] { "game-mode", "gpu-pref", "transparency-off" }, ids.OrderBy(x => x).ToArray());
+        Assert.All(ids, id => Assert.False(ItemCatalog.All.Single(x => x.Id == id).Admin));
+    }
 
     [Fact]
     public void Lang_service_defaults_to_chinese_and_normalizes()

@@ -27,6 +27,16 @@
                 <TextBlock x:Name="BasicGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" LineHeight="23"/>
                 <Button x:Name="ReviewBasicsButton" Content="{DynamicResource Str.PrepareReviewBasics}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="ReviewBasics_Click"/>
             </StackPanel></Border>
+            <CheckBox x:Name="OptimizationsCheck" Content="{DynamicResource Str.PrepareOptimizations}" FontSize="14"/>
+            <ComboBox x:Name="OptimizationPresetBox" Width="420" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=OptimizationsCheck}" AutomationProperties.Name="{DynamicResource Str.PrepareOptimizations}"/>
+            <CheckBox x:Name="PowerPlanCheck" FontSize="14" Margin="0,0,0,16" AutomationProperties.Name="{DynamicResource Str.PreparePowerPlan}"/>
+            <CheckBox x:Name="FrameLimitCheck" Content="{DynamicResource Str.PrepareFrameLimit}" FontSize="14"/>
+            <Grid Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=FrameLimitCheck}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource Str.PrepareFrameLimitFps}" VerticalAlignment="Center" Margin="0,0,8,0" Style="{StaticResource MutedTextStyle}"/>
+                <TextBox x:Name="FrameLimitBox" Grid.Column="1" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.PrepareFrameLimitFps}"/>
+                <TextBlock Grid.Column="2" Text="{DynamicResource Str.PrepareFrameLimitRange}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="Wrap"/>
+            </Grid>
             <CheckBox x:Name="MemoryCheck" Content="{DynamicResource Str.PrepareMemoryScope}" FontSize="14"/>
             <ComboBox x:Name="MemoryMode" Width="420" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=MemoryCheck}" AutomationProperties.Name="{DynamicResource Str.MemoryScope}"><ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/><ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/><ComboBoxItem Content="{DynamicResource Str.PrepareFullMode}"/></ComboBox>
             <CheckBox x:Name="IccCheck" Content="{DynamicResource Str.PrepareIcc}" FontSize="14"/>

@@ -77,7 +77,7 @@ public partial class ConsoleView
         {
             var progress = new Progress<MemoryCleanupProgress>(p =>
             { if (_preparing && !cancellation.IsCancellationRequested) PreparationStatus.Text = MemoryCleanupSummary.Stage(p); });
-            var results = await _preparation.RunAsync(options, memoryProgress: progress, cancellation: cancellation.Token);
+            var results = await _preparation.RunAsync(options, memoryProgress: progress, cancellation: cancellation.Token, gamePath: gamePath);
             recordedSteps = results;
             var ok = results.All(r => r.Succeeded);
             var details = string.Join("\n\n", results.Select(r => Str.T("Str.PrepareStepResult", r.Name,

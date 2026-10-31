@@ -386,6 +386,12 @@ public static partial class BackupService
             case "power-setting":
                 PowerOption.For(r.Id).Set(r.TargetPlanGuid!, r.OldPowerValue!.Value);
                 break;
+            case "power-overlay":
+                RestorePowerOverlay(r);
+                break;
+            case "filter-keys":
+                RestoreFilterKeys(r);
+                break;
             case "power-tuning":
                 RestorePowerTuning(r);
                 break;
@@ -490,6 +496,35 @@ public static partial class BackupService
                 throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
             EnsureNativeSuccess(NativeSystem.Run("powercfg.exe", "-delete", r.CreatedPlanGuid), Str.T("Str.PowerRestoreSetting"));
         }
+    }
+
+    private static void RestorePowerOverlay(BackupRecord r)
+    {
+        // 备份记录的是接电 overlay；用电池时的偏差已在该项副作用中说明。
+        if (!Guid.TryParse(r.OldAcOverlayGuid, out var target))
+            throw new InvalidOperationException(Str.T("Str.PowerOverlayBackupMissing"));
+        var error = NativePowerOverlay.Write(target);
+        if (error != 0)
+            throw new InvalidOperationException(Str.T("Str.PowerOverlayWriteFailed", error));
+        if (!NativePowerOverlay.VerifyApplied(target))
+            throw new InvalidOperationException(Str.T("Str.PowerOverlayReadbackMismatch"));
+    }
+
+    private static void RestoreFilterKeys(BackupRecord r)
+    {
+        if (r.OldFilterKeysFlags is not { } flags)
+            throw new InvalidOperationException(Str.T("Str.FilterKeysBackupMissing"));
+        var state = new NativeAccessibility.FilterKeysState(flags,
+            r.OldFilterKeysWaitPeriod ?? 0, r.OldFilterKeysDelayRate ?? 0,
+            r.OldFilterKeysRepeatDelay ?? 0, r.OldFilterKeysRepeatRate ?? 0,
+            r.OldFilterKeysBounceMSec ?? 0);
+        if (NativeAccessibility.Read() == state)
+            return;
+        var error = NativeAccessibility.Write(state);
+        if (error != 0)
+            throw new InvalidOperationException(Str.T("Str.FilterKeysWriteFailed", error));
+        if (NativeAccessibility.Read() != state)
+            throw new InvalidOperationException(Str.T("Str.FilterKeysReadbackMismatch"));
     }
 
     private static void RestorePowerTuning(BackupRecord r)

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
@@ -39,7 +40,9 @@ internal static class PreparationPlanStore
     internal static bool Valid(GamePreparationOptions o) => o.Configured && o.HasActions
         && (o.IccPreset is null || Enum.IsDefined(o.IccPreset.Value)) && o.VibrancePercent is >= 0 and <= 100
         && (o.DisplayIdentity is null || o.DisplayIdentity.Length <= 4096 && !o.DisplayIdentity.Any(char.IsControl))
-        && (!(o.ApplyIcc || o.ApplyVibrance) || !string.IsNullOrWhiteSpace(o.DisplayIdentity));
+        && (!(o.ApplyIcc || o.ApplyVibrance) || !string.IsNullOrWhiteSpace(o.DisplayIdentity))
+        && (!o.ApplyOptimizations || o.OptimizationPreset is "balanced" or "safe-only")
+        && (!o.ApplyFrameLimit || o.FrameLimitFps is >= 20 and <= 1000);
 
     internal static void Save(string? path, GamePreparationOptions options)
     {
@@ -71,8 +74,15 @@ internal static class PreparationPlanStore
     {
         var actions = new List<string>();
         if (o.CleanMemory) actions.Add(Str.T(o.FullMemoryCleanup ? "Str.MemoryFullAction" : o.AllStandby ? "Str.MemoryAllMode" : "Str.MemoryLowMode"));
+        if (o.ApplyOptimizations) actions.Add(Str.T("Str.PlanOptimizations", PresetLabel(o.OptimizationPreset)));
+        if (o.ApplyPowerPlan) actions.Add(PowerPlanLabel());
+        if (o.ApplyFrameLimit) actions.Add(Str.T("Str.PlanFrameLimit", o.FrameLimitFps ?? 0));
         if (o.ApplyIcc) actions.Add(o.IccPreset is { } preset ? ScreenColorSettings.TitleFor(preset) : Str.T("Str.PrepareOriginalIcc"));
         if (o.ApplyVibrance) actions.Add(Str.T("Str.PlanVibrance", o.VibrancePercent));
         return string.Join(" · ", actions);
     }
+    internal static string PresetLabel(string? preset)
+        => Str.T(preset == "safe-only" ? "Str.PresetSafe" : "Str.PresetBalanced");
+    private static string PowerPlanLabel()
+        => ItemCatalog.All.FirstOrDefault(i => i.Id == "power-ultimate")?.DisplayName ?? "power-ultimate";
 }

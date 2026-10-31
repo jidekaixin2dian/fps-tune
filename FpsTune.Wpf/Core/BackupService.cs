@@ -63,6 +63,18 @@ public sealed class BackupRecord
     public bool? PostDelayedExisted { get; set; }
     public int? PostDelayedValue { get; set; }
 
+    // power-overlay-perf 的原始接电/电池 overlay GUID（零 GUID = 平衡态）。
+    public string? OldAcOverlayGuid { get; set; }
+    public string? OldDcOverlayGuid { get; set; }
+
+    // filter-keys-off 的完整 FilterKeys 状态；restore 原样写回，保留用户自用调校。
+    public int? OldFilterKeysFlags { get; set; }
+    public int? OldFilterKeysWaitPeriod { get; set; }
+    public int? OldFilterKeysDelayRate { get; set; }
+    public int? OldFilterKeysRepeatDelay { get; set; }
+    public int? OldFilterKeysRepeatRate { get; set; }
+    public int? OldFilterKeysBounceMSec { get; set; }
+
     // 定向还原后保留原始快照供审计，同时防止同一记录被后续 RestoreAll 重复覆盖。
     public bool Restored { get; set; }
 }

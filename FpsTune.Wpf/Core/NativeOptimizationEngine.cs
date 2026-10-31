@@ -208,6 +208,10 @@ public static class NativeOptimizationEngine
                 return ApplyDynamicTickOff();
             case "power-ultimate":
                 return ApplyPowerUltimate(backup);
+            case "power-overlay-perf":
+                return ApplyPowerOverlayPerf(backup);
+            case "filter-keys-off":
+                return ApplyFilterKeysOff();
             case "cpu-epp-ac":
             case "cpu-max-ac":
             case "wifi-performance-ac":
@@ -408,6 +412,34 @@ public static class NativeOptimizationEngine
 
         var nameNote = rename.Success ? "" : $"；计划命名失败（{NativeDetail(rename)}）";
         return (true, true, false, "已切换到卓越性能（自动创建）" + nameNote);
+    }
+
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerOverlayPerf(BackupRecord? backup)
+    {
+        _ = backup; // 备份在 Capture 阶段完成（原始接电 overlay GUID）
+        if (!NativePowerOverlay.IsSupported())
+            return (true, false, true, Str.T("Str.PowerOverlayUnsupported"));
+        if (NativePowerOverlay.VerifyApplied(NativePowerOverlay.BestPerformance))
+            return (true, false, false, Str.T("Str.PowerOverlayAlreadyBest"));
+        var error = NativePowerOverlay.Write(NativePowerOverlay.BestPerformance);
+        if (error != 0)
+            throw new InvalidOperationException(Str.T("Str.PowerOverlayWriteFailed", error));
+        if (!NativePowerOverlay.VerifyApplied(NativePowerOverlay.BestPerformance))
+            throw new IOException(Str.T("Str.PowerOverlayReadbackMismatch"));
+        return (true, true, false, Str.T("Str.PowerOverlayApplied"));
+    }
+
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyFilterKeysOff()
+    {
+        var current = NativeAccessibility.Read();
+        if (!current.HotkeyActive)
+            return (true, false, false, Str.T("Str.FilterKeysAlreadyOff"));
+        var error = NativeAccessibility.Write(current.WithoutHotkey());
+        if (error != 0)
+            throw new InvalidOperationException(Str.T("Str.FilterKeysWriteFailed", error));
+        if (NativeAccessibility.Read().HotkeyActive)
+            throw new IOException(Str.T("Str.FilterKeysReadbackMismatch"));
+        return (true, true, false, Str.T("Str.FilterKeysApplied"));
     }
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyPowerTuning(BackupRecord? backup)

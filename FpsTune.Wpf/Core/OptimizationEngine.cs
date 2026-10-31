@@ -90,6 +90,13 @@ public static class OptimizationEngine
     internal static Task<ApplyReceipt> ApplyItemsWithReceiptAsync(IEnumerable<string> ids, string? gamePath, Action<string>? beforeWrite = null)
         => Task.Run(() => ExecuteNative(ids.Distinct().ToArray(), gamePath, beforeWrite));
 
+    /// <summary>
+    /// 同步版 receipt 应用：仅供开局准备等已在同一同步工作线程持有 SystemMutationGate 的调用方使用。
+    /// 命名互斥与 OperationLock 在同一线程上重入；跨线程并发调用会死锁，禁止。
+    /// </summary>
+    internal static ApplyReceipt ApplyItemsWithReceipt(IEnumerable<string> ids, string? gamePath)
+        => ExecuteNative(ids.Distinct().ToArray(), gamePath);
+
     private static ApplyReceipt ExecuteNative(IReadOnlyList<string> ids, string? gamePath, Action<string>? beforeWrite = null)
     {
         lock (OperationLock)

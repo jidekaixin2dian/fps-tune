@@ -10,6 +10,7 @@ public partial class GamePreparationWindow : Window
     private sealed record DisplayChoice(string Identity, string Label) { public override string ToString() => Label; }
     private sealed record IccChoice(IccFilterPreset? Preset, string Label) { public override string ToString() => Label; }
     private sealed record PlanSource(string? Path, string Name) { public override string ToString() => Name; }
+    private sealed record PresetChoice(string Preset, IReadOnlyList<string> Ids) { public override string ToString() => Str.T("Str.PlanPresetChoice", PreparationPlanStore.PresetLabel(Preset), Ids.Count); }
     private readonly GamePreparationOptions _original;
     private readonly string? _gamePath = AppState.GamePath;
     private string? _planError;
@@ -31,6 +32,21 @@ public partial class GamePreparationWindow : Window
         var presets = new[] { new IccChoice(null, Str.T("Str.PrepareOriginalIcc")) }
             .Concat(Enum.GetValues<IccFilterPreset>().Select(p => new IccChoice(p, ScreenColorSettings.TitleFor(p)))).ToArray();
         IccPresetBox.ItemsSource = presets; IccPresetBox.SelectedItem = presets.FirstOrDefault(p => p.Preset == _original.IccPreset) ?? presets[0];
+        // 预设名与项目数取自 catalog，界面只引用不复制。
+        PresetChoice[] optimizationPresets;
+        try
+        {
+            optimizationPresets = new[]
+            {
+                new PresetChoice("balanced", OptimizationCatalog.ResolvePreset("balanced")),
+                new PresetChoice("safe-only", OptimizationCatalog.ResolvePreset("safe-only")),
+            };
+        }
+        catch (Exception ex) { optimizationPresets = []; SourcePlanText.Text = PrivacyScrub.Sanitize(ex.Message); }
+        OptimizationPresetBox.ItemsSource = optimizationPresets;
+        OptimizationPresetBox.SelectedItem = optimizationPresets.FirstOrDefault(p => p.Preset == _original.OptimizationPreset) ?? optimizationPresets.FirstOrDefault();
+        PowerPlanCheck.Content = ItemCatalog.All.FirstOrDefault(i => i.Id == "power-ultimate")?.DisplayName ?? "power-ultimate";
+        GameScope.Checked += Scope_Changed; DefaultScope.Checked += Scope_Changed;
         LoadOptions(_original);
         var sources = new List<PlanSource> { new(null, Str.T("Str.PlanSharedDefault")) };
         try { sources.AddRange(GameLibraryService.Read().Where(g => !g.ExePath.Equals(_gamePath, StringComparison.OrdinalIgnoreCase))
@@ -50,6 +66,19 @@ public partial class GamePreparationWindow : Window
         IccCheck.IsChecked = options.ApplyIcc; VibranceCheck.IsChecked = options.ApplyVibrance;
         VibranceSlider.Value = Math.Clamp(options.VibrancePercent, 0, 100);
         IccPresetBox.SelectedItem = IccPresetBox.Items.Cast<IccChoice>().FirstOrDefault(p => p.Preset == options.IccPreset);
+        OptimizationsCheck.IsChecked = options.ApplyOptimizations;
+        OptimizationPresetBox.SelectedItem = OptimizationPresetBox.Items.Cast<PresetChoice>().FirstOrDefault(p => p.Preset == options.OptimizationPreset);
+        // 限帧依赖具体游戏方案：共用默认方案下不可选。
+        FrameLimitCheck.IsEnabled = GameScope.IsChecked == true;
+        FrameLimitCheck.IsChecked = options.ApplyFrameLimit && GameScope.IsChecked == true;
+        FrameLimitBox.Text = options.FrameLimitFps is { } fps && fps > 0 ? fps.ToString(System.Globalization.CultureInfo.InvariantCulture) : "";
+        PowerPlanCheck.IsChecked = options.ApplyPowerPlan;
+    }
+    private void Scope_Changed(object sender, RoutedEventArgs e)
+    {
+        if (FrameLimitCheck is null) return;
+        FrameLimitCheck.IsEnabled = GameScope.IsChecked == true;
+        if (GameScope.IsChecked != true) FrameLimitCheck.IsChecked = false;
     }
     private void SourcePlan_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
@@ -101,11 +130,24 @@ public partial class GamePreparationWindow : Window
     private void Save(bool run)
     {
         if (!_loaded || _planError is not null || !SameGame()) return;
+        uint? frameLimit = null;
+        if (FrameLimitCheck.IsChecked == true)
+        {
+            if (GameScope.IsChecked != true) { StatusText.Text = Str.T("Str.PrepareFrameLimitNeedsGame"); return; }
+            if (!uint.TryParse(FrameLimitBox.Text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+                || parsed is < 20 or > 1000) { StatusText.Text = Str.T("Str.PrepareFrameLimitRange"); return; }
+            frameLimit = parsed;
+        }
         var selected = new GamePreparationOptions { Configured = true, CleanMemory = MemoryCheck.IsChecked == true,
             AllStandby = MemoryMode.SelectedIndex >= 1, FullMemoryCleanup = MemoryMode.SelectedIndex == 2, ApplyIcc = IccCheck.IsChecked == true,
             IccPreset = (IccPresetBox.SelectedItem as IccChoice)?.Preset, ApplyVibrance = VibranceCheck.IsChecked == true,
-            VibrancePercent = (int)VibranceSlider.Value, DisplayIdentity = (DisplayBox.SelectedItem as DisplayChoice)?.Identity };
+            VibrancePercent = (int)VibranceSlider.Value, DisplayIdentity = (DisplayBox.SelectedItem as DisplayChoice)?.Identity,
+            ApplyOptimizations = OptimizationsCheck.IsChecked == true,
+            OptimizationPreset = (OptimizationPresetBox.SelectedItem as PresetChoice)?.Preset,
+            ApplyFrameLimit = FrameLimitCheck.IsChecked == true, FrameLimitFps = frameLimit,
+            ApplyPowerPlan = PowerPlanCheck.IsChecked == true };
         if (!selected.HasActions) { StatusText.Text = Str.T("Str.PrepareChoose"); return; }
+        if (selected.ApplyOptimizations && selected.OptimizationPreset is null) { StatusText.Text = Str.T("Str.PrepareChoose"); return; }
         if ((selected.ApplyIcc || selected.ApplyVibrance) && selected.DisplayIdentity is null)
         { StatusText.Text = Str.T("Str.PrepareSelectDisplay"); return; }
         try

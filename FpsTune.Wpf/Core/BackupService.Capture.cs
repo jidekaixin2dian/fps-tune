@@ -386,6 +386,26 @@ public static partial class BackupService
                 };
             case "menu-delay-off":
                 return new[] { CreateRegistryBackup(id, RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", RegistryValueKind.String) };
+            case "power-overlay-perf":
+            {
+                var persisted = RegistryHelper.ReadValue(RegistryHive.LocalMachine,
+                    NativePowerOverlay.UserPowerSchemesKey, NativePowerOverlay.AcOverlayValueName)?.ToString();
+                var ac = NativePowerOverlay.ReadActual()
+                    ?? (Guid.TryParse(persisted, out var guid) ? guid
+                        : throw new InvalidOperationException(Str.T("Str.PowerOverlayReadFailed")));
+                return new[] { new BackupRecord { Id = id, Kind = "power-overlay",
+                    OldAcOverlayGuid = ac.ToString("D"),
+                    OldDcOverlayGuid = RegistryHelper.ReadValue(RegistryHive.LocalMachine,
+                        NativePowerOverlay.UserPowerSchemesKey, NativePowerOverlay.DcOverlayValueName)?.ToString() } };
+            }
+            case "filter-keys-off":
+            {
+                var state = NativeAccessibility.Read();
+                return new[] { new BackupRecord { Id = id, Kind = "filter-keys",
+                    OldFilterKeysFlags = state.Flags, OldFilterKeysWaitPeriod = state.WaitPeriod,
+                    OldFilterKeysDelayRate = state.DelayRate, OldFilterKeysRepeatDelay = state.RepeatDelay,
+                    OldFilterKeysRepeatRate = state.RepeatRate, OldFilterKeysBounceMSec = state.BounceMSec } };
+            }
             case "usb-power-save-off":
                 return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", RegistryValueKind.DWord) };
             case "visual-fx-perf":

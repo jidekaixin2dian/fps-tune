@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json.Serialization;
 using FpsTune.Wpf.Core;
 
@@ -14,7 +15,13 @@ public sealed record GamePreparationOptions
     public bool ApplyVibrance { get; init; }
     public int VibrancePercent { get; init; } = 60;
     public string? DisplayIdentity { get; init; }
-    [JsonIgnore] public bool HasActions => CleanMemory || ApplyIcc || ApplyVibrance;
+    public bool ApplyOptimizations { get; init; }
+    /// <summary>基础优化项预设名（catalog 预设，唯一来源）；空串/按均衡处理仅用于旧数据兜底。</summary>
+    public string? OptimizationPreset { get; init; }
+    public bool ApplyFrameLimit { get; init; }
+    public uint? FrameLimitFps { get; init; }
+    public bool ApplyPowerPlan { get; init; }
+    [JsonIgnore] public bool HasActions => CleanMemory || ApplyIcc || ApplyVibrance || ApplyOptimizations || ApplyFrameLimit || ApplyPowerPlan;
 }
 
 internal sealed record PreparationStep(string Name, bool Succeeded, string Detail, string? Error = null);
@@ -30,10 +37,29 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
     // Only the synchronous worker holding the mutation lease may reuse memory cleanup.
     internal static bool BlocksMemoryCleanup => IsRunning && !_ownsMutationThread;
     internal bool IsBusy => _memory.IsBusy || IsRunning;
-    internal bool NeedsAdministrator(GamePreparationOptions options) => options.CleanMemory && !_memory.IsAdministrator;
+    internal bool NeedsAdministrator(GamePreparationOptions options)
+    {
+        if (options.CleanMemory && !_memory.IsAdministrator) return true;
+        try { return OptimizationIdsFor(options).Any(NeedsAdmin); }
+        catch (Exception) { return true; } // 预设无法解析按需管理员处理；RunAsync 会给出真实错误
+    }
+    private static bool NeedsAdmin(string id) =>
+        ItemCatalog.All.FirstOrDefault(i => i.Id == id) is { Admin: true, Available: true };
+
+    /// <summary>开局应用的优化项：基础预设 + 电源计划；去重保持顺序。</summary>
+    internal static IReadOnlyList<string> OptimizationIdsFor(GamePreparationOptions options)
+    {
+        var ids = new List<string>();
+        if (options.ApplyOptimizations)
+            ids.AddRange(OptimizationCatalog.ResolvePreset(
+                string.IsNullOrWhiteSpace(options.OptimizationPreset) ? "balanced" : options.OptimizationPreset!));
+        if (options.ApplyPowerPlan)
+            ids.Add("power-ultimate");
+        return ids.Distinct().ToArray();
+    }
 
     internal async Task<IReadOnlyList<PreparationStep>> RunAsync(GamePreparationOptions options, IProgress<PreparationStep>? progress = null,
-        IProgress<MemoryCleanupProgress>? memoryProgress = null, CancellationToken cancellation = default)
+        IProgress<MemoryCleanupProgress>? memoryProgress = null, CancellationToken cancellation = default, string? gamePath = null)
     {
         if (Interlocked.CompareExchange(ref _running, 1, 0) != 0) throw new InvalidOperationException(Str.T("Str.PrepareBusy"));
         try
@@ -49,6 +75,10 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                     if (!options.HasActions || options.ApplyIcc && options.IccPreset is { } preset && !Enum.IsDefined(preset)
                         || options.ApplyVibrance && options.VibrancePercent is < 0 or > 100)
                         throw new InvalidOperationException(Str.T("Str.PrepareChoose"));
+                    if (options.ApplyFrameLimit && options.FrameLimitFps is not (>= 20 and <= 1000))
+                        throw new InvalidOperationException(Str.T("Str.PrepareFrameLimitRange"));
+                    if (options.ApplyFrameLimit && string.IsNullOrWhiteSpace(gamePath))
+                        throw new InvalidOperationException(Str.T("Str.PrepareFrameLimitNeedsGame"));
                     if (NeedsAdministrator(options)) throw new UnauthorizedAccessException(Str.T("Str.MemoryAdmin"));
                     IccDisplayInfo? display = null;
                     if (options.ApplyIcc || options.ApplyVibrance)
@@ -67,6 +97,28 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                         }
                     }
                     var steps = new List<PreparationStep>();
+                    // 同步复用引擎：本工作线程已持有 SystemMutationGate，同线程重入安全。
+                    var optimizationIds = OptimizationIdsFor(options);
+                    if (optimizationIds.Count > 0) Run(Str.T("Str.PrepareSystemStep"), () =>
+                    {
+                        var receipt = OptimizationEngine.ApplyItemsWithReceipt(optimizationIds, gamePath);
+                        var results = receipt.Results;
+                        // 与引擎 CLI 汇总口径一致：跳过不算失败（如共用方案下缺少游戏路径的逐游戏项）。
+                        var ok = results.All(r => r.Ok || r.Skipped);
+                        var summary = Str.T("Str.PrepareSystemSummary", results.Count(r => r.Ok),
+                            results.Count(r => !r.Ok && !r.Skipped), results.Count(r => r.Skipped));
+                        var detail = summary + "\n" + string.Join("\n",
+                            results.Select(r => Str.T("Str.PrepareSystemItem", r.Name, r.Message)));
+                        var error = results.FirstOrDefault(r => !r.Ok && !r.Skipped) is { } failed
+                            ? PrivacyScrub.Sanitize(failed.Message) : null;
+                        return new(Str.T("Str.PrepareSystemStep"), ok, detail, error);
+                    });
+                    if (options.ApplyFrameLimit) Run(Str.T("Str.PrepareFrameLimitStep"), () =>
+                    {
+                        var exe = Path.GetFileName(gamePath!);
+                        DisplayQualityService.ApplyFrameLimits(exe, new(options.FrameLimitFps!.Value, null));
+                        return new(Str.T("Str.PrepareFrameLimitStep"), true, Str.T("Str.PlanFrameLimit", options.FrameLimitFps!.Value));
+                    });
                     void Run(string name, Func<PreparationStep> action)
                     {
                         PreparationStep result;

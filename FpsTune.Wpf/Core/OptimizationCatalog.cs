@@ -111,7 +111,17 @@ public static class OptimizationCatalog
             if (_cache is not null)
                 return _cache;
 
-            _cache = Parse(LoadJson());
+            var data = Parse(LoadJson());
+            // 按机器能力收敛可用性：没有现代电源滑块（无 overlay 持久化值）的系统置灰该项，
+            // 保留在列表里而不是消失，避免备份/预设引用凭空失效。
+            if (!NativePowerOverlay.IsSupported())
+                data = new CatalogData
+                {
+                    Items = data.Items.Select(i => i.Id == "power-overlay-perf" ? i with { Available = false } : i).ToList(),
+                    Order = data.Order,
+                    Presets = data.Presets
+                };
+            _cache = data;
             return _cache;
         }
     }

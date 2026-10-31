@@ -402,9 +402,39 @@ public static class DetectionService
             "mouse-accel-off" => GetMouseAccelState(),
             "keyboard-repeat" => GetKeyboardRepeatState(),
             "sticky-keys-off" => GetStickyKeysState(),
+            "power-overlay-perf" => GetPowerOverlayState(),
+            "filter-keys-off" => GetFilterKeysState(),
             "net-nagle-off" => GetNagleState(),
             _ => (false, "需要运行时检测")
         };
+    }
+
+    private static (bool Optimized, string Current) GetPowerOverlayState()
+    {
+        try
+        {
+            var current = NativePowerOverlay.ReadActual() ?? NativePowerOverlay.ReadPersistedAc();
+            if (current is null) return (false, Str.T("Str.PowerOverlayUnsupported"));
+            return (current == NativePowerOverlay.BestPerformance,
+                Str.T("Str.PowerOverlayState", OverlayName(current.Value)));
+        }
+        catch (Exception ex) { return (false, PrivacyScrub.Sanitize(ex.Message)); }
+    }
+
+    private static string OverlayName(Guid guid) => guid == NativePowerOverlay.BestPerformance
+        ? Str.T("Str.PowerOverlayBest")
+        : guid == NativePowerOverlay.BestEfficiency ? Str.T("Str.PowerOverlayEfficiency")
+        : guid == Guid.Empty ? Str.T("Str.PowerOverlayBalanced") : guid.ToString("D");
+
+    private static (bool Optimized, string Current) GetFilterKeysState()
+    {
+        try
+        {
+            var state = NativeAccessibility.Read();
+            return (!state.HotkeyActive, Str.T("Str.FilterKeysState",
+                Str.T(state.HotkeyActive ? "Str.FilterKeysHotkeyOn" : "Str.FilterKeysHotkeyOff")));
+        }
+        catch (Exception ex) { return (false, PrivacyScrub.Sanitize(ex.Message)); }
     }
 
     private static (bool Optimized, string Current) GetProcessorPowerState(string id)

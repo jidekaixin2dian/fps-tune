@@ -1,5 +1,7 @@
+using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using Xunit;
+using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Tests;
 
@@ -89,5 +91,63 @@ public sealed class GamePreparationTests
         var memory = new MemoryCleanupTests.FakeMemory { FailRead = 2 };
         var result = Assert.Single(await Service(memory).RunAsync(new()));
         Assert.False(result.Succeeded); Assert.Contains("snapshot unavailable", result.Error); Assert.Equal(1, memory.Purges);
+    }
+
+    [Fact]
+    public async Task Preparation_applies_safe_only_preset_and_reports_skips_for_game_items()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "fps-tune-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var writes = new List<string>();
+        RegistryHelper.SnapshotOverride = (_, _, name) => new(true, 1, RegistryValueKind.DWord);
+        RegistryHelper.SetOverride = (_, _, name, _, _) => writes.Add(name);
+        BackupService.BackupDirOverride = dir;
+        try
+        {
+            var memory = new MemoryCleanupTests.FakeMemory();
+            var options = new GamePreparationOptions { Configured = true, CleanMemory = false, ApplyOptimizations = true, OptimizationPreset = "safe-only" };
+            var step = Assert.Single(await Service(memory).RunAsync(options));
+            // game-mode/transparency-off 走 fake 注册表应用；gpu-pref 无游戏路径按跳过处理，不算失败。
+            Assert.True(step.Succeeded, step.Detail);
+            Assert.Contains("EnableTransparency", writes);
+            Assert.Equal(0, memory.Purges);
+        }
+        finally
+        {
+            RegistryHelper.SnapshotOverride = null; RegistryHelper.SetOverride = null;
+            BackupService.BackupDirOverride = null;
+            try { Directory.Delete(dir, recursive: true); } catch { /* 临时目录清理失败可忽略 */ }
+        }
+    }
+
+    [Fact]
+    public void Administrator_requirement_follows_selected_preset_and_power_plan()
+    {
+        var service = Service(new MemoryCleanupTests.FakeMemory());
+        Assert.False(service.NeedsAdministrator(new() { Configured = true, ApplyOptimizations = true, OptimizationPreset = "safe-only" }));
+        Assert.False(service.NeedsAdministrator(new() { Configured = true, ApplyFrameLimit = true, FrameLimitFps = 144 }));
+        Assert.True(service.NeedsAdministrator(new() { Configured = true, ApplyOptimizations = true, OptimizationPreset = "balanced" }));
+        Assert.True(service.NeedsAdministrator(new() { Configured = true, ApplyPowerPlan = true }));
+    }
+
+    [Fact]
+    public async Task Frame_limit_without_a_game_path_is_rejected_before_any_step()
+    {
+        var memory = new MemoryCleanupTests.FakeMemory();
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            Service(memory).RunAsync(new() { Configured = true, ApplyFrameLimit = true, FrameLimitFps = 144 }));
+        Assert.Equal(0, memory.Purges);
+    }
+
+    [Fact]
+    public void Plan_store_validates_new_fields()
+    {
+        Assert.False(PreparationPlanStore.Valid(new() { Configured = true, ApplyOptimizations = true, OptimizationPreset = "full" }));
+        Assert.False(PreparationPlanStore.Valid(new() { Configured = true, ApplyOptimizations = true }));
+        Assert.False(PreparationPlanStore.Valid(new() { Configured = true, ApplyFrameLimit = true, FrameLimitFps = 10 }));
+        Assert.False(PreparationPlanStore.Valid(new() { Configured = true, ApplyFrameLimit = true, FrameLimitFps = 2000 }));
+        Assert.True(PreparationPlanStore.Valid(new() { Configured = true, ApplyFrameLimit = true, FrameLimitFps = 144 }));
+        Assert.True(PreparationPlanStore.Valid(new() { Configured = true, ApplyPowerPlan = true }));
+        Assert.True(PreparationPlanStore.Valid(new() { Configured = true, ApplyOptimizations = true, OptimizationPreset = "safe-only" }));
     }
 }

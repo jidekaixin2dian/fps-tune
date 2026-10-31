@@ -64,10 +64,10 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
-    public void Catalog_has_40_unique_items()
+    public void Catalog_has_42_unique_items()
     {
         var (ids, _) = LoadCatalog();
-        Assert.Equal(40, ids.Count);
+        Assert.Equal(42, ids.Count);
     }
 
     [Fact]

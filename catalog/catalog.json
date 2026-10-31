@@ -116,6 +116,21 @@
       "group": "键鼠"
     },
     {
+      "id": "filter-keys-off",
+      "common": true,
+      "name": "FilterKeys 防误触",
+      "nameEn": "Prevent accidental FilterKeys prompts",
+      "description": "关闭按住 Shift 8 秒触发的筛选键询问，游戏中长按 Shift 不再弹窗；已开启筛选键的节奏设置原样保留。",
+      "descriptionEn": "Disables the hold-Shift-8-seconds FilterKeys prompt so long Shift presses in games no longer pop a dialog; existing FilterKeys timing settings are kept.",
+      "sideEffect": "使用筛选键的用户将无法再用长按 Shift 的快捷键开启它，可到系统辅助功能设置手动开启。",
+      "sideEffectEn": "FilterKeys users lose the hold-Shift shortcut; it can still be turned on in Windows accessibility settings.",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry",
+      "group": "键鼠"
+    },
+    {
       "id": "hags",
       "common": true,
       "name": "开启硬件加速 GPU 计划（HAGS）",
@@ -254,6 +269,21 @@
       "sideEffect": "可能增加功耗和发热，缩短电池续航。",
       "sideEffectEn": "May increase power draw and heat and shorten battery life.",
       "admin": true,
+      "default": false,
+      "reboot": false,
+      "kind": "power",
+      "group": "电源"
+    },
+    {
+      "id": "power-overlay-perf",
+      "common": true,
+      "name": "Windows 11 电源模式 → 最佳性能",
+      "nameEn": "Windows 11 power mode → Best performance",
+      "description": "把系统电源模式调到最佳性能，立即生效；接电和用电池使用同一模式。",
+      "descriptionEn": "Sets the Windows 11 power mode slider to Best performance, effective immediately; the same mode applies on battery and plugged in.",
+      "sideEffect": "可能增加功耗和发热，缩短电池续航；还原以接电状态记录的模式为准。",
+      "sideEffectEn": "May increase power draw and heat and shorten battery life; restore uses the mode recorded for the plugged-in state.",
+      "admin": false,
       "default": false,
       "reboot": false,
       "kind": "power",
