@@ -101,6 +101,21 @@
       "group": "键鼠"
     },
     {
+      "id": "windowed-games-opt",
+      "common": true,
+      "name": "开启窗口化游戏优化",
+      "nameEn": "Enable optimizations for windowed games",
+      "description": "固定开启 Windows 11 的窗口化游戏优化，窗口与无边框模式改用新的呈现管线；对之后启动的游戏生效。",
+      "descriptionEn": "Pins the Windows 11 windowed-games optimization on so windowed and borderless titles use the newer presentation path; applies to games started afterwards.",
+      "sideEffect": "个别老游戏在窗口化下表现可能不同，可用性能会话 A/B 对比。",
+      "sideEffectEn": "A few older games may behave differently when windowed; compare with an in-app performance session.",
+      "admin": false,
+      "default": false,
+      "reboot": false,
+      "kind": "registry",
+      "group": "图形显示"
+    },
+    {
       "id": "sticky-keys-off",
       "common": true,
       "name": "关闭粘滞键/切换键弹窗",

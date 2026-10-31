@@ -71,6 +71,30 @@ public partial class MaintenanceView : UserControl
         catch (Exception ex) { ToolStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
     private static string Size(long bytes) => $"{bytes / (1024d * 1024):F1} MiB";
+    private sealed record BgRow(string Name, int Pid, string Value);
+    private bool _bgCheckBusy;
+    private async void BgCheck_Click(object sender, RoutedEventArgs e)
+    {
+        if (_bgCheckBusy || _busy) return;
+        _bgCheckBusy = true;
+        BgCheckButton.IsEnabled = false;
+        BgCheckStatus.Text = Str.T("Str.BgCheckRunning", (int)BackgroundResourceCheck.Window.TotalSeconds);
+        try
+        {
+            var result = await Task.Run(() => BackgroundResourceCheck.RunAsync(CancellationToken.None));
+            BgCpuList.ItemsSource = result.TopCpu.Select(s => new BgRow(s.Name, s.Pid, Str.T("Str.BgCheckCpuValue", s.CpuPercent)));
+            BgDiskList.ItemsSource = result.TopDisk.Select(s => new BgRow(s.Name, s.Pid, Str.T("Str.BgCheckDiskValue", s.DiskBytesPerSecond!.Value)));
+            BgCpuTitle.Visibility = result.TopCpu.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BgCpuList.Visibility = result.TopCpu.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BgDiskTitle.Visibility = result.TopDisk.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BgDiskList.Visibility = result.TopDisk.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            BgNetworkText.Visibility = Visibility.Visible;
+            BgNetworkText.Text = Str.T("Str.BgCheckNetwork", result.NetworkBytesPerSecond / 1024.0);
+            BgCheckStatus.Text = Str.T("Str.BgCheckDone", result.SampleSeconds, result.ProcessCount, result.Unavailable);
+        }
+        catch (Exception ex) { BgCheckStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        finally { _bgCheckBusy = false; BgCheckButton.IsEnabled = true; }
+    }
     private async void Scan_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;

@@ -151,6 +151,33 @@
                         </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                         <TextBlock x:Name="NoProcesses" Text="{DynamicResource Str.MaintenanceNoProcesses}" Style="{StaticResource MutedTextStyle}" Visibility="Collapsed"/>
                     </StackPanel></Border>
+<Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+    <DockPanel LastChildFill="True">
+        <Button x:Name="BgCheckButton" DockPanel.Dock="Right" Content="{DynamicResource Str.BgCheckStart}" Style="{StaticResource SecondaryButtonStyle}" Click="BgCheck_Click" VerticalAlignment="Top"/>
+        <StackPanel>
+            <TextBlock Text="{DynamicResource Str.BgCheckTitle}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
+            <TextBlock Text="{DynamicResource Str.BgCheckHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+        </StackPanel>
+    </DockPanel>
+    <TextBlock x:Name="BgCheckStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+    <TextBlock x:Name="BgCpuTitle" Text="{DynamicResource Str.BgCheckCpuTitle}" TextWrapping="Wrap" Margin="0,14,0,4" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" Visibility="Collapsed"/>
+    <ItemsControl x:Name="BgCpuList" Visibility="Collapsed"><ItemsControl.ItemTemplate><DataTemplate>
+        <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="120"/></Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+            <TextBlock Grid.Column="1" Text="{Binding Pid, StringFormat=PID {0}}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
+            <TextBlock Grid.Column="2" Text="{Binding Value}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+        </Grid>
+    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+    <TextBlock x:Name="BgDiskTitle" Text="{DynamicResource Str.BgCheckDiskTitle}" TextWrapping="Wrap" Margin="0,10,0,4" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" Visibility="Collapsed"/>
+    <ItemsControl x:Name="BgDiskList" Visibility="Collapsed"><ItemsControl.ItemTemplate><DataTemplate>
+        <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="120"/></Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+            <TextBlock Grid.Column="1" Text="{Binding Pid, StringFormat=PID {0}}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
+            <TextBlock Grid.Column="2" Text="{Binding Value}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
+        </Grid>
+    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+    <TextBlock x:Name="BgNetworkText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed"/>
+</StackPanel></Border>
 <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceTaskManager}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                 <TextBlock Text="{DynamicResource Str.MaintenanceTaskManagerHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>

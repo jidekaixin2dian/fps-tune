@@ -76,6 +76,40 @@ public sealed class PreparationEngineUiTests
         });
     }
 
+    [Fact]
+    public void Timer_boost_card_and_background_check_card_render_in_both_themes()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(PreparationEngineUiTests)); return; }
+        ReadabilityAndFramesUiTests.RunUi((app, root) =>
+        {
+            var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
+            DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                foreach (var mode in new[] { "dark", "light" })
+                {
+                    ThemeManager.SetMode(mode);
+                    // 设置页 → 游戏卡：计时器开关与状态行
+                    window.NavigateTo("settings"); window.UpdateLayout();
+                    var settings = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
+                    ((RadioButton)settings.FindName("SettingsNav2")).IsChecked = true; window.UpdateLayout();
+                    DlssFeedbackTests.PumpUntil(() => ((CheckBox)settings.FindName("TimerBoostCheck")).IsChecked != null);
+                    var timerCard = (FrameworkElement)((CheckBox)settings.FindName("TimerBoostCheck")).Parent;
+                    Render(timerCard, $"timer-boost-{mode}", backdropKey: "ConsoleBackgroundBrush");
+                    // 维护页 → 进程区：后台资源检查卡
+                    window.NavigateTo("tools"); window.UpdateLayout();
+                    var tools = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
+                    ((RadioButton)tools.FindName("ProcessesNav")).IsChecked = true; window.UpdateLayout();
+                    var bgButton = ReadabilityAndFramesUiTests.Descendants(tools).OfType<Button>().First(b => b.Name == "BgCheckButton");
+                    var bgCard = (FrameworkElement)((DockPanel)bgButton.Parent).Parent;
+                    Render(bgCard, $"bg-check-{mode}", backdropKey: "ConsoleBackgroundBrush");
+                }
+                ThemeManager.SetMode("dark");
+            }
+            finally { window.Close(); }
+        });
+    }
+
     private static void RenderRow(MainWindow window, ListBox list, OptimizationItemViewModel item, string name)
     {
         list.ScrollIntoView(item); window.UpdateLayout();

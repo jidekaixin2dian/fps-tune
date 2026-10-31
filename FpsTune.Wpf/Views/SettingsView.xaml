@@ -391,6 +391,23 @@
                 </StackPanel>
             </Border>
 
+            <!-- 游戏运行时高精度计时器（opt-in） -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Str.TimerBoostTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.TimerBoostDesc}"
+                               Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap"/>
+                    <CheckBox x:Name="TimerBoostCheck"
+                              Style="{StaticResource SettingsToggleStyle}"
+                              Content="{DynamicResource Str.TimerBoostToggle}"
+                              Margin="0,10,0,0"
+                              Checked="TimerBoostSetting_Changed"
+                              Unchecked="TimerBoostSetting_Changed"/>
+                    <TextBlock x:Name="TimerBoostStatus"
+                               Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
 
             </StackPanel></ScrollViewer><ScrollViewer x:Name="Section3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 高级 -->

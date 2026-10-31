@@ -40,6 +40,9 @@ public sealed class AppSettings
     public bool AutoProfileEnabled { get; set; }
     public List<AutoProfileBinding> AutoProfileBindings { get; set; } = new();
 
+    // 游戏运行时保持 0.5 ms 计时器分辨率（opt-in，默认关闭）。
+    public bool GameTimerBoostEnabled { get; set; }
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||

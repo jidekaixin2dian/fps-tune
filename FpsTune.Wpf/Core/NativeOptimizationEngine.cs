@@ -81,6 +81,23 @@ public static class NativeOptimizationEngine
         return (true, changed, false, changed ? "粘滞键/切换键弹窗已关闭" : "粘滞键/切换键本已关闭");
     }
 
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyWindowedGamesOpt()
+    {
+        const string path = @"Software\Microsoft\DirectX\UserGpuPreferences";
+        const string name = "DirectXUserGlobalSettings";
+        var raw = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, name)?.ToString();
+        var settings = DirectXUserSettings.Parse(raw);
+        if (settings.TryGetValue("SwapEffectUpgradeEnable", out var current) && current == "1")
+            return (true, false, false, Str.T("Str.WindowedGamesAlreadyOn"));
+        settings["SwapEffectUpgradeEnable"] = "1";
+        RegistryHelper.SetValue(RegistryHive.CurrentUser, path, name,
+            DirectXUserSettings.Merge(settings), RegistryValueKind.String);
+        var readback = RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, name)?.ToString();
+        if (DirectXUserSettings.TryGet(readback, "SwapEffectUpgradeEnable", out var after) && after == "1")
+            return (true, true, false, Str.T("Str.WindowedGamesApplied"));
+        throw new IOException(Str.T("Str.WindowedGamesReadbackMismatch"));
+    }
+
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyNagleOff()
     {
         const string baseKey = @"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces";
@@ -160,6 +177,8 @@ public static class NativeOptimizationEngine
                     changed => changed ? "键盘重复已提速" : "键盘重复本已最快");
             case "sticky-keys-off":
                 return ApplyStickyKeys();
+            case "windowed-games-opt":
+                return ApplyWindowedGamesOpt();
             case "menu-delay-off":
                 return ApplyHkcuStringTweaks(@"Control Panel\Desktop", new[] { ("MenuShowDelay", "0") },
                     changed => changed ? "菜单延迟已归零" : "菜单延迟本已为 0");

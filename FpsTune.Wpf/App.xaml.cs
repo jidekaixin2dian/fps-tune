@@ -10,8 +10,10 @@ namespace FpsTune.Wpf;
 public partial class App : Application
 {
     private AutoProfileService? _autoProfileService;
+    private GameTimerResolutionService? _gameTimer;
     internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
     internal static AutoRecordingService? AutomaticRecording { get; private set; }
+    internal static GameTimerResolutionService? GameTimer => Current is App app ? app._gameTimer : null;
     private static PerformanceHudService? _hud;
     internal static PerformanceHudService Hud => _hud ??= new();
     internal static void CloseHud() => _hud?.Close();
@@ -131,6 +133,8 @@ public partial class App : Application
             splash.SetPhase(92, Str.T("Str.SplashPhaseData"));
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();
+            _gameTimer = new GameTimerResolutionService();
+            _gameTimer.Start();
             MemoryAutomation = new MemoryAutoCleanupService();
             MemoryAutomation.Start();
             AutomaticRecording = new AutoRecordingService(SessionService);
@@ -142,6 +146,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         AutomaticRecording?.Dispose();
+        _gameTimer?.Dispose();
         CloseHud();
         _liveMetrics?.Dispose();
         SessionService.Dispose();

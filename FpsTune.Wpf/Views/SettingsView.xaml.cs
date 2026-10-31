@@ -32,7 +32,7 @@ public partial class SettingsView : UserControl
             _activityTimer.Start();
         };
         Unloaded += (_, _) => _activityTimer.Stop();
-        _activityTimer.Tick += (_, _) => UpdateActivityScanLine();
+        _activityTimer.Tick += (_, _) => { UpdateActivityScanLine(); UpdateTimerBoostStatus(); };
 
         ThemeDarkRadio.Checked += (_, _) => ApplyThemeMode("dark");
         ThemeLightRadio.Checked += (_, _) => ApplyThemeMode("light");
@@ -232,6 +232,10 @@ public partial class SettingsView : UserControl
         LowSpecCheck.IsChecked = s.LowSpecMode;
         AutoProfileCheck.IsChecked = s.AutoProfileEnabled;
         AutostartCheck.IsChecked = ReadAutostart();
+        _suppressUiEvents = true;
+        TimerBoostCheck.IsChecked = s.GameTimerBoostEnabled;
+        _suppressUiEvents = false;
+        UpdateTimerBoostStatus();
 
         _autoBindingsReady = false;
         _autoBindings.Clear();
@@ -631,6 +635,51 @@ public partial class SettingsView : UserControl
             _suppressUiEvents = false;
             SetAutoProfileStatus("自动应用开关保存失败：" + ex.Message, warning: true);
         }
+    }
+
+    private void TimerBoostSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents || TimerBoostCheck.IsChecked is null) return;
+        var settings = SettingsService.Current;
+        var oldValue = settings.GameTimerBoostEnabled;
+        settings.GameTimerBoostEnabled = TimerBoostCheck.IsChecked == true;
+        try
+        {
+            SettingsService.Save(settings);
+            App.GameTimer?.ApplySettings();
+            UpdateTimerBoostStatus();
+        }
+        catch (Exception ex)
+        {
+            settings.GameTimerBoostEnabled = oldValue;
+            _suppressUiEvents = true;
+            TimerBoostCheck.IsChecked = oldValue;
+            _suppressUiEvents = false;
+            TimerBoostStatus.Text = Str.T("Str.TimerSaveFailed", PrivacyScrub.Sanitize(ex.Message));
+        }
+    }
+
+    internal void UpdateTimerBoostStatus()
+    {
+        if (TimerBoostStatus is null) return;
+        var service = App.GameTimer;
+        if (service is null)
+        {
+            TimerBoostStatus.Text = Str.T("Str.TimerStatusUnavailable");
+            return;
+        }
+        var status = service.Status;
+        if (!status.Enabled)
+        {
+            TimerBoostStatus.Text = Str.T("Str.TimerStatusIdleOff");
+            return;
+        }
+        var current = status.CurrentResolution > 0
+            ? Str.T("Str.TimerCurrentMs", status.CurrentResolution / 10000.0)
+            : Str.T("Str.TimerStatusUnavailable");
+        TimerBoostStatus.Text = status.Active
+            ? Str.T("Str.TimerStatusActive", status.Game ?? "", current)
+            : Str.T("Str.TimerStatusStandby", current);
     }
 
     private bool TrySaveAutoBindings(out string? error)

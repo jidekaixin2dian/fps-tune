@@ -402,6 +402,7 @@ public static class DetectionService
             "mouse-accel-off" => GetMouseAccelState(),
             "keyboard-repeat" => GetKeyboardRepeatState(),
             "sticky-keys-off" => GetStickyKeysState(),
+            "windowed-games-opt" => GetWindowedGamesState(),
             "power-overlay-perf" => GetPowerOverlayState(),
             "filter-keys-off" => GetFilterKeysState(),
             "net-nagle-off" => GetNagleState(),
@@ -419,6 +420,17 @@ public static class DetectionService
                 Str.T("Str.PowerOverlayState", OverlayName(current.Value)));
         }
         catch (Exception ex) { return (false, PrivacyScrub.Sanitize(ex.Message)); }
+    }
+
+    private static (bool Optimized, string Current) GetWindowedGamesState()
+    {
+        var raw = RegistryHelper.ReadValue(RegistryHive.CurrentUser,
+            @"Software\Microsoft\DirectX\UserGpuPreferences", "DirectXUserGlobalSettings")?.ToString();
+        if (!DirectXUserSettings.TryGet(raw, "SwapEffectUpgradeEnable", out var value))
+            return (false, Str.T("Str.WindowedGamesDefault"));
+        return value == "1"
+            ? (true, Str.T("Str.WindowedGamesOn"))
+            : (false, Str.T("Str.WindowedGamesOff"));
     }
 
     private static string OverlayName(Guid guid) => guid == NativePowerOverlay.BestPerformance

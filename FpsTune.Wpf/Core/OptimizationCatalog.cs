@@ -112,12 +112,17 @@ public static class OptimizationCatalog
                 return _cache;
 
             var data = Parse(LoadJson());
-            // 按机器能力收敛可用性：没有现代电源滑块（无 overlay 持久化值）的系统置灰该项，
-            // 保留在列表里而不是消失，避免备份/预设引用凭空失效。
-            if (!NativePowerOverlay.IsSupported())
+            // 按机器能力收敛可用性：不支持的项目置灰保留在列表里而不是消失，
+            // 避免备份/预设引用凭空失效。
+            if (!NativePowerOverlay.IsSupported() || !WindowsVersionHelper.IsBuildAtLeast(22621))
                 data = new CatalogData
                 {
-                    Items = data.Items.Select(i => i.Id == "power-overlay-perf" ? i with { Available = false } : i).ToList(),
+                    Items = data.Items.Select(i => i switch
+                    {
+                        _ when i.Id == "power-overlay-perf" && !NativePowerOverlay.IsSupported() => i with { Available = false },
+                        _ when i.Id == "windowed-games-opt" && !WindowsVersionHelper.IsBuildAtLeast(22621) => i with { Available = false },
+                        _ => i,
+                    }).ToList(),
                     Order = data.Order,
                     Presets = data.Presets
                 };
