@@ -15,7 +15,8 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class TrayService
 {
-    private const string HotkeyHint = "\n\n最小化后不占任务栏，可从托盘图标或全局热键 Ctrl+Alt+F 呼出。";
+    internal static string HiddenMessage => Str.T("Str.TrayHiddenHint")
+        + (SettingsService.Current.HotkeyEnabled ? " " + Str.T("Str.TrayHiddenHotkey") : "");
 
     private const int WM_APPBASE = unchecked((int)0x8000); // WM_APP
     // 自定义回调消息；TaskbarCreated 用于 explorer.exe 重启后自动补挂图标
@@ -167,13 +168,13 @@ public static class TrayService
         if ((!IsEnabled && !force) || _minimizeHintShown)
             return;
         _minimizeHintShown = true;
-        NotifyRaw("FPS 帧律仍在运行", "已最小化到系统托盘。" + HotkeyHint);
+        NotifyRaw(Str.T("Str.TrayStillRunning"), HiddenMessage);
     }
 
     /// <summary>优化 / 实验完成通知（受设置开关控制）。</summary>
     public static void NotifyComplete(string title, string message)
     {
-        if (!IsEnabled || !SettingsService.Current.NotifyOnComplete)
+        if (!SettingsService.Current.NotifyOnComplete)
             return;
         NotifyRaw(title, message);
     }

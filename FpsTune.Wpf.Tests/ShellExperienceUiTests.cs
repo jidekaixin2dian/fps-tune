@@ -83,6 +83,10 @@ public sealed class ShellExperienceUiTests
             try
             {
                 SettingsService.Current.CloseAction = CloseBehavior.Tray;
+                var hotkey = SettingsService.Current.HotkeyEnabled;
+                SettingsService.Current.HotkeyEnabled = false; Assert.DoesNotContain("Ctrl+Alt+F",TrayService.HiddenMessage);
+                SettingsService.Current.HotkeyEnabled = true; Assert.Contains("Ctrl+Alt+F",TrayService.HiddenMessage);
+                SettingsService.Current.HotkeyEnabled = hotkey;
                 DialogService.PrepareWindowForTest = dialog =>
                 {
                     DlssFeedbackTests.PrepareBackgroundWindow(dialog);
