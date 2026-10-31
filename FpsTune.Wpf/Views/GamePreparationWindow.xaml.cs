@@ -67,7 +67,9 @@ public partial class GamePreparationWindow : Window
         VibranceSlider.Value = Math.Clamp(options.VibrancePercent, 0, 100);
         IccPresetBox.SelectedItem = IccPresetBox.Items.Cast<IccChoice>().FirstOrDefault(p => p.Preset == options.IccPreset);
         OptimizationsCheck.IsChecked = options.ApplyOptimizations;
-        OptimizationPresetBox.SelectedItem = OptimizationPresetBox.Items.Cast<PresetChoice>().FirstOrDefault(p => p.Preset == options.OptimizationPreset);
+        // 旧方案没有预设字段：显示回第一项，保存时仍按当前勾选与选择校验。
+        OptimizationPresetBox.SelectedItem = OptimizationPresetBox.Items.Cast<PresetChoice>()
+            .FirstOrDefault(p => p.Preset == options.OptimizationPreset) ?? OptimizationPresetBox.Items.Cast<PresetChoice>().FirstOrDefault();
         // 限帧依赖具体游戏方案：共用默认方案下不可选。
         FrameLimitCheck.IsEnabled = GameScope.IsChecked == true;
         FrameLimitCheck.IsChecked = options.ApplyFrameLimit && GameScope.IsChecked == true;
@@ -143,7 +145,8 @@ public partial class GamePreparationWindow : Window
             IccPreset = (IccPresetBox.SelectedItem as IccChoice)?.Preset, ApplyVibrance = VibranceCheck.IsChecked == true,
             VibrancePercent = (int)VibranceSlider.Value, DisplayIdentity = (DisplayBox.SelectedItem as DisplayChoice)?.Identity,
             ApplyOptimizations = OptimizationsCheck.IsChecked == true,
-            OptimizationPreset = (OptimizationPresetBox.SelectedItem as PresetChoice)?.Preset,
+            // 未勾选时不落预设值，保持方案与显示内容一一对应。
+            OptimizationPreset = OptimizationsCheck.IsChecked == true ? (OptimizationPresetBox.SelectedItem as PresetChoice)?.Preset : null,
             ApplyFrameLimit = FrameLimitCheck.IsChecked == true, FrameLimitFps = frameLimit,
             ApplyPowerPlan = PowerPlanCheck.IsChecked == true };
         if (!selected.HasActions) { StatusText.Text = Str.T("Str.PrepareChoose"); return; }
