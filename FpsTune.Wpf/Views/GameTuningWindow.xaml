@@ -1,0 +1,94 @@
+<Window x:Class="FpsTune.Wpf.Views.GameTuningWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
+    Title="{DynamicResource Str.TuningTitle}" Style="{StaticResource WindowTypographyStyle}" Width="1000" Height="740" MinWidth="860" MinHeight="580"
+    WindowStartupLocation="CenterOwner" ShowInTaskbar="False" WindowStyle="None" ResizeMode="CanResizeWithGrip" Background="{DynamicResource AppBackdropBrush}">
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24"><Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <DockPanel Margin="0,0,0,16"><Button DockPanel.Dock="Right" Content="{DynamicResource Str.TuningOfficial}" Style="{StaticResource GhostButtonStyle}" Click="Official_Click"/>
+            <StackPanel><TextBlock x:Name="GameTitle" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock x:Name="GameGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" MaxWidth="790" Margin="0,8,0,0"/></StackPanel>
+        </DockPanel>
+        <WrapPanel Grid.Row="1" Margin="0,0,0,16">
+            <RadioButton x:Name="ConfigTab" GroupName="tuning" Content="{DynamicResource Str.TuningConfigTab}" Style="{StaticResource ChoiceTabStyle}" IsChecked="True" Checked="Tab_Changed" Margin="0,0,8,0"/>
+            <RadioButton x:Name="DriverTab" GroupName="tuning" Content="{DynamicResource Str.TuningDriverTab}" Style="{StaticResource ChoiceTabStyle}" Checked="Tab_Changed" Margin="0,0,8,0"/>
+            <RadioButton x:Name="Cs2Tab" GroupName="tuning" Content="{DynamicResource Str.TuningCs2Tab}" Style="{StaticResource ChoiceTabStyle}" Checked="Tab_Changed"/>
+        </WrapPanel>
+        <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><Grid Margin="0,0,8,0">
+            <StackPanel x:Name="ConfigPanel">
+                <Border Style="{StaticResource CardStyle}"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.TuningConfigTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.TuningConfigHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,14"/>
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ComboBox x:Name="SourceBox" SelectionChanged="Source_Changed" AutomationProperties.Name="{DynamicResource Str.TuningSource}"/>
+                        <Button Grid.Column="1" x:Name="BrowseButton" Content="{DynamicResource Str.TuningChooseFile}" Style="{StaticResource SecondaryButtonStyle}" Click="Browse_Click" Margin="10,0,0,0"/>
+                        <Button Grid.Column="2" x:Name="ReloadButton" Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}" Click="Reload_Click" Margin="8,0,0,0"/>
+                    </Grid>
+                    <controls:FileNameLabel x:Name="SourcePathText" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,8,0,0"/>
+                    <TextBlock x:Name="ConfigStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    <Grid Margin="0,18,0,6"><Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{DynamicResource Str.TuningField}" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Grid.Column="1" Text="{DynamicResource Str.TuningBaseline}" Style="{StaticResource SectionLabelStyle}"/>
+                        <TextBlock Grid.Column="2" Text="{DynamicResource Str.TuningSavedValue}" Style="{StaticResource SectionLabelStyle}"/>
+                    </Grid>
+                    <ItemsControl x:Name="ConfigRows"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,7"><Grid.ColumnDefinitions><ColumnDefinition Width="170"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Before}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Grid.Column="2" Text="{Binding After}" TextWrapping="Wrap"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Changed}" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                    </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <TextBlock x:Name="BaselineStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                    <Button x:Name="SaveBaselineButton" Content="{DynamicResource Str.TuningSaveBaseline}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveBaseline_Click" IsEnabled="False" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                </StackPanel></Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.TuningRecordTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="SceneText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+                    <WrapPanel><ComboBox x:Name="DurationBox" Width="140" SelectedIndex="1" AutomationProperties.Name="{DynamicResource Str.TuningDuration}"><ComboBoxItem Content="60 s" Tag="60"/><ComboBoxItem Content="120 s" Tag="120"/><ComboBoxItem Content="180 s" Tag="180"/></ComboBox>
+                        <Button x:Name="PrepareRecordButton" Content="{DynamicResource Str.TuningBringConditions}" Style="{StaticResource PrimaryButtonStyle}" IsEnabled="False" Click="PrepareRecord_Click" Margin="12,0,0,0"/></WrapPanel>
+                </StackPanel></Border>
+            </StackPanel>
+            <StackPanel x:Name="DriverPanel" Visibility="Collapsed">
+                <Border Style="{StaticResource CardStyle}"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.TuningDriverTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.TuningDriverScope}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+                    <TextBlock x:Name="DriverCurrent" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+                    <StackPanel x:Name="DriverInputs">
+                    <ComboBox x:Name="SyncBox" SelectedIndex="0" SelectionChanged="Sync_Changed" AutomationProperties.Name="{DynamicResource Str.TuningSync}"><ComboBoxItem Content="{DynamicResource Str.TuningLatency}"/><ComboBoxItem Content="{DynamicResource Str.TuningSmooth}"/></ComboBox>
+                    <TextBlock x:Name="SyncHint" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,14"/>
+                    <CheckBox x:Name="VrrConfirmed" Content="{DynamicResource Str.TuningVrrConfirmed}" Margin="0,0,0,14" Visibility="Collapsed" Checked="DriverInput_Changed" Unchecked="DriverInput_Changed"/>
+                    <CheckBox x:Name="PowerCheck" Content="{DynamicResource Str.TuningMaximumPower}" Margin="0,0,0,14" Checked="DriverInput_Changed" Unchecked="DriverInput_Changed"/>
+                    <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
+                        <CheckBox x:Name="ForegroundCheck" Content="{DynamicResource Str.TuningForeground}" VerticalAlignment="Center" Checked="DriverInput_Changed" Unchecked="DriverInput_Changed"/>
+                        <TextBox Grid.Column="1" x:Name="ForegroundBox" Text="240" MaxLength="4" IsEnabled="{Binding IsChecked, ElementName=ForegroundCheck}" AutomationProperties.Name="{DynamicResource Str.TuningForeground}" TextChanged="DriverInput_Changed"/>
+                    </Grid>
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
+                        <CheckBox x:Name="BackgroundCheck" Content="{DynamicResource Str.TuningBackground}" VerticalAlignment="Center" Checked="DriverInput_Changed" Unchecked="DriverInput_Changed"/>
+                        <TextBox Grid.Column="1" x:Name="BackgroundBox" Text="30" MaxLength="3" IsEnabled="{Binding IsChecked, ElementName=BackgroundCheck}" AutomationProperties.Name="{DynamicResource Str.TuningBackground}" TextChanged="DriverInput_Changed"/>
+                    </Grid>
+                    <TextBlock Text="{DynamicResource Str.FrameRange}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    </StackPanel>
+                    <WrapPanel Margin="0,16,0,0"><Button x:Name="ApplyDriverButton" Content="{DynamicResource Str.TuningApplyDriver}" Style="{StaticResource PrimaryButtonStyle}" IsEnabled="False" Click="ApplyDriver_Click" Margin="0,0,10,0"/>
+                        <Button x:Name="RestoreDriverButton" Content="{DynamicResource Str.TuningRestoreDriver}" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="RestoreDriver_Click"/></WrapPanel>
+                    <TextBlock x:Name="DriverStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                </StackPanel></Border>
+                <Border x:Name="DeltaDlssCard" Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.TuningDlssTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.TuningDlssHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+                    <Button Content="{DynamicResource Str.NavDisplay}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="Display_Click"/>
+                </StackPanel></Border>
+            </StackPanel>
+            <Border x:Name="CommandPanel" Visibility="Collapsed" Style="{StaticResource CardStyle}" VerticalAlignment="Top"><StackPanel>
+                <TextBlock Text="{DynamicResource Str.TuningCs2Title}" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.TuningCs2Hint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,16"/>
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <StackPanel><TextBlock Text="{DynamicResource Str.TuningMatchCap}" Style="{StaticResource SectionLabelStyle}"/><TextBox x:Name="Cs2Foreground" Text="240" MaxLength="4" Margin="0,8,0,0" TextChanged="Command_Changed" AutomationProperties.Name="{DynamicResource Str.TuningMatchCap}"/></StackPanel>
+                    <StackPanel Grid.Column="2"><TextBlock Text="{DynamicResource Str.TuningMenuCap}" Style="{StaticResource SectionLabelStyle}"/><TextBox x:Name="Cs2Menu" Text="60" MaxLength="4" Margin="0,8,0,0" TextChanged="Command_Changed" AutomationProperties.Name="{DynamicResource Str.TuningMenuCap}"/></StackPanel>
+                </Grid>
+                <TextBlock Text="{DynamicResource Str.TuningCommandRange}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                <TextBox x:Name="CommandPreview" IsReadOnly="True" TextWrapping="Wrap" Margin="0,16,0,12" AutomationProperties.Name="{DynamicResource Str.TuningCommandPreview}"/>
+                <Button x:Name="CopyCommandButton" Content="{DynamicResource Str.TuningCopyCommand}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Click="CopyCommand_Click"/>
+                <TextBlock x:Name="CommandStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+            </StackPanel></Border>
+        </Grid></ScrollViewer>
+        <DockPanel Grid.Row="3" Margin="0,18,0,0"><Button DockPanel.Dock="Right" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Click="Close_Click"/>
+            <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,20,0" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/></DockPanel>
+    </Grid></Border>
+</Window>

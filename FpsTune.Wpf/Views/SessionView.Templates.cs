@@ -6,6 +6,14 @@ namespace FpsTune.Wpf.Views;
 
 public partial class SessionView
 {
+    internal void LoadGameConditions(string path, SessionConditions conditions)
+    {
+        if (Service.IsRunning || Service.IsStopping || !string.Equals(path, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) return;
+        var captured = SessionConditionRules.CaptureGame(path, conditions);
+        if (!SessionConditionRules.IsValid(captured)) return;
+        FillConditions(captured); PrepareDeltaSession();
+        _preparationHint = Str.T("Str.TuningConditionsLoaded"); UpdateRunState();
+    }
     private void UpdateTemplateState()
     {
         var available = !Service.IsRunning && !Service.IsStopping && !string.IsNullOrWhiteSpace(AppState.GamePath);

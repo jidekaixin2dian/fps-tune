@@ -80,6 +80,8 @@ public partial class GameLibraryView : UserControl
         var row = GameList.SelectedItem as GameRow;
         DetailPanel.IsEnabled = row is not null && !_loading;
         if (row is null) { GameNameText.Text = GamePathText.Text = ProcessText.Text = PlanText.Text = RecordingText.Text = NameBox.Text = ""; return; }
+        TuningButton.Visibility = GameTuning.Identify(row.Profile.ExePath) is not null ? Visibility.Visible : Visibility.Collapsed;
+        TuningButton.IsEnabled = row.Accessible;
         GameNameText.Text = row.Name; GamePathText.Text = row.Profile.ExePath; ProcessText.Text = row.ProcessLabel; NameBox.Text = row.Name;
         SelectGameButton.IsEnabled = DetectGameButton.IsEnabled = PlanButton.IsEnabled = RecordButton.IsEnabled = DisplayButton.IsEnabled = row.Accessible;
         try { PlanText.Text = PreparationPlanStore.Describe(PreparationPlanStore.Resolve(row.Profile.ExePath)); }
@@ -110,6 +112,8 @@ public partial class GameLibraryView : UserControl
     { if (SelectTarget() && sender is Button { Tag: string route } && Window.GetWindow(this) is MainWindow main) main.NavigateTo(route); }
     private void AutoRecord_Click(object sender, RoutedEventArgs e)
     { if (!_loading && GameList.SelectedItem is GameRow row && Window.GetWindow(this) is MainWindow main) main.OpenRecordingOptions(row.Profile.ExePath); }
+    private void Tuning_Click(object sender, RoutedEventArgs e)
+    { if (SelectTarget() && GameList.SelectedItem is GameRow row && Window.GetWindow(this) is MainWindow main) main.OpenGameTuning(row.Profile.ExePath); }
     private void PreparationHistory_Click(object sender, RoutedEventArgs e)
     {
         if (_loading || GameList.SelectedItem is not GameRow row) return;

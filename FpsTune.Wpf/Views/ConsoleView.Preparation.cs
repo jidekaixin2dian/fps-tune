@@ -9,6 +9,8 @@ public partial class ConsoleView
     private readonly GamePreparationService _preparation;
     private bool _preparing;
     private CancellationTokenSource? _preparationCancellation;
+    private void Tuning_Click(object sender, RoutedEventArgs e)
+    { if (AppState.GamePath is { } path && Window.GetWindow(this) is MainWindow main) main.OpenGameTuning(path); }
     private void PreparationHistory_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new PreparationHistoryWindow(AppState.GamePath) { Owner = Window.GetWindow(this) };

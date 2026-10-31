@@ -28,6 +28,8 @@ public partial class ConsoleView : UserControl
 
     private void UpdatePreparation()
     {
+        TuningButton.Visibility = GameTuning.Identify(AppState.GamePath) is not null ? Visibility.Visible : Visibility.Collapsed;
+        TuningButton.IsEnabled = !_preparing && !_refreshing && !_locating;
         var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
         var firstRun = !StateStore.HasSeenOnboarding;
         GameReadyTitle.Text = GameLocated

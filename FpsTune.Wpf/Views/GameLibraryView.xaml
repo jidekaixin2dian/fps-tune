@@ -45,6 +45,7 @@
                         <TextBlock x:Name="RecordingText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
                         <WrapPanel>
                             <Button x:Name="PlanButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Click="Plan_Click" Margin="0,0,8,8"/>
+                            <Button x:Name="TuningButton" Content="{DynamicResource Str.TuningTitle}" Style="{StaticResource PrimaryButtonStyle}" Click="Tuning_Click" Margin="0,0,8,8" Visibility="Collapsed"/>
                             <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click" Margin="0,0,8,8"/>
                             <Button x:Name="RecordButton" Content="{DynamicResource Str.NavSession}" Style="{StaticResource SecondaryButtonStyle}" Click="Route_Click" Tag="session" Margin="0,0,8,8"/>
                             <Button x:Name="DisplayButton" Content="{DynamicResource Str.NavDisplay}" Style="{StaticResource SecondaryButtonStyle}" Click="Route_Click" Tag="display" Margin="0,0,8,8"/>
