@@ -301,7 +301,7 @@
     <s:String x:Key="Str.TextureHighPerformance">高性能</s:String>
     <s:String x:Key="Str.DrsPowerManagement">电源管理</s:String>
     <s:String x:Key="Str.TipPowerManagement">竞技推荐「最高性能优先」，避免对枪时降频</s:String>
-    <s:String x:Key="Str.PowerPreferMax">最高性能优先（推荐）</s:String>
+    <s:String x:Key="Str.PowerPreferMax">最高性能优先</s:String>
     <s:String x:Key="Str.PowerAdaptive">自适应</s:String>
     <s:String x:Key="Str.PowerDriverControlled">由驱动控制</s:String>
     <s:String x:Key="Str.PowerStablePerf">偏重稳定性能</s:String>
@@ -502,7 +502,7 @@
     <s:String x:Key="Str.ToggleHint2">选择要应用的项目；手动调整后使用自定义方案。</s:String>
     <s:String x:Key="Str.CustomSelection">自定义选择</s:String>
     <s:String x:Key="Str.DetectDoneHint">检测已完成。请选择左侧预设或勾选需要的优化项，确认后点击“应用”。</s:String>
-    <s:String x:Key="Str.DetectUpdatedHint">检测已更新。请选择要调整的项目。</s:String>
+    <s:String x:Key="Str.DetectUpdatedHint">设备信息已更新。</s:String>
     <s:String x:Key="Str.DetectIncomplete">检测未完成。请检查检测页的报错信息后重试。</s:String>
     <s:String x:Key="Str.DetectIncompleteRetry">检测未完成，可重新检测或前往检测页查看原因。</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">暂无优化项，请先在检测页运行检测。</s:String>
