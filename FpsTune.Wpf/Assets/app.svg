@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <title>FPS 帧律</title>
   <defs>
-    <linearGradient id="tile" gradientUnits="userSpaceOnUse" x1="14" y1="5" x2="53" y2="63"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.65" stop-color="#EFFAFF"/><stop offset="1" stop-color="#D2F0FC"/></linearGradient>
-    <linearGradient id="blue" gradientUnits="userSpaceOnUse" x1="18" y1="17" x2="27" y2="52"><stop offset="0" stop-color="#1CBEF7"/><stop offset="0.55" stop-color="#0792FC"/><stop offset="1" stop-color="#0755EF"/></linearGradient>
-    <linearGradient id="fold" gradientUnits="userSpaceOnUse" x1="26" y1="21" x2="49" y2="13"><stop offset="0" stop-color="#008BFA"/><stop offset="1" stop-color="#56DEEE"/></linearGradient>
-    <linearGradient id="mint" gradientUnits="userSpaceOnUse" x1="28" y1="48" x2="48" y2="28"><stop offset="0" stop-color="#06ADEE"/><stop offset="0.55" stop-color="#2ADCD0"/><stop offset="1" stop-color="#79F7B4"/></linearGradient>
+    <linearGradient id="tile" gradientUnits="userSpaceOnUse" x1="14" y1="5" x2="53" y2="63"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.65" stop-color="#F3F7ED"/><stop offset="1" stop-color="#E3EFD9"/></linearGradient>
+    <linearGradient id="green" gradientUnits="userSpaceOnUse" x1="18" y1="17" x2="27" y2="52"><stop offset="0" stop-color="#7CAE52"/><stop offset="0.55" stop-color="#426E2F"/><stop offset="1" stop-color="#355826"/></linearGradient>
+    <linearGradient id="fold" gradientUnits="userSpaceOnUse" x1="26" y1="21" x2="49" y2="13"><stop offset="0" stop-color="#426E2F"/><stop offset="1" stop-color="#A3CE76"/></linearGradient>
+    <linearGradient id="leaf" gradientUnits="userSpaceOnUse" x1="28" y1="48" x2="48" y2="28"><stop offset="0" stop-color="#638F40"/><stop offset="0.55" stop-color="#8ABB63"/><stop offset="1" stop-color="#B8DD8D"/></linearGradient>
   </defs>
-  <rect x="1" y="1" width="62" height="62" rx="14.5" fill="#C8E7F4"/>
+  <rect x="1" y="1" width="62" height="62" rx="14.5" fill="#D0DFC6"/>
   <rect x="1.6" y="1.6" width="60.8" height="60.8" rx="13.9" fill="url(#tile)"/>
-  <path d="M13 21Q13 17.8 17 17L46 11.8Q49.7 11.1 49.7 15V19.5Q49.7 22 46.5 22.6L27 26Q24.3 26.5 24.3 29.2V32.6L34 30.6Q36.1 30.1 36.1 32.5V35Q36.1 36.2 34.7 36.5L26.5 38.6Q24.3 39.2 24.3 41.4V49.4Q24.3 52.3 21.8 51.8L17 50.6Q13 49.4 13 46.2Z" fill="url(#blue)"/>
+  <path d="M13 21Q13 17.8 17 17L46 11.8Q49.7 11.1 49.7 15V19.5Q49.7 22 46.5 22.6L27 26Q24.3 26.5 24.3 29.2V32.6L34 30.6Q36.1 30.1 36.1 32.5V35Q36.1 36.2 34.7 36.5L26.5 38.6Q24.3 39.2 24.3 41.4V49.4Q24.3 52.3 21.8 51.8L17 50.6Q13 49.4 13 46.2Z" fill="url(#green)"/>
   <path d="M25 15.6L46 11.8Q49.7 11.1 49.7 15V19.5Q49.7 22 46.5 22.6L39.2 23.9Q30.5 16.3 25 15.6Z" fill="url(#fold)"/>
-  <path d="M13 45Q21 32.7 34 30.6Q36.1 30.1 36.1 32.5V35Q36.1 36.2 34.7 36.5L26.5 38.6Q24.3 39.2 24.3 41.4V49.4Q24.3 52.3 21.8 51.8L17 50.6Q13 49.4 13 46.2Z" fill="url(#blue)"/>
-  <path d="M26.7 43.5Q26.7 41.7 29 40.6L36.4 37.5Q37.8 36.9 37.8 35.6V32.3Q37.8 31.3 38.8 30.8L46.6 26.9Q49.7 25.5 49.7 29V41.3Q49.7 44.5 46.6 45.4L29.4 49.7Q26.7 50.6 26.7 47.8Z" fill="url(#mint)"/>
+  <path d="M13 45Q21 32.7 34 30.6Q36.1 30.1 36.1 32.5V35Q36.1 36.2 34.7 36.5L26.5 38.6Q24.3 39.2 24.3 41.4V49.4Q24.3 52.3 21.8 51.8L17 50.6Q13 49.4 13 46.2Z" fill="url(#green)"/>
+  <path d="M26.7 43.5Q26.7 41.7 29 40.6L36.4 37.5Q37.8 36.9 37.8 35.6V32.3Q37.8 31.3 38.8 30.8L46.6 26.9Q49.7 25.5 49.7 29V41.3Q49.7 44.5 46.6 45.4L29.4 49.7Q26.7 50.6 26.7 47.8Z" fill="url(#leaf)"/>
 </svg>
