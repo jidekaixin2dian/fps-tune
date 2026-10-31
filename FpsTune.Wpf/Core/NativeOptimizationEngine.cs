@@ -450,14 +450,12 @@ public static class NativeOptimizationEngine
 
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyFilterKeysOff()
     {
-        var current = NativeAccessibility.Read();
-        if (!current.HotkeyActive)
+        var flags = NativeAccessibility.ReadFlags();
+        if (flags is not { } current)
+            return (true, false, true, Str.T("Str.FilterKeysUnavailable"));
+        if ((current & NativeAccessibility.FkfHotkeyActive) == 0)
             return (true, false, false, Str.T("Str.FilterKeysAlreadyOff"));
-        var error = NativeAccessibility.Write(current.WithoutHotkey());
-        if (error != 0)
-            throw new InvalidOperationException(Str.T("Str.FilterKeysWriteFailed", error));
-        if (NativeAccessibility.Read().HotkeyActive)
-            throw new IOException(Str.T("Str.FilterKeysReadbackMismatch"));
+        NativeAccessibility.WriteFlags(current & ~(NativeAccessibility.FkfHotkeyActive | NativeAccessibility.FkfConfirmHotkey));
         return (true, true, false, Str.T("Str.FilterKeysApplied"));
     }
 

@@ -389,9 +389,6 @@ public static partial class BackupService
             case "power-overlay":
                 RestorePowerOverlay(r);
                 break;
-            case "filter-keys":
-                RestoreFilterKeys(r);
-                break;
             case "power-tuning":
                 RestorePowerTuning(r);
                 break;
@@ -510,23 +507,6 @@ public static partial class BackupService
             throw new InvalidOperationException(Str.T("Str.PowerOverlayReadbackMismatch"));
     }
 
-    private static void RestoreFilterKeys(BackupRecord r)
-    {
-        if (r.OldFilterKeysFlags is not { } flags)
-            throw new InvalidOperationException(Str.T("Str.FilterKeysBackupMissing"));
-        var state = new NativeAccessibility.FilterKeysState(flags,
-            r.OldFilterKeysWaitPeriod ?? 0, r.OldFilterKeysDelayRate ?? 0,
-            r.OldFilterKeysRepeatDelay ?? 0, r.OldFilterKeysRepeatRate ?? 0,
-            r.OldFilterKeysBounceMSec ?? 0);
-        if (NativeAccessibility.Read() == state)
-            return;
-        var error = NativeAccessibility.Write(state);
-        if (error != 0)
-            throw new InvalidOperationException(Str.T("Str.FilterKeysWriteFailed", error));
-        if (NativeAccessibility.Read() != state)
-            throw new InvalidOperationException(Str.T("Str.FilterKeysReadbackMismatch"));
-    }
-
     private static void RestorePowerTuning(BackupRecord r)
     {
         RequirePowerTarget(r);
@@ -643,6 +623,7 @@ public static partial class BackupService
             "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", RegistryValueKind.DWord),
             "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", RegistryValueKind.DWord),
             "windowed-games-opt" => (RegistryHive.CurrentUser, @"Software\Microsoft\DirectX\UserGpuPreferences", "DirectXUserGlobalSettings", RegistryValueKind.String),
+            "filter-keys-off" => (RegistryHive.CurrentUser, @"Control Panel\Accessibility\Keyboard Response", "Flags", RegistryValueKind.String),
             _ => null
         };
     }

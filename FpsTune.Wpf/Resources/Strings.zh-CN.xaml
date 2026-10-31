@@ -1736,15 +1736,13 @@
     <s:String x:Key="Str.PowerOverlayBalanced">平衡</s:String>
     <s:String x:Key="Str.FilterKeysAlreadyOff">按住 Shift 已不会触发筛选键</s:String>
     <s:String x:Key="Str.FilterKeysApplied">已关闭按住 Shift 的筛选键触发</s:String>
-    <s:String x:Key="Str.FilterKeysWriteFailed">FilterKeys 写入失败（错误代码 {0}），已保留还原备份。</s:String>
     <s:String x:Key="Str.FilterKeysReadbackMismatch">FilterKeys 写入后读回不一致，已保留还原备份。</s:String>
     <s:String x:Key="Str.FilterKeysState">筛选键触发热键：{0}</s:String>
     <s:String x:Key="Str.FilterKeysHotkeyOn">开启（按住 Shift 8 秒触发）</s:String>
     <s:String x:Key="Str.FilterKeysHotkeyOff">关闭</s:String>
+    <s:String x:Key="Str.FilterKeysUnavailable">无法读取筛选键设置</s:String>
     <s:String x:Key="Str.PowerOverlayBackupInvalid">原电源模式 GUID 不合法</s:String>
-    <s:String x:Key="Str.FilterKeysBackupInvalid">FilterKeys 备份字段不匹配</s:String>
     <s:String x:Key="Str.PowerOverlayBackupMissing">备份缺少原电源模式 GUID</s:String>
-    <s:String x:Key="Str.FilterKeysBackupMissing">备份缺少 FilterKeys 原始状态</s:String>
     <s:String x:Key="Str.WindowedGamesDefault">未设置（跟随系统默认）</s:String>
     <s:String x:Key="Str.WindowedGamesOn">已开启</s:String>
     <s:String x:Key="Str.WindowedGamesOff">已关闭</s:String>

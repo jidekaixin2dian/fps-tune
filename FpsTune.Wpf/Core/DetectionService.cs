@@ -440,13 +440,12 @@ public static class DetectionService
 
     private static (bool Optimized, string Current) GetFilterKeysState()
     {
-        try
-        {
-            var state = NativeAccessibility.Read();
-            return (!state.HotkeyActive, Str.T("Str.FilterKeysState",
-                Str.T(state.HotkeyActive ? "Str.FilterKeysHotkeyOn" : "Str.FilterKeysHotkeyOff")));
-        }
-        catch (Exception ex) { return (false, PrivacyScrub.Sanitize(ex.Message)); }
+        var flags = NativeAccessibility.ReadFlags();
+        if (flags is not { } value)
+            return (false, Str.T("Str.FilterKeysUnavailable"));
+        var hotkey = (value & NativeAccessibility.FkfHotkeyActive) != 0;
+        return (!hotkey, Str.T("Str.FilterKeysState",
+            Str.T(hotkey ? "Str.FilterKeysHotkeyOn" : "Str.FilterKeysHotkeyOff")));
     }
 
     private static (bool Optimized, string Current) GetProcessorPowerState(string id)

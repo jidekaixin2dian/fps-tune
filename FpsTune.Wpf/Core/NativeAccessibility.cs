@@ -1,12 +1,15 @@
-using System.Runtime.InteropServices;
+using System.Globalization;
+using System.IO;
+using FpsTune.Wpf.Services;
+using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
 
 /// <summary>
-/// FilterKeys（筛选键）读写：按住右 Shift 8 秒误触弹窗的根源是 FKF_HOTKEYACTIVE 热键位。
-/// 用 SystemParametersInfo 读写 FILTERKEYS——同一调用既更新运行时状态又持久化到
-/// HKCU\Control Panel\Accessibility\Keyboard Response，立即生效，无需重新登录。
-/// 只清热键位，不改用户自用的筛选节奏（等待/延迟/重复参数原样保留）。
+/// FilterKeys（筛选键）防误触：误触热键位在 HKCU\Control Panel\Accessibility\Keyboard Response 的 Flags 里。
+/// 新版 Windows（本机 26300 实测）SPI_GET/SETFILTERKEYS 结构体查询已不可靠（返回 FALSE，GetLastError=87/0），
+/// 因此与 sticky-keys-off 一致走注册表：写前由备份契约记录原值，写后读回验证；重新登录后完全生效。
+/// 只清热键位（FKF_HOTKEYACTIVE|FKF_CONFIRMHOTKEY），其他位（筛选键开关、节奏参数）原样保留。
 /// </summary>
 internal static class NativeAccessibility
 {
@@ -15,71 +18,22 @@ internal static class NativeAccessibility
     internal const int FkfHotkeyActive = 0x4;
     internal const int FkfConfirmHotkey = 0x8;
 
-    private const int SpiGetFilterKeys = 0x003A;
-    private const int SpiSetFilterKeys = 0x003B;
-    private const int SpifUpdateIniFile = 0x01;
-    private const int SpifSendChange = 0x02;
+    private const string KeyPath = @"Control Panel\Accessibility\Keyboard Response";
+    private const string ValueName = "Flags";
 
-    internal static Func<FilterKeysState>? ReadOverride { get; set; }
-    internal static Func<FilterKeysState, uint>? WriteOverride { get; set; }
-
-    public sealed record FilterKeysState(
-        int Flags, int WaitPeriod, int DelayRate, int RepeatDelay, int RepeatRate, int BounceMSec)
+    /// <summary>读 Flags；值不存在或不是合法整数返回 null（调用方按不可用处理）。</summary>
+    internal static int? ReadFlags()
     {
-        /// <summary>按住右 Shift 触发 FilterKeys 询问的热键是否开启。</summary>
-        public bool HotkeyActive => (Flags & FkfHotkeyActive) != 0;
-
-        /// <summary>只关闭误触路径（热键位与确认弹窗位），其余位保持用户原值。</summary>
-        public FilterKeysState WithoutHotkey() => this with
-        {
-            Flags = Flags & ~(FkfHotkeyActive | FkfConfirmHotkey)
-        };
+        var raw = RegistryHelper.ReadValue(RegistryHive.CurrentUser, KeyPath, ValueName)?.ToString();
+        return int.TryParse(raw, out var flags) ? flags : null;
     }
 
-    /// <summary>当前 FilterKeys 状态；读取失败抛出（调用方决定如何呈现）。</summary>
-    internal static FilterKeysState Read()
+    /// <summary>写 Flags 并读回验证；读回不一致抛出（调用方按单项失败处理，备份已保留）。</summary>
+    internal static void WriteFlags(int flags)
     {
-        if (ReadOverride is not null) return ReadOverride();
-        var keys = new FILTERKEYS { cbSize = (uint)Marshal.SizeOf<FILTERKEYS>() };
-        var ok = SystemParametersInfo(SpiGetFilterKeys, (uint)Marshal.SizeOf<FILTERKEYS>(), ref keys, 0);
-        if (!ok) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-        return new((int)keys.dwFlags, (int)keys.iWaitPeriod, (int)keys.iDelayRate,
-            (int)keys.iRepeatDelay, (int)keys.iRepeatRate, (int)keys.iBounceMSec);
+        RegistryHelper.SetValue(RegistryHive.CurrentUser, KeyPath, ValueName,
+            flags.ToString(CultureInfo.InvariantCulture), RegistryValueKind.String);
+        if (ReadFlags() != flags)
+            throw new IOException(Str.T("Str.FilterKeysReadbackMismatch"));
     }
-
-    /// <summary>写入并广播（立即生效 + 持久化）；返回 Win32 错误码（0 成功）。</summary>
-    internal static uint Write(FilterKeysState state)
-    {
-        if (WriteOverride is not null) return WriteOverride(state);
-        var keys = new FILTERKEYS
-        {
-            cbSize = (uint)Marshal.SizeOf<FILTERKEYS>(),
-            dwFlags = (uint)state.Flags,
-            iWaitPeriod = (uint)state.WaitPeriod,
-            iDelayRate = (uint)state.DelayRate,
-            iRepeatDelay = (uint)state.RepeatDelay,
-            iRepeatRate = (uint)state.RepeatRate,
-            iBounceMSec = (uint)state.BounceMSec
-        };
-        var ok = SystemParametersInfo(SpiSetFilterKeys, (uint)Marshal.SizeOf<FILTERKEYS>(), ref keys,
-            SpifUpdateIniFile | SpifSendChange);
-        return ok ? 0 : (uint)Marshal.GetLastWin32Error();
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct FILTERKEYS
-    {
-        public uint cbSize;
-        public uint dwFlags;
-        public uint iWaitPeriod;
-        public uint iDelayRate;
-        public uint iRepeatDelay;
-        public uint iRepeatRate;
-        public uint iBounceMSec;
-    }
-
-    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    [DllImport("user32.dll", SetLastError = true, ExactSpelling = true, EntryPoint = "SystemParametersInfoW")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SystemParametersInfo(uint action, uint size, ref FILTERKEYS filterKeys, uint profile);
 }

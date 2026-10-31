@@ -14,7 +14,6 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
 {
     private readonly string _dir;
     private Guid _overlay = Guid.Empty;
-    private NativeAccessibility.FilterKeysState _filterKeys = new(0x7E, 30, 500, 250, 12, 0);
 
     public NativePowerOverlayFilterKeysTests()
     {
@@ -30,8 +29,6 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
         NativePowerOverlay.ReadOverride = null;
         NativePowerOverlay.WriteOverride = null;
         NativePowerOverlay.SupportedOverride = null;
-        NativeAccessibility.ReadOverride = null;
-        NativeAccessibility.WriteOverride = null;
         try { Directory.Delete(_dir, recursive: true); } catch { /* 临时目录清理失败可忽略 */ }
     }
 
@@ -109,43 +106,50 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
             new BackupRecord { Id = "sticky-keys-off", Kind = "registry", Hive = "CurrentUser",
                 Path = @"Control Panel\Accessibility\StickyKeys", Name = "Flags", ValueKind = "String",
                 OldAcOverlayGuid = Guid.Empty.ToString("D") }));
+        // filter-keys-off 现为普通 registry 记录：kind 不匹配应拒绝
         Assert.Throws<InvalidOperationException>(() => BackupService.ValidateRecord(
-            new BackupRecord { Id = "filter-keys-off", Kind = "filter-keys", OldFilterKeysFlags = null }));
+            new BackupRecord { Id = "filter-keys-off", Kind = "filter-keys" }));
     }
 
     [Fact]
     public async Task Filter_keys_apply_clears_only_hotkey_bits_and_can_restore()
     {
-        FakeRegistry();
-        var writes = new List<NativeAccessibility.FilterKeysState>();
-        NativeAccessibility.ReadOverride = () => _filterKeys;
-        NativeAccessibility.WriteOverride = state => { writes.Add(state); _filterKeys = state; return 0; };
-        var original = _filterKeys;
+        var original = "126"; // 0x7E：含热键位
+        string? current = original;
+        RegistryHelper.SnapshotOverride = (_, _, name) => name == "Flags"
+            ? new RegistryHelper.Snapshot(true, current, RegistryValueKind.String)
+            : new RegistryHelper.Snapshot(false, null, RegistryValueKind.None);
+        RegistryHelper.SetOverride = (_, _, name, value, _) => { if (name == "Flags") current = (string)value; };
         var capture = BackupService.Capture(new[] { "filter-keys-off" }, null);
         var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
         Assert.True(result.Ok, result.Message); Assert.True(result.Changed);
-        var applied = Assert.Single(writes);
-        // 只清热键位（0x4|0x8），其余位与节奏参数原样保留
-        Assert.Equal(original.Flags & ~(NativeAccessibility.FkfHotkeyActive | NativeAccessibility.FkfConfirmHotkey), applied.Flags);
-        Assert.Equal(original.WaitPeriod, applied.WaitPeriod);
-        Assert.Equal(original.RepeatRate, applied.RepeatRate);
+        // 只清热键位（0x4|0x8）：126 & ~0xC = 114，其余位原样保留
+        Assert.Equal("114", current);
         var record = Assert.Single(BackupService.ReadRecords(capture));
-        Assert.Equal("filter-keys", record.Kind);
-        Assert.Equal(original.Flags, record.OldFilterKeysFlags);
-        Assert.Equal(original.BounceMSec, record.OldFilterKeysBounceMSec);
+        Assert.Equal("registry", record.Kind);
+        Assert.Equal(@"Control Panel\Accessibility\Keyboard Response", record.Path);
+        Assert.Equal(original, record.OldValue?.ToString()); // JSON 反序列化为数值类型
         var restored = BackupService.RestoreAll(new[] { "filter-keys-off" }, capture);
         Assert.Empty(restored.Failures);
-        Assert.Equal(original, _filterKeys);
+        Assert.Equal(original, current);
     }
 
     [Fact]
     public async Task Filter_keys_apply_skips_when_hotkey_already_off()
     {
-        _filterKeys = _filterKeys with { Flags = 0x72 };
-        NativeAccessibility.ReadOverride = () => _filterKeys;
-        NativeAccessibility.WriteOverride = _ => throw new UnexpectedWriteException();
+        RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(true, "114", RegistryValueKind.String);
+        RegistryHelper.SetOverride = (_, _, _, _, _) => throw new UnexpectedWriteException();
         var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
         Assert.True(result.Ok); Assert.False(result.Changed);
+    }
+
+    [Fact]
+    public async Task Filter_keys_skips_as_unavailable_when_flags_missing()
+    {
+        RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(false, null, RegistryValueKind.None);
+        RegistryHelper.SetOverride = (_, _, _, _, _) => throw new UnexpectedWriteException();
+        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
+        Assert.True(result.Ok); Assert.True(result.Skipped);
     }
 
     private sealed class UnexpectedWriteException : Exception;

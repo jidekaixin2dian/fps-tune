@@ -398,14 +398,6 @@ public static partial class BackupService
                     OldDcOverlayGuid = RegistryHelper.ReadValue(RegistryHive.LocalMachine,
                         NativePowerOverlay.UserPowerSchemesKey, NativePowerOverlay.DcOverlayValueName)?.ToString() } };
             }
-            case "filter-keys-off":
-            {
-                var state = NativeAccessibility.Read();
-                return new[] { new BackupRecord { Id = id, Kind = "filter-keys",
-                    OldFilterKeysFlags = state.Flags, OldFilterKeysWaitPeriod = state.WaitPeriod,
-                    OldFilterKeysDelayRate = state.DelayRate, OldFilterKeysRepeatDelay = state.RepeatDelay,
-                    OldFilterKeysRepeatRate = state.RepeatRate, OldFilterKeysBounceMSec = state.BounceMSec } };
-            }
             case "usb-power-save-off":
                 return new[] { CreateRegistryBackup(id, RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", RegistryValueKind.DWord) };
             case "visual-fx-perf":

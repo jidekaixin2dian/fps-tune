@@ -78,16 +78,6 @@ public static partial class BackupService
                 Reject(!Guid.TryParse(record.OldAcOverlayGuid, out _), Str.T("Str.PowerOverlayBackupInvalid"));
                 Reject(record.OldDcOverlayGuid is not null && !Guid.TryParse(record.OldDcOverlayGuid, out _), Str.T("Str.PowerOverlayBackupInvalid"));
                 break;
-            case "filter-keys-off":
-                EnsureNonRegistry(record, "filter-keys", allowFilterKeys: true);
-                Reject(record.OldFilterKeysFlags is null || record.OldFilterKeysFlags < 0
-                    || record.OldFilterKeysWaitPeriod is null || record.OldFilterKeysDelayRate is null
-                    || record.OldFilterKeysRepeatDelay is null || record.OldFilterKeysRepeatRate is null
-                    || record.OldFilterKeysBounceMSec is null
-                    || record.OldFilterKeysWaitPeriod < 0 || record.OldFilterKeysDelayRate < 0
-                    || record.OldFilterKeysRepeatDelay < 0 || record.OldFilterKeysRepeatRate < 0
-                    || record.OldFilterKeysBounceMSec < 0, Str.T("Str.FilterKeysBackupInvalid"));
-                break;
             case "power-tuning":
                 EnsureNonRegistry(record, "power-tuning", allowPower: true);
                 RequirePowerTarget(record);
@@ -206,7 +196,7 @@ public static partial class BackupService
 
     private static void EnsureNonRegistry(BackupRecord record, string kind, bool allowPower = false,
         bool allowService = false, bool allowGuid = false, bool allowState = false,
-        bool allowOverlay = false, bool allowFilterKeys = false,
+        bool allowOverlay = false,
         params string[] allowedStates)
     {
         EnsureKind(record, kind);
@@ -221,9 +211,6 @@ public static partial class BackupService
                                !string.IsNullOrEmpty(record.OldStartMode))) ||
             (!allowGuid && !string.IsNullOrEmpty(record.OldActiveGuid)) ||
             (!allowOverlay && (record.OldAcOverlayGuid is not null || record.OldDcOverlayGuid is not null)) ||
-            (!allowFilterKeys && (record.OldFilterKeysFlags.HasValue || record.OldFilterKeysWaitPeriod.HasValue ||
-                                  record.OldFilterKeysDelayRate.HasValue || record.OldFilterKeysRepeatDelay.HasValue ||
-                                  record.OldFilterKeysRepeatRate.HasValue || record.OldFilterKeysBounceMSec.HasValue)) ||
             (!allowState && !string.IsNullOrEmpty(record.OldState)) ||
             (allowState && (record.OldState is null || !allowedStates.Contains(record.OldState, StringComparer.Ordinal))),
             "非注册表备份包含不匹配的目标字段");
@@ -233,9 +220,6 @@ public static partial class BackupService
         => Reject(record.OldPowerValue.HasValue || record.PostPowerValue.HasValue || record.OldUsbValue.HasValue || record.OldBoostValue.HasValue || record.OldIdleValue.HasValue ||
             record.OldAspmValue.HasValue ||
             record.OldAcOverlayGuid is not null || record.OldDcOverlayGuid is not null ||
-            record.OldFilterKeysFlags.HasValue || record.OldFilterKeysWaitPeriod.HasValue ||
-            record.OldFilterKeysDelayRate.HasValue || record.OldFilterKeysRepeatDelay.HasValue ||
-            record.OldFilterKeysRepeatRate.HasValue || record.OldFilterKeysBounceMSec.HasValue ||
             !string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
             !string.IsNullOrEmpty(record.OldStartMode) || !string.IsNullOrEmpty(record.OldActiveGuid) ||
             !string.IsNullOrEmpty(record.OldState), "注册表备份包含其他类型字段");

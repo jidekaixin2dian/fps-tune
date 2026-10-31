@@ -1736,15 +1736,13 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.PowerOverlayBalanced">Balanced</s:String>
     <s:String x:Key="Str.FilterKeysAlreadyOff">Holding Shift no longer triggers FilterKeys</s:String>
     <s:String x:Key="Str.FilterKeysApplied">The hold-Shift FilterKeys trigger is now off</s:String>
-    <s:String x:Key="Str.FilterKeysWriteFailed">Writing FilterKeys failed (error code {0}); the restore backup is kept.</s:String>
     <s:String x:Key="Str.FilterKeysReadbackMismatch">FilterKeys did not read back as written; the restore backup is kept.</s:String>
     <s:String x:Key="Str.FilterKeysState">FilterKeys shortcut: {0}</s:String>
     <s:String x:Key="Str.FilterKeysHotkeyOn">on (hold Shift for 8 seconds)</s:String>
     <s:String x:Key="Str.FilterKeysHotkeyOff">off</s:String>
+    <s:String x:Key="Str.FilterKeysUnavailable">The FilterKeys setting could not be read</s:String>
     <s:String x:Key="Str.PowerOverlayBackupInvalid">Invalid original power mode GUID</s:String>
-    <s:String x:Key="Str.FilterKeysBackupInvalid">FilterKeys backup fields do not match</s:String>
     <s:String x:Key="Str.PowerOverlayBackupMissing">Backup is missing the original power mode GUID</s:String>
-    <s:String x:Key="Str.FilterKeysBackupMissing">Backup is missing the original FilterKeys state</s:String>
     <s:String x:Key="Str.WindowedGamesDefault">Not set (system default)</s:String>
     <s:String x:Key="Str.WindowedGamesOn">On</s:String>
     <s:String x:Key="Str.WindowedGamesOff">Off</s:String>
