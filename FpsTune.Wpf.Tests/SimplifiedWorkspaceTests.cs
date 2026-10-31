@@ -37,16 +37,13 @@ public sealed class SimplifiedWorkspaceTests
             var profile = api.AddProfile("other-fps.exe", "other-fps.exe");
             profile.Settings[DisplayQualityService.VSyncModeId] = 0x47814940u;
             profile.Settings[DisplayQualityService.FrameRateLimitId] = 165;
-            var page = new OptimizeView(); page.SetResourceReference(Control.BackgroundProperty, "AppBackdropBrush"); page.ReloadFromState();
-            var window = new Window { Width = 1000, Height = 650, Content = page }; app.MainWindow = window;
+            var window = new DriverSettingsWindow { Width = 920, Height = 680 }; app.MainWindow = window;
             DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
-            var driver = (GameDriverSettings)page.FindName("DriverSettings");
+            var driver = (GameDriverSettings)window.FindName("DriverSettings");
             T Named<T>(string name) => (T)driver.FindName(name);
             var previousBusy = GameContextService.IsBusyProvider;
             try
             {
-                Assert.Null(page.FindName("OneClickButton"));
-                ((RadioButton)page.FindName("DriverTab")).IsChecked = true;
                 DlssFeedbackTests.PumpUntil(() => Named<Button>("ApplyDriverButton").IsEnabled);
                 Assert.Equal(0, Named<ComboBox>("SyncBox").SelectedIndex);
                 var noSelection = driver.ChangeDriverAsync(false); DlssFeedbackTests.PumpUntil(() => noSelection.IsCompleted); noSelection.GetAwaiter().GetResult();
@@ -79,16 +76,10 @@ public sealed class SimplifiedWorkspaceTests
                 foreach (var theme in new[] { "light", "dark" })
                 {
                     ThemeManager.SetMode(theme); Render(window, "driver-" + theme);
-                    var scroll = (ScrollViewer)page.FindName("DriverScroll"); scroll.ScrollToEnd(); Render(window, "driver-bottom-" + theme);
+                    var scroll = (ScrollViewer)window.FindName("DriverScroll"); scroll.ScrollToEnd(); Render(window, "driver-bottom-" + theme);
                     var applyAt = Named<Button>("ApplyDriverButton").TranslatePoint(new Point(), scroll);
                     Assert.InRange(applyAt.Y, 0, scroll.ActualHeight - Named<Button>("ApplyDriverButton").ActualHeight + 1);
                     scroll.ScrollToHome();
-                    ((RadioButton)page.FindName("SystemTab")).IsChecked = true; Render(window, "common-" + theme);
-                    ((CheckBox)page.FindName("ShowAdvancedItems")).IsChecked = true;
-                    Assert.Contains(page.ItemsView.Cast<OptimizationItemViewModel>(), i => i.Id == "mpo-off");
-                    Render(window, "advanced-" + theme);
-                    ((CheckBox)page.FindName("ShowAdvancedItems")).IsChecked = false;
-                    ((RadioButton)page.FindName("DriverTab")).IsChecked = true;
                 }
                 Assert.Equal(saves, api.SaveCount); // Navigation and rendering do not apply settings.
             }
@@ -104,7 +95,7 @@ public sealed class SimplifiedWorkspaceTests
         var dpi = VisualTreeHelper.GetDpi(root);
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(root.ActualWidth * dpi.DpiScaleX), (int)Math.Ceiling(root.ActualHeight * dpi.DpiScaleY), dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
         bitmap.Render(root); var png = new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(bitmap));
-        var output = Path.Combine(DlssFeedbackTests.RepoRoot(), "work", "simplify037", "ui"); Directory.CreateDirectory(output);
+        var output = Path.Combine(DlssFeedbackTests.RepoRoot(), "work", "ui-rollback037", "ui"); Directory.CreateDirectory(output);
         using var file = File.Create(Path.Combine(output, name + ".png")); png.Save(file);
     }
 }

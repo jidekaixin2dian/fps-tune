@@ -76,9 +76,6 @@ public sealed class PreparationWorkflowTests
             var dialog = new GamePreparationWindow(); app.MainWindow = dialog;
             WithDialog(dialog, () =>
             {
-                Assert.False(((Expander)dialog.FindName("MorePreparationOptions")).IsExpanded);
-                ThemeManager.SetMode("light"); Render(dialog, "prepare-simple-light");
-                ((Expander)dialog.FindName("MorePreparationOptions")).IsExpanded = true;
                 ((Expander)dialog.FindName("CopyPlanSection")).IsExpanded = true;
                 ((ComboBox)dialog.FindName("SourcePlanBox")).SelectedIndex = 1; Click(dialog, "CopyPlanButton");
                 Assert.Equal(2, ((ComboBox)dialog.FindName("MemoryMode")).SelectedIndex);

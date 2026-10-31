@@ -12,6 +12,7 @@ public partial class GameDriverSettings : UserControl
     private bool _busy, _closed, _driverReady;
     private int _generation;
     internal bool IsBusy => _busy;
+    internal void ShowTargetLabel() => GameTitle.Visibility = Visibility.Visible;
     public GameDriverSettings()
     {
         InitializeComponent(); UpdateSync();

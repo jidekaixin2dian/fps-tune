@@ -1,7 +1,7 @@
 <UserControl x:Class="FpsTune.Wpf.Views.GameDriverSettings"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  FontFamily="{StaticResource FontBody}" Foreground="{DynamicResource TextPrimaryBrush}"><StackPanel>
- <TextBlock x:Name="GameTitle" Visibility="Collapsed"/>
+ <TextBlock x:Name="GameTitle" Visibility="Collapsed" Style="{StaticResource ItemTitleStyle}" Margin="0,0,0,12"/>
                 <Border Style="{StaticResource CardStyle}"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.TuningDriverTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.TuningDriverScope}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>

@@ -34,15 +34,15 @@
     <s:String x:Key="Str.LanguageNote">Applies immediately. Item names and descriptions follow the selected language, falling back to Chinese where no translation exists. Default is Chinese.</s:String>
 
     <!-- Optimize -->
-    <s:String x:Key="Str.OptIntro">选择要调整的项目，审阅后应用；同步和限帧在右侧页签。</s:String>
-    <s:String x:Key="Str.PresetBalanced">推荐</s:String>
-    <s:String x:Key="Str.PresetSafe">基础</s:String>
+    <s:String x:Key="Str.OptIntro">根据检测结果选择要调整的项目。同步与限帧可从上方打开。</s:String>
+    <s:String x:Key="Str.PresetBalanced">均衡</s:String>
+    <s:String x:Key="Str.PresetSafe">保守</s:String>
     <s:String x:Key="Str.PresetFull">All items</s:String>
     <s:String x:Key="Str.PresetCustom">Custom</s:String>
     <s:String x:Key="Str.ApplySelected">Apply selected →</s:String>
     <s:String x:Key="Str.RestoreAll">Restore all</s:String>
     <s:String x:Key="Str.OneClick">One-click optimize</s:String>
-    <s:String x:Key="Str.OneClickTip">应用 catalog 推荐系统设置，不额外叠加画质参数。</s:String>
+    <s:String x:Key="Str.OneClickTip">应用当前推荐的系统设置，保留原值备份；显卡同步与限帧单独选择。</s:String>
     <s:String x:Key="Str.NotConfirmed">Not confirmed</s:String>
     <s:String x:Key="Str.PleaseConsent">Please check the consent box first.</s:String>
 
@@ -123,7 +123,7 @@
     <s:String x:Key="Str.ItemDetailTitle">Item details / run log</s:String>
     <s:String x:Key="Str.TipFull">Includes service and power settings — review the side effects</s:String>
     <s:String x:Key="Str.TipSafe">游戏模式、透明效果和高性能 GPU 偏好。</s:String>
-    <s:String x:Key="Str.TipBalanced">常用系统设置；高级项目按需要选择。</s:String>
+    <s:String x:Key="Str.TipBalanced">预选常用系统设置，其余项目按需要选择。</s:String>
     <s:String x:Key="Str.SideEffectLabel">Side effect: </s:String>
 
     <!-- Detect / Optimize pages (converted 2026-09-25) -->
@@ -167,7 +167,7 @@
     <s:String x:Key="Str.RecordMatch">Record a match</s:String>
     <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load, plus FPS when the game is running and PresentMon is available</s:String>
     <s:String x:Key="Str.BackupRestore">Backup / restore</s:String>
-    <s:String x:Key="Str.ItemsOptimized">已应用设置</s:String>
+    <s:String x:Key="Str.ItemsOptimized">已达标项目</s:String>
     <s:String x:Key="Str.ChoosePlan">Choose plan</s:String>
     <s:String x:Key="Str.PlanBalanced">Balanced</s:String>
     <s:String x:Key="Str.PlanSafe">Conservative</s:String>
@@ -1647,7 +1647,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.PlanUnreadable">专属方案无法读取或来自较新版本。原文件已保留，可在准备设置中改用通用默认。</s:String>
     <s:String x:Key="Str.PlanGameSummary">当前游戏专属 · {0}</s:String>
     <s:String x:Key="Str.PlanDefaultSummary">通用默认 · {0}</s:String>
-    <s:String x:Key="Str.PlanNotConfigured">尚未配置开局方案，点击“调整准备方案”选择项目。</s:String>
+    <s:String x:Key="Str.PlanNotConfigured">尚未配置开局方案，点击“准备设置”选择项目。</s:String>
     <s:String x:Key="Str.PlanVibrance">数字振动 {0}%</s:String>
     <s:String x:Key="Str.PlanTarget">配置目标：{0}</s:String>
     <s:String x:Key="Str.PlanSaveScope">将本次配置保存到</s:String>
@@ -1952,4 +1952,12 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.DriverChooseAction">请选择同步方案，或勾选要调整的帧率、电源选项。</s:String>
     <s:String x:Key="Str.DriverKeepSyncHint">只调整勾选的项目；同步设置沿用当前值。</s:String>
     <s:String x:Key="Str.DriverMoreOptions">更多显卡设置</s:String>
+    <s:String x:Key="Str.OneClickSystemConfirm">将应用当前推荐的系统设置：
+
+{0}
+
+{1}</s:String>
+    <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
+
+{0}</s:String>
 </ResourceDictionary>

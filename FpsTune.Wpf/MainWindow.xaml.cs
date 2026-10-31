@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
@@ -320,7 +320,6 @@ public partial class MainWindow : Window
         Grid.SetRowSpan(PageHost, studio ? 2 : 1);
         NavigationStack.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
         NavigationStack.Margin = new Thickness(12, studio ? 0 : 6, 12, 0);
-        MoreNavigationButton.HorizontalContentAlignment = studio ? HorizontalAlignment.Left : HorizontalAlignment.Center;
         NavigationHeading.Visibility = NavigationFooter.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
         foreach (var nav in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
             nav.SetResourceReference(StyleProperty, studio ? "StudioNavStyle" : typeof(Views.Controls.NavButton));
@@ -448,18 +447,6 @@ public partial class MainWindow : Window
         DialogService.Info(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectDoneHint"));
     }
 
-    private void MoreNavigation_Click(object sender, RoutedEventArgs e)
-    {
-        var menu = MoreNavigationButton.ContextMenu;
-        menu.PlacementTarget = MoreNavigationButton;
-        menu.Placement = SettingsService.Current.OverviewMode == "console"
-            ? System.Windows.Controls.Primitives.PlacementMode.Bottom : System.Windows.Controls.Primitives.PlacementMode.Right;
-        foreach (var item in menu.Items.OfType<System.Windows.Controls.MenuItem>())
-            item.IsChecked = (item.Tag as string) switch { "detect" => NavDetect.IsChecked == true, "ab" => NavAb.IsChecked == true, "tools" => NavTools.IsChecked == true, _ => false };
-        menu.IsOpen = true;
-    }
-    private void MoreNavigationItem_Click(object sender, RoutedEventArgs e)
-    { if (sender is System.Windows.Controls.MenuItem { Tag: string route }) NavigateTo(route); }
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
         if (_pageFactories is null)
@@ -475,8 +462,6 @@ public partial class MainWindow : Window
             }
 
             SwitchPage(GetPage(key));
-            MoreNavigationButton.SetResourceReference(Control.ForegroundProperty,
-                key is "detect" or "ab" or "tools" ? "AccentBrush" : "TextSecondaryBrush");
             if (key == "opt" && GetPage("opt") is OptimizeView opt)
                 opt.ReloadFromState();
         }

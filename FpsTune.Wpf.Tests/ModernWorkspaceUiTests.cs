@@ -143,7 +143,7 @@ public sealed class ModernWorkspaceUiTests
                 Assert.Equal(1, calls);
                 Assert.Equal(2, reviewCounts[1]); Assert.Equal(Visibility.Visible, hiddenStates[1]);
                 Assert.False(((FrameworkElement)page.FindName("PresetControlsCard")).IsEnabled);
-                Assert.False(((RadioButton)page.FindName("DriverTab")).IsEnabled);
+                Assert.False(((Button)page.FindName("OneClickButton")).IsEnabled);
                 Assert.False(((Button)page.FindName("RestoreButton")).IsEnabled);
                 page.Items.First(i => i.Id == ids[1]).IsChecked = false;
                 AppState.GamePath = @"C:\WorkspaceTest\second.exe";
