@@ -79,7 +79,7 @@ internal static class NativeAccessibility
     }
 
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    [DllImport("user32.dll", SetLastError = true, ExactSpelling = true)]
+    [DllImport("user32.dll", SetLastError = true, ExactSpelling = true, EntryPoint = "SystemParametersInfoW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SystemParametersInfo(uint action, uint size, ref FILTERKEYS filterKeys, uint profile);
 }
