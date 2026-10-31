@@ -1,11 +1,11 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.6)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.6)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.3.5](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5)**。
+当前版本为 **[v0.3.6](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.6)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.5) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.3.6) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.3.5.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.5/FpsTune-Setup-0.3.5.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.3.6.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.6/FpsTune-Setup-0.3.6.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -26,7 +26,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.3.5.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.5/SHA256SUMS-v0.3.5.txt)。
+本版校验清单：[SHA256SUMS-v0.3.6.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.3.6/SHA256SUMS-v0.3.6.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -58,7 +58,9 @@
 
 </details>
 
-悬浮窗卡片与透明长条（界面示例，数值为演示数据）：
+悬浮窗支持精简、卡片与长条（界面示例，数值为演示数据）：
+
+![精简无底色悬浮窗 · 界面示例](assets/screenshots/hud/compact-transparent.png)
 
 ![悬浮窗卡片 · 界面示例](assets/screenshots/hud/card-light.png)
 
@@ -68,9 +70,9 @@
 
 - **工作台与紧凑控制台**：深浅主题和主题切换过渡，统一选择控件，可使用本地图片作为软件背景。低配模式或 Windows 关闭动画时直接切换主题。
 - **检测与系统调校**：39 个可选项目，逐项展示当前状态、权限、重启要求和副作用。均衡预选 16 项，保守方案含 4 项；也可自定义选择。应用、一键优化或还原后自动重新检测，同步项目状态与首页建议。
-- **开局准备**：保存整机待机内存整理、SDR 画面滤镜、数字振动和目标显示器的组合，开局前一键执行，分别显示各项结果。
+- **开局准备**：为当前游戏保存专属方案，或使用通用默认；组合内存整理、SDR 画面滤镜、数字振动和目标显示器，开局前一键执行。可选完整整理（受保护后台工作集 + 全部待机缓存），显示阶段与结果，可停止后续步骤；旧方案保持原范围。
 - **游戏限帧**：按游戏设置 NVIDIA 前台、后台帧率上限，并可单独还原。
-- **多游戏**：识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
+- **游戏库**：独立页面扫描、添加、搜索和重命名游戏，支持移除与撤销，直达所选游戏的检测、准备方案、显示与性能会话。识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置和 N 卡数字振动；整屏 SDR 支持 11 种画面预设、亮度、对比度、Gamma、暗部提亮及 RGB 调节，逐屏保存原值并可还原。通用屏幕曲线路径适用于支持该接口的 AMD、NVIDIA、Intel 输出；ICC、画面参数与数字振动集中在同一工作区，可叠加调整；用内置已打码实机截图或自己的图片即时对比，直接拖动图中分界查看效果。高级 ICC 支持自选 `.icc` / `.icm` 和关联还原。
 - **分辨率**：在“显示与画质 → 分辨率”选择屏幕，点选 4:3 预设或编辑宽高、锁定比例，默认沿用当前刷新率。支持试用驱动已有模式与创建 NVIDIA 自定义模式；限时确认、小型确认窗口、独立守护回退和一键还原。缩放由驱动验证，未采用请求时说明原因并回退。
 - **声音均衡器**：在“维护工具 → 声音均衡器”调整 10 段频率、前级增益和音效预设，支持旁路与移除帧律改动。复用 Equalizer APO 引擎，首次需安装引擎、配置输出设备，并按提示重启。
@@ -78,10 +80,11 @@
 - **更改显卡名称**：提供 GTX 750 Ti、GTX 1050 Ti 等 8 个预设，应用前预览，可还原原名称。修改 Windows 设备描述，显卡能力保持原样。
 - **设置分类**：外观、壁纸、启动与通知、游戏与方案、数据与权限、关于；设置自动保存。圆角提供上版经典、当前大圆角两个预设及四组自定义调节，壁纸提供圆角预览与短滑条。
 - **日常维护**：查看固定磁盘空间和内存工作集前 8 项，按需刷新；打开 Windows 存储清理、已安装应用、任务管理器、启动应用、可靠性历史、资源监视器、网络和更新页面。快照保留在当前页面，不自动上传。
+- **网络与端口**：在维护工具查看网卡、DNS 与网关，对指定主机进行 ICMP / TCP 测试，查看延迟、未响应与波动；支持停止和导出。按进程、地址或端口筛选 TCP/UDP、IPv4/IPv6 占用快照，也可通过 Ctrl+K 搜索入口。
 - **内存整理**：一键完整整理可收缩可整理后台的工作集并整理全部待机缓存；也可仅整理待机、仅处理所选后台或组合执行。显示阶段、数量、耗时与前后读数，可停止后续步骤。保留游戏、系统与反作弊保护；低内存自动整理仍默认关闭。
 - **缓存维护**：先预览当前用户的 DirectX / NVIDIA 着色器缓存，再确认清理；跳过占用或预览后变化的文件。删除的缓存不能还原，下次运行会重建，可能短暂卡顿。
-- **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，支持报告导出与会话比较。真实 FPS 采样需要官方 PresentMon。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。A/B 手动 CSV 后台校验，可取消，失败保留已有结果。
-- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；录制时同步显示近期 FPS 与 1% LOW。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
+- **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，按游戏保存录制条件模板，搜索和筛选历史，双选两次记录直接比较平均 FPS、1% LOW 与 P99，并导出独立 HTML 报告。真实 FPS 采样需要官方 PresentMon。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。A/B 手动 CSV 后台校验，可取消，失败保留已有结果。
+- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持精简/卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；“游戏精简”使用 420×44 DIP 无底色穿透条，保留找回。录制时显示近期 FPS 与 1% LOW，未采到时显示缺失状态。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
 - **引导与反馈**：性能记录和 A/B 实验提供入门步骤；QQ 加群反馈与更新提醒独立显示，加群提示可选择不再提醒。
 - **备份与恢复**：统一列出系统、游戏驱动配置、ICC、数字振动、画面参数、分辨率及均衡器的备份；可核验中断操作，导出完整恢复资料，并在同机同 Windows 用户下导入。
 
@@ -92,6 +95,8 @@
 运行 `FpsTune.exe`，选择游戏并做一次检测，在优化页审阅所选项目后应用。
 先测试少量项目；通过性能会话或固定场景的 A/B 判断是否保留。
 需要管理员的操作会提示重启为管理员；应用以 `asInvoker` 启动，不在启动时要求管理员权限。
+
+日常开局：在“游戏库”选游戏，进入“概览 → 准备设置”保存专属或通用方案，再点“开局准备”。要加入完整内存整理，在其中选择“开局内存整理 → 完整整理”后保存。记录条件模板只描述实测条件，不代替游戏内画质或桌面分辨率设置。
 
 <details>
 <summary>命令行用法（进阶使用）</summary>
