@@ -1816,15 +1816,15 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.StartupReady">工作台已就绪</s:String>
     <s:String x:Key="Str.StartupRecovery">恢复资料</s:String>
     <s:String x:Key="Str.StartupTitle">准备你的工作台</s:String>
-    <s:String x:Key="Str.CloseChoiceTitle">关闭帧律</s:String>
-    <s:String x:Key="Str.CloseChoiceHint">选择关闭主窗口后的去向。</s:String>
+    <s:String x:Key="Str.CloseChoiceTitle">关闭窗口</s:String>
+    <s:String x:Key="Str.CloseChoiceHint">帧律可以留在托盘，也可以直接退出。</s:String>
     <s:String x:Key="Str.CloseChoiceTray">回到托盘</s:String>
-    <s:String x:Key="Str.CloseChoiceTrayHint">收起主窗口，已开启的悬浮窗与录制继续运行。</s:String>
+    <s:String x:Key="Str.CloseChoiceTrayHint">收起窗口，已开启的悬浮窗和录制会继续运行。</s:String>
     <s:String x:Key="Str.CloseChoiceExit">直接退出</s:String>
-    <s:String x:Key="Str.CloseChoiceExitHint">保存正在录制的会话，然后退出软件。</s:String>
+    <s:String x:Key="Str.CloseChoiceExitHint">如果正在录制，会先保存再退出。</s:String>
     <s:String x:Key="Str.CloseChoiceRemember">记住选择，下次不再询问</s:String>
-    <s:String x:Key="Str.CloseSettingTitle">关闭主窗口时</s:String>
-    <s:String x:Key="Str.CloseSettingHint">点击 X 或按 Alt+F4 时的处理方式，可随时修改。</s:String>
+    <s:String x:Key="Str.CloseSettingTitle">关闭窗口时</s:String>
+    <s:String x:Key="Str.CloseSettingHint">点击右上角 X 或按 Alt+F4 时采用这个选项。</s:String>
     <s:String x:Key="Str.CloseAsk">每次询问（默认回到托盘）</s:String>
     <s:String x:Key="Str.CloseTrayUnavailable">暂时无法显示托盘图标，已保留主窗口。请稍后重试，或选择直接退出。</s:String>
     <s:String x:Key="Str.CloseRememberFailed">未能保存关闭方式，请重试。</s:String>
@@ -1832,5 +1832,4 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TrayHiddenHint">窗口已收起到系统托盘，可从托盘图标重新打开。</s:String>
     <s:String x:Key="Str.TrayHiddenHotkey">也可按 Ctrl+Alt+F 呼出。</s:String>
     <s:String x:Key="Str.TrayStillRunning">FPS 帧律仍在运行</s:String>
-    <s:String x:Key="Str.FooterPurpose">调校 · 测量 · 还原</s:String>
 </ResourceDictionary>

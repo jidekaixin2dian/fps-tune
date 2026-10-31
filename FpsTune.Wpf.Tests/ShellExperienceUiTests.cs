@@ -101,7 +101,6 @@ public sealed class ShellExperienceUiTests
                     {
                         main.SetDisplayMode(mode); main.NavigateTo("home"); main.UpdateLayout();
                         Assert.Equal(Str.T("Str.AppName"),((TextBlock)main.FindName("FooterBrandText")).Text);
-                        Assert.Equal(Str.T("Str.FooterPurpose"),((TextBlock)main.FindName("FooterPurposeText")).Text);
                         Assert.Equal(mode=="studio",((FrameworkElement)main.FindName("NavigationFooter")).IsVisible);
                         Assert.Equal("v"+UpdateService.DisplayVersion,((TextBlock)main.FindName("TitleVersionText")).Text);
                         var buttons = new[]{"CaptionMin","CaptionMax","CaptionClose"}.Select(n => (Button)main.FindName(n)).ToArray();

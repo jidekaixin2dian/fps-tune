@@ -63,7 +63,6 @@
                 </StackPanel>
                 <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">
                     <TextBlock x:Name="FooterBrandText" Text="{DynamicResource Str.AppName}" FontFamily="{StaticResource FontBody}" FontWeight="{DynamicResource SmallEmphasisWeight}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="14"/>
-                    <TextBlock x:Name="FooterPurposeText" Text="{DynamicResource Str.FooterPurpose}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,6,0,0"/>
                 </StackPanel>
             </Grid>
             <ContentControl x:Name="PageHost" Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Focusable="False"/>
