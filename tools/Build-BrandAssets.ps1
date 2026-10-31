@@ -1,29 +1,49 @@
-# SVG is the source of truth. Only rect/path primitives are accepted; no remote or raster content.
+# SVG is the source of truth. Only rect/path primitives and local linear gradients are accepted.
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName PresentationCore,PresentationFramework,WindowsBase
 $assetDirectory = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../FpsTune.Wpf/Assets'))
-function New-Brush([string]$value) {
+function New-Brush([string]$value, $gradients) {
     if (-not $value -or $value -eq 'none') { return $null }
+    if ($value -match '^url\(#([\w-]+)\)$') {
+        if (-not $gradients.ContainsKey($Matches[1])) { throw "Unknown SVG gradient: $value" }
+        return $gradients[$Matches[1]]
+    }
     return [Windows.Media.BrushConverter]::new().ConvertFromInvariantString($value)
 }
 function Read-Svg([string]$name) {
     [xml]$svg = [IO.File]::ReadAllText((Join-Path $assetDirectory ($name + '.svg')))
+    $gradients = @{}
+    foreach ($definition in $svg.svg.SelectNodes('*[local-name()="defs"]/*')) {
+        if ($definition.LocalName -ne 'linearGradient' -or $definition.gradientUnits -ne 'userSpaceOnUse') { throw 'Only user-space linear gradients are supported' }
+        $brush = [Windows.Media.LinearGradientBrush]::new()
+        $brush.MappingMode = [Windows.Media.BrushMappingMode]::Absolute
+        $brush.StartPoint = [Windows.Point]::new([double]$definition.x1,[double]$definition.y1)
+        $brush.EndPoint = [Windows.Point]::new([double]$definition.x2,[double]$definition.y2)
+        foreach ($stop in $definition.ChildNodes) {
+            if ($stop.LocalName -ne 'stop') { throw 'Unsupported gradient child' }
+            $color = [Windows.Media.ColorConverter]::ConvertFromString($stop.GetAttribute('stop-color'))
+            $offset = [double]::Parse($stop.GetAttribute('offset'),[Globalization.CultureInfo]::InvariantCulture)
+            $brush.GradientStops.Add([Windows.Media.GradientStop]::new($color,$offset))
+        }
+        $brush.Freeze()
+        $gradients.Add($definition.id,$brush)
+    }
     $drawing = [Windows.Media.DrawingGroup]::new()
     $box = @($svg.svg.viewBox.Split(' ') | ForEach-Object { [double]::Parse($_,[Globalization.CultureInfo]::InvariantCulture) })
     $context = $drawing.Open()
     try {
         $context.DrawRectangle([Windows.Media.Brushes]::Transparent,$null,[Windows.Rect]::new(0,0,$box[2],$box[3]))
         foreach ($node in $svg.svg.ChildNodes) {
-            if ($node.LocalName -eq 'title' -or $node.NodeType -eq 'Comment') { continue }
-            $brush = New-Brush $node.GetAttribute('fill')
+            if ($node.LocalName -in @('title','defs') -or $node.NodeType -eq 'Comment') { continue }
+            $brush = New-Brush $node.GetAttribute('fill') $gradients
             if ($node.LocalName -eq 'rect') {
                 $context.DrawRoundedRectangle($brush,$null,[Windows.Rect]::new([double]$node.x,[double]$node.y,[double]$node.width,[double]$node.height),[double]$node.rx,[double]$node.rx)
             } elseif ($node.LocalName -eq 'path') {
                 $pen = $null
                 if ($node.GetAttribute('stroke')) {
-                    $pen = [Windows.Media.Pen]::new((New-Brush $node.GetAttribute('stroke')),[double]::Parse($node.GetAttribute('stroke-width'),[Globalization.CultureInfo]::InvariantCulture))
+                    $pen = [Windows.Media.Pen]::new((New-Brush $node.GetAttribute('stroke') $gradients),[double]::Parse($node.GetAttribute('stroke-width'),[Globalization.CultureInfo]::InvariantCulture))
                     $pen.StartLineCap = $pen.EndLineCap = [Windows.Media.PenLineCap]::Round
                     $pen.LineJoin = [Windows.Media.PenLineJoin]::Round
                 }

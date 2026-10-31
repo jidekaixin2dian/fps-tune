@@ -1,6 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <title>FPS 帧律 · 托盘</title>
-  <rect x="0" y="0" width="32" height="32" rx="8" fill="#111A20"/>
-  <path d="M7 12V7H13 M19 25H25V20" fill="none" stroke="#79E2BC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M6 18H11L14 12L18 22L21 16H26" fill="none" stroke="#F1FBF7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <defs>
+    <linearGradient id="blue" gradientUnits="userSpaceOnUse" x1="18" y1="17" x2="27" y2="52"><stop offset="0" stop-color="#1CBEF7"/><stop offset="1" stop-color="#0755EF"/></linearGradient>
+    <linearGradient id="mint" gradientUnits="userSpaceOnUse" x1="28" y1="48" x2="48" y2="28"><stop offset="0" stop-color="#06ADEE"/><stop offset="1" stop-color="#6AF0B1"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#F1FAFF"/>
+  <path d="M12 21Q12 17 17 16L46 11Q51 10 51 15V19Q51 22.8 46.5 23.5L27 27Q24 27.6 24 31V33L34 30.8Q37 30 37 33V35Q37 37 34.7 37.5L27 39.5Q24 40.2 24 43V49Q24 53 21 52L17 51Q12 49.8 12 46Z" fill="url(#blue)"/>
+  <path d="M27 44Q27 42 29 41L36.5 38Q39 37 39 34V32Q39 31 40 30.5L47 27Q51 25 51 29V42Q51 45 47 46L30 50.5Q27 51 27 48Z" fill="url(#mint)"/>
 </svg>
