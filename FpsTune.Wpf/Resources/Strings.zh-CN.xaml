@@ -34,15 +34,15 @@
     <s:String x:Key="Str.LanguageNote">切换立即生效；优化项名称与说明随语言切换（无英文时回退中文）。默认中文。</s:String>
 
     <!-- 优化页 -->
-    <s:String x:Key="Str.OptIntro">选择预设，审阅改动，再应用。所有改动自动备份。</s:String>
-    <s:String x:Key="Str.PresetBalanced">均衡推荐</s:String>
-    <s:String x:Key="Str.PresetSafe">保守优化</s:String>
+    <s:String x:Key="Str.OptIntro">选择要调整的项目，审阅后应用；同步和限帧在右侧页签。</s:String>
+    <s:String x:Key="Str.PresetBalanced">推荐</s:String>
+    <s:String x:Key="Str.PresetSafe">基础</s:String>
     <s:String x:Key="Str.PresetFull">全部项目</s:String>
     <s:String x:Key="Str.PresetCustom">自定义</s:String>
     <s:String x:Key="Str.ApplySelected">应用所选 →</s:String>
     <s:String x:Key="Str.RestoreAll">还原全部</s:String>
     <s:String x:Key="Str.OneClick">一键优化</s:String>
-    <s:String x:Key="Str.OneClickTip">均衡档系统层 + DLSS K 模型 + 显卡 3D（1070 Ti 档：纹理高质量 / 最高性能优先 / 透明度 2x）+ 卓越性能电源</s:String>
+    <s:String x:Key="Str.OneClickTip">应用 catalog 推荐系统设置，不额外叠加画质参数。</s:String>
     <s:String x:Key="Str.NotConfirmed">未确认</s:String>
     <s:String x:Key="Str.PleaseConsent">请先勾选同意说明，再执行应用。</s:String>
 
@@ -59,7 +59,7 @@
     <s:String x:Key="Str.RestoreOriginal">还原原始</s:String>
     <s:String x:Key="Str.ApplyPreset">应用预设</s:String>
     <s:String x:Key="Str.ApplyDrs">应用 3D 设置</s:String>
-    <s:String x:Key="Str.OneClickEsports">一键竞技推荐</s:String>
+    <s:String x:Key="Str.OneClickEsports">画质组合</s:String>
     <s:String x:Key="Str.FollowGame">跟随游戏内</s:String>
     <s:String x:Key="Str.PresetLatest">最新</s:String>
     <s:String x:Key="Str.Reading">正在读取…</s:String>
@@ -117,13 +117,13 @@
     <s:String x:Key="Str.ProfileName">方案名称</s:String>
     <s:String x:Key="Str.NoMatchingItems">没有匹配的优化项，请调整搜索或分类。</s:String>
     <s:String x:Key="Str.Admin">管理员</s:String>
-    <s:String x:Key="Str.OptimizeTitle">系统优化</s:String>
+    <s:String x:Key="Str.OptimizeTitle">优化设置</s:String>
     <s:String x:Key="Str.ProfileHint">输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享</s:String>
     <s:String x:Key="Str.NeedsReboot">需重启</s:String>
     <s:String x:Key="Str.ItemDetailTitle">项目详情 / 执行记录</s:String>
     <s:String x:Key="Str.TipFull">包含服务和电源设置，请审阅副作用</s:String>
-    <s:String x:Key="Str.TipSafe">只选择无需管理员权限的基础设置</s:String>
-    <s:String x:Key="Str.TipBalanced">预选常用系统设置；其他项目可切换“自定义”按需选择。帧率和色彩在“显示与画质”，内存整理在“开局准备”。</s:String>
+    <s:String x:Key="Str.TipSafe">游戏模式、透明效果和高性能 GPU 偏好。</s:String>
+    <s:String x:Key="Str.TipBalanced">常用系统设置；高级项目按需要选择。</s:String>
     <s:String x:Key="Str.SideEffectLabel">副作用：</s:String>
 
     <!-- 检测页 / 优化页（2026-09-25 转换） -->
@@ -167,7 +167,7 @@
     <s:String x:Key="Str.RecordMatch">记录一局</s:String>
     <s:String x:Key="Str.TipRecordMatch">记录 CPU、GPU、内存负载；游戏已运行且 PresentMon 可用时同时记录 FPS</s:String>
     <s:String x:Key="Str.BackupRestore">备份还原</s:String>
-    <s:String x:Key="Str.ItemsOptimized">已达标项目</s:String>
+    <s:String x:Key="Str.ItemsOptimized">已应用设置</s:String>
     <s:String x:Key="Str.ChoosePlan">选择方案</s:String>
     <s:String x:Key="Str.PlanBalanced">均衡</s:String>
     <s:String x:Key="Str.PlanSafe">保守</s:String>
@@ -290,7 +290,7 @@
     <s:String x:Key="Str.IccStandardDesc">还原为你原始的色彩配置</s:String>
     <s:String x:Key="Str.IccNote">在上方选择 ICC 并调整画面参数，再点击“应用色彩设置”；可用“还原本屏色彩改动”恢复原值。</s:String>
     <s:String x:Key="Str.DrsNote">应用当前游戏的 3D 设置；还原按钮会恢复本工具对该游戏的全部改动。</s:String>
-    <s:String x:Key="Str.TipOneClickEsports">纹理高质量 + 电源最高性能优先 + 透明度 2x + 预渲染 1 帧；桌面高端卡自动升透明度 4x</s:String>
+    <s:String x:Key="Str.TipOneClickEsports">高质量纹理、最高性能电源、透明度抗锯齿等画质组合；应用前可查看完整清单。</s:String>
     <s:String x:Key="Str.DrsDefaultHint">默认推：纹理高质量 · 透明度 2x · 预渲染 1 帧</s:String>
     <s:String x:Key="Str.DrsTextureFilter">纹理过滤 · 质量</s:String>
     <s:String x:Key="Str.TipTextureFilter">现代 N 卡上「高质量」对帧率影响很小、远景更清晰（推荐）</s:String>
@@ -1647,7 +1647,7 @@
     <s:String x:Key="Str.PlanUnreadable">专属方案无法读取或来自较新版本。原文件已保留，可在准备设置中改用通用默认。</s:String>
     <s:String x:Key="Str.PlanGameSummary">当前游戏专属 · {0}</s:String>
     <s:String x:Key="Str.PlanDefaultSummary">通用默认 · {0}</s:String>
-    <s:String x:Key="Str.PlanNotConfigured">尚未配置开局方案，点击“准备设置”选择项目。</s:String>
+    <s:String x:Key="Str.PlanNotConfigured">尚未配置开局方案，点击“调整准备方案”选择项目。</s:String>
     <s:String x:Key="Str.PlanVibrance">数字振动 {0}%</s:String>
     <s:String x:Key="Str.PlanTarget">配置目标：{0}</s:String>
     <s:String x:Key="Str.PlanSaveScope">将本次配置保存到</s:String>
@@ -1849,8 +1849,8 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PlanCopyLoad">载入此方案</s:String>
     <s:String x:Key="Str.PlanCopyHint">复制项目和参数，显示器保持当前选择。检查后点击保存。</s:String>
     <s:String x:Key="Str.PlanCopyLoaded">方案已载入，可继续修改，保存后生效。</s:String>
-    <s:String x:Key="Str.TuningTitle">竞技调校</s:String>
-    <s:String x:Key="Str.TuningGameTitle">{0} · 竞技调校</s:String>
+    <s:String x:Key="Str.TuningTitle">游戏配置与对比</s:String>
+    <s:String x:Key="Str.TuningGameTitle">{0} · 配置与对比</s:String>
     <s:String x:Key="Str.TuningOfficial">官方设置说明</s:String>
     <s:String x:Key="Str.TuningConfigTab">画面检查</s:String>
     <s:String x:Key="Str.TuningDriverTab">驱动组合</s:String>
@@ -1933,4 +1933,23 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TuningCopyCommand">复制命令</s:String>
     <s:String x:Key="Str.TuningCommandCopied">命令已复制，在 CS2 控制台粘贴执行。</s:String>
     <s:String x:Key="Str.TuningPending">方案尚未应用，请审阅后应用。</s:String>
+    <s:String x:Key="Str.HomeOptimize">优化设置</s:String>
+    <s:String x:Key="Str.HomeEditPreparation">调整准备方案</s:String>
+    <s:String x:Key="Str.HomeDisplayHint">分辨率、刷新率与画面</s:String>
+    <s:String x:Key="Str.HomeRecordHint">记录表现，对比前后变化</s:String>
+    <s:String x:Key="Str.HomeHudHint">游戏时查看性能数据</s:String>
+    <s:String x:Key="Str.HomeMoreTools">更多工具</s:String>
+    <s:String x:Key="Str.HomeReadyPending">先检查优化设置，或按保存的方案准备开局。</s:String>
+    <s:String x:Key="Str.HomeReady">按保存的方案准备开局，也可以记录一局查看表现。</s:String>
+    <s:String x:Key="Str.OptSystemTab">系统设置</s:String>
+    <s:String x:Key="Str.OptDriverTab">同步与限帧</s:String>
+    <s:String x:Key="Str.OptShowAdvanced">显示高级项目</s:String>
+    <s:String x:Key="Str.OptMoreFilters">更多筛选</s:String>
+    <s:String x:Key="Str.OptGameTools">游戏相关工具</s:String>
+    <s:String x:Key="Str.OptGameToolsHint">三角洲、无畏契约和 CS2 可查看保存的游戏配置、比较变化并带入性能记录。</s:String>
+    <s:String x:Key="Str.OptGameConfig">游戏配置与对比</s:String>
+    <s:String x:Key="Str.PrepareMoreOptions">保存范围与更多选项</s:String>
+    <s:String x:Key="Str.DriverChooseAction">请选择同步方案，或勾选要调整的帧率、电源选项。</s:String>
+    <s:String x:Key="Str.DriverKeepSyncHint">只调整勾选的项目；同步设置沿用当前值。</s:String>
+    <s:String x:Key="Str.DriverMoreOptions">更多显卡设置</s:String>
 </ResourceDictionary>

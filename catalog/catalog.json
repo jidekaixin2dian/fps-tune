@@ -4,6 +4,7 @@
   "items": [
     {
       "id": "wifi-performance-ac", "name": "接电 Wi-Fi 优先性能",
+      "common": true,
       "nameEn": "Wi-Fi maximum performance on AC",
       "descriptionEn": "Sets the current plan wireless power-saving mode to maximum performance when plugged in.",
       "sideEffectEn": "May increase wireless adapter power draw; unsupported devices report an error.",
@@ -22,6 +23,7 @@
     },
     {
       "id": "cpu-epp-ac",
+      "common": true,
       "name": "接电 CPU 优先性能",
       "nameEn": "CPU performance preference on AC",
       "description": "将当前电源计划的接电 CPU 能效偏好设为 0（优先性能）。适用于支持自主 CPPC v2 性能调节的平台。",
@@ -32,6 +34,7 @@
     },
     {
       "id": "cpu-max-ac",
+      "common": true,
       "name": "接电 CPU 最大状态 100%",
       "nameEn": "Maximum CPU state 100% on AC",
       "description": "将当前电源计划的接电 CPU 最大状态设为 100%，解除该设置中的性能上限。已经是 100% 时不改动。",
@@ -42,6 +45,7 @@
     },
     {
       "id": "mouse-accel-off",
+      "common": true,
       "name": "关闭鼠标加速",
       "nameEn": "Disable mouse acceleration",
       "description": "关闭 Windows 指针精度增强，注销或重启后完整生效。",
@@ -98,6 +102,7 @@
     },
     {
       "id": "sticky-keys-off",
+      "common": true,
       "name": "关闭粘滞键/切换键弹窗",
       "nameEn": "Disable Sticky Keys and Toggle Keys prompts",
       "description": "调整 StickyKeys / ToggleKeys 标志，关闭对应快捷键提示。",
@@ -112,23 +117,25 @@
     },
     {
       "id": "hags",
+      "common": true,
       "name": "开启硬件加速 GPU 计划（HAGS）",
       "nameEn": "Enable hardware-accelerated GPU scheduling (HAGS)",
-      "description": "将 HwSchMode 设为 2，启用硬件加速 GPU 调度，需系统、显卡和驱动支持。",
+      "description": "将部分图形调度交给显卡硬件；可记录调整前后的游戏表现再决定是否保留。",
       "descriptionEn": "Sets HwSchMode to 2 for hardware-accelerated GPU scheduling, requiring OS, GPU and driver support.",
       "sideEffect": "可能影响驱动稳定性与帧时间，重启后对照测试。",
       "sideEffectEn": "May affect driver stability and frame times; compare after restart.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": true,
       "kind": "registry",
       "group": "图形显示"
     },
     {
       "id": "transparency-off",
+      "common": true,
       "name": "关闭窗口透明特效",
       "nameEn": "Disable window transparency effects",
-      "description": "关闭任务栏/窗口亚克力透明，省一点 GPU 开销。",
+      "description": "减少桌面窗口的透明效果，作用于 Windows 外观。",
       "descriptionEn": "Turns off taskbar and window acrylic transparency to save a little GPU overhead.",
       "sideEffect": "桌面观感变朴素。",
       "sideEffectEn": "The desktop looks plainer.",
@@ -147,16 +154,17 @@
       "sideEffect": "Alt+Tab 切换可能略慢；需要先找到游戏主程序路径，找不到则跳过。",
       "sideEffectEn": "Alt+Tab may feel slightly slower. Requires locating the game executable; skipped if it cannot be found.",
       "admin": false,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "layers",
       "group": "图形显示"
     },
     {
       "id": "gpu-pref",
+      "common": true,
       "name": "游戏强制使用高性能 GPU",
       "nameEn": "Force games onto the high-performance GPU",
-      "description": "在 DirectX UserGpuPreferences 中把游戏指定到高性能 GPU（双显卡笔记本关键）。",
+      "description": "为选中的游戏设置 Windows 显卡偏好，适合带核显与独显的电脑。",
       "descriptionEn": "Assigns the game to the high-performance GPU in DirectX UserGpuPreferences. Important on dual-GPU laptops.",
       "sideEffect": "",
       "sideEffectEn": "",
@@ -175,7 +183,7 @@
       "sideEffect": "个别 HDR/多屏场景显示行为可能不同。",
       "sideEffectEn": "Some HDR or multi-monitor setups may behave differently.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": true,
       "kind": "registry",
       "group": "图形显示"
@@ -203,7 +211,7 @@
       "sideEffect": "网络表现依负载和协议而异，建议对照测量。",
       "sideEffectEn": "Network behavior depends on workload and protocol; compare measurements.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "registry",
       "group": "网络"
@@ -238,14 +246,15 @@
     },
     {
       "id": "power-ultimate",
+      "common": true,
       "name": "电源计划 → 卓越性能",
       "nameEn": "Power plan → Ultimate Performance",
-      "description": "复制卓越性能模板并激活本工具创建的电源计划，备份原活动计划。",
+      "description": "切换系统电源计划，偏向性能；可能增加温度和功耗。",
       "descriptionEn": "Duplicates the Ultimate Performance template, activates the tool-created plan and saves the original active plan.",
       "sideEffect": "可能增加功耗和发热，缩短电池续航。",
       "sideEffectEn": "May increase power draw and heat and shorten battery life.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "power",
       "group": "电源"
@@ -259,7 +268,7 @@
       "sideEffect": "可能增加接电功耗与发热；原值读取失败时不写入。",
       "sideEffectEn": "May increase AC power draw and heat; an unreadable original blocks the write.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": true,
       "kind": "power",
       "group": "电源"
@@ -273,7 +282,7 @@
       "sideEffect": "可能增加接电功耗与温度。",
       "sideEffectEn": "May increase AC power draw and temperature.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": true,
       "kind": "power",
       "group": "电源"
@@ -294,9 +303,10 @@
     },
     {
       "id": "game-mode",
+      "common": true,
       "name": "开启 Windows 游戏模式",
       "nameEn": "Enable Windows Game Mode",
-      "description": "允许系统在游戏运行时优先分配 CPU/GPU 资源。",
+      "description": "让 Windows 识别游戏运行状态，使用系统的游戏资源调度。",
       "descriptionEn": "Lets Windows prioritise CPU and GPU resources while a game is running.",
       "sideEffect": "",
       "sideEffectEn": "",
@@ -308,9 +318,10 @@
     },
     {
       "id": "dvr-off",
+      "common": true,
       "name": "关闭 Xbox 后台录制",
       "nameEn": "Disable Xbox background recording",
-      "description": "关掉 Game Bar 后台录制（DVR），减少游戏时的后台编码负载。",
+      "description": "停用 Windows 的后台游戏录制，减少录制带来的资源占用。",
       "descriptionEn": "Turns off Game Bar background recording (DVR) to cut background encoding load while gaming.",
       "sideEffect": "Win+G 录制/截图功能不可用。",
       "sideEffectEn": "Win+G recording and capture become unavailable.",
@@ -329,7 +340,7 @@
       "sideEffect": "个别软件在后台时响应变慢。",
       "sideEffectEn": "A few applications may respond more slowly in the background.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "registry",
       "group": "系统与调度"
@@ -343,7 +354,7 @@
       "sideEffect": "程序崩溃时不再有系统级提示窗口。",
       "sideEffectEn": "No system-level prompt appears when a program crashes.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "registry",
       "group": "系统与调度"
@@ -357,21 +368,21 @@
       "sideEffect": "后台任务（解压、杀毒扫描）响应略慢。",
       "sideEffectEn": "Background tasks such as unzipping or antivirus scans respond a little more slowly.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "registry",
       "group": "系统与调度"
     },
     {
       "id": "mmcss-games",
-      "name": "MMCSS 游戏任务档位拉满",
+      "name": "调整 MMCSS 游戏任务优先级",
       "nameEn": "Max out MMCSS game task priority",
-      "description": "调整 MMCSS Games 的 GPU Priority、Priority、Scheduling Category 和 SFIO Priority。",
+      "description": "调整已注册 MMCSS Games 任务的线程调度。GPU Priority 和 SFIO Priority 当前未使用，不代表所有游戏都能获益。",
       "descriptionEn": "Adjusts MMCSS Games GPU Priority, Priority, Scheduling Category and SFIO Priority.",
       "sideEffect": "影响使用该 MMCSS 任务的应用，可能改变资源分配。",
       "sideEffectEn": "Affects applications using this MMCSS task and may change resource allocation.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "registry",
       "group": "系统与调度"
@@ -427,7 +438,7 @@
       "sideEffect": "对指定进程生效；多开/直播同机时可能影响其他程序。",
       "sideEffectEn": "Applies only to the specified process. May affect other programs when running multiple instances or streaming on the same machine.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": false,
       "kind": "registry",
       "group": "系统与调度"
@@ -441,7 +452,7 @@
       "sideEffect": "可能增加常驻内存占用。",
       "sideEffectEn": "May increase resident memory use.",
       "admin": true,
-      "default": true,
+      "default": false,
       "reboot": true,
       "kind": "registry",
       "group": "系统与调度"
@@ -549,29 +560,16 @@
   "presets": {
     "balanced": {
       "include": [
-        "hags",
-        "transparency-off",
-        "fso-off",
-        "gpu-pref",
-        "mpo-off",
-        "net-throttling-off",
-        "power-ultimate",
-        "pcie-aspm-off",
         "game-mode",
         "dvr-off",
-        "prio-separation",
-        "wer-off",
-        "sys-responsiveness",
-        "mmcss-games",
-        "game-priority",
-        "paging-exec"
+        "gpu-pref",
+        "transparency-off"
       ]
     },
     "safe-only": {
       "include": [
         "game-mode",
         "transparency-off",
-        "fso-off",
         "gpu-pref"
       ]
     }

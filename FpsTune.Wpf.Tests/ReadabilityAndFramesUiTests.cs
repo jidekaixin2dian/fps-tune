@@ -543,7 +543,8 @@ public sealed class ReadabilityAndFramesUiTests
             var page = (ConsoleView)((ContentControl)window.FindName("PageHost")).Content;
             var combo = (ComboBox)page.FindName("GameSwitcher");
             var availableCount = ItemCatalog.All.Count(d => d.Available);
-            Assert.Equal(Str.T("Str.HomeSelectionCount", OptimizationCatalog.ResolvePreset("balanced").Count, availableCount), ((TextBlock)page.FindName("SelectionText")).Text);
+            Assert.Null(page.FindName("ItemList"));
+            AppState.SelectedIds.Clear(); AppState.SelectedIds.Add("wifi-performance-ac");
             Assert.Equal("0/" + availableCount, ((TextBlock)page.FindName("TunedText")).Text);
             Assert.Equal(Str.T("Str.Unavailable"), new OptimizationItemViewModel(unavailableItem).StatusText);
             var report = new List<object>(); var oldBusy = GameContextService.IsBusyProvider;
@@ -556,37 +557,39 @@ public sealed class ReadabilityAndFramesUiTests
                     window.Width = size.Width; window.Height = size.Height;
                     SettingsService.Current.ThemeMode = theme; window.SetDisplayMode(mode); window.UpdateLayout();
                     var primary = ((WrapPanel)page.FindName("PreparationActions")).Children.OfType<Button>().Where(b => b.IsVisible).ToArray();
-                    Assert.Equal(2, primary.Length); Assert.All(primary, b => Assert.Equal(36, b.ActualHeight));
-                    var actions = new[] { "StartPreparationButton", "ConfigurePreparationButton", "LocateDeltaButton", "PrepareDeltaButton", "RecordMatchButton", "PreparationRestoreButton", "GameLibraryButton" }
+                    Assert.Equal(2, primary.Length); Assert.All(primary, b => Assert.Equal(50, b.ActualHeight));
+                    var actions = new[] { "StartPreparationButton", "OpenOptimizationButton", "ConfigurePreparationButton", "RecordMatchButton", "DisplayShortcut", "HudShortcut" }
                         .Select(name => (Button)page.FindName(name)).ToArray();
                     var tops = primary.Select(b => b.TranslatePoint(new Point(0, 0), page).Y).ToArray();
                     Assert.InRange(tops.Max() - tops.Min(), 0, 0.1);
                     foreach (var action in actions)
                     {
-                        Assert.InRange(action.ActualHeight, 30, 36); var at = action.TranslatePoint(new Point(), page);
+                        Assert.InRange(action.ActualHeight, 30, 90); var at = action.TranslatePoint(new Point(), page);
                         Assert.InRange(at.X, 0, page.ActualWidth - action.ActualWidth + 0.1);
                         Assert.InRange(at.Y, 0, page.ActualHeight - action.ActualHeight + 0.1);
                     }
                     Assert.Single(Descendants(combo).OfType<System.Windows.Shapes.Path>()); // Dropdown arrow only.
-                    var review = (Button)page.FindName("ReviewButton"); var bottom = review.TranslatePoint(new Point(), page);
-                    Assert.True(bottom.Y + review.ActualHeight <= page.ActualHeight);
+                    Assert.False(((Expander)page.FindName("MoreHomeTools")).IsExpanded);
                     Capture(window, $"home-audit-{mode}-{size.Width}-{theme}", report);
                 }
-                // Search changes visibility only; selecting a previously excluded item enters custom mode.
-                var search = (TextBox)page.FindName("SearchBox"); search.Text = "Wi-Fi"; window.UpdateLayout();
-                var list = (ListBox)page.FindName("ItemList"); Assert.Single(list.Items);
-                var toggle = Descendants(list).OfType<CheckBox>().Single();
-                ((System.Windows.Automation.Provider.IToggleProvider)new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(toggle)
-                    .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle)).Toggle();
-                Assert.True(((RadioButton)page.FindName("CustomPreset")).IsChecked); Assert.Contains("wifi-performance-ac", AppState.SelectedIds);
-                search.Text = ""; window.UpdateLayout(); Assert.Contains("wifi-performance-ac", AppState.SelectedIds);
-                ((RadioButton)page.FindName("BalancedPreset")).IsChecked = true;
-                Assert.Equal(OptimizationCatalog.ResolvePreset("balanced").Order(), AppState.SelectedIds.Order());
-                Descendants(page).OfType<RadioButton>().Single(b => b.Tag as string == "safe-only").IsChecked = true;
-                Assert.Equal(OptimizationCatalog.ResolvePreset("safe-only").Order(), AppState.SelectedIds.Order());
-                ((Button)page.FindName("PrepareDeltaButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); window.UpdateLayout();
+                Assert.Contains("wifi-performance-ac", AppState.SelectedIds); // Home does not overwrite optimization/experiment choices.
+                Assert.False(((FrameworkElement)window.FindName("NavDetect")).IsVisible);
+                var moreNavigation = (Button)window.FindName("MoreNavigationButton");
+                Assert.True(moreNavigation.IsVisible);
+                var comparison = moreNavigation.ContextMenu.Items.OfType<MenuItem>().Single(i => i.Tag as string == "ab");
+                comparison.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                Assert.True(((RadioButton)window.FindName("NavAb")).IsChecked);
+                window.NavigateTo("home"); window.UpdateLayout();
+                ((Expander)page.FindName("MoreHomeTools")).IsExpanded = true; window.UpdateLayout();
+                Assert.True(((Button)page.FindName("PreparationRestoreButton")).IsVisible);
+                ((Button)page.FindName("OpenOptimizationButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); window.UpdateLayout();
                 var optimization = Assert.IsType<OptimizeView>(((ContentControl)window.FindName("PageHost")).Content);
-                Assert.Equal(new[] { "dvr-off", "game-mode", "gpu-pref" }, optimization.Items.Where(i => i.IsChecked).Select(i => i.Id).Order());
+                Assert.Equal(OptimizationCatalog.ResolvePreset("balanced").Order(), optimization.Items.Where(i => i.IsChecked).Select(i => i.Id).Order());
+                Assert.All(optimization.ItemsView.Cast<OptimizationItemViewModel>(), i => Assert.True(i.Common));
+                var search = (TextBox)optimization.FindName("SearchBox"); search.Text = "net-nagle-off"; window.UpdateLayout();
+                Assert.Single(optimization.ItemsView.Cast<OptimizationItemViewModel>());
+                search.Clear();
+                ((CheckBox)optimization.FindName("ShowAdvancedItems")).IsChecked = true;
                 ((RadioButton)optimization.FindName("PresetFull")).IsChecked = true;
                 Assert.False(optimization.Items.Single(i => i.Id == unavailable.Id).IsChecked);
                 Assert.Equal(availableCount, optimization.Items.Count(i => i.IsChecked));

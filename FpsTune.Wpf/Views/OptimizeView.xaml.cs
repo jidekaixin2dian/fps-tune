@@ -42,14 +42,14 @@ public partial class OptimizeView : UserControl
         ItemList.SelectionChanged += (_, _) => ShowSelectedItem();
         ItemsView = System.Windows.Data.CollectionViewSource.GetDefaultView(Items);
         ItemsView.Filter = FilterItem;
-        ItemsView.GroupDescriptions.Add(
-            new System.Windows.Data.PropertyGroupDescription(nameof(OptimizationItemViewModel.Group)));
+        ItemsView.SortDescriptions.Add(new SortDescription(nameof(OptimizationItemViewModel.Recommended), ListSortDirection.Descending));
     }
 
     private string _searchText = "";
     internal void SelectForReview(IEnumerable<string> ids)
     {
         if (_operationBusy) return;
+        SystemTab.IsChecked = true;
         ReloadFromState();
         SetCustomMode();
         var selected = ids.ToHashSet(StringComparer.Ordinal);
@@ -112,6 +112,7 @@ public partial class OptimizeView : UserControl
         if (obj is not OptimizationItemViewModel vm)
             return false;
         if (!MatchesScope(vm, _scopeFilter)) return false;
+        if (ShowAdvancedItems.IsChecked != true && _searchText.Length == 0 && _scopeFilter != "selected" && !vm.Common) return false;
         if (_groupFilter.Length > 0 && vm.Group != _groupFilter)
             return false;
         if (_searchText.Length == 0)
@@ -167,6 +168,8 @@ public partial class OptimizeView : UserControl
     public void ReloadFromState()
     {
         if (_operationBusy) return;
+        GameConfigButton.IsEnabled = GameTuning.Identify(AppState.GamePath) is not null;
+        OptimizationGameText.Text = AppState.GamePath is { } path ? GameContextService.DisplayNameFor(path) : Str.T("Str.NoGameSelected");
         ReloadItemsFromState();
     }
 
@@ -220,6 +223,7 @@ public partial class OptimizeView : UserControl
 
         if (PresetFull.IsChecked == true)
         {
+            ShowAdvancedItems.IsChecked = true;
             foreach (var item in Items)
                 item.IsChecked = true;
         }
@@ -294,57 +298,6 @@ public partial class OptimizeView : UserControl
         if (PresetCustom.IsChecked == true)
             return Items.Where(i => i.IsChecked).Select(i => i.Id);
         return BalancedIds();
-    }
-
-    private async void OneClickButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_operationBusy) return;
-        if (ConsentCheck.IsChecked != true)
-        {
-            DialogService.Warning("未确认", Str.T("Str.ConsentOneClick"));
-            return;
-        }
-
-        if (OptimizationCatalog.ResolvePreset("balanced").Any(id =>
-                AppState.Items.FirstOrDefault(i => i.Id == id)?.RequiresAdmin == true)
-            && !AdminHelper.IsAdministrator())
-        {
-            var elevate = DialogService.Confirm(
-                Str.T("Str.NeedsAdmin"),
-                "一键优化的均衡档包含电源计划等需要管理员权限的项目。\n\n" +
-                Str.T("Str.ConfirmRestartAdmin"),
-                danger: false);
-            if (elevate)
-                AdminHelper.RestartAsAdministrator();
-            return;
-        }
-
-        var confirmed = DialogService.Confirm(
-            Str.T("Str.OneClick"),
-            "将一次应用：\n\n" +
-            "① 均衡档系统层（含电源计划→卓越性能、游戏强制高性能 GPU）\n" +
-            "② DLSS K 模型\n" +
-            "③ 显卡 3D（1070 Ti 档）：纹理高质量 · 电源最高性能优先 · 透明度 2x · 预渲染 1 帧\n\n" +
-            Str.T("Str.ConfirmAllBackedUp"),
-            confirmText: Str.T("Str.Start"));
-        if (!confirmed)
-            return;
-
-        SetOperationBusy(true);
-        SetPlain(Str.T("Str.RunningOneClick"), "AccentBrush");
-        try
-        {
-            var result = await OneClickOptimizer.ApplyAsync();
-            await CompleteOperationAsync(result);
-        }
-        catch (Exception ex)
-        {
-            SetRawMonospace(ex.ToString());
-        }
-        finally
-        {
-            SetOperationBusy(false);
-        }
     }
 
     private async void ApplyButton_Click(object sender, RoutedEventArgs e)

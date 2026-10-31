@@ -14,7 +14,8 @@ public partial class GameTuningWindow : Window
     private readonly CompetitiveGame _game;
     private readonly IReadOnlyList<string>? _candidates;
     private GameVideoConfig? _config;
-    private bool _busy, _closed, _driverReady;
+    private bool _closed;
+    private bool _busy => DriverSettings.IsBusy;
     private int _configGeneration;
     internal SessionConditions? Recording { get; private set; }
     internal bool OpenDisplay { get; private set; }
@@ -28,8 +29,8 @@ public partial class GameTuningWindow : Window
         SceneText.Text = Str.T("Str.TuningSceneHint", GameTuning.Scene(_game));
         Cs2Tab.Visibility = _game == CompetitiveGame.Cs2 ? Visibility.Visible : Visibility.Collapsed;
         DeltaDlssCard.Visibility = _game == CompetitiveGame.DeltaForce ? Visibility.Visible : Visibility.Collapsed;
-        ShowSection(); UpdateSync(); UpdateCommand(); DriverStatus.Text = Str.T("Str.TuningPending");
-        Loaded += async (_, _) => { await DiscoverAsync(); if (!_closed) await RefreshDriverAsync(); };
+        ShowSection(); UpdateCommand();
+        Loaded += async (_, _) => { await DiscoverAsync(); };
         Closed += (_, _) => { _closed = true; ++_configGeneration; };
         Closing += (_, e) => { if (_busy) { e.Cancel = true; StatusText.Text = Str.T("Str.TuningBusy"); } };
     }
@@ -118,66 +119,7 @@ public partial class GameTuningWindow : Window
         { StatusText.Text = Str.T("Str.TuningBusy"); return false; }
         return true;
     }
-    private async Task RefreshDriverAsync()
-    {
-        _driverReady = false; ApplyDriverButton.IsEnabled = RestoreDriverButton.IsEnabled = false;
-        try
-        {
-            var state = await Task.Run(() => DisplayQualityService.GetDrsGameSettings(Path.GetFileName(_gamePath)));
-            if (_closed) return;
-            _driverReady = true;
-            var sync = state.VSync switch { VSyncMode.ForceOff => Str.T("Str.Off"), VSyncMode.ForceOn => Str.T("Str.TuningEnabled"), _ => Str.T("Str.FollowDriverGame") };
-            var power = state.PowerMode switch { PowerMode.PreferMax => Str.T("Str.PowerPreferMax"), PowerMode.Adaptive => Str.T("Str.PowerAdaptive"),
-                PowerMode.DriverControlled => Str.T("Str.PowerDriverControlled"), PowerMode.PreferConsistentPerformance => Str.T("Str.PowerStablePerf"),
-                PowerMode.PreferMin => Str.T("Str.PowerLowestConsumption"), PowerMode.OptimalPower => Str.T("Str.PowerOptimal"), _ => Str.T("Str.FollowDriverGame") };
-            DriverCurrent.Text = Str.T("Str.TuningDriverCurrent", sync, power, Cap(state.FrameRateLimit), Cap(state.BackgroundFrameRateLimit));
-            RestoreDriverButton.IsEnabled = DisplayQualityService.HasCompetitiveBackup(Path.GetFileName(_gamePath));
-        }
-        catch (Exception ex) { _driverReady = false; if (!_closed) DriverCurrent.Text = Str.T("Str.TuningDriverUnavailable", PrivacyScrub.Sanitize(ex.Message)); }
-        ApplyDriverButton.IsEnabled = _driverReady && !_busy;
-    }
-    private static string Cap(uint? value) => value is null ? Str.T("Str.FollowDriverGame") : value == 0 ? Str.T("Str.FrameOff") : value + " FPS";
-    private static uint? ReadCap(CheckBox selected, TextBox input, bool background)
-    {
-        if (selected.IsChecked != true) return null;
-        if (!uint.TryParse(input.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var value) || !DisplayQualityService.IsValidFrameLimit(value, background))
-            throw new ArgumentException(Str.T("Str.FrameRange"));
-        return value;
-    }
-    internal async Task ChangeDriverAsync(bool restore)
-    {
-        if (!CanAct() || !_driverReady || !File.Exists(_gamePath)) return;
-        DisplayQualityService.CompetitiveSettings? selection = null;
-        try
-        {
-            if (!restore)
-            {
-                selection = new(SyncBox.SelectedIndex == 1, VrrConfirmed.IsChecked == true, PowerCheck.IsChecked == true,
-                    ReadCap(ForegroundCheck, ForegroundBox, false), ReadCap(BackgroundCheck, BackgroundBox, true));
-                if (selection.SmoothVrr && !selection.VrrAndReflexConfirmed) throw new ArgumentException(Str.T("Str.TuningConfirmVrr"));
-            }
-            var details = restore ? Str.T("Str.TuningRestoreConfirm") : Str.T("Str.TuningApplyConfirm", ((ComboBoxItem)SyncBox.SelectedItem).Content,
-                selection!.MaximumPower ? Str.T("Str.TuningMaximumPower") : Str.T("Str.FrameKeep"),
-                selection.Foreground is null ? Str.T("Str.FrameKeep") : Cap(selection.Foreground), selection.Background is null ? Str.T("Str.FrameKeep") : Cap(selection.Background));
-            if (!DialogService.Confirm(Str.T("Str.TuningTitle"), GameTitle.Text + "\n\n" + details)) return;
-            if (!CanAct()) return;
-            _busy = true; DriverInputs.IsEnabled = ApplyDriverButton.IsEnabled = RestoreDriverButton.IsEnabled = SourceBox.IsEnabled = BrowseButton.IsEnabled = ReloadButton.IsEnabled = false;
-            var exe = Path.GetFileName(_gamePath);
-            var changed = await Task.Run(() => { if (restore) return DisplayQualityService.RestoreCompetitiveSettings(exe); DisplayQualityService.ApplyCompetitiveSettings(exe, selection!); return true; });
-            DriverStatus.Text = Str.T(changed ? restore ? "Str.TuningDriverRestored" : "Str.TuningDriverApplied" : "Str.NothingToRestore");
-        }
-        catch (Exception ex) { DriverStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { _busy = false; DriverInputs.IsEnabled = SourceBox.IsEnabled = BrowseButton.IsEnabled = ReloadButton.IsEnabled = true; if (!_closed) await RefreshDriverAsync(); }
-    }
-    private async void ApplyDriver_Click(object sender, RoutedEventArgs e) => await ChangeDriverAsync(false);
-    private async void RestoreDriver_Click(object sender, RoutedEventArgs e) => await ChangeDriverAsync(true);
-    private void Sync_Changed(object sender, SelectionChangedEventArgs e) { if (SyncHint is not null) { UpdateSync(); DriverInput_Changed(sender, e); } }
-    private void DriverInput_Changed(object sender, RoutedEventArgs e) { if (DriverStatus is not null && !_busy) DriverStatus.Text = Str.T("Str.TuningPending"); }
-    private void UpdateSync()
-    {
-        SyncHint.Text = Str.T(SyncBox.SelectedIndex == 1 ? "Str.TuningSmoothHint" : "Str.TuningLatencyHint");
-        VrrConfirmed.Visibility = SyncBox.SelectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
-    }
+    internal Task ChangeDriverAsync(bool restore) => DriverSettings.ChangeDriverAsync(restore);
     private void Tab_Changed(object sender, RoutedEventArgs e) { if (ConfigPanel is not null) ShowSection(); }
     private void ShowSection()
     {

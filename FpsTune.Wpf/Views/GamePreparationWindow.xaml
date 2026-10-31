@@ -5,8 +5,21 @@
     WindowStartupLocation="CenterOwner" ShowInTaskbar="False" ResizeMode="NoResize" WindowStyle="None" Background="{DynamicResource AppBackdropBrush}">
     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24"><Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <StackPanel Margin="0,0,0,18"><TextBlock Text="{DynamicResource Str.PrepareSettings}" Style="{StaticResource PageTitleStyle}"/><TextBlock x:Name="PlanGameText" Style="{StaticResource ItemTitleStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/><TextBlock Text="{DynamicResource Str.PrepareSettingsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel>
+        <StackPanel Margin="0,0,0,18"><TextBlock Text="{DynamicResource Str.PrepareSettings}" Style="{StaticResource PageTitleStyle}"/><TextBlock x:Name="PlanGameText" Style="{StaticResource ItemTitleStyle}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,8,0,0" TextWrapping="Wrap"/><TextBlock Text="{DynamicResource Str.PrepareSettingsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="570"><StackPanel Margin="0,0,8,0">
+            <CheckBox x:Name="MemoryCheck" Content="{DynamicResource Str.PrepareMemoryScope}" FontSize="14"/>
+            <ComboBox x:Name="MemoryMode" Width="420" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=MemoryCheck}" AutomationProperties.Name="{DynamicResource Str.MemoryScope}"><ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/><ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/><ComboBoxItem Content="{DynamicResource Str.PrepareFullMode}"/></ComboBox>
+            <CheckBox x:Name="IccCheck" Content="{DynamicResource Str.PrepareIcc}" FontSize="14"/>
+            <ComboBox x:Name="IccPresetBox" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=IccCheck}" AutomationProperties.Name="{DynamicResource Str.IccPresetLabel}"/>
+            <CheckBox x:Name="VibranceCheck" Content="{DynamicResource Str.PrepareVibrance}" FontSize="14"/>
+            <Grid Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=VibranceCheck}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
+                <Slider x:Name="VibranceSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.PrepareVibrance}"/>
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=VibranceSlider, StringFormat={}{0:0}%}" HorizontalAlignment="Right" Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </Grid>
+            <TextBlock Text="{DynamicResource Str.PrepareDisplay}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,8"/>
+            <ComboBox x:Name="DisplayBox" IsEnabled="False" AutomationProperties.Name="{DynamicResource Str.PrepareDisplay}"/>
+            <TextBlock x:Name="StatusText" Foreground="{DynamicResource WarningBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+            <Expander x:Name="MorePreparationOptions" Header="{DynamicResource Str.PrepareMoreOptions}" Margin="0,16,0,0"><StackPanel Margin="0,12,0,0">
             <TextBlock Text="{DynamicResource Str.PlanSaveScope}" Style="{StaticResource MutedTextStyle}"/>
             <WrapPanel Margin="0,8,0,8">
                 <RadioButton x:Name="GameScope" GroupName="planScope" Content="{DynamicResource Str.PlanCurrentGame}" Margin="0,0,22,0"/>
@@ -27,18 +40,7 @@
                 <TextBlock x:Name="BasicGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" LineHeight="23"/>
                 <Button x:Name="ReviewBasicsButton" Content="{DynamicResource Str.PrepareReviewBasics}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="ReviewBasics_Click"/>
             </StackPanel></Border>
-            <CheckBox x:Name="MemoryCheck" Content="{DynamicResource Str.PrepareMemoryScope}" FontSize="14"/>
-            <ComboBox x:Name="MemoryMode" Width="420" HorizontalAlignment="Left" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=MemoryCheck}" AutomationProperties.Name="{DynamicResource Str.MemoryScope}"><ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/><ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/><ComboBoxItem Content="{DynamicResource Str.PrepareFullMode}"/></ComboBox>
-            <CheckBox x:Name="IccCheck" Content="{DynamicResource Str.PrepareIcc}" FontSize="14"/>
-            <ComboBox x:Name="IccPresetBox" Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=IccCheck}" AutomationProperties.Name="{DynamicResource Str.IccPresetLabel}"/>
-            <CheckBox x:Name="VibranceCheck" Content="{DynamicResource Str.PrepareVibrance}" FontSize="14"/>
-            <Grid Margin="28,8,0,16" IsEnabled="{Binding IsChecked, ElementName=VibranceCheck}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="50"/></Grid.ColumnDefinitions>
-                <Slider x:Name="VibranceSlider" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.PrepareVibrance}"/>
-                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=VibranceSlider, StringFormat={}{0:0}%}" HorizontalAlignment="Right" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            </Grid>
-            <TextBlock Text="{DynamicResource Str.PrepareDisplay}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,8"/>
-            <ComboBox x:Name="DisplayBox" IsEnabled="False" AutomationProperties.Name="{DynamicResource Str.PrepareDisplay}"/>
-            <TextBlock x:Name="StatusText" Foreground="{DynamicResource WarningBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+            </StackPanel></Expander>
         </StackPanel></ScrollViewer>
         <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,22,0,0">
             <Button Content="{DynamicResource Str.Cancel}" Style="{StaticResource GhostButtonStyle}" Click="Cancel_Click" Margin="0,0,10,0"/>

@@ -161,14 +161,15 @@ public sealed class CompetitiveTuningTests
                 DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
                 try
                 {
-                    DlssFeedbackTests.PumpUntil(() => ((Button)window.FindName("ApplyDriverButton")).IsEnabled);
+                    ((RadioButton)window.FindName("DriverTab")).IsChecked = true;
+                    DlssFeedbackTests.PumpUntil(() => ((Button)((GameDriverSettings)window.FindName("DriverSettings")).FindName("ApplyDriverButton")).IsEnabled);
                     Assert.Equal(kind == CompetitiveGame.Cs2 ? Visibility.Visible : Visibility.Collapsed, ((RadioButton)window.FindName("Cs2Tab")).Visibility);
                     ((RadioButton)window.FindName("DriverTab")).IsChecked = true;
-                    ((ComboBox)window.FindName("SyncBox")).SelectedIndex = 1;
+                    ((ComboBox)((GameDriverSettings)window.FindName("DriverSettings")).FindName("SyncBox")).SelectedIndex = 2;
                     var blocked = window.ChangeDriverAsync(false); DlssFeedbackTests.PumpUntil(() => blocked.IsCompleted); blocked.GetAwaiter().GetResult();
                     Assert.Equal(savesBefore, api.SaveCount); // Unconfirmed VRR does not open an apply confirmation or save.
-                    ((CheckBox)window.FindName("VrrConfirmed")).IsChecked = true;
-                    ((CheckBox)window.FindName("BackgroundCheck")).IsChecked = true;
+                    ((CheckBox)((GameDriverSettings)window.FindName("DriverSettings")).FindName("VrrConfirmed")).IsChecked = true;
+                    ((CheckBox)((GameDriverSettings)window.FindName("DriverSettings")).FindName("BackgroundCheck")).IsChecked = true;
                     foreach (var theme in new[] { "light", "dark" })
                     {
                         ThemeManager.SetMode(theme); ((ScrollViewer)window.FindName("ContentScroll")).ScrollToHome(); Render(window, kind + "-driver-" + theme);
@@ -195,8 +196,9 @@ public sealed class CompetitiveTuningTests
             DlssFeedbackTests.PrepareBackgroundWindow(unavailable); unavailable.Show();
             try
             {
-                DlssFeedbackTests.PumpUntil(() => ((TextBlock)unavailable.FindName("DriverCurrent")).Text.Length > 0);
-                Assert.False(((Button)unavailable.FindName("ApplyDriverButton")).IsEnabled);
+                ((RadioButton)unavailable.FindName("DriverTab")).IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => ((TextBlock)((GameDriverSettings)unavailable.FindName("DriverSettings")).FindName("DriverCurrent")).Text.Length > 0);
+                Assert.False(((Button)((GameDriverSettings)unavailable.FindName("DriverSettings")).FindName("ApplyDriverButton")).IsEnabled);
             }
             finally { unavailable.Close(); }
         });

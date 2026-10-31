@@ -11,6 +11,27 @@ public partial class OptimizeView
     private string _scopeFilter = "all";
     internal Func<IReadOnlyList<string>, string?, Task<RunResult>>? ApplyItemsOverride { get; set; }
     internal Func<Task<bool>>? RefreshDetectionOverride { get; set; }
+    private void Section_Changed(object sender, RoutedEventArgs e)
+    {
+        if (SystemPanel is null) return;
+        var system = SystemTab.IsChecked == true;
+        PresetControlsCard.Visibility = SystemPanel.Visibility = SystemActions.Visibility = system ? Visibility.Visible : Visibility.Collapsed;
+        DriverScroll.Visibility = system ? Visibility.Collapsed : Visibility.Visible;
+    }
+    private void Advanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (PresetFull is null) return;
+        PresetFull.Visibility = ShowAdvancedItems.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        if (ItemsView is not null)
+        {
+            ItemsView.GroupDescriptions.Clear();
+            if (ShowAdvancedItems.IsChecked == true && _scopeFilter != "selected")
+                ItemsView.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(OptimizationItemViewModel.Group)));
+        }
+        ItemsView?.Refresh(); UpdateFilterSummary();
+    }
+    private void GameConfig_Click(object sender, RoutedEventArgs e)
+    { if (!_operationBusy && AppState.GamePath is { } path && Window.GetWindow(this) is MainWindow main) main.OpenGameTuning(path); }
     private void RefreshWorkspaceLabels()
     {
         foreach (var item in Items) item.RefreshLanguage();
@@ -22,7 +43,7 @@ public partial class OptimizeView
         if (ItemsView is not null)
         {
             ItemsView.GroupDescriptions.Clear();
-            if (_scopeFilter != "selected") ItemsView.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(OptimizationItemViewModel.Group)));
+            if (_scopeFilter != "selected" && ShowAdvancedItems.IsChecked == true) ItemsView.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(OptimizationItemViewModel.Group)));
         }
         ItemsView?.Refresh(); UpdateFilterSummary();
     }
@@ -44,6 +65,7 @@ public partial class OptimizeView
     internal void RevealItem(string id)
     {
         if (_operationBusy) return;
+        SystemTab.IsChecked = true; ShowAdvancedItems.IsChecked = true;
         ReloadFromState(); AllGroups.IsChecked = true; ScopeFilter.SelectedIndex = 0; SearchBox.Text = id;
         var item = Items.FirstOrDefault(i => i.Id == id);
         if (item is not null)
@@ -58,8 +80,9 @@ public partial class OptimizeView
     private void SetOperationBusy(bool busy)
     {
         _operationBusy = busy;
+        SystemTab.IsEnabled = DriverTab.IsEnabled = !busy;
         PresetControlsCard.IsEnabled = OptimizationItemsCard.IsEnabled = ConsentCheck.IsEnabled = !busy;
-        ApplyButton.IsEnabled = RestoreButton.IsEnabled = OneClickButton.IsEnabled = !busy;
+        ApplyButton.IsEnabled = RestoreButton.IsEnabled = !busy;
         if (!busy) ApplyButton.IsEnabled = Items.Any(i => i.IsChecked);
     }
     internal OptimizationApplyPlan CaptureReviewPlan()

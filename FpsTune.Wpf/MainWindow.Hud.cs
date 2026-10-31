@@ -7,6 +7,8 @@ namespace FpsTune.Wpf;
 
 public partial class MainWindow
 {
+    internal void ToggleHudFromHome() => HudEntry_Click(this, new RoutedEventArgs());
+
     internal PerformanceHudService HudController { get; set; } = App.Hud;
     private bool _loadingHudAppearance;
     private void HudEntry_Click(object sender, RoutedEventArgs e)

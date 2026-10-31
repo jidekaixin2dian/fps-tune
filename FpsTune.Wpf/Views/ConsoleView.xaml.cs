@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.IO;
@@ -9,13 +8,8 @@ namespace FpsTune.Wpf.Views;
 
 public partial class ConsoleView : UserControl
 {
-    private sealed record Row(string Number, OptimizationItemViewModel Item);
-    private List<Row> _rows = new();
-    private List<OptimizationItem>? _source;
     private MetricsSampler? _sampler;
     private Window? _owner;
-    private string _preset = "balanced";
-    private bool _changingSelection;
     private bool _refreshing;
     private bool _locating;
 
@@ -28,25 +22,17 @@ public partial class ConsoleView : UserControl
 
     private void UpdatePreparation()
     {
-        TuningButton.Visibility = GameTuning.Identify(AppState.GamePath) is not null ? Visibility.Visible : Visibility.Collapsed;
-        TuningButton.IsEnabled = !_preparing && !_refreshing && !_locating;
         var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
-        var firstRun = !StateStore.HasSeenOnboarding;
         GameReadyTitle.Text = GameLocated
             ? $"{GameContextService.DisplayNameFor(AppState.GamePath!)} · 开局准备"
             : "开局准备";
         GameReadyText.Text = _locating ? Str.T("Str.LocatingAndDetecting") : !GameReady
             ? GameLocated ? Str.T("Str.GameSelectedRefreshDetect") : Str.T("Str.LocateGameForAdvice")
-            : count > 0 ? (firstRun
-                ? Str.T("Str.FirstRunAdviceIntro", count)
-                : $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。")
-            : Str.T("Str.BasicsOk");
+            : Str.T(count > 0 ? "Str.HomeReadyPending" : "Str.HomeReady");
         GameReadyText.ToolTip = AppState.GamePath ?? Str.T("Str.NoGameSelected");
         LocateDeltaButton.Content = GameLocated && !GameReady ? Str.T("Str.RefreshDetect") : "定位游戏";
-        PrepareDeltaButton.IsEnabled = GameLocated && !_refreshing && !_locating && !_preparing;
-        PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
-        PrepareDeltaButton.ToolTip = Str.T("Str.BasicAdviceGuideTip");
-        StartPreparationButton.IsEnabled = ConfigurePreparationButton.IsEnabled = !_preparing && !_refreshing && !_locating;
+        OpenOptimizationButton.IsEnabled = !_preparing && !_refreshing && !_locating;
+        StartPreparationButton.IsEnabled = ConfigurePreparationButton.IsEnabled = OpenOptimizationButton.IsEnabled;
         try { PreparationPlanText.Text = PreparationPlanStore.Describe(PreparationPlanStore.Resolve(AppState.GamePath)); }
         catch (Exception ex)
         {
@@ -90,24 +76,15 @@ public partial class ConsoleView : UserControl
         finally { _locating = false; LocateDeltaButton.IsEnabled = true; RefreshGameSwitcher(); UpdatePreparation(); }
     }
 
-    private void PrepareDelta_Click(object sender, RoutedEventArgs e)
-    {
-        UpdatePreparation();
-        if (!PrepareDeltaButton.IsEnabled) return;
-        if (Window.GetWindow(this) is not MainWindow main) return;
-
-        var ids = DeltaPreparation.PendingItems(AppState.Items, GameReady);
-        if (GameReady && ids.Count == 0)
-        {
-            DialogService.Info(Str.T("Str.BasicAdvice"), Str.T("Str.BasicAdviceAllReady"));
-            return;
-        }
-        if (GameReady && StateStore.HasSeenOnboarding)
-            main.ReviewSelection(ids);
-        else
-            // P3-9：首次先做一次只读体检（控制台概览此前直接跳优化、跳过了检测页）
-            _ = main.ReviewSelectionWithIntroAsync(ids);
-    }
+    private void OpenOptimization_Click(object sender, RoutedEventArgs e)
+    { if (OpenOptimizationButton.IsEnabled && Window.GetWindow(this) is MainWindow main) main.NavigateTo("opt"); }
+    private void PrepareDelta_Click(object sender, RoutedEventArgs e) => OpenOptimization_Click(sender, e);
+    private void DisplayShortcut_Click(object sender, RoutedEventArgs e)
+    { if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("display"); }
+    private void HudShortcut_Click(object sender, RoutedEventArgs e)
+    { if (Window.GetWindow(this) is MainWindow main) main.ToggleHudFromHome(); }
+    private void MaintenanceShortcut_Click(object sender, RoutedEventArgs e)
+    { if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("tools"); }
 
     private void DeltaSession_Click(object sender, RoutedEventArgs e)
     {
@@ -145,18 +122,18 @@ public partial class ConsoleView : UserControl
         StartMonitor();
         RebuildRows();
         if (AppState.Items.Count == 0) await RefreshDataAsync();
-        // 首页数据就绪信号（splash 放行条件之一）：行列表与检测状态落定；
+        // 首页数据就绪信号（splash 放行条件之一）：概览与检测状态落定；
         // 与首个实时样本汇合后才上报，避免进入界面仍是一片 "—"。
-        _rowsSettled = true;
+        _dataSettled = true;
         TryNotifyHomeDataReady();
     }
 
     private bool _metricsSeen;
-    private bool _rowsSettled;
+    private bool _dataSettled;
 
     private void TryNotifyHomeDataReady()
     {
-        if (_metricsSeen && _rowsSettled && _owner is MainWindow main)
+        if (_metricsSeen && _dataSettled && _owner is MainWindow main)
             main.NotifyHomeDataReady();
     }
 
@@ -206,7 +183,7 @@ public partial class ConsoleView : UserControl
         if (_refreshing || Window.GetWindow(this) is not MainWindow main) return;
         _refreshing = true;
         RefreshButton.IsEnabled = false;
-        ReviewButton.IsEnabled = false;
+        UpdatePreparation();
         StateText.Text = Str.T("Str.DetectingBackground");
         try
         {
@@ -218,7 +195,7 @@ public partial class ConsoleView : UserControl
         {
             _refreshing = false;
             RefreshButton.IsEnabled = true;
-            UpdateSelection();
+            UpdatePreparation();
         }
     }
 
@@ -274,79 +251,16 @@ public partial class ConsoleView : UserControl
             Dispatcher.BeginInvoke(OnGameContextSwitched);
             return;
         }
-        _source = null;   // 绕过 RebuildRows 的同引用短路，强制重建
         RebuildRows();
         RefreshGameSwitcher();
     }
 
     private void RebuildRows()
     {
-        RefreshGameSwitcher();
-        UpdatePreparation();
-        if (ReferenceEquals(_source, AppState.Items)) return;
-        var selected = _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToHashSet();
-        foreach (var row in _rows) row.Item.PropertyChanged -= ItemChanged;
-        _source = AppState.Items;
-        var verdicts = VerdictStore.Load();
-        var currentGame = Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
-        _rows = _source.Select((item, index) => new Row($"{index + 1:00}",
-            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts, currentGame, AppState.GamePath) })).ToList();
-        foreach (var row in _rows) row.Item.PropertyChanged += ItemChanged;
-        SetChecks(_preset == "custom" ? selected : OptimizationCatalog.ResolvePreset(_preset).ToHashSet());
-        var available = _rows.Where(r => r.Item.Available).ToArray();
-        var count = available.Count(r => r.Item.Optimized);
+        RefreshGameSwitcher(); UpdatePreparation();
+        var available = AppState.Items.Where(i => ItemCatalog.All.FirstOrDefault(d => d.Id == i.Id)?.Available != false).ToArray();
+        var count = available.Count(i => i.Optimized);
         TunedText.Text = available.Length > 0 ? $"{count}/{available.Length}" : "—";
         TunedMeter.Value = available.Length > 0 ? 100.0 * count / available.Length : 0;
-        FilterRows();
-    }
-
-    private void Preset_Checked(object sender, RoutedEventArgs e)
-    {
-        if (sender is not RadioButton { Tag: string preset }) return;
-        _preset = preset;
-        if (ItemList is null || preset == "custom") return;
-        SetChecks(OptimizationCatalog.ResolvePreset(preset).ToHashSet());
-    }
-
-    private void SetChecks(HashSet<string> selected)
-    {
-        _changingSelection = true;
-        foreach (var row in _rows) row.Item.IsChecked = selected.Contains(row.Item.Id);
-        _changingSelection = false;
-        UpdateSelection();
-    }
-
-    private void ItemChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (_changingSelection || e.PropertyName != nameof(OptimizationItemViewModel.IsChecked)) return;
-        CustomPreset.IsChecked = true;
-        UpdateSelection();
-    }
-
-    private void UpdateSelection()
-    {
-        UpdatePreparation();
-        // 0.2.0 M1：勾选集合同步给 A/B 页自定义实测。
-        AppState.SelectedIds.Clear();
-        foreach (var id in _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id))
-            AppState.SelectedIds.Add(id);
-        var count = _rows.Count(r => r.Item.IsChecked);
-        SelectionText.Text = _rows.Count == 0 ? Str.T("Str.NoDetectResult") : Str.T("Str.HomeSelectionCount", count, _rows.Count(r => r.Item.Available));
-        ReviewButton.IsEnabled = count > 0 && !_refreshing;
-    }
-
-    private void Search_TextChanged(object sender, TextChangedEventArgs e) => FilterRows();
-    private void FilterRows()
-    {
-        if (ItemList is null || SearchBox is null) return;
-        var query = SearchBox.Text.Trim();
-        ItemList.ItemsSource = _rows.Where(r => r.Item.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || r.Item.Description.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-    }
-
-    private void Review_Click(object sender, RoutedEventArgs e)
-    {
-        if (Window.GetWindow(this) is MainWindow main)
-            main.ReviewSelection(_rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToArray());
     }
 }

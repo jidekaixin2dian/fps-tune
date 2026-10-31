@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace FpsTune.Wpf.Services;
@@ -23,6 +23,8 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public string Group { get; }
     public bool Available => Core.ItemCatalog.All.FirstOrDefault(item => item.Id == Id)?.Available != false;
     public string StatusText => Str.T(!Available ? "Str.Unavailable" : Optimized ? "Str.OptStateAtTarget" : "Str.OptStatePending");
+    public bool Common => _definition?.Common == true;
+    public bool Recommended => _definition?.Default == true;
     public bool HasSideEffect => !string.IsNullOrWhiteSpace(SideEffect);
 
     /// <summary>0.2.0 M1：项级实测徽标（无记录为 null，行内零宽不占位）；由页面注入。</summary>
