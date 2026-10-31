@@ -1832,4 +1832,21 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TrayHiddenHint">窗口已收起到系统托盘，可从托盘图标重新打开。</s:String>
     <s:String x:Key="Str.TrayHiddenHotkey">也可按 Ctrl+Alt+F 呼出。</s:String>
     <s:String x:Key="Str.TrayStillRunning">FPS 帧律仍在运行</s:String>
+    <s:String x:Key="Str.PreparationHistory">准备记录</s:String>
+    <s:String x:Key="Str.PreparationHistoryHint">保留最近 50 次开局准备结果。</s:String>
+    <s:String x:Key="Str.PreparationHistoryScope">记录范围</s:String>
+    <s:String x:Key="Str.PreparationHistoryAll">全部游戏</s:String>
+    <s:String x:Key="Str.PreparationHistoryEmpty">还没有准备记录。</s:String>
+    <s:String x:Key="Str.PreparationHistoryUnreadable">准备记录无法读取，原文件已保留。</s:String>
+    <s:String x:Key="Str.PreparationHistoryTime">{0} · 用时 {1:F1} 秒</s:String>
+    <s:String x:Key="Str.PreparationHistoryCount">{0} 条记录</s:String>
+    <s:String x:Key="Str.PreparationHistoryExport">导出所选记录</s:String>
+    <s:String x:Key="Str.PreparationHistoryExported">记录已导出。</s:String>
+    <s:String x:Key="Str.PreparationHistoryExportLocation">请选择帧律数据目录之外的位置，避免覆盖已有资料。</s:String>
+    <s:String x:Key="Str.PreparationHistorySaveFailed">此次结果未能保存到准备记录：{0}</s:String>
+    <s:String x:Key="Str.PlanCopyFrom">从其他方案复制</s:String>
+    <s:String x:Key="Str.PlanCopySource">来源游戏或通用方案</s:String>
+    <s:String x:Key="Str.PlanCopyLoad">载入此方案</s:String>
+    <s:String x:Key="Str.PlanCopyHint">复制项目和参数，显示器保持当前选择。检查后点击保存。</s:String>
+    <s:String x:Key="Str.PlanCopyLoaded">方案已载入，可继续修改，保存后生效。</s:String>
 </ResourceDictionary>

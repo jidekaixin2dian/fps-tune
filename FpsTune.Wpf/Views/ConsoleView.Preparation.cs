@@ -9,6 +9,12 @@ public partial class ConsoleView
     private readonly GamePreparationService _preparation;
     private bool _preparing;
     private CancellationTokenSource? _preparationCancellation;
+    private void PreparationHistory_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new PreparationHistoryWindow(AppState.GamePath) { Owner = Window.GetWindow(this) };
+        DialogService.PrepareWindowForTest?.Invoke(dialog);
+        dialog.ShowDialog();
+    }
     private void CancelPreparation_Click(object sender, RoutedEventArgs e)
     {
         _preparationCancellation?.Cancel(); CancelPreparationButton.IsEnabled = false;
@@ -51,6 +57,13 @@ public partial class ConsoleView
                 AdminHelper.RestartAsAdministrator();
             return;
         }
+        var gamePath = AppState.GamePath;
+        var startedAt = DateTimeOffset.Now;
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var gameName = gamePath is null ? Str.T("Str.PlanSharedDefault") : GameContextService.DisplayNameFor(gamePath);
+        var plan = PreparationPlanStore.DescribeActions(options);
+        IReadOnlyList<PreparationStep> recordedSteps = [];
+        string? recordedError = null;
         _preparing = true;
         using var cancellation = new CancellationTokenSource(); _preparationCancellation = cancellation;
         CancelPreparationButton.Visibility = Visibility.Visible; CancelPreparationButton.IsEnabled = true;
@@ -63,6 +76,7 @@ public partial class ConsoleView
             var progress = new Progress<MemoryCleanupProgress>(p =>
             { if (_preparing && !cancellation.IsCancellationRequested) PreparationStatus.Text = MemoryCleanupSummary.Stage(p); });
             var results = await _preparation.RunAsync(options, memoryProgress: progress, cancellation: cancellation.Token);
+            recordedSteps = results;
             var ok = results.All(r => r.Succeeded);
             var details = string.Join("\n\n", results.Select(r => Str.T("Str.PrepareStepResult", r.Name,
                 Str.T(r.Succeeded ? "Str.PrepareStepDone" : "Str.PrepareStepAttention"), r.Detail)));
@@ -73,12 +87,24 @@ public partial class ConsoleView
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { PreparationStatus.Text = Str.T("Str.PrepareStopped"); }
         catch (Exception ex)
         {
+            recordedError = PrivacyScrub.Sanitize(ex.Message);
             PreparationStatus.Text = Str.T("Str.PrepareFailed"); PreparationStatus.ToolTip = PrivacyScrub.Sanitize(ex.Message);
             PreparationStatus.Foreground = (Brush)FindResource("WarningBrush");
             DialogService.Warning(Str.T("Str.PrepareFailed"), ex.Message);
         }
         finally
         {
+            try
+            {
+                PreparationHistory.Append(new(Guid.NewGuid().ToString("N"), startedAt, watch.Elapsed.TotalSeconds,
+                    gamePath is null ? null : SessionConditionRules.CaptureGame(gamePath, null).GameKey,
+                    gameName, plan, cancellation.IsCancellationRequested, recordedError, recordedSteps));
+            }
+            catch (Exception ex)
+            {
+                PreparationStatus.Text += "\n" + Str.T("Str.PreparationHistorySaveFailed", PrivacyScrub.Sanitize(ex.Message));
+                PreparationStatus.Foreground = (Brush)FindResource("WarningBrush");
+            }
             _preparing = false;
             _preparationCancellation = null; CancelPreparationButton.Visibility = Visibility.Collapsed;
             GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = RefreshButton.IsEnabled = true;

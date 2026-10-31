@@ -9,6 +9,7 @@ public partial class GamePreparationWindow : Window
 {
     private sealed record DisplayChoice(string Identity, string Label) { public override string ToString() => Label; }
     private sealed record IccChoice(IccFilterPreset? Preset, string Label) { public override string ToString() => Label; }
+    private sealed record PlanSource(string? Path, string Name) { public override string ToString() => Name; }
     private readonly GamePreparationOptions _original;
     private readonly string? _gamePath = AppState.GamePath;
     private string? _planError;
@@ -27,17 +28,52 @@ public partial class GamePreparationWindow : Window
         PlanGameText.Text = Str.T("Str.PlanTarget", _gamePath is null ? Str.T("Str.PlanSharedDefault") : GamePathService.LabelFor(_gamePath));
         try { UseDefaultButton.IsEnabled = _gamePath is not null && System.IO.File.Exists(PreparationPlanStore.FileFor(_gamePath)); }
         catch (ArgumentException) { UseDefaultButton.IsEnabled = GameScope.IsEnabled = false; DefaultScope.IsChecked = true; }
-        MemoryCheck.IsChecked = _original.CleanMemory; MemoryMode.SelectedIndex = _original.FullMemoryCleanup ? 2 : _original.AllStandby ? 1 : 0;
-        IccCheck.IsChecked = _original.ApplyIcc; VibranceCheck.IsChecked = _original.ApplyVibrance;
-        VibranceSlider.Value = Math.Clamp(_original.VibrancePercent, 0, 100);
         var presets = new[] { new IccChoice(null, Str.T("Str.PrepareOriginalIcc")) }
             .Concat(Enum.GetValues<IccFilterPreset>().Select(p => new IccChoice(p, ScreenColorSettings.TitleFor(p)))).ToArray();
         IccPresetBox.ItemsSource = presets; IccPresetBox.SelectedItem = presets.FirstOrDefault(p => p.Preset == _original.IccPreset) ?? presets[0];
+        LoadOptions(_original);
+        var sources = new List<PlanSource> { new(null, Str.T("Str.PlanSharedDefault")) };
+        try { sources.AddRange(GameLibraryService.Read().Where(g => !g.ExePath.Equals(_gamePath, StringComparison.OrdinalIgnoreCase))
+            .Select(g => new PlanSource(g.ExePath, new GameSwitcherItem(g.Name, g.Id, g.ExePath).DisplayLabel))); }
+        catch (Exception ex) { SourcePlanText.Text = PrivacyScrub.Sanitize(ex.Message); }
+        SourcePlanBox.ItemsSource = sources; SourcePlanBox.SelectedIndex = 0;
         var pending = DeltaPreparation.PendingItems(AppState.Items, true);
         var ready = AppState.Items.Count > 0 && string.Equals(AppState.DetectJson?["gamePath"]?.GetValue<string>(), AppState.GamePath, StringComparison.OrdinalIgnoreCase);
         BasicGuide.Text = Str.T("Str.PrepareFirstGuide") + "\n\n" + (ready ? Str.T("Str.PrepareBasicsSummary", pending.Count) : Str.T("Str.PrepareNeedsDetection"));
         Loaded += LoadDisplays;
         KeyDown += (_, e) => { if (e.Key == Key.Escape) Close(); };
+    }
+
+    private void LoadOptions(GamePreparationOptions options)
+    {
+        MemoryCheck.IsChecked = options.CleanMemory; MemoryMode.SelectedIndex = options.FullMemoryCleanup ? 2 : options.AllStandby ? 1 : 0;
+        IccCheck.IsChecked = options.ApplyIcc; VibranceCheck.IsChecked = options.ApplyVibrance;
+        VibranceSlider.Value = Math.Clamp(options.VibrancePercent, 0, 100);
+        IccPresetBox.SelectedItem = IccPresetBox.Items.Cast<IccChoice>().FirstOrDefault(p => p.Preset == options.IccPreset);
+    }
+    private void SourcePlan_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        CopyPlanButton.IsEnabled = false;
+        if (SourcePlanBox.SelectedItem is not PlanSource source) return;
+        try
+        {
+            var plan = PreparationPlanStore.Resolve(source.Path);
+            SourcePlanText.Text = PreparationPlanStore.Describe(plan);
+            CopyPlanButton.IsEnabled = PreparationPlanStore.Valid(plan.Options);
+        }
+        catch (Exception ex) { SourcePlanText.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+    private void CopyPlan_Click(object sender, RoutedEventArgs e)
+    {
+        if (SourcePlanBox.SelectedItem is not PlanSource source || !SameGame()) return;
+        try
+        {
+            var plan = PreparationPlanStore.Resolve(source.Path);
+            if (!PreparationPlanStore.Valid(plan.Options)) { SourcePlanText.Text = Str.T("Str.PlanNotConfigured"); return; }
+            // Copy only editable actions. Keep this target's current display and save scope.
+            LoadOptions(plan.Options); StatusText.Text = Str.T("Str.PlanCopyLoaded");
+        }
+        catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
 
     private async void LoadDisplays(object sender, RoutedEventArgs e)

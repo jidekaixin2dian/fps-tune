@@ -65,10 +65,14 @@ internal static class PreparationPlanStore
     {
         var o = plan.Options;
         if (!o.Configured) return Str.T("Str.PlanNotConfigured");
+        return Str.T(plan.IsGameSpecific ? "Str.PlanGameSummary" : "Str.PlanDefaultSummary", DescribeActions(o));
+    }
+    internal static string DescribeActions(GamePreparationOptions o)
+    {
         var actions = new List<string>();
         if (o.CleanMemory) actions.Add(Str.T(o.FullMemoryCleanup ? "Str.MemoryFullAction" : o.AllStandby ? "Str.MemoryAllMode" : "Str.MemoryLowMode"));
         if (o.ApplyIcc) actions.Add(o.IccPreset is { } preset ? ScreenColorSettings.TitleFor(preset) : Str.T("Str.PrepareOriginalIcc"));
         if (o.ApplyVibrance) actions.Add(Str.T("Str.PlanVibrance", o.VibrancePercent));
-        return Str.T(plan.IsGameSpecific ? "Str.PlanGameSummary" : "Str.PlanDefaultSummary", string.Join(" · ", actions));
+        return string.Join(" · ", actions);
     }
 }

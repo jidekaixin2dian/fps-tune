@@ -50,6 +50,7 @@
                     <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource GhostButtonStyle}" Click="LocateDelta_Click"/>
                     <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
                     <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Click="DeltaRestore_Click"/>
+                    <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click"/>
                 </WrapPanel>
                 <TextBlock Grid.Row="5" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
             </Grid>

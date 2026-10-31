@@ -14,6 +14,14 @@
             </WrapPanel>
             <TextBlock Text="{DynamicResource Str.PlanScopeHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
             <Button x:Name="UseDefaultButton" Content="{DynamicResource Str.PlanUseDefault}" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="0,0,0,12" Click="UseDefault_Click"/>
+            <Expander x:Name="CopyPlanSection" Header="{DynamicResource Str.PlanCopyFrom}" Margin="0,0,0,16"><StackPanel Margin="0,10,0,0">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <ComboBox x:Name="SourcePlanBox" SelectionChanged="SourcePlan_Changed" AutomationProperties.Name="{DynamicResource Str.PlanCopySource}"/>
+                    <Button Grid.Column="1" x:Name="CopyPlanButton" Content="{DynamicResource Str.PlanCopyLoad}" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Margin="10,0,0,0" Click="CopyPlan_Click"/>
+                </Grid>
+                <TextBlock x:Name="SourcePlanText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                <TextBlock Text="{DynamicResource Str.PlanCopyHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+            </StackPanel></Expander>
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,16"><StackPanel>
                 <TextBlock Text="{DynamicResource Str.PrepareFirstTitle}" Style="{StaticResource CardTitleStyle}"/>
                 <TextBlock x:Name="BasicGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" LineHeight="23"/>

@@ -110,6 +110,12 @@ public partial class GameLibraryView : UserControl
     { if (SelectTarget() && sender is Button { Tag: string route } && Window.GetWindow(this) is MainWindow main) main.NavigateTo(route); }
     private void AutoRecord_Click(object sender, RoutedEventArgs e)
     { if (!_loading && GameList.SelectedItem is GameRow row && Window.GetWindow(this) is MainWindow main) main.OpenRecordingOptions(row.Profile.ExePath); }
+    private void PreparationHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (_loading || GameList.SelectedItem is not GameRow row) return;
+        var dialog = new PreparationHistoryWindow(row.Profile.ExePath) { Owner = Window.GetWindow(this) };
+        DialogService.PrepareWindowForTest?.Invoke(dialog); dialog.ShowDialog();
+    }
     private async void Plan_Click(object sender, RoutedEventArgs e)
     {
         if (!CanEdit() || !SelectTarget()) return;
