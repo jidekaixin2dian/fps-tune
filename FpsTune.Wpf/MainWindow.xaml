@@ -19,11 +19,11 @@
                    IsHitTestVisible="False" Visibility="Collapsed" RenderOptions.BitmapScalingMode="HighQuality"/>
             <Grid x:Name="TitleBar" Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Image Source="/Assets/app-icon.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <Image x:Name="AppBrand" Source="{StaticResource AppMark}" Width="32" Height="32"/>
                     <TextBlock Text="{DynamicResource Str.AppNameShort}" FontSize="18" FontWeight="{DynamicResource StrongEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TitleVersionText" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel x:Name="TitleActions" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button x:Name="HudEntryButton" Content="{DynamicResource Str.HudEntry}" Click="HudEntry_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0" Padding="14,0" Height="34"/>
                     <Button x:Name="CommandSearchButton" Click="CommandSearch_Click" Style="{StaticResource GhostButtonStyle}" Width="34" Height="34" Padding="0" Margin="0,0,12,0"
                             ToolTip="{DynamicResource Str.CommandSearch}" AutomationProperties.Name="{DynamicResource Str.CommandSearch}">
@@ -41,9 +41,9 @@
                             </ContextMenu>
                         </Button.ContextMenu>
                     </Button>
-                    <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click" Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}" ToolTip="{DynamicResource Str.Minimize}" AutomationProperties.Name="{DynamicResource Str.Minimize}"><Path Data="M0 0 H10" Stroke="{DynamicResource TextSecondaryBrush}"/></Button>
-                    <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click" Width="44" Height="32" Style="{StaticResource CaptionButtonStyle}" ToolTip="{DynamicResource Str.Maximize}" AutomationProperties.Name="{DynamicResource Str.Maximize}"><Path Data="M0 0 H9 V9 H0 Z" Stroke="{DynamicResource TextSecondaryBrush}" Fill="Transparent"/></Button>
-                    <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click" Width="44" Height="32" Style="{StaticResource CaptionCloseButtonStyle}" ToolTip="{DynamicResource Str.Close}" AutomationProperties.Name="{DynamicResource Str.Close}"><Path Data="M0 0 L9 9 M9 0 L0 9" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.4"/></Button>
+                    <Button x:Name="CaptionMin" Tag="min" Click="CaptionButton_Click" Width="42" Height="36" Margin="6,0,0,0" Style="{StaticResource CaptionButtonStyle}" ToolTip="{DynamicResource Str.Minimize}" AutomationProperties.Name="{DynamicResource Str.Minimize}"><Path Data="M0 0 H10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="10" Height="1" StrokeThickness="1.2"/></Button>
+                    <Button x:Name="CaptionMax" Tag="max" Click="CaptionButton_Click" Width="42" Height="36" Style="{StaticResource CaptionButtonStyle}"><Path x:Name="CaptionMaxGlyph" Data="M0 0 H10 V10 H0 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="11" Height="11" StrokeThickness="1.2"/></Button>
+                    <Button x:Name="CaptionClose" Tag="close" Click="CaptionButton_Click" Width="42" Height="36" Style="{StaticResource CaptionCloseButtonStyle}" ToolTip="{DynamicResource Str.CloseChoiceTitle}" AutomationProperties.Name="{DynamicResource Str.CloseChoiceTitle}"><Path Data="M0 0 L10 10 M10 0 L0 10" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="11" Height="11" StrokeThickness="1.4"/></Button>
                 </StackPanel>
             </Grid>
             <Grid x:Name="TabBar" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">

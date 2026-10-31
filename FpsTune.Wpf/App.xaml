@@ -8,6 +8,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Strings.zh-CN.xaml"/>
+                <ResourceDictionary Source="Resources/BrandAssets.xaml"/>
                 <ResourceDictionary Source="Resources/NotificationCardStyle.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
@@ -813,6 +814,7 @@
 
             <!-- ============ 自定义标题栏按钮 ============ -->
             <Style x:Key="CaptionButtonStyle" TargetType="Button">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
@@ -820,7 +822,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="Bg" Background="Transparent">
+                            <Border x:Name="Bg" Background="Transparent" BorderThickness="0" BorderBrush="{DynamicResource AccentBrush}" CornerRadius="7" Margin="1">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -828,6 +830,7 @@
                                     <Setter TargetName="Bg" Property="Background" Value="{DynamicResource ElevatedBrush}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                 </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Bg" Property="BorderThickness" Value="1"/></Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -839,7 +842,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="Bg" Background="Transparent">
+                            <Border x:Name="Bg" Background="Transparent" BorderThickness="0" BorderBrush="{DynamicResource AccentBrush}" CornerRadius="7" Margin="1">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -847,6 +850,7 @@
                                     <Setter TargetName="Bg" Property="Background" Value="#E81123"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Bg" Property="BorderThickness" Value="1"/></Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>

@@ -8,7 +8,7 @@
   <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <DockPanel>
     <Border DockPanel.Dock="Right" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="9,5" VerticalAlignment="Center"><TextBlock x:Name="VersionText" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/></Border>
-    <Image Source="/FpsTune;component/Assets/app-icon.png" Width="44" Height="44" DockPanel.Dock="Left" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+    <Image Source="{StaticResource AppMark}" Width="44" Height="44" DockPanel.Dock="Left" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality"/>
     <StackPanel VerticalAlignment="Center"><TextBlock Text="{DynamicResource Str.AppName}" FontSize="20" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
      <TextBlock Text="{DynamicResource Str.SplashTagline}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,4,0,0"/></StackPanel>
    </DockPanel>

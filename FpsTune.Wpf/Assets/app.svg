@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>FPS 帧律</title>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="#111A20"/>
+  <path d="M16 26V17H29 M35 47H48V38" fill="none" stroke="#79E2BC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15 36H23L28 25L35 42L41 30H49" fill="none" stroke="#F1FBF7" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

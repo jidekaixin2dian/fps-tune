@@ -162,9 +162,9 @@ public static class TrayService
     }
 
     /// <summary>最小化进托盘时的提示，每次会话只弹一次。</summary>
-    public static void ShowMinimizedHint()
+    public static void ShowMinimizedHint(bool force = false)
     {
-        if (!IsEnabled || _minimizeHintShown)
+        if ((!IsEnabled && !force) || _minimizeHintShown)
             return;
         _minimizeHintShown = true;
         NotifyRaw("FPS 帧律仍在运行", "已最小化到系统托盘。" + HotkeyHint);

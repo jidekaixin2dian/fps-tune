@@ -164,6 +164,12 @@
             <TextBlock Text="{DynamicResource Str.StartupHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="AutostartCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.StartupShort}" />
     </Grid><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.CloseSettingTitle}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.CloseSettingHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <ComboBox x:Name="CloseActionBox" Grid.Column="1" Width="240" Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.CloseSettingTitle}" VerticalAlignment="Center">
+            <ComboBoxItem Content="{DynamicResource Str.CloseAsk}"/><ComboBoxItem Content="{DynamicResource Str.CloseChoiceTray}"/><ComboBoxItem Content="{DynamicResource Str.CloseChoiceExit}"/>
+        </ComboBox>
+    </Grid><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.TrayShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.TrayHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="TrayCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.TrayShort}" />

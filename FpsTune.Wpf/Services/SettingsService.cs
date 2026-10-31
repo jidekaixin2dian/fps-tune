@@ -29,6 +29,7 @@ public sealed class AppSettings
 
     // 托盘常驻（v1.2）：最小化到托盘 / 全局热键呼出 / 完成通知，默认全开
     public bool MinimizeToTray { get; set; } = true;
+    public string CloseAction { get; set; } = CloseBehavior.Ask;
     public bool HotkeyEnabled { get; set; } = true;
     public bool NotifyOnComplete { get; set; } = true;
 
@@ -117,6 +118,7 @@ public static class SettingsService
             Current.AutoRecordGames = AutoRecordingService.NormalizePaths(Current.AutoRecordGames).ToList();
             Current.HudAppearance = (Current.HudAppearance ?? new()).Normalize();
             Current.Corners = (Current.Corners ?? new()).Normalize();
+            Current.CloseAction = CloseBehavior.Normalize(Current.CloseAction);
             Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
             if (Current.OverviewMode != "console") Current.OverviewMode = "studio";
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))

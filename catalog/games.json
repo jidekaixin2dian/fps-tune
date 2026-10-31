@@ -1,0 +1,192 @@
+[
+  {
+    "name": "反恐精英 2 (CS2)",
+    "executables": [
+      "cs2.exe"
+    ],
+    "directories": [
+      "Counter-Strike Global Offensive",
+      "CS2",
+      "Counter-Strike 2"
+    ]
+  },
+  {
+    "name": "VALORANT",
+    "executables": [
+      "VALORANT-Win64-Shipping.exe"
+    ],
+    "directories": [
+      "VALORANT",
+      "无畏契约"
+    ]
+  },
+  {
+    "name": "APEX 英雄",
+    "executables": [
+      "r5apex_dx12.exe"
+    ],
+    "directories": [
+      "Apex Legends",
+      "Apex"
+    ]
+  },
+  {
+    "name": "绝地求生 (PUBG)",
+    "executables": [
+      "TslGame.exe"
+    ],
+    "directories": [
+      "PUBG"
+    ]
+  },
+  {
+    "name": "守望先锋",
+    "executables": [
+      "Overwatch.exe"
+    ],
+    "directories": [
+      "Overwatch",
+      "守望先锋"
+    ]
+  },
+  {
+    "name": "使命召唤",
+    "executables": [
+      "cod.exe"
+    ],
+    "directories": [
+      "Call of Duty",
+      "使命召唤"
+    ]
+  },
+  {
+    "name": "THE FINALS",
+    "executables": [
+      "TheFinals.exe"
+    ],
+    "directories": [
+      "THE FINALS"
+    ]
+  },
+  {
+    "name": "彩虹六号",
+    "executables": [
+      "RainbowSix.exe"
+    ],
+    "directories": [
+      "Rainbow Six Siege",
+      "RainbowSix",
+      "彩虹六号"
+    ]
+  },
+  {
+    "name": "逃离塔科夫",
+    "executables": [
+      "EscapeFromTarkov.exe"
+    ],
+    "directories": [
+      "Escape from Tarkov",
+      "逃离塔科夫"
+    ]
+  },
+  {
+    "name": "命运 2",
+    "executables": [
+      "destiny2.exe"
+    ],
+    "directories": [
+      "Destiny 2",
+      "命运2"
+    ]
+  },
+  {
+    "name": "战地 2042",
+    "executables": [
+      "BF2042.exe"
+    ],
+    "directories": [
+      "Battlefield 2042",
+      "战地"
+    ]
+  },
+  {
+    "name": "三角洲行动",
+    "executables": [
+      "DeltaForceClient-Win64-Shipping.exe",
+      "DeltaForceClient.exe"
+    ],
+    "directories": [
+      "Delta Force",
+      "DeltaForce",
+      "三角洲"
+    ]
+  },
+  {
+    "name": "Fortnite",
+    "executables": [
+      "FortniteClient-Win64-Shipping.exe"
+    ],
+    "directories": [
+      "Fortnite"
+    ]
+  },
+  {
+    "name": "Warframe",
+    "executables": [
+      "Warframe.x64.exe"
+    ],
+    "directories": [
+      "Warframe"
+    ]
+  },
+  {
+    "name": "光环：无限",
+    "executables": [
+      "HaloInfinite.exe"
+    ],
+    "directories": [
+      "Halo Infinite",
+      "HaloInfinite"
+    ]
+  },
+  {
+    "name": "DOOM Eternal",
+    "executables": [
+      "DOOMEternalx64vk.exe"
+    ],
+    "directories": [
+      "DOOMEternal",
+      "DOOM Eternal"
+    ]
+  },
+  {
+    "name": "绝地潜兵 2",
+    "executables": [
+      "helldivers2.exe"
+    ],
+    "directories": [
+      "Helldivers 2",
+      "Helldivers2"
+    ]
+  },
+  {
+    "name": "英雄联盟",
+    "executables": [
+      "League of Legends.exe"
+    ],
+    "directories": [
+      "League of Legends",
+      "英雄联盟"
+    ]
+  },
+  {
+    "name": "Dota 2",
+    "executables": [
+      "dota2.exe"
+    ],
+    "directories": [
+      "dota 2 beta",
+      "Dota 2"
+    ]
+  }
+]

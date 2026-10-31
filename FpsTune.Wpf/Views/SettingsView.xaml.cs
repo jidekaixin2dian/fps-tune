@@ -42,6 +42,7 @@ public partial class SettingsView : UserControl
         GamePathBox.LostFocus += (_, _) => SaveGamePathFromBox();
         TrayCheck.Checked += TraySetting_Changed;
         TrayCheck.Unchecked += TraySetting_Changed;
+        CloseActionBox.SelectionChanged += CloseAction_Changed;
         HotkeyCheck.Checked += HotkeySetting_Changed;
         HotkeyCheck.Unchecked += HotkeySetting_Changed;
         NotifyCheck.Checked += NotifySetting_Changed;
@@ -224,6 +225,7 @@ public partial class SettingsView : UserControl
         RefreshGamePathHint();
 
         TrayCheck.IsChecked = s.MinimizeToTray;
+        CloseActionBox.SelectedIndex = CloseBehavior.Normalize(s.CloseAction) switch { CloseBehavior.Tray => 1, CloseBehavior.Exit => 2, _ => 0 };
         StartupUpdateCheck.IsChecked = s.CheckUpdatesOnStartup;
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
@@ -364,6 +366,22 @@ public partial class SettingsView : UserControl
         s.MinimizeToTray = TrayCheck.IsChecked == true;
         SettingsService.Save(s);
         TrayService.ApplySettings();
+    }
+
+    private void CloseAction_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressUiEvents || CloseActionBox.SelectedIndex < 0) return;
+        var settings = SettingsService.Current; var previous = settings.CloseAction;
+        var action = CloseActionBox.SelectedIndex switch { 1 => CloseBehavior.Tray, 2 => CloseBehavior.Exit, _ => CloseBehavior.Ask };
+        try { settings.CloseAction = action; SettingsService.Save(settings); }
+        catch (Exception ex)
+        {
+            settings.CloseAction = previous;
+            _suppressUiEvents = true;
+            CloseActionBox.SelectedIndex = previous switch { CloseBehavior.Tray => 1, CloseBehavior.Exit => 2, _ => 0 };
+            _suppressUiEvents = false;
+            DialogService.Warning(Str.T("Str.CloseSettingTitle"), Str.T("Str.CloseRememberFailed") + "\n" + ex.Message);
+        }
     }
 
     private void HotkeySetting_Changed(object sender, RoutedEventArgs e)

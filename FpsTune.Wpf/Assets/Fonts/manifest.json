@@ -325,6 +325,7 @@
     20845,
     20849,
     20851,
+    20853,
     20854,
     20855,
     20856,
@@ -871,6 +872,7 @@
     28418,
     28431,
     28436,
+    28508,
     28608,
     28748,
     28781,
@@ -920,6 +922,7 @@
     30417,
     30422,
     30424,
+    30431,
     30446,
     30452,
     30456,
@@ -1298,18 +1301,18 @@
   "files": [
     {
       "name": "FpsTuneText-Regular.ttf",
-      "bytes": 331104,
-      "sha256": "0325fd8d22ff9c3f1cf9fce7ee79fe8bbacb512a6d8dd47c7073d4632bb80d33"
+      "bytes": 331956,
+      "sha256": "300a35d1d2eae934797fa086d351943326a62ac259ecfd1e352a8c2c275b8767"
     },
     {
       "name": "FpsTuneText-Medium.ttf",
-      "bytes": 331008,
-      "sha256": "48b236861e17ec8dcbc5f0feb06cb45f9c5381975cf0213bb60e1ff2e49f9f9b"
+      "bytes": 331864,
+      "sha256": "50984365cf0a7ce96039b72962c70fada0cf1c9fb9a1da49a664df65fd682d1f"
     },
     {
       "name": "FpsTuneText-SemiBold.ttf",
-      "bytes": 330920,
-      "sha256": "9d99210d00ab72cf56101d1cdc3bbcb4d1e14919218051f0eddb416829952d63"
+      "bytes": 331772,
+      "sha256": "a2859ef57a4eca2220682cf49409d328b02cfc10e627c224358fb27fa8afa2f8"
     }
   ]
 }

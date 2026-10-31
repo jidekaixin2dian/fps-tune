@@ -12,24 +12,9 @@ public static class GamePathService
     }
 
     /// <summary>可执行文件名 → 中文显示名（切换游戏选择器用）。</summary>
-    private static readonly Dictionary<string, string> ExeLabel = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["cs2.exe"] = "反恐精英 2 (CS2)",
-        ["VALORANT-Win64-Shipping.exe"] = "VALORANT",
-        ["r5apex_dx12.exe"] = "APEX 英雄",
-        ["TslGame.exe"] = "绝地求生 (PUBG)",
-        ["Overwatch.exe"] = "守望先锋",
-        ["cod.exe"] = "使命召唤",
-        ["TheFinals.exe"] = "THE FINALS",
-        ["RainbowSix.exe"] = "彩虹六号",
-        ["EscapeFromTarkov.exe"] = "逃离塔科夫",
-        ["destiny2.exe"] = "命运 2",
-        ["BF2042.exe"] = "战地 2042",
-        ["DeltaForceClient-Win64-Shipping.exe"] = "三角洲行动",
-        ["DeltaForceClient.exe"] = "三角洲行动",
-        ["FortniteClient-Win64-Shipping.exe"] = "Fortnite",
-        ["Warframe.x64.exe"] = "Warframe",
-    };
+    private static readonly Dictionary<string, string> ExeLabel = GameCatalog.All
+        .SelectMany(game => game.Executables.Select(exe => new KeyValuePair<string, string>(exe, game.Name)))
+        .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
 
     private static readonly string[] ExeNames = ExeLabel.Keys.ToArray();
     internal static bool IsKnownGameExecutable(string name) => ExeLabel.ContainsKey(Path.GetFileName(name));
@@ -136,7 +121,7 @@ public static class GamePathService
     // 根目录下认识的安装目录名（常见盘符兜底扫描用）
     // "Riot Games"/"Tencent Games" 是厂商容器: 游戏在其下一层(如 D:\Riot Games\VALORANT),
     // 不认识容器就会漏掉全部 Riot/腾讯渠道安装
-    private static readonly string[] KnownInstallDirNames =
+    private static readonly string[] KnownInstallDirNames = new[]
     {
         "Delta Force", "DeltaForce", "三角洲",
         "Counter-Strike Global Offensive", "CS2", "Counter-Strike 2",
@@ -147,13 +132,13 @@ public static class GamePathService
         "Riot Games", "Tencent Games", "Epic Games", "Steam", "SteamLibrary",
         "Fortnite", "Warframe",
         "CS 2", "Counter-Strike", "绝地求生", "使命召唤", "守望先锋", "彩虹六号", "逃离塔科夫", "命运2", "Battlefield",
-    };
+    }.Concat(GameCatalog.All.SelectMany(game => game.Directories)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
 
     // 顶层 pass-through 容器: 其下一层也可能出现上面的厂商目录
     // (腾讯渠道常装在 C:\Program Files (x86)\Tencent Games\VALORANT)
     private static readonly string[] PassThroughDirNames =
     {
-        "Program Files", "Program Files (x86)",
+        "Program Files", "Program Files (x86)", "XboxGames",
     };
 
     private static IEnumerable<string> CollectFromCommonDirectories()

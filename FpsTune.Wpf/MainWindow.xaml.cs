@@ -188,33 +188,9 @@ public partial class MainWindow : Window
         RefreshWallpaper();
 
         StateChanged += OnStateChanged;
+        UpdateCaptionState();
         ChromeGrid.SizeChanged += (_, _) => UpdateRootClip();
-        Closing += async (_, e) =>
-        {
-            if (GamePreparationService.IsRunning) { e.Cancel = true; DialogService.Info(Str.T("Str.PrepareTitle"), Str.T("Str.PrepareBusy")); return; }
-            if (App.SessionService.IsRunning)
-            {
-                e.Cancel = true;
-                if (_savingSessionOnExit) return;
-                _savingSessionOnExit = true;
-                try
-                {
-                    await App.SessionService.StopAsync();
-                    // Close only after this Closing callback has returned, even for an already finished save.
-                    _ = Dispatcher.BeginInvoke(Close);
-                }
-                catch (Exception ex)
-                {
-                    DialogService.Warning(Str.T("Str.SessionSaveFailed"), Str.T("Str.SessionSaveFailedHint") + "\n\n" + ex.Message);
-                }
-                finally { _savingSessionOnExit = false; }
-                return;
-            }
-            // 只取消本窗口 A/B 页面启动的采样；不按名称影响正式安装版或其他用户进程。
-            // RunningStep 留在磁盘时可在下次启动恢复。
-            if (_pageCache.TryGetValue("ab", out var page) && page is AbExperimentView ab)
-                ab.CancelPendingRun();
-        };
+        Closing += OnMainClosing;
         Closed += (_, _) =>
         {
             App.AutomaticRecording?.Dispose();
@@ -247,6 +223,12 @@ public partial class MainWindow : Window
 
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
+        if (msg == 0x0112 /* WM_SYSCOMMAND */ && ((long)wParam & 0xfff0) == 0xf060 /* SC_CLOSE */)
+        {
+            handled = true;
+            _ = Dispatcher.BeginInvoke(RequestUserClose);
+            return nint.Zero;
+        }
         if (msg == WM_HOTKEY && wParam == HOTKEY_ID)
         {
             RestoreFromTray();
@@ -270,6 +252,7 @@ public partial class MainWindow : Window
     private async void OnStateChanged(object? sender, EventArgs e)
     {
         UpdateRootClip();
+        UpdateCaptionState();
         if (WindowState == WindowState.Minimized && SettingsService.Current.MinimizeToTray)
         {
             // 先让最小化动画落定再决定去向: 托盘图标挂载成功才隐藏窗口,
@@ -291,7 +274,7 @@ public partial class MainWindow : Window
     {
         Show();
         if (WindowState == WindowState.Minimized)
-            WindowState = WindowState.Normal;
+            WindowState = _restoreState;
         Activate();
         Focus();
     }
@@ -510,7 +493,7 @@ public partial class MainWindow : Window
                 else SystemCommands.MaximizeWindow(this);
                 break;
             case "close":
-                Close();
+                RequestUserClose();
                 break;
         }
     }
