@@ -9,20 +9,20 @@
    <DockPanel>
     <Border DockPanel.Dock="Right" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="9,5" VerticalAlignment="Center"><TextBlock x:Name="VersionText" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/></Border>
     <Image Source="/FpsTune;component/Assets/app-icon.png" Width="44" Height="44" DockPanel.Dock="Left" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality"/>
-    <StackPanel VerticalAlignment="Center"><TextBlock Text="{DynamicResource Str.AppName}" FontSize="20" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{StaticResource SmallEmphasisWeight}"/>
+    <StackPanel VerticalAlignment="Center"><TextBlock Text="{DynamicResource Str.AppName}" FontSize="20" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
      <TextBlock Text="{DynamicResource Str.SplashTagline}" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" Margin="0,4,0,0"/></StackPanel>
    </DockPanel>
    <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,12,0,0">
-    <TextBlock Text="准备你的工作台" FontSize="23" FontWeight="{StaticResource SmallEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+    <TextBlock Text="{DynamicResource Str.StartupTitle}" FontSize="23" FontWeight="{DynamicResource SmallEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}"/>
     <TextBlock x:Name="LoadingText" Text="{DynamicResource Str.SplashPhasePrepare}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,9,0,0" TextWrapping="Wrap"/>
    </StackPanel>
    <StackPanel Grid.Row="2">
     <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-     <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="恢复资料" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/><TextBlock Text="  /  " Foreground="{DynamicResource BorderHoverBrush}"/><TextBlock Text="构建界面" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/><TextBlock Text="  /  " Foreground="{DynamicResource BorderHoverBrush}"/><TextBlock Text="载入检测" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/></StackPanel>
+     <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><TextBlock Text="{DynamicResource Str.StartupRecovery}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/><TextBlock Text="  /  " Foreground="{DynamicResource BorderHoverBrush}"/><TextBlock Text="{DynamicResource Str.StartupInterface}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/><TextBlock Text="  /  " Foreground="{DynamicResource BorderHoverBrush}"/><TextBlock Text="{DynamicResource Str.StartupDetection}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12"/></StackPanel>
      <TextBlock x:Name="PercentText" Grid.Column="1" Text="6%" Foreground="{DynamicResource AccentBrush}" FontSize="13"/>
     </Grid>
     <ProgressBar x:Name="PhaseBar" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}" Maximum="100" Value="6"/>
-    <Button x:Name="EnterButton" Content="进入工作台" ToolTip="检测将在后台继续" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" IsEnabled="False" Margin="0,9,-10,-8" Click="Enter_Click"/>
+    <Button x:Name="EnterButton" Content="{DynamicResource Str.StartupEnter}" ToolTip="{DynamicResource Str.StartupBackground}" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" IsEnabled="False" Margin="0,9,-10,-8" Click="Enter_Click"/>
    </StackPanel>
   </Grid>
  </Border>

@@ -9,7 +9,7 @@
         </Style>
         <Style x:Key="PresetCardText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="15"/>
-            <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+            <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
         </Style>
         <Style x:Key="PresetCardNote" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13"/>
@@ -225,7 +225,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" x:Name="VibPercentText" Text="—"
-                                       FontFamily="{StaticResource FontStat}" FontSize="26" FontWeight="SemiBold"
+                                       FontFamily="{StaticResource FontStat}" Typography.NumeralAlignment="Tabular" FontSize="26" FontWeight="{DynamicResource StrongEmphasisWeight}"
                                        Foreground="{DynamicResource AccentBrush}"
                                        VerticalAlignment="Center" MinWidth="64"/>
                             <Slider Grid.Column="1" x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
@@ -547,7 +547,7 @@
                         <TextBlock Text="{DynamicResource Str.GpuIdentityDevice}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6"/>
                         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <ComboBox x:Name="GpuIdentityDevices" MaxWidth="600" HorizontalAlignment="Left" MinWidth="320" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="GpuIdentitySelection_Changed" AutomationProperties.Name="{DynamicResource Str.GpuIdentityDevice}">
-                                <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/></DataTemplate></ComboBox.ItemTemplate>
+                                <ComboBox.ItemTemplate><DataTemplate><controls:FileNameLabel Text="{Binding DisplayName}"/></DataTemplate></ComboBox.ItemTemplate>
                             </ComboBox>
                             <Button x:Name="GpuIdentityRefreshButton" Grid.Column="1" Content="{DynamicResource Str.GpuIdentityRefresh}" Click="GpuIdentityRefresh_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0"/>
                         </Grid>

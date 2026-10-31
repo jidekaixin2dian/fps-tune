@@ -35,7 +35,7 @@ The branded installer lets you choose a destination, including during reinstalla
 
 ## Interface preview
 
-![Workspace · light theme](assets/screenshots/light/01-overview.png)
+![Workspace · light theme with a demonstration game entry](assets/screenshots/v036/overview-light.png)
 
 | Display and quality | Detection |
 |---|---|
@@ -68,7 +68,7 @@ Compact, card and strip HUDs (interface examples with demonstration values):
 
 ## Current features
 
-- **Studio and compact console layouts**, dark/light themes with smooth transitions, shared selection controls and a local image as the application wallpaper. Low-spec mode or disabled Windows animations switches themes immediately.
+- **Studio and compact console layouts**, dark/light themes, subtle single outlines, concentric corners and filled controls. Dark themes use lighter emphasis weights, truncated filenames retain their extensions and metrics use tabular digits. Disclosure motion reverses smoothly, save actions have a short spring, and local images can be used as wallpaper. Low-spec mode or disabled Windows animations makes transitions immediate.
 - **Detection and system tuning**: 39 available items with current state, privileges, restart requirements and side effects. Balanced selects 16 items, safe-only selects 4, and Custom lets you choose. Applying, one-click optimization and restoring automatically run detection again to update item status and home recommendations.
 - **Pre-game preparation**: save a per-game routine or use a shared default, combining memory cleanup, SDR filters, vibrance and display choices. Optional full cleanup combines protected background working sets and all standby priorities, with progress, individual results and a stop action. Existing routines keep their previous scope.
 - **Frame caps**: set NVIDIA foreground and background frame limits per game and restore those settings separately.

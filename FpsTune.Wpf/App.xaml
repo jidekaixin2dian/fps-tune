@@ -15,7 +15,7 @@
             <!-- Replace the Windows dotted keyboard adorner across controls, keeping focus visible. -->
             <Style x:Key="KeyboardFocusStyle" TargetType="Control">
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Control">
-                    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Margin="1"/>
+                    <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusFocus}" Margin="1"/>
                 </ControlTemplate></Setter.Value></Setter>
             </Style>
             <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="Control" BasedOn="{StaticResource KeyboardFocusStyle}"/>
@@ -30,10 +30,26 @@
             <!-- Static Noto Sans SC subsets provide actual 400/500/600 CJK faces.
                  Uncovered user text falls back to the installed system font. -->
             <FontWeight x:Key="SmallEmphasisWeight">Medium</FontWeight>
+            <FontWeight x:Key="StrongEmphasisWeight">SemiBold</FontWeight>
+            <FontWeight x:Key="HeavyEmphasisWeight">Bold</FontWeight>
+            <Style TargetType="controls:FileNameLabel">
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="ClipToBounds" Value="True"/>
+                <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="controls:FileNameLabel">
+                    <Grid HorizontalAlignment="Left"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock x:Name="StemText" Text="{TemplateBinding Stem}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ExtensionText" Grid.Column="1" Text="{TemplateBinding Extension}" VerticalAlignment="Center"/>
+                    </Grid>
+                </ControlTemplate></Setter.Value></Setter>
+            </Style>
             <Style x:Key="ItemTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="15"/>
-                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+                <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
             </Style>
 
             <!-- Opaque native windows allow LCD subpixel antialiasing and natural glyph spacing. -->
@@ -44,6 +60,8 @@
                 <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
                 <Setter Property="TextOptions.TextHintingMode" Value="Fixed"/>
+                <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+                <Setter Property="Typography.NumeralStyle" Value="Lining"/>
                 <Setter Property="UseLayoutRounding" Value="True"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
@@ -51,6 +69,7 @@
             <!-- Shared generous radii in both workspace modes and both color themes. -->
             <CornerRadius x:Key="RadiusChip">8</CornerRadius>
             <CornerRadius x:Key="RadiusControl">12</CornerRadius>
+            <CornerRadius x:Key="RadiusFocus">11</CornerRadius>
             <CornerRadius x:Key="RadiusNav">12</CornerRadius>
             <CornerRadius x:Key="RadiusCard">18</CornerRadius>
 
@@ -137,7 +156,7 @@
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -157,7 +176,7 @@
                 <Setter Property="Margin" Value="0,0,0,6"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="SectionBorder" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="16,12">
+                    <Border x:Name="SectionBorder" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="16,12">
                         <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -172,7 +191,7 @@
                 <Setter Property="FontFamily" Value="{StaticResource FontDisplay}"/>
                 <Setter Property="FontSize" Value="22"/>
                 <!-- YaHei has no SemiBold face: it resolves to full Bold for CJK. -->
-                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+                <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
                 <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
                 <Setter Property="TextOptions.TextHintingMode" Value="Fixed"/>
@@ -183,7 +202,7 @@
             <Style x:Key="CardTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="16"/>
-                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+                <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Margin" Value="0,0,0,10"/>
             </Style>
@@ -201,13 +220,18 @@
 
             <Style x:Key="StatValueStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontStat}"/>
+                <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
+                <Setter Property="Typography.NumeralStyle" Value="Lining"/>
                 <Setter Property="FontSize" Value="24"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontWeight" Value="{DynamicResource StrongEmphasisWeight}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             </Style>
 
             <!-- ============ 面板（控制台唯一容器：半透明底 + 发丝边） ============ -->
+            <Style TargetType="Border"><Setter Property="controls:SurfaceChrome.Normalize" Value="True"/></Style>
             <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="controls:SurfaceChrome.IsCard" Value="True"/>
+                <Setter Property="controls:SurfaceChrome.Normalize" Value="True"/>
                 <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -232,9 +256,9 @@
             <Style x:Key="ChipStyle" TargetType="Border">
                 <Setter Property="CornerRadius" Value="{DynamicResource RadiusChip}"/>
                 <Setter Property="Padding" Value="6,2"/>
-                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="SnapsToDevicePixels" Value="True"/>
             </Style>
 
@@ -272,7 +296,7 @@
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
                                     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                                    <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+                                    <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -299,7 +323,7 @@
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
                                             <Border x:Name="Bd" Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                    BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderThickness="1"
+                                                    BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderThickness="0"
                                                     CornerRadius="{DynamicResource RadiusControl}">
                                                 <Path Data="M0 0 L4 4 L8 0" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.4"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -308,8 +332,8 @@
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
                                                 </Trigger>
-                                                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                                                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></DataTrigger>
+                                                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Bd" Property="BorderThickness" Value="1"/></Trigger>
+                                                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="True"><Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Bd" Property="BorderThickness" Value="1"/></DataTrigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
                                     </ToggleButton.Template>
@@ -433,7 +457,7 @@
                 <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="13"/>
-                <Setter Property="FontWeight" Value="{StaticResource SmallEmphasisWeight}"/>
+                <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="34"/>
                 <Setter Property="Padding" Value="16,0"/>
@@ -464,7 +488,7 @@
             <Style x:Key="SecondaryButtonStyle" TargetType="Button">
                 <Setter Property="controls:UiMotion.ButtonFeedback" Value="True"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="13"/>
@@ -477,13 +501,13 @@
                             <Border x:Name="Root" CornerRadius="{DynamicResource RadiusControl}"
                                     Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="1">
+                                    BorderThickness="0">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
-                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                    <Setter TargetName="Root" Property="Background" Value="{DynamicResource ElevatedBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="Root" Property="Opacity" Value="0.8"/>
@@ -543,7 +567,7 @@
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Padding" Value="10,7"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="13"/>
@@ -565,6 +589,7 @@
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter TargetName="Border" Property="BorderThickness" Value="1"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

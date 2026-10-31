@@ -27,7 +27,7 @@
                     <ListBox.ItemTemplate><DataTemplate>
                         <Grid Margin="12,9"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,16,0">
-                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}"/>
+                                <TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                                 <TextBlock Text="{Binding Description}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <TextBlock Grid.Column="1" Text="{Binding Group}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" VerticalAlignment="Center"/>

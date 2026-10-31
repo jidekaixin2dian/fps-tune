@@ -1,5 +1,6 @@
 <UserControl x:Class="FpsTune.Wpf.Views.GameLibraryView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
     Background="{DynamicResource AppBackgroundBrush}" FontFamily="{StaticResource FontBody}">
     <Grid Margin="28,22,28,24">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -22,9 +23,9 @@
             <Border Style="{StaticResource CardStyle}" Padding="8">
                 <Grid><ListBox x:Name="GameList" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource CardListItemStyle}" SelectionChanged="Game_Changed" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListBox.ItemTemplate><DataTemplate><StackPanel Margin="0,3">
-                        <DockPanel><TextBlock Text="{Binding CurrentLabel}" DockPanel.Dock="Right" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="8,0,0,0"/><TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{StaticResource SmallEmphasisWeight}" TextTrimming="CharacterEllipsis"/></DockPanel>
+                        <DockPanel><TextBlock Text="{Binding CurrentLabel}" DockPanel.Dock="Right" Foreground="{DynamicResource AccentBrush}" FontSize="12" Margin="8,0,0,0"/><TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" TextTrimming="CharacterEllipsis"/></DockPanel>
                         <TextBlock Text="{Binding ProcessLabel}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,6,0,0"/>
-                        <TextBlock Text="{Binding Profile.ExePath}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextTrimming="CharacterEllipsis" ToolTip="{Binding Profile.ExePath}" Margin="0,4,0,0"/>
+                        <controls:FileNameLabel Text="{Binding Profile.ExePath}" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" ToolTip="{Binding Profile.ExePath}" Margin="0,4,0,0"/>
                     </StackPanel></DataTemplate></ListBox.ItemTemplate>
                 </ListBox>
                 <TextBlock x:Name="EmptyText" Text="{DynamicResource Str.LibraryEmpty}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Margin="16"/>

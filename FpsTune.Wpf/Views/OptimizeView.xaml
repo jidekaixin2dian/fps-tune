@@ -210,7 +210,7 @@
   <Border Grid.Row="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0" Margin="0,16,0,0">
    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <StackPanel>
-     <TextBlock x:Name="SelectionSummary" Text="{DynamicResource Str.PendingZero}" Foreground="{DynamicResource AccentBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="0,0,12,8" TextWrapping="Wrap"/>
+     <TextBlock x:Name="SelectionSummary" Text="{DynamicResource Str.PendingZero}" Foreground="{DynamicResource AccentBrush}" FontSize="15" FontWeight="{DynamicResource SmallEmphasisWeight}" Margin="0,0,12,8" TextWrapping="Wrap"/>
      <CheckBox x:Name="ConsentCheck" Style="{StaticResource ToggleSwitchStyle}"><TextBlock Text="{DynamicResource Str.ConsentText}" FontSize="13" TextWrapping="Wrap"/></CheckBox>
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

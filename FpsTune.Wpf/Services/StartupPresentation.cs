@@ -24,7 +24,7 @@ internal static class StartupPresentation
             var deadline = Task.Delay(timeout ?? TimeSpan.FromSeconds(15), stopped.Token);
             await Task.WhenAny(Task.WhenAll(frame.Task, ready.Task), deadline);
             if (stopped.IsCancellationRequested) return;
-            splash.SetPhase(100, "工作台已就绪");
+            splash.SetPhase(100, Str.T("Str.StartupReady"));
             splash.CloseWithFade();
         }
         finally

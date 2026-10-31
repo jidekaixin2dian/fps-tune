@@ -44,7 +44,7 @@ public partial class NetworkToolsPanel : UserControl
     {
         if (AdapterText is null) return;
         var adapter = AdapterBox.SelectedItem as NetworkAdapterInfo;
-        AdapterText.Text = adapter is null ? "未读取到可用网卡。" : $"{adapter.Status} · 链路 {adapter.Speed}\n地址：{adapter.Addresses}\nDNS：{adapter.Dns}\n网关：{(adapter.Gateway.Length == 0 ? "—" : adapter.Gateway)}";
+        AdapterText.Text = adapter is null ? Str.T("Str.NetworkNoAdapter") : Str.T("Str.NetworkAdapterDetails", adapter.Status, adapter.Speed, adapter.Addresses, adapter.Dns, adapter.Gateway.Length == 0 ? "—" : adapter.Gateway);
         GatewayButton.IsEnabled = adapter is { Gateway.Length: > 0 } && _run is null;
     }
     private async void AdaptersRefresh_Click(object sender, RoutedEventArgs e) => await RefreshAdaptersAsync();
@@ -57,7 +57,7 @@ public partial class NetworkToolsPanel : UserControl
             var rows = await Task.Run(_readAdapters);
             if (generation != _adapterGeneration || !IsLoaded) return;
             AdapterBox.ItemsSource = rows;
-            AdapterBox.SelectedItem = rows.FirstOrDefault(a => a.Name == selected) ?? rows.FirstOrDefault(a => a.Status == "已连接" && a.Gateway.Length > 0) ?? rows.FirstOrDefault();
+            AdapterBox.SelectedItem = rows.FirstOrDefault(a => a.Name == selected) ?? rows.FirstOrDefault(a => a.Status == Str.T("Str.NetworkConnected") && a.Gateway.Length > 0) ?? rows.FirstOrDefault();
             ShowAdapter();
         }
         catch (Exception ex) { if (generation == _adapterGeneration) { AdapterText.Text = PrivacyScrub.Sanitize(ex.Message); GatewayButton.IsEnabled = false; } }
@@ -76,7 +76,7 @@ public partial class NetworkToolsPanel : UserControl
             host = NetworkDiagnostics.NormalizeHost(HostBox.Text);
             if (ModeBox.SelectedIndex == 1)
             {
-                if (!int.TryParse(PortBox.Text, out var n) || n is < 1 or > 65535) throw new ArgumentException("TCP 端口应为 1–65535。");
+                if (!int.TryParse(PortBox.Text, out var n) || n is < 1 or > 65535) throw new ArgumentException(Str.T("Str.NetworkPortInvalid"));
                 port = n;
             }
         }
@@ -85,14 +85,14 @@ public partial class NetworkToolsPanel : UserControl
         using var cancellation = new CancellationTokenSource(); _run = cancellation;
         _result = null; _rows.Clear(); ExportProbeButton.IsEnabled = false;
         ProbeProgress.Maximum = count; ProbeProgress.Value = 0; ResultTarget.Text = host + (port is { } p ? $" · TCP {p}" : " · ICMP");
-        FailureLabel.Text = port.HasValue ? "连接失败比例" : "未响应比例";
+        FailureLabel.Text = port.HasValue ? Str.T("Str.NetworkConnectFailure") : Str.T("Str.NetworkNoResponse");
         AverageText.Text = FailureText.Text = VariationText.Text = "—"; RangeText.Text = "";
-        SetProbeBusy(true); ProbeStatus.Text = "正在解析目标并采样…";
+        SetProbeBusy(true); ProbeStatus.Text = Str.T("Str.NetworkResolving");
         var progress = new Progress<NetworkProbe>(probe =>
         {
             if (!ReferenceEquals(_run, cancellation) || cancellation.IsCancellationRequested) return;
             _rows.Add(new(probe.Number, NetworkProbeResult.Format(probe.Milliseconds), probe.Status)); ProbeProgress.Value = probe.Number;
-            ProbeStatus.Text = $"正在采样 {probe.Number} / {count}";
+            ProbeStatus.Text = Str.T("Str.NetworkSamplingProgress", probe.Number, count);
         });
         try
         {
@@ -100,10 +100,10 @@ public partial class NetworkToolsPanel : UserControl
             _rows.Clear(); foreach (var probe in _result.Probes) _rows.Add(new(probe.Number, NetworkProbeResult.Format(probe.Milliseconds), probe.Status));
             var s = _result.Summary;
             ProbeProgress.Value = s.Sent;
-            ResultTarget.Text = $"{_result.Host} · {_result.Mode} · {_result.Address}\nDNS：{NetworkProbeResult.Format(_result.DnsMilliseconds)} · 解析地址：{_result.Resolved}";
+            ResultTarget.Text = Str.T("Str.NetworkResultTarget", _result.Host, _result.Mode, _result.Address, NetworkProbeResult.Format(_result.DnsMilliseconds), _result.Resolved);
             AverageText.Text = NetworkProbeResult.Format(s.Average); FailureText.Text = s.FailurePercent is { } f ? $"{f:0.#}%" : "—";
-            VariationText.Text = NetworkProbeResult.Format(s.Variation); RangeText.Text = $"最低 {NetworkProbeResult.Format(s.Minimum)} · 最高 {NetworkProbeResult.Format(s.Maximum)} · 响应 {s.Received}/{s.Sent}";
-            ProbeStatus.Text = _result.Cancelled ? $"已停止，保留 {s.Sent} 次采样。" : _result.Error ?? (port.HasValue ? "测试完成：查看指定端口的建连情况。" : "测试完成。未响应可能来自目标禁用 ICMP 回包或网络路径。");
+            VariationText.Text = NetworkProbeResult.Format(s.Variation); RangeText.Text = Str.T("Str.NetworkResultRange", NetworkProbeResult.Format(s.Minimum), NetworkProbeResult.Format(s.Maximum), s.Received, s.Sent);
+            ProbeStatus.Text = _result.Cancelled ? Str.T("Str.NetworkStoppedCount", s.Sent) : _result.Error ?? (port.HasValue ? Str.T("Str.NetworkTcpComplete") : Str.T("Str.NetworkIcmpComplete"));
             ExportProbeButton.IsEnabled = true;
         }
         catch (Exception ex) { ProbeStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
@@ -121,7 +121,7 @@ public partial class NetworkToolsPanel : UserControl
     {
         if (_portsBusy) return;
         _portsBusy = true; var generation = ++_endpointGeneration;
-        PortsRefreshButton.IsEnabled = ExportPortsButton.IsEnabled = false; PortsStatus.Text = "正在读取端口快照…";
+        PortsRefreshButton.IsEnabled = ExportPortsButton.IsEnabled = false; PortsStatus.Text = Str.T("Str.NetworkPortsReading");
         try
         {
             var snapshot = await Task.Run(_readEndpoints);
@@ -143,27 +143,27 @@ public partial class NetworkToolsPanel : UserControl
         if (text.Length > 0)
         {
             if (!int.TryParse(text, out var p) || p is < 0 or > 65535)
-            { _visible = []; EndpointList.ItemsSource = null; ExportPortsButton.IsEnabled = false; PortsStatus.Text = "筛选端口应为 0–65535，留空显示全部。"; return; }
+            { _visible = []; EndpointList.ItemsSource = null; ExportPortsButton.IsEnabled = false; PortsStatus.Text = Str.T("Str.NetworkPortFilterInvalid"); return; }
             port = p;
         }
         _visible = (_snapshot?.Items ?? []).Where(e => (!port.HasValue || e.LocalPort == port) && (ListenersOnly.IsChecked != true || e.Listening)
             && (e.Process.Contains(q, StringComparison.OrdinalIgnoreCase) || e.Local.Contains(q, StringComparison.OrdinalIgnoreCase) || e.Remote.Contains(q, StringComparison.OrdinalIgnoreCase) || e.Pid.ToString().Contains(q))).ToArray();
         EndpointList.ItemsSource = _visible; ExportPortsButton.IsEnabled = _snapshot is not null;
-        PortsStatus.Text = _snapshot is null ? "点击刷新读取当前端口。" : $"显示 {_visible.Count} / {_snapshot.Items.Count} 条 · {_snapshot.CapturedAt:HH:mm:ss}" + (_visible.Count == 0 ? " · 没有匹配端口" : "")
+        PortsStatus.Text = _snapshot is null ? Str.T("Str.NetworkPortsRefreshHint") : Str.T("Str.NetworkVisibleCount", _visible.Count, _snapshot.Items.Count, _snapshot.CapturedAt) + (_visible.Count == 0 ? Str.T("Str.NetworkNoMatch") : "")
             + (_snapshot.Warnings.Count > 0 ? "\n" + string.Join("\n", _snapshot.Warnings) : "");
     }
-    internal void ExportProbeTo(string path) => NetworkDiagnostics.Export(path, _result?.ToText() ?? throw new InvalidOperationException("请先完成一次测试。"));
-    internal void ExportPortsTo(string path) => NetworkDiagnostics.Export(path, _snapshot?.ToText(_visible) ?? throw new InvalidOperationException("请先读取端口快照。"));
+    internal void ExportProbeTo(string path) => NetworkDiagnostics.Export(path, _result?.ToText() ?? throw new InvalidOperationException(Str.T("Str.NetworkProbeFirst")));
+    internal void ExportPortsTo(string path) => NetworkDiagnostics.Export(path, _snapshot?.ToText(_visible) ?? throw new InvalidOperationException(Str.T("Str.NetworkReadPortsFirst")));
     private static string? PickReportPath(string name)
     {
-        var dialog = new Microsoft.Win32.SaveFileDialog { Title = "导出诊断结果", Filter = "文本文件|*.txt", DefaultExt = ".txt", FileName = $"FpsTune-{name}-{DateTime.Now:yyyyMMdd-HHmmss}.txt" };
+        var dialog = new Microsoft.Win32.SaveFileDialog { Title = Str.T("Str.NetworkExportTitle"), Filter = Str.T("Str.NetworkTextFilter"), DefaultExt = ".txt", FileName = $"FpsTune-{name}-{DateTime.Now:yyyyMMdd-HHmmss}.txt" };
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
     private void ExportProbe_Click(object sender, RoutedEventArgs e)
     {
         var result = _result; if (result is null || _run is not null) return;
         var path = PickReportPath("Network"); if (path is null) return;
-        try { NetworkDiagnostics.Export(path, result.ToText()); ProbeStatus.Text = "结果已导出。"; } catch (Exception ex) { ProbeStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        try { NetworkDiagnostics.Export(path, result.ToText()); ProbeStatus.Text = Str.T("Str.NetworkExportDone"); } catch (Exception ex) { ProbeStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
     private void ExportPorts_Click(object sender, RoutedEventArgs e)
     {

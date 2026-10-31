@@ -1,11 +1,12 @@
 <UserControl x:Class="FpsTune.Wpf.Views.Controls.ColorPreviewControl"
- xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls">
  <StackPanel>
   <DockPanel Margin="0,0,0,10">
    <Button x:Name="LoadImageButton" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorPreviewLoad}" Click="LoadImage_Click" Style="{StaticResource SecondaryButtonStyle}"/>
    <StackPanel VerticalAlignment="Center">
     <TextBlock Text="{DynamicResource Str.ColorPreviewTitle}" Style="{StaticResource SectionLabelStyle}"/>
-    <TextBlock x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}" Style="{StaticResource MutedTextStyle}" Margin="0,3,10,0" TextTrimming="CharacterEllipsis"/>
+    <controls:FileNameLabel x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}"  Margin="0,3,10,0"/>
    </StackPanel>
   </DockPanel>
   <ComboBox x:Name="ScreenshotCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Screenshot_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorPreviewScene}">

@@ -13,7 +13,7 @@
                     <TextBlock x:Name="VersionText" Foreground="{DynamicResource AccentBrush}" FontSize="16" Margin="0,8,0,0"/>
                 </StackPanel>
             </DockPanel>
-            <TextBlock Grid.Row="1" Text="{DynamicResource Str.ReleaseChanges}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="{StaticResource SmallEmphasisWeight}" Margin="0,24,0,12"/>
+            <TextBlock Grid.Row="1" Text="{DynamicResource Str.ReleaseChanges}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="15" FontWeight="{DynamicResource SmallEmphasisWeight}" Margin="0,24,0,12"/>
             <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusCard}" Padding="16">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <TextBlock x:Name="NotesText" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" LineHeight="24"/>

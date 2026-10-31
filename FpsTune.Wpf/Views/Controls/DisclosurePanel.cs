@@ -34,12 +34,12 @@ public sealed class DisclosurePanel : Decorator
         Reveal = target;
         IsEnabled = IsExpanded;
         if (animate && IsLoaded && from != target &&
-            (AnimationEnabledOverride ?? (!UiPerformance.LowSpec && SystemParameters.ClientAreaAnimation)))
+            (AnimationEnabledOverride ?? UiMotion.Enabled))
         {
             Visibility = Visibility.Visible;
-            var animation = new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(180))
+            var animation = new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(200))
             {
-                EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut },
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
                 FillBehavior = FillBehavior.Stop
             };
             animation.Completed += (_, _) => { if (!IsExpanded) Visibility = Visibility.Collapsed; };

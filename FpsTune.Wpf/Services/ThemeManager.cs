@@ -48,6 +48,9 @@ public static class ThemeManager
         void SetBrush(string key, Color target) => UpdateResourceBrush(key, target, animate);
         var resolved = mode == "system" ? ResolveSystemTheme() : mode;
         var t = resolved == "light" ? LightPalette : DarkPalette;
+        Application.Current.Resources["SmallEmphasisWeight"] = resolved == "light" ? FontWeights.Medium : FontWeights.Normal;
+        Application.Current.Resources["StrongEmphasisWeight"] = resolved == "light" ? FontWeights.SemiBold : FontWeights.Medium;
+        Application.Current.Resources["HeavyEmphasisWeight"] = resolved == "light" ? FontWeights.Bold : FontWeights.SemiBold;
         var studio = SettingsService.Current.OverviewMode != "console";
         var accent = studio ? Parse(resolved == "light" ? "#426E2F" : "#B8DD8D") : t.Accent;
 
@@ -222,12 +225,12 @@ public static class ThemeManager
 
     // 控制台配色：近黑底 · 电光青动作 · 蓝色数据；文字三级灰阶
     private static readonly Palette DarkPalette = new(
-        "#0C1015", "#0C1015", "#11171E", "#17202A", "#1B2632", "#0E141B",
-        "#293443", "#43546A", "#2A3648", "#E8EEF5", "#ABB8C9", "#8896A8",
+        "#0C1015", "#0C1015", "#15191F", "#1B1F25", "#20242A", "#1B1F25",
+        "#1C2026", "#23272D", "#23272D", "#E8EEF5", "#ABB8C9", "#8896A8",
         "#3B82F6", "#67E8F9", "#062A30", "#22D3EE", "#F87171", "#F2B75C", "#34D399");
 
     private static readonly Palette LightPalette = new(
-        "#EDF2F8", "#EDF2F8", "#FFFFFF", "#F5F8FC", "#EBF0F7", "#F4F7FB",
-        "#D9E2EC", "#B9C8D9", "#9DAEC2", "#14202E", "#3A4A61", "#5D6B84",
+        "#F7F9FC", "#F7F9FC", "#FFFFFF", "#F8FAFC", "#F2F5F8", "#F2F5F8",
+        "#F8F9FB", "#EAF0F5", "#EAF0F5", "#14202E", "#3A4A61", "#5D6B84",
         "#2563EB", "#0E7490", "#FFFFFF", "#0891B2", "#DC2626", "#B45309", "#059669");
 }

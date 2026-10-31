@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using System.Windows;
+using FpsTune.Wpf.Views.Controls;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -307,17 +308,17 @@ public sealed class ModernWorkspaceUiTests
                 var scene = (ComboBox)preview.FindName("ScreenshotCombo");
                 DlssFeedbackTests.PumpUntil(() => ((Image)preview.FindName("BeforeImage")).Source is not null);
                 var delta = ((Image)preview.FindName("BeforeImage")).Source;
-                Assert.Equal(Str.T("Str.ColorPreviewDelta"), ((TextBlock)preview.FindName("ImageNameText")).Text);
+                Assert.Equal(Str.T("Str.ColorPreviewDelta"), ((FileNameLabel)preview.FindName("ImageNameText")).Text);
                 Assert.Equal(Visibility.Collapsed, ((TextBlock)preview.FindName("EmptyHint")).Visibility);
                 scene.SelectedIndex = 1;
                 DlssFeedbackTests.PumpUntil(() => !ReferenceEquals(delta, ((Image)preview.FindName("BeforeImage")).Source));
-                Assert.Equal(Str.T("Str.ColorPreviewValorant"), ((TextBlock)preview.FindName("ImageNameText")).Text);
+                Assert.Equal(Str.T("Str.ColorPreviewValorant"), ((FileNameLabel)preview.FindName("ImageNameText")).Text);
                 Directory.CreateDirectory(root);
                 var path = Path.Combine(root, "comparison.png");
                 using (var file = File.Create(path))
                 { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(ScreenColorPreview.Sample())); encoder.Save(file); }
                 var loading = preview.LoadImageAsync(path); DlssFeedbackTests.PumpUntil(() => loading.IsCompleted); loading.GetAwaiter().GetResult();
-                Assert.Equal("comparison.png", ((TextBlock)preview.FindName("ImageNameText")).Text);
+                Assert.Equal("comparison.png", ((FileNameLabel)preview.FindName("ImageNameText")).Text);
                 Assert.Equal(2, scene.SelectedIndex);
                 var original = ((Image)preview.FindName("BeforeImage")).Source;
                 var before = ((Image)preview.FindName("AfterImage")).Source;
@@ -353,7 +354,7 @@ public sealed class ModernWorkspaceUiTests
                 {
                     scene.SelectedIndex = index;
                     DlssFeedbackTests.PumpUntil(() => image.Source is ColorConvertedBitmap
-                        && ((TextBlock)preview.FindName("ImageNameText")).Text == Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
+                        && ((FileNameLabel)preview.FindName("ImageNameText")).Text == Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
                     var active = ((Image)preview.FindName("BeforeImage")).Source;
                     if (index == 0)
                     {

@@ -8,9 +8,15 @@ using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views.Controls;
 
+public enum FeedbackCharacter { Immediate, Subtle, Spring }
+
 /// <summary>Short interruptible feedback; navigation never waits for animation.</summary>
 public static class UiMotion
 {
+    public static readonly DependencyProperty CharacterProperty = DependencyProperty.RegisterAttached(
+        "Character", typeof(FeedbackCharacter), typeof(UiMotion), new PropertyMetadata(FeedbackCharacter.Subtle));
+    public static void SetCharacter(DependencyObject d, FeedbackCharacter value) => d.SetValue(CharacterProperty, value);
+    public static FeedbackCharacter GetCharacter(DependencyObject d) => (FeedbackCharacter)d.GetValue(CharacterProperty);
     internal static bool? EnabledOverride { get; set; }
     internal static bool Enabled => EnabledOverride ?? (!UiPerformance.LowSpec && SystemParameters.ClientAreaAnimation);
     public static readonly DependencyProperty ButtonFeedbackProperty = DependencyProperty.RegisterAttached(
@@ -55,7 +61,7 @@ public static class UiMotion
     private static void Up(object s, RoutedEventArgs e) => Press((ButtonBase)s, false);
     private static void Unloaded(object s, RoutedEventArgs e) => Press((ButtonBase)s, false, false);
     private static void IsEnabledChanged(object s, DependencyPropertyChangedEventArgs e) { if (!(bool)e.NewValue) Press((ButtonBase)s, false, false); }
-    private static void KeyDown(object s, KeyEventArgs e) { if (e.Key is Key.Space or Key.Enter) Press((ButtonBase)s, true); }
+    private static void KeyDown(object s, KeyEventArgs e) { if (!e.IsRepeat && (e.Key is Key.Space or Key.Enter)) Press((ButtonBase)s, true); }
     private static void KeyUp(object s, KeyEventArgs e) { if (e.Key is Key.Space or Key.Enter) Press((ButtonBase)s, false); }
     internal static void Press(ButtonBase b, bool down, bool animate = true)
     {
@@ -66,10 +72,21 @@ public static class UiMotion
             root.RenderTransformOrigin = new Point(0.5, 0.5); root.RenderTransform = scale = new ScaleTransform(1, 1);
         }
         var from = scale.ScaleX;
-        var target = down && b.IsEnabled && Enabled ? 0.985 : 1;
+        var character = GetCharacter(b);
+        var target = down && b.IsEnabled && Enabled && character != FeedbackCharacter.Immediate
+            ? character == FeedbackCharacter.Spring ? 0.97 : 0.985 : 1;
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, null); scale.BeginAnimation(ScaleTransform.ScaleYProperty, null);
         scale.ScaleX = scale.ScaleY = target;
-        if (!animate || !Enabled || !b.IsLoaded) return;
+        if (!animate || !Enabled || !b.IsLoaded || character == FeedbackCharacter.Immediate) return;
+        if (!down && character == FeedbackCharacter.Spring && from < 1)
+        {
+            var spring = new DoubleAnimationUsingKeyFrames { FillBehavior = FillBehavior.Stop };
+            spring.KeyFrames.Add(new LinearDoubleKeyFrame(from, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+            spring.KeyFrames.Add(new EasingDoubleKeyFrame(1.018, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(100)), new CubicEase { EasingMode = EasingMode.EaseOut }));
+            spring.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(240)), new QuadraticEase { EasingMode = EasingMode.EaseOut }));
+            scale.BeginAnimation(ScaleTransform.ScaleXProperty, spring); scale.BeginAnimation(ScaleTransform.ScaleYProperty, spring);
+            return;
+        }
         var motion = new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(down ? 70 : 130))
         { FillBehavior = FillBehavior.Stop, EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut } };
         scale.BeginAnimation(ScaleTransform.ScaleXProperty, motion); scale.BeginAnimation(ScaleTransform.ScaleYProperty, motion);

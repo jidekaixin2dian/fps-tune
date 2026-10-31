@@ -29,6 +29,7 @@ public sealed record CornerPreferences(string Preset = "large", double Card = 18
         var p = (SettingsService.Current.Corners ?? new()).Resolve(SettingsService.Current.OverviewMode);
         app.Resources["RadiusCard"] = new CornerRadius(p.Card);
         app.Resources["RadiusControl"] = new CornerRadius(p.Control);
+        app.Resources["RadiusFocus"] = new CornerRadius(Math.Max(0, p.Control - 1));
         app.Resources["RadiusNav"] = new CornerRadius(p.Nav);
         app.Resources["RadiusChip"] = new CornerRadius(p.Chip);
     }

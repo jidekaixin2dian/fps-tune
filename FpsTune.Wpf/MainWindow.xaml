@@ -20,7 +20,7 @@
             <Grid x:Name="TitleBar" Grid.Row="0" Grid.ColumnSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
                     <Image Source="/Assets/app-icon.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="{DynamicResource Str.AppNameShort}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.AppNameShort}" FontSize="18" FontWeight="{DynamicResource StrongEmphasisWeight}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TitleVersionText" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="16,2,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">

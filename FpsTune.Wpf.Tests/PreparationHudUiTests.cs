@@ -134,7 +134,7 @@ public sealed class PreparationHudUiTests
                     preview.Visibility = Visibility.Visible;
                     DlssFeedbackTests.PumpUntil(() => after.Source is ColorConvertedBitmap);
                     Assert.Equal(2, ((ComboBox)preview.FindName("ScreenshotCombo")).SelectedIndex); Assert.Equal(27, ((Slider)preview.FindName("SplitSlider")).Value);
-                    Assert.Equal("custom.png", ((TextBlock)preview.FindName("ImageNameText")).Text);
+                    Assert.Equal("custom.png", ((FileNameLabel)preview.FindName("ImageNameText")).Text);
                 }
                 ((ComboBox)preview.FindName("ScreenshotCombo")).SelectedIndex = 0;
                 preview.Visibility = Visibility.Collapsed;

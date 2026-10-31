@@ -9,7 +9,7 @@
         <StackPanel x:Name="HudBody" Margin="8">
             <Border x:Name="InteractionBar" Background="{DynamicResource NotificationBackgroundBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="4,0">
             <Grid x:Name="DragArea" Background="Transparent" MouseLeftButtonDown="DragArea_MouseLeftButtonDown"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBlock x:Name="HudCaption" Text="{DynamicResource Str.AppNameShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="Medium" VerticalAlignment="Center" Cursor="SizeAll"/>
+                <TextBlock x:Name="HudCaption" Text="{DynamicResource Str.AppNameShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="{DynamicResource SmallEmphasisWeight}" VerticalAlignment="Center" Cursor="SizeAll"/>
                 <StackPanel x:Name="HudActions" Grid.Column="1" Orientation="Horizontal">
                     <CheckBox x:Name="Pin" Content="{DynamicResource Str.HudPin}" IsChecked="True" Checked="Pin_Changed" Unchecked="Pin_Changed" Margin="0,0,8,0"/>
                     <Button x:Name="ThroughButton" Content="{DynamicResource Str.HudThrough}" Style="{StaticResource GhostButtonStyle}" Padding="8,0" Height="26" MinHeight="26" Click="Through_Click" Focusable="False"/>

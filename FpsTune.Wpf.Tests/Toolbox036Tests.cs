@@ -40,7 +40,8 @@ public sealed class Toolbox036Tests
         var result = await NetworkDiagnostics.RunAsync("fixture.example", 443, 4, null, CancellationToken.None, fake, TimeSpan.Zero);
         Assert.Equal(1, fake.Resolutions); Assert.Equal(4, result.Summary.Sent); Assert.Equal(3, result.Summary.Received);
         Assert.All(fake.Addresses, address => Assert.Equal(IPAddress.Loopback, address));
-        Assert.Contains("::1", result.Resolved); Assert.Equal("127.0.0.1", result.Address); Assert.Contains("TCP:443", result.ToText());
+        Assert.Contains("::1", result.Resolved); Assert.Equal("127.0.0.1", result.Address);
+        Assert.Equal("TCP", result.Mode); Assert.Equal(443, result.Port); // Localized export is covered by the real WPF test.
         var failed = await NetworkDiagnostics.RunAsync("missing.example", null, 4, null, CancellationToken.None, new Transport { FailDns = true });
         Assert.NotNull(failed.Error); Assert.Equal(0, failed.Summary.Sent); Assert.Null(failed.Summary.FailurePercent);
         using var cancel = new CancellationTokenSource(); var blocked = new Transport { Block = true };
