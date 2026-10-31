@@ -1832,4 +1832,5 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TrayHiddenHint">窗口已收起到系统托盘，可从托盘图标重新打开。</s:String>
     <s:String x:Key="Str.TrayHiddenHotkey">也可按 Ctrl+Alt+F 呼出。</s:String>
     <s:String x:Key="Str.TrayStillRunning">FPS 帧律仍在运行</s:String>
+    <s:String x:Key="Str.FooterPurpose">调校 · 测量 · 还原</s:String>
 </ResourceDictionary>
