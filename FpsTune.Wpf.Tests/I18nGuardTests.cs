@@ -194,8 +194,10 @@ public class I18nGuardTests
     {
         var path = Path.Combine(RepoRoot(), "FpsTune.Wpf", "Resources", fileName);
         Assert.True(File.Exists(path), "缺少资源字典: " + path);
-        return Regex.Matches(File.ReadAllText(path), @"x:Key=""(Str\.[A-Za-z0-9_]+)""")
-            .Select(m => m.Groups[1].Value)
-            .ToHashSet(StringComparer.Ordinal);
+        var keys = Regex.Matches(File.ReadAllText(path), @"x:Key=""(Str\.[A-Za-z0-9_]+)""")
+            .Select(m => m.Groups[1].Value).ToArray();
+        var duplicates = keys.GroupBy(k => k, StringComparer.Ordinal).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
+        Assert.True(duplicates.Length == 0, fileName + " duplicate resource keys: " + string.Join(", ", duplicates));
+        return keys.ToHashSet(StringComparer.Ordinal);
     }
 }

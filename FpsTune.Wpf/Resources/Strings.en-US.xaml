@@ -548,7 +548,9 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.RestoreFailedNeedAdmin">Restore failed: writing the NVIDIA configuration needs administrator rights.</s:String>
     <s:String x:Key="Str.WriteDrsNeedAdmin">Writing the NVIDIA driver configuration needs administrator rights, and this program is not running as administrator.</s:String>
     <s:String x:Key="Str.SelectedNeedsAdmin">The selection includes items that need administrator rights, and this program is not running as administrator.</s:String>
-    <s:String x:Key="Str.OneClickNeedsAdmin">The balanced profile in one-click optimization includes items such as the power plan that need administrator rights.</s:String>
+    <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
+
+{0}</s:String>
     <s:String x:Key="Str.SwitchToSafeOnly">If you only want items that need no administrator rights, switch to the safe-only preset.</s:String>
     <s:String x:Key="Str.RestoreDrsNeedAdmin">Restoring the NVIDIA driver configuration needs administrator rights.</s:String>
     <s:String x:Key="Str.ConfirmRestartAdmin">Restart as administrator and continue?</s:String>
@@ -1957,7 +1959,4 @@ DNS：{3} · 解析地址：{4}</s:String>
 {0}
 
 {1}</s:String>
-    <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
-
-{0}</s:String>
 </ResourceDictionary>

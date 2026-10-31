@@ -548,7 +548,9 @@
     <s:String x:Key="Str.RestoreFailedNeedAdmin">还原失败：写入 NVIDIA 配置需要管理员权限。</s:String>
     <s:String x:Key="Str.WriteDrsNeedAdmin">写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。</s:String>
     <s:String x:Key="Str.SelectedNeedsAdmin">所选优化项中包含需要管理员权限的项目，而当前程序不是以管理员身份运行的。</s:String>
-    <s:String x:Key="Str.OneClickNeedsAdmin">一键优化的均衡档包含电源计划等需要管理员权限的项目。</s:String>
+    <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
+
+{0}</s:String>
     <s:String x:Key="Str.SwitchToSafeOnly">如果只想修改无需管理员的项目，可以切换到 safe-only 预设。</s:String>
     <s:String x:Key="Str.RestoreDrsNeedAdmin">还原 NVIDIA 驱动配置需要管理员权限。</s:String>
     <s:String x:Key="Str.ConfirmRestartAdmin">要以管理员身份重启并继续吗？</s:String>
@@ -1957,7 +1959,4 @@ DNS：{3} · 解析地址：{4}</s:String>
 {0}
 
 {1}</s:String>
-    <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
-
-{0}</s:String>
 </ResourceDictionary>
