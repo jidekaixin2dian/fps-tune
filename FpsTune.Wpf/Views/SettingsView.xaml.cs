@@ -234,6 +234,8 @@ public partial class SettingsView : UserControl
         AutostartCheck.IsChecked = ReadAutostart();
         _suppressUiEvents = true;
         TimerBoostCheck.IsChecked = s.GameTimerBoostEnabled;
+        AutoPreparationCheck.IsChecked = s.AutoPreparationEnabled;
+        AutoRefreshCheck.IsChecked = s.AutoRefreshBoostEnabled;
         _suppressUiEvents = false;
         UpdateTimerBoostStatus();
 
@@ -656,6 +658,30 @@ public partial class SettingsView : UserControl
             TimerBoostCheck.IsChecked = oldValue;
             _suppressUiEvents = false;
             TimerBoostStatus.Text = Str.T("Str.TimerSaveFailed", PrivacyScrub.Sanitize(ex.Message));
+        }
+    }
+
+    private void AutoSessionSetting_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents || AutoPreparationCheck.IsChecked is null || AutoRefreshCheck.IsChecked is null) return;
+        var settings = SettingsService.Current;
+        var oldPrep = settings.AutoPreparationEnabled;
+        var oldRefresh = settings.AutoRefreshBoostEnabled;
+        settings.AutoPreparationEnabled = AutoPreparationCheck.IsChecked == true;
+        settings.AutoRefreshBoostEnabled = AutoRefreshCheck.IsChecked == true;
+        try
+        {
+            SettingsService.Save(settings);
+            App.SessionAutomation?.ApplySettings();
+        }
+        catch (Exception)
+        {
+            settings.AutoPreparationEnabled = oldPrep;
+            settings.AutoRefreshBoostEnabled = oldRefresh;
+            _suppressUiEvents = true;
+            AutoPreparationCheck.IsChecked = oldPrep;
+            AutoRefreshCheck.IsChecked = oldRefresh;
+            _suppressUiEvents = false;
         }
     }
 

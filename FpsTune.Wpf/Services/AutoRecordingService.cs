@@ -91,10 +91,16 @@ internal sealed class AutoRecordingService : IDisposable
                 var observation = observations[path];
                 if (!observation.Reliable) continue; // Unknown is not an exit or a new launch.
                 var known = _observed.TryGetValue(path, out var before);
+                var launchEdge = known && observation.Run is not null && observation.Run != before;
+                if (launchEdge && (_session.IsRunning || _session.IsStopping || _busy()))
+                {
+                    // 忙（如开局准备/实验运行中）时不消费启动边沿：保留旧观察，
+                    // 待忙完后的轮询再启动录制，避免自动准备与自动录制互斥时漏录整局。
+                    SetStatus(Str.T("Str.AutoRecordBusy"));
+                    continue;
+                }
                 _observed[path] = observation.Run;
                 if (!known || observation.Run is null || observation.Run == before) continue;
-                if (_session.IsRunning || _session.IsStopping || _busy())
-                { SetStatus(Str.T("Str.AutoRecordBusy")); continue; }
                 var name = Path.GetFileNameWithoutExtension(path);
                 name = name[..Math.Min(name.Length, 30)];
                 if (_session.StartForGame($"{name} · {Str.T("Str.AutoRecordName")} {DateTime.Now:MM-dd HH-mm}", path, observation.Run))
@@ -122,7 +128,23 @@ internal sealed class AutoRecordingService : IDisposable
         _owned = null;
         if (!_session.IsRunning || _session.RunId != owned.Id) return;
         var saved = await _session.StopAsync(save: true);
-        SetStatus(saved is null ? Str.T("Str.AutoRecordNoSave") : Str.T("Str.AutoRecordSaved", saved.Name));
+        if (saved is not null)
+        {
+            SetStatus(Str.T("Str.AutoRecordSaved", saved.Name));
+            var summary = BuildSummary(saved);
+            if (summary is not null)
+                TrayService.NotifyComplete(summary.Value.Title, summary.Value.Message);
+        }
+        else SetStatus(Str.T("Str.AutoRecordNoSave"));
+    }
+
+    /// <summary>本局性能小结（平均 FPS / 1% Low / 卡顿 / 时长）；无可靠 FPS 数据返回 null。</summary>
+    internal static (string Title, string Message)? BuildSummary(PerformanceSession? saved)
+    {
+        if (saved?.Fps is not { } fps || fps.Samples <= 0) return null;
+        var minutes = Math.Max(0.0, ((saved.EndedAt ?? DateTime.Now) - saved.StartedAt).TotalMinutes);
+        return (Str.T("Str.AutoRecordSummaryTitle"),
+            Str.T("Str.AutoRecordSummary", saved.Name, fps.AvgFps, fps.P1Low, fps.Stutters, minutes));
     }
     private void SetStatus(string text) { Status = text; Changed?.Invoke(); }
     public void Dispose() { _disposed = true; _generation++; _timer.Stop(); }

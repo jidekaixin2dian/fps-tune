@@ -43,6 +43,10 @@ public sealed class AppSettings
     // 游戏运行时保持 0.5 ms 计时器分辨率（opt-in，默认关闭）。
     public bool GameTimerBoostEnabled { get; set; }
 
+    // 游戏自动化（opt-in，默认关闭）：启动边沿触发，不做持续监控写操作。
+    public bool AutoPreparationEnabled { get; set; }
+    public bool AutoRefreshBoostEnabled { get; set; }
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||

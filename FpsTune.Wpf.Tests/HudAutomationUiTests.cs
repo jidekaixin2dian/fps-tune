@@ -45,7 +45,7 @@ public sealed class HudAutomationUiTests
             enabled = false; Poll(); Assert.False(session.IsRunning); Assert.False(automation.IsObserving);
             enabled = true; observation = new(null); Poll();
             busy = true; observation = new(new(10, 4)); Poll(); Assert.False(session.IsRunning);
-            busy = false; Poll(); Assert.False(session.IsRunning); // Busy launch is consumed, not retried mid-match.
+            busy = false; Poll(); Assert.True(session.IsRunning); // Busy edge is retained and starts once busy clears (自动准备期间不漏录整局).
             observation = new(null); Poll(); observation = new(new(10, 5)); Poll(); owned = session.RunId;
             observation = new(new(10, 6)); Poll(); Assert.True(session.IsRunning); Assert.NotEqual(owned, session.RunId);
             session.Stop(false); Assert.True(session.Start("Replacement manual")); manual = session.RunId;

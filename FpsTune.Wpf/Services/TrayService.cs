@@ -176,8 +176,12 @@ public static class TrayService
     {
         if (!SettingsService.Current.NotifyOnComplete)
             return;
+        if (NotifyOverride is { } hook) { hook(title, message); return; }
         NotifyRaw(title, message);
     }
+
+    /// <summary>测试注入；null 时走真实托盘气泡。</summary>
+    internal static Action<string, string>? NotifyOverride { get; set; }
 
     internal static long NotificationGeneration => Volatile.Read(ref _notificationGeneration);
 

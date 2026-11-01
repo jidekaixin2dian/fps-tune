@@ -11,9 +11,11 @@ public partial class App : Application
 {
     private AutoProfileService? _autoProfileService;
     private GameTimerResolutionService? _gameTimer;
+    private GameSessionAutomationService? _sessionAutomation;
     internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
     internal static AutoRecordingService? AutomaticRecording { get; private set; }
     internal static GameTimerResolutionService? GameTimer => Current is App app ? app._gameTimer : null;
+    internal static GameSessionAutomationService? SessionAutomation => Current is App app ? app._sessionAutomation : null;
     private static PerformanceHudService? _hud;
     internal static PerformanceHudService Hud => _hud ??= new();
     internal static void CloseHud() => _hud?.Close();
@@ -135,6 +137,8 @@ public partial class App : Application
             _autoProfileService.Start();
             _gameTimer = new GameTimerResolutionService();
             _gameTimer.Start();
+            _sessionAutomation = new GameSessionAutomationService();
+            _sessionAutomation.Start();
             MemoryAutomation = new MemoryAutoCleanupService();
             MemoryAutomation.Start();
             AutomaticRecording = new AutoRecordingService(SessionService);
@@ -147,6 +151,7 @@ public partial class App : Application
     {
         AutomaticRecording?.Dispose();
         _gameTimer?.Dispose();
+        _sessionAutomation?.Dispose();
         CloseHud();
         _liveMetrics?.Dispose();
         SessionService.Dispose();

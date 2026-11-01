@@ -96,6 +96,10 @@ public sealed class PreparationEngineUiTests
                     DlssFeedbackTests.PumpUntil(() => ((CheckBox)settings.FindName("TimerBoostCheck")).IsChecked != null);
                     var timerCard = (FrameworkElement)((CheckBox)settings.FindName("TimerBoostCheck")).Parent;
                     Render(timerCard, $"timer-boost-{mode}", backdropKey: "ConsoleBackgroundBrush");
+                    // 游戏自动化卡：两个 opt-in 开关
+                    var prepCheck = (CheckBox)settings.FindName("AutoPreparationCheck");
+                    Assert.NotNull(settings.FindName("AutoRefreshCheck"));
+                    Render((FrameworkElement)prepCheck.Parent, $"auto-session-{mode}", backdropKey: "ConsoleBackgroundBrush");
                     // 维护页 → 进程区：后台资源检查卡
                     window.NavigateTo("tools"); window.UpdateLayout();
                     var tools = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
