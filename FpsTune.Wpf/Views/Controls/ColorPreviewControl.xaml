@@ -25,15 +25,15 @@
      <Slider.Template>
       <ControlTemplate TargetType="Slider">
        <Grid Background="Transparent">
-        <Track x:Name="PART_Track" Margin="-18,0" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}">
+        <Track x:Name="PART_Track" Margin="0,0" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}">
          <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge" Focusable="False"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton>
          <Track.Thumb>
-          <Thumb Width="36" Cursor="SizeWE">
+          <Thumb Width="24" Cursor="SizeWE">
            <Thumb.Template><ControlTemplate TargetType="Thumb">
             <Grid Background="Transparent">
              <Border Width="2" Background="#F2FFFFFF"/>
-             <Border x:Name="Grip" Width="22" Height="46" CornerRadius="11" Background="#FAFFFFFF" BorderBrush="#50000000" BorderThickness="1" VerticalAlignment="Center">
-              <Path Data="M 0,0 L 0,14 M 5,0 L 5,14" Stroke="#4B5563" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+             <Border x:Name="Grip" Width="18" Height="44" CornerRadius="9" Background="#FAFFFFFF" BorderBrush="#50000000" BorderThickness="1" VerticalAlignment="Center">
+              <Path Data="M 0,0 L 0,12 M 4,0 L 4,12" Stroke="#4B5563" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
              </Border>
             </Grid>
             <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Grip" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>

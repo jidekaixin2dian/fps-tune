@@ -175,7 +175,9 @@ public partial class ColorPreviewControl : UserControl
         var available = ComparisonViewport.ActualWidth > 2 ? ComparisonViewport.ActualWidth : ComparisonSurface.Width;
         if (available <= 2) return;
         var aspect = (double)_source.PixelWidth / _source.PixelHeight;
-        var height = Math.Min((available - 4) / aspect, 520);
+        // 预览别把整页顶掉：限高 300，同时限宽 880，保证手柄始终完整可见、可拖。
+        var height = Math.Min((available - 4) / aspect, 300);
+        if (height * aspect > 880) height = 880 / aspect;
         ComparisonSurface.Width = height * aspect;
         ComparisonSurface.Height = height;
         ComparisonSurface.UpdateLayout(); UpdateSplit();
@@ -184,8 +186,10 @@ public partial class ColorPreviewControl : UserControl
     private void UpdateSplit()
     {
         if (BeforeLayer is null || SplitSlider is null) return;
-        var x = ComparisonSurface.ActualWidth * SplitSlider.Value / 100;
-        BeforeLayer.Clip = new RectangleGeometry(new Rect(0, 0, x, ComparisonSurface.ActualHeight));
+        // 手柄宽 24：轨道可用范围是「宽度 - 24」，分界线跟着手柄中心走，边界才和手柄对齐。
+        var usable = Math.Max(0, ComparisonSurface.ActualWidth - 24);
+        var x = 12 + usable * SplitSlider.Value / 100;
+        BeforeLayer.Clip = new RectangleGeometry(new Rect(0, 0, Math.Max(0, x), ComparisonSurface.ActualHeight));
 
     }
 }
