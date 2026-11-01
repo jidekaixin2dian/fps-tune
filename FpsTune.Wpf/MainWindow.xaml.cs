@@ -164,6 +164,7 @@ public partial class MainWindow : Window
             ["opt"] = () => new OptimizeView(),
             ["display"] = () => new DisplayQualityView(),
             ["filters"] = () => new FilterView(),
+            ["quick"] = () => new QuickOptimizeView(),
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
             ["backup"] = () => new BackupLogView(),
@@ -309,6 +310,16 @@ public partial class MainWindow : Window
             opt.ReloadFromState();
     }
 
+    /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
+    private Views.Controls.NavButton[] AllNavButtons => new[]
+    {
+        NavHome, NavGames, NavQuick, NavDetect, NavDisplay, NavFilters,
+        NavOpt, NavTools, NavBackup, NavSession, NavAb, NavSettings
+    };
+
+    /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
+    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavSession, NavAb, NavSettings };
+
     private void UpdateOverviewModeLabel()
     {
         var studio = SettingsService.Current.OverviewMode != "console";
@@ -322,8 +333,23 @@ public partial class MainWindow : Window
         NavigationStack.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
         NavigationStack.Margin = new Thickness(12, studio ? 0 : 6, 12, 0);
         NavigationHeading.Visibility = NavigationFooter.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var nav in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
-            nav.SetResourceReference(StyleProperty, studio ? "StudioNavStyle" : typeof(Views.Controls.NavButton));
+        // studio=侧栏：分组组头可见（可折叠）、子项竖排、缩进样式；
+        // console=顶部横排：隐藏组头、子项横向连排、回到横排页签样式。
+        foreach (var (header, items) in new[] {
+            (NavGroupGamesHeader, NavGroupGamesItems),
+            (NavGroupDisplayHeader, NavGroupDisplayItems),
+            (NavGroupSystemHeader, NavGroupSystemItems) })
+        {
+            header.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
+            items.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
+        }
+        foreach (var nav in AllNavButtons)
+        {
+            var style = studio
+                ? (TopNavButtons.Contains(nav) ? "SideNavItemStyle" : "SideNavSubItemStyle")
+                : "StudioNavStyle";
+            nav.SetResourceReference(StyleProperty, style);
+        }
     }
 
     private void OverviewMode_Click(object sender, RoutedEventArgs e)
@@ -456,7 +482,7 @@ public partial class MainWindow : Window
         {
             // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
             // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavFilters, NavSession, NavAb, NavBackup, NavTools, NavSettings })
+            foreach (var radio in AllNavButtons)
             {
                 if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
                     radio.IsChecked = false;
@@ -468,6 +494,20 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>导航分组折叠：组头勾选态控制子项面板显隐。</summary>
+    private void GroupHeader_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Primitives.ToggleButton { Tag: string key })
+            return;
+        var items = FindName("NavGroup" + key + "Items") as Panel;
+        if (items is null) return;
+        items.Visibility = ((System.Windows.Controls.Primitives.ToggleButton)sender).IsChecked == true
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>侧栏"掉帧修复"动作项：进滤镜页并打开修复窗口。</summary>
+    private void NavDeltaFix_Click(object sender, RoutedEventArgs e) => OpenDeltaFixFromHome();
+
     private void SwitchPage(UserControl page)
     {
         if (ReferenceEquals(PageHost.Content, page))
@@ -476,7 +516,23 @@ public partial class MainWindow : Window
         // Present cached content immediately; whole-page fades delayed every navigation
         // and repeatedly rasterized CJK text at fractional translated positions.
         PageHost.Content = page;
+        var key = _pageCache.FirstOrDefault(kv => ReferenceEquals(kv.Value, page)).Key;
+        if (!string.IsNullOrEmpty(key)) RememberRecentPage(key);
+        if (key == "home" && page is ConsoleView console) console.RefreshRecentPages();
         if (!ReferenceEquals(page, GetPage("home"))) StartupNavigationRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>首页"继续使用"：记录最近访问页面（首页本身除外），最多保留 6 个。</summary>
+    private void RememberRecentPage(string key)
+    {
+        if (key == "home") return;
+        var settings = SettingsService.Current;
+        var recent = settings.RecentPages ??= [];
+        recent.Remove(key);
+        recent.Insert(0, key);
+        if (recent.Count > 6) recent.RemoveRange(6, recent.Count - 6);
+        try { SettingsService.Save(settings); }
+        catch (Exception) { /* 最近访问记录失败不阻断导航。 */ }
     }
 
     private void CaptionButton_Click(object sender, RoutedEventArgs e)
@@ -510,6 +566,7 @@ public partial class MainWindow : Window
         {
             case "home": NavHome.IsChecked = true; break;
             case "games": NavGames.IsChecked = true; break;
+            case "quick": NavQuick.IsChecked = true; break;
             case "detect": NavDetect.IsChecked = true; break;
             case "opt": NavOpt.IsChecked = true; break;
             case "display": NavDisplay.IsChecked = true; break;

@@ -305,6 +305,148 @@
                 </Setter>
             </Style>
 
+            <!-- ============ 侧栏分组导航（1U 式：组头可折叠 + 子项缩进） ============ -->
+            <Style x:Key="NavGroupHeaderStyle" TargetType="ToggleButton">
+                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="Margin" Value="6,12,6,2"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="Transparent">
+                                <Grid>
+                                    <TextBlock Text="{TemplateBinding Content}"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               FontFamily="{TemplateBinding FontFamily}"
+                                               FontSize="{TemplateBinding FontSize}"
+                                               HorizontalAlignment="Left" VerticalAlignment="Center"
+                                               Margin="14,0,20,0"/>
+                                    <Path x:Name="Chevron" Data="M0 0 L4 4 L0 8" Stroke="{TemplateBinding Foreground}" StrokeThickness="1.4"
+                                          HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0"
+                                          RenderTransformOrigin="0.5,0.5">
+                                        <Path.RenderTransform><RotateTransform Angle="0"/></Path.RenderTransform>
+                                    </Path>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Chevron" Property="RenderTransform">
+                                        <Setter.Value><RotateTransform Angle="90"/></Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="SideNavItemStyle" TargetType="controls:NavButton">
+                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Height" Value="34"/>
+                <Setter Property="Focusable" Value="True"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="controls:NavButton">
+                            <Grid Background="Transparent">
+                                <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
+                                <TextBlock Text="{TemplateBinding Text}"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           FontFamily="{TemplateBinding FontFamily}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                                           Margin="14,0,10,0"/>
+                                <Border x:Name="Indicator" Width="2" Height="16" CornerRadius="1"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                                        Background="{DynamicResource AccentBrush}" Visibility="Collapsed"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="SideNavSubItemStyle" TargetType="controls:NavButton" BasedOn="{StaticResource SideNavItemStyle}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="controls:NavButton">
+                            <Grid Background="Transparent">
+                                <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
+                                <TextBlock Text="{TemplateBinding Text}"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           FontFamily="{TemplateBinding FontFamily}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                                           Margin="26,0,10,0"/>
+                                <Border x:Name="Indicator" Width="2" Height="16" CornerRadius="1"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="14,0,0,0"
+                                        Background="{DynamicResource AccentBrush}" Visibility="Collapsed"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="SideNavActionStyle" TargetType="Button">
+                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Height" Value="34"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid Background="Transparent">
+                                <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
+                                <TextBlock Text="{TemplateBinding Content}"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           FontFamily="{TemplateBinding FontFamily}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center"
+                                           Margin="26,0,10,0"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <!-- ============ 下拉框 ============ -->
             <Style x:Key="SelectComboBoxStyle" TargetType="ComboBox">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>

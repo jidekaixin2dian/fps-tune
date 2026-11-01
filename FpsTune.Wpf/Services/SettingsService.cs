@@ -15,6 +15,8 @@ public sealed class AppSettings
     public string DouyinLink { get; set; } = "";
     public string ThemeMode { get; set; } = "dark";
     public string OverviewMode { get; set; } = "studio";
+    // 首页"继续使用"：最近访问页面键（不含 home），最多 6 个。
+    public List<string> RecentPages { get; set; } = [];
     public CornerPreferences Corners { get; set; } = new();
     public bool CheckUpdatesOnStartup { get; set; } = true;
     public bool WallpaperEnabled { get; set; }

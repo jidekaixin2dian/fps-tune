@@ -15,7 +15,9 @@ public sealed class WorkspaceCommands
         foreach (var (route, title, alias) in new[] {
             ("home", "Str.NavHome", "Str.CommandAliasHome"), ("detect", "Str.NavDetect", "Str.CommandAliasDetect"),
             ("games", "Str.NavGames", "Str.LibrarySearch"),
+            ("quick", "Str.NavQuickOpt", "Str.QuickOptTitle"),
             ("opt", "Str.NavOpt", "Str.CommandAliasOptimize"), ("display", "Str.NavDisplay", "Str.CommandAliasDisplay"),
+            ("filters", "Str.NavFilters", "Str.CommandAliasFilters"),
             ("session", "Str.NavSession", "Str.CommandAliasSession"), ("ab", "Str.NavAb", "Str.CommandAliasExperiment"),
             ("backup", "Str.NavBackup", "Str.CommandAliasBackup"), ("tools", "Str.NavTools", "Str.CommandAliasTools"),
             ("settings", "Str.NavSettings", "Str.CommandAliasSettings") })

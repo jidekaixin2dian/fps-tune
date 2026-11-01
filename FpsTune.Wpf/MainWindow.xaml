@@ -49,18 +49,35 @@
             <Grid x:Name="TabBar" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                 <TextBlock x:Name="NavigationHeading" Text="{DynamicResource Str.Workspace}" Margin="24,24,0,16" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
-                <StackPanel x:Name="NavigationStack" Grid.Row="1" Margin="12,0,12,0">
-                    <controls:NavButton x:Name="NavHome" Tag="home" Text="{DynamicResource Str.NavHome}" IsChecked="True" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavGames" Tag="games" Text="{DynamicResource Str.NavGames}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavDetect" Tag="detect" Text="{DynamicResource Str.NavDetect}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavDisplay" Tag="display" Text="{DynamicResource Str.NavDisplay}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavFilters" Tag="filters" Text="{DynamicResource Str.NavFilters}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavSession" Tag="session" Text="{DynamicResource Str.NavSession}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavAb" Tag="ab" Text="{DynamicResource Str.NavAb}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavTools" Tag="tools" Text="{DynamicResource Str.NavTools}" Checked="Nav_Checked"/>
-                    <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Checked="Nav_Checked"/>
+                <StackPanel x:Name="NavigationStack" Grid.Row="1" Margin="4,0,10,0">
+                    <controls:NavButton x:Name="NavHome" Tag="home" Text="{DynamicResource Str.NavHome}" Style="{StaticResource SideNavItemStyle}" IsChecked="True" Checked="Nav_Checked"/>
+                    <StackPanel x:Name="NavGroupGamesRoot">
+                        <ToggleButton x:Name="NavGroupGamesHeader" Tag="Games" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupGames}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupGames}"/>
+                        <StackPanel x:Name="NavGroupGamesItems">
+                            <controls:NavButton x:Name="NavGames" Tag="games" Text="{DynamicResource Str.NavGames}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavQuick" Tag="quick" Text="{DynamicResource Str.NavQuickOpt}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <Button x:Name="NavDeltaFix" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource SideNavActionStyle}" Click="NavDeltaFix_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel x:Name="NavGroupDisplayRoot">
+                        <ToggleButton x:Name="NavGroupDisplayHeader" Tag="Display" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupDisplay}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupDisplay}"/>
+                        <StackPanel x:Name="NavGroupDisplayItems">
+                            <controls:NavButton x:Name="NavDetect" Tag="detect" Text="{DynamicResource Str.NavDetect}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavDisplay" Tag="display" Text="{DynamicResource Str.NavDisplayPage}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <controls:NavButton x:Name="NavFilters" Tag="filters" Text="{DynamicResource Str.NavFilters}" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
+                    <StackPanel x:Name="NavGroupSystemRoot">
+                        <ToggleButton x:Name="NavGroupSystemHeader" Tag="System" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupSystem}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupSystem}"/>
+                        <StackPanel x:Name="NavGroupSystemItems">
+                            <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavTools" Tag="tools" Text="{DynamicResource Str.NavTools}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <controls:NavButton x:Name="NavSession" Tag="session" Text="{DynamicResource Str.NavSession}" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavAb" Tag="ab" Text="{DynamicResource Str.NavAb}" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                 </StackPanel>
                 <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">
                     <TextBlock x:Name="FooterBrandText" Text="{DynamicResource Str.AppName}" FontFamily="{StaticResource FontBody}" FontWeight="{DynamicResource SmallEmphasisWeight}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="14"/>

@@ -3,188 +3,222 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
              Background="{DynamicResource AppBackgroundBrush}"
              FontFamily="{StaticResource FontBody}">
-    <!-- 0.1.16：卡片化（用户批准的布局提案）——开局准备卡 / 指标通栏卡 / 优化项卡（含底部动作条），
-         组件与色值沿用全站卡片语言（CardStyle + 发丝分隔），与检测/会话等页一致 -->
+    <!-- 0.4.0：首页化（对标 1U 首页）——一键优化大卡置顶 + 开局准备 / 指标 / 继续使用与常用入口 / 优化项，
+         组件与色值沿用全站卡片语言（CardStyle + 发丝分隔），整页可滚动 -->
     <UserControl.Resources>
         <Style x:Key="MetricNumber" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">
             <Setter Property="FontSize" Value="28"/>
             <Setter Property="Margin" Value="0,6,0,8"/>
         </Style>
     </UserControl.Resources>
-    <Grid Margin="28,14,28,18">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="28,14,28,18">
 
-        <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
-        <Border Grid.Row="0" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
-            <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <!-- 卡 0：一键优化大卡（点进统一页，方案 chips 快捷预选） -->
+            <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,12">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,18,0"/>
-                    <ComboBox Grid.Column="1" x:Name="GameSwitcher" Width="300" Height="38" FontSize="14" Padding="14,0,34,0" Background="{DynamicResource SurfaceBrush}" HorizontalContentAlignment="Stretch"
-                              Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
-                              SelectionChanged="GameSwitcher_SelectionChanged">
-                        <ComboBox.ItemTemplate><DataTemplate><controls:FileNameLabel Text="{Binding DisplayLabel}" ToolTip="{Binding ExePath}" VerticalAlignment="Center"/></DataTemplate></ComboBox.ItemTemplate>
-                    </ComboBox>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{DynamicResource Str.HomeQuickCardTitle}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="{DynamicResource Str.HomeQuickCardBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap" MaxWidth="640" HorizontalAlignment="Left"/>
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button Content="{DynamicResource Str.PlanBalanced}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="balanced"/>
+                            <Button Content="{DynamicResource Str.PlanSafe}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="safe-only"/>
+                            <Button Content="{DynamicResource Str.PlanFull}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="full"/>
+                        </WrapPanel>
+                    </StackPanel>
+                    <Button Grid.Column="1" x:Name="HomeQuickCardButton" Content="{DynamicResource Str.HomeQuickCardCta}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="150" Height="44" VerticalAlignment="Center" Click="HomeQuickCard_Click"/>
                 </Grid>
-                <TextBlock Grid.Row="1" x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"/>
-                <Grid Grid.Row="2" Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <WrapPanel x:Name="PreparationActions">
-                        <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="112" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
-                        <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
-                        <Button x:Name="CancelPreparationButton" Content="{DynamicResource Str.PrepareStop}" Style="{StaticResource GhostButtonStyle}" Height="36" Visibility="Collapsed" Click="CancelPreparation_Click"/>
-                    </WrapPanel>
-                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
-                        <Button x:Name="GameLibraryButton" Content="{DynamicResource Str.NavGames}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="GameLibrary_Click"/>
-                        <Button x:Name="QuickFiltersButton" Content="{DynamicResource Str.TabFilters}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="QuickFilters_Click"/>
-                        <Button x:Name="QuickDeltaFixButton" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource GhostButtonStyle}" Height="36" Click="QuickDeltaFix_Click"/>
-                        <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
-                    </WrapPanel>
-                </Grid>
-                <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,8" Margin="0,12,0,0">
-                    <TextBlock x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
-                </Border>
-                <WrapPanel Grid.Row="4" Margin="-10,6,0,-4">
-                    <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource GhostButtonStyle}" Click="LocateDelta_Click"/>
-                    <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
-                    <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Click="DeltaRestore_Click"/>
-                    <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click"/>
-                    <Button x:Name="TuningButton" Content="{DynamicResource Str.TuningTitle}" Style="{StaticResource GhostButtonStyle}" Click="Tuning_Click" Visibility="Collapsed"/>
-                </WrapPanel>
-                <TextBlock Grid.Row="5" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
-            </Grid>
-        </Border>
+            </Border>
 
-        <!-- 卡 2：指标通栏（发丝分隔四格，与检测页硬件条同构） -->
-        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
-            <UniformGrid Columns="4">
-                <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                    <StackPanel>
-                        <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBlock x:Name="CpuText" Text="—" Style="{StaticResource MetricNumber}"/>
-                        <ProgressBar x:Name="CpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
-                    </StackPanel>
-                </Border>
-                <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                    <StackPanel>
-                        <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
-                        <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
-                    </StackPanel>
-                </Border>
-                <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
-                    <StackPanel>
-                        <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBlock x:Name="GpuText" Text="—" Style="{StaticResource MetricNumber}"/>
-                        <ProgressBar x:Name="GpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
-                    </StackPanel>
-                </Border>
-                <Border Padding="20,12,20,10">
-                    <StackPanel>
-                        <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
-                        <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>
-                        <ProgressBar x:Name="TunedMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
-                    </StackPanel>
-                </Border>
-            </UniformGrid>
-        </Border>
-
-        <!-- 卡 3：优化项（方案 + 搜索 + 发丝行列表 + 底部动作条） -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0" Margin="18,14,18,4">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="230"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                        <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
-                        <Border Background="Transparent" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="3">
-                            <UniformGrid Columns="3" Width="240">
-                                <RadioButton x:Name="BalancedPreset" ToolTip="{DynamicResource Str.TipBalanced}" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
-                                <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
-                                <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
-                            </UniformGrid>
-                        </Border>
-                    </StackPanel>
-                    <Grid Grid.Column="2">
-                        <TextBox x:Name="SearchBox" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
-                                 ToolTip="{DynamicResource Str.TipSearchItems}" AutomationProperties.Name="{DynamicResource Str.SearchItemsShort}" TextChanged="Search_TextChanged"/>
-                        <TextBlock Text="{DynamicResource Str.SearchItemsShort}" Margin="11,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource TextMutedBrush}">
-                            <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                    <Button Grid.Column="3" x:Name="RefreshButton" Content="{DynamicResource Str.Redetect}" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
-                </Grid>
-
-                <ListBox x:Name="ItemList" Grid.Row="1" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
-                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" SelectionMode="Single">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource CardListItemStyle}">
-                            <Setter Property="Padding" Value="18,13"/>
-                            <Setter Property="MinHeight" Value="64"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="38"/><ColumnDefinition Width="245"/><ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="94"/><ColumnDefinition Width="78"/><ColumnDefinition Width="48"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Number}" FontFamily="{StaticResource FontBody}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" Style="{StaticResource ItemTitleStyle}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
-                                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
-                                    <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
-                                    <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="13"
-                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
-                                               Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
-                                    <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
-                                    <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="13" Margin="0,3,0,0"
-                                               Foreground="{DynamicResource AccentBrush}"/>
-                                </StackPanel>
-                                <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="13" VerticalAlignment="Center"
-                                           Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
-                                <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="13" VerticalAlignment="Center">
-                                    <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-                                </TextBlock>
-                                <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" IsEnabled="{Binding Item.Available}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
-                                          ToolTip="{DynamicResource Str.TipSelectItem}" AutomationProperties.Name="{Binding Item.Name}"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="18,12">
+            <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                     <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,18,0"/>
+                        <ComboBox Grid.Column="1" x:Name="GameSwitcher" Width="300" Height="38" FontSize="14" Padding="14,0,34,0" Background="{DynamicResource SurfaceBrush}" HorizontalContentAlignment="Stretch"
+                                  Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
+                                  SelectionChanged="GameSwitcher_SelectionChanged">
+                            <ComboBox.ItemTemplate><DataTemplate><controls:FileNameLabel Text="{Binding DisplayLabel}" ToolTip="{Binding ExePath}" VerticalAlignment="Center"/></DataTemplate></ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+                    <TextBlock Grid.Row="1" x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    <Grid Grid.Row="2" Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <WrapPanel x:Name="PreparationActions">
+                            <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="112" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
+                            <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
+                            <Button x:Name="CancelPreparationButton" Content="{DynamicResource Str.PrepareStop}" Style="{StaticResource GhostButtonStyle}" Height="36" Visibility="Collapsed" Click="CancelPreparation_Click"/>
+                        </WrapPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <Button x:Name="GameLibraryButton" Content="{DynamicResource Str.NavGames}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="GameLibrary_Click"/>
+                            <Button x:Name="QuickFiltersButton" Content="{DynamicResource Str.TabFilters}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="QuickFilters_Click"/>
+                            <Button x:Name="QuickDeltaFixButton" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource GhostButtonStyle}" Height="36" Click="QuickDeltaFix_Click"/>
+                            <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
+                        </WrapPanel>
+                    </Grid>
+                    <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,8" Margin="0,12,0,0">
+                        <TextBlock x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                    </Border>
+                    <WrapPanel Grid.Row="4" Margin="-10,6,0,-4">
+                        <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource GhostButtonStyle}" Click="LocateDelta_Click"/>
+                        <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
+                        <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Click="DeltaRestore_Click"/>
+                        <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click"/>
+                        <Button x:Name="TuningButton" Content="{DynamicResource Str.TuningTitle}" Style="{StaticResource GhostButtonStyle}" Click="Tuning_Click" Visibility="Collapsed"/>
+                    </WrapPanel>
+                    <TextBlock Grid.Row="5" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
+            <!-- 卡 2：指标通栏（发丝分隔四格，与检测页硬件条同构） -->
+            <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
+                <UniformGrid Columns="4">
+                    <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                        <StackPanel>
+                            <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="CpuText" Text="—" Style="{StaticResource MetricNumber}"/>
+                            <ProgressBar x:Name="CpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
+                            <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                        <StackPanel>
+                            <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="GpuText" Text="—" Style="{StaticResource MetricNumber}"/>
+                            <ProgressBar x:Name="GpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Padding="20,12,20,10">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>
+                            <ProgressBar x:Name="TunedMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </Border>
+
+            <!-- 卡 3：继续使用 + 常用入口（最近访问 + 六入口网格） -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="{DynamicResource Str.HomeRecent}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <WrapPanel x:Name="RecentPagesPanel" Margin="0,10,0,0"/>
+                    <TextBlock x:Name="RecentEmptyText" Text="{DynamicResource Str.HomeRecentEmpty}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,8,0,0"/>
+                    <TextBlock Text="{DynamicResource Str.HomeCommon}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,0"/>
+                    <UniformGrid Columns="3" Margin="0,10,0,-6">
+                        <Button Content="{DynamicResource Str.HomeEntryPrep}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,10" HorizontalAlignment="Stretch" Click="StartPreparation_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntryGames}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,10" HorizontalAlignment="Stretch" Click="GameLibrary_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntryFilters}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,0,10" HorizontalAlignment="Stretch" Click="QuickFilters_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntryDeltaFix}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,0" HorizontalAlignment="Stretch" Click="QuickDeltaFix_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntrySession}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,0" HorizontalAlignment="Stretch" Click="HomeSession_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntryTools}" Style="{StaticResource SecondaryButtonStyle}" Height="44" HorizontalAlignment="Stretch" Click="HomeTools_Click"/>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- 卡 4：优化项（方案 + 搜索 + 发丝行列表 + 底部动作条） -->
+            <Border Style="{StaticResource CardStyle}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="18,14,18,4">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="230"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{DynamicResource Str.ItemsTitle}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <TextBlock Text="{DynamicResource Str.ChoosePlan}" VerticalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,12,0"/>
+                            <Border Background="Transparent" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="3">
+                                <UniformGrid Columns="3" Width="240">
+                                    <RadioButton x:Name="BalancedPreset" ToolTip="{DynamicResource Str.TipBalanced}" Content="{DynamicResource Str.PlanBalanced}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="balanced" IsChecked="True"/>
+                                    <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="safe-only"/>
+                                    <RadioButton x:Name="CustomPreset" Content="{DynamicResource Str.PresetCustom}" GroupName="ConsolePreset" Style="{StaticResource PillRadioStyle}" Checked="Preset_Checked" Tag="custom"/>
+                                </UniformGrid>
+                            </Border>
                         </StackPanel>
-                        <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
+                        <Grid Grid.Column="2">
+                            <TextBox x:Name="SearchBox" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
+                                     ToolTip="{DynamicResource Str.TipSearchItems}" AutomationProperties.Name="{DynamicResource Str.SearchItemsShort}" TextChanged="Search_TextChanged"/>
+                            <TextBlock Text="{DynamicResource Str.SearchItemsShort}" Margin="11,0" VerticalAlignment="Center" IsHitTestVisible="False" Foreground="{DynamicResource TextMutedBrush}">
+                                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                        <Button Grid.Column="3" x:Name="RefreshButton" Content="{DynamicResource Str.Redetect}" Style="{StaticResource GhostButtonStyle}" Margin="12,0,0,0" Click="Refresh_Click"/>
                     </Grid>
-                </Border>
-            </Grid>
-        </Border>
-    </Grid>
+
+                    <ListBox x:Name="ItemList" Grid.Row="1" Height="380" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" SelectionMode="Single">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource CardListItemStyle}">
+                                <Setter Property="Padding" Value="18,13"/>
+                                <Setter Property="MinHeight" Value="64"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38"/><ColumnDefinition Width="245"/><ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="94"/><ColumnDefinition Width="78"/><ColumnDefinition Width="48"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Number}" FontFamily="{StaticResource FontBody}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Item.Name}" Foreground="{DynamicResource AccentBrush}" Style="{StaticResource ItemTitleStyle}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,18,0"/>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,18,0">
+                                        <TextBlock Text="{Binding Item.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.Description}"/>
+                                        <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="13"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.SideEffect}" Margin="0,3,0,0"
+                                                   Visibility="{Binding Item.HasSideEffect, Converter={StaticResource BoolToVis}}"><Run Text="{DynamicResource Str.NoteLabel}"/><Run Text="{Binding Item.SideEffect, Mode=OneWay}"/></TextBlock>
+                                        <!-- 0.2.0 M1：项级实测徽标（无记录为空串，零宽不占位） -->
+                                        <TextBlock Text="{Binding Item.VerdictBadge}" FontSize="13" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource AccentBrush}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.AdminRequired}" Foreground="{DynamicResource WarningBrush}" FontSize="13" VerticalAlignment="Center"
+                                               Visibility="{Binding Item.RequiresAdmin, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding Item.StatusText}" FontSize="13" VerticalAlignment="Center">
+                                        <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Item.Optimized}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                    </TextBlock>
+                                    <CheckBox Grid.Column="5" IsChecked="{Binding Item.IsChecked}" IsEnabled="{Binding Item.Available}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                                              ToolTip="{DynamicResource Str.TipSelectItem}" AutomationProperties.Name="{Binding Item.Name}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="18,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="SelectionText" Text="{DynamicResource Str.PreparingItems}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock x:Name="StateText" Text="{DynamicResource Str.ToggleHint}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" x:Name="ReviewButton" Content="{DynamicResource Str.ReviewAndApply}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="38" Click="Review_Click" IsEnabled="False"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

@@ -3,9 +3,14 @@
                     xmlns:s="clr-namespace:System;assembly=System.Runtime">
 
     <!-- 主导航 -->
-    <s:String x:Key="Str.NavHome">概览</s:String>
+    <s:String x:Key="Str.NavHome">首页</s:String>
     <s:String x:Key="Str.NavDetect">检测</s:String>
     <s:String x:Key="Str.NavOpt">优化</s:String>
+    <s:String x:Key="Str.NavGroupGames">游戏</s:String>
+    <s:String x:Key="Str.NavGroupDisplay">显示与画质</s:String>
+    <s:String x:Key="Str.NavGroupSystem">系统优化</s:String>
+    <s:String x:Key="Str.NavDisplayPage">显示</s:String>
+    <s:String x:Key="Str.NavQuickOpt">一键优化</s:String>
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
     <s:String x:Key="Str.NavFilters">游戏滤镜</s:String>
     <s:String x:Key="Str.FilterPageIntro">滤镜中心一键套用 ICC 预设；独立程序滤镜按前台进程自动切换；掉帧修复针对三角洲更新后的卡顿。</s:String>
@@ -2002,6 +2007,43 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TrayHiddenHotkey">也可按 Ctrl+Alt+F 呼出。</s:String>
     <s:String x:Key="Str.TrayStillRunning">FPS 帧律仍在运行</s:String>
     <s:String x:Key="Str.PreparationHistory">准备记录</s:String>
+    <!-- 一键优化统一页 -->
+    <s:String x:Key="Str.QuickOptTitle">一键优化</s:String>
+    <s:String x:Key="Str.PlanFull">全量</s:String>
+    <s:String x:Key="Str.ResultOk">成功</s:String>
+    <s:String x:Key="Str.ResultFailed">失败</s:String>
+    <s:String x:Key="Str.ResultSkipped">跳过</s:String>
+    <s:String x:Key="Str.QuickOptIntro">选择游戏和方案，按既有备份契约一次完成优化项、电源计划与滤镜设置；执行后逐项显示结果，可随时还原。</s:String>
+    <s:String x:Key="Str.QuickOptGameLabel">游戏</s:String>
+    <s:String x:Key="Str.QuickOptNoGame">还没有游戏档案，先到游戏库添加</s:String>
+    <s:String x:Key="Str.QuickOptPlanLabel">优化方案</s:String>
+    <s:String x:Key="Str.QuickOptPowerLabel">电源计划</s:String>
+    <s:String x:Key="Str.QuickOptPowerToggle">同时把 Windows 电源计划切到最高性能优先</s:String>
+    <s:String x:Key="Str.QuickOptFilterLabel">滤镜场景（可选）</s:String>
+    <s:String x:Key="Str.QuickOptFilterNone">不套滤镜</s:String>
+    <s:String x:Key="Str.QuickOptRun">开始优化</s:String>
+    <s:String x:Key="Str.QuickOptRunning">正在优化…</s:String>
+    <s:String x:Key="Str.QuickOptDoneTitle">执行结果</s:String>
+    <s:String x:Key="Str.QuickOptBackupHint">写入前已自动备份；到「系统优化 → 备份日志」可逐项还原。</s:String>
+    <s:String x:Key="Str.QuickOptSummaryFmt">{0} 项成功、{1} 项失败、{2} 项跳过</s:String>
+    <s:String x:Key="Str.QuickOptFilterDoneFmt">滤镜「{0}」已应用</s:String>
+    <s:String x:Key="Str.QuickOptFilterFailFmt">滤镜「{0}」应用失败</s:String>
+    <s:String x:Key="Str.QuickOptPowerDone">电源计划已切到最高性能优先</s:String>
+    <s:String x:Key="Str.QuickOptPowerFail">电源计划切换失败</s:String>
+    <s:String x:Key="Str.QuickOptNeedAdmin">所选方案包含需要管理员的优化项，请以管理员身份运行后重试。</s:String>
+    <!-- 首页大卡与入口区 -->
+    <s:String x:Key="Str.HomeQuickCardTitle">一键优化</s:String>
+    <s:String x:Key="Str.HomeQuickCardBody">按游戏和场景一次完成优化项、电源与滤镜，改动前自动备份、可还原。</s:String>
+    <s:String x:Key="Str.HomeQuickCardCta">开始一键优化</s:String>
+    <s:String x:Key="Str.HomeRecent">继续使用</s:String>
+    <s:String x:Key="Str.HomeCommon">常用入口</s:String>
+    <s:String x:Key="Str.HomeEntryPrep">开局准备</s:String>
+    <s:String x:Key="Str.HomeEntryGames">游戏库</s:String>
+    <s:String x:Key="Str.HomeEntryFilters">游戏滤镜</s:String>
+    <s:String x:Key="Str.HomeEntryDeltaFix">掉帧修复</s:String>
+    <s:String x:Key="Str.HomeEntrySession">性能会话</s:String>
+    <s:String x:Key="Str.HomeEntryTools">维护工具</s:String>
+    <s:String x:Key="Str.HomeRecentEmpty">用过一次后，最近访问的页面会出现在这里</s:String>
     <s:String x:Key="Str.PreparationHistoryHint">保留最近 50 次开局准备结果。</s:String>
     <s:String x:Key="Str.PreparationHistoryScope">记录范围</s:String>
     <s:String x:Key="Str.PreparationHistoryAll">全部游戏</s:String>

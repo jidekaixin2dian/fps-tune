@@ -349,4 +349,68 @@ public partial class ConsoleView : UserControl
         if (Window.GetWindow(this) is MainWindow main)
             main.ReviewSelection(_rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToArray());
     }
+
+    // ---------- 首页：一键优化大卡 + 继续使用 + 常用入口 ----------
+
+    private void HomeQuickCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("quick");
+    }
+
+    private void HomeQuickPreset_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string preset }) return;
+        QuickOptimizeView.PendingPreset = preset;
+        if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("quick");
+    }
+
+    private void HomeSession_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("session");
+    }
+
+    private void HomeTools_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("tools");
+    }
+
+    /// <summary>“继续使用”最近访问 chips；由 MainWindow 在切回首页时调用刷新。</summary>
+    internal void RefreshRecentPages()
+    {
+        if (RecentPagesPanel is null) return;
+        RecentPagesPanel.Children.Clear();
+        var recent = SettingsService.Current.RecentPages;
+        RecentEmptyText.Visibility = recent.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var key in recent)
+        {
+            var title = PageTitle(key);
+            if (title.Length == 0) continue;
+            var chip = new Button
+            {
+                Content = title,
+                Style = (Style)FindResource("SecondaryButtonStyle"),
+                Height = 34,
+                Margin = new Thickness(0, 0, 8, 8),
+                Tag = key,
+            };
+            chip.Click += (_, _) => { if (Window.GetWindow(this) is MainWindow main) main.NavigateTo(key); };
+            RecentPagesPanel.Children.Add(chip);
+        }
+    }
+
+    private static string PageTitle(string key) => key switch
+    {
+        "games" => Str.T("Str.NavGames"),
+        "quick" => Str.T("Str.QuickOptTitle"),
+        "detect" => Str.T("Str.NavDetect"),
+        "opt" => Str.T("Str.NavOpt"),
+        "display" => Str.T("Str.NavDisplayPage"),
+        "filters" => Str.T("Str.NavFilters"),
+        "session" => Str.T("Str.NavSession"),
+        "ab" => Str.T("Str.NavAb"),
+        "backup" => Str.T("Str.NavBackup"),
+        "tools" => Str.T("Str.NavTools"),
+        "settings" => Str.T("Str.NavSettings"),
+        _ => "",
+    };
 }
