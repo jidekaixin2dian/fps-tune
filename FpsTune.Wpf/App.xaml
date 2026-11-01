@@ -396,9 +396,9 @@
                             <Grid Background="Transparent">
                                 <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="26,0,10,0">
-                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="12" Height="12" Stretch="Uniform"
-                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.9" Margin="0,1,0,0"/>
+                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="14" Height="14" Stretch="Uniform"
+                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="2.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Margin="0,1,0,0"/>
                                     <TextBlock Text="{TemplateBinding Text}"
                                                Foreground="{TemplateBinding Foreground}"
                                                FontFamily="{TemplateBinding FontFamily}"
@@ -438,9 +438,9 @@
                             <Grid Background="Transparent">
                                 <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="26,0,10,0">
-                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="12" Height="12" Stretch="Uniform"
-                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.9" Margin="0,1,0,0"/>
+                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="14" Height="14" Stretch="Uniform"
+                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="2.1" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Margin="0,1,0,0"/>
                                     <TextBlock Text="{TemplateBinding Content}"
                                                Foreground="{TemplateBinding Foreground}"
                                                FontFamily="{TemplateBinding FontFamily}"
