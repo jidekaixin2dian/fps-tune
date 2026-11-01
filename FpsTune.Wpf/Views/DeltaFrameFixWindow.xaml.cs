@@ -19,13 +19,13 @@ public partial class DeltaFrameFixWindow : Window
     {
         if (!UiMotion.Enabled) return;
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        Shell.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150))
+        Shell.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170))
         { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-        var grow = new DoubleAnimation(0.985, 1, TimeSpan.FromMilliseconds(190)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop };
+        var grow = new DoubleAnimation(0.965, 1, TimeSpan.FromMilliseconds(210)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop };
         ShellScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, grow);
         ShellScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, grow);
         ShellOffset.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty,
-            new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(190)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+            new DoubleAnimation(16, 0, TimeSpan.FromMilliseconds(210)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
     }
 
     private void Header_MouseDown(object sender, MouseButtonEventArgs e)
