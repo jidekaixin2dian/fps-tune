@@ -81,29 +81,92 @@ public sealed class GameContextStoreTests : IDisposable
     }
 
     [Fact]
-    public void Startup_restores_saved_selection_without_loading_stale_detection()
+    public void Startup_restores_saved_selection_and_its_detection_snapshot()
     {
+        // 契约变更（2026-11-01）：重启后不再只恢复路径，而是一并载入该游戏自己的检测快照——
+        // 否则「优化」页会一直空着，用户必须回检测页手动点「加载到优化页」。
         var profile = StateStore.AddGame(@"C:\Games\Saved.exe");
         StateStore.SaveGamePath(profile.ExePath);
+        StateStore.SaveDetectForGame(profile.Id, Snapshot("game-mode"));
         var previousPath = AppState.GamePath;
         var previousDetection = AppState.DetectJson;
+        var previousItems = AppState.Items;
         try
         {
             AppState.GamePath = null;
-            var detection = new JsonObject { ["sentinel"] = true };
-            AppState.DetectJson = detection;
+            AppState.DetectJson = null;
+            AppState.Items = [];
 
             GameContextService.RestoreSavedSelection();
 
             Assert.Equal(profile.ExePath, AppState.GamePath);
             Assert.Equal(profile.Id, GameContextService.SelectedItem(GameContextService.BuildSwitcherItems())?.ProfileId);
-            Assert.Same(detection, AppState.DetectJson);
+            Assert.NotNull(AppState.DetectJson);
+            Assert.Contains(AppState.Items, item => item.Id == "game-mode");
         }
         finally
         {
             AppState.GamePath = previousPath;
             AppState.DetectJson = previousDetection;
+            AppState.Items = previousItems;
         }
+    }
+
+    [Fact]
+    public void Startup_does_not_invent_detection_when_the_game_has_no_snapshot()
+    {
+        var profile = StateStore.AddGame(@"C:\Games\NoSnapshot.exe");
+        StateStore.SaveGamePath(profile.ExePath);
+        var previousPath = AppState.GamePath;
+        var previousDetection = AppState.DetectJson;
+        var previousItems = AppState.Items;
+        try
+        {
+            AppState.GamePath = null;
+            var sentinel = new JsonObject { ["sentinel"] = true };
+            AppState.DetectJson = sentinel;
+            AppState.Items = [];
+
+            GameContextService.RestoreSavedSelection();
+
+            Assert.Equal(profile.ExePath, AppState.GamePath);
+            Assert.Same(sentinel, AppState.DetectJson);
+            Assert.Empty(AppState.Items);
+        }
+        finally
+        {
+            AppState.GamePath = previousPath;
+            AppState.DetectJson = previousDetection;
+            AppState.Items = previousItems;
+        }
+    }
+
+    /// <summary>与真实检测快照同构的最小 JSON（字段够 DetectionData.ParseItems 解析）。</summary>
+    internal static JsonObject Snapshot(params string[] itemIds)
+    {
+        var items = new JsonArray();
+        foreach (var id in itemIds)
+        {
+            items.Add(new JsonObject
+            {
+                ["id"] = id,
+                ["name"] = id,
+                ["desc"] = "",
+                ["sideEffect"] = "",
+                ["admin"] = false,
+                ["default"] = false,
+                ["reboot"] = false,
+                ["optimized"] = false,
+            });
+        }
+        return new JsonObject
+        {
+            ["tool"] = "fps-tune",
+            ["version"] = "0.4.0",
+            ["mode"] = "detect",
+            ["admin"] = false,
+            ["items"] = items,
+        };
     }
 
     [Fact]

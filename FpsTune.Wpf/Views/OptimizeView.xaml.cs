@@ -105,6 +105,12 @@ public partial class OptimizeView : UserControl
         var count = Items.Count(ItemsView.Contains);
         ItemListTitle.Text = Str.T("Str.OptFilteredCount", count, Items.Count);
         EmptyHint.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (count == 0)
+        {
+            // 列表本身就是空的时候，用户不是"筛掉了"，而是还没把检测结果加载进来——
+            // 这时候提示"调整搜索或分类"只会让人以为软件坏了。
+            EmptyHint.Text = Items.Count == 0 ? Str.T("Str.NoItemsRunDetect") : Str.T("Str.NoMatchingItems");
+        }
         UpdateSelectionSummary();
     }
     private bool FilterItem(object obj)
