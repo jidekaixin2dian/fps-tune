@@ -301,14 +301,14 @@ public static class UpdateService
     private static async Task DownloadCoreAsync(string url, string targetFile, Action<double>? progress,
         CancellationToken cancellationToken, long maximumBytes, bool allowMirror, string partial)
     {
-        if (!UpdateMirrors.IsAllowedSource(url) || (!allowMirror && !IsOfficialUrl(url)))
+        if (!UpdateMirrors.IsAllowed(url) || (!allowMirror && !IsOfficialUrl(url)))
             throw new InvalidOperationException(Str.T("Str.UpdateUrlInvalid"));
 
-        var candidates = allowMirror ? UpdateMirrors.Candidates(url).ToArray() : [url];
+        var candidates = UpdateMirrors.ResolveCandidates(url, allowMirror).ToArray();
         Exception? failure = null;
         foreach (var candidate in candidates)
         {
-            if (!UpdateMirrors.IsAllowedSource(candidate)) continue;
+            if (!UpdateMirrors.IsAllowed(candidate)) continue;
             for (var attempt = 1; attempt <= AttemptsPerSource; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();

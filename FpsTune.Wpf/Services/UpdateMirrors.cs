@@ -31,6 +31,17 @@ internal static partial class UpdateMirrors
             yield return prefix + officialUrl;
     }
 
+    /// <summary>测试注入：换掉候选源列表（只在本机回环验证续传/回退时用）。</summary>
+    internal static Func<string, IEnumerable<string>>? CandidatesOverride;
+
+    /// <summary>测试注入：换掉来源校验（与 <see cref="CandidatesOverride"/> 同时使用）。</summary>
+    internal static Func<string, bool>? SourceOverride;
+
+    internal static IEnumerable<string> ResolveCandidates(string url, bool allowMirror)
+        => CandidatesOverride is { } custom ? custom(url) : allowMirror ? Candidates(url) : [url];
+
+    internal static bool IsAllowed(string? url) => SourceOverride is { } custom ? custom(url ?? "") : IsAllowedSource(url);
+
     /// <summary>只允许官方域名或已登记的加速前缀，路径必须落在本项目 Release 资产上。</summary>
     internal static bool IsAllowedSource(string? url)
     {

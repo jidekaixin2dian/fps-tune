@@ -122,6 +122,22 @@ public class DarkBalanceFilterTests
         Assert.True(ScreenColorSettings.ForPreset(IccFilterPreset.ArenaCool).Blue > ScreenColorSettings.ForPreset(IccFilterPreset.ArenaCool).Red);
     }
 
+    [Theory]
+    [InlineData(IccFilterPreset.Daylight, 75)]
+    [InlineData(IccFilterPreset.VividLively, 90)]
+    [InlineData(IccFilterPreset.ArenaCool, 95)]
+    [InlineData(IccFilterPreset.GameR6, 32)]
+    [InlineData(IccFilterPreset.GameCod16, 93)]
+    public void Presets_carry_the_reference_digital_vibrance_value(IccFilterPreset preset, int expected)
+        => Assert.Equal(expected, IccProfileGenerator.VibranceFor(preset));
+
+    [Fact]
+    public void Presets_without_a_reference_vibrance_stay_null()
+    {
+        Assert.Null(IccProfileGenerator.VibranceFor(IccFilterPreset.Vivid));
+        Assert.Null(IccProfileGenerator.VibranceFor(IccFilterPreset.Neutral));
+    }
+
     /// <summary>改造前的 MapTone（无条件 x^(1/Gamma)），用于证明中性值零回归。</summary>
     private static double LegacyTone(double x, ScreenColorSettings settings)
     {

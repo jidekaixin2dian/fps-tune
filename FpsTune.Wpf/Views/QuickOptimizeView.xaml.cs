@@ -20,6 +20,12 @@ public partial class QuickOptimizeView : UserControl
         public override string ToString() => Label;
     }
 
+    /// <summary>生成式滤镜预设（没有 .icc 文件，应用时按枚举即时生成字节）。</summary>
+    internal sealed record GeneratedFilterChoice(string Label, IccFilterPreset Preset)
+    {
+        public override string ToString() => Label;
+    }
+
     private StateStore.GameProfile? _game;
     private bool _loaded;
 
@@ -45,7 +51,7 @@ public partial class QuickOptimizeView : UserControl
             DlssBox.Items.Add(new ComboPreset<DlssPreset>(Str.T(key), preset));
         DlssBox.SelectedIndex = 0;
 
-        // 滤镜场景下拉（可选）：不套滤镜 + 全部预设
+        // 滤镜场景下拉（可选）：不套滤镜 + 内置 .icc 预设 + 生成式预设（白天/鲜艳等，与滤镜页同一套枚举）
         FilterBox.Items.Add(Str.T("Str.QuickOptFilterNone"));
         try
         {
@@ -53,6 +59,8 @@ public partial class QuickOptimizeView : UserControl
             if (!_loaded) return;
             foreach (var preset in presets)
                 FilterBox.Items.Add(preset);
+            foreach (var generated in Enum.GetValues<IccFilterPreset>())
+                FilterBox.Items.Add(new GeneratedFilterChoice(ScreenColorSettings.TitleFor(generated), generated));
         }
         catch (Exception ex) { RunStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
         FilterBox.SelectedIndex = 0;
@@ -132,22 +140,39 @@ public partial class QuickOptimizeView : UserControl
                 }
             }
 
-            // 可选滤镜场景：走滤镜中心同一契约（备份在 ICC 服务内部）
-            if (filter is GameFilterPreset fp)
+            // 可选滤镜场景：走滤镜中心同一契约（备份在 ICC 服务内部）。
+            // 内置 .icc 读文件；生成式预设按枚举即时生成字节，两条路径统一落到同一个临时文件再应用。
+            var filterBytes = filter switch
             {
+                GameFilterPreset fp => await Task.Run(() => GameFilterLibrary.ReadPreset(fp.FileName)),
+                GeneratedFilterChoice gp => IccProfileGenerator.Build(gp.Preset),
+                _ => null,
+            };
+            var filterLabel = filter switch
+            {
+                GameFilterPreset fp => fp.Name,
+                GeneratedFilterChoice gp => gp.Label,
+                _ => null,
+            };
+            if (filterBytes is not null && filterLabel is not null)
+            {
+                var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + Guid.NewGuid().ToString("N") + ".icc");
                 try
                 {
-                    var bytes = await Task.Run(() => GameFilterLibrary.ReadPreset(fp.FileName));
-                    var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + Guid.NewGuid().ToString("N") + ".icc");
-                    await File.WriteAllBytesAsync(temp, bytes);
+                    await File.WriteAllBytesAsync(temp, filterBytes);
                     var message = await Task.Run(() => IccFilterService.ApplyFromFile(temp));
-                    rows.Add(new ResultRow(Str.T("Str.QuickOptFilterLabel") + "：" + fp.Name, true,
+                    rows.Add(new ResultRow(Str.T("Str.QuickOptFilterLabel") + "：" + filterLabel, true,
                         Str.T("Str.ResultOk"), Str.T("Str.QuickOptFilterDoneFmt", message)));
                 }
                 catch (Exception ex)
                 {
-                    rows.Add(new ResultRow(Str.T("Str.QuickOptFilterLabel") + "：" + fp.Name, false,
+                    rows.Add(new ResultRow(Str.T("Str.QuickOptFilterLabel") + "：" + filterLabel, false,
                         Str.T("Str.ResultFailed"), PrivacyScrub.Sanitize(ex.Message)));
+                }
+                finally
+                {
+                    // 应用后过滤器的字节已被 ICC 服务接管，临时文件不再需要，别留在 %TEMP%。
+                    try { File.Delete(temp); } catch (IOException) { } catch (UnauthorizedAccessException) { }
                 }
             }
 

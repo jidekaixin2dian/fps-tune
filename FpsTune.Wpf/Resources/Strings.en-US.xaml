@@ -1325,6 +1325,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorBlue">Blue</s:String>
     <s:String x:Key="Str.ColorDarkBalance">Shadow balance</s:String>
     <s:String x:Key="Str.ColorHighlight">Highlights</s:String>
+    <s:String x:Key="Str.FilterVibranceSuggested">This profile pairs with digital vibrance {0}%; it only applies when you press Apply.</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalance">Shadow balance</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 leaves the image untouched; move right to brighten, left to darken. Uses the same 12-step curve as the reference tool, so values snap.</s:String>
     <s:String x:Key="Str.ColorCustom">Custom parameters</s:String>

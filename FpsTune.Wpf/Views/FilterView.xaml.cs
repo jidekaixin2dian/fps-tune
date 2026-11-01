@@ -83,10 +83,33 @@ public partial class FilterView : UserControl
     {
         try
         {
-            if (choice.Generated is { } preset) { ColorPanel.SelectGeneratedPreset(preset); return; }
+            if (choice.Generated is { } preset)
+            {
+                ColorPanel.SelectGeneratedPreset(preset);
+                SuggestVibrance(preset);
+                return;
+            }
             if (await FilterCenter.MaterializeAsync(choice) is { } path) ColorPanel.SelectIccFile(path);
         }
         catch (Exception ex) { FilterCenter.ReportStatus(PrivacyScrub.Sanitize(ex.Message)); }
+    }
+
+    /// <summary>
+    /// 预设自带数字振动档（1U 同款数据）：只把滑块与百分比预填成草稿，不写系统，
+    /// 仍要点「应用」；该屏没有 DVC 通道时什么都不动。
+    /// </summary>
+    private void SuggestVibrance(IccFilterPreset preset)
+    {
+        if (VibSupportedPanel is null || VibSupportedPanel.Visibility != Visibility.Visible) return;
+        if (IccProfileGenerator.VibranceFor(preset) is not { } percent) return;
+        var value = Math.Clamp(percent, 0, 100);
+        _vibSyncing = true;
+        VibSlider.Value = value;
+        VibPercentText.Text = value + "%";
+        _vibSyncing = false;
+        ColorPanel.SetVibrance(value, VibRestoreButton?.IsEnabled == true, draft: true);
+        _vibStatus = Str.T("Str.FilterVibranceSuggested", value);
+        VibStateText.Text = _vibStatus;
     }
 
     private void OpenDeltaFix_Click(object sender, RoutedEventArgs e) => OpenDeltaFix();

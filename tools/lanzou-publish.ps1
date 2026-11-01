@@ -9,10 +9,9 @@
 
   首次使用（只需一次）：
     1. 配置好 agent-browser（npm i -g agent-browser && agent-browser install）。
-    2. 用同一会话手动登录一次蓝奏云，cookie 会留在会话 profile 里：
-         $env:AGENT_BROWSER_SESSION = 'fpstune-lanzou'
-         agent-browser open 'https://pc.woozooo.com/'
-       （登录后关闭窗口即可，不要 open 其它站点覆盖会话）
+    2. 弹出真实浏览器窗口，手动登录一次（cookie 留在 -Profile 指定的持久 profile 里）：
+         agent-browser --profile "$env:USERPROFILE\.fpstune-browser\lanzou" --headed open 'https://pc.woozooo.com/'
+       登录完成后关掉窗口即可；脚本默认用同一个 profile，不用再登录。
 
   之后每次发版：
     pwsh -File tools/lanzou-publish.ps1 -File dist/installer/FpsTune-Setup-0.4.0.exe
@@ -36,6 +35,7 @@
 param(
     [string[]]$File = @(),
     [string]$Session = 'fpstune-lanzou',
+    [string]$Profile = (Join-Path $env:USERPROFILE '.fpstune-browser\lanzou'),
     [switch]$Probe,
     [int]$TimeoutSeconds = 180
 )
@@ -64,7 +64,7 @@ function Invoke-Browser {
     $previous = $env:AGENT_BROWSER_SESSION
     try {
         $env:AGENT_BROWSER_SESSION = $Session
-        $process = Start-Process -FilePath $launcher[0] -ArgumentList ($launcher[1..($launcher.Count - 1)] + $Arguments) -NoNewWindow -PassThru `
+        $process = Start-Process -FilePath $launcher[0] -ArgumentList ($launcher[1..($launcher.Count - 1)] + @('--profile', $Profile) + $Arguments) -NoNewWindow -PassThru `
             -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     }
     finally {
@@ -106,12 +106,11 @@ $url = (Invoke-Browser -Arguments @('get', 'url')).Trim()
 $loggedIn = ($loginMarkers | Where-Object { Test-Element $_ }).Count -gt 0
 $needsLogin = ($loginPrompts | Where-Object { Test-Element $_ }).Count -gt 0
 if (-not $loggedIn -and $needsLogin) {
-    Write-Warning @'
-蓝奏云会话尚未登录。请手动登录一次（cookie 会保存在本会话里）：
-  $env:AGENT_BROWSER_SESSION = 'fpstune-lanzou'
-  agent-browser open 'https://pc.woozooo.com/'
+    Write-Warning @"
+蓝奏云会话尚未登录。请手动登录一次（会弹出真实浏览器窗口，cookie 保存在 $Profile）：
+  agent-browser --profile '$Profile' --headed open 'https://pc.woozooo.com/'
 登录完成后重新运行本脚本即可全自动上传。
-'@
+"@
     exit 2
 }
 

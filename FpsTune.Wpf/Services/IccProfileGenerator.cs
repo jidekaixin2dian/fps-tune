@@ -85,6 +85,36 @@ public static class IccProfileGenerator
         };
     }
 
+    /// <summary>
+    /// 1U 每条调色预设都捆绑一个数字振动档（NVAPI DVC 百分比），曲线之外还差这一档饱和度。
+    /// 选中预设时只是把滑块预填成草稿，仍要点「应用」才写入系统；没有对应值返回 null。
+    /// </summary>
+    internal static int? VibranceFor(IccFilterPreset preset) => preset switch
+    {
+        IccFilterPreset.Daylight => 75,
+        IccFilterPreset.Bright => 76,
+        IccFilterPreset.VividLively => 90,
+        IccFilterPreset.Cinema => 70,
+        IccFilterPreset.NightScene => 65,
+        IccFilterPreset.Foggy => 81,
+        IccFilterPreset.SoftBright => 78,
+        IccFilterPreset.ClearBright => 82,
+        IccFilterPreset.ArenaCool => 95,
+        IccFilterPreset.Lively => 72,
+        IccFilterPreset.ClearBright2 => 82,
+        IccFilterPreset.GameGenshin => 72,
+        IccFilterPreset.GameKarakin => 68,
+        IccFilterPreset.GameGw2 => 62,
+        IccFilterPreset.GameApex => 53,
+        IccFilterPreset.GameNaraka => 52,
+        IccFilterPreset.GameMyth => 49,
+        IccFilterPreset.GameR6 => 32,
+        IccFilterPreset.GameValorant => 42,
+        IccFilterPreset.GameNaraka2 => 56,
+        IccFilterPreset.GameCod16 => 93,
+        _ => null,
+    };
+
     internal static (string Title, string Description) ResourceKeysFor(IccFilterPreset preset) => preset switch
     {
         IccFilterPreset.Vivid => ("Str.IccVivid", "Str.IccVividDesc"),
