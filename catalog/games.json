@@ -8,7 +8,10 @@
       "Counter-Strike Global Offensive",
       "CS2",
       "Counter-Strike 2"
-    ]
+    ],
+    "tuning": {
+      "profile": "cs2"
+    }
   },
   {
     "name": "VALORANT",
@@ -18,7 +21,10 @@
     "directories": [
       "VALORANT",
       "无畏契约"
-    ]
+    ],
+    "tuning": {
+      "profile": "valorant"
+    }
   },
   {
     "name": "APEX 英雄",
@@ -122,7 +128,10 @@
       "Delta Force",
       "DeltaForce",
       "三角洲"
-    ]
+    ],
+    "tuning": {
+      "profile": "deltaforce"
+    }
   },
   {
     "name": "Fortnite",
@@ -212,7 +221,17 @@
       "NarakaBladepoint",
       "Naraka Bladepoint",
       "永劫无间"
-    ]
+    ],
+    "tuning": {
+      "profile": "ue",
+      "configRoots": [
+        "NarakaBladepoint"
+      ],
+      "guide": "永劫无间：对照前先固定画质档与分辨率，保存快照后再改设置。配置文件由游戏自己写回，改动要重启游戏才生效。",
+      "guideEn": "Naraka: Bladepoint: lock the quality preset and resolution before comparing, save a snapshot, then change settings. The game rewrites its own config, so restart it to apply.",
+      "scene": "永劫无间训练场固定路线",
+      "sceneEn": "Naraka training ground, fixed route"
+    }
   },
   {
     "name": "CS:GO（经典服）",
@@ -222,7 +241,10 @@
     "directories": [
       "Counter-Strike Global Offensive",
       "csgo"
-    ]
+    ],
+    "tuning": {
+      "profile": "csgo"
+    }
   },
   {
     "name": "卡拉彼丘",
@@ -234,7 +256,17 @@
       "Calabiyau",
       "Strinova",
       "卡拉彼丘"
-    ]
+    ],
+    "tuning": {
+      "profile": "ue",
+      "configRoots": [
+        "Calabiyau"
+      ],
+      "guide": "卡拉彼丘：先在游戏内把画面设置调成你要对照的那一档，再保存快照。分辨率、全屏模式与帧率上限都写在 GameUserSettings.ini 里，改动要等游戏退出后才写回。",
+      "guideEn": "Calabiyau: set the graphics options you want to compare first, then save a snapshot. Resolution, fullscreen mode and the frame-rate limit live in GameUserSettings.ini and are written back only after the game exits.",
+      "scene": "卡拉彼丘训练场固定路线",
+      "sceneEn": "Calabiyau practice range, fixed route"
+    }
   },
   {
     "name": "战争雷霆",
@@ -254,7 +286,17 @@
     ],
     "directories": [
       "SquadGame"
-    ]
+    ],
+    "tuning": {
+      "profile": "ue",
+      "configRoots": [
+        "SquadGame"
+      ],
+      "guide": "战术小队：服务器与本地画质分开设置，先固定本地画质档再对照。配置文件由游戏写回，改动要重启游戏才生效。",
+      "guideEn": "Squad: server and local graphics are separate; lock the local preset before comparing. The game rewrites its config, so restart it to apply.",
+      "scene": "战术小队本地训练场固定路线",
+      "sceneEn": "Squad local training range, fixed route"
+    }
   },
   {
     "name": "猎杀：对决",
@@ -296,7 +338,17 @@
       "MarvelRivals",
       "Marvel Rivals",
       "漫威争锋"
-    ]
+    ],
+    "tuning": {
+      "profile": "ue",
+      "configRoots": [
+        "MarvelRivals"
+      ],
+      "guide": "漫威争锋：先固定画质与分辨率再对照。它的启动器和游戏本体是两个进程，选游戏路径时请选本体 exe；配置文件由游戏写回，改动要重启游戏才生效。",
+      "guideEn": "Marvel Rivals: lock graphics and resolution before comparing. Its launcher and game client are separate processes, so point the game path at the client exe. The game rewrites its config, so restart it to apply.",
+      "scene": "漫威争锋训练场固定路线",
+      "sceneEn": "Marvel Rivals practice range, fixed route"
+    }
   },
   {
     "name": "原神",

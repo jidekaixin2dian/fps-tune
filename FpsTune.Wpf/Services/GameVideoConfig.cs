@@ -55,7 +55,8 @@ internal sealed record GameVideoConfig(string Path, DateTime LastWrite, string S
             if (raw.TryGetValue(key, out var old) && old != value) conflicts.Add(key);
             else raw[key] = value;
         }
-        if (game == CompetitiveGame.Cs2)
+        // CS2 与 CS:GO 的视频配置同为 KeyValues 引号格式，共用一套解析。
+        if (game is CompetitiveGame.Cs2 or CompetitiveGame.Csgo)
         {
             foreach (var line in text.Split('\n'))
             {
@@ -70,14 +71,20 @@ internal sealed record GameVideoConfig(string Path, DateTime LastWrite, string S
             {
                 var line = rawLine.Trim();
                 if (line.StartsWith('[') && line.EndsWith(']')) { section = line; continue; }
-                var expected = game == CompetitiveGame.DeltaForce ? "[/Script/Engine.GameUserSettings]" : "[/Script/ShooterGame.ShooterGameUserSettings]";
-                if (section != expected || line.StartsWith(';') || line.StartsWith('#')) continue;
+                // ue 档不限定段名：各家项目类名不同（PMGame / ShooterGame / Engine），只按唯一键名取值。
+                var expected = game switch
+                {
+                    CompetitiveGame.DeltaForce => "[/Script/Engine.GameUserSettings]",
+                    CompetitiveGame.Ue => null,
+                    _ => "[/Script/ShooterGame.ShooterGameUserSettings]",
+                };
+                if ((expected is not null && section != expected) || line.StartsWith(';') || line.StartsWith('#')) continue;
                 var split = line.IndexOf('='); if (split > 0) Add(line[..split].Trim(), line[(split + 1)..].Trim());
             }
         }
         foreach (var key in conflicts) raw.Remove(key);
         var result = new Dictionary<string, string>();
-        string? Get(string ini, string cs) => raw.GetValueOrDefault(game == CompetitiveGame.Cs2 ? cs : ini);
+        string? Get(string ini, string cs) => raw.GetValueOrDefault(game is CompetitiveGame.Cs2 or CompetitiveGame.Csgo ? cs : ini);
         void Number(string field, string? value, double min, double max)
         {
             if (double.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number)
@@ -91,7 +98,7 @@ internal sealed record GameVideoConfig(string Path, DateTime LastWrite, string S
         if (sync is "0" or "1") result["vsync"] = sync;
         else if (bool.TryParse(sync, out var vsync)) result["vsync"] = vsync ? "1" : "0";
         var mode = Get("FullscreenMode", "setting.fullscreen");
-        if (game == CompetitiveGame.Cs2)
+        if (game is CompetitiveGame.Cs2 or CompetitiveGame.Csgo)
         {
             if (mode == "1") result["mode"] = "Exclusive";
             else if (mode == "0" && raw.GetValueOrDefault("setting.nowindowborder") is { } border && border is "0" or "1")
@@ -124,20 +131,37 @@ internal sealed record GameVideoConfig(string Path, DateTime LastWrite, string S
             foreach (var root in roots) foreach (var platform in new[] { "WindowsClient", "WindowsNoEditor" })
                 Add(System.IO.Path.Combine(root, "Saved", "Config", platform, "GameUserSettings.ini"));
         }
+        else if (game == CompetitiveGame.Ue)
+        {
+            // 通用 UE 档：%LOCALAPPDATA% 的目录名只来自 catalog 的 tuning.configRoots。
+            // 猜错只会"找不到配置"，绝不会读到别的游戏的数据——这是不串读的硬保证。
+            var roots = new List<string>();
+            foreach (var hint in GameTuning.ConfigRoots(gamePath)) roots.Add(System.IO.Path.Combine(localRoot, hint));
+            for (var dir = new DirectoryInfo(System.IO.Path.GetDirectoryName(gamePath)!); dir is not null && roots.Count < 9; dir = dir.Parent) roots.Add(dir.FullName);
+            foreach (var root in roots) foreach (var platform in UeConfigPlatforms)
+                Add(System.IO.Path.Combine(root, "Saved", "Config", platform, "GameUserSettings.ini"));
+        }
         else
         {
-            if (steamRoots is null)
-            {
-                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
-                steamRoots = new[] { key?.GetValue("SteamPath") as string, System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam") }
-                    .Where(p => !string.IsNullOrWhiteSpace(p)).Cast<string>();
-            }
+            steamRoots ??= DefaultSteamRoots();
+            // CS:GO 与 CS2 共用 appid 730，但视频配置文件名不同：只找本档自己的文件。
+            var fileName = game == CompetitiveGame.Csgo ? "csgo_video.txt" : "cs2_video.txt";
             foreach (var root in steamRoots.Distinct(StringComparer.OrdinalIgnoreCase))
             {
                 var users = System.IO.Path.Combine(root, "userdata"); if (!Directory.Exists(users)) continue;
-                foreach (var user in Directory.EnumerateDirectories(users).Take(128)) Add(System.IO.Path.Combine(user, "730", "local", "cfg", "cs2_video.txt"));
+                foreach (var user in Directory.EnumerateDirectories(users).Take(128)) Add(System.IO.Path.Combine(user, "730", "local", "cfg", fileName));
             }
         }
         return candidates.Order(StringComparer.OrdinalIgnoreCase).ToArray();
+    }
+
+    /// <summary>UE 项目可能落在三种平台目录名下（编辑版 / 客户端 / 通用）。</summary>
+    private static readonly string[] UeConfigPlatforms = ["WindowsClient", "WindowsNoEditor", "Windows"];
+
+    private static IEnumerable<string> DefaultSteamRoots()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
+        return new[] { key?.GetValue("SteamPath") as string, System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam") }
+            .Where(p => !string.IsNullOrWhiteSpace(p)).Cast<string>().ToArray();
     }
 }

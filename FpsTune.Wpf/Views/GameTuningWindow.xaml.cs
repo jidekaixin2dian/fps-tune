@@ -25,9 +25,9 @@ public partial class GameTuningWindow : Window
     {
         _gamePath = gamePath; _game = GameTuning.Identify(gamePath) ?? throw new ArgumentException(Str.T("Str.TuningUnsupported"));
         _candidates = candidates; InitializeComponent();
-        GameTitle.Text = Str.T("Str.TuningGameTitle", GameContextService.DisplayNameFor(gamePath)); GameGuide.Text = GameTuning.Guide(_game);
-        SceneText.Text = Str.T("Str.TuningSceneHint", GameTuning.Scene(_game));
-        Cs2Tab.Visibility = _game == CompetitiveGame.Cs2 ? Visibility.Visible : Visibility.Collapsed;
+        GameTitle.Text = Str.T("Str.TuningGameTitle", GameContextService.DisplayNameFor(gamePath)); GameGuide.Text = GameTuning.Guide(gamePath);
+        SceneText.Text = Str.T("Str.TuningSceneHint", GameTuning.Scene(gamePath));
+        Cs2Tab.Visibility = GameTuning.SupportsConsoleCommands(_game) ? Visibility.Visible : Visibility.Collapsed;
         DeltaDlssCard.Visibility = _game == CompetitiveGame.DeltaForce ? Visibility.Visible : Visibility.Collapsed;
         ShowSection(); UpdateCommand();
         Loaded += async (_, _) => { await DiscoverAsync(); };
@@ -98,7 +98,16 @@ public partial class GameTuningWindow : Window
     private void Browse_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
-        var picker = new Microsoft.Win32.OpenFileDialog { Title = Str.T("Str.TuningChooseFile"), Filter = _game == CompetitiveGame.Cs2 ? "CS2|cs2_video.txt" : "GameUserSettings|GameUserSettings.ini" };
+        var picker = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = Str.T("Str.TuningChooseFile"),
+            Filter = _game switch
+            {
+                CompetitiveGame.Cs2 => "CS2|cs2_video.txt",
+                CompetitiveGame.Csgo => "CS:GO|csgo_video.txt",
+                _ => "GameUserSettings|GameUserSettings.ini",
+            },
+        };
         if (picker.ShowDialog(this) != true) return;
         SourceBox.ItemsSource = new[] { new Source(picker.FileName, Path.GetFileName(picker.FileName)) }; SourceBox.SelectedIndex = 0;
     }
@@ -108,7 +117,7 @@ public partial class GameTuningWindow : Window
         try
         {
             var seconds = int.Parse((string)((ComboBoxItem)DurationBox.SelectedItem).Tag, CultureInfo.InvariantCulture);
-            Recording = GameTuning.RecordingConditions(FreshConfig(), _game, seconds); DialogResult = true;
+            Recording = GameTuning.RecordingConditions(FreshConfig(), _game, seconds, _gamePath); DialogResult = true;
         }
         catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
@@ -148,6 +157,6 @@ public partial class GameTuningWindow : Window
     }
     private void Display_Click(object sender, RoutedEventArgs e) { if (CanAct()) { OpenDisplay = true; DialogResult = true; } }
     private void Official_Click(object sender, RoutedEventArgs e)
-    { try { Process.Start(new ProcessStartInfo(GameTuning.Source(_game)) { UseShellExecute = true }); } catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); } }
+    { try { Process.Start(new ProcessStartInfo(GameTuning.Source(_gamePath)) { UseShellExecute = true }); } catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); } }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }

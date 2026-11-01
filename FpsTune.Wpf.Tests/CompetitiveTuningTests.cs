@@ -45,7 +45,9 @@ public sealed class CompetitiveTuningTests
             Assert.Throws<ArgumentException>(() => GameTuning.Cs2Commands("NaN", "60"));
             Assert.Equal("fps_max 0; fps_max_ui 60", GameTuning.Cs2Commands("0", "60"));
             Assert.Equal(bytes, File.ReadAllBytes(a)); Assert.True(GameVideoConfig.ValidValues(value.Values));
-            Assert.Null(GameTuning.Identify("VALORANT.exe")); Assert.Null(GameTuning.Identify("csgo.exe"));
+            // VALORANT.exe 只是启动器名、不是游戏本体，仍然没有调校；
+            // csgo.exe 自本轮起由 catalog 的 tuning.profile = csgo 提供调校（原先断言它无调校，是旧契约）。
+            Assert.Null(GameTuning.Identify("VALORANT.exe")); Assert.Equal(CompetitiveGame.Csgo, GameTuning.Identify("csgo.exe"));
         });
     }
 
