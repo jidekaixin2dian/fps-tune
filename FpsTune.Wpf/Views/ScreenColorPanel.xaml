@@ -58,8 +58,8 @@
   </Border>
     <TextBlock Text="{DynamicResource Str.ColorParametersLayer}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,8"/>
     <Expander Header="{DynamicResource Str.ColorParameterPresets}" Margin="0,0,0,6"><ComboBox x:Name="ColorPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreset}" Margin="0,8,0,0"/></Expander>
-    <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,14,0,0"/>
-    <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" HorizontalAlignment="Left" Style="{StaticResource SecondaryButtonStyle}" Click="Reset_Click" Margin="0,0,0,12"/>
+    <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,18,0,0"/>
+    <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" HorizontalAlignment="Left" Style="{StaticResource SecondaryButtonStyle}" Click="Reset_Click" Margin="0,0,0,20"/>
     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0"><ContentControl x:Name="VibranceHost"/></Border>
 
    </StackPanel>

@@ -4,7 +4,7 @@
              xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
              Background="{DynamicResource AppBackgroundBrush}">
     <ScrollViewer x:Name="RootScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <Grid Margin="28,22,28,24">
+    <Grid Margin="32,26,32,28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -23,9 +23,9 @@
                 <TextBlock Text="{DynamicResource Str.SessionIntro}"
                            Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
             </StackPanel>
-                <Border Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="0,14,0,0">
+                <Border Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="0,18,0,0">
                     <Expander x:Name="GettingStarted" Header="{DynamicResource Str.SessionGuideTitle}" IsExpanded="True" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14">
-                        <StackPanel Margin="0,12,0,0">
+                        <StackPanel Margin="0,16,0,0">
                             <TextBlock Text="{DynamicResource Str.SessionGuideSteps}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23"/>
                             <TextBlock Text="{DynamicResource Str.SessionChartGuide}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="22"/>
                         </StackPanel>
@@ -34,7 +34,7 @@
         </Grid>
 
         <!-- 采样控制 -->
-        <Border x:Name="SamplingCard" Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border x:Name="SamplingCard" Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,20">
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.SamplingControl}" Style="{StaticResource CardTitleStyle}"/>
                 <Grid Margin="0,2,0,0">
@@ -61,7 +61,7 @@
                                 Click="Cancel_Click"/>
                     </StackPanel>
                 </Grid>
-                <StackPanel x:Name="ConditionsPanel" Margin="0,14,0,0">
+                <StackPanel x:Name="ConditionsPanel" Margin="0,18,0,0">
                     <TextBlock Text="{DynamicResource Str.ConditionTitle}" Style="{StaticResource SectionLabelStyle}"/>
                     <TextBlock x:Name="ConditionGameText" Style="{StaticResource MutedTextStyle}" Margin="0,5,0,6"/>
                     <UniformGrid Columns="3">
@@ -89,7 +89,7 @@
                         <Button x:Name="ReuseConditionsButton" Content="{DynamicResource Str.ConditionReuse}" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0" Click="ReuseConditions_Click"/>
                     </WrapPanel>
                     <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="13" Margin="0,8,0,0"/>
-                    <WrapPanel Margin="0,12,0,0">
+                    <WrapPanel Margin="0,16,0,0">
                         <Button x:Name="SaveTemplateButton" Content="{DynamicResource Str.SessionTemplateSave}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveTemplate_Click" Margin="0,0,8,6" controls:UiMotion.Character="Spring"/>
                         <Button x:Name="LoadTemplateButton" Content="{DynamicResource Str.SessionTemplateLoad}" Style="{StaticResource SecondaryButtonStyle}" Click="LoadTemplate_Click" Margin="0,0,8,6"/>
                         <Button x:Name="DeleteTemplateButton" Content="{DynamicResource Str.SessionTemplateDelete}" Style="{StaticResource GhostButtonStyle}" Click="DeleteTemplate_Click" Margin="0,0,0,6"/>
@@ -102,7 +102,7 @@
                            Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap"
                            Margin="0,10,0,0"/>
                 <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,16,0,0" Padding="0,14,0,0"><StackPanel>
-                    <Expander x:Name="AutoRecordOptions" Header="{DynamicResource Str.AutoRecordTitle}" Margin="0,14,0,0"><StackPanel Margin="0,10,0,0">
+                    <Expander x:Name="AutoRecordOptions" Header="{DynamicResource Str.AutoRecordTitle}" Margin="0,18,0,0"><StackPanel Margin="0,10,0,0">
                         <TextBlock Text="{DynamicResource Str.AutoRecordHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                         <CheckBox x:Name="AutoRecordEnabled" Content="{DynamicResource Str.AutoRecordEnable}" Margin="0,12,0,8"/>
                         <ItemsControl x:Name="AutoRecordGames"><ItemsControl.ItemTemplate><DataTemplate>
@@ -112,7 +112,7 @@
                             </StackPanel></CheckBox>
                         </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                         <TextBlock x:Name="AutoRecordEmpty" Text="{DynamicResource Str.AutoRecordEmpty}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <WrapPanel Margin="0,12,0,0">
+                        <WrapPanel Margin="0,16,0,0">
                             <Button x:Name="AutoRecordSave" Content="{DynamicResource Str.Save}" Style="{StaticResource SecondaryButtonStyle}" Click="AutoRecordSave_Click" Margin="0,0,8,0"/>
                             <Button Content="{DynamicResource Str.AutoRecordRefresh}" Style="{StaticResource GhostButtonStyle}" Click="AutoGamesRefresh_Click"/>
                         </WrapPanel>
@@ -123,7 +123,7 @@
         </Border>
 
         <!-- 实时指标：发丝分隔通栏 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -176,7 +176,7 @@
         </Border>
 
         <!-- 性能洞察 -->
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,20">
             <StackPanel>
                 <TextBlock Text="{DynamicResource Str.PerformanceInsights}" Style="{StaticResource CardTitleStyle}"/>
                 <TextBlock x:Name="InsightTargetText" Text="{DynamicResource Str.SelectSessionHint}"
@@ -223,7 +223,7 @@
         </Border>
 
         <!-- 历史会话 -->
-        <Border x:Name="HistoryCard" Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,12" Padding="14,14,4,14">
+        <Border x:Name="HistoryCard" Grid.Row="4" Style="{StaticResource CardStyle}" Margin="0,0,0,20" Padding="14,14,4,14">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -302,7 +302,7 @@
         <!-- 并排比较 -->
         <Border x:Name="ComparisonCard" Grid.Row="5" Style="{StaticResource CardStyle}">
             <StackPanel>
-                <DockPanel Margin="0,0,0,12">
+                <DockPanel Margin="0,0,0,20">
                     <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
                         <Button x:Name="SwapComparisonButton" Content="{DynamicResource Str.ComparisonSwap}" Style="{StaticResource GhostButtonStyle}" Click="SwapComparison_Click" IsEnabled="False" Margin="0,0,8,0"/>
                         <Button x:Name="ExportComparisonButton" Content="{DynamicResource Str.ComparisonExport}" Style="{StaticResource SecondaryButtonStyle}" Click="ExportComparison_Click" IsEnabled="False"/>

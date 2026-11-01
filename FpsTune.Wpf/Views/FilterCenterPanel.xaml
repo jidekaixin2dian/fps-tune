@@ -4,7 +4,7 @@
     Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <Style x:Key="PresetCardStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
-            <Setter Property="Margin" Value="0,0,8,8"/>
+            <Setter Property="Margin" Value="0,0,10,10"/>
         </Style>
         <!-- 没有内容就收起来：这三行在未选中预设时是空的，留着会撑出一大块空白 -->
         <Style x:Key="CollapseWhenEmpty" TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
@@ -55,7 +55,7 @@
                 </WrapPanel>
 
                 <!-- 编辑 ICC -->
-                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.FilterEditorTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <Grid Margin="0,10,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
@@ -120,7 +120,7 @@
                 </StackPanel></Border>
 
                 <!-- 独立程序滤镜 -->
-                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.FilterAppsTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.FilterAppsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
                     <CheckBox x:Name="WatcherCheck" Content="{DynamicResource Str.FilterWatcherToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,10,0,0" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>

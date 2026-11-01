@@ -13,13 +13,13 @@
    <Setter Property="MinHeight" Value="36"/><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="Normal"/><Setter Property="Margin" Value="0,0,6,6"/>
   </Style>
  </UserControl.Resources>
- <Grid Margin="28,22,28,24">
+ <Grid Margin="32,26,32,28">
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <StackPanel Margin="0,0,0,14">
    <TextBlock Text="{DynamicResource Str.OptimizeTitle}" Style="{StaticResource PageTitleStyle}"/>
    <TextBlock Text="{DynamicResource Str.OptIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
   </StackPanel>
-  <Border x:Name="PresetControlsCard" Grid.Row="1" Style="{StaticResource CardStyle}" Padding="14,12" Margin="0,0,0,12">
+  <Border x:Name="PresetControlsCard" Grid.Row="1" Style="{StaticResource CardStyle}" Padding="14,12" Margin="0,0,0,20">
    <DockPanel LastChildFill="True">
     <TextBlock Text="{DynamicResource Str.OptimizePresets}" VerticalAlignment="Center" Margin="0,0,20,0" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -90,7 +90,7 @@
                         <RadioButton Content="{DynamicResource Str.GroupSystem}" GroupName="grpfilter" Tag="系统与调度"
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                     </WrapPanel>
-                    <WrapPanel Grid.Row="2" Margin="0,0,0,12">
+                    <WrapPanel Grid.Row="2" Margin="0,0,0,20">
                         <ComboBox x:Name="ScopeFilter" Width="170" Style="{StaticResource SelectComboBoxStyle}" SelectedIndex="0" SelectionChanged="ScopeFilter_Changed"
                                   AutomationProperties.Name="{DynamicResource Str.OptFilterLabel}">
                             <ComboBoxItem Tag="all" Content="{DynamicResource Str.OptScopeAll}"/>

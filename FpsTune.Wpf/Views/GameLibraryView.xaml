@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
     Background="{DynamicResource AppBackgroundBrush}" FontFamily="{StaticResource FontBody}">
-    <Grid Margin="28,22,28,24">
+    <Grid Margin="32,26,32,28">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <DockPanel Margin="0,0,0,16">
             <WrapPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
@@ -11,7 +11,7 @@
             </WrapPanel>
             <StackPanel Margin="0,0,12,0"><TextBlock Text="{DynamicResource Str.NavGames}" Style="{StaticResource PageTitleStyle}"/><TextBlock Text="{DynamicResource Str.LibraryIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/></StackPanel>
         </DockPanel>
-        <Grid Grid.Row="1" Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" Margin="0,0,0,20"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <Grid><TextBox x:Name="SearchBox" Style="{StaticResource InputTextBoxStyle}" MaxLength="160" TextChanged="Search_Changed" AutomationProperties.Name="{DynamicResource Str.LibrarySearch}"/>
                 <TextBlock Text="{DynamicResource Str.LibrarySearch}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="14,0" VerticalAlignment="Center" IsHitTestVisible="False">
                     <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
@@ -36,13 +36,13 @@
                     <Border x:Name="GameDetailCard" Style="{StaticResource CardStyle}"><StackPanel>
                         <TextBlock x:Name="GameNameText" Style="{StaticResource CardTitleStyle}" TextWrapping="Wrap"/>
                         <TextBlock x:Name="GamePathText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,2,0,10"/>
-                        <TextBlock x:Name="ProcessText" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="ProcessText" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,20"/>
                         <WrapPanel><Button x:Name="SelectGameButton" Content="{DynamicResource Str.LibrarySelect}" Style="{StaticResource PrimaryButtonStyle}" Click="Select_Click" Margin="0,0,8,6"/><Button x:Name="DetectGameButton" Content="{DynamicResource Str.LibraryDetect}" Style="{StaticResource SecondaryButtonStyle}" Click="Route_Click" Tag="detect" Margin="0,0,0,6"/></WrapPanel>
                     </StackPanel></Border>
-                    <Border x:Name="GameWorkflowCard" Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+                    <Border x:Name="GameWorkflowCard" Style="{StaticResource CardStyle}" Margin="0,16,0,0"><StackPanel>
                         <TextBlock Text="{DynamicResource Str.LibraryWorkspace}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock x:Name="PlanText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                        <TextBlock x:Name="RecordingText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="RecordingText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,20"/>
                         <WrapPanel>
                             <Button x:Name="PlanButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Click="Plan_Click" Margin="0,0,8,8"/>
                             <Button x:Name="TuningButton" Content="{DynamicResource Str.TuningTitle}" Style="{StaticResource PrimaryButtonStyle}" Click="Tuning_Click" Margin="0,0,8,8" Visibility="Collapsed"/>
@@ -52,7 +52,7 @@
                             <Button x:Name="AutoRecordButton" Content="{DynamicResource Str.AutoRecordTitle}" Style="{StaticResource GhostButtonStyle}" Click="AutoRecord_Click" Margin="0,0,0,8"/>
                         </WrapPanel>
                     </StackPanel></Border>
-                    <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+                    <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0"><StackPanel>
                         <TextBlock Text="{DynamicResource Str.LibraryManage}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.LibraryName}" Style="{StaticResource MutedTextStyle}"/>
                         <TextBox x:Name="NameBox" Style="{StaticResource InputTextBoxStyle}" MaxLength="80" Margin="0,6,0,10" AutomationProperties.Name="{DynamicResource Str.LibraryName}"/>
@@ -61,7 +61,7 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
-        <DockPanel Grid.Row="3" Margin="0,12,0,0" LastChildFill="True">
+        <DockPanel Grid.Row="3" Margin="0,16,0,0" LastChildFill="True">
             <Button x:Name="UndoRemoveButton" Content="{DynamicResource Str.LibraryUndoRemove}" Style="{StaticResource SecondaryButtonStyle}" DockPanel.Dock="Right" IsEnabled="False" Click="UndoRemove_Click" Margin="12,0,0,0"/>
             <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
         </DockPanel>

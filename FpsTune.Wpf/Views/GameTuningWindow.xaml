@@ -36,10 +36,10 @@
                         <TextBlock Grid.Column="1" Text="{Binding Before}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/>
                         <TextBlock Grid.Column="2" Text="{Binding After}" TextWrapping="Wrap"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Changed}" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
                     </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-                    <TextBlock x:Name="BaselineStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,12,0,0"/>
-                    <Button x:Name="SaveBaselineButton" Content="{DynamicResource Str.TuningSaveBaseline}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveBaseline_Click" IsEnabled="False" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                    <TextBlock x:Name="BaselineStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,16,0,0"/>
+                    <Button x:Name="SaveBaselineButton" Content="{DynamicResource Str.TuningSaveBaseline}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveBaseline_Click" IsEnabled="False" HorizontalAlignment="Left" Margin="0,16,0,0"/>
                 </StackPanel></Border>
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+                <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.TuningRecordTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="SceneText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
                     <WrapPanel><ComboBox x:Name="DurationBox" Width="140" SelectedIndex="1" AutomationProperties.Name="{DynamicResource Str.TuningDuration}"><ComboBoxItem Content="60 s" Tag="60"/><ComboBoxItem Content="120 s" Tag="120"/><ComboBoxItem Content="180 s" Tag="180"/></ComboBox>
@@ -48,7 +48,7 @@
             </StackPanel>
             <StackPanel x:Name="DriverPanel" Visibility="Collapsed">
                 <local:GameDriverSettings x:Name="DriverSettings"/>
-                <Border x:Name="DeltaDlssCard" Style="{StaticResource CardStyle}" Margin="0,12,0,0"><StackPanel>
+                <Border x:Name="DeltaDlssCard" Style="{StaticResource CardStyle}" Margin="0,16,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.TuningDlssTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.TuningDlssHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
                     <Button Content="{DynamicResource Str.NavDisplay}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="Display_Click"/>
@@ -71,7 +71,7 @@
             <Border Style="{StaticResource CardStyle}"><StackPanel>
                 <TextBlock Text="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource CardTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.DeltaFixIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                <Button Content="{DynamicResource Str.DeltaFixOpen}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OpenFrameFix_Click"/>
+                <Button Content="{DynamicResource Str.DeltaFixOpen}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,16,0,0" Click="OpenFrameFix_Click"/>
             </StackPanel></Border>
         </StackPanel>
         <DockPanel Grid.Row="3" Margin="0,18,0,0"><Button DockPanel.Dock="Right" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Click="Close_Click"/>

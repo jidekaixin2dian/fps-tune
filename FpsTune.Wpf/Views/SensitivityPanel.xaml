@@ -5,7 +5,7 @@
         <TextBlock Text="{DynamicResource Str.SensTitle}" Style="{StaticResource CardTitleStyle}"/>
         <TextBlock Text="{DynamicResource Str.SensHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
 
-        <Grid Margin="0,14,0,0">
+        <Grid Margin="0,18,0,0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="160"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <TextBlock Text="{DynamicResource Str.SensDpi}" VerticalAlignment="Center" Margin="0,0,12,8"/>
             <TextBox x:Name="DpiBox" Grid.Column="1" Text="800" Style="{StaticResource InputTextBoxStyle}" Margin="0,0,12,8"

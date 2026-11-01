@@ -25,7 +25,7 @@
                 <TextBlock x:Name="TimeText" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
                 <TextBlock x:Name="OutcomeText" FontWeight="{DynamicResource SmallEmphasisWeight}" FontSize="16" Margin="0,16,0,8" TextWrapping="Wrap"/>
                 <TextBlock x:Name="PlanText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                <TextBlock x:Name="ErrorText" Foreground="{DynamicResource WarningBrush}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                <TextBlock x:Name="ErrorText" Foreground="{DynamicResource WarningBrush}" Margin="0,16,0,0" TextWrapping="Wrap"/>
                 <ItemsControl x:Name="StepList" Margin="0,16,0,0"><ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,0,0,18">
                     <TextBlock Text="{Binding Title}" FontWeight="{DynamicResource SmallEmphasisWeight}"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/><Style.Triggers><DataTrigger Binding="{Binding Succeeded}" Value="True"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
                     <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,7,0,0" TextWrapping="Wrap"/>

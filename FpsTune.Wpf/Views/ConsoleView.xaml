@@ -15,13 +15,13 @@
         <StackPanel Margin="28,14,28,18">
 
             <!-- 卡 0：一键优化大卡（点进统一页，方案 chips 快捷预选） -->
-            <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.HomeQuickCardTitle}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
                         <TextBlock Text="{DynamicResource Str.HomeQuickCardBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap" MaxWidth="640" HorizontalAlignment="Left"/>
-                        <WrapPanel Margin="0,14,0,0">
+                        <WrapPanel Margin="0,18,0,0">
                             <Button Content="{DynamicResource Str.PlanBalanced}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="balanced"/>
                             <Button Content="{DynamicResource Str.PlanSafe}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="safe-only"/>
                             <Button Content="{DynamicResource Str.PlanFull}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="full"/>
@@ -32,7 +32,7 @@
             </Border>
 
             <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                     <Grid>
@@ -45,7 +45,7 @@
                         </ComboBox>
                     </Grid>
                     <TextBlock Grid.Row="1" x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"/>
-                    <Grid Grid.Row="2" Margin="0,14,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid Grid.Row="2" Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <WrapPanel x:Name="PreparationActions">
                             <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="112" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
                             <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
@@ -58,7 +58,7 @@
                             <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
                         </WrapPanel>
                     </Grid>
-                    <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,8" Margin="0,12,0,0">
+                    <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,8" Margin="0,16,0,0">
                         <TextBlock x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
                     </Border>
                     <WrapPanel Grid.Row="4" Margin="-10,6,0,-4">
@@ -73,7 +73,7 @@
             </Border>
 
             <!-- 卡 2：指标通栏（发丝分隔四格，与检测页硬件条同构） -->
-            <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,20">
                 <UniformGrid Columns="4">
                     <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                         <StackPanel>
@@ -107,7 +107,7 @@
             </Border>
 
             <!-- 卡 3：继续使用 + 常用入口（最近访问 + 六入口网格） -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,16">
+            <Border Style="{StaticResource CardStyle}" Padding="24,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.HomeRecent}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <WrapPanel x:Name="RecentPagesPanel" Margin="0,10,0,0"/>

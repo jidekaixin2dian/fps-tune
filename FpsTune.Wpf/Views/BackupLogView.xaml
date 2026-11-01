@@ -4,7 +4,7 @@
              xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
              Background="{DynamicResource AppBackgroundBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <Grid Margin="28,22,28,24">
+    <Grid Margin="32,26,32,28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -37,7 +37,7 @@
         </Grid>
 
         <!-- 目录信息 -->
-        <Grid Grid.Row="1" Margin="0,0,0,12">
+        <Grid Grid.Row="1" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="12"/>
@@ -87,7 +87,7 @@
         <!-- 备份文件列表：区分"还能还原"与"已消费的 .restored 审计文件"（P2-11） -->
 
         <!-- 0.2.2 M4：改动总览（只读）——本工具改过什么：原值 vs 当前实时状态 -->
-        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border Grid.Row="2" Style="{StaticResource CardStyle}" Margin="0,0,0,20">
             <StackPanel>
                 <Grid>
                     <StackPanel>
@@ -125,7 +125,7 @@
                 </ItemsControl>
             </StackPanel>
         </Border>
-        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+        <Border Grid.Row="3" Style="{StaticResource CardStyle}" Margin="0,0,0,20">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

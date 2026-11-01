@@ -56,7 +56,7 @@
 
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28,22,28,24">
+        <StackPanel Margin="32,26,32,28">
 
             <!-- 页头：左标题说明，右当前游戏（DLSS / 驱动 3D 共用的上下文） -->
             <Grid Margin="0,0,0,14">
@@ -111,11 +111,11 @@
 
             <!-- 主体卡片 -->
             <views:ResolutionPanel x:Name="ResolutionContent" Visibility="Collapsed"/>
-            <Border x:Name="CardDlss" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
+            <Border x:Name="CardDlss" Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.DlssCard}" Style="{StaticResource CardTitleStyle}"/>
 
-                    <StackPanel x:Name="SupportedPanel" Visibility="Collapsed" Margin="0,12,0,0">
+                    <StackPanel x:Name="SupportedPanel" Visibility="Collapsed" Margin="0,16,0,0">
                         <TextBlock Text="{DynamicResource Str.DlssOverrideNote}"
                                    Style="{StaticResource MutedTextStyle}"/>
                         <UniformGrid Columns="3" Margin="0,10,0,0">
@@ -166,7 +166,7 @@
                         <TextBlock x:Name="StateText" Text="" Style="{StaticResource MutedTextStyle}"
                                    Margin="0,10,0,0" TextWrapping="Wrap"/>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                             <Button x:Name="ApplyButton" Content="{DynamicResource Str.ApplyOverride}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="Apply_Click"/>
@@ -178,7 +178,7 @@
                         </StackPanel>
 
                         <TextBlock Text="{DynamicResource Str.DlssNote}"
-                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,16,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <TextBlock x:Name="UnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
@@ -188,7 +188,7 @@
 
             <!-- M3：驱动 3D 设置（纹理/电源/透明度/低延迟/各向异性/垂直同步/着色器缓存）
                  0.1.12：两列字段网格，用足全宽；一键竞技推荐保持在卡头右侧 -->
-            <Border x:Name="CardDrs" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12" Visibility="Collapsed">
+            <Border x:Name="CardDrs" Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20" Visibility="Collapsed">
                 <StackPanel>
                     <Grid>
                         <TextBlock Text="{DynamicResource Str.DrsCard}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center" Margin="0"/>
@@ -199,10 +199,10 @@
                     </Grid>
                     <TextBlock x:Name="DrsStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
-                    <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                    <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,18,0,0">
                         <TextBlock Text="{DynamicResource Str.DrsNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <Grid Margin="0,14,0,0">
+                        <Grid Margin="0,18,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="28"/>
@@ -307,7 +307,7 @@
                             </Grid>
                         </Grid>
 
-                        <WrapPanel Margin="0,14,0,0">
+                        <WrapPanel Margin="0,18,0,0">
                             <Button x:Name="DrsApplyButton" Content="{DynamicResource Str.ApplyDrs}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinWidth="110" Margin="0,0,8,0" Click="DrsApply_Click"/>
@@ -321,13 +321,13 @@
                         </WrapPanel>
 
                         <TextBlock Text="{DynamicResource Str.DrsNote2}"
-                                   Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                                   Style="{StaticResource MutedTextStyle}" Margin="0,16,0,0" TextWrapping="Wrap"/>
                         <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,22,0,0" Padding="0,18,0,0">
                             <StackPanel>
                                 <TextBlock Text="{DynamicResource Str.FrameLimitTitle}" Style="{StaticResource CardTitleStyle}"/>
                                 <TextBlock Text="{DynamicResource Str.FrameLimitIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                                 <TextBlock x:Name="FrameCurrentText" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-                                <Grid x:Name="FrameControls" IsEnabled="False" Margin="0,12,0,0">
+                                <Grid x:Name="FrameControls" IsEnabled="False" Margin="0,16,0,0">
                                     <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="24"/><ColumnDefinition/></Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <CheckBox x:Name="MainCapCheck" Content="{DynamicResource Str.FrameForeground}" Checked="FrameInputs_Changed" Unchecked="FrameInputs_Changed"/>
@@ -346,7 +346,7 @@
                                         <TextBlock Text="{DynamicResource Str.FrameBackgroundHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                                     </StackPanel>
                                 </Grid>
-                                <WrapPanel Margin="0,14,0,0">
+                                <WrapPanel Margin="0,18,0,0">
                                     <Button x:Name="FrameApplyButton" Content="{DynamicResource Str.FrameApply}" Click="FrameApply_Click" IsEnabled="False" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/>
                                     <Button x:Name="FrameRestoreButton" Content="{DynamicResource Str.FrameRestore}" Click="FrameRestore_Click" IsEnabled="False" Style="{StaticResource SecondaryButtonStyle}"/>
                                 </WrapPanel>
@@ -369,14 +369,14 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- 驱动版本建议：只读信息，本工具不下载也不安装驱动 -->
-                <Border x:Name="CardAdviceD1" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="20,18">
+                <Border x:Name="CardAdviceD1" Grid.Column="0" Style="{StaticResource CardStyle}" Padding="24,20">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.DriverCard}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock x:Name="DriverAdviceText" Text="" Style="{StaticResource MutedTextStyle}"
                                    Margin="0,10,0,0" TextWrapping="Wrap"/>
                         <TextBlock x:Name="DriverAdviceSourceText" Text="" Style="{StaticResource MutedTextStyle}"
                                    Margin="0,10,0,0" TextWrapping="Wrap" FontSize="13"/>
-                        <WrapPanel Margin="0,12,0,0">
+                        <WrapPanel Margin="0,16,0,0">
                             <Button x:Name="DriverRefreshButton" Content="{DynamicResource Str.DriverRefresh}" Style="{StaticResource SecondaryButtonStyle}" Click="DriverRefresh_Click" Margin="0,0,8,8"/>
                             <Button x:Name="DriverOfficialButton" Content="{DynamicResource Str.DriverOfficial}" Style="{StaticResource SecondaryButtonStyle}" Click="DriverOfficial_Click" Margin="0,0,8,8"/>
                             <Button x:Name="DriverHotfixButton" Content="{DynamicResource Str.DriverHotfixLink}" Style="{StaticResource SecondaryButtonStyle}" Click="DriverOfficial_Click" Visibility="Collapsed" Margin="0,0,0,8"/>
@@ -385,7 +385,7 @@
                 </Border>
 
                 <!-- 驱动内手动设置清单（P2-8）：按厂商生成，只读指引，不代改任何设置 -->
-                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="20,18">
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="24,20">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.ManualCard}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.ManualIntro}"

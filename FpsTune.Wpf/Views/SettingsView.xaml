@@ -85,7 +85,7 @@
             <Setter Property="Margin" Value="0,12,0,12"/>
         </Style>
     </UserControl.Resources>
-    <Grid Margin="28,22,28,24">
+    <Grid Margin="32,26,32,28">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <StackPanel Margin="0,0,0,20"><TextBlock Text="{DynamicResource Str.NavSettings}" Style="{StaticResource PageTitleStyle}"/>
             <TextBlock Text="{DynamicResource Str.SettingsIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/></StackPanel>
@@ -161,13 +161,13 @@
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.NotifyShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.NotifyHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="NotifyCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.NotifyShort}" />
-    </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsPerformance}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsPerformance}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.LowSpecShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.LowSpecHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="LowSpecCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.LowSpecShort}" />
     </Grid></StackPanel></Border></StackPanel></ScrollViewer><ScrollViewer x:Name="Section2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 游戏 -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.SectionGame}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.GamePathDesc}"
@@ -199,7 +199,7 @@
             </Border>
 
             <!-- 按游戏自动应用 -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.AutoApplyByGame}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.AutoApplyDesc}"
@@ -263,7 +263,7 @@
                     </StackPanel>
 
                     <ListBox x:Name="AutoBindingList"
-                             Margin="0,12,0,0"
+                             Margin="0,16,0,0"
                              Background="Transparent"
                              BorderThickness="0"
                              ItemContainerStyle="{StaticResource CardListItemStyle}"
@@ -309,7 +309,7 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-<Expander Header="{DynamicResource Str.ActivityLogTitle}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,18,0,0"><StackPanel Margin="0,12,0,0">                    <!-- 活动中心：本地审计事件，可解释自动应用都发生了什么 -->
+<Expander Header="{DynamicResource Str.ActivityLogTitle}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,18,0,0"><StackPanel Margin="0,16,0,0">                    <!-- 活动中心：本地审计事件，可解释自动应用都发生了什么 -->
                     <Grid>
                         <TextBlock Text="{DynamicResource Str.ActivityLogTitle}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -372,7 +372,7 @@
             </Border>
 
             <!-- 游戏运行时高精度计时器（opt-in） -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.TimerBoostTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.TimerBoostDesc}"
@@ -389,7 +389,7 @@
             </Border>
 
             <!-- 游戏自动化（opt-in） -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.AutoSessionTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.AutoSessionDesc}"
@@ -420,7 +420,7 @@
 
             </StackPanel></ScrollViewer><ScrollViewer x:Name="Section3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 高级 -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.SectionAdvanced}" Style="{StaticResource CardTitleStyle}"/>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -435,7 +435,7 @@
                                 MinWidth="150" Margin="14,0,0,0"
                                 Click="AdminRestartButton_Click"/>
                     </StackPanel>
-                    <WrapPanel Margin="0,14,0,0">
+                    <WrapPanel Margin="0,18,0,0">
                         <Button Content="{DynamicResource Str.OpenDataDir}"
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="110" Margin="0,0,6,0"
@@ -467,7 +467,7 @@
                             <Grid>
                                 <Border x:Name="WallpaperPreviewImage" Margin="1" CornerRadius="17"
                                         Opacity="{Binding ElementName=WallpaperOpacitySlider, Path=Value}"/>
-                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,12">
+                                <StackPanel x:Name="WallpaperPreviewPlaceholder" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,20">
                                     <Grid Width="64" Height="48" HorizontalAlignment="Center">
                                         <Border Margin="8,0,0,8" CornerRadius="9" Background="{DynamicResource AccentSoftBrush}"/>
                                         <Border Margin="0,8,8,0" CornerRadius="9" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderHoverBrush}" BorderThickness="1"/>
@@ -483,7 +483,7 @@
                         </Border>
                         <StackPanel Grid.Column="1" Margin="24,0,0,0" Width="300" HorizontalAlignment="Left" VerticalAlignment="Center">
                             <CheckBox x:Name="WallpaperEnabledCheck" Content="{DynamicResource Str.WallpaperShow}" Style="{StaticResource SettingsToggleStyle}" Checked="WallpaperEnabled_Changed" Unchecked="WallpaperEnabled_Changed"/>
-                            <Grid Margin="0,14,0,0">
+                            <Grid Margin="0,18,0,0">
                                 <TextBlock Text="{DynamicResource Str.WallpaperOpacity}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                                 <Border HorizontalAlignment="Right" CornerRadius="{DynamicResource RadiusChip}" Background="{DynamicResource AccentSoftBrush}" Padding="8,3">
                                     <TextBlock x:Name="WallpaperOpacityValue" Text="{Binding ElementName=WallpaperOpacitySlider, Path=Value, StringFormat={}{0:P0}}" Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
@@ -513,7 +513,7 @@
                                Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <TextBlock Text="{DynamicResource Str.AboutLine2}"
                                Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                    <WrapPanel Margin="0,14,0,0">
+                    <WrapPanel Margin="0,18,0,0">
                         <Button x:Name="CheckUpdateButton"
                                 Content="{DynamicResource Str.CheckUpdate}"
                                 Style="{StaticResource SecondaryButtonStyle}"
@@ -544,9 +544,9 @@
         <CheckBox x:Name="StartupUpdateCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CheckUpdatesOnStartup}" Checked="StartupUpdate_Changed" Unchecked="StartupUpdate_Changed"/>
     </Grid>
                     <TextBlock Text="{DynamicResource Str.ContactNote}"
-                               Foreground="{DynamicResource WarningBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" Margin="0,14,0,0"/>
+                               Foreground="{DynamicResource WarningBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" Margin="0,18,0,0"/>
                     <Expander Header="{DynamicResource Str.DisclaimerTitle}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" Margin="0,18,0,0">
-                        <TextBlock Text="{DynamicResource Str.DisclaimerBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23" Margin="0,12,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.DisclaimerBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23" Margin="0,16,0,0"/>
                     </Expander>
                 </StackPanel>
             </Border>

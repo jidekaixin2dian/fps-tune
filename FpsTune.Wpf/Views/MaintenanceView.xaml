@@ -9,7 +9,7 @@
             <Style.Triggers><Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger></Style.Triggers>
         </Style>
     </UserControl.Resources>
-    <Grid Margin="28,22,28,24"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid Margin="32,26,32,28"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <Grid Margin="0,0,0,20"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel><TextBlock Text="{DynamicResource Str.NavTools}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.MaintenanceIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
@@ -45,7 +45,7 @@
                         </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                         <TextBlock x:Name="NoDrives" Text="{DynamicResource Str.MaintenanceNoDrives}" Style="{StaticResource MutedTextStyle}" Visibility="Collapsed"/>
                     </StackPanel></Border>
-<Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+<Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceTemporary}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                 <TextBlock Text="{DynamicResource Str.MaintenanceTemporaryHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
             <Button Grid.Column="1" Tag="temporary" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceTemporary}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
@@ -54,7 +54,7 @@
             <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceApps}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                 <TextBlock Text="{DynamicResource Str.MaintenanceAppsHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
             <Button Grid.Column="1" Tag="apps" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceApps}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
-        </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" VerticalAlignment="Top" Margin="0,14,0,0"><StackPanel>
+        </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" VerticalAlignment="Top" Margin="0,18,0,0"><StackPanel>
             <TextBlock Text="{DynamicResource Str.ShaderCache}" Style="{StaticResource CardTitleStyle}"/>
             <TextBlock Text="{DynamicResource Str.CacheScope}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
             <WrapPanel Margin="0,18,0,12"><Button x:Name="ScanButton" Content="{DynamicResource Str.CacheScan}" Click="Scan_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,8"/>
@@ -67,7 +67,7 @@
                     <TextBlock Text="{Binding Path}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/>
                 </StackPanel></Border>
             </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-            <TextBlock Text="{DynamicResource Str.CacheRebuild}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+            <TextBlock Text="{DynamicResource Str.CacheRebuild}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,16,0,0"/>
             <TextBlock x:Name="Skipped" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
         </StackPanel></Border>
                 </StackPanel></ScrollViewer>
@@ -94,20 +94,20 @@
                                 <ComboBoxItem Content="{DynamicResource Str.MemoryLowMode}"/>
                                 <ComboBoxItem Content="{DynamicResource Str.MemoryAllMode}"/>
                             </ComboBox>
-                            <Button x:Name="MemoryCombinedButton" Content="{DynamicResource Str.MemoryCombinedAction}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="MemoryCombined_Click"/>
+                            <Button x:Name="MemoryCombinedButton" Content="{DynamicResource Str.MemoryCombinedAction}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,16,0,0" Click="MemoryCombined_Click"/>
                         </StackPanel></Expander>
-                        <Border x:Name="MemoryProgressPanel" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,14,0,0"><StackPanel>
+                        <Border x:Name="MemoryProgressPanel" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,18,0,0"><StackPanel>
                             <DockPanel><Button x:Name="MemoryCancel" DockPanel.Dock="Right" Content="{DynamicResource Str.MemoryStop}" Style="{StaticResource SecondaryButtonStyle}" Click="MemoryCancel_Click" Margin="12,0,0,0"/>
                                 <StackPanel><TextBlock x:Name="MemoryStage" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" TextWrapping="Wrap"/>
                                     <TextBlock x:Name="MemoryElapsed" Style="{StaticResource MutedTextStyle}" Margin="0,5,0,0"/></StackPanel></DockPanel>
-                            <ProgressBar IsIndeterminate="True" Height="4" Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource BorderBrush}" Margin="0,12,0,0" AutomationProperties.Name="{DynamicResource Str.MemoryCleaning}"/>
+                            <ProgressBar IsIndeterminate="True" Height="4" Foreground="{DynamicResource AccentBrush}" Background="{DynamicResource BorderBrush}" Margin="0,16,0,0" AutomationProperties.Name="{DynamicResource Str.MemoryCleaning}"/>
                         </StackPanel></Border>
                         <TextBlock x:Name="MemoryResult" Style="{StaticResource MemoryResultStyle}" AutomationProperties.LiveSetting="Polite"/>
                     </StackPanel></Border>
                     <Border Style="{StaticResource CardStyle}" Margin="0,0,0,14"><StackPanel>
                         <TextBlock Text="{DynamicResource Str.MemoryBackgroundTitle}" Style="{StaticResource CardTitleStyle}"/>
                         <TextBlock Text="{DynamicResource Str.MemoryBackgroundHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="MemorySelection" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                        <TextBlock x:Name="MemorySelection" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,16,0,0"/>
                         <WrapPanel Margin="0,8,0,8">
                             <Button x:Name="MemoryAppsRefresh" Content="{DynamicResource Str.MaintenanceRefresh}" Click="MemoryAppsRefresh_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
                             <Button x:Name="MemoryStreamingDetect" Content="{DynamicResource Str.MemoryStreamingDetect}" Click="MemoryStreamingDetect_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
@@ -154,7 +154,7 @@
                         </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                         <TextBlock x:Name="NoProcesses" Text="{DynamicResource Str.MaintenanceNoProcesses}" Style="{StaticResource MutedTextStyle}" Visibility="Collapsed"/>
                     </StackPanel></Border>
-<Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+<Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
     <DockPanel LastChildFill="True">
         <Button x:Name="BgCheckButton" DockPanel.Dock="Right" Content="{DynamicResource Str.BgCheckStart}" Style="{StaticResource SecondaryButtonStyle}" Click="BgCheck_Click" VerticalAlignment="Top"/>
         <StackPanel>
@@ -162,7 +162,7 @@
             <TextBlock Text="{DynamicResource Str.BgCheckHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
         </StackPanel>
     </DockPanel>
-    <TextBlock x:Name="BgCheckStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+    <TextBlock x:Name="BgCheckStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,16,0,0"/>
     <TextBlock x:Name="BgCpuTitle" Text="{DynamicResource Str.BgCheckCpuTitle}" TextWrapping="Wrap" Margin="0,14,0,4" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" Visibility="Collapsed"/>
     <ItemsControl x:Name="BgCpuList" Visibility="Collapsed"><ItemsControl.ItemTemplate><DataTemplate>
         <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="120"/></Grid.ColumnDefinitions>
@@ -179,9 +179,9 @@
             <TextBlock Grid.Column="2" Text="{Binding Value}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
         </Grid>
     </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-    <TextBlock x:Name="BgNetworkText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="Collapsed"/>
+    <TextBlock x:Name="BgNetworkText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,16,0,0" Visibility="Collapsed"/>
 </StackPanel></Border>
-<Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+<Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceTaskManager}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                 <TextBlock Text="{DynamicResource Str.MaintenanceTaskManagerHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
             <Button Grid.Column="1" Tag="taskmanager" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceTaskManager}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>

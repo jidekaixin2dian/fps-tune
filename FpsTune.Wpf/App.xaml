@@ -190,7 +190,7 @@
             </Style>
             <Style x:Key="PageTitleStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontDisplay}"/>
-                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="FontSize" Value="24"/>
                 <!-- YaHei has no SemiBold face: it resolves to full Bold for CJK. -->
                 <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
                 <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
@@ -210,13 +210,13 @@
 
             <Style x:Key="MutedTextStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontSize" Value="13.5"/>
             </Style>
 
             <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontSize" Value="13.5"/>
             </Style>
 
             <Style x:Key="StatValueStyle" TargetType="TextBlock">

@@ -10,6 +10,6 @@
   <ScrollViewer x:Name="DriverScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
    <local:GameDriverSettings x:Name="DriverSettings" Margin="0,0,8,0"/>
   </ScrollViewer>
-  <Button Grid.Row="2" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" Margin="0,14,0,0" Click="Close_Click"/>
+  <Button Grid.Row="2" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Right" Margin="0,18,0,0" Click="Close_Click"/>
  </Grid></Border>
 </Window>
