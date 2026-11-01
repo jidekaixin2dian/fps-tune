@@ -201,6 +201,15 @@
     <s:String x:Key="Str.ChoosePlan">Choose plan</s:String>
     <s:String x:Key="Str.PlanBalanced">Balanced</s:String>
     <s:String x:Key="Str.PlanSafe">Conservative</s:String>
+    <s:String x:Key="Str.PlanCompetitive">Competitive</s:String>
+    <s:String x:Key="Str.PlanVisual">Visual</s:String>
+    <s:String x:Key="Str.PlanLaptop">Cool &amp; quiet</s:String>
+    <s:String x:Key="Str.PlanStream">Streaming</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewTitle">What this preset will do</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewBody">{0} items: {1}</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewExtras">Also applies: {0}</s:String>
+    <s:String x:Key="Str.QuickOptPlanExtraPower">Power plan → best performance</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewNone">No extras selected (power plan / resolution / DLSS / filters).</s:String>
     <s:String x:Key="Str.TipSearchItems">Search optimization items by name</s:String>
     <s:String x:Key="Str.SearchItemsShort">Search items</s:String>
     <s:String x:Key="Str.Redetect">Re-detect</s:String>

@@ -51,6 +51,12 @@ public partial class QuickOptimizeView : UserControl
             DlssBox.Items.Add(new ComboPreset<DlssPreset>(Str.T(key), preset));
         DlssBox.SelectedIndex = 0;
 
+        // 方案 chips（来自 catalog 预设）+ 预览：改任何一项都立刻刷新"这个方案会做什么"
+        BuildPlanChips();
+        DlssBox.SelectionChanged += (_, _) => UpdatePlanPreview();
+        PowerCheck.Checked += (_, _) => UpdatePlanPreview();
+        PowerCheck.Unchecked += (_, _) => UpdatePlanPreview();
+
         // 分辨率下拉（可选）：跟随当前 + 该屏可用模式（按宽×高归组取最高刷新率）
         await LoadResolutionsAsync();
 
@@ -67,13 +73,15 @@ public partial class QuickOptimizeView : UserControl
         }
         catch (Exception ex) { RunStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
         FilterBox.SelectedIndex = 0;
+        FilterBox.SelectionChanged += (_, _) => UpdatePlanPreview();
+        UpdatePlanPreview();
 
         await ReloadGamesAsync();
 
         if (PendingPreset is { } pending)
         {
             PendingPreset = null;
-            foreach (var child in ((System.Windows.Controls.Panel?)PlanBalanced.Parent)!.Children.OfType<System.Windows.Controls.RadioButton>())
+            foreach (var child in PlanList.Children.OfType<RadioButton>())
                 if (Equals(child.Tag, pending)) child.IsChecked = true;
         }
     }
@@ -124,6 +132,8 @@ public partial class QuickOptimizeView : UserControl
                          .OrderByDescending(m => m.Width).ThenByDescending(m => m.Height))
                 ResolutionBox.Items.Add(new ResolutionChoice($"{mode.Width}×{mode.Height} @ {mode.Hz}Hz", mode.Width, mode.Height, mode.Hz));
             ResolutionBox.SelectedIndex = 0;
+            ResolutionBox.SelectionChanged += (_, _) => UpdatePlanPreview();
+            UpdatePlanPreview();
         }
         catch (Exception ex)
         {
@@ -145,9 +155,82 @@ public partial class QuickOptimizeView : UserControl
     private void Plan_Checked(object sender, RoutedEventArgs e) { /* 选中态由 Tag 读取 */ }
 
     private string SelectedPreset
-        => ((System.Windows.Controls.Panel?)PlanBalanced.Parent)!.Children
-            .OfType<System.Windows.Controls.RadioButton>()
-            .FirstOrDefault(r => r.IsChecked == true)?.Tag as string ?? "balanced";
+        => PlanList?.Children.OfType<RadioButton>().FirstOrDefault(r => r.IsChecked == true)?.Tag as string ?? "balanced";
+
+    /// <summary>方案 chips：catalog 里的预设 + 全量。新预设只要写进 catalog.json 就会自动出现。</summary>
+    private void BuildPlanChips()
+    {
+        if (PlanList is null) return;
+        PlanList.Children.Clear();
+        var entries = new List<(string Key, string? LabelKey)> { ("balanced", "Str.PlanBalanced"), ("safe-only", "Str.PlanSafe") };
+        foreach (var name in OptimizationCatalog.PresetNames)
+            if (name is not ("balanced" or "safe-only"))
+                entries.Add((name, name switch
+                {
+                    "competitive" => "Str.PlanCompetitive",
+                    "visual" => "Str.PlanVisual",
+                    "laptop" => "Str.PlanLaptop",
+                    "stream" => "Str.PlanStream",
+                    _ => null,
+                }));
+        entries.Add(("full", "Str.PlanFull"));
+
+        foreach (var (key, labelKey) in entries)
+        {
+            var label = labelKey is null ? key : Str.T(labelKey);
+            var chip = new RadioButton
+            {
+                GroupName = "QuickPlan",
+                Content = label,
+                Tag = key,
+                Style = (Style)Resources["PillRadioStyle"],
+                Margin = new Thickness(0, 0, 8, 8),
+            };
+            System.Windows.Automation.AutomationProperties.SetName(chip, label);
+            chip.Checked += (_, _) => UpdatePlanPreview();
+            PlanList.Children.Add(chip);
+            if (key == "balanced") chip.IsChecked = true;
+        }
+    }
+
+    /// <summary>方案预览：会执行多少项、分布在哪几类，以及本次还附带做什么。</summary>
+    private void UpdatePlanPreview()
+    {
+        if (PlanPreviewText is null) return;
+        IReadOnlyList<string> ids;
+        try { ids = QuickOptimizePlan.Resolve(SelectedPreset, PowerCheck?.IsChecked == true); }
+        catch (Exception ex)
+        {
+            PlanPreviewText.Text = PrivacyScrub.Sanitize(ex.Message);
+            PlanPreviewExtras.Text = "";
+            return;
+        }
+
+        var byGroup = ids
+            .Select(id => OptimizationCatalog.Items.FirstOrDefault(item => item.Id == id))
+            .Where(item => item is not null && !string.IsNullOrWhiteSpace(item.Group))
+            .GroupBy(item => item!.Group)
+            .OrderByDescending(g => g.Count())
+            .Select(g => $"{g.Key} {g.Count()}");
+        PlanPreviewText.Text = Str.T("Str.QuickOptPlanPreviewBody", ids.Count, string.Join(" · ", byGroup));
+
+        var extras = new List<string>();
+        if (PowerCheck?.IsChecked == true) extras.Add(Str.T("Str.QuickOptPlanExtraPower"));
+        if (ResolutionBox?.SelectedItem is ResolutionChoice { Width: > 0 } resolution) extras.Add(resolution.Label);
+        if (DlssBox?.SelectedItem is ComboPreset<DlssPreset> { Value: not DlssPreset.FollowGame } dlss) extras.Add("DLSS " + dlss.Label);
+        switch (FilterBox?.SelectedItem)
+        {
+            case GameFilterPreset preset:
+                extras.Add(preset.Vibrance is { } v ? $"{preset.Name}（振动 {v}%）" : preset.Name);
+                break;
+            case GeneratedFilterChoice generated:
+                extras.Add(generated.Label);
+                break;
+        }
+        PlanPreviewExtras.Text = extras.Count > 0
+            ? Str.T("Str.QuickOptPlanPreviewExtras", string.Join(" · ", extras))
+            : Str.T("Str.QuickOptPlanPreviewNone");
+    }
 
     private async void Run_Click(object sender, RoutedEventArgs e)
     {

@@ -42,6 +42,29 @@ public sealed class QuickOptimizeTests : IDisposable
         Assert.NotEmpty(ids);
     }
 
+    [Theory]
+    [InlineData("competitive", 17)]
+    [InlineData("visual", 8)]
+    [InlineData("laptop", 10)]
+    [InlineData("stream", 11)]
+    public void Scenario_presets_resolve_to_their_curated_items(string preset, int expected)
+    {
+        var ids = QuickOptimizePlan.Resolve(preset, applyPowerPlan: false);
+        Assert.Equal(expected, ids.Count);
+        Assert.Equal(OptimizationCatalog.ResolvePreset(preset), ids);
+        var known = OptimizationCatalog.Items.Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
+        Assert.All(ids, id => Assert.Contains(id, known));
+    }
+
+    [Fact]
+    public void Every_catalog_preset_is_resolvable_and_non_empty()
+    {
+        Assert.Contains("competitive", OptimizationCatalog.PresetNames);
+        Assert.Contains("laptop", OptimizationCatalog.PresetNames);
+        foreach (var name in OptimizationCatalog.PresetNames)
+            Assert.NotEmpty(QuickOptimizePlan.Resolve(name, applyPowerPlan: false));
+    }
+
     [Fact]
     public void Power_plan_appended_once()
     {

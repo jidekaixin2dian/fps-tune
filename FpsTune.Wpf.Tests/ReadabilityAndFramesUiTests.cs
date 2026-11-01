@@ -420,6 +420,9 @@ public sealed class ReadabilityAndFramesUiTests
             const string original = "{\"Level\":90}"; File.WriteAllText(receipt, original);
             var page = new FilterView(); var window = new Window { Width = 1180, Height = 800, Content = page };
             app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            // 2026-11-02：游戏滤镜页拆成三个子页签，振动控件在「画面与色彩」页签里，测试要显式切过去。
+            ((RadioButton)page.FindName("TabColor")).IsChecked = true;
+            window.UpdateLayout();
             var apply = (Button)page.FindName("VibApplyButton"); var restore = (Button)page.FindName("VibRestoreButton");
             var state = (TextBlock)page.FindName("VibStateText"); var slider = (Slider)page.FindName("VibSlider");
             var failureShown = false;

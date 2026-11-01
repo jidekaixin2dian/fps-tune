@@ -32,11 +32,8 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <TextBlock Text="{DynamicResource Str.QuickOptPlanLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <Border Grid.Column="1" Background="Transparent" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="3" HorizontalAlignment="Left">
-                        <UniformGrid Columns="3" Width="300">
-                            <RadioButton x:Name="PlanBalanced" Content="{DynamicResource Str.PlanBalanced}" GroupName="QuickPlan" Style="{StaticResource PillRadioStyle}" Tag="balanced" Checked="Plan_Checked" IsChecked="True" ToolTip="{DynamicResource Str.TipBalanced}"/>
-                            <RadioButton Content="{DynamicResource Str.PlanSafe}" GroupName="QuickPlan" Style="{StaticResource PillRadioStyle}" Tag="safe-only" Checked="Plan_Checked"/>
-                            <RadioButton Content="{DynamicResource Str.PlanFull}" GroupName="QuickPlan" Style="{StaticResource PillRadioStyle}" Tag="full" Checked="Plan_Checked"/>
-                        </UniformGrid>
+                        <!-- 方案 chips 由 catalog 预设生成（均衡/保守/竞技/观感/笔记本/直播 + 全量） -->
+                        <WrapPanel x:Name="PlanList"/>
                     </Border>
                 </Grid>
                 <Grid Margin="0,14,0,0">
@@ -66,6 +63,18 @@
                     <Button x:Name="RunButton" Content="{DynamicResource Str.QuickOptRun}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="140" Height="40" Click="Run_Click"/>
                     <TextBlock x:Name="RunStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" Margin="14,0,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
+
+                <!-- 方案预览：选了哪些项目、还会附带做什么，一眼看清再点开始 -->
+                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="16,14" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.QuickOptPlanPreviewTitle}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                   FontWeight="{DynamicResource SmallEmphasisWeight}" FontSize="14"/>
+                        <TextBlock x:Name="PlanPreviewText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                                   TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        <TextBlock x:Name="PlanPreviewExtras" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"
+                                   TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </Border>
 

@@ -201,6 +201,15 @@
     <s:String x:Key="Str.ChoosePlan">选择方案</s:String>
     <s:String x:Key="Str.PlanBalanced">均衡</s:String>
     <s:String x:Key="Str.PlanSafe">保守</s:String>
+    <s:String x:Key="Str.PlanCompetitive">竞技</s:String>
+    <s:String x:Key="Str.PlanVisual">观感</s:String>
+    <s:String x:Key="Str.PlanLaptop">降温省电</s:String>
+    <s:String x:Key="Str.PlanStream">直播稳定</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewTitle">这个方案会做什么</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewBody">共 {0} 项：{1}</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewExtras">另外会执行：{0}</s:String>
+    <s:String x:Key="Str.QuickOptPlanExtraPower">电源计划 → 最高性能优先</s:String>
+    <s:String x:Key="Str.QuickOptPlanPreviewNone">没有选附加项（电源计划 / 分辨率 / DLSS / 滤镜）。</s:String>
     <s:String x:Key="Str.TipSearchItems">按中文名称搜索优化项</s:String>
     <s:String x:Key="Str.SearchItemsShort">搜索优化项</s:String>
     <s:String x:Key="Str.Redetect">重新检测</s:String>
