@@ -52,8 +52,11 @@ internal static partial class UpdateMirrors
         return uri.AbsolutePath.Contains("/jidekaixin2dian/fps-tune/releases/", StringComparison.Ordinal);
     }
 
-    /// <summary>从 Release 说明里取第一个蓝奏云分享地址（没有就返回 null）。</summary>
-    internal static string? FindBackupDownload(string? notes)
+    /// <summary>备用下载：网盘地址 + 可选的访问密码（蓝奏云分享常带密码）。</summary>
+    internal sealed record BackupDownload(string Url, string? Password = null);
+
+    /// <summary>从 Release 说明里取第一个蓝奏云/网盘分享地址，并顺带取它旁边的访问密码。</summary>
+    internal static BackupDownload? FindBackupLink(string? notes)
     {
         if (string.IsNullOrWhiteSpace(notes)) return null;
         foreach (Match match in BackupLinkPattern().Matches(notes))
@@ -63,10 +66,47 @@ internal static partial class UpdateMirrors
             if (uri.Scheme != Uri.UriSchemeHttps || !uri.IsDefaultPort || uri.UserInfo.Length != 0) continue;
             if (!IsBackupHost(uri.Host)) continue;
             if (uri.AbsolutePath.Trim('/').Length < 3) continue;
-            return text;
+            return new BackupDownload(text, PasswordFrom(notes, uri));
         }
         return null;
     }
+
+    /// <summary>只取地址（旧调用点的兼容入口）。</summary>
+    internal static string? FindBackupDownload(string? notes) => FindBackupLink(notes)?.Url;
+
+    /// <summary>
+    /// 密码来源两处：URL 自带的 <c>pwd=</c>/<c>password=</c>，或说明里 URL 附近的"密码: xxx"。
+    /// 只认 2–12 位字母数字，避免把整句话当成密码。
+    /// </summary>
+    private static string? PasswordFrom(string notes, Uri uri)
+    {
+        var query = uri.Query.TrimStart('?');
+        foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var index = pair.IndexOf('=');
+            if (index <= 0) continue;
+            var key = pair[..index];
+            if (!key.Equals("pwd", StringComparison.OrdinalIgnoreCase)
+                && !key.Equals("password", StringComparison.OrdinalIgnoreCase)) continue;
+            var value = Uri.UnescapeDataString(pair[(index + 1)..]);
+            if (IsPassword(value)) return value;
+        }
+
+        // 说明里最靠近该链接的那一处"密码：xxxx"。
+        var linkIndex = notes.IndexOf(uri.OriginalString, StringComparison.OrdinalIgnoreCase);
+        Match? best = null;
+        foreach (Match match in PasswordPattern().Matches(notes))
+        {
+            if (!IsPassword(match.Groups["pwd"].Value)) continue;
+            if (best is null || Math.Abs(match.Index - linkIndex) < Math.Abs(best.Index - linkIndex)) best = match;
+        }
+        return best?.Groups["pwd"].Value;
+    }
+
+    private static bool IsPassword(string value) => value.Length is >= 2 and <= 12 && value.All(char.IsAsciiLetterOrDigit);
+
+    [GeneratedRegex(@"(?:密码|提取码|访问码|pwd|password)\s*[:：=]?\s*(?<pwd>[A-Za-z0-9]{2,12})", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PasswordPattern();
 
     private static readonly string[] BackupHostSuffixes =
     [

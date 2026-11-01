@@ -823,6 +823,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.UpdateDownloading">Downloading and verifying the installer…</s:String>
     <s:String x:Key="Str.UpdateBackupDownload">Backup download</s:String>
     <s:String x:Key="Str.UpdateBackupHint">Use this when the direct download keeps failing; it is the same installer hosted on a Chinese cloud drive.</s:String>
+    <s:String x:Key="Str.UpdateBackupPassword">Password {0}</s:String>
+    <s:String x:Key="Str.UpdateBackupPasswordCopied">Password {0} copied; paste it on the download page.</s:String>
     <s:String x:Key="Str.UpdateCancelled">Download cancelled.</s:String>
     <s:String x:Key="Str.UpdateFailed">Update did not finish: {0}</s:String>
     <s:String x:Key="Str.UpdateUrlInvalid">The update download address is invalid.</s:String>

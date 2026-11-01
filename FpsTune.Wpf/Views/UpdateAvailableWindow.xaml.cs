@@ -8,7 +8,7 @@ public partial class UpdateAvailableWindow : Window
 {
     private readonly UpdateInfo _info;
     private readonly Action<string> _openLink;
-    private readonly string? _backup;
+    private readonly UpdateMirrors.BackupDownload? _backup;
     private CancellationTokenSource? _download;
     private bool _handedOff;
     private string _phase = "";
@@ -22,8 +22,13 @@ public partial class UpdateAvailableWindow : Window
         InitializeComponent();
         VersionText.Text = $"{UpdateService.DisplayVersion} → {info.ReleaseTag ?? info.Version}";
         NotesText.Text = ReleaseNotesText.Format(info.Notes);
-        _backup = UpdateMirrors.FindBackupDownload(info.Notes);
+        _backup = UpdateMirrors.FindBackupLink(info.Notes);
         BackupDownloadButton.Visibility = _backup is null ? Visibility.Collapsed : Visibility.Visible;
+        if (_backup?.Password is { } password)
+        {
+            BackupPasswordText.Text = Str.T("Str.UpdateBackupPassword", password);
+            BackupPasswordText.Visibility = Visibility.Visible;
+        }
         Closing += (_, e) =>
         {
             if (IsRunning && !_handedOff) { e.Cancel = true; _download!.Cancel(); }
@@ -40,7 +45,16 @@ public partial class UpdateAvailableWindow : Window
     private void BackupDownload_Click(object sender, RoutedEventArgs e)
     {
         if (_backup is null) return;
-        try { _openLink(_backup); }
+        try
+        {
+            // 网盘页面会要求输入访问密码：点一次就把密码放进剪贴板，省一步手抄。
+            if (_backup.Password is { } password)
+            {
+                Clipboard.SetText(password);
+                StatusText.Text = Str.T("Str.UpdateBackupPasswordCopied", password);
+            }
+            _openLink(_backup.Url);
+        }
         catch { StatusText.Text = Str.T("Str.CannotOpenLink"); }
     }
     private async void Install_Click(object sender, RoutedEventArgs e) => await InstallAsync();

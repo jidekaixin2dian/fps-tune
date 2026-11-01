@@ -68,4 +68,35 @@ public class UpdateSourceTests
     {
         Assert.Null(UpdateMirrors.FindBackupDownload("https://lanzou.evil.test/s/abcde"));
     }
+
+    [Fact]
+    public void Backup_download_carries_the_share_password_when_the_notes_list_one()
+    {
+        const string notes = """
+            修复若干问题。
+            备用下载：https://wwbkt.lanzouw.com/i1rjo4eab2gd 密码:34qy
+            """;
+        var backup = UpdateMirrors.FindBackupLink(notes);
+        Assert.NotNull(backup);
+        Assert.Equal("https://wwbkt.lanzouw.com/i1rjo4eab2gd", backup!.Url);
+        Assert.Equal("34qy", backup.Password);
+    }
+
+    [Fact]
+    public void Backup_download_reads_the_password_from_the_url_query()
+    {
+        var backup = UpdateMirrors.FindBackupLink("见 https://wwbkt.lanzouw.com/i1rjo4eab2gd?pwd=abc123");
+        Assert.NotNull(backup);
+        Assert.Equal("abc123", backup!.Password);
+    }
+
+    [Fact]
+    public void Backup_download_without_a_password_stays_null_and_rejects_junk()
+    {
+        var backup = UpdateMirrors.FindBackupLink("备用下载：https://pan.quark.cn/s/abc123");
+        Assert.NotNull(backup);
+        Assert.Null(backup!.Password);
+        // 太长/带符号的"密码"不认，避免把整句话当密码。
+        Assert.Null(UpdateMirrors.FindBackupLink("密码：这是一个很长的中文句子 https://pan.quark.cn/s/abc123")?.Password);
+    }
 }

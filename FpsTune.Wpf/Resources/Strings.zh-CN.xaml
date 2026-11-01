@@ -823,6 +823,8 @@
     <s:String x:Key="Str.UpdateDownloading">正在下载并校验安装包…</s:String>
     <s:String x:Key="Str.UpdateBackupDownload">备用下载</s:String>
     <s:String x:Key="Str.UpdateBackupHint">直连下不动就点这个，从网盘下载同一个安装包。</s:String>
+    <s:String x:Key="Str.UpdateBackupPassword">密码 {0}</s:String>
+    <s:String x:Key="Str.UpdateBackupPasswordCopied">密码 {0} 已复制，粘贴到网盘页面即可。</s:String>
     <s:String x:Key="Str.UpdateCancelled">下载已取消。</s:String>
     <s:String x:Key="Str.UpdateFailed">更新未完成：{0}</s:String>
     <s:String x:Key="Str.UpdateUrlInvalid">更新下载地址无效。</s:String>
