@@ -32,9 +32,9 @@ public sealed class TrayMinimizeMigrationTests : IDisposable
 
         SettingsService.Load();
         Assert.False(SettingsService.Current.MinimizeToTray);
-        Assert.True(SettingsService.Current.TrayMinimizeMigrated);
+        Assert.Equal(SettingsService.TrayMinimizeMigrationVersion, SettingsService.Current.TrayMinimizeMigration);
         // 迁移立即持久化，避免下次启动重复翻转
-        Assert.Contains("TrayMinimizeMigrated", File.ReadAllText(settingsFile));
+        Assert.Contains("TrayMinimizeMigration", File.ReadAllText(settingsFile));
 
         // 用户此后手动开启：不被再次翻转
         SettingsService.Current.MinimizeToTray = true;
@@ -44,11 +44,17 @@ public sealed class TrayMinimizeMigrationTests : IDisposable
     }
 
     [Fact]
-    public void Fresh_install_defaults_to_taskbar_minimize_and_marks_migrated()
+    public void Fresh_install_defaults_to_taskbar_minimize_and_self_heals_legacy_true()
     {
-        SettingsService.Load(); // 无设置文件
+        SettingsService.Load(); // 无设置文件：默认即任务栏最小化，尚未打迁移标记
         Assert.False(SettingsService.Current.MinimizeToTray);
-        Assert.True(SettingsService.Current.TrayMinimizeMigrated);
+        Assert.Equal("", SettingsService.Current.TrayMinimizeMigration);
+        // 无标记的旧默认 true（含被回写的场景）：Load 即自愈翻转
+        var settingsFile = Path.Combine(_root, "settings.json");
+        File.WriteAllText(settingsFile, """{"MinimizeToTray": true}""");
+        SettingsService.Load();
+        Assert.False(SettingsService.Current.MinimizeToTray);
+        Assert.Equal(SettingsService.TrayMinimizeMigrationVersion, SettingsService.Current.TrayMinimizeMigration);
     }
 
     [Fact]
@@ -57,6 +63,6 @@ public sealed class TrayMinimizeMigrationTests : IDisposable
         File.WriteAllText(Path.Combine(_root, "settings.json"), """{"MinimizeToTray": false}""");
         SettingsService.Load();
         Assert.False(SettingsService.Current.MinimizeToTray);
-        Assert.True(SettingsService.Current.TrayMinimizeMigrated);
+        Assert.Equal(SettingsService.TrayMinimizeMigrationVersion, SettingsService.Current.TrayMinimizeMigration);
     }
 }

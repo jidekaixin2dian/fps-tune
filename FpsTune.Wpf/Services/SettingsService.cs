@@ -31,8 +31,8 @@ public sealed class AppSettings
     // 最小化自 0.4.0 起回归常规语义（任务栏），是否随最小化进托盘改为显式 opt-in。
     public bool MinimizeToTray { get; set; }
 
-    // 一次性迁移标记：旧默认"最小化进托盘"翻转回任务栏；此后用户手动开启不再迁移。
-    public bool TrayMinimizeMigrated { get; set; }
+    // 一次性迁移标记（版本号）：旧默认"最小化进托盘"翻转回任务栏；此后用户手动开启不再迁移。
+    public string TrayMinimizeMigration { get; set; } = "";
     public string CloseAction { get; set; } = CloseBehavior.Ask;
     public bool HotkeyEnabled { get; set; } = true;
     public bool NotifyOnComplete { get; set; } = true;
@@ -117,7 +117,6 @@ public static class SettingsService
             if (!File.Exists(SettingsFile))
             {
                 Current = CreateDefault();
-                Current.TrayMinimizeMigrated = true; // 新装无旧默认可迁移，防后续误翻转
                 return;
             }
 
@@ -141,18 +140,19 @@ public static class SettingsService
         {
             AtomicFile.PreserveCorrupt(SettingsFile);
             Current = CreateDefault();
-            Current.TrayMinimizeMigrated = true;
         }
     }
 
+    public const string TrayMinimizeMigrationVersion = "0.4.0";
+
     /// <summary>
     /// 0.4.0 一次性迁移：旧默认"最小化进托盘"回归任务栏最小化。
-    /// 迁移只发生一次（TrayMinimizeMigrated 标记），此后用户在设置里手动开启不会被再次翻转。
+    /// 标记存迁移版本号（空 = 未迁移）；完成后用户在设置里手动开启不会被再次翻转。
     /// </summary>
     private static void MigrateTrayMinimizeDefault(AppSettings settings)
     {
-        if (settings.TrayMinimizeMigrated) return;
-        settings.TrayMinimizeMigrated = true;
+        if (settings.TrayMinimizeMigration == TrayMinimizeMigrationVersion) return;
+        settings.TrayMinimizeMigration = TrayMinimizeMigrationVersion;
         settings.MinimizeToTray = false;
         try { Save(settings); }
         catch { /* 写回失败时下次启动重试；本次会话已按任务栏最小化运行 */ }

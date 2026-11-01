@@ -19,11 +19,13 @@ public sealed class GameAutomationTests : IDisposable
         _dir = Path.Combine(Path.GetTempPath(), "fps-tune-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_dir);
         AutoProfileActivityStore.OverrideDir = _dir;
+        UserDataPaths.RootOverride = _dir;
     }
 
     public void Dispose()
     {
         AutoProfileActivityStore.OverrideDir = null;
+        UserDataPaths.RootOverride = null;
         TrayService.NotifyOverride = null;
     }
 

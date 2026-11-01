@@ -20,6 +20,7 @@ public sealed class Evolution040Tests : IDisposable
         _dir = Path.Combine(Path.GetTempPath(), "fps-tune-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_dir);
         BackupService.BackupDirOverride = _dir;
+        UserDataPaths.RootOverride = _dir;
         AutoProfileActivityStore.OverrideDir = _dir;
     }
 
@@ -27,6 +28,7 @@ public sealed class Evolution040Tests : IDisposable
     {
         BackupService.BackupDirOverride = null;
         AutoProfileActivityStore.OverrideDir = null;
+        UserDataPaths.RootOverride = null;
         RegistryHelper.SnapshotOverride = null;
         RegistryHelper.SetOverride = null;
         NativeTimerResolution.QueryOverride = null;
