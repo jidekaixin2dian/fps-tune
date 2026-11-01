@@ -171,16 +171,8 @@ public partial class ColorPreviewControl : UserControl
 
     private void UpdatePreviewHeight()
     {
-        if (_source is null) return;
-        var available = ComparisonViewport.ActualWidth > 2 ? ComparisonViewport.ActualWidth : ComparisonSurface.Width;
-        if (available <= 2) return;
-        var aspect = (double)_source.PixelWidth / _source.PixelHeight;
-        // 预览别把整页顶掉：限高 300，同时限宽 880，保证手柄始终完整可见、可拖。
-        var height = Math.Min((available - 4) / aspect, 300);
-        if (height * aspect > 880) height = 880 / aspect;
-        ComparisonSurface.Width = height * aspect;
-        ComparisonSurface.Height = height;
-        ComparisonSurface.UpdateLayout(); UpdateSplit();
+        // 尺寸完全交给布局（固定高度 + 撑满宽度），这里只刷新分界线。
+        UpdateSplit();
     }
     private void Split_Changed(object sender, RoutedPropertyChangedEventArgs<double> e) => UpdateSplit();
     private void UpdateSplit()

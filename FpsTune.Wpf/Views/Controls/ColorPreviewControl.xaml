@@ -15,9 +15,10 @@
    <ComboBoxItem x:Name="CustomSceneItem" Content="{DynamicResource Str.ColorPreviewCustom}" Visibility="Collapsed"/>
   </ComboBox>
   <Grid x:Name="ComparisonViewport" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
-  <Border x:Name="ComparisonFrame" HorizontalAlignment="Center" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
-   <!-- 给一个初始宽度：父级是 StackPanel（宽度无限），没有它时滑块会被拉成无限宽、手柄点不到 -->
-   <Grid x:Name="ComparisonSurface" Width="480" Height="230" ClipToBounds="True">
+  <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" MinWidth="520" MaxWidth="880" Height="260" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
+   <!-- 尺寸交给布局：固定高度 + 撑满可用宽度（最多 880），不再用代码算像素——算错过一次，
+        预览被压成一条竖线、分界手柄也就点不到了。 -->
+   <Grid x:Name="ComparisonSurface" ClipToBounds="True">
     <TextBlock x:Name="EmptyHint" Text="{DynamicResource Str.ColorPreviewEmpty}" Foreground="#CCD2DA" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
     <Image x:Name="AfterImage" Stretch="Uniform"/>
     <Grid x:Name="BeforeLayer"><Image x:Name="BeforeImage" Stretch="Uniform"/></Grid>
