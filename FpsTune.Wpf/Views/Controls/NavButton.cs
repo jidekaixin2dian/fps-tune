@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 
 namespace FpsTune.Wpf.Views.Controls;
 
@@ -21,7 +22,8 @@ public class NavButton : RadioButton
             nameof(Text),
             typeof(string),
             typeof(NavButton),
-            new PropertyMetadata(string.Empty));
+            new PropertyMetadata(string.Empty, (d, e) =>
+                AutomationProperties.SetName((NavButton)d, (string)e.NewValue ?? string.Empty)));
 
     public string Text
     {
