@@ -23,6 +23,12 @@ for path in (root / 'FpsTune.Wpf').rglob('*'):
 # Optimization titles/descriptions come from the catalog, not XAML resources.
 for path in (root / 'catalog').glob('*.json'):
     characters.update(map(ord, path.read_text(encoding='utf-8-sig')))
+# Filter preset names are runtime filenames, and fit/avoid hints live in presets.json;
+# missing glyphs fall through the composite FontBody to a different typeface mid-run.
+for path in (root / 'FpsTune.Wpf' / 'Assets' / 'GameFilters').glob('*'):
+    characters.update(map(ord, path.stem))
+    if path.suffix == '.json':
+        characters.update(map(ord, path.read_text(encoding='utf-8-sig')))
 source = TTFont(args.source)
 cmap = source.getBestCmap()
 characters &= cmap.keys()

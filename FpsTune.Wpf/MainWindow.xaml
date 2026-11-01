@@ -67,11 +67,11 @@
                         </StackPanel>
                     </StackPanel>
                     <controls:NavButton x:Name="NavFilters" Tag="filters" Text="{DynamicResource Str.NavFilters}" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavTools" Tag="tools" Text="{DynamicResource Str.NavTools}" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                     <StackPanel x:Name="NavGroupSystemRoot">
                         <ToggleButton x:Name="NavGroupSystemHeader" Tag="System" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupSystem}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupSystem}"/>
                         <StackPanel x:Name="NavGroupSystemItems">
                             <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
-                            <controls:NavButton x:Name="NavTools" Tag="tools" Text="{DynamicResource Str.NavTools}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                             <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                         </StackPanel>
                     </StackPanel>

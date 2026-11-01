@@ -4,7 +4,7 @@
         Title="{DynamicResource Str.CloseChoiceTitle}" Style="{StaticResource WindowTypographyStyle}"
         Width="480" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" WindowStyle="None" Background="{DynamicResource AppBackdropBrush}">
-    <Border Style="{StaticResource CardStyle}" Padding="26">
+    <Border Style="{StaticResource CardStyle}" Padding="26" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <StackPanel>
             <TextBlock Text="{DynamicResource Str.CloseChoiceTitle}" Style="{StaticResource PageTitleStyle}"/>
             <TextBlock Text="{DynamicResource Str.CloseChoiceHint}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,20" TextWrapping="Wrap"/>

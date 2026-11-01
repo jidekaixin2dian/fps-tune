@@ -1126,6 +1126,9 @@
                 </ControlTemplate></Setter.Value></Setter>
             </Style>
                 <Style x:Key="TuneSliderStyle" TargetType="Slider">
+            <!-- 全站滑杆限宽：杜绝铺满整行的长调节线（用户 2026-11-01 明确要求） -->
+            <Setter Property="MaxWidth" Value="260"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="Height" Value="22"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="IsMoveToPointEnabled" Value="True"/>

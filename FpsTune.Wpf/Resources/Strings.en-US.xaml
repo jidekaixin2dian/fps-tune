@@ -935,7 +935,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CacheSkipped">Skipped {0} unavailable files or directories.</s:String>
     <s:String x:Key="Str.CacheSummary">{0} files · {1}</s:String>
     <s:String x:Key="Str.CacheTruncated">Scan limit reached. Clean with Windows Storage settings before scanning again.</s:String>
-    <s:String x:Key="Str.NavTools">Maintenance</s:String>
+    <s:String x:Key="Str.NavTools">Tools</s:String>
     <s:String x:Key="Str.ShaderCache">Shader cache</s:String>
     <s:String x:Key="Str.Wallpaper">Custom wallpaper</s:String>
     <s:String x:Key="Str.WallpaperChoose">Choose image</s:String>
@@ -2061,7 +2061,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.HomeEntryFilters">Game filters</s:String>
     <s:String x:Key="Str.HomeEntryDeltaFix">Frame fix</s:String>
     <s:String x:Key="Str.HomeEntrySession">Sessions</s:String>
-    <s:String x:Key="Str.HomeEntryTools">Maintenance</s:String>
+    <s:String x:Key="Str.HomeEntryTools">Tools</s:String>
     <s:String x:Key="Str.HomeRecentEmpty">Recently visited pages will show up here after first use</s:String>
     <s:String x:Key="Str.MemoryStreamingDetect">Detect streaming apps</s:String>
     <s:String x:Key="Str.MemoryStreamingFoundFmt">Checked {0} streaming app(s) ({1})</s:String>

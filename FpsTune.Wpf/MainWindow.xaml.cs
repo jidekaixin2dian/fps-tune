@@ -318,7 +318,7 @@ public partial class MainWindow : Window
     };
 
     /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
-    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavSession, NavAb, NavSettings };
+    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavTools, NavSession, NavAb, NavSettings };
 
     private void UpdateOverviewModeLabel()
     {

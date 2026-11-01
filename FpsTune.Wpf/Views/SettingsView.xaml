@@ -5,6 +5,8 @@
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <Style x:Key="WallpaperSliderStyle" TargetType="Slider">
+            <Setter Property="MaxWidth" Value="260"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="IsMoveToPointEnabled" Value="True"/>
             <Setter Property="IsSnapToTickEnabled" Value="True"/>

@@ -935,7 +935,7 @@
     <s:String x:Key="Str.CacheSkipped">已跳过 {0} 个无法处理的文件或目录。</s:String>
     <s:String x:Key="Str.CacheSummary">{0} 个文件 · {1}</s:String>
     <s:String x:Key="Str.CacheTruncated">缓存项较多，扫描未完成。请先用 Windows 存储设置清理后再扫描。</s:String>
-    <s:String x:Key="Str.NavTools">维护工具</s:String>
+    <s:String x:Key="Str.NavTools">常用工具</s:String>
     <s:String x:Key="Str.ShaderCache">着色器缓存</s:String>
     <s:String x:Key="Str.Wallpaper">自定义壁纸</s:String>
     <s:String x:Key="Str.WallpaperChoose">选择图片</s:String>
@@ -2063,7 +2063,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.HomeEntryFilters">游戏滤镜</s:String>
     <s:String x:Key="Str.HomeEntryDeltaFix">掉帧修复</s:String>
     <s:String x:Key="Str.HomeEntrySession">性能会话</s:String>
-    <s:String x:Key="Str.HomeEntryTools">维护工具</s:String>
+    <s:String x:Key="Str.HomeEntryTools">常用工具</s:String>
     <s:String x:Key="Str.HomeRecentEmpty">用过一次后，最近访问的页面会出现在这里</s:String>
     <!-- 直播软件识别（并入后台应用整理） -->
     <s:String x:Key="Str.MemoryStreamingDetect">识别直播软件</s:String>

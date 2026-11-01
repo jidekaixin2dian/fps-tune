@@ -31,25 +31,25 @@
                 <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.FilterEditorTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <Grid Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="*"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                         <TextBlock Text="{DynamicResource Str.FilterEditorGamma}" VerticalAlignment="Center" Margin="0,0,10,6"/>
                         <Slider x:Name="GammaSlider" Grid.Column="1" Minimum="0.5" Maximum="2.5" Value="1" TickFrequency="0.01" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorGamma}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=GammaSlider, StringFormat={}{0:0.00}}" VerticalAlignment="Center"/>
                     </Grid>
                     <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="*"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                         <TextBlock Text="{DynamicResource Str.FilterEditorBrightness}" VerticalAlignment="Center" Margin="0,0,10,6"/>
                         <Slider x:Name="BrightnessSlider" Grid.Column="1" Minimum="-0.3" Maximum="0.3" Value="0" TickFrequency="0.01" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorBrightness}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=BrightnessSlider, StringFormat={}{0:0.00}}" VerticalAlignment="Center"/>
                     </Grid>
                     <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="*"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                         <TextBlock Text="{DynamicResource Str.FilterEditorSaturation}" VerticalAlignment="Center" Margin="0,0,10,6"/>
                         <Slider x:Name="SaturationSlider" Grid.Column="1" Minimum="0.5" Maximum="1.5" Value="1" TickFrequency="0.01" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorSaturation}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=SaturationSlider, StringFormat={}{0:0.00}}" VerticalAlignment="Center"/>
                     </Grid>
                     <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="*"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
                         <TextBlock Text="{DynamicResource Str.FilterEditorHighlight}" VerticalAlignment="Center" Margin="0,0,10,6"/>
                         <Slider x:Name="HighlightSlider" Grid.Column="1" Minimum="-25" Maximum="25" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorHighlight}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=HighlightSlider, StringFormat={}{0:0}}" VerticalAlignment="Center"/>
