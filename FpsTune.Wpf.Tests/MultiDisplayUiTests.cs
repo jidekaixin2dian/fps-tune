@@ -31,7 +31,7 @@ public sealed class MultiDisplayUiTests
                 UserDataPaths.RootOverride = fixture.Root;
                 application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown, Resources = DlssFeedbackTests.LoadResources() };
                 SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(application.Dispatcher));
-                var page = new DisplayQualityView();
+                var page = new FilterView();
                 window = new Window { Width = 1050, Height = 850, Content = page };
                 application.MainWindow = window;
                 DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
@@ -42,8 +42,6 @@ public sealed class MultiDisplayUiTests
                 var applyColor = (Button)color.FindName("ColorApplyButton");
                 var vib = (Button)page.FindName("VibApplyButton");
                 var icc = (Button)page.FindName("IccApplyButton");
-                var subtab = FindVisual<RadioButton>(page).Single(b => Equals(b.Tag, "vibicc"));
-                subtab.IsChecked = true;
                 ((Expander)page.FindName("IccAdvanced")).IsExpanded = true;
                 DlssFeedbackTests.PumpUntil(() => combo.Items.Count == 2 && vib.IsEnabled && icc.IsEnabled);
                 Assert.True(((Button)page.FindName("IccApplyFileButton")).IsEnabled);

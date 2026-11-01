@@ -13,7 +13,9 @@
     <s:String x:Key="Str.NavQuickOpt">One-click Optimize</s:String>
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
     <s:String x:Key="Str.NavFilters">Game filters</s:String>
-    <s:String x:Key="Str.FilterPageIntro">One-click ICC presets in the filter center; per-app filters follow the foreground process; frame fix targets Delta Force stutter after updates.</s:String>
+    <s:String x:Key="Str.FilterPageIntro">Pick a filter, compare it on an in-game screenshot, fine-tune, then apply. The preset library below ships 43 built-in ICC presets; per-app filters follow the foreground process.</s:String>
+    <s:String x:Key="Str.FilterLibraryTitle">Filter preset library</s:String>
+    <s:String x:Key="Str.FilterLibraryHint">43 built-in ICC presets grouped by scene. Use the editor below to make your own, or bind different filters to different apps.</s:String>
     <s:String x:Key="Str.CommandAliasFilters">filter ICC color per-app game filter</s:String>    <s:String x:Key="Str.NavSession">Sessions</s:String>
     <s:String x:Key="Str.NavAb">A/B Test</s:String>
     <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>
@@ -283,6 +285,10 @@
     <s:String x:Key="Str.DlssNote">选择预设后点击“应用覆盖”。“跟随游戏内”会还原本游戏的全部工具改动。</s:String>
     <s:String x:Key="Str.VibNote">Saturation / digital vibrance (NVIDIA)</s:String>
     <s:String x:Key="Str.VibNote2">Digital vibrance is applied together with the selected color mode.</s:String>
+    <s:String x:Key="Str.VibStateReadFailed">Could not read digital vibrance state: {0}</s:String>
+    <s:String x:Key="Str.VibStateCurrentRestorable">Current {0}% (original level saved, restorable; driver default about {1}%)</s:String>
+    <s:String x:Key="Str.VibStateCurrent">Current {0}% (driver default about {1}%)</s:String>
+    <s:String x:Key="Str.IccStateReadFailed">Could not read ICC state: {0}</s:String>
     <s:String x:Key="Str.VibRecommendedSet">Try 58%</s:String>
     <s:String x:Key="Str.VibRecommendedNote">Try the recommended level, then apply color settings.</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% is a starting point for a subtle color boost. Adjust to taste.</s:String>

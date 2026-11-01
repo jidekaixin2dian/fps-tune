@@ -252,12 +252,13 @@ public sealed class ReadabilityAndFramesUiTests
                     ThemeManager.SetMode(theme);
                     Assert.NotEqual(((SolidColorBrush)app.FindResource("AccentBrush")).Color,
                         ((SolidColorBrush)app.FindResource("ChartSecondaryBrush")).Color);
-                    foreach (var route in new[] { "home", "detect", "opt", "display", "session", "ab", "backup", "tools", "settings" })
+                    foreach (var route in new[] { "home", "detect", "opt", "display", "filters", "session", "ab", "backup", "tools", "settings" })
                     {
                         window.NavigateTo(route); window.UpdateLayout();
                         var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
                         DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
                         var titleKey = route switch { "detect" => "Str.NavDetect", "opt" => "Str.OptimizeTitle", "display" => "Str.DisplayTitle",
+                            "filters" => "Str.NavFilters",
                             "session" => "Str.NavSession", "ab" => "Str.NavAb", "backup" => "Str.NavBackup", "tools" => "Str.NavTools", "settings" => "Str.NavSettings", _ => null };
                         if (titleKey is not null)
                             Assert.Contains(Descendants(page).OfType<TextBlock>(), t => t.Text == Str.T(titleKey) && t.FontSize == 22);
@@ -278,7 +279,7 @@ public sealed class ReadabilityAndFramesUiTests
                             foreach (var name in new[] { "StorageNav", "ProcessesNav", "TroubleshootNav" })
                             { ((RadioButton)page.FindName(name)).IsChecked = true; Capture(window, "tools-" + name + "-" + theme, report); }
                         if (page is DisplayQualityView)
-                            foreach (var tab in Descendants(page).OfType<RadioButton>().Where(b => b.Tag is string s && new[] { "dlss", "vibicc", "drs", "identity", "advice" }.Contains(s)).ToArray())
+                            foreach (var tab in Descendants(page).OfType<RadioButton>().Where(b => b.Tag is string s && new[] { "dlss", "drs", "identity", "advice" }.Contains(s)).ToArray())
                             { tab.IsChecked = true; Capture(window, "display-" + tab.Tag + "-" + theme, report); }
                     }
                 }
@@ -413,7 +414,7 @@ public sealed class ReadabilityAndFramesUiTests
             Directory.CreateDirectory(DigitalVibranceService.BackupDirOverride!);
             var receipt = Path.Combine(DigitalVibranceService.BackupDirOverride!, "vibrance.json");
             const string original = "{\"Level\":90}"; File.WriteAllText(receipt, original);
-            var page = new DisplayQualityView(); var window = new Window { Width = 1180, Height = 800, Content = page };
+            var page = new FilterView(); var window = new Window { Width = 1180, Height = 800, Content = page };
             app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
             var apply = (Button)page.FindName("VibApplyButton"); var restore = (Button)page.FindName("VibRestoreButton");
             var state = (TextBlock)page.FindName("VibStateText"); var slider = (Slider)page.FindName("VibSlider");
@@ -434,7 +435,6 @@ public sealed class ReadabilityAndFramesUiTests
             };
             try
             {
-                Descendants(page).OfType<RadioButton>().Single(b => b.Tag as string == "vibicc").IsChecked = true;
                 DlssFeedbackTests.PumpUntil(() => apply.IsEnabled && slider.Value == 30);
                 Assert.True(((StackPanel)page.FindName("VibSupportedPanel")).IsVisible);
                 Assert.False(restore.IsEnabled); Assert.Contains(Str.T("Str.VibranceLegacyUnassigned"), state.Text);

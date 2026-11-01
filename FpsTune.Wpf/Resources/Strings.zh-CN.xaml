@@ -13,7 +13,9 @@
     <s:String x:Key="Str.NavQuickOpt">一键优化</s:String>
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
     <s:String x:Key="Str.NavFilters">游戏滤镜</s:String>
-    <s:String x:Key="Str.FilterPageIntro">滤镜中心一键套用 ICC 预设；独立程序滤镜按前台进程自动切换；掉帧修复针对三角洲更新后的卡顿。</s:String>
+    <s:String x:Key="Str.FilterPageIntro">选滤镜、看游戏内实机截图对比、微调后一键应用；下方滤镜预设库有 43 个内置 ICC 预设，独立程序滤镜按前台进程自动切换。</s:String>
+    <s:String x:Key="Str.FilterLibraryTitle">滤镜预设库</s:String>
+    <s:String x:Key="Str.FilterLibraryHint">内置 43 个 ICC 预设，按场景分组；也能用下面的编辑器调出自己的一档，或给不同程序绑定不同滤镜。</s:String>
     <s:String x:Key="Str.CommandAliasFilters">滤镜 ICC 滤镜中心 独立程序 filter color</s:String>    <s:String x:Key="Str.NavSession">性能会话</s:String>
     <s:String x:Key="Str.NavAb">A/B 实验</s:String>
     <s:String x:Key="Str.NavBackup">备份 / 日志</s:String>
@@ -283,6 +285,10 @@
     <s:String x:Key="Str.DlssNote">选择预设后点击“应用覆盖”。“跟随游戏内”会还原本游戏的全部工具改动。</s:String>
     <s:String x:Key="Str.VibNote">饱和度 / 数字振动（NVIDIA）</s:String>
     <s:String x:Key="Str.VibNote2">数字振动与所选色彩模式一起应用。</s:String>
+    <s:String x:Key="Str.VibStateReadFailed">读取数字振动状态失败：{0}</s:String>
+    <s:String x:Key="Str.VibStateCurrentRestorable">当前 {0}%（已记录原始档位，可还原；驱动默认约 {1}%）</s:String>
+    <s:String x:Key="Str.VibStateCurrent">当前 {0}%（驱动默认约 {1}%）</s:String>
+    <s:String x:Key="Str.IccStateReadFailed">读取 ICC 状态失败：{0}</s:String>
     <s:String x:Key="Str.VibRecommendedSet">试试 58%</s:String>
     <s:String x:Key="Str.VibRecommendedNote">可先试试推荐档位，再点“应用色彩设置”。</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% 是轻微增强色彩的起点，可继续调整。</s:String>

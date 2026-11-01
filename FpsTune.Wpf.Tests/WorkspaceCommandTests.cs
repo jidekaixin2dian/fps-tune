@@ -13,9 +13,9 @@ public sealed class WorkspaceCommandTests
     {
         var commands = WorkspaceCommands.Build();
         Assert.Equal(commands.Count, commands.Select(c => c.Id).Distinct().Count());
-        Assert.All(commands, c => Assert.Contains(c.Route, new[] { "home", "games", "detect", "opt", "display", "session", "ab", "backup", "tools", "settings" }));
+        Assert.All(commands, c => Assert.Contains(c.Route, new[] { "home", "games", "detect", "quick", "opt", "display", "filters", "session", "ab", "backup", "tools", "settings" }));
         Assert.Equal(ItemCatalog.All.Count, commands.Count(c => c.Id.StartsWith("item:")));
-        Assert.Contains(commands, c => c.Id == "display:vibicc" && c.Target == "vibicc");
+        Assert.Contains(commands, c => c.Id == "filters:color" && c.Target == "color" && c.Route == "filters");
     }
     [Fact]
     public void Search_matches_all_terms_and_ranks_exact_catalog_id_first()

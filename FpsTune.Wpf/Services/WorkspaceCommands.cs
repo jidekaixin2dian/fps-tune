@@ -24,11 +24,13 @@ public sealed class WorkspaceCommands
             Add("page:" + route, title, "Str.CommandPage", route, null, Str.T(alias));
         foreach (var (target, title, aliases) in new[] {
             ("dlss", "Str.CommandDlss", "DLSS NVIDIA RTX K J M preset"),
-            ("vibicc", "Str.CommandColor", "ICC ICM digital vibrance saturation color monitor"),
             ("drs", "Str.CommandDrs", "NVIDIA DRS 3D VSync texture shader cache"),
-            ("advice", "Str.CommandAdvice", "AMD Intel NVIDIA driver checklist advice"),
-            ("delta-fix", "Str.DeltaFixTab", "Str.FilterAppsHint") })
+            ("advice", "Str.CommandAdvice", "AMD Intel NVIDIA driver checklist advice") })
             Add("display:" + target, title, "Str.NavDisplay", "display", target, aliases);
+        foreach (var (target, title, aliases) in new[] {
+            ("color", "Str.CommandColor", "ICC ICM digital vibrance saturation color monitor"),
+            ("delta-fix", "Str.DeltaFixTab", "Str.FilterAppsHint") })
+            Add("filters:" + target, title, "Str.NavFilters", "filters", target, aliases);
         foreach (var (target, title, alias) in new[] {
             ("0", "Str.SettingsAppearance", "Str.CommandAliasAppearance"), ("1", "Str.SettingsStartup", "Str.CommandAliasStartup"), ("2", "Str.SettingsGame", "Str.CommandAliasGames"),
             ("3", "Str.SettingsData", "Str.CommandAliasData"), ("4", "Str.Wallpaper", "Str.CommandAliasWallpaper"), ("5", "Str.SectionAbout", "Str.CommandAliasUpdate") })

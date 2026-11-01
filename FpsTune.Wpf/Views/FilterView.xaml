@@ -2,6 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="clr-namespace:FpsTune.Wpf.Views"
+    xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
     Background="{DynamicResource AppBackgroundBrush}" FontFamily="{StaticResource FontBody}">
     <Grid Margin="28,22,28,24">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -11,8 +12,118 @@
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
-                <views:FilterCenterPanel/>
-                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+                <!-- 目标显示器：下面的画面色彩与滤镜都应用到这台显示器 -->
+                <Border x:Name="CardDisplayTarget" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.DisplayTarget}" Style="{StaticResource CardTitleStyle}"/>
+                        <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <ComboBox x:Name="DisplayTargetCombo" DisplayMemberPath="Label" Style="{StaticResource SelectComboBoxStyle}"
+                                      AutomationProperties.Name="{DynamicResource Str.DisplayTarget}" SelectionChanged="DisplayTarget_Changed"/>
+                            <Button x:Name="DisplayRefreshButton" Grid.Column="1" Content="{DynamicResource Str.DisplayRefresh}" Margin="10,0,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}" Click="DisplayRefresh_Click"/>
+                        </Grid>
+                        <TextBlock x:Name="DisplayTargetState" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 画面与色彩：选滤镜 → 微调 → 应用；下方是游戏内实机截图对比预览 -->
+                <Border x:Name="CardVib" MaxWidth="1560" HorizontalAlignment="Stretch" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
+                    <StackPanel>
+                        <views:ScreenColorPanel x:Name="ColorPanel"/>
+                        <StackPanel x:Name="VibranceContent">
+                        <!-- Hosted in the unified color panel after namescope creation. -->
+                        <StackPanel x:Name="VibSupportedPanel" Visibility="Collapsed">
+                            <TextBlock Text="{DynamicResource Str.VibNote}"
+                                       Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                            <Grid Margin="0,12,0,0" HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" x:Name="VibPercentText" Text="—"
+                                           FontFamily="{StaticResource FontStat}" Typography.NumeralAlignment="Tabular" FontSize="26" FontWeight="{DynamicResource StrongEmphasisWeight}"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           VerticalAlignment="Center" MinWidth="64"/>
+                                <Slider Grid.Column="1" x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
+                                        IsSnapToTickEnabled="False" ValueChanged="VibSlider_Changed"
+                                        Style="{StaticResource TuneSliderStyle}"
+                                        VerticalAlignment="Center" Margin="14,0,18,0"/>
+                                <Button Grid.Column="2" x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        MinWidth="90" Padding="10,8" VerticalAlignment="Center" Click="VibRecommended_Click"
+                                        ToolTip="{DynamicResource Str.TipVibRecommended}"/>
+                            </Grid>
+
+                            <TextBlock x:Name="VibStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0" Visibility="Collapsed">
+                                <Button x:Name="VibApplyButton" Content="{DynamicResource Str.Apply}"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        MinWidth="110" Margin="0,0,8,0" Click="VibApply_Click"/>
+                                <Button x:Name="VibRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        MinWidth="110" Click="VibRestore_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock x:Name="VibUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <Expander x:Name="IccAdvanced" Header="{DynamicResource Str.IccAdvanced}" IsExpanded="False"><StackPanel Margin="0,12,0,0">
+                        <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+
+                        <StackPanel x:Name="IccSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                            <TextBlock Text="{DynamicResource Str.IccPresetLabel}"
+                                       Style="{StaticResource MutedTextStyle}"/>
+                            <ItemsControl Visibility="Collapsed" x:Name="IccPresetList" Margin="0,10,0,0">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate><DataTemplate>
+                                    <RadioButton GroupName="iccPreset" Style="{StaticResource PresetCard}" IsChecked="{Binding IsSelected, Mode=TwoWay}">
+                                        <StackPanel><TextBlock controls:LocalizedText.Key="{Binding TitleKey}" Style="{StaticResource PresetCardText}"/>
+                                            <TextBlock controls:LocalizedText.Key="{Binding DescriptionKey}" Style="{StaticResource PresetCardNote}"/>
+                                        </StackPanel>
+                                    </RadioButton>
+                                </DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock x:Name="IccStateText" Text="" Style="{StaticResource MutedTextStyle}"
+                                       Margin="0,10,0,0" TextWrapping="Wrap"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <Button Visibility="Collapsed" x:Name="IccApplyButton" Content="{DynamicResource Str.ApplyPreset}"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        MinWidth="110" Margin="0,0,8,0" Click="IccApply_Click"/>
+                                <Button x:Name="IccApplyFileButton" Content="{DynamicResource Str.IccApplyFromFile}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        MinWidth="120" Margin="0,0,8,0" Click="IccApplyFromFile_Click"
+                                        ToolTip="{DynamicResource Str.IccApplyFromFileTip}"/>
+                                <Button Visibility="Collapsed" x:Name="IccRestoreButton" Content="{DynamicResource Str.RestoreOriginal}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        MinWidth="110" Click="IccRestore_Click"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{DynamicResource Str.IccNote}"
+                                       Style="{StaticResource MutedTextStyle}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <TextBlock x:Name="IccUnsupportedText" Text="" Style="{StaticResource MutedTextStyle}"
+                                   Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                        </StackPanel></Expander>
+                    </StackPanel>
+                </Border>
+
+                <!-- 滤镜预设库：43 个内置 ICC 预设 + 自定义 ICC + 独立程序滤镜 -->
+                <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.FilterLibraryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.FilterLibraryHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                        <views:FilterCenterPanel x:Name="FilterCenter" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.CrosshairTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.CrosshairHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
                     <CheckBox x:Name="CrosshairCheck" Content="{DynamicResource Str.CrosshairToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,10,0,0" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
@@ -38,7 +149,7 @@
                     <CheckBox x:Name="CrosshairAdaptiveCheck" Content="{DynamicResource Str.CrosshairAdaptiveToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,4,0,0" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
                     <TextBlock Text="{DynamicResource Str.CrosshairAdaptiveHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                 </StackPanel></Border>
-                <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0"><StackPanel>
+                <Border Style="{StaticResource CardStyle}"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                     <Button Content="{DynamicResource Str.DeltaFixOpen}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OpenDeltaFix_Click"/>
