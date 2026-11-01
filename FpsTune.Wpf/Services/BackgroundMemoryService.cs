@@ -16,6 +16,18 @@ internal interface IBackgroundMemoryApi
     MemoryProcessResult Trim(MemoryProcessTarget target);
 }
 
+/// <summary>常见直播/推流软件识别（进程名小写、无扩展名）：OBS / Streamlabs / XSplit / vMix / 虎牙直播伴侣。</summary>
+internal static class StreamingAppDetector
+{
+    internal static readonly string[] ProcessNames =
+    [
+        "obs64", "obs32", "streamlabs", "streamlabs obs", "xsplit.core", "vmix64", "vmix", "livehime"
+    ];
+
+    internal static bool IsStreamingProcess(string path)
+        => ProcessNames.Contains(Path.GetFileNameWithoutExtension(path).ToLowerInvariant());
+}
+
 internal sealed class BackgroundMemoryService(IBackgroundMemoryApi? api = null, Func<bool>? isBusy = null)
 {
     private readonly IBackgroundMemoryApi _api = api ?? new WindowsBackgroundMemoryApi();

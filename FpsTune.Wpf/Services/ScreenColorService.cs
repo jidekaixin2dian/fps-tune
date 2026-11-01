@@ -6,13 +6,13 @@ using FpsTune.Wpf.Core;
 namespace FpsTune.Wpf.Services;
 
 public sealed record ScreenColorSettings(double Brightness = 0, double Contrast = 100, double Gamma = 1,
-    double Shadows = 0, double Red = 100, double Green = 100, double Blue = 100)
+    double Shadows = 0, double Red = 100, double Green = 100, double Blue = 100, double Highlight = 0)
 {
     public void Validate()
     {
-        var values = new[] { Brightness, Contrast, Gamma, Shadows, Red, Green, Blue };
+        var values = new[] { Brightness, Contrast, Gamma, Shadows, Red, Green, Blue, Highlight };
         if (values.Any(v => !double.IsFinite(v)) || Brightness is < -20 or > 20 || Contrast is < 80 or > 120
-            || Gamma is < .7 or > 1.5 || Shadows is < 0 or > 25
+            || Gamma is < .7 or > 1.5 || Shadows is < 0 or > 25 || Highlight is < -25 or > 25
             || new[] { Red, Green, Blue }.Any(v => v is < 80 or > 110))
             throw new ArgumentOutOfRangeException(nameof(ScreenColorSettings), Str.T("Str.ColorOutOfRange"));
     }
@@ -28,6 +28,8 @@ public sealed record ScreenColorSettings(double Brightness = 0, double Contrast 
         IccFilterPreset.ShadowGentle => new(Shadows: 8),
         IccFilterPreset.ContrastGentle => new(Contrast: 106),
         IccFilterPreset.Muted => new(Contrast: 95, Red: 96, Green: 96, Blue: 96),
+        IccFilterPreset.Deexposure => new(Highlight: -14),
+        IccFilterPreset.DeexposureStrong => new(Highlight: -22, Shadows: 3),
         IccFilterPreset.Neutral => new(),
         _ => throw new ArgumentOutOfRangeException(nameof(preset))
     };
@@ -134,6 +136,10 @@ public static class ScreenColorService
         y += settings.Shadows / 100 * 4 * y * Math.Pow(1 - y, 2);
         y += (settings.Contrast / 100 - 1) * 2 * y * (1 - y) * (2 * y - 1);
         y += settings.Brightness / 100 * 4 * y * (1 - y);
+        // 高光窗（smoothstep 0.5→1，端点保持）：负值压高光（去曝光），正值提亮白点。
+        var w = y <= .5 ? 0 : (y - .5) * 2;
+        w = w * w * (3 - 2 * w);
+        y += settings.Highlight / 100 * w * y * (1 - y) * 2;
         return Math.Pow(Math.Clamp(y, 0, 1), 100 / gain);
     }
     public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false, bool preserveIcc = false)

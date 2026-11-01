@@ -17,6 +17,8 @@ public enum IccFilterPreset
     ContrastGentle = 8,
     Muted = 9,
     Neutral = 10,
+    Deexposure = 11,       // 去曝光：高光窗压亮部（画面过曝/雪地/强光）
+    DeexposureStrong = 12, // 去曝光强化：更深的高光压缩，夜间与暗场适用性更差
 }
 
 /// <summary>
@@ -74,6 +76,8 @@ public static class IccProfileGenerator
         IccFilterPreset.ContrastGentle => ("Str.IccContrastGentle", "Str.IccContrastGentleDesc"),
         IccFilterPreset.Muted => ("Str.IccMuted", "Str.IccMutedDesc"),
         IccFilterPreset.Neutral => ("Str.IccNeutral", "Str.IccNeutralDesc"),
+        IccFilterPreset.Deexposure => ("Str.IccDeexposure", "Str.IccDeexposureDesc"),
+        IccFilterPreset.DeexposureStrong => ("Str.IccDeexposureStrong", "Str.IccDeexposureStrongDesc"),
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };
 

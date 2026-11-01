@@ -108,6 +108,7 @@
                         <TextBlock x:Name="MemorySelection" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0"/>
                         <WrapPanel Margin="0,8,0,8">
                             <Button x:Name="MemoryAppsRefresh" Content="{DynamicResource Str.MaintenanceRefresh}" Click="MemoryAppsRefresh_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
+                            <Button x:Name="MemoryStreamingDetect" Content="{DynamicResource Str.MemoryStreamingDetect}" Click="MemoryStreamingDetect_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
                             <Button x:Name="MemorySelectAll" Content="{DynamicResource Str.MemorySelectAll}" Click="MemorySelectAll_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
                             <Button x:Name="MemorySelectNone" Content="{DynamicResource Str.MemorySelectNone}" Click="MemorySelectNone_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"/>
                         </WrapPanel>

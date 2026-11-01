@@ -5,11 +5,12 @@ using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
 
-/// <summary>游戏滤镜单条预设：内置 .icc 资产 + 适用/避坑说明（来源预设标注 "No copyright, use freely"）。</summary>
-public sealed record GameFilterPreset(string FileName, string Name, string Fit, string Avoid, bool Builtin);
+/// <summary>游戏滤镜单条预设：内置 .icc 资产 + 适用/避坑说明（来源预设标注 "No copyright, use freely"）。
+/// Category 为分类键（soft/deexpose/bright/color/game/face），UI 按键映射到本地化组名。</summary>
+public sealed record GameFilterPreset(string FileName, string Name, string Fit, string Avoid, bool Builtin, string Category = "");
 
 /// <summary>
-/// 滤镜中心预设库：内置资产（嵌入资源，随包分发）+ 用户自定义目录（UserDataPaths/GameFilters）。
+/// 滤镜中心预设库：内置资产（嵌入资源，随包分发）+ 生成式去曝光预设 + 用户自定义目录（UserDataPaths/GameFilters）。
 /// 应用走 IccFilterService.ApplyFromFile（沿用其原值备份/读回/漂移保护契约）。
 /// </summary>
 public static class GameFilterLibrary
@@ -17,6 +18,9 @@ public static class GameFilterLibrary
     private static IReadOnlyList<GameFilterPreset>? _cache;
     internal static Func<Assembly>? AssemblyOverride { get; set; }
     internal static string? UserDirOverride { get; set; }
+
+    /// <summary>生成式预设文件名前缀（不落盘，应用时即时生成字节）。</summary>
+    internal const string GeneratedPrefix = "generated:";
 
     internal static string UserDir => UserDirOverride
         ?? Path.Combine(UserDataPaths.Root, "game-filters");
@@ -35,8 +39,12 @@ public static class GameFilterLibrary
             {
                 if (!name.EndsWith(".icc", StringComparison.OrdinalIgnoreCase) || !seen.Add(name)) continue;
                 var meta = metadata.TryGetValue(name, out var m) ? ((string Fit, string Avoid)?)m : null;
-                list.Add(new(name, PrettyName(name), meta?.Fit ?? "", meta?.Avoid ?? "", Builtin: true));
+                list.Add(new(name, PrettyName(name), meta?.Fit ?? "", meta?.Avoid ?? "", Builtin: true,
+                    Category: CategoryFor(PrettyName(name))));
             }
+            // 生成式去曝光预设（IccProfileGenerator 即时生成，不占嵌入资产）
+            list.Add(new(GeneratedPrefix + nameof(IccFilterPreset.Deexposure), "去曝光 · 轻压", "画面过亮发白、雪地强光", "本来就暗的场景", Builtin: true, Category: "deexpose"));
+            list.Add(new(GeneratedPrefix + nameof(IccFilterPreset.DeexposureStrong), "去曝光 · 重压", "强光爆闪、需要深压光", "夜间与暗场", Builtin: true, Category: "deexpose"));
             foreach (var name in ListUser())
             {
                 if (!name.EndsWith(".icc", StringComparison.OrdinalIgnoreCase) || !seen.Add(name)) continue;
@@ -47,9 +55,14 @@ public static class GameFilterLibrary
         }
     }
 
-    /// <summary>取预设 .icc 字节（内置资产或用户目录）。</summary>
+    /// <summary>取预设 .icc 字节（生成式 / 内置资产 / 用户目录）。</summary>
     public static byte[] ReadPreset(string fileName)
     {
+        if (fileName.StartsWith(GeneratedPrefix, StringComparison.Ordinal))
+        {
+            var preset = Enum.Parse<IccFilterPreset>(fileName[GeneratedPrefix.Length..], ignoreCase: false);
+            return IccProfileGenerator.Build(preset);
+        }
         if (ListEmbedded().Contains(fileName, StringComparer.OrdinalIgnoreCase))
         {
             using var stream = AssetAssembly.GetManifestResourceStream("FpsTune.GameFilter." + fileName)
@@ -109,4 +122,29 @@ public static class GameFilterLibrary
     /// <summary>文件名 → 展示名（去掉 .icc 扩展与序号前缀，如 "13·日常通用.icc" → "日常通用"）。</summary>
     private static string PrettyName(string fileName)
         => Path.GetFileNameWithoutExtension(fileName);
+
+    private static readonly Dictionary<string, string> CategoryByName = new(StringComparer.Ordinal)
+    {
+        // 柔和护眼
+        ["1.1·柔和"] = "soft", ["5.1·偏灰暗"] = "soft", ["22·柔和3.0"] = "soft", ["46·AZ3柔灰"] = "soft", ["58·雾柔"] = "soft", ["13·日常通用"] = "soft",
+        // 压暗去曝
+        ["2.1·原色降曝"] = "deexpose", ["15·无曝优化"] = "deexpose", ["28·防雪盲"] = "deexpose", ["12·偏冷灰"] = "deexpose",
+        ["41·夜坝"] = "deexpose", ["55·墨影"] = "deexpose", ["54·寒墨"] = "deexpose",
+        // 提亮通透
+        ["23·高亮2.0"] = "bright", ["24·明透3.0"] = "bright", ["26·白天2.0"] = "bright", ["42·锐透"] = "bright",
+        ["43·AZ3清透"] = "bright", ["51·明澈"] = "bright", ["56·清锐"] = "bright", ["47·匀光"] = "bright",
+        // 色彩风格
+        ["11·偏冷色"] = "color", ["29·琥珀"] = "color", ["30·冰艳"] = "color", ["31·澄蓝"] = "color", ["32·靛蓝"] = "color",
+        ["33·粉紫"] = "color", ["34·烈彩"] = "color", ["27·鲜艳2.0"] = "color", ["45·AZ3浓彩"] = "color", ["44·青润"] = "color",
+        ["25·电影2.0"] = "color", ["49·AZ3暮色"] = "color", ["14·测试14"] = "color",
+        // 游戏专属
+        ["36·彩虹6号冷亮"] = "game", ["48·激战2清润"] = "game", ["50·永劫清韵"] = "game", ["52·使命召唤16明晰"] = "game",
+        ["53·APEX透彩"] = "game", ["57·原神晴彩"] = "game", ["35·AZ3"] = "game",
+        // 人物暗场
+        ["16·人物微亮"] = "face", ["17·人物微亮+"] = "face",
+    };
+
+    /// <summary>展示名 → 分类键；未收录的归入色彩风格（风格类新增文件不至于落空）。</summary>
+    internal static string CategoryFor(string displayName)
+        => CategoryByName.TryGetValue(displayName, out var category) ? category : "color";
 }

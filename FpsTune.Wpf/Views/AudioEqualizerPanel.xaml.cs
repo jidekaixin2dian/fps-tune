@@ -12,7 +12,15 @@ public partial class AudioEqualizerPanel : UserControl
     private bool _busy, _syncing;
     private static readonly (string Name, double[] Gains)[] Presets = [
         (Str.T("Str.EqFlat"), new double[10]), (Str.T("Str.EqFootsteps"), [-4,-3,-2,0,1,2,3,3,1,0]),
-        (Str.T("Str.EqVoice"), [-2,-2,-1,0,2,3,3,1,0,-1]), (Str.T("Str.EqBass"), [5,4,3,1,0,0,0,0,0,0])];
+        (Str.T("Str.EqVoice"), [-2,-2,-1,0,2,3,3,1,0,-1]), (Str.T("Str.EqBass"), [5,4,3,1,0,0,0,0,0,0]),
+        // 1U 场景预设移植（提取自 work/research/1u-analysis/eq-presets-extracted.json，命名保持中文场景名）
+        (Str.T("Str.EqSceneGame"), [0,0,2,2,2,0,-1,-1,2,2]),
+        (Str.T("Str.EqSceneMusic"), [0,2,2,1,0,0,0,-1,0,2]),
+        (Str.T("Str.EqSceneVoiceRich"), [0,-4,-2,2,4,5,3,3,5,-11]),        (Str.T("Str.EqSceneMovie"), [0,0,2,0,2,2,1,-1,0,2]),
+        (Str.T("Str.EqSceneStreaming"), [0,0,0,0,1,1,1,-1,0,2]),
+        (Str.T("Str.EqSceneTv"), [0,0,1,0,1,0,1,-1,-1,2]),
+        (Str.T("Str.EqSceneVolume"), [0,3,2,2,0,0,1,1,2,2]),
+        (Str.T("Str.EqSceneLight"), [0,-1,1,1,-1,-1,-2,-1,-1,1])];
     public AudioEqualizerPanel()
     {
         InitializeComponent();

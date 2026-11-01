@@ -108,6 +108,38 @@ public partial class MaintenanceView
     }
     private void MemorySelectAll_Click(object sender, RoutedEventArgs e) => SelectMemoryApps(true);
     private void MemorySelectNone_Click(object sender, RoutedEventArgs e) => SelectMemoryApps(false);
+
+    /// <summary>识别运行中的直播软件并勾选：并入后台应用整理清单（用户仍可逐项取消）。</summary>
+    private async void MemoryStreamingDetect_Click(object sender, RoutedEventArgs e)
+    {
+        if (_appsReading || _busy) return;
+        if (MemoryApps.ItemsSource is not IReadOnlyList<MemoryAppRow> rows || rows.Count == 0)
+        {
+            MemoryAppsStatus.Text = Str.T("Str.MemoryStreamingNone");
+            return;
+        }
+        var hits = rows.Where(r => StreamingAppDetector.IsStreamingProcess(r.Path)).ToList();
+        if (hits.Count == 0)
+        {
+            MemoryAppsStatus.Text = Str.T("Str.MemoryStreamingNone");
+            return;
+        }
+        var settings = SettingsService.Current;
+        var before = settings.MemoryBackgroundApps;
+        var selected = before.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in hits) selected.Add(row.Path);
+        settings.MemoryBackgroundApps = selected.ToList();
+        try { SettingsService.Save(settings); }
+        catch (Exception ex)
+        {
+            settings.MemoryBackgroundApps = before;
+            MemoryAppsStatus.Text = PrivacyScrub.Sanitize(ex.Message);
+            return;
+        }
+        await RefreshMemoryAppsAsync(); // 按新清单重建勾选态
+        MemoryAppsStatus.Text = Str.T("Str.MemoryStreamingFoundFmt", hits.Count,
+            string.Join("、", hits.Select(h => System.IO.Path.GetFileNameWithoutExtension(h.Name))));
+    }
     private void SelectMemoryApps(bool selected)
     {
         if (_busy || _snapshotBusy || _appsReading) return;

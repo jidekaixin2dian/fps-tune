@@ -953,6 +953,10 @@
     <s:String x:Key="Str.IccMutedDesc">轻微降低饱和度</s:String>
     <s:String x:Key="Str.IccNeutral">中性曲线</s:String>
     <s:String x:Key="Str.IccNeutralDesc">保持中性，作为对比起点</s:String>
+    <s:String x:Key="Str.IccDeexposure">去曝光</s:String>
+    <s:String x:Key="Str.IccDeexposureDesc">压暗高光，画面过亮发白、雪地强光时保住亮部细节</s:String>
+    <s:String x:Key="Str.IccDeexposureStrong">去曝光强化</s:String>
+    <s:String x:Key="Str.IccDeexposureStrongDesc">更深的压光，强光爆闪场景用；整体会明显偏暗</s:String>
     <s:String x:Key="Str.IccShadowGentle">轻度暗部</s:String>
     <s:String x:Key="Str.IccShadowGentleDesc">轻度提亮阴影，接近原图观感</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">内存压缩控制暂不可用，未执行写入。</s:String>
@@ -1289,6 +1293,14 @@
     <s:String x:Key="Str.EqFootsteps">脚步清晰</s:String>
     <s:String x:Key="Str.EqVoice">人声清晰</s:String>
     <s:String x:Key="Str.EqBass">低音增强</s:String>
+    <s:String x:Key="Str.EqSceneGame">游戏场景</s:String>
+    <s:String x:Key="Str.EqSceneVoiceRich">人声浓厚</s:String>
+    <s:String x:Key="Str.EqSceneMusic">音乐</s:String>
+    <s:String x:Key="Str.EqSceneMovie">电影</s:String>
+    <s:String x:Key="Str.EqSceneStreaming">流媒体视频</s:String>
+    <s:String x:Key="Str.EqSceneTv">电视</s:String>
+    <s:String x:Key="Str.EqSceneVolume">音量增强</s:String>
+    <s:String x:Key="Str.EqSceneLight">轻度处理</s:String>
     <s:String x:Key="Str.EqHzGain"> Hz 增益</s:String>
     <s:String x:Key="Str.EqFirstUse">首次使用：安装 Equalizer APO → 在设备配置器勾选耳机或音箱 → 按提示重启 → 回到这里选择设备并应用。</s:String>
     <s:String x:Key="Str.EqFound">已找到 Equalizer APO。首次使用请在“配置输出设备”中勾选对应设备，按提示重启后试听。</s:String>
@@ -1805,6 +1817,15 @@
     <s:String x:Key="Str.FilterEditorGamma">伽马</s:String>
     <s:String x:Key="Str.FilterEditorBrightness">亮度偏移</s:String>
     <s:String x:Key="Str.FilterEditorSaturation">饱和度</s:String>
+    <s:String x:Key="Str.FilterEditorHighlight">高光</s:String>
+    <s:String x:Key="Str.FilterEditorHighlightHint">负值压高光（去曝光），正值提亮白点；端点保持，不改变纯黑纯白。</s:String>
+    <s:String x:Key="Str.FilterCategoryAll">全部</s:String>
+    <s:String x:Key="Str.FilterCategorySoft">柔和护眼</s:String>
+    <s:String x:Key="Str.FilterCategoryDeexpose">压暗去曝</s:String>
+    <s:String x:Key="Str.FilterCategoryBright">提亮通透</s:String>
+    <s:String x:Key="Str.FilterCategoryColor">色彩风格</s:String>
+    <s:String x:Key="Str.FilterCategoryGame">游戏专属</s:String>
+    <s:String x:Key="Str.FilterCategoryFace">人物暗场</s:String>
     <s:String x:Key="Str.FilterEditorName">自定义滤镜名称</s:String>
     <s:String x:Key="Str.FilterEditorSave">保存为自定义滤镜</s:String>
     <s:String x:Key="Str.FilterEditorNeedName">先填自定义滤镜名称。</s:String>
@@ -2044,6 +2065,10 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.HomeEntrySession">性能会话</s:String>
     <s:String x:Key="Str.HomeEntryTools">维护工具</s:String>
     <s:String x:Key="Str.HomeRecentEmpty">用过一次后，最近访问的页面会出现在这里</s:String>
+    <!-- 直播软件识别（并入后台应用整理） -->
+    <s:String x:Key="Str.MemoryStreamingDetect">识别直播软件</s:String>
+    <s:String x:Key="Str.MemoryStreamingFoundFmt">已勾选 {0} 款直播软件（{1}）</s:String>
+    <s:String x:Key="Str.MemoryStreamingNone">没有发现运行中的直播软件（OBS、Streamlabs、XSplit、vMix、虎牙直播伴侣等）</s:String>
     <s:String x:Key="Str.PreparationHistoryHint">保留最近 50 次开局准备结果。</s:String>
     <s:String x:Key="Str.PreparationHistoryScope">记录范围</s:String>
     <s:String x:Key="Str.PreparationHistoryAll">全部游戏</s:String>

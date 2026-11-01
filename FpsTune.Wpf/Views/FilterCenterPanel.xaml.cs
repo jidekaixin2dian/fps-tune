@@ -13,6 +13,20 @@ public partial class FilterCenterPanel : UserControl
     private GameFilterPreset? _selected;
     private bool _loaded;
     private readonly ForegroundFilterWatcher? _watcher;
+    private IReadOnlyList<GameFilterPreset> _allPresets = [];
+    private string _category = "all";
+
+    /// <summary>分类键 → 本地化组名。</summary>
+    private static string CategoryLabel(string key) => key switch
+    {
+        "soft" => Str.T("Str.FilterCategorySoft"),
+        "deexpose" => Str.T("Str.FilterCategoryDeexpose"),
+        "bright" => Str.T("Str.FilterCategoryBright"),
+        "color" => Str.T("Str.FilterCategoryColor"),
+        "game" => Str.T("Str.FilterCategoryGame"),
+        "face" => Str.T("Str.FilterCategoryFace"),
+        _ => Str.T("Str.FilterCategoryAll"),
+    };
 
     public FilterCenterPanel() : this(App.FilterWatcher) { }
     internal FilterCenterPanel(ForegroundFilterWatcher? watcher)
@@ -30,24 +44,57 @@ public partial class FilterCenterPanel : UserControl
         RefreshRules();
         try
         {
-            var presets = await Task.Run(() => GameFilterLibrary.Presets);
+            _allPresets = await Task.Run(() => GameFilterLibrary.Presets);
             if (!_loaded) return;
-            PresetList.Children.Clear();
-            foreach (var preset in presets)
-            {
-                var radio = new RadioButton
-                {
-                    GroupName = "filterPresets",
-                    Content = preset.Name,
-                    Style = (Style)Resources["PresetCardStyle"],
-                    Tag = preset,
-                };
-                System.Windows.Automation.AutomationProperties.SetName(radio, preset.Name);
-                radio.Checked += (_, _) => SelectPreset(preset);
-                PresetList.Children.Add(radio);
-            }
+            BuildCategoryChips();
+            RenderPresetList();
         }
         catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    /// <summary>分类 chips：全部 + 出现过的分组。</summary>
+    private void BuildCategoryChips()
+    {
+        CategoryList.Children.Clear();
+        var keys = new List<string> { "all" };
+        keys.AddRange(_allPresets.Select(p => p.Category).Where(c => c.Length > 0).Distinct());
+        foreach (var key in keys)
+        {
+            var chip = new RadioButton
+            {
+                GroupName = "filterCategories",
+                Content = CategoryLabel(key),
+                Style = (Style)Resources["PresetCardStyle"],
+                Tag = key,
+                IsChecked = key == _category,
+            };
+            AutomationProperties.SetName(chip, CategoryLabel(key));
+            chip.Checked += (_, _) =>
+            {
+                _category = key;
+                RenderPresetList();
+            };
+            CategoryList.Children.Add(chip);
+        }
+    }
+
+    /// <summary>按当前分类渲染预设卡片。</summary>
+    private void RenderPresetList()
+    {
+        PresetList.Children.Clear();
+        foreach (var preset in _allPresets.Where(p => _category == "all" || p.Category == _category))
+        {
+            var radio = new RadioButton
+            {
+                GroupName = "filterPresets",
+                Content = preset.Name,
+                Style = (Style)Resources["PresetCardStyle"],
+                Tag = preset,
+            };
+            AutomationProperties.SetName(radio, preset.Name);
+            radio.Checked += (_, _) => SelectPreset(preset);
+            PresetList.Children.Add(radio);
+        }
     }
 
     private void SelectPreset(GameFilterPreset preset)
@@ -108,7 +155,8 @@ public partial class FilterCenterPanel : UserControl
             var gamma = (double)GammaSlider.Value;
             var brightness = (double)BrightnessSlider.Value;
             var saturation = (double)SaturationSlider.Value;
-            var curves = BuildCurves(gamma, brightness);
+            var highlight = (double)HighlightSlider.Value;
+            var curves = BuildCurves(gamma, brightness, highlight);
             var column = SaturationColumn(saturation);
             var bytes = IccProfileGenerator.Build(new IccProfileGenerator.PresetParams(
                 Path.GetFileNameWithoutExtension(name) + ".icc",
@@ -124,14 +172,18 @@ public partial class FilterCenterPanel : UserControl
         catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
 
-    /// <summary>期望显示曲线（伽马/亮度），并按 CMM 反演约定存逆曲线。</summary>
-    private static ushort[] BuildCurves(double gamma, double brightness)
+    /// <summary>期望显示曲线（伽马/亮度/高光），并按 CMM 反演约定存逆曲线。
+    /// 高光与 MapTone 同构（smoothstep 0.5→1 窗，端点保持）：负值压高光（去曝光），正值提亮白点。</summary>
+    private static ushort[] BuildCurves(double gamma, double brightness, double highlight)
     {
         var curve = new ushort[256];
         for (var i = 0; i < 256; i++)
         {
             var x = i / 255d;
             var y = Math.Pow(x, gamma) + brightness;
+            var w = y <= .5 ? 0 : (y - .5) * 2;
+            w = w * w * (3 - 2 * w);
+            y += highlight / 100 * w * y * (1 - y) * 2;
             curve[i] = (ushort)Math.Clamp(Math.Round(y * 65535), 0, 65535);
         }
         // 逆曲线：目标输出 y 对应的输入 x
