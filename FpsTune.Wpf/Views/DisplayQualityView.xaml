@@ -99,9 +99,6 @@
                         </Border>
                     </StackPanel>
                 </RadioButton>
-                <RadioButton x:Name="SubTabFilters" GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabFilters}" Style="{StaticResource SubTabStyle}" Tag="filters" Checked="SubTab_Checked">
-                    <TextBlock Text="{DynamicResource Str.TabFilters}"/>
-                </RadioButton>
                 <RadioButton GroupName="dqSub" AutomationProperties.Name="{DynamicResource Str.TabDrs}" Style="{StaticResource SubTabStyle}" Tag="drs" Checked="SubTab_Checked">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{DynamicResource Str.TabDrs}" VerticalAlignment="Center"/>
@@ -478,9 +475,6 @@
             </Border>
 
             <!-- 建议与清单：两张信息卡归入同一页签；0.1.12 全宽下并排两列 -->
-            <Border x:Name="CardFilters" Visibility="Collapsed">
-                <views:FilterCenterPanel/>
-            </Border>
             <Grid x:Name="CardAdvice" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="11*"/>

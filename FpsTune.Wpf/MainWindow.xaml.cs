@@ -163,6 +163,7 @@ public partial class MainWindow : Window
             ["detect"] = () => new DetectView(),
             ["opt"] = () => new OptimizeView(),
             ["display"] = () => new DisplayQualityView(),
+            ["filters"] = () => new FilterView(),
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
             ["backup"] = () => new BackupLogView(),
@@ -455,7 +456,7 @@ public partial class MainWindow : Window
         {
             // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
             // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavSession, NavAb, NavBackup, NavTools, NavSettings })
+            foreach (var radio in new[] { NavHome, NavGames, NavDetect, NavOpt, NavDisplay, NavFilters, NavSession, NavAb, NavBackup, NavTools, NavSettings })
             {
                 if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
                     radio.IsChecked = false;
@@ -497,6 +498,12 @@ public partial class MainWindow : Window
         }
     }
 
+    internal void OpenDeltaFixFromHome()
+    {
+        NavigateTo("filters");
+        Dispatcher.BeginInvoke(() => { if (GetPage("filters") is FilterView filter) filter.OpenDeltaFix(); });
+    }
+
     public void NavigateTo(string key)
     {
         switch (key)
@@ -506,6 +513,7 @@ public partial class MainWindow : Window
             case "detect": NavDetect.IsChecked = true; break;
             case "opt": NavOpt.IsChecked = true; break;
             case "display": NavDisplay.IsChecked = true; break;
+            case "filters": NavFilters.IsChecked = true; break;
             case "session": NavSession.IsChecked = true; break;
             case "ab": NavAb.IsChecked = true; break;
             case "backup": NavBackup.IsChecked = true; break;

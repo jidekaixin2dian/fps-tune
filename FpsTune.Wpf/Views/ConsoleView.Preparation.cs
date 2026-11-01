@@ -11,6 +11,10 @@ public partial class ConsoleView
     private CancellationTokenSource? _preparationCancellation;
     private void Tuning_Click(object sender, RoutedEventArgs e)
     { if (AppState.GamePath is { } path && Window.GetWindow(this) is MainWindow main) main.OpenGameTuning(path); }
+    private void QuickFilters_Click(object sender, RoutedEventArgs e)
+    { if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("filters"); }
+    private void QuickDeltaFix_Click(object sender, RoutedEventArgs e)
+    { if (Window.GetWindow(this) is MainWindow main) main.OpenDeltaFixFromHome(); }
     private void PreparationHistory_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new PreparationHistoryWindow(AppState.GamePath) { Owner = Window.GetWindow(this) };

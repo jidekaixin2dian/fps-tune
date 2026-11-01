@@ -7,7 +7,9 @@
     <s:String x:Key="Str.NavDetect">检测</s:String>
     <s:String x:Key="Str.NavOpt">优化</s:String>
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
-    <s:String x:Key="Str.NavSession">性能会话</s:String>
+    <s:String x:Key="Str.NavFilters">游戏滤镜</s:String>
+    <s:String x:Key="Str.FilterPageIntro">滤镜中心一键套用 ICC 预设；独立程序滤镜按前台进程自动切换；掉帧修复针对三角洲更新后的卡顿。</s:String>
+    <s:String x:Key="Str.CommandAliasFilters">滤镜 ICC 滤镜中心 独立程序 filter color</s:String>    <s:String x:Key="Str.NavSession">性能会话</s:String>
     <s:String x:Key="Str.NavAb">A/B 实验</s:String>
     <s:String x:Key="Str.NavBackup">备份 / 日志</s:String>
     <s:String x:Key="Str.NavSettings">设置</s:String>

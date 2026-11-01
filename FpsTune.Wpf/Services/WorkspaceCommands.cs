@@ -24,7 +24,8 @@ public sealed class WorkspaceCommands
             ("dlss", "Str.CommandDlss", "DLSS NVIDIA RTX K J M preset"),
             ("vibicc", "Str.CommandColor", "ICC ICM digital vibrance saturation color monitor"),
             ("drs", "Str.CommandDrs", "NVIDIA DRS 3D VSync texture shader cache"),
-            ("advice", "Str.CommandAdvice", "AMD Intel NVIDIA driver checklist advice") })
+            ("advice", "Str.CommandAdvice", "AMD Intel NVIDIA driver checklist advice"),
+            ("delta-fix", "Str.DeltaFixTab", "Str.FilterAppsHint") })
             Add("display:" + target, title, "Str.NavDisplay", "display", target, aliases);
         foreach (var (target, title, alias) in new[] {
             ("0", "Str.SettingsAppearance", "Str.CommandAliasAppearance"), ("1", "Str.SettingsStartup", "Str.CommandAliasStartup"), ("2", "Str.SettingsGame", "Str.CommandAliasGames"),

@@ -40,6 +40,8 @@
                     </WrapPanel>
                     <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
                         <Button x:Name="GameLibraryButton" Content="{DynamicResource Str.NavGames}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="GameLibrary_Click"/>
+                        <Button x:Name="QuickFiltersButton" Content="{DynamicResource Str.TabFilters}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="QuickFilters_Click"/>
+                        <Button x:Name="QuickDeltaFixButton" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource GhostButtonStyle}" Height="36" Click="QuickDeltaFix_Click"/>
                         <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
                     </WrapPanel>
                 </Grid>

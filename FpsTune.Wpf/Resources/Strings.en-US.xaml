@@ -7,7 +7,9 @@
     <s:String x:Key="Str.NavDetect">Detect</s:String>
     <s:String x:Key="Str.NavOpt">Optimize</s:String>
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
-    <s:String x:Key="Str.NavSession">Sessions</s:String>
+    <s:String x:Key="Str.NavFilters">Game filters</s:String>
+    <s:String x:Key="Str.FilterPageIntro">One-click ICC presets in the filter center; per-app filters follow the foreground process; frame fix targets Delta Force stutter after updates.</s:String>
+    <s:String x:Key="Str.CommandAliasFilters">filter ICC color per-app game filter</s:String>    <s:String x:Key="Str.NavSession">Sessions</s:String>
     <s:String x:Key="Str.NavAb">A/B Test</s:String>
     <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>
     <s:String x:Key="Str.NavSettings">Settings</s:String>
