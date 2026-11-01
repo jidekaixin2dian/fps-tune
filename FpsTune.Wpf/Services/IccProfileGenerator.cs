@@ -41,6 +41,11 @@ public enum IccFilterPreset
     GameValorant = 31,
     GameNaraka2 = 32,
     GameCod16 = 33,
+    // 会员专属调色（1U PRO_PRESET_TUNES，用户解锁的加密模块里取到的原始参数，按 mappingRules 折算）
+    VipSaturated = 34,     // 高饱和：饱和度拉满，暗部不动
+    VipDeepVivid = 35,     // 沉艳：浓郁压沉
+    VipWarmClear = 36,     // 暖透：暖调通透
+    VipCoolSuppress = 37,  // 冷抑：冷调压制、高光收敛
 }
 
 /// <summary>
@@ -71,7 +76,15 @@ public static class IccProfileGenerator
     public static PresetParams ParamsFor(IccFilterPreset preset)
     {
         var settings = ScreenColorSettings.ForPreset(preset);
-        var saturation = preset switch { IccFilterPreset.Vivid => 1.06, IccFilterPreset.Soft => .94, IccFilterPreset.Muted => .96, IccFilterPreset.ClearBright2 => 1.36, _ => 1d };
+        var saturation = preset switch
+        {
+            IccFilterPreset.Vivid => 1.06, IccFilterPreset.Soft => .94, IccFilterPreset.Muted => .96,
+            IccFilterPreset.ClearBright2 => 1.36,
+            // 会员调色的 saturation 原值 77–100 → 折算比 1.5 档（与 1U 的 clamp(0.5,1.5) 一致）
+            IccFilterPreset.VipSaturated or IccFilterPreset.VipDeepVivid or IccFilterPreset.VipWarmClear
+                or IccFilterPreset.VipCoolSuppress => 1.5,
+            _ => 1d
+        };
         // A destination profile is inverted by the CMM: store the inverse desired
         // saturation matrix and inverse desired display curves, preserving D50 white.
         double[] Column(double[] primary, double luminance) => Enumerable.Range(0, 3)
@@ -112,6 +125,10 @@ public static class IccProfileGenerator
         IccFilterPreset.GameValorant => 42,
         IccFilterPreset.GameNaraka2 => 56,
         IccFilterPreset.GameCod16 => 93,
+        IccFilterPreset.VipSaturated => 80,
+        IccFilterPreset.VipDeepVivid => 70,
+        IccFilterPreset.VipWarmClear => 62,
+        IccFilterPreset.VipCoolSuppress => 70,
         _ => null,
     };
 
@@ -151,6 +168,10 @@ public static class IccProfileGenerator
         IccFilterPreset.GameValorant => ("Str.IccGameValorant", "Str.IccGameValorantDesc"),
         IccFilterPreset.GameNaraka2 => ("Str.IccGameNaraka2", "Str.IccGameNaraka2Desc"),
         IccFilterPreset.GameCod16 => ("Str.IccGameCod16", "Str.IccGameCod16Desc"),
+        IccFilterPreset.VipSaturated => ("Str.IccVipSaturated", "Str.IccVipSaturatedDesc"),
+        IccFilterPreset.VipDeepVivid => ("Str.IccVipDeepVivid", "Str.IccVipDeepVividDesc"),
+        IccFilterPreset.VipWarmClear => ("Str.IccVipWarmClear", "Str.IccVipWarmClearDesc"),
+        IccFilterPreset.VipCoolSuppress => ("Str.IccVipCoolSuppress", "Str.IccVipCoolSuppressDesc"),
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };
 

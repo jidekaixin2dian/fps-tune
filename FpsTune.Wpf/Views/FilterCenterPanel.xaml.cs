@@ -9,7 +9,8 @@ using FpsTune.Wpf.Services;
 namespace FpsTune.Wpf.Views;
 
 /// <summary>滤镜列表里的一项：内置 .icc 文件（FileName 指向文件）或生成式预设（Generated 非空）。</summary>
-public sealed record FilterChoice(string FileName, string Name, string Category, string Fit, string Avoid, IccFilterPreset? Generated);
+public sealed record FilterChoice(string FileName, string Name, string Category, string Fit, string Avoid,
+    IccFilterPreset? Generated, int? Vibrance = null);
 
 public partial class FilterCenterPanel : UserControl
 {
@@ -88,14 +89,15 @@ public partial class FilterCenterPanel : UserControl
             if (preset.FileName.StartsWith(GameFilterLibrary.GeneratedPrefix, StringComparison.Ordinal)
                 && Enum.TryParse<IccFilterPreset>(preset.FileName[GameFilterLibrary.GeneratedPrefix.Length..], out var parsed))
                 generated = parsed;
-            list.Add(new FilterChoice(preset.FileName, preset.Name, preset.Category, preset.Fit, preset.Avoid, generated));
+            list.Add(new FilterChoice(preset.FileName, preset.Name, preset.Category, preset.Fit, preset.Avoid, generated,
+                preset.Vibrance ?? (generated is { } g ? IccProfileGenerator.VibranceFor(g) : null)));
         }
         foreach (var preset in Enum.GetValues<IccFilterPreset>())
         {
             if (!seen.Add(GameFilterLibrary.GeneratedPrefix + preset)) continue;
             var keys = IccProfileGenerator.ResourceKeysFor(preset);
             list.Add(new FilterChoice(GameFilterLibrary.GeneratedPrefix + preset, Str.T(keys.Title),
-                GeneratedCategory(preset), Str.T(keys.Description), "", preset));
+                GeneratedCategory(preset), Str.T(keys.Description), "", preset, IccProfileGenerator.VibranceFor(preset)));
         }
         return list;
     }
@@ -114,6 +116,8 @@ public partial class FilterCenterPanel : UserControl
         IccFilterPreset.ArenaCool or IccFilterPreset.GameGenshin or IccFilterPreset.GameKarakin or IccFilterPreset.GameGw2
             or IccFilterPreset.GameApex or IccFilterPreset.GameNaraka or IccFilterPreset.GameMyth or IccFilterPreset.GameR6
             or IccFilterPreset.GameValorant or IccFilterPreset.GameNaraka2 or IccFilterPreset.GameCod16 => "game",
+        IccFilterPreset.VipSaturated or IccFilterPreset.VipDeepVivid or IccFilterPreset.VipWarmClear
+            or IccFilterPreset.VipCoolSuppress => "color",
         _ => "color",
     };
 

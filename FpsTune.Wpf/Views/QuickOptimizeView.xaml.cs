@@ -154,6 +154,13 @@ public partial class QuickOptimizeView : UserControl
                 GeneratedFilterChoice gp => gp.Label,
                 _ => null,
             };
+            // 预设自带的数字振动档：滤镜和振动是一个整体预设，别让用户只选到一半。
+            var filterVibrance = filter switch
+            {
+                GameFilterPreset fp => fp.Vibrance,
+                GeneratedFilterChoice gp => IccProfileGenerator.VibranceFor(gp.Preset),
+                _ => null,
+            };
             if (filterBytes is not null && filterLabel is not null)
             {
                 var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + Guid.NewGuid().ToString("N") + ".icc");
@@ -161,8 +168,21 @@ public partial class QuickOptimizeView : UserControl
                 {
                     await File.WriteAllBytesAsync(temp, filterBytes);
                     var message = await Task.Run(() => IccFilterService.ApplyFromFile(temp));
+                    var note = message;
+                    if (filterVibrance is { } percent)
+                    {
+                        try
+                        {
+                            var state = await Task.Run(() => DigitalVibranceService.SetPercent(percent, null, startNewBaselineOnDrift: true));
+                            note += " " + Str.T("Str.QuickOptVibranceDoneFmt", percent) + (state ? " " + Str.T("Str.VibranceNewBaselineSaved") : "");
+                        }
+                        catch (Exception ex)
+                        {
+                            note += " " + Str.T("Str.QuickOptVibranceFailedFmt", PrivacyScrub.Sanitize(ex.Message));
+                        }
+                    }
                     rows.Add(new ResultRow(Str.T("Str.QuickOptFilterLabel") + "：" + filterLabel, true,
-                        Str.T("Str.ResultOk"), Str.T("Str.QuickOptFilterDoneFmt", message)));
+                        Str.T("Str.ResultOk"), note));
                 }
                 catch (Exception ex)
                 {

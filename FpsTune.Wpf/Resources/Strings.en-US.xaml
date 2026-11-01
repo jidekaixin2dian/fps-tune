@@ -1010,6 +1010,16 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.IccGameNaraka2Desc">Soft lift that holds highlights back more than the first profile</s:String>
     <s:String x:Key="Str.IccGameCod16">CoD16</s:String>
     <s:String x:Key="Str.IccGameCod16Desc">Bright and rich</s:String>
+    <s:String x:Key="Str.IccVipSaturated">High saturation</s:String>
+    <s:String x:Key="Str.IccVipSaturatedDesc">Color cranked to the limit with shadows untouched; skin tones and natural scenery will look off</s:String>
+    <s:String x:Key="Str.IccVipDeepVivid">Deep vivid</s:String>
+    <s:String x:Key="Str.IccVipDeepVividDesc">Rich and sunk, midtones darker; suits moody night and indoor scenes</s:String>
+    <s:String x:Key="Str.IccVipWarmClear">Warm clear</s:String>
+    <s:String x:Key="Str.IccVipWarmClearDesc">Warm and clean with a slight shadow lift; comfortable for long sessions</s:String>
+    <s:String x:Key="Str.IccVipCoolSuppress">Cool suppress</s:String>
+    <s:String x:Key="Str.IccVipCoolSuppressDesc">Cool and restrained with highlights held back, so glare does not wash out</s:String>
+    <s:String x:Key="Str.QuickOptVibranceDoneFmt">digital vibrance set to {0}%</s:String>
+    <s:String x:Key="Str.QuickOptVibranceFailedFmt">digital vibrance was not applied: {0}</s:String>
     <s:String x:Key="Str.IccShadowGentle">Gentle shadows</s:String>
     <s:String x:Key="Str.IccShadowGentleDesc">A subtle shadow lift close to the original image</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">Memory compression control is unavailable; no write performed.</s:String>

@@ -6,8 +6,10 @@ using FpsTune.Wpf.Core;
 namespace FpsTune.Wpf.Services;
 
 /// <summary>游戏滤镜单条预设：内置 .icc 资产 + 适用/避坑说明（来源预设标注 "No copyright, use freely"）。
-/// Category 为分类键（soft/deexpose/bright/color/game/face），UI 按键映射到本地化组名。</summary>
-public sealed record GameFilterPreset(string FileName, string Name, string Fit, string Avoid, bool Builtin, string Category = "");
+/// Category 为分类键（soft/deexpose/bright/color/game/face），UI 按键映射到本地化组名。
+/// <see cref="Vibrance"/> 是这条预设配套的数字振动档（百分比；null = 没有对应值，选中时不动振动滑块）。</summary>
+public sealed record GameFilterPreset(string FileName, string Name, string Fit, string Avoid, bool Builtin,
+    string Category = "", int? Vibrance = null);
 
 /// <summary>
 /// 滤镜中心预设库：内置资产（嵌入资源，随包分发）+ 生成式去曝光预设 + 用户自定义目录（UserDataPaths/GameFilters）。
@@ -38,9 +40,9 @@ public static class GameFilterLibrary
             foreach (var name in ListEmbedded())
             {
                 if (!name.EndsWith(".icc", StringComparison.OrdinalIgnoreCase) || !seen.Add(name)) continue;
-                var meta = metadata.TryGetValue(name, out var m) ? ((string Fit, string Avoid)?)m : null;
+                var meta = metadata.TryGetValue(name, out var m) ? m : null;
                 list.Add(new(name, PrettyName(name), meta?.Fit ?? "", meta?.Avoid ?? "", Builtin: true,
-                    Category: CategoryFor(PrettyName(name))));
+                    Category: CategoryFor(PrettyName(name)), Vibrance: meta?.Vibrance));
             }
             // 生成式去曝光预设（IccProfileGenerator 即时生成，不占嵌入资产）
             list.Add(new(GeneratedPrefix + nameof(IccFilterPreset.Deexposure), "去曝光 · 轻压", "画面过亮发白、雪地强光", "本来就暗的场景", Builtin: true, Category: "deexpose"));
@@ -95,7 +97,10 @@ public static class GameFilterLibrary
     private static IEnumerable<string> ListUser()
         => Directory.Exists(UserDir) ? Directory.GetFiles(UserDir, "*.icc").Select(Path.GetFileName).OfType<string>() : [];
 
-    private static Dictionary<string, (string Fit, string Avoid)> LoadMetadata()
+    /// <summary>presets.json 里每条内置预设的可选元数据。</summary>
+    private sealed record PresetMeta(string Fit, string Avoid, int? Vibrance = null);
+
+    private static Dictionary<string, PresetMeta> LoadMetadata()
     {
         try
         {
@@ -103,16 +108,19 @@ public static class GameFilterLibrary
             if (stream is null) return [];
             using var reader = new StreamReader(stream);
             var doc = JsonDocument.Parse(reader.ReadToEnd());
-            var result = new Dictionary<string, (string, string)>(StringComparer.OrdinalIgnoreCase);
+            var result = new Dictionary<string, PresetMeta>(StringComparer.OrdinalIgnoreCase);
             foreach (var prop in doc.RootElement.EnumerateObject())
             {
                 string? fit = null, avoid = null;
+                int? vibrance = null;
                 if (prop.Value.ValueKind == JsonValueKind.Object)
                 {
                     fit = prop.Value.TryGetProperty("fit", out var f) ? f.GetString() : null;
                     avoid = prop.Value.TryGetProperty("avoid", out var a) ? a.GetString() : null;
+                    if (prop.Value.TryGetProperty("vibrance", out var v) && v.ValueKind == JsonValueKind.Number
+                        && v.TryGetInt32(out var percent)) vibrance = percent;
                 }
-                result[prop.Name] = (fit ?? "", avoid ?? "");
+                result[prop.Name] = new PresetMeta(fit ?? "", avoid ?? "", vibrance);
             }
             return result;
         }
@@ -142,6 +150,9 @@ public static class GameFilterLibrary
         ["53·APEX透彩"] = "game", ["57·原神晴彩"] = "game", ["35·AZ3"] = "game",
         // 人物暗场
         ["16·人物微亮"] = "face", ["17·人物微亮+"] = "face",
+        // 会员 ICC（用户解锁的加密模块里取到的正式 profile）
+        ["18·特调V1"] = "color", ["19·特调V3"] = "bright", ["20·特调V4"] = "color", ["21·特调V5"] = "deexpose",
+        ["37·深艳"] = "color", ["38·浓墨"] = "deexpose", ["39·航天基地"] = "game", ["40·沉冷"] = "deexpose",
     };
 
     /// <summary>展示名 → 分类键；未收录的归入色彩风格（风格类新增文件不至于落空）。</summary>

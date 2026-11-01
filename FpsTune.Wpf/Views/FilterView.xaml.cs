@@ -86,10 +86,14 @@ public partial class FilterView : UserControl
             if (choice.Generated is { } preset)
             {
                 ColorPanel.SelectGeneratedPreset(preset);
-                SuggestVibrance(preset);
+                SuggestVibrance(choice.Vibrance ?? IccProfileGenerator.VibranceFor(preset));
                 return;
             }
-            if (await FilterCenter.MaterializeAsync(choice) is { } path) ColorPanel.SelectIccFile(path);
+            if (await FilterCenter.MaterializeAsync(choice) is { } path)
+            {
+                ColorPanel.SelectIccFile(path);
+                SuggestVibrance(choice.Vibrance);
+            }
         }
         catch (Exception ex) { FilterCenter.ReportStatus(PrivacyScrub.Sanitize(ex.Message)); }
     }
@@ -98,10 +102,16 @@ public partial class FilterView : UserControl
     /// 预设自带数字振动档（1U 同款数据）：只把滑块与百分比预填成草稿，不写系统，
     /// 仍要点「应用」；该屏没有 DVC 通道时什么都不动。
     /// </summary>
-    private void SuggestVibrance(IccFilterPreset preset)
+    private void SuggestVibrance(IccFilterPreset preset) => SuggestVibrance(IccProfileGenerator.VibranceFor(preset));
+
+    /// <summary>
+    /// 预设自带数字振动档（1U 同款数据）：只把滑块与百分比预填成草稿，不写系统，
+    /// 仍要点「应用」；该屏没有 DVC 通道时什么都不动。
+    /// </summary>
+    private void SuggestVibrance(int? suggestion)
     {
         if (VibSupportedPanel is null || VibSupportedPanel.Visibility != Visibility.Visible) return;
-        if (IccProfileGenerator.VibranceFor(preset) is not { } percent) return;
+        if (suggestion is not { } percent) return;
         var value = Math.Clamp(percent, 0, 100);
         _vibSyncing = true;
         VibSlider.Value = value;

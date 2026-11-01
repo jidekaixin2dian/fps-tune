@@ -55,6 +55,12 @@ public sealed record ScreenColorSettings(double Brightness = 0, double Contrast 
         IccFilterPreset.GameValorant => new(Brightness: -5.2, Contrast: 110, Gamma: 1.5, Shadows: 8.8),
         IccFilterPreset.GameNaraka2 => new(Brightness: -9.2, Contrast: 96.4, Gamma: 1.316, Shadows: .8),
         IccFilterPreset.GameCod16 => new(Brightness: -2.8, Contrast: 101.6, Gamma: 1.5, Shadows: 2),
+        // 会员调色（1U PRO_PRESET_TUNES 原值折算）：brightness/contrast 按 (v-50)*0.4、gamma 按 50/v、
+        // shadow 按 v*0.25、highlights 按 (v-50)*0.5（0 视为不调）、色温按 (kelvin-6500)/4000 折 R/B。
+        IccFilterPreset.VipSaturated => new(Brightness: 0.8, Contrast: 104.4, Gamma: 1.5, Highlight: -6, Red: 98.6, Blue: 101.4),
+        IccFilterPreset.VipDeepVivid => new(Contrast: 98.4, Gamma: 0.806, Red: 99.25, Blue: 100.75),
+        IccFilterPreset.VipWarmClear => new(Brightness: -1.6, Contrast: 102.8, Gamma: 1.5, Shadows: 2, Red: 100.6, Blue: 99.4),
+        IccFilterPreset.VipCoolSuppress => new(Brightness: 2, Contrast: 101.2, Gamma: 1.25, Highlight: -3.5, Red: 99.55, Blue: 100.45),
         _ => throw new ArgumentOutOfRangeException(nameof(preset))
     };
     public static string TitleFor(IccFilterPreset preset) => preset switch

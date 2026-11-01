@@ -1010,6 +1010,16 @@
     <s:String x:Key="Str.IccGameNaraka2Desc">柔亮微提，比第一档更压高光</s:String>
     <s:String x:Key="Str.IccGameCod16">CoD16</s:String>
     <s:String x:Key="Str.IccGameCod16Desc">明亮浓彩</s:String>
+    <s:String x:Key="Str.IccVipSaturated">高饱和</s:String>
+    <s:String x:Key="Str.IccVipSaturatedDesc">色彩浓度拉满，暗部保持不动；肤色和自然景物会明显失真</s:String>
+    <s:String x:Key="Str.IccVipDeepVivid">沉艳</s:String>
+    <s:String x:Key="Str.IccVipDeepVividDesc">浓郁压沉，中间调偏暗，适合有氛围的夜景与室内</s:String>
+    <s:String x:Key="Str.IccVipWarmClear">暖透</s:String>
+    <s:String x:Key="Str.IccVipWarmClearDesc">暖调通透，暗部微提，长时间看着不累</s:String>
+    <s:String x:Key="Str.IccVipCoolSuppress">冷抑</s:String>
+    <s:String x:Key="Str.IccVipCoolSuppressDesc">冷调压制，高光收敛，强光场景不发白</s:String>
+    <s:String x:Key="Str.QuickOptVibranceDoneFmt">同时把数字振动设为 {0}%</s:String>
+    <s:String x:Key="Str.QuickOptVibranceFailedFmt">数字振动没设上：{0}</s:String>
     <s:String x:Key="Str.IccShadowGentle">轻度暗部</s:String>
     <s:String x:Key="Str.IccShadowGentleDesc">轻度提亮阴影，接近原图观感</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">内存压缩控制暂不可用，未执行写入。</s:String>
