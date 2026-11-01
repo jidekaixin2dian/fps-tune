@@ -950,7 +950,7 @@
     <s:String x:Key="Str.IccShadowGentleDesc">轻度提亮阴影，接近原图观感</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">内存压缩控制暂不可用，未执行写入。</s:String>
     <s:String x:Key="Str.StartupHint">登录 Windows 时打开帧律。</s:String>
-    <s:String x:Key="Str.TrayHint">最小化时隐藏到系统托盘。</s:String>
+    <s:String x:Key="Str.TrayHint">最小化时隐藏到系统托盘，可从托盘图标恢复；默认最小化到任务栏。</s:String>
     <s:String x:Key="Str.HotkeyHint">使用 Ctrl + Alt + F 呼出主窗口。</s:String>
     <s:String x:Key="Str.NotifyHint">操作结束时显示结果通知。</s:String>
     <s:String x:Key="Str.SettingsPerformance">运行开销</s:String>

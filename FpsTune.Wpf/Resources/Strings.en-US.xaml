@@ -950,7 +950,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.IccShadowGentleDesc">A subtle shadow lift close to the original image</s:String>
     <s:String x:Key="Str.MemoryCompressionUnavailable">Memory compression control is unavailable; no write performed.</s:String>
     <s:String x:Key="Str.StartupHint">Open FPS Tune when you sign in to Windows.</s:String>
-    <s:String x:Key="Str.TrayHint">Hide the minimized window in the system tray.</s:String>
+    <s:String x:Key="Str.TrayHint">Hides the window to the tray on minimize, restored from the tray icon; the default is a normal taskbar minimize.</s:String>
     <s:String x:Key="Str.HotkeyHint">Use Ctrl + Alt + F to bring up the main window.</s:String>
     <s:String x:Key="Str.NotifyHint">Show the result when an operation finishes.</s:String>
     <s:String x:Key="Str.SettingsPerformance">App performance</s:String>
