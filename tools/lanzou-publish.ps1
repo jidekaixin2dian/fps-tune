@@ -44,9 +44,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $uploadPage = 'https://pc.woozooo.com/mydisk.php?item=files&action=index'
 # 蓝奏云 PC 版历史上换过控件，按优先级逐个试；页面改版时用 -Probe 看实际结构再补。
-$fileInputSelectors = @('input[type=file]', '#file', '#selectfiles', 'input[name=file]')
-$loginMarkers = @('#nickname', '.user-name', '#userinfo', '.um-name', '#myfiles')
-$loginPrompts = @('#loginform', 'input[name=username]', 'input#user', 'input[name=passwd]')
+$fileInputSelectors = @('#selectfiles', 'input[type=file]', '#file', 'input[name=file]')
+$loginPrompts = @('input[type=password]', '#loginform', 'input[name=username]')
 
 function Invoke-Browser {
     # agent-browser 的 open 会让 CLI 常驻（守护进程附着），直接 & 调用会永远不返回，
@@ -103,8 +102,11 @@ Write-Host "打开蓝奏云文件页（会话 $Session）…"
 Invoke-Browser -Arguments @('open', $uploadPage) | Out-Null
 $url = (Invoke-Browser -Arguments @('get', 'url')).Trim()
 
-$loggedIn = ($loginMarkers | Where-Object { Test-Element $_ }).Count -gt 0
+# 登录态判据：停在文件页（mydisk.php）且没有密码框，且能找到上传控件。
+# 早期的 #nickname 之类标记在 pc.woozooo.com 这套老界面上根本不存在，会误判成未登录。
 $needsLogin = ($loginPrompts | Where-Object { Test-Element $_ }).Count -gt 0
+$uploadReady = ($fileInputSelectors | Where-Object { Test-Element $_ }).Count -gt 0
+$loggedIn = -not $needsLogin -and $uploadReady -and $url.Contains('mydisk.php', StringComparison.OrdinalIgnoreCase)
 if (-not $loggedIn -and $needsLogin) {
     Write-Warning @"
 蓝奏云会话尚未登录。请手动登录一次（会弹出真实浏览器窗口，cookie 保存在 $Profile）：
@@ -159,8 +161,8 @@ foreach ($item in $paths) {
     Write-Host ("已上传：{0}" -f $item.Name)
 }
 
-Write-Host '取分享链接：请在网页里对刚上传的文件点「分享」→「复制链接」，或先看下方快照确认按钮位置。'
-Invoke-Browser -Arguments @('snapshot', '-i', '-c') | Write-Host
+Write-Host '取分享链接：请在网页里对刚上传的文件点「分享」→「复制链接」。'
+Write-Host '（蓝奏云的行内操作菜单要真实鼠标悬停才展开，脚本用合成事件打不开，所以这一步留给人点一次。）'
 Write-Host '拿到 https://<你的子域>.lanzou*.com/<id> 后，把它写进 Release 说明的单独一行：'
 Write-Host '  备用下载：https://xxx.lanzouq.com/xxxx'
 Write-Host '客户端会自动识别这一行（Services/UpdateMirrors.FindBackupDownload），在更新弹窗里显示「备用下载」按钮。'
