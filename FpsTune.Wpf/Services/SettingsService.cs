@@ -50,6 +50,8 @@ public sealed class AppSettings
     // 游戏自动化（opt-in，默认关闭）：启动边沿触发，不做持续监控写操作。
     public bool AutoPreparationEnabled { get; set; }
     public bool AutoRefreshBoostEnabled { get; set; }
+    // 游戏时后台应用让路：按用户在维护页挑选的后台应用清单，隔离到效率核并降优先级。
+    public bool AutoAffinityIsolateEnabled { get; set; }
 
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||

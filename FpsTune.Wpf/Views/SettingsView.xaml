@@ -426,6 +426,12 @@
                               Margin="0,10,0,0"
                               Checked="AutoSessionSetting_Changed"
                               Unchecked="AutoSessionSetting_Changed"/>
+                    <CheckBox x:Name="AutoAffinityCheck"
+                              Style="{StaticResource SettingsToggleStyle}"
+                              Content="{DynamicResource Str.AutoSessionAffinityToggle}"
+                              Margin="0,10,0,0"
+                              Checked="AutoSessionSetting_Changed"
+                              Unchecked="AutoSessionSetting_Changed"/>
                     <TextBlock Text="{DynamicResource Str.AutoSessionHint}"
                                Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel>

@@ -18,8 +18,10 @@ internal sealed class GameSessionAutomationService : IDisposable
     private readonly object _gate = new();
     private readonly Dictionary<string, GameProcessRun?> _observed = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DisplayMode> _refreshBackup = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<int, (nuint Affinity, uint Priority, bool AffinityWritten, bool PriorityWritten)> _affinityTouched = new();
     private string _signature = "";
     private bool _refreshEngaged;
+    private bool _affinityEngaged;
     private int _polling;
     private int _disposed;
 
@@ -30,6 +32,8 @@ internal sealed class GameSessionAutomationService : IDisposable
     internal Func<IReadOnlyList<IccDisplayInfo>>? DisplaysProvider { get; set; }
     internal Func<StateStore.GameProfile, GamePreparationOptions>? PreparationResolver { get; set; }
     internal Func<GamePreparationOptions, string, Task<IReadOnlyList<PreparationStep>>>? PreparationRunner { get; set; }
+    internal Func<ushort[]>? EfficiencyClassesProvider { get; set; }
+    internal Func<string, IReadOnlyList<int>>? PidsByPathOverride { get; set; }
 
     public GameSessionAutomationService()
         => _timer = new Timer(TimerTick, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -65,8 +69,9 @@ internal sealed class GameSessionAutomationService : IDisposable
             var settings = SettingsService.Current;
             var prepEnabled = settings.AutoPreparationEnabled;
             var refreshEnabled = settings.AutoRefreshBoostEnabled;
+            var affinityEnabled = settings.AutoAffinityIsolateEnabled;
             var games = GamesProvider?.Invoke() ?? GameLibraryService.Read();
-            var signature = $"{prepEnabled}|{refreshEnabled}|{string.Join("|", games.Select(g => g.ExePath.ToUpperInvariant()))}";
+            var signature = $"{prepEnabled}|{refreshEnabled}|{affinityEnabled}|{string.Join("|", games.Select(g => g.ExePath.ToUpperInvariant()))}";
             var configChanged = !string.Equals(_signature, signature, StringComparison.Ordinal);
             _signature = signature;
 
@@ -77,6 +82,7 @@ internal sealed class GameSessionAutomationService : IDisposable
             // 基线：配置变化或首次观察不触发边沿（应用启动时游戏已在运行不算"启动"）。
             var edges = new List<(StateStore.GameProfile Game, bool Started)>();
             var restoreOnDisable = false;
+            var restoreAffinityOnDisable = false;
             lock (_gate)
             {
                 foreach (var (path, observation) in observations)
@@ -97,8 +103,10 @@ internal sealed class GameSessionAutomationService : IDisposable
                 }
                 // 运行中关闭刷新开关：立即还原已切换的显示器，不留挂起状态。
                 restoreOnDisable = configChanged && !refreshEnabled && _refreshEngaged;
+                restoreAffinityOnDisable = configChanged && !affinityEnabled && _affinityEngaged;
             }
             if (restoreOnDisable) DisengageRefresh(Str.T("Str.AutoSessionRefreshReasonToggle"));
+            if (restoreAffinityOnDisable) DisengageAffinity(Str.T("Str.AutoSessionRefreshReasonToggle"));
 
             foreach (var (game, started) in edges)
             {
@@ -108,6 +116,12 @@ internal sealed class GameSessionAutomationService : IDisposable
                     if (refreshEnabled) EngageRefresh();
                 }
             }
+
+            // 后台让路：游戏运行期间持续应用（覆盖新启动的进程），全部退出后还原。
+            if (affinityEnabled && observations.Any(o => o.Value.Run is not null))
+                ReapplyAffinity();
+            else if (_affinityEngaged)
+                DisengageAffinity(Str.T("Str.AutoSessionRefreshReasonAllGames"));
 
             // 全部游戏退出后还原刷新率（含开关关闭或游戏库清空的场景）。
             var anyRunning = observations.Any(o => o.Value.Run is not null);
@@ -228,6 +242,107 @@ internal sealed class GameSessionAutomationService : IDisposable
         Audit(Str.T("Str.AutoSessionRefreshReason", reason));
     }
 
+    private void ReapplyAffinity()
+    {
+        var classes = EfficiencyClassesProvider?.Invoke() ?? CpuTopology.EfficiencyClasses();
+        var (_, backgroundMask) = CpuTopology.SplitMasks(classes);
+        var paths = AutoRecordingService.NormalizePaths(SettingsService.Current.MemoryBackgroundApps);
+        if (paths.Length == 0)
+        {
+            if (_affinityEngaged) DisengageAffinity(Str.T("Str.AutoSessionAffinityNoApps"));
+            return;
+        }
+        var touchedNew = 0;
+        foreach (var path in paths)
+        {
+            foreach (var pid in PidsByPath(path))
+            {
+                lock (_gate)
+                {
+                    if (_affinityTouched.ContainsKey(pid)) continue;
+                }
+                var original = NativeProcessScheduling.Read(pid);
+                if (original is not { } before) continue; // 受保护/已退出：如实跳过
+                var affinityWritten = false;
+                var priorityWritten = false;
+                if (backgroundMask != 0 && before.Affinity != backgroundMask)
+                    affinityWritten = NativeProcessScheduling.WriteAffinity(pid, backgroundMask);
+                // 只把"常规或更高"优先级往下一档；已是低优先级的不动。
+                if (before.Priority is 0x20 or 0x8000 or 0x80)
+                    priorityWritten = NativeProcessScheduling.WritePriority(pid, NativeProcessScheduling.PriorityBelowNormal);
+                if (!affinityWritten && !priorityWritten) continue;
+                lock (_gate)
+                {
+                    _affinityTouched[pid] = (before.Affinity, before.Priority, affinityWritten, priorityWritten);
+                    _affinityEngaged = true;
+                }
+                touchedNew++;
+            }
+        }
+        if (touchedNew > 0)
+            Audit(Str.T("Str.AutoSessionAffinityOn", touchedNew));
+    }
+
+    private void DisengageAffinity(string reason)
+    {
+        List<KeyValuePair<int, (nuint Affinity, uint Priority, bool AffinityWritten, bool PriorityWritten)>> touched;
+        lock (_gate)
+        {
+            if (!_affinityEngaged || _affinityTouched.Count == 0)
+            {
+                _affinityEngaged = false;
+                return;
+            }
+            touched = _affinityTouched.ToList();
+            _affinityTouched.Clear();
+            _affinityEngaged = false;
+        }
+        var restored = 0;
+        foreach (var (pid, original) in touched)
+        {
+            try
+            {
+                if (original.AffinityWritten) NativeProcessScheduling.WriteAffinity(pid, original.Affinity);
+                if (original.PriorityWritten) NativeProcessScheduling.WritePriority(pid, original.Priority);
+                restored++;
+            }
+            catch { /* 进程已退出：无需还原 */ }
+        }
+        Audit(Str.T("Str.AutoSessionAffinityOff", restored, reason));
+    }
+
+    private IReadOnlyList<int> PidsByPath(string path)
+    {
+        if (PidsByPathOverride is not null) return PidsByPathOverride(path);
+        var result = new List<int>();
+        var name = Path.GetFileNameWithoutExtension(path);
+        if (name.Length == 0) return result;
+        System.Diagnostics.Process[]? processes = null;
+        try
+        {
+            processes = System.Diagnostics.Process.GetProcessesByName(name);
+            foreach (var process in processes)
+            {
+                try
+                {
+                    if (process.Id == Environment.ProcessId) continue;
+                    var image = ProcessIdentity.TryGetImagePath(process);
+                    if (image is not null && image.Equals(path, StringComparison.OrdinalIgnoreCase))
+                        result.Add(process.Id);
+                }
+                catch { /* 探测单个进程失败跳过 */ }
+            }
+        }
+        catch { /* 枚举失败返回空 */ }
+        finally
+        {
+            if (processes is not null)
+                foreach (var process in processes)
+                    process.Dispose();
+        }
+        return result;
+    }
+
     internal static DisplayMode? PickTarget(DisplayMode current, IReadOnlyList<DisplayMode> modes)
         => modes.Where(m => m.Width == current.Width && m.Height == current.Height && m.Hz > current.Hz)
             .OrderByDescending(m => m.Hz).FirstOrDefault();
@@ -248,5 +363,6 @@ internal sealed class GameSessionAutomationService : IDisposable
             _timer.Dispose();
         }
         DisengageRefreshCore(new WindowsDisplayModeApi(), IndependentDisplays(), Str.T("Str.AutoSessionRefreshReasonExit"));
+        DisengageAffinity(Str.T("Str.AutoSessionRefreshReasonExit"));
     }
 }

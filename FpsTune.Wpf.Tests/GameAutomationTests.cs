@@ -27,6 +27,9 @@ public sealed class GameAutomationTests : IDisposable
         AutoProfileActivityStore.OverrideDir = null;
         UserDataPaths.RootOverride = null;
         TrayService.NotifyOverride = null;
+        NativeProcessScheduling.ReadOverride = null;
+        NativeProcessScheduling.WriteAffinityOverride = null;
+        NativeProcessScheduling.WritePriorityOverride = null;
     }
 
     private static StateStore.GameProfile Game(string name = "Fixture", string exe = @"C:\Games\Fixture.exe")
@@ -212,6 +215,109 @@ public sealed class GameAutomationTests : IDisposable
         var emptyFps = withFps with { Fps = new SessionFpsStats(0, 0, 0, 0, 0) };
         Assert.Null(AutoRecordingService.BuildSummary(emptyFps));
         Assert.Single(notifications); // 无数据不通知
+    }
+
+    [Fact]
+    public void Split_masks_hybrid_splits_and_homogeneous_does_not()
+    {
+        var (game, bg) = CpuTopology.SplitMasks([0, 0, 0, 0, 1, 1]);
+        Assert.Equal(0b001111u, game);
+        Assert.Equal(0b110000u, bg);
+        var (sameGame, sameBg) = CpuTopology.SplitMasks([0, 0, 0, 0]);
+        Assert.Equal(0b1111u, sameGame);
+        Assert.Equal(0u, sameBg); // 同构不隔离亲和性
+    }
+
+    [Fact]
+    public async Task Affinity_isolation_throttles_selected_apps_and_restores_on_exit()
+    {
+        var settings = SettingsService.Current;
+        var oldAffinity = settings.AutoAffinityIsolateEnabled;
+        var oldApps = settings.MemoryBackgroundApps;
+        settings.AutoAffinityIsolateEnabled = true;
+        settings.AutoPreparationEnabled = false;
+        settings.AutoRefreshBoostEnabled = false;
+        settings.MemoryBackgroundApps = [@"C:\Apps\Fan.exe"];
+        var state = new Dictionary<int, (nuint Affinity, uint Priority)>
+        {
+            [501] = (0b111111u, 0x20), [502] = (0b111111u, 0x20),
+        };
+        NativeProcessScheduling.ReadOverride = pid => state.TryGetValue(pid, out var v) ? v : null;
+        NativeProcessScheduling.WriteAffinityOverride = (pid, mask) => { if (state.ContainsKey(pid)) { state[pid] = (mask, state[pid].Priority); return true; } return false; };
+        NativeProcessScheduling.WritePriorityOverride = (pid, prio) => { if (state.ContainsKey(pid)) { state[pid] = (state[pid].Affinity, prio); return true; } return false; };
+        var running = false;
+        var pids = new[] { 501, 502 };
+        try
+        {
+            var game = Game();
+            using var service = new GameSessionAutomationService
+            {
+                GamesProvider = () => [game],
+                Probe = _ => new GameProcessObservation(running ? new GameProcessRun(100, 1) : null),
+                EfficiencyClassesProvider = () => [0, 0, 0, 0, 1, 1],
+                PidsByPathOverride = _ => pids,
+            };
+            service.Poll(); // 基线
+            running = true; service.Poll(); // 启动 → 隔离到 E 核（bits 4-5）+ BelowNormal
+            Assert.Equal(0b110000u, state[501].Affinity);
+            Assert.Equal(0b110000u, state[502].Affinity);
+            Assert.Equal(NativeProcessScheduling.PriorityBelowNormal, state[501].Priority);
+            pids = [501, 502, 503]; // 游戏运行中新进程 → 下轮轮询同样被隔离
+            state[503] = (0b111111u, 0x20);
+            service.Poll();
+            Assert.Equal(0b110000u, state[503].Affinity);
+            running = false; service.Poll(); // 全部退出 → 还原
+            Assert.Equal(0b111111u, state[501].Affinity);
+            Assert.Equal(0x20u, state[501].Priority);
+            Assert.Equal(0b111111u, state[503].Affinity);
+        }
+        finally
+        {
+            settings.AutoAffinityIsolateEnabled = oldAffinity;
+            settings.MemoryBackgroundApps = oldApps;
+            SettingsService.Save(settings);
+        }
+    }
+
+    [Fact]
+    public async Task Affinity_isolation_restores_immediately_when_toggled_off_mid_game()
+    {
+        var settings = SettingsService.Current;
+        var oldAffinity = settings.AutoAffinityIsolateEnabled;
+        var oldApps = settings.MemoryBackgroundApps;
+        settings.AutoAffinityIsolateEnabled = true;
+        settings.AutoPreparationEnabled = false;
+        settings.AutoRefreshBoostEnabled = false;
+        settings.MemoryBackgroundApps = [@"C:\Apps\Fan.exe"];
+        var state = new Dictionary<int, (nuint Affinity, uint Priority)> { [501] = (0b111111u, 0x20) };
+        NativeProcessScheduling.ReadOverride = pid => state.TryGetValue(pid, out var v) ? v : null;
+        NativeProcessScheduling.WriteAffinityOverride = (pid, mask) => { if (state.ContainsKey(pid)) { state[pid] = (mask, state[pid].Priority); return true; } return false; };
+        NativeProcessScheduling.WritePriorityOverride = (pid, prio) => { if (state.ContainsKey(pid)) { state[pid] = (state[pid].Affinity, prio); return true; } return false; };
+        var running = true;
+        try
+        {
+            var game = Game();
+            using var service = new GameSessionAutomationService
+            {
+                GamesProvider = () => [game],
+                Probe = _ => new GameProcessObservation(running ? new GameProcessRun(100, 1) : null),
+                EfficiencyClassesProvider = () => [0, 0, 0, 0, 1, 1],
+                PidsByPathOverride = _ => [501],
+            };
+            service.Poll(); // 基线
+            service.Poll(); // 启动边沿
+            Assert.Equal(0b110000u, state[501].Affinity);
+            settings.AutoAffinityIsolateEnabled = false; // 运行中关闭：立即还原
+            service.ApplySettings();
+            Assert.Equal(0b111111u, state[501].Affinity);
+            Assert.Equal(0x20u, state[501].Priority);
+        }
+        finally
+        {
+            settings.AutoAffinityIsolateEnabled = oldAffinity;
+            settings.MemoryBackgroundApps = oldApps;
+            SettingsService.Save(settings);
+        }
     }
 
     private sealed class FakeModeApi(int currentHz) : IDisplayModeApi

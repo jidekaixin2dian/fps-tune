@@ -236,6 +236,7 @@ public partial class SettingsView : UserControl
         TimerBoostCheck.IsChecked = s.GameTimerBoostEnabled;
         AutoPreparationCheck.IsChecked = s.AutoPreparationEnabled;
         AutoRefreshCheck.IsChecked = s.AutoRefreshBoostEnabled;
+        AutoAffinityCheck.IsChecked = s.AutoAffinityIsolateEnabled;
         _suppressUiEvents = false;
         UpdateTimerBoostStatus();
 
@@ -663,12 +664,14 @@ public partial class SettingsView : UserControl
 
     private void AutoSessionSetting_Changed(object sender, RoutedEventArgs e)
     {
-        if (_suppressUiEvents || AutoPreparationCheck.IsChecked is null || AutoRefreshCheck.IsChecked is null) return;
+        if (_suppressUiEvents || AutoPreparationCheck.IsChecked is null || AutoRefreshCheck.IsChecked is null || AutoAffinityCheck.IsChecked is null) return;
         var settings = SettingsService.Current;
         var oldPrep = settings.AutoPreparationEnabled;
         var oldRefresh = settings.AutoRefreshBoostEnabled;
+        var oldAffinity = settings.AutoAffinityIsolateEnabled;
         settings.AutoPreparationEnabled = AutoPreparationCheck.IsChecked == true;
         settings.AutoRefreshBoostEnabled = AutoRefreshCheck.IsChecked == true;
+        settings.AutoAffinityIsolateEnabled = AutoAffinityCheck.IsChecked == true;
         try
         {
             SettingsService.Save(settings);
@@ -678,9 +681,11 @@ public partial class SettingsView : UserControl
         {
             settings.AutoPreparationEnabled = oldPrep;
             settings.AutoRefreshBoostEnabled = oldRefresh;
+            settings.AutoAffinityIsolateEnabled = oldAffinity;
             _suppressUiEvents = true;
             AutoPreparationCheck.IsChecked = oldPrep;
             AutoRefreshCheck.IsChecked = oldRefresh;
+            AutoAffinityCheck.IsChecked = oldAffinity;
             _suppressUiEvents = false;
         }
     }

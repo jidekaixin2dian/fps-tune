@@ -1780,7 +1780,11 @@
     <s:String x:Key="Str.AutoSessionDesc">检测到游戏库中的游戏启动时自动执行以下动作，全部退出后自动还原。只有边沿触发一次，不做持续干预。</s:String>
     <s:String x:Key="Str.AutoSessionPrepToggle">游戏启动时自动执行开局准备</s:String>
     <s:String x:Key="Str.AutoSessionRefreshToggle">游戏启动时自动切换最高刷新率</s:String>
-    <s:String x:Key="Str.AutoSessionHint">开局准备使用各游戏已保存的方案，未配置或需要管理员时跳过并记录；刷新率还原在游戏全部退出后自动完成。</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityToggle">游戏时后台应用自动让路（隔离到小核并降优先级）</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityOn">后台让路已应用（本轮新隔离 {0} 个进程）</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityOff">后台让路已还原（{0} 个进程，原因：{1}）</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityNoApps">后台应用清单为空</s:String>
+    <s:String x:Key="Str.AutoSessionHint">开局准备使用各游戏已保存的方案，未配置或需要管理员时跳过并记录；刷新率与后台让路在游戏全部退出后自动还原；后台让路按维护页“后台应用整理”里挑选的应用清单生效。</s:String>
     <s:String x:Key="Str.AutoSessionAuditFailed">游戏自动化状态更新失败：{0}</s:String>
     <s:String x:Key="Str.AutoSessionPrepDone">已为「{0}」自动执行开局准备（{1}/{2} 步成功）</s:String>
     <s:String x:Key="Str.AutoSessionPrepPartial">「{0}」自动开局准备部分失败（{1}/{2} 步成功）</s:String>

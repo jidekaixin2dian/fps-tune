@@ -1780,7 +1780,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AutoSessionDesc">Runs the actions below when a library game launches and reverts them after all games exit. Edge-triggered once; no continuous intervention.</s:String>
     <s:String x:Key="Str.AutoSessionPrepToggle">Run the saved game preparation automatically on launch</s:String>
     <s:String x:Key="Str.AutoSessionRefreshToggle">Switch to the highest refresh rate automatically on launch</s:String>
-    <s:String x:Key="Str.AutoSessionHint">Preparation uses each game's saved plan; unconfigured plans or missing admin rights are skipped and logged. Refresh rates restore automatically once every game exits.</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityToggle">Throttle background apps while gaming (isolate to efficiency cores, lower priority)</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityOn">Background throttling applied ({0} new processes isolated)</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityOff">Background throttling restored ({0} processes, reason: {1})</s:String>
+    <s:String x:Key="Str.AutoSessionAffinityNoApps">the background app list is empty</s:String>
+    <s:String x:Key="Str.AutoSessionHint">Preparation uses each game's saved plan; unconfigured plans or missing admin rights are skipped and logged. Refresh rates and background throttling restore automatically once every game exits; throttling applies to the apps picked in Maintenance &gt; Background apps.</s:String>
     <s:String x:Key="Str.AutoSessionAuditFailed">Game automation state update failed: {0}</s:String>
     <s:String x:Key="Str.AutoSessionPrepDone">Auto preparation finished for "{0}" ({1}/{2} steps ok)</s:String>
     <s:String x:Key="Str.AutoSessionPrepPartial">Auto preparation partially failed for "{0}" ({1}/{2} steps ok)</s:String>
