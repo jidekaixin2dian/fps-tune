@@ -47,6 +47,12 @@ internal interface IForegroundProbe
     /// <summary>DWM 隐藏窗口（UWP 幽灵窗）——它们的矩形不可信。</summary>
     bool IsCloaked(nint window);
 
+    /// <summary>
+    /// 窗口是否带标题栏或可调边框。<b>必须有这道判据</b>：Windows 最大化窗口的 DWM 扩展边框
+    /// 会被外扩到屏幕边缘，与无边框全屏完全同形（真机实测），只靠矩形会误判。
+    /// </summary>
+    bool HasCaptionOrBorder(nint window);
+
     string? ClassNameOf(nint window);
 }
 
@@ -56,6 +62,10 @@ internal sealed class Win32ForegroundProbe : IForegroundProbe
     private const int DwmwaExtendedFrameBounds = 9;
     private const int DwmwaCloaked = 14;
     private const uint MonitorDefaultToNearest = 2;
+    private const int GwlStyle = -16;
+    private const int WsCaption = 0x00C00000;
+    private const int WsThickFrame = 0x00040000;
+    private const int WsBorder = 0x00800000;
 
     public nint GetForegroundWindow() => GetForegroundWindowNative();
     public nint GetShellWindow() => GetShellWindowNative();
@@ -124,6 +134,21 @@ internal sealed class Win32ForegroundProbe : IForegroundProbe
     public bool IsCloaked(nint window)
         => DwmGetWindowAttributeInt(window, DwmwaCloaked, out var cloaked, sizeof(int)) == 0 && cloaked != 0;
 
+    public bool HasCaptionOrBorder(nint window)
+    {
+        try
+        {
+            // GWL_STYLE 是 32 位值，用 GetWindowLongW 在 32/64 位都可用（不需要 Ptr 变体）。
+            var style = GetWindowLong(window, GwlStyle);
+            return (style & (WsCaption | WsThickFrame | WsBorder)) != 0;
+        }
+        catch
+        {
+            // 读不到样式时按"有边框"处理：宁可漏判一次无边框全屏，也不要误切用户的屏幕。
+            return true;
+        }
+    }
+
     public string? ClassNameOf(nint window)
     {
         try
@@ -179,6 +204,9 @@ internal sealed class Win32ForegroundProbe : IForegroundProbe
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetClassName(nint window, [Out] char[] buffer, int maxCount);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")]
+    private static extern int GetWindowLong(nint window, int index);
 
     [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
     private static extern int DwmGetWindowAttributeRect(nint window, int attribute, out NativeRect value, int size);

@@ -52,6 +52,7 @@ public sealed class FullscreenDetectorTests : IDisposable
         internal int? Notification { get; set; } = 5;
         internal bool Cloaked { get; set; }
         internal string? ClassName { get; set; } = "UnrealWindow";
+        internal bool CaptionOrBorder { get; set; }
 
         public nint GetForegroundWindow() => Window;
         public nint GetShellWindow() => 22;
@@ -78,6 +79,7 @@ public sealed class FullscreenDetectorTests : IDisposable
             return Notification is not null;
         }
         public bool IsCloaked(nint window) => Cloaked;
+        public bool HasCaptionOrBorder(nint window) => CaptionOrBorder;
         public string? ClassNameOf(nint window) => ClassName;
     }
 
@@ -104,8 +106,32 @@ public sealed class FullscreenDetectorTests : IDisposable
     }
 
     [Fact]
-    public void Exclusive_fullscreen_falls_back_to_notification_state()
+    public void Bordered_maximized_window_is_not_fullscreen()
     {
+        // 真机实测：Windows 最大化窗口的 DWM 扩展边框被外扩到屏幕边缘，与无边框全屏同形，
+        // 只靠矩形会把"窗口化最大化"误判成全屏，必须有样式闸门。
+        var probe = new FakeProbe { CaptionOrBorder = true };
+        Assert.Equal(ForegroundScreenState.NotFullscreen, Evaluate(probe, out _, out _));
+    }
+
+    [Fact]
+    public void Bordered_window_still_counts_as_exclusive_when_the_shell_reports_d3d_fullscreen()
+    {
+        // 独占全屏可能仍带样式位，靠 notification == 3 兜住，别被样式闸门连坐。
+        var probe = new FakeProbe { CaptionOrBorder = true, Notification = 3 };
+        Assert.Equal(ForegroundScreenState.FullscreenExclusive, Evaluate(probe, out _, out _));
+    }
+
+    [Fact]
+    public void Window_far_larger_than_its_monitor_is_not_fullscreen()
+    {
+        // 非 PMv2 进程会把逻辑像素与物理像素混用：窗口"覆盖"显示器其实是坐标系错位。
+        var probe = new FakeProbe { Bounds = new PixelRect(-8, -8, 2568, 1608) };
+        Assert.Equal(ForegroundScreenState.NotFullscreen, Evaluate(probe, out _, out _));
+    }
+
+    [Fact]
+    public void Exclusive_fullscreen_falls_back_to_notification_state()    {
         // 独占全屏下窗口矩形可能小于显示器，靠 SHQueryUserNotificationState == 3 兜住。
         var probe = new FakeProbe { Bounds = new PixelRect(0, 0, 1280, 720), Notification = 3 };
         Assert.Equal(ForegroundScreenState.FullscreenExclusive, Evaluate(probe, out _, out _));

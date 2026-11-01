@@ -48,7 +48,10 @@ internal sealed class FullscreenDetector(IForegroundProbe probe)
             return ForegroundScreenState.Unknown;
 
         var state = ForegroundScreenState.NotFullscreen;
-        if (probe.TryGetWindowBounds(window, out var bounds) && Covers(bounds, monitor))
+        // 矩形铺满 + 没有标题栏/边框 = 无边框全屏。有边框的最大化窗口同样铺满屏幕（真机实测：
+        // Windows 把它的 DWM 扩展边框外扩到屏幕边缘），必须先过样式闸门，再退给 notification 判据。
+        var covered = probe.TryGetWindowBounds(window, out var bounds) && Covers(bounds, monitor);
+        if (covered && !probe.HasCaptionOrBorder(window))
         {
             state = ForegroundScreenState.FullscreenBorderless;
         }
@@ -72,12 +75,17 @@ internal sealed class FullscreenDetector(IForegroundProbe probe)
         return displayIdentity is null ? ForegroundScreenState.Unknown : state;
     }
 
-    /// <summary>窗口边界是否覆盖显示器矩形（允许 <see cref="Tolerance"/> 像素误差）。</summary>
+    /// <summary>窗口最多允许比显示器大这么多像素；超了说明坐标系不一致（非 PMv2 进程给逻辑像素）。</summary>
+    internal const int MaxOverhang = 32;
+
+    /// <summary>窗口边界是否覆盖显示器矩形（允许 <see cref="Tolerance"/> 像素误差，且不允许明显外溢）。</summary>
     internal static bool Covers(PixelRect window, PixelRect monitor)
         => Math.Abs(window.Left - monitor.Left) <= Tolerance
            && Math.Abs(window.Top - monitor.Top) <= Tolerance
            && window.Width >= monitor.Width - Tolerance
-           && window.Height >= monitor.Height - Tolerance;
+           && window.Height >= monitor.Height - Tolerance
+           && window.Width <= monitor.Width + MaxOverhang
+           && window.Height <= monitor.Height + MaxOverhang;
 
     private static string? ResolveIdentity(string gdiDeviceName)
     {
