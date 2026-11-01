@@ -73,7 +73,7 @@ public partial class ConsoleView
         _preparing = true;
         using var cancellation = new CancellationTokenSource(); _preparationCancellation = cancellation;
         CancelPreparationButton.Visibility = Visibility.Visible; CancelPreparationButton.IsEnabled = true;
-        GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = RefreshButton.IsEnabled = false;
+        GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = false;
         UpdatePreparation();
         PreparationStatus.Visibility = Visibility.Visible; PreparationStatus.Text = Str.T("Str.PrepareRunning");
         PreparationStatus.Foreground = (Brush)FindResource("TextSecondaryBrush");
@@ -113,7 +113,7 @@ public partial class ConsoleView
             }
             _preparing = false;
             _preparationCancellation = null; CancelPreparationButton.Visibility = Visibility.Collapsed;
-            GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = RefreshButton.IsEnabled = true;
+            GameSwitcher.IsEnabled = LocateDeltaButton.IsEnabled = true;
             UpdatePreparation();
         }
     }

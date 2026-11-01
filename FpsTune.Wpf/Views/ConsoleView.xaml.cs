@@ -9,13 +9,8 @@ namespace FpsTune.Wpf.Views;
 
 public partial class ConsoleView : UserControl
 {
-    private sealed record Row(string Number, OptimizationItemViewModel Item);
-    private List<Row> _rows = new();
-    private List<OptimizationItem>? _source;
     private MetricsSampler? _sampler;
     private Window? _owner;
-    private string _preset = "balanced";
-    private bool _changingSelection;
     private bool _refreshing;
     private bool _locating;
 
@@ -28,6 +23,14 @@ public partial class ConsoleView : UserControl
 
     private void UpdatePreparation()
     {
+        // 指标卡"已优化"格：随检测状态刷新（原 RebuildRows 职责，优化项列表移除后并入此处）。
+        if (TunedText is not null)
+        {
+            var tuned = AppState.Items.Where(i => ItemCatalog.All.FirstOrDefault(d => d.Id == i.Id)?.Available != false).ToArray();
+            var tunedCount = tuned.Count(i => i.Optimized);
+            TunedText.Text = tuned.Length > 0 ? $"{tunedCount}/{tuned.Length}" : "—";
+            TunedMeter.Value = tuned.Length > 0 ? 100.0 * tunedCount / tuned.Length : 0;
+        }
         TuningButton.Visibility = GameTuning.Identify(AppState.GamePath) is not null ? Visibility.Visible : Visibility.Collapsed;
         TuningButton.IsEnabled = !_preparing && !_refreshing && !_locating;
         var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
@@ -143,21 +146,33 @@ public partial class ConsoleView : UserControl
         _owner = Window.GetWindow(this);
         if (_owner is not null) _owner.IsVisibleChanged += OwnerVisibilityChanged;
         StartMonitor();
-        RebuildRows();
-        if (AppState.Items.Count == 0) await RefreshDataAsync();
-        // 首页数据就绪信号（splash 放行条件之一）：行列表与检测状态落定；
-        // 与首个实时样本汇合后才上报，避免进入界面仍是一片 "—"。
-        _rowsSettled = true;
+        UpdatePreparation();
+        // 首页数据就绪信号（splash 放行条件）：首个实时样本落定后上报，避免进入界面仍是一片 "—"。
         TryNotifyHomeDataReady();
     }
 
     private bool _metricsSeen;
-    private bool _rowsSettled;
 
     private void TryNotifyHomeDataReady()
     {
-        if (_metricsSeen && _rowsSettled && _owner is MainWindow main)
+        if (_metricsSeen && _owner is MainWindow main)
             main.NotifyHomeDataReady();
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (_refreshing || Window.GetWindow(this) is not MainWindow main) return;
+        _refreshing = true;
+        UpdatePreparation();
+        try
+        {
+            await main.RefreshDetectionAsync();
+        }
+        finally
+        {
+            _refreshing = false;
+            UpdatePreparation();
+        }
     }
 
     private void OwnerVisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -199,30 +214,7 @@ public partial class ConsoleView : UserControl
         text.ToolTip = available ? Str.T("Str.LiveLocalSampling") : _sampler?.UnavailableReasons.GetValueOrDefault(key) ?? Str.T("Str.LoadingMetrics");
     }
 
-    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshDataAsync();
-
-    private async Task RefreshDataAsync()
-    {
-        if (_refreshing || Window.GetWindow(this) is not MainWindow main) return;
-        _refreshing = true;
-        RefreshButton.IsEnabled = false;
-        ReviewButton.IsEnabled = false;
-        StateText.Text = Str.T("Str.DetectingBackground");
-        try
-        {
-            var ok = await main.RefreshDetectionAsync();
-            RebuildRows();
-            StateText.Text = ok ? Str.T("Str.DetectUpdatedHint") : Str.T("Str.DetectIncompleteRetry");
-        }
-        finally
-        {
-            _refreshing = false;
-            RefreshButton.IsEnabled = true;
-            UpdateSelection();
-        }
-    }
-
-    // ---------- 0.2.0 M2：多游戏切换（状态在 GameContextService，这里只管 UI） ----------
+// ---------- 0.2.0 M2：多游戏切换（状态在 GameContextService，这里只管 UI） ----------
 
     private bool _suppressGameSwitch;
 
@@ -274,80 +266,8 @@ public partial class ConsoleView : UserControl
             Dispatcher.BeginInvoke(OnGameContextSwitched);
             return;
         }
-        _source = null;   // 绕过 RebuildRows 的同引用短路，强制重建
-        RebuildRows();
-        RefreshGameSwitcher();
-    }
-
-    private void RebuildRows()
-    {
         RefreshGameSwitcher();
         UpdatePreparation();
-        if (ReferenceEquals(_source, AppState.Items)) return;
-        var selected = _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToHashSet();
-        foreach (var row in _rows) row.Item.PropertyChanged -= ItemChanged;
-        _source = AppState.Items;
-        var verdicts = VerdictStore.Load();
-        var currentGame = Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
-        _rows = _source.Select((item, index) => new Row($"{index + 1:00}",
-            new OptimizationItemViewModel(item) { VerdictBadge = VerdictStore.BadgeFor(item.Id, verdicts, currentGame, AppState.GamePath) })).ToList();
-        foreach (var row in _rows) row.Item.PropertyChanged += ItemChanged;
-        SetChecks(_preset == "custom" ? selected : OptimizationCatalog.ResolvePreset(_preset).ToHashSet());
-        var available = _rows.Where(r => r.Item.Available).ToArray();
-        var count = available.Count(r => r.Item.Optimized);
-        TunedText.Text = available.Length > 0 ? $"{count}/{available.Length}" : "—";
-        TunedMeter.Value = available.Length > 0 ? 100.0 * count / available.Length : 0;
-        FilterRows();
-    }
-
-    private void Preset_Checked(object sender, RoutedEventArgs e)
-    {
-        if (sender is not RadioButton { Tag: string preset }) return;
-        _preset = preset;
-        if (ItemList is null || preset == "custom") return;
-        SetChecks(OptimizationCatalog.ResolvePreset(preset).ToHashSet());
-    }
-
-    private void SetChecks(HashSet<string> selected)
-    {
-        _changingSelection = true;
-        foreach (var row in _rows) row.Item.IsChecked = selected.Contains(row.Item.Id);
-        _changingSelection = false;
-        UpdateSelection();
-    }
-
-    private void ItemChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (_changingSelection || e.PropertyName != nameof(OptimizationItemViewModel.IsChecked)) return;
-        CustomPreset.IsChecked = true;
-        UpdateSelection();
-    }
-
-    private void UpdateSelection()
-    {
-        UpdatePreparation();
-        // 0.2.0 M1：勾选集合同步给 A/B 页自定义实测。
-        AppState.SelectedIds.Clear();
-        foreach (var id in _rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id))
-            AppState.SelectedIds.Add(id);
-        var count = _rows.Count(r => r.Item.IsChecked);
-        SelectionText.Text = _rows.Count == 0 ? Str.T("Str.NoDetectResult") : Str.T("Str.HomeSelectionCount", count, _rows.Count(r => r.Item.Available));
-        ReviewButton.IsEnabled = count > 0 && !_refreshing;
-    }
-
-    private void Search_TextChanged(object sender, TextChangedEventArgs e) => FilterRows();
-    private void FilterRows()
-    {
-        if (ItemList is null || SearchBox is null) return;
-        var query = SearchBox.Text.Trim();
-        ItemList.ItemsSource = _rows.Where(r => r.Item.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || r.Item.Description.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-    }
-
-    private void Review_Click(object sender, RoutedEventArgs e)
-    {
-        if (Window.GetWindow(this) is MainWindow main)
-            main.ReviewSelection(_rows.Where(r => r.Item.IsChecked).Select(r => r.Item.Id).ToArray());
     }
 
     // ---------- 首页：一键优化大卡 + 继续使用 + 常用入口 ----------

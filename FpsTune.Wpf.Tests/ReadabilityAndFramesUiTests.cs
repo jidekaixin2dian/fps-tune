@@ -524,7 +524,7 @@ public sealed class ReadabilityAndFramesUiTests
     }
 
     [Fact]
-    public void Home_actions_align_at_supported_sizes_and_selection_review_and_busy_game_choice_stay_consistent()
+    public void Home_actions_align_at_supported_sizes_and_busy_game_choice_stay_consistent()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
         RunUi((app, root) =>
@@ -543,7 +543,6 @@ public sealed class ReadabilityAndFramesUiTests
             var page = (ConsoleView)((ContentControl)window.FindName("PageHost")).Content;
             var combo = (ComboBox)page.FindName("GameSwitcher");
             var availableCount = ItemCatalog.All.Count(d => d.Available);
-            Assert.Equal(Str.T("Str.HomeSelectionCount", OptimizationCatalog.ResolvePreset("balanced").Count, availableCount), ((TextBlock)page.FindName("SelectionText")).Text);
             Assert.Equal("0/" + availableCount, ((TextBlock)page.FindName("TunedText")).Text);
             Assert.Equal(Str.T("Str.Unavailable"), new OptimizationItemViewModel(unavailableItem).StatusText);
             var report = new List<object>(); var oldBusy = GameContextService.IsBusyProvider;
@@ -568,22 +567,11 @@ public sealed class ReadabilityAndFramesUiTests
                         Assert.InRange(at.Y, 0, page.ActualHeight - action.ActualHeight + 0.1);
                     }
                     Assert.Single(Descendants(combo).OfType<System.Windows.Shapes.Path>()); // Dropdown arrow only.
-                    var review = (Button)page.FindName("ReviewButton"); var bottom = review.TranslatePoint(new Point(), page);
-                    Assert.True(bottom.Y + review.ActualHeight <= page.ActualHeight);
+                    var primaryCta = (Button)page.FindName("HomeQuickCardButton"); var bottom = primaryCta.TranslatePoint(new Point(), page);
+                    Assert.True(bottom.Y + primaryCta.ActualHeight <= page.ActualHeight);
                     Capture(window, $"home-audit-{mode}-{size.Width}-{theme}", report);
                 }
-                // Search changes visibility only; selecting a previously excluded item enters custom mode.
-                var search = (TextBox)page.FindName("SearchBox"); search.Text = "Wi-Fi"; window.UpdateLayout();
-                var list = (ListBox)page.FindName("ItemList"); Assert.Single(list.Items);
-                var toggle = Descendants(list).OfType<CheckBox>().Single();
-                ((System.Windows.Automation.Provider.IToggleProvider)new System.Windows.Automation.Peers.ToggleButtonAutomationPeer(toggle)
-                    .GetPattern(System.Windows.Automation.Peers.PatternInterface.Toggle)).Toggle();
-                Assert.True(((RadioButton)page.FindName("CustomPreset")).IsChecked); Assert.Contains("wifi-performance-ac", AppState.SelectedIds);
-                search.Text = ""; window.UpdateLayout(); Assert.Contains("wifi-performance-ac", AppState.SelectedIds);
-                ((RadioButton)page.FindName("BalancedPreset")).IsChecked = true;
-                Assert.Equal(OptimizationCatalog.ResolvePreset("balanced").Order(), AppState.SelectedIds.Order());
-                Descendants(page).OfType<RadioButton>().Single(b => b.Tag as string == "safe-only").IsChecked = true;
-                Assert.Equal(OptimizationCatalog.ResolvePreset("safe-only").Order(), AppState.SelectedIds.Order());
+                // 首页不再平铺优化项（用户 2026-11-01 反馈）：方案选择与逐项审阅全部在「优化」页。
                 ((Button)page.FindName("PrepareDeltaButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); window.UpdateLayout();
                 var optimization = Assert.IsType<OptimizeView>(((ContentControl)window.FindName("PageHost")).Content);
                 Assert.Equal(new[] { "dvr-off", "game-mode", "gpu-pref" }, optimization.Items.Where(i => i.IsChecked).Select(i => i.Id).Order());

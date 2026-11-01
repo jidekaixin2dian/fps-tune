@@ -54,7 +54,7 @@
                     <StackPanel x:Name="NavGroupGamesRoot">
                         <ToggleButton x:Name="NavGroupGamesHeader" Tag="Games" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupGames}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupGames}"/>
                         <StackPanel x:Name="NavGroupGamesItems">
-                            <controls:NavButton x:Name="NavGames" Tag="games" Text="{DynamicResource Str.NavGames}" Icon="M5.5 5.5 H10.5 A2.5 2.5 0 0 1 13 8 A3.2 3.2 0 0 1 9.8 11.2 H6.2 A3.2 3.2 0 0 1 3 8 A2.5 2.5 0 0 1 5.5 5.5 Z M5.3 7.6 V9.6 M4.3 8.6 H6.3 M10.2 8 V8.1 M11.5 9 V9.1" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavGames" Tag="games" Text="{DynamicResource Str.NavGames}" Icon="M4.6 5.5 H11.4 A2.6 2.6 0 0 1 14 8.1 A3.4 3.4 0 0 1 10.6 11.5 H9.9 A1.4 1.4 0 0 1 8.8 11 L8.5 10.6 A.7.7 0 0 0 7.5 10.6 L7.2 11 A1.4 1.4 0 0 1 6.1 11.5 H5.4 A3.4 3.4 0 0 1 2 8.1 A2.6 2.6 0 0 1 4.6 5.5 Z M5.6 7.3 V9.1 M4.7 8.2 H6.5 M10.6 7.5 V7.6 M11.9 8.8 V8.9" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                             <controls:NavButton x:Name="NavQuick" Tag="quick" Text="{DynamicResource Str.NavQuickOpt}" Icon="M8.7 2 L4 9 H7 L6.4 14 L12 7 H8.6 Z" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                             <controls:NavActionButton x:Name="NavDeltaFix" Content="{DynamicResource Str.DeltaFixTab}" Icon="M3.5 7.5 H10 A3 3 0 0 1 10 13.5 H6 M6.5 4.5 L3.5 7.5 L6.5 10.5" Style="{StaticResource SideNavActionStyle}" Click="NavDeltaFix_Click"/>
                         </StackPanel>
@@ -66,13 +66,13 @@
                             <controls:NavButton x:Name="NavDisplay" Tag="display" Text="{DynamicResource Str.NavDisplayPage}" Icon="M2.5 3.5 H13.5 V10.5 H2.5 Z M6 13.5 H10 M8 10.5 V13.5" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                         </StackPanel>
                     </StackPanel>
-                    <controls:NavButton x:Name="NavFilters" Tag="filters" Text="{DynamicResource Str.NavFilters}" Icon="M2.5 3 H13.5 L9.5 8.5 V12.5 L6.5 11 V8.5 Z" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
+                    <controls:NavButton x:Name="NavFilters" Tag="filters" Text="{DynamicResource Str.NavFilters}" Icon="M3.2 3 H12.8 A.7.7 0 0 1 13.3 4.1 L10 8.2 V11.4 A.7.7 0 0 1 9.6 12 L7 13.3 A.6.6 0 0 1 6.1 12.8 V8.2 L2.7 4.1 A.7.7 0 0 1 3.2 3 Z M6.3 3.6 L8 6.2 L9.7 3.6" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavTools" Tag="tools" Text="{DynamicResource Str.NavTools}" Icon="M2.5 5.5 H13.5 V13 H2.5 Z M6 5.5 V3.5 H10 V5.5 M2.5 9 H13.5" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                     <StackPanel x:Name="NavGroupSystemRoot">
                         <ToggleButton x:Name="NavGroupSystemHeader" Tag="System" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupSystem}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupSystem}"/>
                         <StackPanel x:Name="NavGroupSystemItems">
                             <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Icon="M3 5.5 H13 M3 10.5 H13 M6.5 3.8 V7.2 M10.5 8.8 V12.2" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
-                            <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Icon="M8 3.5 A4.5 4.5 0 1 1 3.5 8 M3.5 4 V8 H7.5 M8 6 V8.5 L9.8 9.8" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Icon="M8 2.2 L13 4.1 V8 C13 10.9 10.9 13.1 8 14 C5.1 13.1 3 10.9 3 8 V4.1 Z M5.8 8.1 L7.3 9.6 L10.2 6.6" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                         </StackPanel>
                     </StackPanel>
                     <controls:NavButton x:Name="NavSession" Tag="session" Text="{DynamicResource Str.NavSession}" Icon="M8 4 A4.6 4.6 0 1 1 7.99 4 M8 2.3 V4 M6.2 2.5 H9.8 M8 8.5 L10 6" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>

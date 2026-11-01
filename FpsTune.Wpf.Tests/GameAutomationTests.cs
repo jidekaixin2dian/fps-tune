@@ -323,10 +323,13 @@ public sealed class GameAutomationTests : IDisposable
     [Fact]
     public async Task Filter_library_rule_store_and_watcher_follow_foreground()
     {
-        // 库：内置资产可读、元数据带说明
+        // 库：内置资产可读、元数据带说明；生成式预设走 generated: 前缀，其余为 .icc 资产
         var presets = GameFilterLibrary.Presets;
         Assert.True(presets.Count > 30, $"presets={presets.Count}");
-        Assert.All(presets, p => Assert.EndsWith(".icc", p.FileName, StringComparison.OrdinalIgnoreCase));
+        Assert.All(presets, p =>
+            Assert.True(p.FileName.StartsWith("generated:", StringComparison.Ordinal)
+                || p.FileName.EndsWith(".icc", StringComparison.OrdinalIgnoreCase),
+                $"unexpected FileName: {p.FileName}"));
         var bytes = GameFilterLibrary.ReadPreset(presets[0].FileName);
         Assert.Equal("acsp", System.Text.Encoding.ASCII.GetString(bytes, 36, 4)); // ICC 签名在 36 偏移
         // 规则表：保存/匹配/上限

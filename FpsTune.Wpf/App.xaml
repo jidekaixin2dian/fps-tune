@@ -309,7 +309,7 @@
             <Style x:Key="NavGroupHeaderStyle" TargetType="ToggleButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Focusable" Value="False"/>
                 <Setter Property="Height" Value="28"/>
