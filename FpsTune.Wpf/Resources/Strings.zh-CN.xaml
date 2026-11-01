@@ -2041,6 +2041,14 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptPowerLabel">电源计划</s:String>
     <s:String x:Key="Str.QuickOptPowerToggle">同时把 Windows 电源计划切到最高性能优先</s:String>
     <s:String x:Key="Str.QuickOptFilterLabel">滤镜场景（可选）</s:String>
+    <s:String x:Key="Str.QuickOptDlssLabel">DLSS 超分（可选）</s:String>
+    <s:String x:Key="Str.QuickOptDlssFollow">跟随游戏内设置</s:String>
+    <s:String x:Key="Str.QuickOptDlssLatest">官方「最新」预设</s:String>
+    <s:String x:Key="Str.QuickOptDlssM">预设 M（新一代 · 高端首选）</s:String>
+    <s:String x:Key="Str.QuickOptDlssK">预设 K（新一代 · 社区常用）</s:String>
+    <s:String x:Key="Str.QuickOptDlssJ">预设 J（旧一代 CNN）</s:String>
+    <s:String x:Key="Str.QuickOptDlssE">预设 E（旧一代 CNN）</s:String>
+    <s:String x:Key="Str.QuickOptDlssDoneFmt">已切换到 {0}</s:String>
     <s:String x:Key="Str.QuickOptFilterNone">不套滤镜</s:String>
     <s:String x:Key="Str.QuickOptRun">开始优化</s:String>
     <s:String x:Key="Str.QuickOptRunning">正在优化…</s:String>

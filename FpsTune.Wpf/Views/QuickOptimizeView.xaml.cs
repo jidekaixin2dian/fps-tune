@@ -14,6 +14,12 @@ public partial class QuickOptimizeView : UserControl
 
     private sealed record ResultRow(string Name, bool Ok, string StateText, string Message);
 
+    /// <summary>带负载的下拉项（DLSS 档位等）。</summary>
+    private sealed record ComboPreset<T>(string Label, T Value)
+    {
+        public override string ToString() => Label;
+    }
+
     private StateStore.GameProfile? _game;
     private bool _loaded;
 
@@ -27,6 +33,17 @@ public partial class QuickOptimizeView : UserControl
     {
         if (_loaded) return;
         _loaded = true;
+
+        // DLSS 超分下拉（可选覆盖）：跟随游戏内设置 + 各官方预设
+        foreach (var (key, preset) in new[] {
+            ("Str.QuickOptDlssFollow", DlssPreset.FollowGame),
+            ("Str.QuickOptDlssLatest", DlssPreset.Latest),
+            ("Str.QuickOptDlssM", DlssPreset.PresetM),
+            ("Str.QuickOptDlssK", DlssPreset.PresetK),
+            ("Str.QuickOptDlssJ", DlssPreset.PresetJ),
+            ("Str.QuickOptDlssE", DlssPreset.PresetE) })
+            DlssBox.Items.Add(new ComboPreset<DlssPreset>(Str.T(key), preset));
+        DlssBox.SelectedIndex = 0;
 
         // 滤镜场景下拉（可选）：不套滤镜 + 全部预设
         FilterBox.Items.Add(Str.T("Str.QuickOptFilterNone"));
@@ -98,6 +115,22 @@ public partial class QuickOptimizeView : UserControl
                     r.Skipped ? Str.T("Str.ResultSkipped") : r.Ok ? Str.T("Str.ResultOk") : Str.T("Str.ResultFailed"),
                     r.Message))
                 .ToList();
+
+            // 可选 DLSS 超分覆盖：走显示页同一路径（含备份/还原契约）
+            if (DlssBox.SelectedItem is ComboPreset<DlssPreset> dlss && dlss.Value != DlssPreset.FollowGame)
+            {
+                try
+                {
+                    await Task.Run(() => DisplayQualityService.ApplyDlssPreset(game.ExePath, dlss.Value));
+                    rows.Add(new ResultRow(Str.T("Str.QuickOptDlssLabel") + "：" + dlss.Label, true,
+                        Str.T("Str.ResultOk"), Str.T("Str.QuickOptDlssDoneFmt", dlss.Label)));
+                }
+                catch (Exception ex)
+                {
+                    rows.Add(new ResultRow(Str.T("Str.QuickOptDlssLabel") + "：" + dlss.Label, false,
+                        Str.T("Str.ResultFailed"), PrivacyScrub.Sanitize(ex.Message)));
+                }
+            }
 
             // 可选滤镜场景：走滤镜中心同一契约（备份在 ICC 服务内部）
             if (filter is GameFilterPreset fp)

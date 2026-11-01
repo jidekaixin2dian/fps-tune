@@ -46,6 +46,12 @@
                 </Grid>
                 <Grid Margin="0,14,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{DynamicResource Str.QuickOptDlssLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" x:Name="DlssBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
+                              Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptDlssLabel}"/>
+                </Grid>
+                <Grid Margin="0,14,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <TextBlock Text="{DynamicResource Str.QuickOptFilterLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="1" x:Name="FilterBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptFilterLabel}"/>

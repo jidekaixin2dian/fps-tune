@@ -2040,6 +2040,14 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptPowerLabel">Power plan</s:String>
     <s:String x:Key="Str.QuickOptPowerToggle">Also switch the Windows power plan to Best performance</s:String>
     <s:String x:Key="Str.QuickOptFilterLabel">Filter scene (optional)</s:String>
+    <s:String x:Key="Str.QuickOptDlssLabel">DLSS upscaling (optional)</s:String>
+    <s:String x:Key="Str.QuickOptDlssFollow">Follow in-game setting</s:String>
+    <s:String x:Key="Str.QuickOptDlssLatest">Official "Latest" preset</s:String>
+    <s:String x:Key="Str.QuickOptDlssM">Preset M (new model, premium)</s:String>
+    <s:String x:Key="Str.QuickOptDlssK">Preset K (new model, community pick)</s:String>
+    <s:String x:Key="Str.QuickOptDlssJ">Preset J (older CNN)</s:String>
+    <s:String x:Key="Str.QuickOptDlssE">Preset E (older CNN)</s:String>
+    <s:String x:Key="Str.QuickOptDlssDoneFmt">Switched to {0}</s:String>
     <s:String x:Key="Str.QuickOptFilterNone">No filter</s:String>
     <s:String x:Key="Str.QuickOptRun">Start</s:String>
     <s:String x:Key="Str.QuickOptRunning">Optimizing…</s:String>
