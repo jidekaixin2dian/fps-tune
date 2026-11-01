@@ -30,4 +30,42 @@ public class NavButton : RadioButton
         get => (string)GetValue(TextProperty);
         set => SetValue(TextProperty, value);
     }
+
+    /// <summary>可选线性图标（SVG path data，16×16 视窗，stroke 渲染）；空 = 不显示。</summary>
+    public static readonly DependencyProperty IconProperty =
+        DependencyProperty.Register(
+            nameof(Icon),
+            typeof(string),
+            typeof(NavButton),
+            new PropertyMetadata(string.Empty));
+
+    public string Icon
+    {
+        get => (string)GetValue(IconProperty);
+        set => SetValue(IconProperty, value);
+    }
+}
+
+/// <summary>侧栏动作项（非页面导航，如"掉帧修复"）：外观同子项，支持同款线性图标。</summary>
+public class NavActionButton : Button
+{
+    static NavActionButton()
+    {
+        DefaultStyleKeyProperty.OverrideMetadata(
+            typeof(NavActionButton),
+            new FrameworkPropertyMetadata(typeof(NavActionButton)));
+    }
+
+    public static readonly DependencyProperty IconProperty =
+        DependencyProperty.Register(
+            nameof(Icon),
+            typeof(string),
+            typeof(NavActionButton),
+            new PropertyMetadata(string.Empty));
+
+    public string Icon
+    {
+        get => (string)GetValue(IconProperty);
+        set => SetValue(IconProperty, value);
+    }
 }
