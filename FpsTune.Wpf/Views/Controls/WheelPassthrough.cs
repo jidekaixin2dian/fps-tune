@@ -19,12 +19,26 @@ internal static class WheelPassthrough
     {
         if (e.Handled || e.OriginalSource is not DependencyObject source) return;
         if (!IsValueControl(source)) return;
-        if (FindAncestor<ScrollViewer>(source) is not { } viewer) return;
-        if (viewer.ScrollableHeight <= 0) return;
+        // 用最外层的可滚动容器：页面里一旦再出现嵌套滚动区，滚轮也不会被它截住。
+        if (FindOutermostScrollViewer(source) is not { } viewer || viewer.ScrollableHeight <= 0) return;
         var target = Math.Clamp(viewer.VerticalOffset - e.Delta, 0, viewer.ScrollableHeight);
         if (Math.Abs(target - viewer.VerticalOffset) < 0.5) return;
         viewer.ScrollToVerticalOffset(target);
         e.Handled = true;
+    }
+
+    private static ScrollViewer? FindOutermostScrollViewer(DependencyObject source)
+    {
+        ScrollViewer? found = null;
+        var node = source;
+        while (node is not null)
+        {
+            if (node is ScrollViewer { ScrollableHeight: > 0 } viewer) found = viewer;
+            node = node is Visual or System.Windows.Media.Media3D.Visual3D
+                ? VisualTreeHelper.GetParent(node)
+                : LogicalTreeHelper.GetParent(node);
+        }
+        return found;
     }
 
     /// <summary>只有"吃滚轮改值"的控件需要改写；其余保持原样。</summary>

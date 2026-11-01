@@ -158,11 +158,24 @@ public partial class ColorPreviewControl : UserControl
         finally { LoadImageButton.IsEnabled = true; }
     }
     private void Comparison_SizeChanged(object sender, SizeChangedEventArgs e) => UpdatePreviewHeight();
+
+    /// <summary>
+    /// 面板在「画面与色彩」页签里，未展开时宽度是 0，尺寸计算会被跳过；
+    /// 切到这个页签时必须重算一次，否则对比区宽度定不下来、分界手柄点不到。
+    /// </summary>
+    private void Viewport_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (e.NewValue is not true) return;
+        Dispatcher.BeginInvoke(new Action(UpdatePreviewHeight), System.Windows.Threading.DispatcherPriority.Loaded);
+    }
+
     private void UpdatePreviewHeight()
     {
-        if (_source is null || ComparisonViewport.ActualWidth <= 2) return;
+        if (_source is null) return;
+        var available = ComparisonViewport.ActualWidth > 2 ? ComparisonViewport.ActualWidth : ComparisonSurface.Width;
+        if (available <= 2) return;
         var aspect = (double)_source.PixelWidth / _source.PixelHeight;
-        var height = Math.Min((ComparisonViewport.ActualWidth - 4) / aspect, 520);
+        var height = Math.Min((available - 4) / aspect, 520);
         ComparisonSurface.Width = height * aspect;
         ComparisonSurface.Height = height;
         ComparisonSurface.UpdateLayout(); UpdateSplit();

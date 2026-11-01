@@ -1915,6 +1915,12 @@
     <s:String x:Key="Str.FilterEditorHighlightHint">负值压高光（去曝光），正值提亮白点；端点保持，不改变纯黑纯白。</s:String>
     <s:String x:Key="Str.FilterVibranceSuggested">这条滤镜配套数字振动 {0}%，点「应用」才会写入。</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalance">暗部平衡</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceTag">12 档 · 游戏加加同款</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceGamma">等效 γ</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceGammaValue">γ {0}</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceBright">提亮 · γ1.40</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceNeutral">原样 · 45</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceDark">压暗 · γ0.30</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 是原样，往右提亮、往左压暗；用游戏加加同一套 12 档曲线，数值会自动取整。</s:String>
     <s:String x:Key="Str.FilterCategoryAll">全部</s:String>
     <s:String x:Key="Str.FilterCategorySoft">柔和护眼</s:String>

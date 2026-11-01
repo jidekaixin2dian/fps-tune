@@ -160,6 +160,14 @@ public partial class FilterCenterPanel : UserControl
         RenderPresetList();
     }
 
+    /// <summary>暗部平衡滑动时实时给出等效 γ（12 档量化后的真实值），让"数值 = 画面变化"看得见。</summary>
+    private void DarkBalance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (DarkBalanceGammaText is null) return;
+        var gamma = ScreenColorService.DarkBalanceGamma(e.NewValue);
+        DarkBalanceGammaText.Text = Str.T("Str.FilterEditorDarkBalanceGammaValue", gamma.ToString("0.00", CultureInfo.InvariantCulture));
+    }
+
     private void RenderPresetList()
     {
         PresetList.Children.Clear();

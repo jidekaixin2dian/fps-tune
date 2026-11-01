@@ -35,8 +35,8 @@
             <WrapPanel x:Name="CategoryList" Margin="0,0,0,6"/>
             <WrapPanel x:Name="PresetList" Margin="0,0,0,8"/>
         </StackPanel>
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="0,10,0,0">
+        <!-- 不再套内层 ScrollViewer：嵌套滚动区会吞掉滚轮，整页只能滚一半（用户两次反馈）。 -->
+            <StackPanel Grid.Row="1" Margin="0,10,0,0">
                 <TextBlock x:Name="PresetFitText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                 <TextBlock x:Name="PresetAvoidText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 <TextBlock x:Name="ApplyStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
@@ -73,12 +73,35 @@
                         <Slider x:Name="HighlightSlider" Grid.Column="1" Minimum="-25" Maximum="25" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorHighlight}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=HighlightSlider, StringFormat={}{0:0}}" VerticalAlignment="Center"/>
                     </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
-                        <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalance}" VerticalAlignment="Center" Margin="0,0,10,6"/>
-                        <Slider x:Name="DarkBalanceSlider" Grid.Column="1" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalance}"/>
-                        <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=DarkBalanceSlider, StringFormat={}{0:0}}" VerticalAlignment="Center"/>
-                    </Grid>
+                    <!-- 暗部平衡：游戏加加同款 12 档幂律，单独突出显示（实时给出等效 γ） -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,4,0,6">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalance}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+                                    <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceTag}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" x:Name="DarkBalanceGammaText" Text="γ 1.00"
+                                           FontFamily="{StaticResource FontStat}" Typography.NumeralAlignment="Tabular"
+                                           FontSize="17" FontWeight="{DynamicResource StrongEmphasisWeight}"
+                                           Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"
+                                           AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalanceGamma}"/>
+                            </Grid>
+                            <Slider x:Name="DarkBalanceSlider" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True"
+                                    Margin="0,8,0,0" Style="{StaticResource TuneSliderStyle}"
+                                    ValueChanged="DarkBalance_Changed"
+                                    AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalance}"/>
+                            <Grid Margin="0,2,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceBright}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                                <TextBlock Grid.Column="1" Text="{DynamicResource Str.FilterEditorDarkBalanceNeutral}" Style="{StaticResource MutedTextStyle}" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="{DynamicResource Str.FilterEditorDarkBalanceDark}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                     <TextBlock Text="{DynamicResource Str.FilterEditorHighlightHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     <Grid Margin="0,4,0,0">
@@ -108,6 +131,5 @@
                     <TextBlock Text="{DynamicResource Str.FilterAppsRuleHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel></Border>
             </StackPanel>
-        </ScrollViewer>
     </Grid>
 </UserControl>
