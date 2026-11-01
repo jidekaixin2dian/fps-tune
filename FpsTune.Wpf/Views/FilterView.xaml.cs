@@ -8,12 +8,7 @@ namespace FpsTune.Wpf.Views;
 
 public partial class FilterView : UserControl
 {
-    // InitializeComponent 期间（元素属性赋值时）事件即会触发，此时后续命名字段尚未 Connect；
-    // 只允许 OnInitialized 全部完成后响应真实交互，避免半初始化状态触达 catch 回滚分支。
-    private bool _crosshairReady;
-    private bool _suppressCrosshair;
-
-    // 画面色彩与滤镜：目标显示器 → 画面与色彩（含实机截图对比）→ 滤镜预设库
+    // 目标显示器 → 滤镜（统一列表）→ 画面与色彩（含实机截图对比）→ 掉帧修复
     private bool _busy;
     private string? _vibStatus;
     private string? _iccStatus;
@@ -45,7 +40,12 @@ public partial class FilterView : UserControl
         ColorPanel.VibranceContent = VibranceContent;
         ColorPanel.IccContent = IccAdvanced;
         ColorPanel.Unified = true;
+        // 滤镜选择已统一到上面的滤镜列表，色彩面板不再重复一套筛选入口。
+        ColorPanel.SetFilterPickerVisible(false);
         ColorPanel.BusyChanged += busy => { _busy = busy; ++_refreshGen; SetDisplayInputEnabled(!busy); if (!busy) Refresh(); };
+        FilterCenter.ChoiceChanged += OnFilterChoiceChanged;
+        FilterCenter.ApplyRequested += () => ColorPanel.RequestApply();
+        FilterCenter.RestoreRequested += () => ColorPanel.RequestRestore();
         var choices = Enum.GetValues<IccFilterPreset>().Select(preset =>
         {
             var keys = IccProfileGenerator.ResourceKeysFor(preset);
@@ -57,56 +57,17 @@ public partial class FilterView : UserControl
         Unloaded += (_, _) => Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= DisplaysChanged;
     }
 
-    protected override void OnInitialized(EventArgs e)
+    /// <summary>滤镜列表选中后，把这条滤镜填进色彩面板：生成式给枚举，.icc 先物化成临时文件。</summary>
+    private async void OnFilterChoiceChanged(FilterChoice choice)
     {
-        base.OnInitialized(e);
-        var settings = SettingsService.Current;
-        CrosshairStyleBox.SelectedIndex = Array.IndexOf(
-            new[] { "cross", "dot", "crossdot", "circle" },
-            CrosshairConfig.NormalizeStyle(settings.CrosshairStyle)) is >= 0 and var idx and not int.MaxValue ? idx : 0;
-        CrosshairCheck.IsChecked = settings.CrosshairEnabled;
-        CrosshairAdaptiveCheck.IsChecked = settings.CrosshairAdaptiveHide;
-        CrosshairColorBox.Text = CrosshairConfig.NormalizeColor(settings.CrosshairColor);
-        CrosshairSizeSlider.Value = Math.Clamp(settings.CrosshairSize, 4, 48);
-        CrosshairGapSlider.Value = Math.Clamp(settings.CrosshairGap, 0, 30);
-        CrosshairThicknessSlider.Value = Math.Clamp(settings.CrosshairThickness, 1, 10);
-        CrosshairOpacitySlider.Value = Math.Clamp(settings.CrosshairOpacity, 10, 100);
-        _crosshairReady = true;
-    }
-    private void Crosshair_Changed(object sender, RoutedEventArgs e)
-    {
-        if (!_crosshairReady || _suppressCrosshair) return;
-        var settings = SettingsService.Current;
-        var backup = CrosshairConfig.FromSettings();
         try
         {
-            settings.CrosshairEnabled = CrosshairCheck.IsChecked == true;
-            settings.CrosshairStyle = ((ComboBoxItem)CrosshairStyleBox.SelectedItem)?.Tag as string ?? "cross";
-            settings.CrosshairColor = CrosshairConfig.NormalizeColor(CrosshairColorBox.Text);
-            settings.CrosshairSize = CrosshairSizeSlider.Value;
-            settings.CrosshairGap = CrosshairGapSlider.Value;
-            settings.CrosshairThickness = CrosshairThicknessSlider.Value;
-            settings.CrosshairOpacity = CrosshairOpacitySlider.Value;
-            settings.CrosshairAdaptiveHide = CrosshairAdaptiveCheck.IsChecked == true;
-            SettingsService.Save(settings);
-            App.ApplyCrosshairSettings();
+            if (choice.Generated is { } preset) { ColorPanel.SelectGeneratedPreset(preset); return; }
+            if (await FilterCenter.MaterializeAsync(choice) is { } path) ColorPanel.SelectIccFile(path);
         }
-        catch (Exception)
-        {
-            settings.CrosshairEnabled = backup.Enabled;
-            settings.CrosshairStyle = backup.Style;
-            settings.CrosshairColor = backup.Color;
-            settings.CrosshairSize = backup.Size;
-            settings.CrosshairGap = backup.Gap;
-            settings.CrosshairThickness = backup.Thickness;
-            settings.CrosshairOpacity = backup.Opacity;
-            settings.CrosshairAdaptiveHide = backup.AdaptiveHide;
-            _suppressCrosshair = true;
-            CrosshairCheck.IsChecked = backup.Enabled;
-            CrosshairAdaptiveCheck.IsChecked = backup.AdaptiveHide;
-            _suppressCrosshair = false;
-        }
+        catch (Exception ex) { FilterCenter.ReportStatus(PrivacyScrub.Sanitize(ex.Message)); }
     }
+
     private void OpenDeltaFix_Click(object sender, RoutedEventArgs e) => OpenDeltaFix();
     internal void OpenDeltaFix()
     {

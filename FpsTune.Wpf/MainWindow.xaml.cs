@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
@@ -164,6 +164,7 @@ public partial class MainWindow : Window
             ["opt"] = () => new OptimizeView(),
             ["display"] = () => new DisplayQualityView(),
             ["filters"] = () => new FilterView(),
+            ["crosshair"] = () => new CrosshairView(),
             ["quick"] = () => new QuickOptimizeView(),
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
@@ -313,12 +314,12 @@ public partial class MainWindow : Window
     /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
     private Views.Controls.NavButton[] AllNavButtons => new[]
     {
-        NavHome, NavGames, NavQuick, NavDetect, NavDisplay, NavFilters,
+        NavHome, NavGames, NavQuick, NavDetect, NavDisplay, NavFilters, NavCrosshair,
         NavOpt, NavTools, NavBackup, NavSession, NavAb, NavSettings
     };
 
     /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
-    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavTools, NavSession, NavAb, NavSettings };
+    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavCrosshair, NavTools, NavSession, NavAb, NavSettings };
 
     private void UpdateOverviewModeLabel()
     {
@@ -571,6 +572,7 @@ public partial class MainWindow : Window
             case "opt": NavOpt.IsChecked = true; break;
             case "display": NavDisplay.IsChecked = true; break;
             case "filters": NavFilters.IsChecked = true; break;
+            case "crosshair": NavCrosshair.IsChecked = true; break;
             case "session": NavSession.IsChecked = true; break;
             case "ab": NavAb.IsChecked = true; break;
             case "backup": NavBackup.IsChecked = true; break;

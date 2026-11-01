@@ -8,13 +8,26 @@ using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
 
+/// <summary>滤镜列表里的一项：内置 .icc 文件（FileName 指向文件）或生成式预设（Generated 非空）。</summary>
+public sealed record FilterChoice(string FileName, string Name, string Category, string Fit, string Avoid, IccFilterPreset? Generated);
+
 public partial class FilterCenterPanel : UserControl
 {
-    private GameFilterPreset? _selected;
+    private FilterChoice? _selected;
     private bool _loaded;
     private readonly ForegroundFilterWatcher? _watcher;
-    private IReadOnlyList<GameFilterPreset> _allPresets = [];
+    private IReadOnlyList<FilterChoice> _choices = [];
     private string _category = "all";
+    private readonly Dictionary<string, string> _tempProfiles = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>选中滤镜：宿主页据此刷新截图对比预览。</summary>
+    internal event Action<FilterChoice>? ChoiceChanged;
+
+    /// <summary>「应用滤镜」：交给宿主页走单一写入路径（色彩 + ICC + 振动一起确认）。</summary>
+    internal event Action? ApplyRequested;
+
+    /// <summary>「还原原始」：同上，统一还原。</summary>
+    internal event Action? RestoreRequested;
 
     /// <summary>分类键 → 本地化组名。</summary>
     private static string CategoryLabel(string key) => key switch
@@ -27,6 +40,9 @@ public partial class FilterCenterPanel : UserControl
         "face" => Str.T("Str.FilterCategoryFace"),
         _ => Str.T("Str.FilterCategoryAll"),
     };
+
+    /// <summary>分类固定顺序：室内柔和 → 压暗去曝 → 提亮通透 → 色彩风格 → 游戏专属 → 人物暗场。</summary>
+    private static readonly string[] CategoryOrder = ["soft", "deexpose", "bright", "color", "game", "face"];
 
     public FilterCenterPanel() : this(App.FilterWatcher) { }
     internal FilterCenterPanel(ForegroundFilterWatcher? watcher)
@@ -44,20 +60,57 @@ public partial class FilterCenterPanel : UserControl
         RefreshRules();
         try
         {
-            _allPresets = await Task.Run(() => GameFilterLibrary.Presets);
+            var library = await Task.Run(() => GameFilterLibrary.Presets);
             if (!_loaded) return;
+            _choices = BuildChoices(library);
             BuildCategoryChips();
             RenderPresetList();
         }
         catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
 
-    /// <summary>分类 chips：全部 + 出现过的分组。</summary>
+    /// <summary>把 43 个内置 .icc 与生成式预设（IccFilterPreset）合成一张列表；重复的按文件名去重。</summary>
+    private static List<FilterChoice> BuildChoices(IReadOnlyList<GameFilterPreset> library)
+    {
+        var list = new List<FilterChoice>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var preset in library)
+        {
+            if (!seen.Add(preset.FileName)) continue;
+            IccFilterPreset? generated = null;
+            if (preset.FileName.StartsWith(GameFilterLibrary.GeneratedPrefix, StringComparison.Ordinal)
+                && Enum.TryParse<IccFilterPreset>(preset.FileName[GameFilterLibrary.GeneratedPrefix.Length..], out var parsed))
+                generated = parsed;
+            list.Add(new FilterChoice(preset.FileName, preset.Name, preset.Category, preset.Fit, preset.Avoid, generated));
+        }
+        foreach (var preset in Enum.GetValues<IccFilterPreset>())
+        {
+            if (!seen.Add(GameFilterLibrary.GeneratedPrefix + preset)) continue;
+            var keys = IccProfileGenerator.ResourceKeysFor(preset);
+            list.Add(new FilterChoice(GameFilterLibrary.GeneratedPrefix + preset, Str.T(keys.Title),
+                GeneratedCategory(preset), Str.T(keys.Description), "", preset));
+        }
+        return list;
+    }
+
+    private static string GeneratedCategory(IccFilterPreset preset) => preset switch
+    {
+        IccFilterPreset.Vivid or IccFilterPreset.Warm or IccFilterPreset.Cool or IccFilterPreset.Muted => "color",
+        IccFilterPreset.ShadowBoost or IccFilterPreset.Dehaze => "bright",
+        IccFilterPreset.NightGuard or IccFilterPreset.Soft or IccFilterPreset.ShadowGentle or IccFilterPreset.ContrastGentle => "soft",
+        IccFilterPreset.Neutral => "game",
+        IccFilterPreset.Deexposure or IccFilterPreset.DeexposureStrong => "deexpose",
+        _ => "color",
+    };
+
+    /// <summary>分类 chips：全部 + 出现过的分组（按固定顺序，未知分类排在后面）。</summary>
     private void BuildCategoryChips()
     {
         CategoryList.Children.Clear();
+        var present = _choices.Select(c => c.Category).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList();
         var keys = new List<string> { "all" };
-        keys.AddRange(_allPresets.Select(p => p.Category).Where(c => c.Length > 0).Distinct());
+        keys.AddRange(CategoryOrder.Where(present.Contains));
+        keys.AddRange(present.Where(c => !CategoryOrder.Contains(c)).OrderBy(c => c, StringComparer.Ordinal));
         foreach (var key in keys)
         {
             var chip = new RadioButton
@@ -78,59 +131,61 @@ public partial class FilterCenterPanel : UserControl
         }
     }
 
-    /// <summary>按当前分类渲染预设卡片。</summary>
+    /// <summary>按当前分类渲染滤镜卡片。</summary>
     private void RenderPresetList()
     {
         PresetList.Children.Clear();
-        foreach (var preset in _allPresets.Where(p => _category == "all" || p.Category == _category))
+        foreach (var choice in _choices.Where(c => _category == "all" || c.Category == _category))
         {
             var radio = new RadioButton
             {
                 GroupName = "filterPresets",
-                Content = preset.Name,
+                Content = choice.Name,
                 Style = (Style)Resources["PresetCardStyle"],
-                Tag = preset,
+                Tag = choice,
+                IsChecked = ReferenceEquals(choice, _selected),
             };
-            AutomationProperties.SetName(radio, preset.Name);
-            radio.Checked += (_, _) => SelectPreset(preset);
+            AutomationProperties.SetName(radio, choice.Name);
+            radio.Checked += (_, _) => SelectChoice(choice);
             PresetList.Children.Add(radio);
         }
     }
 
-    private void SelectPreset(GameFilterPreset preset)
+    private void SelectChoice(FilterChoice choice)
     {
-        _selected = preset;
-        PresetFitText.Text = string.IsNullOrWhiteSpace(preset.Fit) ? "" : Str.T("Str.FilterFit", preset.Fit);
-        PresetAvoidText.Text = string.IsNullOrWhiteSpace(preset.Avoid) ? "" : Str.T("Str.FilterAvoid", preset.Avoid);
+        _selected = choice;
+        // 生成式预设的 Fit 本身就是一句说明，不再套「适合：」模板。
+        PresetFitText.Text = choice.Generated is not null
+            ? choice.Fit
+            : string.IsNullOrWhiteSpace(choice.Fit) ? "" : Str.T("Str.FilterFit", choice.Fit);
+        PresetAvoidText.Text = choice.Generated is not null
+            ? ""
+            : string.IsNullOrWhiteSpace(choice.Avoid) ? "" : Str.T("Str.FilterAvoid", choice.Avoid);
+        ApplyStatus.Text = "";
+        ChoiceChanged?.Invoke(choice);
     }
 
-    private async void Apply_Click(object sender, RoutedEventArgs e)
+    /// <summary>把 .icc 预设物化成临时文件，供色彩面板的预览与应用使用（同一条缓存）。</summary>
+    internal async Task<string?> MaterializeAsync(FilterChoice choice)
     {
-        if (_selected is not { } preset) { ApplyStatus.Text = Str.T("Str.FilterPickFirst"); return; }
-        ApplyButton.IsEnabled = false;
-        try
-        {
-            var bytes = await Task.Run(() => GameFilterLibrary.ReadPreset(preset.FileName));
-            var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + Guid.NewGuid().ToString("N") + ".icc");
-            await File.WriteAllBytesAsync(temp, bytes);
-            var message = await Task.Run(() => IccFilterService.ApplyFromFile(temp, DisplayTarget()));
-            ApplyStatus.Text = Str.T("Str.FilterApplied", preset.Name, message);
-        }
-        catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { ApplyButton.IsEnabled = true; }
+        if (choice.Generated is not null) return null;
+        if (_tempProfiles.TryGetValue(choice.FileName, out var cached) && File.Exists(cached)) return cached;
+        var bytes = await Task.Run(() => GameFilterLibrary.ReadPreset(choice.FileName));
+        var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + Guid.NewGuid().ToString("N") + ".icc");
+        await File.WriteAllBytesAsync(temp, bytes);
+        _tempProfiles[choice.FileName] = temp;
+        return temp;
     }
 
-    private async void Restore_Click(object sender, RoutedEventArgs e)
+    internal void ReportStatus(string text) => ApplyStatus.Text = text;
+
+    private void Apply_Click(object sender, RoutedEventArgs e)
     {
-        RestoreButton.IsEnabled = false;
-        try
-        {
-            var restored = await Task.Run(() => IccFilterService.Restore(DisplayTarget()));
-            ApplyStatus.Text = Str.T(restored ? "Str.FilterRestored" : "Str.FilterNothingRestored");
-        }
-        catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        finally { RestoreButton.IsEnabled = true; }
+        if (_selected is null) { ApplyStatus.Text = Str.T("Str.FilterPickFirst"); return; }
+        ApplyRequested?.Invoke();
     }
+
+    private void Restore_Click(object sender, RoutedEventArgs e) => RestoreRequested?.Invoke();
 
     private void OpenFolder_Click(object sender, RoutedEventArgs e)
     {
@@ -167,7 +222,7 @@ public partial class FilterCenterPanel : UserControl
             });
             var saved = GameFilterLibrary.SaveUserPreset(name + ".icc", bytes);
             ApplyStatus.Text = Str.T("Str.FilterEditorSaved", saved);
-            _ = LoadAsync(); // 重载预设列表
+            _ = LoadAsync(); // 重载滤镜列表
         }
         catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
@@ -244,10 +299,11 @@ public partial class FilterCenterPanel : UserControl
     private void AddRule_Click(object sender, RoutedEventArgs e)
     {
         var process = RuleProcessBox.Text.Trim();
-        if (_selected is not { } preset) { ApplyStatus.Text = Str.T("Str.FilterPickFirst"); return; }
+        if (_selected is not { } choice) { ApplyStatus.Text = Str.T("Str.FilterPickFirst"); return; }
         if (process.Length == 0) { ApplyStatus.Text = Str.T("Str.FilterRuleNeedProcess"); return; }
+        if (choice.Generated is not null) { ApplyStatus.Text = Str.T("Str.FilterRuleGenerated"); return; }
         var rules = IccAppRuleStore.Rules.ToList();
-        rules.Add(new FilterAppRule(process, preset.FileName));
+        rules.Add(new FilterAppRule(process, choice.FileName));
         IccAppRuleStore.Save(rules);
         RuleProcessBox.Text = "";
         RefreshRules();
@@ -262,17 +318,5 @@ public partial class FilterCenterPanel : UserControl
         IccAppRuleStore.Save(rules);
         RefreshRules();
         App.FilterWatcher?.ApplySettings();
-    }
-
-    private static string? DisplayTarget()
-    {
-        try
-        {
-            var displays = DisplayTopology.GetDisplays().Where(d => d.Independent).ToArray();
-            return displays.FirstOrDefault(d => d.IsPrimary) is { } primary
-                ? DisplayTopology.Identity(primary)
-                : displays.FirstOrDefault() is { } first ? DisplayTopology.Identity(first) : null;
-        }
-        catch { return null; }
     }
 }

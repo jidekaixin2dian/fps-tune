@@ -101,8 +101,28 @@ public partial class ScreenColorPanel : UserControl
         _syncing = true;
         try { _iccFile = path; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0; }
         finally { _syncing = false; }
-        _dirty = true; ColorStatus.Text = Path.GetFileName(path); Availability(); UpdatePreview();
+        // 状态行不显示临时文件名（滤镜列表物化出来的缓存路径），文件名在 ICC 高级里单独展示。
+        _dirty = true; MarkDraft(); Availability(); UpdatePreview();
     }
+
+    /// <summary>把滤镜列表里选中的内置生成式预设填进本面板（预览与应用都走这一份状态）。</summary>
+    internal void SelectGeneratedPreset(IccFilterPreset preset)
+    {
+        _syncing = true;
+        try { _iccFile = null; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = (int)preset + 1; }
+        finally { _syncing = false; }
+        _dirty = true; MarkDraft(); Availability(); UpdatePreview();
+    }
+
+    /// <summary>滤镜列表取代了这里的「选择滤镜」行，宿主页可收起它避免重复入口。</summary>
+    internal void SetFilterPickerVisible(bool visible)
+        => FilterPickerBox.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>由外部（滤镜列表的「应用滤镜」）触发的统一应用：色彩 + ICC + 振动一起走确认流程。</summary>
+    internal void RequestApply() => Apply_Click(this, new RoutedEventArgs());
+
+    /// <summary>由外部触发的还原：屏幕色彩、ICC、振动一并回滚。</summary>
+    internal void RequestRestore() => Restore_Click(this, new RoutedEventArgs());
     private void Mode_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || ColorPresetCombo is null) return;

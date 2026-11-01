@@ -13,9 +13,10 @@
     <s:String x:Key="Str.NavQuickOpt">一键优化</s:String>
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
     <s:String x:Key="Str.NavFilters">游戏滤镜</s:String>
-    <s:String x:Key="Str.FilterPageIntro">选滤镜、看游戏内实机截图对比、微调后一键应用；下方滤镜预设库有 43 个内置 ICC 预设，独立程序滤镜按前台进程自动切换。</s:String>
-    <s:String x:Key="Str.FilterLibraryTitle">滤镜预设库</s:String>
-    <s:String x:Key="Str.FilterLibraryHint">内置 43 个 ICC 预设，按场景分组；也能用下面的编辑器调出自己的一档，或给不同程序绑定不同滤镜。</s:String>
+    <s:String x:Key="Str.FilterPageIntro">选滤镜、看游戏内实机截图对比、微调后一键应用；所有滤镜按场景分在同一张列表里，独立程序滤镜按前台进程自动切换。</s:String>
+    <s:String x:Key="Str.FilterLibraryTitle">滤镜</s:String>
+    <s:String x:Key="Str.FilterLibraryHint">内置 .icc 与生成式滤镜统一在这里，按柔和护眼、压暗去曝、提亮通透、色彩风格、游戏专属、人物暗场分组；选中即套到下面的实机截图预览。</s:String>
+    <s:String x:Key="Str.FilterRuleGenerated">这一档是内置生成式滤镜，无法绑定到具体程序；要给程序绑定请选 .icc 预设。</s:String>
     <s:String x:Key="Str.CommandAliasFilters">滤镜 ICC 滤镜中心 独立程序 filter color</s:String>    <s:String x:Key="Str.NavSession">性能会话</s:String>
     <s:String x:Key="Str.NavAb">A/B 实验</s:String>
     <s:String x:Key="Str.NavBackup">备份 / 日志</s:String>

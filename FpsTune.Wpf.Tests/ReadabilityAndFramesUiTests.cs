@@ -39,7 +39,7 @@ public sealed class ReadabilityAndFramesUiTests
         });
     }
     [Fact]
-    public void Corner_presets_and_custom_values_update_existing_pages_and_survive_reload()
+    public void Corner_radius_is_pinned_to_shipping_values_and_no_longer_adjustable()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
         RunUi((app, _) =>
@@ -48,21 +48,25 @@ public sealed class ReadabilityAndFramesUiTests
             DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
             try
             {
-                window.SetDisplayMode("studio"); window.NavigateTo("settings"); window.UpdateLayout();
+                foreach (var mode in new[] { "studio", "console" })
+                {
+                    window.SetDisplayMode(mode);
+                    Assert.Equal(new CornerRadius(18), app.FindResource("RadiusCard"));
+                    Assert.Equal(new CornerRadius(12), app.FindResource("RadiusControl"));
+                    Assert.Equal(new CornerRadius(12), app.FindResource("RadiusNav"));
+                    Assert.Equal(new CornerRadius(8), app.FindResource("RadiusChip"));
+                }
+                window.NavigateTo("settings"); window.UpdateLayout();
                 var page = (SettingsView)((ContentControl)window.FindName("PageHost")).Content;
-                DlssFeedbackTests.PumpUntil(() => ((RadioButton)page.FindName("CornerLargeRadio")).IsChecked == true);
-                ((RadioButton)page.FindName("CornerClassicRadio")).IsChecked = true;
-                Assert.Equal(new CornerRadius(12), app.FindResource("RadiusCard"));
-                window.SetDisplayMode("console"); Assert.Equal(new CornerRadius(6), app.FindResource("RadiusCard"));
-                ((RadioButton)page.FindName("CornerLargeRadio")).IsChecked = true;
+                Assert.Null(page.FindName("CornerCardSlider"));
+                Assert.Null(page.FindName("CornerClassicRadio"));
+                // 旧版本存下来的自定义值不再生效：仍然固定为出货值。
+                SettingsService.Current.Corners = new CornerPreferences("custom", 0, 0, 0, 0);
+                CornerPreferences.Apply();
                 Assert.Equal(new CornerRadius(18), app.FindResource("RadiusCard"));
-                ((Slider)page.FindName("CornerCardSlider")).Value = 25;
-                SettingsService.Load(); Assert.Equal("custom", SettingsService.Current.Corners.Preset);
-                Assert.Equal(25, SettingsService.Current.Corners.Card);
-                ThemeManager.SetMode("light"); window.NavigateTo("display"); window.NavigateTo("settings");
-                Assert.Equal(new CornerRadius(25), app.FindResource("RadiusCard"));
-                Assert.False(((RadioButton)page.FindName("CornerLargeRadio")).IsChecked);
-                Assert.Equal(0, new CornerPreferences("custom", -5).Normalize().Card);
+                Assert.Equal(new CornerRadius(8), app.FindResource("RadiusChip"));
+                ThemeManager.SetMode("light");
+                Assert.Equal(new CornerRadius(18), app.FindResource("RadiusCard"));
             }
             finally { window.Close(); }
         });
@@ -252,13 +256,13 @@ public sealed class ReadabilityAndFramesUiTests
                     ThemeManager.SetMode(theme);
                     Assert.NotEqual(((SolidColorBrush)app.FindResource("AccentBrush")).Color,
                         ((SolidColorBrush)app.FindResource("ChartSecondaryBrush")).Color);
-                    foreach (var route in new[] { "home", "detect", "opt", "display", "filters", "session", "ab", "backup", "tools", "settings" })
+                    foreach (var route in new[] { "home", "detect", "opt", "display", "filters", "crosshair", "session", "ab", "backup", "tools", "settings" })
                     {
                         window.NavigateTo(route); window.UpdateLayout();
                         var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
                         DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
                         var titleKey = route switch { "detect" => "Str.NavDetect", "opt" => "Str.OptimizeTitle", "display" => "Str.DisplayTitle",
-                            "filters" => "Str.NavFilters",
+                            "filters" => "Str.NavFilters", "crosshair" => "Str.CrosshairTitle",
                             "session" => "Str.NavSession", "ab" => "Str.NavAb", "backup" => "Str.NavBackup", "tools" => "Str.NavTools", "settings" => "Str.NavSettings", _ => null };
                         if (titleKey is not null)
                             Assert.Contains(Descendants(page).OfType<TextBlock>(), t => t.Text == Str.T(titleKey) && t.FontSize == 22);

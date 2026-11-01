@@ -1,5 +1,8 @@
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
 using FpsTune.Wpf.Services;
+using FpsTune.Wpf.Views.Controls;
 
 namespace FpsTune.Wpf.Views;
 
@@ -8,7 +11,27 @@ public partial class DeltaFrameFixWindow : Window
     public DeltaFrameFixWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => Refresh();
+        Loaded += (_, _) => { Refresh(); PlayEntrance(); };
+    }
+
+    /// <summary>弹窗入场：淡入 + 轻微上浮与放大，系统关闭动画或低配模式下直接静态呈现。</summary>
+    private void PlayEntrance()
+    {
+        if (!UiMotion.Enabled) return;
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        Shell.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(150))
+        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+        var grow = new DoubleAnimation(0.985, 1, TimeSpan.FromMilliseconds(190)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop };
+        ShellScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, grow);
+        ShellScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, grow);
+        ShellOffset.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty,
+            new DoubleAnimation(10, 0, TimeSpan.FromMilliseconds(190)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
+    }
+
+    private void Header_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left) return;
+        try { DragMove(); } catch (InvalidOperationException) { /* 鼠标已释放，忽略 */ }
     }
 
     private void Refresh()

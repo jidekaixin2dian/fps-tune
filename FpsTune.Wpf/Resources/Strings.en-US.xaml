@@ -13,9 +13,10 @@
     <s:String x:Key="Str.NavQuickOpt">One-click Optimize</s:String>
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
     <s:String x:Key="Str.NavFilters">Game filters</s:String>
-    <s:String x:Key="Str.FilterPageIntro">Pick a filter, compare it on an in-game screenshot, fine-tune, then apply. The preset library below ships 43 built-in ICC presets; per-app filters follow the foreground process.</s:String>
-    <s:String x:Key="Str.FilterLibraryTitle">Filter preset library</s:String>
-    <s:String x:Key="Str.FilterLibraryHint">43 built-in ICC presets grouped by scene. Use the editor below to make your own, or bind different filters to different apps.</s:String>
+    <s:String x:Key="Str.FilterPageIntro">Pick a filter, compare it on an in-game screenshot, fine-tune, then apply. Every filter lives in one categorized list; per-app filters follow the foreground process.</s:String>
+    <s:String x:Key="Str.FilterLibraryTitle">Filters</s:String>
+    <s:String x:Key="Str.FilterLibraryHint">Built-in .icc files and generated filters sit in one list, grouped into gentle, de-exposure, brightening, color, game and dark-scene sets; selecting one updates the screenshot preview below.</s:String>
+    <s:String x:Key="Str.FilterRuleGenerated">This is a built-in generated filter and cannot be bound to an app; pick an .icc preset instead.</s:String>
     <s:String x:Key="Str.CommandAliasFilters">filter ICC color per-app game filter</s:String>    <s:String x:Key="Str.NavSession">Sessions</s:String>
     <s:String x:Key="Str.NavAb">A/B Test</s:String>
     <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>

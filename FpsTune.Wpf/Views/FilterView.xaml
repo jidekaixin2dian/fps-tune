@@ -12,7 +12,7 @@
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
-                <!-- 目标显示器：下面的画面色彩与滤镜都应用到这台显示器 -->
+                <!-- 目标显示器：下面的滤镜与画面色彩都应用到这台显示器 -->
                 <Border x:Name="CardDisplayTarget" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.DisplayTarget}" Style="{StaticResource CardTitleStyle}"/>
@@ -26,7 +26,16 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 画面与色彩：选滤镜 → 微调 → 应用；下方是游戏内实机截图对比预览 -->
+                <!-- 滤镜：全部滤镜统一在这里选，按场景分类；选中即套到下面的实机截图预览 -->
+                <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.FilterLibraryTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.FilterLibraryHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                        <views:FilterCenterPanel x:Name="FilterCenter" Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 画面与色彩：屏幕色彩与振动在这里微调，下方是游戏内实机截图对比 -->
                 <Border x:Name="CardVib" MaxWidth="1560" HorizontalAlignment="Stretch" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
                     <StackPanel>
                         <views:ScreenColorPanel x:Name="ColorPanel"/>
@@ -114,41 +123,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 滤镜预设库：43 个内置 ICC 预设 + 自定义 ICC + 独立程序滤镜 -->
-                <Border Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
-                    <StackPanel>
-                        <TextBlock Text="{DynamicResource Str.FilterLibraryTitle}" Style="{StaticResource CardTitleStyle}"/>
-                        <TextBlock Text="{DynamicResource Str.FilterLibraryHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                        <views:FilterCenterPanel x:Name="FilterCenter" Margin="0,12,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12"><StackPanel>
-                    <TextBlock Text="{DynamicResource Str.CrosshairTitle}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock Text="{DynamicResource Str.CrosshairHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                    <CheckBox x:Name="CrosshairCheck" Content="{DynamicResource Str.CrosshairToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,10,0,0" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
-                    <WrapPanel Margin="0,10,0,0">
-                        <StackPanel Margin="0,0,16,8"><TextBlock Text="{DynamicResource Str.CrosshairStyleLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <ComboBox x:Name="CrosshairStyleBox" MinWidth="110" AutomationProperties.Name="{DynamicResource Str.CrosshairStyleLabel}" SelectionChanged="Crosshair_Changed">
-                                <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCross}" Tag="cross"/>
-                                <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleDot}" Tag="dot"/>
-                                <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCrossDot}" Tag="crossdot"/>
-                                <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCircle}" Tag="circle"/>
-                            </ComboBox></StackPanel>
-                        <StackPanel Margin="0,0,16,8"><TextBlock Text="{DynamicResource Str.CrosshairColorLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="CrosshairColorBox" MinWidth="90" Style="{StaticResource InputTextBoxStyle}" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" LostFocus="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,16,8"><TextBlock Text="{DynamicResource Str.CrosshairSizeLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairSizeSlider" MinWidth="120" Minimum="4" Maximum="48" Value="12" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairSizeLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,16,8"><TextBlock Text="{DynamicResource Str.CrosshairGapLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairGapSlider" MinWidth="120" Minimum="0" Maximum="30" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairGapLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,16,8"><TextBlock Text="{DynamicResource Str.CrosshairThicknessLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairThicknessSlider" MinWidth="120" Minimum="1" Maximum="10" Value="2" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairThicknessLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,16,8"><TextBlock Text="{DynamicResource Str.CrosshairOpacityLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairOpacitySlider" MinWidth="120" Minimum="10" Maximum="100" Value="90" TickFrequency="5" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairOpacityLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                    </WrapPanel>
-                    <CheckBox x:Name="CrosshairAdaptiveCheck" Content="{DynamicResource Str.CrosshairAdaptiveToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,4,0,0" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
-                    <TextBlock Text="{DynamicResource Str.CrosshairAdaptiveHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                </StackPanel></Border>
                 <Border Style="{StaticResource CardStyle}"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>

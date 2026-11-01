@@ -18,6 +18,7 @@ public sealed class WorkspaceCommands
             ("quick", "Str.NavQuickOpt", "Str.QuickOptTitle"),
             ("opt", "Str.NavOpt", "Str.CommandAliasOptimize"), ("display", "Str.NavDisplay", "Str.CommandAliasDisplay"),
             ("filters", "Str.NavFilters", "Str.CommandAliasFilters"),
+            ("crosshair", "Str.CrosshairTitle", "crosshair overlay reticle"),
             ("session", "Str.NavSession", "Str.CommandAliasSession"), ("ab", "Str.NavAb", "Str.CommandAliasExperiment"),
             ("backup", "Str.NavBackup", "Str.CommandAliasBackup"), ("tools", "Str.NavTools", "Str.CommandAliasTools"),
             ("settings", "Str.NavSettings", "Str.CommandAliasSettings") })
