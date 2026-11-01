@@ -14,6 +14,7 @@
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
     <s:String x:Key="Str.NavFilters">Game filters</s:String>
     <s:String x:Key="Str.FilterPageIntro">Pick a filter, compare it on an in-game screenshot, fine-tune, then apply. Every filter lives in one categorized list; per-app filters follow the foreground process.</s:String>
+    <s:String x:Key="Str.FilterSearchHint">Search by filter name or use case</s:String>
     <s:String x:Key="Str.SensNav">Sensitivity</s:String>
     <s:String x:Key="Str.SensTitle">Sensitivity to cm/360</s:String>
     <s:String x:Key="Str.SensHint">Enter your DPI and in-game sensitivity to see how far you move for a full turn; the equivalent value keeps the feel when switching games.</s:String>

@@ -154,13 +154,23 @@ public partial class FilterCenterPanel : UserControl
     }
 
     /// <summary>按当前分类渲染滤镜卡片。</summary>
+    private void Search_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (_rendering || PresetList is null) return;
+        RenderPresetList();
+    }
+
     private void RenderPresetList()
     {
         PresetList.Children.Clear();
         _rendering = true;
         try
         {
-            foreach (var choice in _choices.Where(c => _category == "all" || c.Category == _category))
+            var keyword = (SearchBox?.Text ?? "").Trim();
+            foreach (var choice in _choices.Where(c => _category == "all" || c.Category == _category)
+                         .Where(c => keyword.Length == 0
+                             || c.Name.Contains(keyword, StringComparison.CurrentCultureIgnoreCase)
+                             || c.Fit.Contains(keyword, StringComparison.CurrentCultureIgnoreCase)))
             {
                 var radio = new RadioButton
                 {
