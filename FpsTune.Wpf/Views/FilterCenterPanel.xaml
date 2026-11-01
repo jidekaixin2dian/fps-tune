@@ -6,9 +6,17 @@
         <Style x:Key="PresetCardStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
             <Setter Property="Margin" Value="0,0,8,8"/>
         </Style>
+        <!-- 没有内容就收起来：这三行在未选中预设时是空的，留着会撑出一大块空白 -->
+        <Style x:Key="CollapseWhenEmpty" TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
+            <Style.Triggers>
+                <Trigger Property="Text" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <Grid Margin="0,0,14,0">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
             <!-- 搜索：预设多起来以后按名字/适用场景直接找，不用一屏屏翻。
                  占位文字叠在输入框内部、有输入即隐藏（与优化页搜索框同一写法）。 -->
@@ -37,9 +45,9 @@
         </StackPanel>
         <!-- 不再套内层 ScrollViewer：嵌套滚动区会吞掉滚轮，整页只能滚一半（用户两次反馈）。 -->
             <StackPanel Grid.Row="1" Margin="0,10,0,0">
-                <TextBlock x:Name="PresetFitText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                <TextBlock x:Name="PresetAvoidText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                <TextBlock x:Name="ApplyStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                <TextBlock x:Name="PresetFitText" Style="{StaticResource CollapseWhenEmpty}" TextWrapping="Wrap"/>
+                <TextBlock x:Name="PresetAvoidText" Style="{StaticResource CollapseWhenEmpty}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                <TextBlock x:Name="ApplyStatus" Style="{StaticResource CollapseWhenEmpty}" TextWrapping="Wrap" Margin="0,10,0,0"/>
                 <WrapPanel Margin="0,10,0,0">
                     <Button x:Name="ApplyButton" Content="{DynamicResource Str.FilterApply}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8" Click="Apply_Click"/>
                     <Button x:Name="RestoreButton" Content="{DynamicResource Str.RestoreOriginal}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8" Click="Restore_Click"/>
