@@ -7,7 +7,9 @@ namespace FpsTune.Wpf.Views;
 
 public partial class FilterView : UserControl
 {
-    private bool _crosshairLoaded;
+    // InitializeComponent 期间（元素属性赋值时）事件即会触发，此时后续命名字段尚未 Connect；
+    // 只允许 OnInitialized 全部完成后响应真实交互，避免半初始化状态触达 catch 回滚分支。
+    private bool _crosshairReady;
     private bool _suppressCrosshair;
     public FilterView() { InitializeComponent(); }
     protected override void OnInitialized(EventArgs e)
@@ -17,19 +19,18 @@ public partial class FilterView : UserControl
         CrosshairStyleBox.SelectedIndex = Array.IndexOf(
             new[] { "cross", "dot", "crossdot", "circle" },
             CrosshairConfig.NormalizeStyle(settings.CrosshairStyle)) is >= 0 and var idx and not int.MaxValue ? idx : 0;
-        _crosshairLoaded = true;
         CrosshairCheck.IsChecked = settings.CrosshairEnabled;
         CrosshairAdaptiveCheck.IsChecked = settings.CrosshairAdaptiveHide;
-        _crosshairLoaded = false;
         CrosshairColorBox.Text = CrosshairConfig.NormalizeColor(settings.CrosshairColor);
         CrosshairSizeSlider.Value = Math.Clamp(settings.CrosshairSize, 4, 48);
         CrosshairGapSlider.Value = Math.Clamp(settings.CrosshairGap, 0, 30);
         CrosshairThicknessSlider.Value = Math.Clamp(settings.CrosshairThickness, 1, 10);
         CrosshairOpacitySlider.Value = Math.Clamp(settings.CrosshairOpacity, 10, 100);
+        _crosshairReady = true;
     }
     private void Crosshair_Changed(object sender, RoutedEventArgs e)
     {
-        if (_suppressCrosshair || _crosshairLoaded || CrosshairCheck.IsChecked is null) return;
+        if (!_crosshairReady || _suppressCrosshair) return;
         var settings = SettingsService.Current;
         var backup = CrosshairConfig.FromSettings();
         try
