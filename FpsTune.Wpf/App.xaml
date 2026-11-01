@@ -724,6 +724,9 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Padding" Value="10,7"/>
+                <!-- 与 SelectComboBoxStyle 的 30px 同高：输入框和下拉框并排时不会一高一矮 -->
+                <Setter Property="MinHeight" Value="30"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="Template">

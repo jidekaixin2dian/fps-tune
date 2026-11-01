@@ -14,6 +14,10 @@
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
     <s:String x:Key="Str.NavFilters">游戏滤镜</s:String>
     <s:String x:Key="Str.FilterPageIntro">选滤镜、看游戏内实机截图对比、微调后一键应用；所有滤镜按场景分在同一张列表里，独立程序滤镜按前台进程自动切换。</s:String>
+    <s:String x:Key="Str.QuickOptResolutionLabel">分辨率（可选）</s:String>
+    <s:String x:Key="Str.QuickOptResolutionFollow">跟随当前分辨率</s:String>
+    <s:String x:Key="Str.QuickOptResolutionUnavailable">没有取到显示器信息，无法改分辨率。</s:String>
+    <s:String x:Key="Str.QuickOptResolutionDoneFmt">已切换到 {0}</s:String>
     <s:String x:Key="Str.FilterSearchHint">搜索滤镜名称或适用场景</s:String>
     <s:String x:Key="Str.SensNav">灵敏度换算</s:String>
     <s:String x:Key="Str.SensTitle">灵敏度换算（cm/360）</s:String>

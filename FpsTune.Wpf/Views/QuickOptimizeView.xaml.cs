@@ -51,6 +51,9 @@ public partial class QuickOptimizeView : UserControl
             DlssBox.Items.Add(new ComboPreset<DlssPreset>(Str.T(key), preset));
         DlssBox.SelectedIndex = 0;
 
+        // 分辨率下拉（可选）：跟随当前 + 该屏可用模式（按宽×高归组取最高刷新率）
+        await LoadResolutionsAsync();
+
         // 滤镜场景下拉（可选）：不套滤镜 + 内置 .icc 预设 + 生成式预设（白天/鲜艳等，与滤镜页同一套枚举）
         FilterBox.Items.Add(Str.T("Str.QuickOptFilterNone"));
         try
@@ -92,6 +95,52 @@ public partial class QuickOptimizeView : UserControl
 
     private void GameBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         => _game = GameBox.SelectedItem as StateStore.GameProfile;
+
+    /// <summary>下拉项：null 表示跟随当前分辨率，否则是某个显示模式。</summary>
+    private sealed record ResolutionChoice(string Label, int Width, int Height, int Hz)
+    {
+        public override string ToString() => Label;
+    }
+
+    private string? _resolutionIdentity;
+
+    private async Task LoadResolutionsAsync()
+    {
+        try
+        {
+            var (identity, modes) = await Task.Run<(string? Identity, IReadOnlyList<DisplayMode> Modes)>(() =>
+            {
+                var display = DisplayTopology.GetDisplays().FirstOrDefault();
+                if (display is null) return (null, []);
+                var key = DisplayTopology.Identity(display);
+                return (key, ResolutionService.Read(key).Modes);
+            });
+            if (!_loaded || ResolutionBox is null) return;
+            _resolutionIdentity = identity;
+            ResolutionBox.Items.Add(new ResolutionChoice(Str.T("Str.QuickOptResolutionFollow"), 0, 0, 0));
+            foreach (var mode in modes
+                         .GroupBy(m => (m.Width, m.Height))
+                         .Select(g => g.OrderByDescending(m => m.Hz).First())
+                         .OrderByDescending(m => m.Width).ThenByDescending(m => m.Height))
+                ResolutionBox.Items.Add(new ResolutionChoice($"{mode.Width}×{mode.Height} @ {mode.Hz}Hz", mode.Width, mode.Height, mode.Hz));
+            ResolutionBox.SelectedIndex = 0;
+        }
+        catch (Exception ex)
+        {
+            RunStatus.Text = PrivacyScrub.Sanitize(ex.Message);
+        }
+    }
+
+    /// <summary>应用选中的分辨率：走分辨率页同一套试用+确认契约（失败会自动回滚）。</summary>
+    private async Task<string?> ApplyResolutionAsync()
+    {
+        if (ResolutionBox?.SelectedItem is not ResolutionChoice { Width: > 0 } choice) return null;
+        if (_resolutionIdentity is not { } identity) throw new InvalidOperationException(Str.T("Str.QuickOptResolutionUnavailable"));
+        var plan = await Task.Run(() => ResolutionService.Plan(identity, choice.Width, choice.Height, choice.Hz, null));
+        var token = await Task.Run(() => ResolutionService.Begin(identity, plan));
+        await Task.Run(() => ResolutionService.Confirm(identity, token));
+        return choice.Label;
+    }
 
     private void Plan_Checked(object sender, RoutedEventArgs e) { /* 选中态由 Tag 读取 */ }
 
@@ -136,6 +185,22 @@ public partial class QuickOptimizeView : UserControl
                 catch (Exception ex)
                 {
                     rows.Add(new ResultRow(Str.T("Str.QuickOptDlssLabel") + "：" + dlss.Label, false,
+                        Str.T("Str.ResultFailed"), PrivacyScrub.Sanitize(ex.Message)));
+                }
+            }
+
+            // 可选分辨率：走分辨率页同一套试用+确认契约，切换失败会自动回滚
+            if (ResolutionBox.SelectedItem is ResolutionChoice { Width: > 0 } resolution)
+            {
+                try
+                {
+                    var applied = await ApplyResolutionAsync();
+                    rows.Add(new ResultRow(Str.T("Str.QuickOptResolutionLabel") + "：" + applied, true,
+                        Str.T("Str.ResultOk"), Str.T("Str.QuickOptResolutionDoneFmt", applied)));
+                }
+                catch (Exception ex)
+                {
+                    rows.Add(new ResultRow(Str.T("Str.QuickOptResolutionLabel") + "：" + resolution.Label, false,
                         Str.T("Str.ResultFailed"), PrivacyScrub.Sanitize(ex.Message)));
                 }
             }

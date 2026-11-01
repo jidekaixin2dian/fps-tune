@@ -21,7 +21,7 @@
                                 <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCircle}" Tag="circle"/>
                             </ComboBox></StackPanel>
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairColorLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="CrosshairColorBox" MinWidth="110" Style="{StaticResource InputTextBoxStyle}" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" LostFocus="Crosshair_Changed"/></StackPanel>
+                            <TextBox x:Name="CrosshairColorBox" MinWidth="110" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" LostFocus="Crosshair_Changed"/></StackPanel>
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairSizeLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
                             <Slider x:Name="CrosshairSizeSlider" MinWidth="140" Minimum="4" Maximum="48" Value="12" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairSizeLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairGapLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>

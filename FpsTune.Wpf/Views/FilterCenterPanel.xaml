@@ -10,10 +10,26 @@
     <Grid Margin="0,0,14,0">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <StackPanel Grid.Row="0">
-            <!-- 搜索：预设多起来以后按名字/适用场景直接找，不用一屏屏翻 -->
-            <TextBox x:Name="SearchBox" Style="{StaticResource InputTextBoxStyle}" Margin="0,0,0,8" MaxWidth="320" HorizontalAlignment="Left"
-                     VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterSearchHint}"
-                     TextChanged="Search_Changed" Tag="{DynamicResource Str.FilterSearchHint}"/>
+            <!-- 搜索：预设多起来以后按名字/适用场景直接找，不用一屏屏翻。
+                 占位文字叠在输入框内部、有输入即隐藏（与优化页搜索框同一写法）。 -->
+            <Grid Width="300" Height="32" HorizontalAlignment="Left" Margin="0,0,0,8">
+                <TextBox x:Name="SearchBox" Style="{StaticResource InputTextBoxStyle}"
+                         VerticalContentAlignment="Center" FontSize="13"
+                         TextChanged="Search_Changed" AutomationProperties.Name="{DynamicResource Str.FilterSearchHint}"/>
+                <TextBlock Text="{DynamicResource Str.FilterSearchHint}" IsHitTestVisible="False"
+                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="11,0,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
             <!-- 分类 chips（全部 + 按场景分组）。预设列表不套内层 ScrollViewer：
                  内层可滚动区域会吞掉鼠标滚轮，页面滚到这一块就卡住。 -->
             <WrapPanel x:Name="CategoryList" Margin="0,0,0,6"/>

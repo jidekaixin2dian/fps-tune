@@ -14,6 +14,10 @@
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
     <s:String x:Key="Str.NavFilters">Game filters</s:String>
     <s:String x:Key="Str.FilterPageIntro">Pick a filter, compare it on an in-game screenshot, fine-tune, then apply. Every filter lives in one categorized list; per-app filters follow the foreground process.</s:String>
+    <s:String x:Key="Str.QuickOptResolutionLabel">Resolution (optional)</s:String>
+    <s:String x:Key="Str.QuickOptResolutionFollow">Keep current resolution</s:String>
+    <s:String x:Key="Str.QuickOptResolutionUnavailable">No display information is available, so the resolution cannot be changed.</s:String>
+    <s:String x:Key="Str.QuickOptResolutionDoneFmt">Switched to {0}</s:String>
     <s:String x:Key="Str.FilterSearchHint">Search by filter name or use case</s:String>
     <s:String x:Key="Str.SensNav">Sensitivity</s:String>
     <s:String x:Key="Str.SensTitle">Sensitivity to cm/360</s:String>
