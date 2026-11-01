@@ -26,7 +26,7 @@ public partial class MaintenanceView : UserControl
     private void Section_Checked(object sender, RoutedEventArgs e)
     {
         if (StorageSection is null || sender is not RadioButton { Tag: string tag }) return;
-        FrameworkElement[] sections = [StorageSection, ProcessesSection, TroubleshootSection, AudioSection, NetworkSection];
+        FrameworkElement[] sections = [StorageSection, ProcessesSection, TroubleshootSection, AudioSection, NetworkSection, SensitivitySection];
         for (var i = 0; i < sections.Length; i++)
             sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
         if (tag == "4" && NetworkSection.Content is null) NetworkSection.Content = new NetworkToolsPanel();

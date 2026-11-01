@@ -204,6 +204,8 @@ public partial class MainWindow : Window
                 UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
         };
         Loaded += (_, _) => { if (UserDataPaths.RootOverride is null) _ = CheckStartupUpdateAsync(); };
+        // 全局滚轮穿透：滑块/下拉框不再吞掉滚轮，页面能一路滚到底（各页面都受益）。
+        Views.Controls.WheelPassthrough.Attach(this);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)

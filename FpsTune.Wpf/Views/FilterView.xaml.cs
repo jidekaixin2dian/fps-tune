@@ -130,8 +130,31 @@ public partial class FilterView : UserControl
         dialog.ShowDialog();
     }
 
-    /// <summary>命令面板跳「画面与色彩」时直接把该卡滚到视口。</summary>
-    internal void RevealColor() => CardVib.BringIntoView();
+    /// <summary>命令面板跳「画面与色彩」时先切到对应分类页签，再滚到该卡。</summary>
+    internal void RevealColor()
+    {
+        if (TabColor is not null) TabColor.IsChecked = true;
+        ApplySection(SectionKind.Color);
+        CardVib.BringIntoView();
+    }
+
+    /// <summary>分类页签：一次只显示一组，避免整页几屏长（用户反馈内容太多、滚轮难用）。</summary>
+    private enum SectionKind { Library, Color, Automation }
+
+    private void Section_Changed(object sender, RoutedEventArgs e)
+    {
+        if (SectionLibrary is null) return;   // InitializeComponent 期间 IsChecked=True 会先触发一次
+        ApplySection(sender == TabColor ? SectionKind.Color
+            : sender == TabAutomation ? SectionKind.Automation
+            : SectionKind.Library);
+    }
+
+    private void ApplySection(SectionKind section)
+    {
+        SectionLibrary.Visibility = section == SectionKind.Library ? Visibility.Visible : Visibility.Collapsed;
+        SectionColor.Visibility = section == SectionKind.Color ? Visibility.Visible : Visibility.Collapsed;
+        SectionAutomation.Visibility = section == SectionKind.Automation ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     // ---------- 目标显示器 ----------
 
