@@ -320,6 +320,92 @@ public sealed class GameAutomationTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task Filter_library_rule_store_and_watcher_follow_foreground()
+    {
+        // 库：内置资产可读、元数据带说明
+        var presets = GameFilterLibrary.Presets;
+        Assert.True(presets.Count > 30, $"presets={presets.Count}");
+        Assert.All(presets, p => Assert.EndsWith(".icc", p.FileName, StringComparison.OrdinalIgnoreCase));
+        var bytes = GameFilterLibrary.ReadPreset(presets[0].FileName);
+        Assert.Equal("acsp", System.Text.Encoding.ASCII.GetString(bytes, 36, 4)); // ICC 签名在 36 偏移
+        // 规则表：保存/匹配/上限
+        IccAppRuleStore.Save([new FilterAppRule("cs2", presets[0].FileName), new FilterAppRule("cs2", presets[1].FileName)]);
+        Assert.Equal(presets[0].FileName, Assert.Single(IccAppRuleStore.Rules).PresetFileName);
+        Assert.NotNull(IccAppRuleStore.Match("CS2.EXE"));
+        Assert.Null(IccAppRuleStore.Match("other.exe"));
+        // 守护：前台命中 → 应用；离开 → 还原
+        var applied = new List<string?>(); var restores = 0;
+        ForegroundFilterWatcher.ApplyOverride = _ => { applied.Add("apply"); return true; };
+        ForegroundFilterWatcher.RestoreOverride = () => { restores++; return true; };
+        ForegroundFilterWatcher.ForegroundProcessOverride = () => "cs2";
+        ForegroundFilterWatcher.DisplayOverride = () => "DISPLAY1";
+        var settings = SettingsService.Current;
+        var oldWatcher = settings.FilterWatcherEnabled;
+        settings.FilterWatcherEnabled = true;
+        try
+        {
+            using var watcher = new ForegroundFilterWatcher();
+            watcher.Poll();
+            Assert.True(watcher.Status.ActivePreset is not null);
+            ForegroundFilterWatcher.ForegroundProcessOverride = () => "explorer";
+            watcher.Poll();
+            Assert.Null(watcher.Status.ActivePreset);
+            Assert.Equal(1, restores);
+        }
+        finally
+        {
+            settings.FilterWatcherEnabled = oldWatcher;
+            SettingsService.Save(settings);
+            ForegroundFilterWatcher.ApplyOverride = null;
+            ForegroundFilterWatcher.RestoreOverride = null;
+            ForegroundFilterWatcher.ForegroundProcessOverride = null;
+            ForegroundFilterWatcher.DisplayOverride = null;
+        }
+    }
+
+    [Fact]
+    public async Task Delta_frame_fix_renames_pso_and_saved_as_reversible_backups()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "fps-tune-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "Saved", "PSOCache"));
+        Directory.CreateDirectory(Path.Combine(root, "Saved", "Settings"));
+        File.WriteAllText(Path.Combine(root, "Saved", "Settings", "user.cfg"), "graphics");
+        File.WriteAllText(Path.Combine(root, "DeltaForceClient-Win64-Shipping.exe"), "stub");
+        var gameExe = Path.Combine(root, "DeltaForceClient-Win64-Shipping.exe");
+        var fakeDx = Path.Combine(root, "DxCache");
+        Directory.CreateDirectory(fakeDx);
+        File.WriteAllText(Path.Combine(fakeDx, "shader.bin"), "stub");
+        DeltaFrameFixService.DxCacheDirOverride = fakeDx;
+        try
+        {
+            var scan = DeltaFrameFixService.Scan(gameExe);
+            Assert.True(scan.GameFound);
+            Assert.Equal(root, scan.GameDir);
+            var pso = DeltaFrameFixService.FixPsoCache(gameExe);
+            Assert.True(pso.Succeeded);
+            Assert.False(Directory.Exists(Path.Combine(root, "Saved", "PSOCache")));
+            var renamed = Directory.GetDirectories(Path.Combine(root, "Saved"), "PSOCache.bak-*");
+            Assert.Single(renamed);
+            // 7.31：Saved 改名 + DXCache（无目录则跳过）
+            var steps = DeltaFrameFixService.FixLegacy(gameExe);
+            Assert.All(steps, s => Assert.True(s.Succeeded, s.Detail));
+            Assert.False(Directory.Exists(Path.Combine(root, "Saved")));
+            Assert.False(Directory.Exists(fakeDx)); // DXCache 已改名
+            var savedBak = Directory.GetDirectories(root, "Saved.bak-*");
+            Assert.Single(savedBak);
+            // 可逆：改回原名即恢复
+            Directory.Move(savedBak[0], Path.Combine(root, "Saved"));
+            Assert.True(File.Exists(Path.Combine(root, "Saved", "Settings", "user.cfg")));
+        }
+        finally
+        {
+            DeltaFrameFixService.DxCacheDirOverride = null;
+            try { Directory.Delete(root, recursive: true); } catch { /* 清理失败可忽略 */ }
+        }
+        await Task.CompletedTask;
+    }
+
     private sealed class FakeModeApi(int currentHz) : IDisplayModeApi
     {
         public int CurrentHz { get; set; } = currentHz;

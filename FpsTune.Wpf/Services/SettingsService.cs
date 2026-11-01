@@ -52,6 +52,8 @@ public sealed class AppSettings
     public bool AutoRefreshBoostEnabled { get; set; }
     // 游戏时后台应用让路：按用户在维护页挑选的后台应用清单，隔离到效率核并降优先级。
     public bool AutoAffinityIsolateEnabled { get; set; }
+    // 独立程序滤镜守护（opt-in，默认关闭）：前台进程命中规则时切滤镜 ICC。
+    public bool FilterWatcherEnabled { get; set; }
 
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||

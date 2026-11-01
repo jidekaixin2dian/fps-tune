@@ -12,6 +12,7 @@
             <RadioButton x:Name="ConfigTab" GroupName="tuning" Content="{DynamicResource Str.TuningConfigTab}" Style="{StaticResource ChoiceTabStyle}" IsChecked="True" Checked="Tab_Changed" Margin="0,0,8,0"/>
             <RadioButton x:Name="DriverTab" GroupName="tuning" Content="{DynamicResource Str.TuningDriverTab}" Style="{StaticResource ChoiceTabStyle}" Checked="Tab_Changed" Margin="0,0,8,0"/>
             <RadioButton x:Name="Cs2Tab" GroupName="tuning" Content="{DynamicResource Str.TuningCs2Tab}" Style="{StaticResource ChoiceTabStyle}" Checked="Tab_Changed"/>
+            <RadioButton x:Name="FrameFixTab" GroupName="tuning" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource ChoiceTabStyle}" Checked="Tab_Changed"/>
         </WrapPanel>
         <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><Grid Margin="0,0,8,0">
             <StackPanel x:Name="ConfigPanel">
@@ -66,6 +67,13 @@
                 <TextBlock x:Name="CommandStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
             </StackPanel></Border>
         </Grid></ScrollViewer>
+        <StackPanel x:Name="FrameFixPanel" Visibility="Collapsed" Grid.Row="2">
+            <Border Style="{StaticResource CardStyle}"><StackPanel>
+                <TextBlock Text="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.DeltaFixIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                <Button Content="{DynamicResource Str.DeltaFixOpen}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OpenFrameFix_Click"/>
+            </StackPanel></Border>
+        </StackPanel>
         <DockPanel Grid.Row="3" Margin="0,18,0,0"><Button DockPanel.Dock="Right" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Click="Close_Click"/>
             <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,20,0" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/></DockPanel>
     </Grid></Border>

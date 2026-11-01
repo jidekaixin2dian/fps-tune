@@ -126,7 +126,14 @@ public partial class GameTuningWindow : Window
         ConfigPanel.Visibility = ConfigTab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         DriverPanel.Visibility = DriverTab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         CommandPanel.Visibility = Cs2Tab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        FrameFixPanel.Visibility = FrameFixTab.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         ContentScroll.ScrollToHome();
+    }
+    private void OpenFrameFix_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new DeltaFrameFixWindow { Owner = this };
+        DialogService.PrepareWindowForTest?.Invoke(dialog);
+        dialog.ShowDialog();
     }
     private void Command_Changed(object sender, TextChangedEventArgs e) { if (CommandPreview is not null) UpdateCommand(); }
     private void UpdateCommand()

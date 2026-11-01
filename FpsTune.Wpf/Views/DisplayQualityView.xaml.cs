@@ -287,7 +287,7 @@ public partial class DisplayQualityView : UserControl
     private void SubTab_Checked(object sender, RoutedEventArgs e)
     {
         // InitializeComponent 期间首个页签的 Checked 会提前触发，此时后面的卡片还没解析出来
-        if (CardDlss is null || CardAdvice is null)
+        if (CardDlss is null || CardAdvice is null || CardFilters is null)
             return;
         if (sender is not RadioButton { Tag: string key })
             return;
@@ -297,6 +297,7 @@ public partial class DisplayQualityView : UserControl
         CardVib.Visibility = key == "vibicc" ? Visibility.Visible : Visibility.Collapsed;
         CardDisplayTarget.Visibility = CardVib.Visibility;
         CardDrs.Visibility = key == "drs" ? Visibility.Visible : Visibility.Collapsed;
+        CardFilters.Visibility = key == "filters" ? Visibility.Visible : Visibility.Collapsed;
         CardAdvice.Visibility = key == "advice" ? Visibility.Visible : Visibility.Collapsed;
         CardGpuIdentity.Visibility = key == "identity" ? Visibility.Visible : Visibility.Collapsed;
         if (key == "advice") _ = RefreshDriverAdviceAsync();
