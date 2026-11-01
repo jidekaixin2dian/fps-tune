@@ -406,6 +406,37 @@ public sealed class GameAutomationTests : IDisposable
         await Task.CompletedTask;
     }
 
+    [Fact]
+    public void Crosshair_config_normalizes_and_adaptive_hide()
+    {
+        Assert.Equal("cross", CrosshairConfig.NormalizeStyle("CROSS"));
+        Assert.Equal("cross", CrosshairConfig.NormalizeStyle("bogus"));
+        Assert.Equal("dot", CrosshairConfig.NormalizeStyle("dot"));
+        Assert.Equal("#00FF66", CrosshairConfig.NormalizeColor("00ff66"));
+        Assert.Equal("#00FF66", CrosshairConfig.NormalizeColor("nope"));
+        Assert.Equal("#1A2B3C", CrosshairConfig.NormalizeColor("#1a2b3c"));
+
+        var config = new CrosshairConfig(true, "cross", "#00FF66", 12, 4, 2, 90, AdaptiveHide: true);
+        Assert.True(config.ShouldHide(rightButtonHeld: true, selfForeground: false));  // AW 据枪隐藏
+        Assert.False(config.ShouldHide(rightButtonHeld: false, selfForeground: false));
+        Assert.True(config.ShouldHide(rightButtonHeld: false, selfForeground: true)); // 自家前台隐藏
+        var nonAdaptive = config with { AdaptiveHide = false };
+        Assert.False(nonAdaptive.ShouldHide(rightButtonHeld: true, selfForeground: false));
+    }
+
+    [Fact]
+    public async Task Crosshair_input_state_reads_right_button_with_injection()
+    {
+        NativeInputState.RightButtonOverride = () => true;
+        Assert.True(NativeInputState.RightButtonHeld());
+        NativeInputState.RightButtonOverride = () => false;
+        Assert.False(NativeInputState.RightButtonHeld());
+        NativeInputState.RightButtonOverride = null;
+        // 真实 API 冒烟：不抛异常即可（值取决于物理按键状态）
+        _ = NativeInputState.RightButtonHeld();
+        await Task.CompletedTask;
+    }
+
     private sealed class FakeModeApi(int currentHz) : IDisplayModeApi
     {
         public int CurrentHz { get; set; } = currentHz;

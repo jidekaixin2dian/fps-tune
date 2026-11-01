@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
+using FpsTune.Wpf.Views;
 using System.Windows.Threading;
 
 namespace FpsTune.Wpf;
@@ -13,14 +14,35 @@ public partial class App : Application
     private GameTimerResolutionService? _gameTimer;
     private GameSessionAutomationService? _sessionAutomation;
     private ForegroundFilterWatcher? _filterWatcher;
+
     internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
     internal static AutoRecordingService? AutomaticRecording { get; private set; }
     internal static GameTimerResolutionService? GameTimer => Current is App app ? app._gameTimer : null;
     internal static GameSessionAutomationService? SessionAutomation => Current is App app ? app._sessionAutomation : null;
     internal static ForegroundFilterWatcher? FilterWatcher => Current is App app ? app._filterWatcher : null;
+    private static CrosshairOverlayWindow? _crosshair;
+    internal static CrosshairOverlayWindow? CrosshairOverlay => _crosshair;
     private static PerformanceHudService? _hud;
     internal static PerformanceHudService Hud => _hud ??= new();
     internal static void CloseHud() => _hud?.Close();
+
+    /// <summary>外置准星：按设置创建/显示/更新/关闭（幂等）。</summary>
+    internal static void ApplyCrosshairSettings()
+    {
+        var config = CrosshairConfig.FromSettings();
+        if (config.Enabled)
+        {
+            _crosshair ??= new CrosshairOverlayWindow();
+            _crosshair.ApplyConfig(config);
+            _crosshair.StartPolling();
+            if (!_crosshair.IsVisible) _crosshair.Show();
+        }
+        else
+        {
+            _crosshair?.Close();
+            _crosshair = null;
+        }
+    }
     private static MetricsSampler? _liveMetrics;
     public static MetricsSampler LiveMetrics => _liveMetrics ??= new(
         TimeSpan.FromSeconds(UiPerformance.LowSpec ? 3 : 1), 120);
@@ -143,6 +165,7 @@ public partial class App : Application
             _sessionAutomation.Start();
             _filterWatcher = new ForegroundFilterWatcher();
             _filterWatcher.Start();
+            ApplyCrosshairSettings();
             MemoryAutomation = new MemoryAutoCleanupService();
             MemoryAutomation.Start();
             AutomaticRecording = new AutoRecordingService(SessionService);
@@ -157,6 +180,7 @@ public partial class App : Application
         _gameTimer?.Dispose();
         _sessionAutomation?.Dispose();
         _filterWatcher?.Dispose();
+        _crosshair?.Close();
         CloseHud();
         _liveMetrics?.Dispose();
         SessionService.Dispose();

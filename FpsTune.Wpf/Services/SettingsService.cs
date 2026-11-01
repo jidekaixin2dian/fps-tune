@@ -54,6 +54,15 @@ public sealed class AppSettings
     public bool AutoAffinityIsolateEnabled { get; set; }
     // 独立程序滤镜守护（opt-in，默认关闭）：前台进程命中规则时切滤镜 ICC。
     public bool FilterWatcherEnabled { get; set; }
+    // 外置准星（opt-in，默认关闭）：覆盖窗 + AW 战术据枪（按住右键隐藏）。
+    public bool CrosshairEnabled { get; set; }
+    public string CrosshairStyle { get; set; } = "cross";
+    public string CrosshairColor { get; set; } = "#00FF66";
+    public double CrosshairSize { get; set; } = 12;
+    public double CrosshairGap { get; set; } = 4;
+    public double CrosshairThickness { get; set; } = 2;
+    public double CrosshairOpacity { get; set; } = 90;
+    public bool CrosshairAdaptiveHide { get; set; } = true;
 
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
