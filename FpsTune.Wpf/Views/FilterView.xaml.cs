@@ -17,6 +17,19 @@ public partial class FilterView : UserControl
     private bool _displaySyncing;
     private bool _vibSyncing;
     private int _refreshGen;
+    private bool _fullscreenSyncing;
+
+    /// <summary>全屏方案的方案下拉条目（文案来自 ScreenColorSettings.TitleFor，与 ICC 预设共用同一套标题）。</summary>
+    private sealed record FullscreenChoice(IccFilterPreset Preset, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    /// <summary>生效方式条目：gamma = 游戏内生效，icc = 仅色彩管理应用。</summary>
+    private sealed record FullscreenChannelChoice(string Key, string Label)
+    {
+        public override string ToString() => Label;
+    }
 
     private sealed record DisplayChoice(string Identity, string Label)
     {
@@ -53,7 +66,15 @@ public partial class FilterView : UserControl
         }).ToList();
         choices.Add(new(null, "Str.IccStandard", "Str.IccStandardDesc"));
         IccPresetList.ItemsSource = choices;
-        Loaded += (_, _) => { Microsoft.Win32.SystemEvents.DisplaySettingsChanged += DisplaysChanged; Refresh(); };
+        FullscreenPresetCombo.ItemsSource = Enum.GetValues<IccFilterPreset>()
+            .Select(preset => new FullscreenChoice(preset, ScreenColorSettings.TitleFor(preset))).ToList();
+        FullscreenChannelCombo.ItemsSource = new List<FullscreenChannelChoice>
+        {
+            new(FullscreenPresetWatcher.ChannelGamma, Str.T("Str.FullscreenChannelGamma")),
+            new(FullscreenPresetWatcher.ChannelIcc, Str.T("Str.FullscreenChannelIcc")),
+        };
+        LoadFullscreenSettings();
+        Loaded += (_, _) => { Microsoft.Win32.SystemEvents.DisplaySettingsChanged += DisplaysChanged; LoadFullscreenSettings(); Refresh(); };
         Unloaded += (_, _) => Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= DisplaysChanged;
     }
 
@@ -147,7 +168,117 @@ public partial class FilterView : UserControl
             return; // 期间发生了更新的刷新，旧结果作废
         ApplyVibState(snap);
         ApplyIccState(snap);
+        UpdateFullscreenStatus();
         await ColorPanel.RefreshFor(identity);
+    }
+
+    // ---------- 全屏自动切换（与独立程序滤镜互斥，全屏方案优先） ----------
+
+    private void LoadFullscreenSettings()
+    {
+        _fullscreenSyncing = true;
+        try
+        {
+            var settings = SettingsService.Current;
+            FullscreenCheck.IsChecked = settings.FullscreenPresetEnabled;
+            FullscreenGamesOnlyCheck.IsChecked = settings.FullscreenPresetOnlyForGames;
+            var channel = FullscreenPresetWatcher.NormalizeChannel(settings.FullscreenPresetChannel);
+            FullscreenChannelCombo.SelectedItem = FullscreenChannelCombo.Items.OfType<FullscreenChannelChoice>()
+                .FirstOrDefault(choice => choice.Key == channel);
+            // 还没选过方案时展示第一项，但只有用户改动或开启开关才写入设置。
+            var preset = FullscreenPresetWatcher.ParsePreset(settings.FullscreenPresetName) ?? IccFilterPreset.Vivid;
+            FullscreenPresetCombo.SelectedItem = FullscreenPresetCombo.Items.OfType<FullscreenChoice>()
+                .FirstOrDefault(choice => choice.Preset == preset);
+        }
+        finally
+        {
+            _fullscreenSyncing = false;
+        }
+        UpdateFullscreenStatus();
+    }
+
+    private void UpdateFullscreenStatus()
+    {
+        var status = App.FullscreenPreset?.Status;
+        FullscreenStatus.Text = status is { Enabled: true, ActivePreset: { } preset }
+            ? Str.T("Str.FullscreenStatusActive", preset, status.DisplayName ?? "—")
+            : Str.T("Str.FullscreenStatusIdle");
+    }
+
+    /// <summary>设置落盘并让两个守护立刻重估；失败时回滚到改动前的值并刷新界面。</summary>
+    private void PersistFullscreen(Action rollback)
+    {
+        try
+        {
+            SettingsService.Save(SettingsService.Current);
+            App.FullscreenPreset?.ApplySettings();
+            // 互斥关系：全屏方案开关一变，独立程序滤镜守护也得立刻重新判断要不要暂停。
+            App.FilterWatcher?.ApplySettings();
+            UpdateFullscreenStatus();
+        }
+        catch (Exception ex)
+        {
+            rollback();
+            _fullscreenSyncing = true;
+            try { LoadFullscreenSettingsCore(); }
+            finally { _fullscreenSyncing = false; }
+            FullscreenStatus.Text = PrivacyScrub.Sanitize(ex.Message);
+        }
+    }
+
+    private void LoadFullscreenSettingsCore()
+    {
+        var settings = SettingsService.Current;
+        FullscreenCheck.IsChecked = settings.FullscreenPresetEnabled;
+        FullscreenGamesOnlyCheck.IsChecked = settings.FullscreenPresetOnlyForGames;
+        var channel = FullscreenPresetWatcher.NormalizeChannel(settings.FullscreenPresetChannel);
+        FullscreenChannelCombo.SelectedItem = FullscreenChannelCombo.Items.OfType<FullscreenChannelChoice>()
+            .FirstOrDefault(choice => choice.Key == channel);
+        var preset = FullscreenPresetWatcher.ParsePreset(settings.FullscreenPresetName) ?? IccFilterPreset.Vivid;
+        FullscreenPresetCombo.SelectedItem = FullscreenPresetCombo.Items.OfType<FullscreenChoice>()
+            .FirstOrDefault(choice => choice.Preset == preset);
+        UpdateFullscreenStatus();
+    }
+
+    private void Fullscreen_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_fullscreenSyncing || FullscreenCheck.IsChecked is null) return;
+        var settings = SettingsService.Current;
+        var old = settings.FullscreenPresetEnabled;
+        var enabled = FullscreenCheck.IsChecked == true;
+        settings.FullscreenPresetEnabled = enabled;
+        // 开启时给一个确定方案，避免守护因为没选方案而空转。
+        if (enabled && FullscreenPresetWatcher.ParsePreset(settings.FullscreenPresetName) is null
+            && FullscreenPresetCombo.SelectedItem is FullscreenChoice fallback)
+            settings.FullscreenPresetName = fallback.Preset.ToString();
+        PersistFullscreen(() => settings.FullscreenPresetEnabled = old);
+    }
+
+    private void FullscreenPreset_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_fullscreenSyncing || FullscreenPresetCombo.SelectedItem is not FullscreenChoice choice) return;
+        var settings = SettingsService.Current;
+        var old = settings.FullscreenPresetName;
+        settings.FullscreenPresetName = choice.Preset.ToString();
+        PersistFullscreen(() => settings.FullscreenPresetName = old);
+    }
+
+    private void FullscreenChannel_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_fullscreenSyncing || FullscreenChannelCombo.SelectedItem is not FullscreenChannelChoice choice) return;
+        var settings = SettingsService.Current;
+        var old = settings.FullscreenPresetChannel;
+        settings.FullscreenPresetChannel = choice.Key;
+        PersistFullscreen(() => settings.FullscreenPresetChannel = old);
+    }
+
+    private void FullscreenGamesOnly_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_fullscreenSyncing || FullscreenGamesOnlyCheck.IsChecked is null) return;
+        var settings = SettingsService.Current;
+        var old = settings.FullscreenPresetOnlyForGames;
+        settings.FullscreenPresetOnlyForGames = FullscreenGamesOnlyCheck.IsChecked == true;
+        PersistFullscreen(() => settings.FullscreenPresetOnlyForGames = old);
     }
 
     // ---------- 数字振动（显示级，全桌面） ----------

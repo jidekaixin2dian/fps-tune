@@ -282,11 +282,61 @@ public static class UpdateService
         return true;
     }
 
-    /// <summary>下载到新文件；-1 表示长度未知，0–100 表示实际接收进度。</summary>
-    public static async Task DownloadAsync(string url, string targetFile, Action<double>? progress,
+    /// <summary>下载到新文件；-1 表示长度未知，0–100 表示实际接收进度。清单等小文件只走官方直连。</summary>
+    public static Task DownloadAsync(string url, string targetFile, Action<double>? progress,
         CancellationToken cancellationToken = default, long maximumBytes = 512L * 1024 * 1024)
+        => DownloadCoreAsync(url, targetFile, progress, cancellationToken, maximumBytes, allowMirror: false, targetFile + ".part");
+
+    /// <summary>
+    /// 安装包下载：官方直连断了就留在 .part 上续传，直连反复失败再换加速前缀。
+    /// 第三方前缀只影响传输，最终仍以官方 SHA256 清单为准。
+    /// </summary>
+    internal static Task DownloadPackageAsync(string url, string targetFile, Action<double>? progress,
+        CancellationToken cancellationToken = default, long maximumBytes = 512L * 1024 * 1024)
+        => DownloadCoreAsync(url, targetFile, progress, cancellationToken, maximumBytes, allowMirror: true,
+            targetFile + ".part");
+
+    private const int AttemptsPerSource = 3;
+
+    private static async Task DownloadCoreAsync(string url, string targetFile, Action<double>? progress,
+        CancellationToken cancellationToken, long maximumBytes, bool allowMirror, string partial)
     {
-        if (!IsOfficialUrl(url)) throw new InvalidOperationException(Str.T("Str.UpdateUrlInvalid"));
+        if (!UpdateMirrors.IsAllowedSource(url) || (!allowMirror && !IsOfficialUrl(url)))
+            throw new InvalidOperationException(Str.T("Str.UpdateUrlInvalid"));
+
+        var candidates = allowMirror ? UpdateMirrors.Candidates(url).ToArray() : [url];
+        Exception? failure = null;
+        foreach (var candidate in candidates)
+        {
+            if (!UpdateMirrors.IsAllowedSource(candidate)) continue;
+            for (var attempt = 1; attempt <= AttemptsPerSource; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    if (await DownloadOnceAsync(candidate, partial, progress, cancellationToken, maximumBytes))
+                    {
+                        progress?.Invoke(100);
+                        if (File.Exists(targetFile)) File.Delete(targetFile);
+                        File.Move(partial, targetFile);
+                        return;
+                    }
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (InvalidOperationException) { throw; }
+                catch (Exception ex) { failure = ex; }
+                if (attempt < AttemptsPerSource)
+                    await Task.Delay(TimeSpan.FromMilliseconds(600 * attempt), cancellationToken).ConfigureAwait(false);
+            }
+        }
+        throw failure ?? new IOException(Str.T("Str.UpdateDownloadIncomplete"));
+    }
+
+    /// <summary>一次传输；返回 false 表示连接在拿到完整长度前断了，可继续重试（.part 保留已收字节）。</summary>
+    private static async Task<bool> DownloadOnceAsync(string url, string partial, Action<double>? progress,
+        CancellationToken cancellationToken, long maximumBytes)
+    {
+        var already = File.Exists(partial) ? new FileInfo(partial).Length : 0;
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromMinutes(15));
         var token = timeout.Token;
@@ -294,18 +344,37 @@ public static class UpdateService
         // 总时限与用户取消由上面的 linked token 统一控制。
         client.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
         client.DefaultRequestHeaders.UserAgent.ParseAdd("FpsTune/1.0");
-        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, token);
-        response.EnsureSuccessStatusCode();
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (already > 0) request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(already, null);
+        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
 
-        var total = response.Content.Headers.ContentLength ?? -1;
+        var total = -1L;
+        var append = false;
+        if (response.StatusCode == System.Net.HttpStatusCode.PartialContent && already > 0)
+        {
+            append = true;
+            total = response.Content.Headers.ContentRange?.Length ?? -1;
+        }
+        else if (response.StatusCode == System.Net.HttpStatusCode.RequestedRangeNotSatisfiable && already > 0)
+        {
+            // .part 比服务端文件还长：丢掉重来。
+            try { File.Delete(partial); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+            return false;
+        }
+        else
+        {
+            response.EnsureSuccessStatusCode();
+            total = response.Content.Headers.ContentLength ?? -1;
+        }
         if (total > maximumBytes) throw new InvalidOperationException(Str.T("Str.UpdateFileTooLarge"));
+
         await using var source = await response.Content.ReadAsStreamAsync(token);
-        await using var target = new FileStream(targetFile, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        await using var target = new FileStream(partial, append ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None);
         var buffer = new byte[81920];
-        long written = 0;
+        long written = append ? already : 0;
         var watch = System.Diagnostics.Stopwatch.StartNew();
         long lastReport = 0;
-        progress?.Invoke(total > 0 ? 0 : -1);
+        progress?.Invoke(total > 0 ? written * 100.0 / total : -1);
         int read;
         while ((read = await source.ReadAsync(buffer, token)) > 0)
         {
@@ -318,7 +387,8 @@ public static class UpdateService
                 lastReport = watch.ElapsedMilliseconds;
             }
         }
-        if (total >= 0 && written != total) throw new IOException(Str.T("Str.UpdateDownloadIncomplete"));
-        progress?.Invoke(100);
+        // 服务端没给长度（分块传输）时以流结束为准，不能当作失败。
+        if (total < 0) return true;
+        return written == total;
     }
 }

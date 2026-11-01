@@ -58,6 +58,16 @@ public sealed class AppSettings
     public bool AutoAffinityIsolateEnabled { get; set; }
     // 独立程序滤镜守护（opt-in，默认关闭）：前台进程命中规则时切滤镜 ICC。
     public bool FilterWatcherEnabled { get; set; }
+
+    // 全屏自动切换画面方案（opt-in，默认关闭）：游戏进全屏时套用选定方案，退出全屏还原。
+    // 与上面的进程规则守护互斥：两个都开时只生效全屏方案。
+    public bool FullscreenPresetEnabled { get; set; }
+    // gamma = 游戏内生效（默认，走显示器 LUT）；icc = 仅色彩管理应用感知。
+    public string FullscreenPresetChannel { get; set; } = "gamma";
+    // 方案名取 IccFilterPreset 的枚举名（Vivid / ShadowBoost / …）；空 = 未选。
+    public string FullscreenPresetName { get; set; } = "";
+    // 只对 catalog/games.json 里登记的可执行文件生效，避免看视频/全屏浏览器被误切。
+    public bool FullscreenPresetOnlyForGames { get; set; } = true;
     // 外置准星（opt-in，默认关闭）：覆盖窗 + AW 战术据枪（按住右键隐藏）。
     public bool CrosshairEnabled { get; set; }
     public string CrosshairStyle { get; set; } = "cross";

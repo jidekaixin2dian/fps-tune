@@ -8,6 +8,7 @@ public partial class UpdateAvailableWindow : Window
 {
     private readonly UpdateInfo _info;
     private readonly Action<string> _openLink;
+    private readonly string? _backup;
     private CancellationTokenSource? _download;
     private bool _handedOff;
     private string _phase = "";
@@ -21,6 +22,8 @@ public partial class UpdateAvailableWindow : Window
         InitializeComponent();
         VersionText.Text = $"{UpdateService.DisplayVersion} → {info.ReleaseTag ?? info.Version}";
         NotesText.Text = ReleaseNotesText.Format(info.Notes);
+        _backup = UpdateMirrors.FindBackupDownload(info.Notes);
+        BackupDownloadButton.Visibility = _backup is null ? Visibility.Collapsed : Visibility.Visible;
         Closing += (_, e) =>
         {
             if (IsRunning && !_handedOff) { e.Cancel = true; _download!.Cancel(); }
@@ -33,6 +36,12 @@ public partial class UpdateAvailableWindow : Window
         try { _openLink(ProductLinks.ReleasePage(_info)); }
         catch { StatusText.Text = Str.T("Str.CannotOpenLink"); return; }
         Close();
+    }
+    private void BackupDownload_Click(object sender, RoutedEventArgs e)
+    {
+        if (_backup is null) return;
+        try { _openLink(_backup); }
+        catch { StatusText.Text = Str.T("Str.CannotOpenLink"); }
     }
     private async void Install_Click(object sender, RoutedEventArgs e) => await InstallAsync();
     internal async Task InstallAsync()
@@ -72,7 +81,7 @@ public partial class UpdateAvailableWindow : Window
     }
     private void SetBusy(bool busy)
     {
-        InstallButton.IsEnabled = DownloadPageButton.IsEnabled = LaterButton.IsEnabled = !busy;
+        InstallButton.IsEnabled = DownloadPageButton.IsEnabled = LaterButton.IsEnabled = BackupDownloadButton.IsEnabled = !busy;
         CancelDownloadButton.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
         DownloadProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
         DownloadProgress.Value = 0;

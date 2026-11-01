@@ -59,6 +59,13 @@ internal sealed class ForegroundFilterWatcher : IDisposable
                 Disengage(Str.T("Str.FilterWatcherReasonOff"));
                 return;
             }
+            // 互斥（用户拍板，不做优先级链）：全屏方案守护开启时由它接管显示写入，
+            // 进程规则先还原再暂停，避免两套状态机互相 Restore 撕裂注册表。
+            if (FullscreenPresetWatcher.SuppressesForegroundRules)
+            {
+                Disengage(Str.T("Str.FullscreenReasonTakeover"));
+                return;
+            }
             var foreground = (ForegroundProcessOverride ?? ReadForegroundProcess)();
             var rule = foreground is null ? null : IccAppRuleStore.Match(foreground);
             lock (_gate)

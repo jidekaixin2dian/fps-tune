@@ -29,8 +29,10 @@ public partial class ScreenColorPanel : UserControl
     public ScreenColorPanel()
     {
         InitializeComponent();
-        var names = new[] { Str.T("Str.ColorBrightness"), Str.T("Str.ColorContrast"), "Gamma", Str.T("Str.ColorShadows"), Str.T("Str.ColorRed"), Str.T("Str.ColorGreen"), Str.T("Str.ColorBlue") };
-        var ranges = new (double Min, double Max, double Value)[] { (-20,20,0), (80,120,100), (.7,1.5,1), (0,25,0), (80,110,100), (80,110,100), (80,110,100) };
+        var names = new[] { Str.T("Str.ColorBrightness"), Str.T("Str.ColorContrast"), "Gamma", Str.T("Str.ColorShadows"),
+            Str.T("Str.ColorRed"), Str.T("Str.ColorGreen"), Str.T("Str.ColorBlue"), Str.T("Str.ColorDarkBalance"), Str.T("Str.ColorHighlight") };
+        var ranges = new (double Min, double Max, double Value)[] { (-20,20,0), (80,120,100), (.7,1.5,1), (0,25,0),
+            (80,110,100), (80,110,100), (80,110,100), (0,100,ScreenColorService.NeutralDarkBalance), (-25,25,0) };
         for (var i = 0; i < names.Length; i++)
         {
             var row = new StackPanel { Margin = new Thickness(0, 0, 16, 16) };
@@ -61,10 +63,10 @@ public partial class ScreenColorPanel : UserControl
             var header = new DockPanel(); DockPanel.SetDock(entry, Dock.Right); header.Children.Add(entry); header.Children.Add(text);
             row.Children.Add(header); row.Children.Add(slider); ParameterGrid.Children.Add(row); _sliders.Add(slider);
         }
-        ColorPresetCombo.ItemsSource = new Choice[] { new(Str.T("Str.ColorCustom"), null), new(Str.T("Str.ColorVivid"), IccFilterPreset.Vivid), new(Str.T("Str.ColorShadowPreset"), IccFilterPreset.ShadowBoost),
-            new(Str.T("Str.ColorDehaze"), IccFilterPreset.Dehaze), new(Str.T("Str.ColorNight"), IccFilterPreset.NightGuard), new(Str.T("Str.ColorWarm"), IccFilterPreset.Warm), new(Str.T("Str.ColorCool"), IccFilterPreset.Cool),
-            new(Str.T("Str.ColorSoft"), IccFilterPreset.Soft), new(Str.T("Str.ColorGentleShadow"), IccFilterPreset.ShadowGentle), new(Str.T("Str.ColorGentleContrast"), IccFilterPreset.ContrastGentle), new(Str.T("Str.ColorMuted"), IccFilterPreset.Muted), new(Str.T("Str.ColorNeutral"), IccFilterPreset.Neutral) };
-        IccPresetCombo.ItemsSource = ((Choice[])ColorPresetCombo.ItemsSource).Select((choice, index) => index == 0 ? new Choice(Str.T("Str.ColorIccFile"), null) : new Choice(Str.T(IccProfileGenerator.ResourceKeysFor(choice.Preset!.Value).Title), choice.Preset)).ToArray();
+        ColorPresetCombo.ItemsSource = new[] { new Choice(Str.T("Str.ColorCustom"), null) }
+            .Concat(Enum.GetValues<IccFilterPreset>().Select(preset => new Choice(ScreenColorSettings.TitleFor(preset), preset)))
+            .ToArray();
+        IccPresetCombo.ItemsSource = ((Choice[])ColorPresetCombo.ItemsSource).Select((choice, index) => index == 0 ? new Choice(Str.T("Str.ColorIccFile"), null) : choice).ToArray();
         _syncing = true;
         ColorPresetCombo.SelectedIndex = 0; IccPresetCombo.SelectedIndex = 1;
         _syncing = false;
@@ -73,7 +75,7 @@ public partial class ScreenColorPanel : UserControl
     }
     private async void UpdatePreview()
     {
-        if (_sliders.Count != 7) return;
+        if (_sliders.Count != 9) return;
         ColorPreview.SetSettings(Values());
         var generation = ++_previewGeneration;
         try
@@ -109,9 +111,22 @@ public partial class ScreenColorPanel : UserControl
     internal void SelectGeneratedPreset(IccFilterPreset preset)
     {
         _syncing = true;
-        try { _iccFile = null; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = (int)preset + 1; }
+        try { _iccFile = null; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(preset); }
         finally { _syncing = false; }
         _dirty = true; MarkDraft(); Availability(); UpdatePreview();
+    }
+
+    /// <summary>按预设枚举找下拉项（枚举值与列表下标不再相等，不能再用 (int)preset + 1）。</summary>
+    private int IndexOfPreset(IccFilterPreset preset)
+    {
+        if (IccPresetCombo?.ItemsSource is not IEnumerable<Choice> items) return 0;
+        var index = 0;
+        foreach (var item in items)
+        {
+            if (item.Preset == preset) return index;
+            index++;
+        }
+        return 0;
     }
 
     /// <summary>滤镜列表取代了这里的「选择滤镜」行，宿主页可收起它避免重复入口。</summary>
@@ -147,13 +162,13 @@ public partial class ScreenColorPanel : UserControl
         ColorRestoreButton.IsEnabled = !_busy && (_restorable || _vibranceRestorable);
     }
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
-        _sliders[4].Value, _sliders[5].Value, _sliders[6].Value);
+        _sliders[4].Value, _sliders[5].Value, _sliders[6].Value, _sliders[8].Value, _sliders[7].Value);
     private void ShowSettings(ScreenColorSettings s)
     {
         _syncing = true;
         try
         {
-            var values = new[] { s.Brightness, s.Contrast, s.Gamma, s.Shadows, s.Red, s.Green, s.Blue };
+            var values = new[] { s.Brightness, s.Contrast, s.Gamma, s.Shadows, s.Red, s.Green, s.Blue, s.DarkBalance, s.Highlight };
             for (var i = 0; i < values.Length; i++) _sliders[i].Value = values[i];
         }
         finally { _syncing = false; UpdatePreview(); }
@@ -189,7 +204,7 @@ public partial class ScreenColorPanel : UserControl
                         || string.Equals(name, $"FpsTune-{p}-v2.icc", StringComparison.OrdinalIgnoreCase));
                     if (known is { } selected)
                     {
-                        _iccFile = null; IccPresetCombo.SelectedIndex = (int)selected + 1;
+                        _iccFile = null; IccPresetCombo.SelectedIndex = IndexOfPreset(selected);
                         if (!string.Equals(name, IccProfileGenerator.FileNameFor(selected), StringComparison.OrdinalIgnoreCase))
                         { _dirty = true; ColorStatus.Text = Str.T("Str.ColorLegacyFilterUpdate"); }
                     }

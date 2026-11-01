@@ -24,6 +24,7 @@
                 <TextBlock x:Name="StatusText" Text="{DynamicResource Str.UpdateInstallHint}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,7,0,12" FontSize="13" AutomationProperties.LiveSetting="Polite"/>
                 <ProgressBar x:Name="DownloadProgress" Maximum="100" Height="7" Visibility="Collapsed" Margin="0,0,0,14" AutomationProperties.Name="{DynamicResource Str.UpdateProgress}"/>
                 <WrapPanel HorizontalAlignment="Right">
+                    <Button x:Name="BackupDownloadButton" Content="{DynamicResource Str.UpdateBackupDownload}" ToolTip="{DynamicResource Str.UpdateBackupHint}" Click="BackupDownload_Click" Visibility="Collapsed" Style="{StaticResource GhostButtonStyle}" Margin="0,0,10,0"/>
                     <Button x:Name="DownloadPageButton" Content="{DynamicResource Str.ReleaseDownloadPage}" Click="Download_Click" Style="{StaticResource GhostButtonStyle}" Margin="0,0,10,0"/>
                     <Button x:Name="LaterButton" Content="{DynamicResource Str.CommunityLater}" IsCancel="True" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>
                     <Button x:Name="CancelDownloadButton" Content="{DynamicResource Str.UpdateCancelDownload}" Click="Cancel_Click" Visibility="Collapsed" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>

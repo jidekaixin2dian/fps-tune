@@ -53,7 +53,14 @@
                         <Slider x:Name="HighlightSlider" Grid.Column="1" Minimum="-25" Maximum="25" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorHighlight}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=HighlightSlider, StringFormat={}{0:0}}" VerticalAlignment="Center"/>
                     </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="lbl"/><ColumnDefinition Width="220"/><ColumnDefinition Width="56"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalance}" VerticalAlignment="Center" Margin="0,0,10,6"/>
+                        <Slider x:Name="DarkBalanceSlider" Grid.Column="1" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalance}"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=DarkBalanceSlider, StringFormat={}{0:0}}" VerticalAlignment="Center"/>
+                    </Grid>
                     <TextBlock Text="{DynamicResource Str.FilterEditorHighlightHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     <Grid Margin="0,4,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBox x:Name="CustomNameBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterEditorName}"/>

@@ -107,6 +107,13 @@ public partial class FilterCenterPanel : UserControl
         IccFilterPreset.NightGuard or IccFilterPreset.Soft or IccFilterPreset.ShadowGentle or IccFilterPreset.ContrastGentle => "soft",
         IccFilterPreset.Neutral => "game",
         IccFilterPreset.Deexposure or IccFilterPreset.DeexposureStrong => "deexpose",
+        IccFilterPreset.Daylight or IccFilterPreset.Bright or IccFilterPreset.SoftBright or IccFilterPreset.ClearBright
+            or IccFilterPreset.ClearBright2 or IccFilterPreset.Lively => "bright",
+        IccFilterPreset.VividLively or IccFilterPreset.Cinema => "color",
+        IccFilterPreset.NightScene or IccFilterPreset.Foggy => "deexpose",
+        IccFilterPreset.ArenaCool or IccFilterPreset.GameGenshin or IccFilterPreset.GameKarakin or IccFilterPreset.GameGw2
+            or IccFilterPreset.GameApex or IccFilterPreset.GameNaraka or IccFilterPreset.GameMyth or IccFilterPreset.GameR6
+            or IccFilterPreset.GameValorant or IccFilterPreset.GameNaraka2 or IccFilterPreset.GameCod16 => "game",
         _ => "color",
     };
 
@@ -238,7 +245,8 @@ public partial class FilterCenterPanel : UserControl
             var brightness = (double)BrightnessSlider.Value;
             var saturation = (double)SaturationSlider.Value;
             var highlight = (double)HighlightSlider.Value;
-            var curves = BuildCurves(gamma, brightness, highlight);
+            var darkBalance = (double)DarkBalanceSlider.Value;
+            var curves = BuildCurves(gamma, brightness, highlight, darkBalance);
             var column = SaturationColumn(saturation);
             var bytes = IccProfileGenerator.Build(new IccProfileGenerator.PresetParams(
                 Path.GetFileNameWithoutExtension(name) + ".icc",
@@ -254,15 +262,18 @@ public partial class FilterCenterPanel : UserControl
         catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
 
-    /// <summary>期望显示曲线（伽马/亮度/高光），并按 CMM 反演约定存逆曲线。
-    /// 高光与 MapTone 同构（smoothstep 0.5→1 窗，端点保持）：负值压高光（去曝光），正值提亮白点。</summary>
-    private static ushort[] BuildCurves(double gamma, double brightness, double highlight)
+    /// <summary>期望显示曲线（伽马/亮度/高光/暗部平衡），并按 CMM 反演约定存逆曲线。
+    /// 高光与 MapTone 同构（smoothstep 0.5→1 窗，端点保持）：负值压高光（去曝光），正值提亮白点。
+    /// 暗部平衡沿用游戏加加的 12 档幂律（黑位抬 1/256），45 为原样。</summary>
+    private static ushort[] BuildCurves(double gamma, double brightness, double highlight, double darkBalance)
     {
         var curve = new ushort[256];
+        var darkGamma = ScreenColorService.DarkBalanceGamma(darkBalance);
         for (var i = 0; i < 256; i++)
         {
             var x = i / 255d;
-            var y = Math.Pow(x, gamma) + brightness;
+            var input = darkGamma == 1 ? x : Math.Clamp(x + 1 / 256d, 0, 1);
+            var y = Math.Pow(input, gamma * darkGamma) + brightness;
             var w = y <= .5 ? 0 : (y - .5) * 2;
             w = w * w * (3 - 2 * w);
             y += highlight / 100 * w * y * (1 - y) * 2;

@@ -23,7 +23,8 @@
   {
     "name": "APEX 英雄",
     "executables": [
-      "r5apex_dx12.exe"
+      "r5apex_dx12.exe",
+      "r5apex.exe"
     ],
     "directories": [
       "Apex Legends",
@@ -52,7 +53,8 @@
   {
     "name": "使命召唤",
     "executables": [
-      "cod.exe"
+      "cod.exe",
+      "ModernWarfare.exe"
     ],
     "directories": [
       "Call of Duty",
@@ -82,7 +84,8 @@
   {
     "name": "逃离塔科夫",
     "executables": [
-      "EscapeFromTarkov.exe"
+      "EscapeFromTarkov.exe",
+      "EscapeFromTarkov_BE.exe"
     ],
     "directories": [
       "Escape from Tarkov",
@@ -172,7 +175,8 @@
   {
     "name": "英雄联盟",
     "executables": [
-      "League of Legends.exe"
+      "League of Legends.exe",
+      "LeagueClient.exe"
     ],
     "directories": [
       "League of Legends",
@@ -187,6 +191,176 @@
     "directories": [
       "dota 2 beta",
       "Dota 2"
+    ]
+  },
+  {
+    "name": "穿越火线 (CF)",
+    "executables": [
+      "CrossFire.exe"
+    ],
+    "directories": [
+      "CrossFire",
+      "穿越火线"
+    ]
+  },
+  {
+    "name": "永劫无间",
+    "executables": [
+      "NarakaBladepoint.exe"
+    ],
+    "directories": [
+      "NarakaBladepoint",
+      "Naraka Bladepoint",
+      "永劫无间"
+    ]
+  },
+  {
+    "name": "CS:GO（经典服）",
+    "executables": [
+      "csgo.exe"
+    ],
+    "directories": [
+      "Counter-Strike Global Offensive",
+      "csgo"
+    ]
+  },
+  {
+    "name": "卡拉彼丘",
+    "executables": [
+      "Calabiyau-Win64-Shipping.exe",
+      "CalabiYau.exe"
+    ],
+    "directories": [
+      "Calabiyau",
+      "Strinova",
+      "卡拉彼丘"
+    ]
+  },
+  {
+    "name": "战争雷霆",
+    "executables": [
+      "aces.exe"
+    ],
+    "directories": [
+      "War Thunder",
+      "WarThunder",
+      "战争雷霆"
+    ]
+  },
+  {
+    "name": "战术小队 (Squad)",
+    "executables": [
+      "Squad.exe"
+    ],
+    "directories": [
+      "SquadGame"
+    ]
+  },
+  {
+    "name": "猎杀：对决",
+    "executables": [
+      "HuntGame.exe"
+    ],
+    "directories": [
+      "Hunt Showdown",
+      "猎杀对决"
+    ]
+  },
+  {
+    "name": "死锁 (Deadlock)",
+    "executables": [
+      "Deadlock.exe"
+    ],
+    "directories": [
+      "Deadlock",
+      "死锁"
+    ]
+  },
+  {
+    "name": "坦克世界",
+    "executables": [
+      "worldoftanks.exe"
+    ],
+    "directories": [
+      "World_of_Tanks",
+      "WorldOfTanks",
+      "坦克世界"
+    ]
+  },
+  {
+    "name": "漫威争锋",
+    "executables": [
+      "MarvelRivals_Launcher.exe"
+    ],
+    "directories": [
+      "MarvelRivals",
+      "Marvel Rivals",
+      "漫威争锋"
+    ]
+  },
+  {
+    "name": "原神",
+    "executables": [
+      "GenshinImpact.exe"
+    ],
+    "directories": [
+      "Genshin Impact",
+      "原神",
+      "YuanShen"
+    ]
+  },
+  {
+    "name": "绝区零",
+    "executables": [
+      "ZenlessZoneZero.exe"
+    ],
+    "directories": [
+      "ZenlessZoneZero",
+      "绝区零"
+    ]
+  },
+  {
+    "name": "崩坏：星穹铁道",
+    "executables": [
+      "StarRail.exe"
+    ],
+    "directories": [
+      "Star Rail",
+      "StarRail",
+      "星穹铁道"
+    ]
+  },
+  {
+    "name": "剑网 3",
+    "executables": [
+      "JX3Client.exe"
+    ],
+    "directories": [
+      "JX3",
+      "剑网3",
+      "剑侠情缘网络版叁"
+    ]
+  },
+  {
+    "name": "失落的方舟",
+    "executables": [
+      "LOSTARK.exe"
+    ],
+    "directories": [
+      "LOSTARK",
+      "Lost Ark",
+      "失落的方舟"
+    ]
+  },
+  {
+    "name": "侠盗猎车手 5",
+    "executables": [
+      "GTA5.exe"
+    ],
+    "directories": [
+      "Grand Theft Auto V",
+      "GTAV",
+      "GTA5"
     ]
   }
 ]

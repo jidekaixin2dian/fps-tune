@@ -14,12 +14,14 @@ public partial class App : Application
     private GameTimerResolutionService? _gameTimer;
     private GameSessionAutomationService? _sessionAutomation;
     private ForegroundFilterWatcher? _filterWatcher;
+    private FullscreenPresetWatcher? _fullscreenPreset;
 
     internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
     internal static AutoRecordingService? AutomaticRecording { get; private set; }
     internal static GameTimerResolutionService? GameTimer => Current is App app ? app._gameTimer : null;
     internal static GameSessionAutomationService? SessionAutomation => Current is App app ? app._sessionAutomation : null;
     internal static ForegroundFilterWatcher? FilterWatcher => Current is App app ? app._filterWatcher : null;
+    internal static FullscreenPresetWatcher? FullscreenPreset => Current is App app ? app._fullscreenPreset : null;
     private static CrosshairOverlayWindow? _crosshair;
     internal static CrosshairOverlayWindow? CrosshairOverlay => _crosshair;
     private static PerformanceHudService? _hud;
@@ -165,6 +167,9 @@ public partial class App : Application
             _sessionAutomation.Start();
             _filterWatcher = new ForegroundFilterWatcher();
             _filterWatcher.Start();
+            // 全屏方案守护：先做一次崩溃残留还原，再开始轮询。
+            _fullscreenPreset = new FullscreenPresetWatcher();
+            _fullscreenPreset.Start();
             ApplyCrosshairSettings();
             MemoryAutomation = new MemoryAutoCleanupService();
             MemoryAutomation.Start();
@@ -180,6 +185,7 @@ public partial class App : Application
         _gameTimer?.Dispose();
         _sessionAutomation?.Dispose();
         _filterWatcher?.Dispose();
+        _fullscreenPreset?.Dispose();
         _crosshair?.Close();
         CloseHud();
         _liveMetrics?.Dispose();

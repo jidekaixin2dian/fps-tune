@@ -98,7 +98,7 @@ internal static partial class UpdateRecovery
                 throw new InvalidDataException(Str.T("Str.ManifestMissingEntry"));
             var cached = FindPackage(info.ReleaseTag!, hash);
             if (cached is not null) { ready = false; progress?.Invoke(100); return cached; }
-            await UpdateService.DownloadAsync(info.InstallerUrl!, installer, progress, token);
+            await UpdateService.DownloadPackageAsync(info.InstallerUrl!, installer, progress, token);
             if (!await Task.Run(() => UpdateService.VerifySha256(installer, hash), token))
                 throw new InvalidDataException(Str.T("Str.InstallerHashMismatch"));
             var package = new CachedUpdatePackage(id, info.Version, info.ReleaseTag!, hash);

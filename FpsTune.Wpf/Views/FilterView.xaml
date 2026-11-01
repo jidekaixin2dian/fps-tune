@@ -123,6 +123,42 @@
                     </StackPanel>
                 </Border>
 
+                <!-- 全屏自动切换：游戏进全屏套用方案、退出还原；与独立程序滤镜互斥，全屏方案优先 -->
+                <Border x:Name="CardFullscreen" Style="{StaticResource CardStyle}" Padding="20,18" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.FullscreenTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.FullscreenHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                        <CheckBox x:Name="FullscreenCheck" Content="{DynamicResource Str.FullscreenToggle}" Style="{StaticResource ToggleSwitchStyle}"
+                                  Margin="0,10,0,0" Checked="Fullscreen_Changed" Unchecked="Fullscreen_Changed"/>
+
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="{DynamicResource Str.FullscreenPresetLabel}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox x:Name="FullscreenPresetCombo" Grid.Column="1" MinWidth="220" MaxWidth="260" HorizontalAlignment="Left"
+                                      DisplayMemberPath="Label" Style="{StaticResource SelectComboBoxStyle}"
+                                      AutomationProperties.Name="{DynamicResource Str.FullscreenPresetLabel}"
+                                      SelectionChanged="FullscreenPreset_Changed"/>
+                        </Grid>
+
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="{DynamicResource Str.FullscreenChannelLabel}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ComboBox x:Name="FullscreenChannelCombo" Grid.Column="1" MinWidth="220" MaxWidth="260" HorizontalAlignment="Left"
+                                      DisplayMemberPath="Label" Style="{StaticResource SelectComboBoxStyle}"
+                                      AutomationProperties.Name="{DynamicResource Str.FullscreenChannelLabel}"
+                                      SelectionChanged="FullscreenChannel_Changed"/>
+                        </Grid>
+
+                        <CheckBox x:Name="FullscreenGamesOnlyCheck" Content="{DynamicResource Str.FullscreenOnlyGames}"
+                                  Style="{StaticResource ToggleSwitchStyle}" Margin="0,10,0,0"
+                                  Checked="FullscreenGamesOnly_Changed" Unchecked="FullscreenGamesOnly_Changed"/>
+
+                        <TextBlock Text="{DynamicResource Str.FullscreenChannelHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.FullscreenConflict}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="FullscreenStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
                 <Border Style="{StaticResource CardStyle}"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>

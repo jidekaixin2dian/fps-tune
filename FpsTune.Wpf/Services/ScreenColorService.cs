@@ -6,13 +6,14 @@ using FpsTune.Wpf.Core;
 namespace FpsTune.Wpf.Services;
 
 public sealed record ScreenColorSettings(double Brightness = 0, double Contrast = 100, double Gamma = 1,
-    double Shadows = 0, double Red = 100, double Green = 100, double Blue = 100, double Highlight = 0)
+    double Shadows = 0, double Red = 100, double Green = 100, double Blue = 100, double Highlight = 0,
+    double DarkBalance = ScreenColorService.NeutralDarkBalance)
 {
     public void Validate()
     {
-        var values = new[] { Brightness, Contrast, Gamma, Shadows, Red, Green, Blue, Highlight };
+        var values = new[] { Brightness, Contrast, Gamma, Shadows, Red, Green, Blue, Highlight, DarkBalance };
         if (values.Any(v => !double.IsFinite(v)) || Brightness is < -20 or > 20 || Contrast is < 80 or > 120
-            || Gamma is < .7 or > 1.5 || Shadows is < 0 or > 25 || Highlight is < -25 or > 25
+            || Gamma is < .7 or > 1.5 || Shadows is < 0 or > 25 || Highlight is < -25 or > 25 || DarkBalance is < 0 or > 100
             || new[] { Red, Green, Blue }.Any(v => v is < 80 or > 110))
             throw new ArgumentOutOfRangeException(nameof(ScreenColorSettings), Str.T("Str.ColorOutOfRange"));
     }
@@ -31,6 +32,29 @@ public sealed record ScreenColorSettings(double Brightness = 0, double Contrast 
         IccFilterPreset.Deexposure => new(Highlight: -14),
         IccFilterPreset.DeexposureStrong => new(Highlight: -22, Shadows: 3),
         IccFilterPreset.Neutral => new(),
+        // 以下 21 条按 1U 2.9.6 的明文调色参数换算（详见 work/research/1u-filter-gap/），
+        // Brightness/Contrast/Shadows/Red/Blue 已按 mappingRules 折算到本产品的取值范围。
+        IccFilterPreset.Daylight => new(Brightness: -6, Contrast: 101.6, Gamma: 1.351, Shadows: 14.5),
+        IccFilterPreset.Bright => new(Brightness: -2.8, Contrast: 96, Gamma: 1.25, Shadows: 3.5, Red: 100.5, Blue: 99.5),
+        IccFilterPreset.VividLively => new(Brightness: 2, Contrast: 104.4, Gamma: .943, Shadows: 11.5, Red: 100.8, Blue: 99.2),
+        IccFilterPreset.Cinema => new(Brightness: 6, Contrast: 99.6, Gamma: .98, Shadows: 6.5, Red: 100.5, Blue: 99.5),
+        IccFilterPreset.NightScene => new(Brightness: -8, Contrast: 112, Gamma: 1.5, Shadows: 11.2, Red: 100.5, Blue: 99.5),
+        IccFilterPreset.Foggy => new(Brightness: -3.2, Contrast: 104.4, Gamma: 1.5, Shadows: 1.8),
+        IccFilterPreset.SoftBright => new(Brightness: -7.6, Contrast: 103.2, Gamma: 1.351, Shadows: 2.5, Red: 100.5, Blue: 99.5),
+        IccFilterPreset.ClearBright => new(Brightness: 4.8, Contrast: 98, Gamma: .962, Shadows: 3.5, Red: 100.5, Blue: 99.5),
+        IccFilterPreset.ArenaCool => new(Contrast: 107.2, Shadows: 15, Red: 95, Blue: 105),
+        IccFilterPreset.Lively => new(Brightness: 6.4, Contrast: 99.2, Gamma: 1.042, Shadows: 3.5),
+        IccFilterPreset.ClearBright2 => new(Brightness: 2.4, Contrast: 98.4, Gamma: 1.163, Shadows: 3, Highlight: -16, Red: 99.8, Blue: 100.2),
+        IccFilterPreset.GameGenshin => new(Brightness: -6.4, Contrast: 110.4, Gamma: 1.136, Shadows: 14.8),
+        IccFilterPreset.GameKarakin => new(Brightness: -4, Contrast: 98, Gamma: 1.5),
+        IccFilterPreset.GameGw2 => new(Brightness: -4, Contrast: 101.6, Gamma: 1.5, Red: 99.9, Blue: 100.1),
+        IccFilterPreset.GameApex => new(Brightness: -2, Contrast: 101.2, Gamma: 1.19, Shadows: .8),
+        IccFilterPreset.GameNaraka => new(Brightness: -4.8, Contrast: 97.2, Gamma: 1.136, Shadows: 1.5),
+        IccFilterPreset.GameMyth => new(Brightness: -1.2, Contrast: 100, Gamma: 1.19, Shadows: 1, Red: 99.9, Blue: 100.1),
+        IccFilterPreset.GameR6 => new(Brightness: 3.6, Contrast: 102.8, Gamma: 1.111, Shadows: 7.8, Red: 100.6, Blue: 99.4),
+        IccFilterPreset.GameValorant => new(Brightness: -5.2, Contrast: 110, Gamma: 1.5, Shadows: 8.8),
+        IccFilterPreset.GameNaraka2 => new(Brightness: -9.2, Contrast: 96.4, Gamma: 1.316, Shadows: .8),
+        IccFilterPreset.GameCod16 => new(Brightness: -2.8, Contrast: 101.6, Gamma: 1.5, Shadows: 2),
         _ => throw new ArgumentOutOfRangeException(nameof(preset))
     };
     public static string TitleFor(IccFilterPreset preset) => preset switch
@@ -111,6 +135,19 @@ public static class ScreenColorService
         }
         catch (Exception ex) { return new(false, ex.Message, new(), File.Exists(ReceiptPath(id))); }
     }
+    /// <summary>暗部平衡的中性值：45 对应 γ=1.0（不改变画面）；游戏加加自己的默认档 50 是 γ=0.9。</summary>
+    internal const double NeutralDarkBalance = 45;
+
+    /// <summary>
+    /// 游戏加加「暗部平衡」的原始映射（逆向自 DisplayColorControl.dll / HardwareAddon.node，两处常量一致）：
+    /// v = trunc(p/100*11 + 26) ∈ [26,37]，γ = (40-v)/10 ∈ [1.4, 0.3]，只有 12 档。
+    /// </summary>
+    internal static double DarkBalanceGamma(double darkBalance)
+    {
+        var steps = (int)(Math.Clamp(darkBalance, 0, 100) / 100 * 11 + 26);
+        return (40 - steps) / 10d;
+    }
+
     internal static ushort[] BuildRamp(ScreenColorSettings settings, ushort[] baseline)
     {
         settings.Validate();
@@ -132,7 +169,11 @@ public static class ScreenColorService
     // shadow values to black. The ICC inverse and preview shader use the same mapping.
     internal static double MapTone(double x, ScreenColorSettings settings, double gain)
     {
-        var y = Math.Pow(x, 1 / settings.Gamma);
+        // 暗部平衡=游戏加加「DefinitionEnhancedDark」的等比幂律曲线：输入先上抬 1/256（黑位不落到 0，
+        // 这就是"暗部平衡"的观感来源），再按 12 档 γ 做幂运算；γ=1 时与改造前完全等价。
+        var darkGamma = DarkBalanceGamma(settings.DarkBalance);
+        var input = darkGamma == 1 ? x : Math.Clamp(x + 1 / 256d, 0, 1);
+        var y = Math.Pow(input, darkGamma / settings.Gamma);
         y += settings.Shadows / 100 * 4 * y * Math.Pow(1 - y, 2);
         y += (settings.Contrast / 100 - 1) * 2 * y * (1 - y) * (2 * y - 1);
         y += settings.Brightness / 100 * 4 * y * (1 - y);

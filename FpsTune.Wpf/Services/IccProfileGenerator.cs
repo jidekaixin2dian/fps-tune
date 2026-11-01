@@ -19,6 +19,28 @@ public enum IccFilterPreset
     Neutral = 10,
     Deexposure = 11,       // 去曝光：高光窗压亮部（画面过曝/雪地/强光）
     DeexposureStrong = 12, // 去曝光强化：更深的高光压缩，夜间与暗场适用性更差
+    // 以下按 1U 2.9.6 明文调色参数补齐（原来只接了它的 43 个 .icc，这批"调色参数"型预设没接）。
+    Daylight = 13,         // 白天：暗部全开，找人优先
+    Bright = 14,           // 高亮：整体提亮
+    VividLively = 15,      // 鲜艳：浓郁鲜明
+    Cinema = 16,           // 电影：高对比观感
+    NightScene = 17,       // 夜晚：暗场提亮
+    Foggy = 18,            // 雾天：透雾增艳
+    SoftBright = 19,       // 柔和明亮
+    ClearBright = 20,      // 增亮通透
+    ArenaCool = 21,        // 竞技冷调：浓彩冷调
+    Lively = 22,           // 亮丽
+    ClearBright2 = 23,     // 明透 2.0：通透增强（带消光高光）
+    GameGenshin = 24,
+    GameKarakin = 25,
+    GameGw2 = 26,
+    GameApex = 27,
+    GameNaraka = 28,
+    GameMyth = 29,
+    GameR6 = 30,
+    GameValorant = 31,
+    GameNaraka2 = 32,
+    GameCod16 = 33,
 }
 
 /// <summary>
@@ -49,7 +71,7 @@ public static class IccProfileGenerator
     public static PresetParams ParamsFor(IccFilterPreset preset)
     {
         var settings = ScreenColorSettings.ForPreset(preset);
-        var saturation = preset switch { IccFilterPreset.Vivid => 1.06, IccFilterPreset.Soft => .94, IccFilterPreset.Muted => .96, _ => 1d };
+        var saturation = preset switch { IccFilterPreset.Vivid => 1.06, IccFilterPreset.Soft => .94, IccFilterPreset.Muted => .96, IccFilterPreset.ClearBright2 => 1.36, _ => 1d };
         // A destination profile is inverted by the CMM: store the inverse desired
         // saturation matrix and inverse desired display curves, preserving D50 white.
         double[] Column(double[] primary, double luminance) => Enumerable.Range(0, 3)
@@ -78,6 +100,27 @@ public static class IccProfileGenerator
         IccFilterPreset.Neutral => ("Str.IccNeutral", "Str.IccNeutralDesc"),
         IccFilterPreset.Deexposure => ("Str.IccDeexposure", "Str.IccDeexposureDesc"),
         IccFilterPreset.DeexposureStrong => ("Str.IccDeexposureStrong", "Str.IccDeexposureStrongDesc"),
+        IccFilterPreset.Daylight => ("Str.IccDaylight", "Str.IccDaylightDesc"),
+        IccFilterPreset.Bright => ("Str.IccBright", "Str.IccBrightDesc"),
+        IccFilterPreset.VividLively => ("Str.IccVividLively", "Str.IccVividLivelyDesc"),
+        IccFilterPreset.Cinema => ("Str.IccCinema", "Str.IccCinemaDesc"),
+        IccFilterPreset.NightScene => ("Str.IccNightScene", "Str.IccNightSceneDesc"),
+        IccFilterPreset.Foggy => ("Str.IccFoggy", "Str.IccFoggyDesc"),
+        IccFilterPreset.SoftBright => ("Str.IccSoftBright", "Str.IccSoftBrightDesc"),
+        IccFilterPreset.ClearBright => ("Str.IccClearBright", "Str.IccClearBrightDesc"),
+        IccFilterPreset.ArenaCool => ("Str.IccArenaCool", "Str.IccArenaCoolDesc"),
+        IccFilterPreset.Lively => ("Str.IccLively", "Str.IccLivelyDesc"),
+        IccFilterPreset.ClearBright2 => ("Str.IccClearBright2", "Str.IccClearBright2Desc"),
+        IccFilterPreset.GameGenshin => ("Str.IccGameGenshin", "Str.IccGameGenshinDesc"),
+        IccFilterPreset.GameKarakin => ("Str.IccGameKarakin", "Str.IccGameKarakinDesc"),
+        IccFilterPreset.GameGw2 => ("Str.IccGameGw2", "Str.IccGameGw2Desc"),
+        IccFilterPreset.GameApex => ("Str.IccGameApex", "Str.IccGameApexDesc"),
+        IccFilterPreset.GameNaraka => ("Str.IccGameNaraka", "Str.IccGameNarakaDesc"),
+        IccFilterPreset.GameMyth => ("Str.IccGameMyth", "Str.IccGameMythDesc"),
+        IccFilterPreset.GameR6 => ("Str.IccGameR6", "Str.IccGameR6Desc"),
+        IccFilterPreset.GameValorant => ("Str.IccGameValorant", "Str.IccGameValorantDesc"),
+        IccFilterPreset.GameNaraka2 => ("Str.IccGameNaraka2", "Str.IccGameNaraka2Desc"),
+        IccFilterPreset.GameCod16 => ("Str.IccGameCod16", "Str.IccGameCod16Desc"),
         _ => throw new ArgumentOutOfRangeException(nameof(preset)),
     };
 
