@@ -350,7 +350,7 @@
             <Style x:Key="SideNavItemStyle" TargetType="controls:NavButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
-                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Height" Value="34"/>
                 <Setter Property="Focusable" Value="True"/>
@@ -396,9 +396,9 @@
                             <Grid Background="Transparent">
                                 <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="26,0,10,0">
-                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="13" Height="13" Stretch="Uniform"
-                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.9"/>
+                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="12" Height="12" Stretch="Uniform"
+                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.9" Margin="0,1,0,0"/>
                                     <TextBlock Text="{TemplateBinding Text}"
                                                Foreground="{TemplateBinding Foreground}"
                                                FontFamily="{TemplateBinding FontFamily}"
@@ -438,9 +438,9 @@
                             <Grid Background="Transparent">
                                 <Border x:Name="HoverBg" Background="Transparent" CornerRadius="{DynamicResource RadiusControl}"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="26,0,10,0">
-                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="13" Height="13" Stretch="Uniform"
-                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="1.3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.9"/>
+                                    <Path Data="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}" Width="12" Height="12" Stretch="Uniform"
+                                          Stroke="{TemplateBinding Foreground}" StrokeThickness="2.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.9" Margin="0,1,0,0"/>
                                     <TextBlock Text="{TemplateBinding Content}"
                                                Foreground="{TemplateBinding Foreground}"
                                                FontFamily="{TemplateBinding FontFamily}"
