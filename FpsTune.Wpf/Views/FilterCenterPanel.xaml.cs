@@ -18,6 +18,7 @@ public partial class FilterCenterPanel : UserControl
     private readonly ForegroundFilterWatcher? _watcher;
     private IReadOnlyList<FilterChoice> _choices = [];
     private string _category = "all";
+    private bool _rendering;
     private readonly Dictionary<string, string> _tempProfiles = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>选中滤镜：宿主页据此刷新截图对比预览。</summary>
@@ -28,6 +29,9 @@ public partial class FilterCenterPanel : UserControl
 
     /// <summary>「还原原始」：同上，统一还原。</summary>
     internal event Action? RestoreRequested;
+
+    /// <summary>当前选中的分类键（供测试与宿主页读取）。</summary>
+    internal string Category => _category;
 
     /// <summary>分类键 → 本地化组名。</summary>
     private static string CategoryLabel(string key) => key switch
@@ -49,6 +53,9 @@ public partial class FilterCenterPanel : UserControl
     {
         InitializeComponent();
         _watcher = watcher;
+        // 记住上次用的分类：下次打开滤镜页直接落在那组，不用每次从「全部」翻。
+        var saved = SettingsService.Current.FilterCategory;
+        if (!string.IsNullOrWhiteSpace(saved)) _category = saved;
         Loaded += async (_, _) => { if (!_loaded) { _loaded = true; await LoadAsync(); } };
         _ = _watcher;
     }
@@ -111,6 +118,8 @@ public partial class FilterCenterPanel : UserControl
         var keys = new List<string> { "all" };
         keys.AddRange(CategoryOrder.Where(present.Contains));
         keys.AddRange(present.Where(c => !CategoryOrder.Contains(c)).OrderBy(c => c, StringComparer.Ordinal));
+        // 记住的分类可能因为自定义滤镜被删而消失，落回「全部」。
+        if (!keys.Contains(_category)) _category = "all";
         foreach (var key in keys)
         {
             var chip = new RadioButton
@@ -124,7 +133,9 @@ public partial class FilterCenterPanel : UserControl
             AutomationProperties.SetName(chip, CategoryLabel(key));
             chip.Checked += (_, _) =>
             {
+                if (_category == key) return;
                 _category = key;
+                SaveCategory();
                 RenderPresetList();
             };
             CategoryList.Children.Add(chip);
@@ -135,24 +146,40 @@ public partial class FilterCenterPanel : UserControl
     private void RenderPresetList()
     {
         PresetList.Children.Clear();
-        foreach (var choice in _choices.Where(c => _category == "all" || c.Category == _category))
+        _rendering = true;
+        try
         {
-            var radio = new RadioButton
+            foreach (var choice in _choices.Where(c => _category == "all" || c.Category == _category))
             {
-                GroupName = "filterPresets",
-                Content = choice.Name,
-                Style = (Style)Resources["PresetCardStyle"],
-                Tag = choice,
-                IsChecked = ReferenceEquals(choice, _selected),
-            };
-            AutomationProperties.SetName(radio, choice.Name);
-            radio.Checked += (_, _) => SelectChoice(choice);
-            PresetList.Children.Add(radio);
+                var radio = new RadioButton
+                {
+                    GroupName = "filterPresets",
+                    Content = choice.Name,
+                    Style = (Style)Resources["PresetCardStyle"],
+                    Tag = choice,
+                    IsChecked = ReferenceEquals(choice, _selected),
+                };
+                AutomationProperties.SetName(radio, choice.Name);
+                radio.Checked += (_, _) => SelectChoice(choice);
+                PresetList.Children.Add(radio);
+            }
         }
+        finally { _rendering = false; }
+    }
+
+    /// <summary>把当前分类写回设置；写失败不阻断筛选（下次只是回到「全部」）。</summary>
+    private void SaveCategory()
+    {
+        var settings = SettingsService.Current;
+        if (settings.FilterCategory == _category) return;
+        settings.FilterCategory = _category;
+        try { SettingsService.Save(settings); }
+        catch (Exception) { /* 记住分类失败不影响本次筛选。 */ }
     }
 
     private void SelectChoice(FilterChoice choice)
     {
+        if (_rendering) return; // 重渲染时回填选中态不算用户重新选择，避免重复套预览
         _selected = choice;
         // 生成式预设的 Fit 本身就是一句说明，不再套「适合：」模板。
         PresetFitText.Text = choice.Generated is not null

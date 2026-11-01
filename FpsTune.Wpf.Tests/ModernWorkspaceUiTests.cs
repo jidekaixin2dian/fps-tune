@@ -395,6 +395,39 @@ public sealed class ModernWorkspaceUiTests
         });
     }
 
+    [Fact]
+    public void Filter_category_is_remembered_for_the_next_visit()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var settings = SettingsService.Current;
+            settings.FilterCategory = "all";
+            var first = new FilterCenterPanel();
+            var window = new Window { Width = 1180, Height = 800, Content = new ScrollViewer { Content = first } };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                DlssFeedbackTests.PumpUntil(() => first.FindName("CategoryList") is WrapPanel chips && chips.Children.Count > 1);
+                var list = (WrapPanel)first.FindName("CategoryList");
+                var soft = list.Children.OfType<RadioButton>().Single(c => (string)c.Tag == "soft");
+                soft.IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => SettingsService.Current.FilterCategory == "soft");
+                Assert.Equal("soft", first.Category);
+                // 切到别的分类会影响下一次渲染的列表内容
+                var game = list.Children.OfType<RadioButton>().Single(c => (string)c.Tag == "game");
+                game.IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => SettingsService.Current.FilterCategory == "game");
+            }
+            finally { window.Content = null; window.Close(); }
+
+            // 重新打开滤镜面板：直接落在上次的分类上
+            var second = new FilterCenterPanel();
+            Assert.Equal("game", second.Category);
+            SettingsService.Current.FilterCategory = "all";
+        });
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {

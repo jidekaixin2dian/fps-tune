@@ -17,6 +17,8 @@ public sealed class AppSettings
     public string OverviewMode { get; set; } = "studio";
     // 首页"继续使用"：最近访问页面键（不含 home），最多 6 个。
     public List<string> RecentPages { get; set; } = [];
+    // 滤镜列表上次选的分类键（all/soft/deexpose/bright/color/game/face），下次打开沿用。
+    public string FilterCategory { get; set; } = "all";
     public CornerPreferences Corners { get; set; } = new();
     public bool CheckUpdatesOnStartup { get; set; } = true;
     public bool WallpaperEnabled { get; set; }
