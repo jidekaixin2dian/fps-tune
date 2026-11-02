@@ -2004,7 +2004,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FilterEditorSaved">Custom filter saved: {0}</s:String>
     <s:String x:Key="Str.FilterAppsTitle">Per-app filters</s:String>
     <s:String x:Key="Str.FilterAppsHint">Bind a filter to each game/app: it applies while that window is in the foreground and restores the original ICC afterwards.</s:String>
-    <s:String x:Key="Str.FilterWatcherToggle">Enable per-app filters (foreground follow)</s:String>
+    <s:String x:Key="Str.FilterWatcherToggle">Follow foreground</s:String>
     <s:String x:Key="Str.FilterWatcherActive">Foreground: {0} · applied {1}</s:String>
     <s:String x:Key="Str.FilterWatcherIdle">Watcher off or no rule matched the foreground app.</s:String>
     <s:String x:Key="Str.FilterWatcherApplied">Per-app filter: {0} → {1}</s:String>

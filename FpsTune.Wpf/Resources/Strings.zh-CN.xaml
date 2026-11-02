@@ -2004,7 +2004,7 @@
     <s:String x:Key="Str.FilterEditorSaved">自定义滤镜已保存：{0}</s:String>
     <s:String x:Key="Str.FilterAppsTitle">独立游戏方案</s:String>
     <s:String x:Key="Str.FilterAppsHint">为每个游戏/程序绑定一个滤镜：它的窗口在前台时自动套用，离开后自动还原原 ICC。</s:String>
-    <s:String x:Key="Str.FilterWatcherToggle">开启独立程序滤镜（前台跟随）</s:String>
+    <s:String x:Key="Str.FilterWatcherToggle">前台自动切换</s:String>
     <s:String x:Key="Str.FilterWatcherActive">当前前台：{0} · 已应用 {1}</s:String>
     <s:String x:Key="Str.FilterWatcherIdle">守护未启用或前台没有命中规则。</s:String>
     <s:String x:Key="Str.FilterWatcherApplied">独立程序滤镜：{0} → {1}</s:String>
