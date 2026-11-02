@@ -7,7 +7,9 @@ namespace FpsTune.Wpf.Services;
 
 public sealed record ScreenColorSettings(double Brightness = 0, double Contrast = 100, double Gamma = 1,
     double Shadows = 0, double Red = 100, double Green = 100, double Blue = 100, double Highlight = 0,
-    double DarkBalance = ScreenColorService.NeutralDarkBalance)
+    double DarkBalance = ScreenColorService.DefaultDarkBalance,
+    // 游戏加加是「开关 + 滑杆」：关着时这条曲线完全不参与，滑杆值只记住不用。
+    bool DarkBalanceEnabled = false)
 {
     public void Validate()
     {
@@ -142,7 +144,10 @@ public static class ScreenColorService
         catch (Exception ex) { return new(false, ex.Message, new(), File.Exists(ReceiptPath(id))); }
     }
     /// <summary>暗部平衡的中性值：45 对应 γ=1.0（不改变画面）；游戏加加自己的默认档 50 是 γ=0.9。</summary>
-    internal const double NeutralDarkBalance = 45;
+    /// <summary>游戏加加 `DefinitionEnhancedDarkValue` 默认 50（对应 γ≈0.9）；关掉开关时这条曲线不参与。</summary>
+    internal const double DefaultDarkBalance = 50;
+    /// <summary>曲线不改变画面时的滑杆位置（γ=1.0 落在 36–37 之间，游戏加加中点也不是中性）。</summary>
+    internal const double NeutralDarkBalance = 37;
 
     /// <summary>
     /// 游戏加加「暗部平衡」的原始映射（逆向自 DisplayColorControl.dll / HardwareAddon.node，两处常量一致）：
@@ -160,10 +165,12 @@ public static class ScreenColorService
         if (baseline.Length != 768) throw new InvalidDataException(Str.T("Str.ColorLength"));
         var result = new ushort[768];
         var gains = new[] { settings.Red, settings.Green, settings.Blue };
+        // 开关关着时按中性值参与，曲线整体退化为恒等（不要每像素 with 一次）。
+        var effective = settings.DarkBalanceEnabled ? settings : settings with { DarkBalance = NeutralDarkBalance };
         for (var c = 0; c < 3; c++)
         for (var i = 0; i < 256; i++)
         {
-            var y = MapTone(i / 255d, settings, gains[c]);
+            var y = MapTone(i / 255d, effective, gains[c]);
             // 滤镜曲线叠在画面参数之后：ICC 预设的 rTRC/gTRC/bTRC 就是它要的画面变化，
             // 折进 ramp 后游戏（不读色彩管理）也能看到；没有滤镜时这一段恒等。
             if (filter is not null) y = SampleCurve(filter.Channels[c], y);

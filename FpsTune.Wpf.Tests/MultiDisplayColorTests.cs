@@ -72,7 +72,9 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(60, Levels["B"]); Assert.Equal(new[] { "b.icm" }, Profiles["B"]);
         Displays[0] = Displays[0] with { AdvancedColorEnabled = true, ColorMode = DisplayColorMode.Hdr };
         ColorWorkspaceService.Apply("A", new(), true, null, Path.Combine(Root, "colors", "external.icm"), null, applyScreen: false);
-        Assert.StartsWith(IccFilterService.CustomProfilePrefix, Profiles["A"].Last());
+        // 命名已改：按文件来源命名（同一个预设重复应用只覆盖同一个文件），不再用内容哈希的 FpsTune-Custom-*。
+        Assert.StartsWith("FpsTune-", Profiles["A"].Last());
+        Assert.Contains("external", Profiles["A"].Last());
         ColorWorkspaceService.Apply("A", new(), false, null, null, null, applyScreen: false, restoreIcc: true);
         Assert.Equal(new[] { "a.icm" }, Profiles["A"]); Assert.Equal(LinearRamp(), Ramps["A"]);
         Displays[0] = Displays[0] with { AdvancedColorEnabled = false, ColorMode = DisplayColorMode.Sdr };

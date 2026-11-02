@@ -45,7 +45,7 @@ public sealed class ColorPreviewChannelUiTests
 
                 // 暗部平衡与高光必须真的进预览：旧的 shader 只有亮度/对比/gamma/阴影/增益/饱和。
                 var render = preview.RenderedRevision;
-                preview.SetSettings(new(DarkBalance: 50));
+                preview.SetSettings(new(DarkBalance: 50, DarkBalanceEnabled: true));
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
                 Assert.False(neutral.SequenceEqual(Pixels((BitmapSource)after.Source!)));
 

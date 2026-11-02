@@ -113,7 +113,7 @@ public partial class FilterCenterPanel : UserControl
     {
         if (DarkBalanceGammaText is null) return;
         var gamma = ScreenColorService.DarkBalanceGamma(e.NewValue);
-        DarkBalanceGammaText.Text = Str.T("Str.FilterEditorDarkBalanceGammaValue", gamma.ToString("0.00", CultureInfo.InvariantCulture));
+        DarkBalanceGammaText.Text = e.NewValue.ToString("0", CultureInfo.InvariantCulture);
     }
 
     private void RenderPresetList()

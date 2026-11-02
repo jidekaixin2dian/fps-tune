@@ -344,8 +344,10 @@ public static class IccFilterService
     private static bool IsBackupPlusOwnProfiles(string[] list, Backup backup, string colorDir)
     {
         var ownNames = AllPresetFileNames();
+        // 我们自己装的 profile 一律以 FpsTune- 开头（预设名安装的 FpsTune-<预设名>.icc 也在此列，
+        // 不只用历史的自定义哈希前缀）。
         bool Own(string name) => ownNames.Contains(name, StringComparer.OrdinalIgnoreCase)
-            || name.StartsWith(CustomProfilePrefix, StringComparison.OrdinalIgnoreCase);
+            || name.StartsWith("FpsTune-", StringComparison.OrdinalIgnoreCase);
         // Selecting a profile removes its previous entry and appends it as default. Our
         // profiles may therefore move even when they were already in the original list.
         // Foreign entries must still retain exactly their original order and count.

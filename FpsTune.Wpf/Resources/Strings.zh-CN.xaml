@@ -1437,7 +1437,11 @@
     <s:String x:Key="Str.ColorRed">红色</s:String>
     <s:String x:Key="Str.ColorGreen">绿色</s:String>
     <s:String x:Key="Str.ColorBlue">蓝色</s:String>
-    <s:String x:Key="Str.ColorDarkBalance">暗部平衡</s:String>
+    <s:String x:Key="Str.ColorDarkBalance">暗部场景平衡</s:String>
+    <s:String x:Key="Str.ColorDarkBalanceReset">还原初始值</s:String>
+    <s:String x:Key="Str.ColorDarkBalanceDark">暗</s:String>
+    <s:String x:Key="Str.ColorDarkBalanceBright">亮</s:String>
+    <s:String x:Key="Str.ColorDarkBalanceHint">调整场景的明暗程度。暗部提亮后，房间、走廊、箱子阴影里的敌人更容易看清，对枪时不会因为看不清角落而吃亏。</s:String>
     <s:String x:Key="Str.ColorHighlight">高光</s:String>
     <s:String x:Key="Str.ColorCustom">自定义参数</s:String>
     <s:String x:Key="Str.ColorShadowPreset">暗部增强</s:String>

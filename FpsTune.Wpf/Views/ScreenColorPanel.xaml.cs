@@ -87,17 +87,21 @@ public partial class ScreenColorPanel : UserControl
             // 暗部平衡单独占一张卡片（滤镜列表正下方），卡片标题已写名字，行内标签就不重复了。
             if (i == DarkBalanceIndex)
             {
+                // 游戏加加那套：数值在上方居中、滑杆吃满、暗/亮在两端，没有多余的标签和读数。
                 text.Visibility = Visibility.Collapsed;
+                entry.Visibility = Visibility.Collapsed;
                 row.Margin = new Thickness(0);
                 slider.Style = (Style)FindResource("TuneSliderStyle");
                 System.Windows.Automation.AutomationProperties.SetAutomationId(slider, "ColorDarkBalanceSlider");
-                slider.ValueChanged += (_, _) => UpdateDarkBalanceGamma(slider.Value);
+                slider.ValueChanged += (_, _) => { DarkBalanceValue.Text = slider.Value.ToString("0", CultureInfo.InvariantCulture); };
                 DarkBalanceRowHost.Children.Add(row);
             }
             else ParameterGrid.Children.Add(row);
             _sliders.Add(slider);
         }
-        UpdateDarkBalanceGamma(_sliders[DarkBalanceIndex].Value);
+        DarkBalanceValue.Text = _sliders[DarkBalanceIndex].Value.ToString("0", CultureInfo.InvariantCulture);
+        DarkBalanceRowHost.IsEnabled = false;
+        DarkBalanceResetButton.IsEnabled = false;
         ColorPresetCombo.ItemsSource = new[] { new Choice(Str.T("Str.ColorCustom"), null) }
             .Concat(Enum.GetValues<IccFilterPreset>().Select(preset => new Choice(ScreenColorSettings.TitleFor(preset), preset)))
             .ToArray();
@@ -185,6 +189,9 @@ public partial class ScreenColorPanel : UserControl
         if (ColorApplyButton is null) return;
         ColorApplyButton.IsEnabled = !_busy && (IccMode ? _iccSupported && (Preset is not null || _iccFile is not null) : _screenSupported || _iccRestorable || _vibranceDirty && _vibrance is not null);
         ParameterGrid.IsEnabled = !_busy && _screenSupported;
+        DarkBalanceToggle.IsEnabled = !_busy && _screenSupported;
+        DarkBalanceResetButton.IsEnabled = !_busy && _screenSupported && DarkBalanceToggle.IsChecked == true;
+        DarkBalanceRowHost.IsEnabled = !_busy && _screenSupported && DarkBalanceToggle.IsChecked == true;
         ColorResetButton.IsEnabled = !_busy && _screenSupported;
         ColorPresetCombo.IsEnabled = !_busy && _screenSupported;
         IccPresetCombo.IsEnabled = !_busy && _iccSupported;
@@ -198,9 +205,9 @@ public partial class ScreenColorPanel : UserControl
         ColorRestoreButton.IsEnabled = !_busy && (_restorable || _vibranceRestorable);
     }
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
-        _sliders[4].Value, _sliders[5].Value, _sliders[6].Value, _sliders[8].Value, _sliders[7].Value);
-    /// <summary>暗部平衡的实时等效 γ：与「编辑 ICC」里那块同一套换算，读数随滑块走。</summary>
-    /// <summary>当前滤镜的 TRC 曲线（.icc 文件优先，其次生成式预设）；读不到就当没有滤镜。</summary>
+        _sliders[4].Value, _sliders[5].Value, _sliders[6].Value, _sliders[8].Value, _sliders[7].Value,
+        DarkBalanceToggle.IsChecked == true);
+    /// <summary>当前滤镜的 vcgt/TRC 曲线（.icc 文件优先，其次生成式预设）；读不到就当没有滤镜。</summary>
     private IccCurves? CurrentFilterCurves()
     {
         // 只有真的选中了滤镜（ICC 模式）才把曲线算进预览：面板初始就会选中一条预设，不能拿它当"用户选了滤镜"。
@@ -214,13 +221,23 @@ public partial class ScreenColorPanel : UserControl
         catch { return null; }
     }
 
-    private void UpdateDarkBalanceGamma(double value)
+    /// <summary>开关：关着时这条曲线不参与，滑杆就地禁用（值仍记着）。</summary>
+    private void DarkBalance_Toggled(object sender, RoutedEventArgs e)
     {
-        if (DarkBalanceGammaText is null) return;
-        DarkBalanceGammaText.Text = Str.T("Str.FilterEditorDarkBalanceGammaValue",
-            ScreenColorService.DarkBalanceGamma(value).ToString("0.00", CultureInfo.InvariantCulture));
+        if (_sliders.Count <= DarkBalanceIndex || DarkBalanceRowHost is null) return;
+        DarkBalanceRowHost.IsEnabled = DarkBalanceToggle.IsChecked == true;
+        DarkBalanceResetButton.IsEnabled = DarkBalanceToggle.IsChecked == true;
+        if (_syncing) return;
+        MarkDraft(); ColorPresetCombo.SelectedIndex = 0; Availability(); UpdatePreview();
     }
 
+    /// <summary>还原初始值：游戏加加默认 50。</summary>
+    private void DarkBalance_Reset_Click(object sender, RoutedEventArgs e)
+    {
+        _sliders[DarkBalanceIndex].Value = ScreenColorService.DefaultDarkBalance;
+        DarkBalanceValue.Text = ScreenColorService.DefaultDarkBalance.ToString("0", CultureInfo.InvariantCulture);
+        MarkDraft(); ColorPresetCombo.SelectedIndex = 0; UpdatePreview();
+    }
     private void ShowSettings(ScreenColorSettings s)
     {
         _syncing = true;
@@ -228,6 +245,8 @@ public partial class ScreenColorPanel : UserControl
         {
             var values = new[] { s.Brightness, s.Contrast, s.Gamma, s.Shadows, s.Red, s.Green, s.Blue, s.DarkBalance, s.Highlight };
             for (var i = 0; i < values.Length; i++) _sliders[i].Value = values[i];
+            DarkBalanceToggle.IsChecked = s.DarkBalanceEnabled;
+            DarkBalanceValue.Text = _sliders[DarkBalanceIndex].Value.ToString("0", CultureInfo.InvariantCulture);
         }
         finally { _syncing = false; UpdatePreview(); }
     }

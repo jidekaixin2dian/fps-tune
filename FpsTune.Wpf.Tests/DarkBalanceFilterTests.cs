@@ -43,7 +43,8 @@ public class DarkBalanceFilterTests
     [Fact]
     public void Neutral_value_leaves_every_parameter_untouched()
     {
-        var settings = new ScreenColorSettings(Brightness: 3, Contrast: 107, Gamma: 1.12, Shadows: 6, Red: 102, Green: 99, Blue: 97, Highlight: -8);
+        var settings = new ScreenColorSettings(Brightness: 3, Contrast: 107, Gamma: 1.12, Shadows: 6, Red: 102, Green: 99, Blue: 97, Highlight: -8,
+            DarkBalance: ScreenColorService.NeutralDarkBalance, DarkBalanceEnabled: true);
         var legacy = Enumerable.Range(0, 256)
             .Select(i => LegacyTone(i / 255d, settings))
             .ToArray();
@@ -56,7 +57,7 @@ public class DarkBalanceFilterTests
     {
         foreach (var p in new double[] { 0, 20, 45, 50, 100 })
         {
-            var ours = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: p), Identity());
+            var ours = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: p, DarkBalanceEnabled: true), Identity());
             var reference = GamePpRamp(p);
             for (var i = 0; i < 256; i++)
             {
@@ -69,7 +70,7 @@ public class DarkBalanceFilterTests
     [Fact]
     public void Reference_default_lifts_black_and_keeps_white()
     {
-        var ramp = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 50), Identity());
+        var ramp = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 50, DarkBalanceEnabled: true), Identity());
         // 游戏加加默认档（p=50, γ=0.9）实测 ramp[0] ≈ 446，白点保持 65535。
         Assert.InRange(ramp[0], 420, 470);
         Assert.Equal(65535, ramp[255]);
@@ -81,8 +82,8 @@ public class DarkBalanceFilterTests
     public void Extreme_values_are_monotonic_and_ordered()
     {
         // 值越大 γ 越小 → 画面越亮（0 → γ1.4 压暗，100 → γ0.3 提亮）。
-        var crushed = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 0), Identity());
-        var lifted = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 100), Identity());
+        var crushed = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 0, DarkBalanceEnabled: true), Identity());
+        var lifted = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 100, DarkBalanceEnabled: true), Identity());
         for (var i = 1; i < 256; i++)
         {
             Assert.True(crushed[i] >= crushed[i - 1]);
@@ -91,6 +92,19 @@ public class DarkBalanceFilterTests
         Assert.True(lifted[128] > crushed[128]);
         Assert.True(lifted[0] > 0);
         Assert.True(crushed[0] > 0);
+    }
+
+    [Fact]
+    public void Toggle_off_ignores_the_slider_value_entirely()
+    {
+        // 游戏加加是「开关 + 滑杆」：开关关着时这条曲线完全不参与，滑杆只是记着。
+        var off = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 100), Identity());
+        var neutral = ScreenColorService.BuildRamp(
+            new ScreenColorSettings(DarkBalance: ScreenColorService.NeutralDarkBalance), Identity());
+        Assert.Equal(neutral, off);
+
+        var on = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 100, DarkBalanceEnabled: true), Identity());
+        Assert.NotEqual(neutral, on);
     }
 
     [Theory]

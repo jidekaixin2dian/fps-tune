@@ -84,36 +84,28 @@
                         <Slider x:Name="HighlightSlider" Grid.Column="1" Minimum="-25" Maximum="25" Value="0" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,0,10,6" AutomationProperties.Name="{DynamicResource Str.FilterEditorHighlight}"/>
                         <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=HighlightSlider, StringFormat={}{0:0}}" VerticalAlignment="Center"/>
                     </Grid>
-                    <!-- 暗部平衡：游戏加加同款 12 档幂律，单独突出显示（实时给出等效 γ） -->
+                    <!-- 暗部场景平衡：与「画面与色彩」同一套形式（数值在上、暗/亮在两端），不再是自创的档位标签 + γ 读数。 -->
                     <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,4,0,6">
                         <StackPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalance}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
-                                    <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceTag}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Grid.Column="1" x:Name="DarkBalanceGammaText" Text="γ 1.00"
+                                <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalance}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" x:Name="DarkBalanceGammaText" Text="50"
                                            FontFamily="{StaticResource FontStat}" Typography.NumeralAlignment="Tabular"
-                                           FontSize="17" FontWeight="{DynamicResource StrongEmphasisWeight}"
-                                           Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"
-                                           AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalanceGamma}"/>
+                                           FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"
+                                           AutomationProperties.AutomationId="FilterEditorDarkBalanceValue"/>
                             </Grid>
-                            <Slider x:Name="DarkBalanceSlider" Minimum="0" Maximum="100" Value="45" TickFrequency="1" IsSnapToTickEnabled="True"
+                            <Slider x:Name="DarkBalanceSlider" Minimum="0" Maximum="100" Value="50" TickFrequency="1" IsSnapToTickEnabled="True"
                                     Margin="0,8,0,0" Style="{StaticResource TuneSliderStyle}"
                                     ValueChanged="DarkBalance_Changed"
                                     AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalance}"/>
                             <Grid Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceBright}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
-                                <TextBlock Grid.Column="1" Text="{DynamicResource Str.FilterEditorDarkBalanceNeutral}" Style="{StaticResource MutedTextStyle}" FontSize="12" HorizontalAlignment="Center"/>
-                                <TextBlock Grid.Column="2" Text="{DynamicResource Str.FilterEditorDarkBalanceDark}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                                <TextBlock Text="{DynamicResource Str.ColorDarkBalanceDark}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock Grid.Column="2" Text="{DynamicResource Str.ColorDarkBalanceBright}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                             </Grid>
                         </StackPanel>
-                    </Border>
-                    <TextBlock Text="{DynamicResource Str.FilterEditorHighlightHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </Border>                    <TextBlock Text="{DynamicResource Str.FilterEditorHighlightHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                     <Grid Margin="0,4,0,0">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

@@ -77,34 +77,29 @@
        <ContentControl x:Name="FilterHost"/>
       </Border>
 
-      <!-- 暗部平衡：选滤镜时最常调的项，单独一张卡放在滤镜列表正下方；滑块本体仍由下方循环生成（与画面参数同一份状态）。 -->
+      <!-- 暗部场景平衡：按游戏加加的样子做——开关 + 还原初始值 + 滑杆，暗/亮在两端，数值在上方。 -->
       <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20" AutomationProperties.AutomationId="DarkBalanceCard">
        <StackPanel>
         <Grid>
-         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-          <TextBlock Text="{DynamicResource Str.ColorDarkBalance}" Style="{StaticResource CardTitleStyle}"/>
-          <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-           <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceTag}" FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
-          </Border>
-         </StackPanel>
-         <TextBlock Grid.Column="1" x:Name="DarkBalanceGammaText" Text="γ 1.00"
-                    FontFamily="{StaticResource FontStat}" Typography.NumeralAlignment="Tabular" FontSize="17"
-                    FontWeight="{DynamicResource StrongEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"
-                    VerticalAlignment="Center" AutomationProperties.AutomationId="DarkBalanceGammaText"
-                    AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalanceGamma}"/>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+         <TextBlock Text="{DynamicResource Str.ColorDarkBalance}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+         <CheckBox x:Name="DarkBalanceToggle" Grid.Column="1" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center"
+                   Checked="DarkBalance_Toggled" Unchecked="DarkBalance_Toggled"
+                   AutomationProperties.Name="{DynamicResource Str.ColorDarkBalance}"/>
+         <Button x:Name="DarkBalanceResetButton" Grid.Column="2" Content="{DynamicResource Str.ColorDarkBalanceReset}"
+                 Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Margin="14,0,0,0" Click="DarkBalance_Reset_Click"/>
         </Grid>
-        <StackPanel x:Name="DarkBalanceRowHost" Margin="0,12,0,0"/>
+        <TextBlock Text="{DynamicResource Str.ColorDarkBalanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+        <TextBlock x:Name="DarkBalanceValue" Text="50" FontSize="13" HorizontalAlignment="Center" Margin="0,14,0,0"
+                   Typography.NumeralAlignment="Tabular" AutomationProperties.AutomationId="DarkBalanceValue"/>
+        <StackPanel x:Name="DarkBalanceRowHost" Margin="0,4,0,0"/>
         <Grid Margin="0,2,0,0">
          <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-         <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceBright}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
-         <TextBlock Grid.Column="1" Text="{DynamicResource Str.FilterEditorDarkBalanceNeutral}" Style="{StaticResource MutedTextStyle}" FontSize="13" HorizontalAlignment="Center"/>
-         <TextBlock Grid.Column="2" Text="{DynamicResource Str.FilterEditorDarkBalanceDark}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+         <TextBlock Text="{DynamicResource Str.ColorDarkBalanceDark}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+         <TextBlock Grid.Column="2" Text="{DynamicResource Str.ColorDarkBalanceBright}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
         </Grid>
-        <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
        </StackPanel>
       </Border>
-
       <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
        <StackPanel>
         <TextBlock Text="{DynamicResource Str.ColorParametersLayer}" Style="{StaticResource CardTitleStyle}"/>
