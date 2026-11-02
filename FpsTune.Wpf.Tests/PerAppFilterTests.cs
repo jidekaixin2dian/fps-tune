@@ -25,6 +25,7 @@ public sealed class PerAppFilterTests : IDisposable
         ForegroundFilterWatcher.ApplyOverride = null;
         ForegroundFilterWatcher.RestoreOverride = null;
         ForegroundFilterWatcher.DisplayOverride = null;
+        ForegroundFilterWatcher.ProcessAliveOverride = null;
         IccAppRuleStore.FileOverride = null;
         FilterPreferenceStore.FileOverride = null;
         UserDataPaths.RootOverride = null;
@@ -143,6 +144,38 @@ public sealed class PerAppFilterTests : IDisposable
             watcher.Poll();
             Assert.Equal(1, restores);
             Assert.Null(watcher.Status.ActivePreset);
+        }
+        finally
+        {
+            SettingsService.Current.FilterWatcherEnabled = old;
+            SettingsService.Current.FullscreenPresetEnabled = oldFullscreen;
+            SettingsService.Save(SettingsService.Current);
+        }
+    }
+
+    [Fact]
+    public void Watcher_restores_immediately_when_the_applied_process_exits_even_if_foreground_is_stale()
+    {
+        var old = SettingsService.Current.FilterWatcherEnabled;
+        var oldFullscreen = SettingsService.Current.FullscreenPresetEnabled;
+        SettingsService.Current.FilterWatcherEnabled = true;
+        SettingsService.Current.FullscreenPresetEnabled = false;
+        IccAppRuleStore.Save([Rule("game.exe", "generated:Vivid", 60, false)]);
+        var restores = 0;
+        ForegroundFilterWatcher.ForegroundProcessOverride = () => new("game.exe", @"C:\Games\game.exe", "Game", 4321);
+        ForegroundFilterWatcher.DisplayOverride = () => "D1";
+        ForegroundFilterWatcher.ApplyOverride = _ => true;
+        ForegroundFilterWatcher.RestoreOverride = () => { restores++; return true; };
+        try
+        {
+            using var watcher = new ForegroundFilterWatcher();
+            watcher.Poll(); watcher.Poll();
+            Assert.NotNull(watcher.Status.ActivePreset);
+            ForegroundFilterWatcher.ProcessAliveOverride = _ => false; // 模拟游戏进程已退出，前台窗口仍是旧 HWND。
+            watcher.Poll();
+            Assert.Equal(1, restores);
+            Assert.Null(watcher.Status.ActivePreset);
+            Assert.Contains("FilterWatcherRestored", watcher.Status.Detail);
         }
         finally
         {

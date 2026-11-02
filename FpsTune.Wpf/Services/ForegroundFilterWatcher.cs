@@ -35,6 +35,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     private bool _applied;
     private FilterAppRule? _appliedRule;
     private string? _appliedDisplay;
+    private int _appliedPid;
     private ForegroundAppInfo? _active;
     private string _detail = "";
     private string? _lastError;
@@ -46,6 +47,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     internal static Func<string?, bool>? ApplyOverride { get; set; }
     internal static Func<bool>? RestoreOverride { get; set; }
     internal static Func<string?>? DisplayOverride { get; set; }
+    internal static Func<int, bool>? ProcessAliveOverride { get; set; }
 
     public ForegroundFilterWatcher() : this(null) { }
     internal ForegroundFilterWatcher(IPerAppForegroundProbe? probe = null)
@@ -81,6 +83,14 @@ internal sealed class ForegroundFilterWatcher : IDisposable
                 _state.Reset();
                 Disengage(Str.T(suppressed ? "Str.FullscreenReasonTakeover" : "Str.FilterWatcherReasonOff"), suppressed);
                 SetDetail(Str.T(suppressed ? "Str.FilterWatcherSuppressed" : "Str.FilterWatcherIdle"));
+                return;
+            }
+            // 游戏已经退出但 GetForegroundWindow 仍可能返回失效窗口，不能把“窗口没了”当 Unknown
+            // 永久保留。按已应用进程 ID 明确识别退出边沿，先还原再继续本轮。
+            if (_applied && _appliedPid > 0 && !IsProcessAlive(_appliedPid))
+            {
+                _state.Reset();
+                Disengage(Str.T("Str.FilterWatcherReasonExit"), false);
                 return;
             }
             var app = ReadForeground();
@@ -128,7 +138,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         else outcome = PerAppFilterExecution.Apply(display, rule);
         lock (_gate)
         {
-            _applied = true; _appliedRule = rule; _appliedDisplay = display;
+            _applied = true; _appliedRule = rule; _appliedDisplay = display; _appliedPid = app.ProcessId;
             _lastError = null;
             _detail = Str.T("Str.FilterWatcherActive", app.ProcessName, rule.PresetFileName);
         }
@@ -144,7 +154,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         {
             previous = _appliedRule; identity = _appliedDisplay;
             if (!_applied) { _detail = ""; return; }
-            _applied = false; _appliedRule = null; _appliedDisplay = null;
+            _applied = false; _appliedRule = null; _appliedDisplay = null; _appliedPid = 0;
         }
         try
         {
@@ -180,6 +190,18 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     private string? ReadDisplay() => DisplayOverride?.Invoke() ?? _probe.DisplayIdentity;
     private void SetDetail(string text) { lock (_gate) _detail = text; }
     private void SetError(string text) { lock (_gate) { _detail = text; _lastError = text; } }
+    private static bool IsProcessAlive(int pid)
+    {
+        if (ProcessAliveOverride is { } hook) return hook(pid);
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            return !process.HasExited;
+        }
+        catch (ArgumentException) { return false; }
+        catch { return true; } // 受保护进程读不到退出状态时保持现状，不误还原。
+    }
+
     private static void Record(string kind, string text)
         => AutoProfileActivityStore.Append(new AutoProfileEvent(DateTime.Now, kind, "", null, text));
 
