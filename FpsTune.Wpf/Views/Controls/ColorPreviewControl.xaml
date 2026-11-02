@@ -31,7 +31,9 @@
     <TextBlock x:Name="EmptyHint" Text="{DynamicResource Str.ColorPreviewEmpty}" Foreground="#CCD2DA" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="20"/>
     <Image x:Name="AfterImage" Stretch="Uniform"/>
     <Grid x:Name="BeforeLayer"><Image x:Name="BeforeImage" Stretch="Uniform"/></Grid>
-    <Slider x:Name="SplitSlider" Height="Auto" Minimum="0" Maximum="100" Value="50" SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True" ValueChanged="Split_Changed" VerticalAlignment="Stretch" Focusable="True" Cursor="SizeWE" AutomationProperties.Name="{DynamicResource Str.ColorPreviewSplit}" ToolTip="{DynamicResource Str.ColorPreviewDrag}">
+    <!-- 这条不是"调参滑杆"：全站隐式 Slider 样式（Left + MaxWidth 260 + 高 22）会把它压成
+         拇指宽度、跑到图下方，谁都拖不到。这里显式脱离该样式，铺满整块对比区。 -->
+    <Slider x:Name="SplitSlider" Style="{x:Null}" Height="Auto" Minimum="0" Maximum="100" Value="50" SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True" ValueChanged="Split_Changed" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="True" Cursor="SizeWE" AutomationProperties.Name="{DynamicResource Str.ColorPreviewSplit}" ToolTip="{DynamicResource Str.ColorPreviewDrag}">
      <Slider.Template>
       <ControlTemplate TargetType="Slider">
        <Grid Background="Transparent">

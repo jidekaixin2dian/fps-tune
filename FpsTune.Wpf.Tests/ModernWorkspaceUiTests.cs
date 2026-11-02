@@ -539,6 +539,33 @@ public sealed class ModernWorkspaceUiTests
     }
 
     [Fact]
+    public void Split_handle_covers_the_comparison_surface_so_it_can_be_dragged()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            var preview = new FpsTune.Wpf.Views.Controls.ColorPreviewControl();
+            var window = new Window { Width = 1100, Height = 760, Content = preview };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var path = Path.Combine(root, "split.png");
+                using (var file = File.Create(path))
+                { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(ScreenColorPreview.Sample())); encoder.Save(file); }
+                var load = preview.LoadImageAsync(path); DlssFeedbackTests.PumpUntil(() => load.IsCompleted); load.GetAwaiter().GetResult();
+                window.UpdateLayout();
+                var slider = (Slider)preview.FindName("SplitSlider");
+                var surface = (Grid)preview.FindName("ComparisonSurface");
+                Assert.True(slider.ActualWidth > surface.ActualWidth * 0.9,
+                    $"slider={slider.ActualWidth:0.##}x{slider.ActualHeight:0.##} surface={surface.ActualWidth:0.##}x{surface.ActualHeight:0.##}");
+                Assert.True(slider.ActualHeight > surface.ActualHeight * 0.9,
+                    $"slider={slider.ActualWidth:0.##}x{slider.ActualHeight:0.##} surface={surface.ActualWidth:0.##}x{surface.ActualHeight:0.##}");
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Filter_selection_clears_with_the_panel_ICC_and_can_be_selected_again()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
