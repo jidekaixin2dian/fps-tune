@@ -149,21 +149,37 @@ public partial class App : Application
                 UpdateLiveMetrics();
             };
             mainWindow.StateChanged += (_, _) => UpdateLiveMetrics();
+            // 加载期间主界面不出现：先以 0 不透明度、不进任务栏、不抢焦点地 Show 出来，
+            // 只为让页面开始加载并产生首帧；加载完成后再显形、恢复任务栏与激活。
+            var wantedTaskbar = mainWindow.ShowInTaskbar;
+            mainWindow.ShowInTaskbar = false;
+            mainWindow.ShowActivated = false;
+            mainWindow.Opacity = 0;
+            void Reveal()
+            {
+                try
+                {
+                    mainWindow.ShowInTaskbar = wantedTaskbar;
+                    mainWindow.Opacity = 1;
+                    mainWindow.Activate();
+                }
+                catch { /* 显形失败按原样显示，不阻塞启动 */ }
+                // 更新装好并重启后，把「这个版本改了什么」告诉用户；必须在主界面显形之后，
+                // 否则会弹在加载窗上。没有未读说明就什么都不做。
+                mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try { Views.WhatsNewWindow.ShowIfPending(mainWindow); }
+                    catch { /* 弹窗失败不影响主界面，下次启动还会再试。 */ }
+                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            }
             // 首帧渲染 ≠ 首页数据就绪（控制台概览首启要跑后台检测、经典概览要等 WMI）。
             // splash 等到「首帧 + 首页数据就绪信号」双条件齐备才放行，超时兜底防启动卡死。
-            _ = StartupPresentation.CompleteAsync(mainWindow, splash);
+            _ = StartupPresentation.CompleteAsync(mainWindow, splash, reveal: Reveal);
             mainWindow.Closed += (_, _) =>
             {
                 try { splash.Close(); } catch { /* 已关闭则忽略 */ }
             };
             mainWindow.Show();
-            splash.Owner = mainWindow;
-            // 更新装好并重启后，把「这个版本改了什么」告诉用户；没有未读说明就什么都不做。
-            mainWindow.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                try { Views.WhatsNewWindow.ShowIfPending(mainWindow); }
-                catch { /* 弹窗失败不影响主界面，下次启动还会再试。 */ }
-            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             splash.SetPhase(92, Str.T("Str.SplashPhaseData"));
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();

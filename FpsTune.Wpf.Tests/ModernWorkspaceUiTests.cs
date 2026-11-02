@@ -539,6 +539,23 @@ public sealed class ModernWorkspaceUiTests
     }
 
     [Fact]
+    public void Startup_splash_is_topmost_so_the_loading_window_never_falls_behind_the_shell()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var splash = new SplashWindow();
+            try
+            {
+                app.MainWindow = splash; DlssFeedbackTests.PrepareBackgroundWindow(splash); splash.Show();
+                Assert.True(splash.Topmost);
+                Assert.False(splash.ShowInTaskbar);
+            }
+            finally { splash.Close(); }
+        });
+    }
+
+    [Fact]
     public void Split_handle_covers_the_comparison_surface_so_it_can_be_dragged()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }

@@ -6,7 +6,7 @@ namespace FpsTune.Wpf.Services;
 /// <summary>The startup presentation belongs to the shell, never to a cached page's lifetime.</summary>
 internal static class StartupPresentation
 {
-    internal static async Task CompleteAsync(MainWindow main, SplashWindow splash, TimeSpan? timeout = null)
+    internal static async Task CompleteAsync(MainWindow main, SplashWindow splash, TimeSpan? timeout = null, Action? reveal = null)
     {
         var frame = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -25,6 +25,8 @@ internal static class StartupPresentation
             await Task.WhenAny(Task.WhenAll(frame.Task, ready.Task), deadline);
             if (stopped.IsCancellationRequested) return;
             splash.SetPhase(100, Str.T("Str.StartupReady"));
+            // 先让主界面出现在加载窗背后，再由加载窗淡出——启动期间用户只看得到加载窗。
+            reveal?.Invoke();
             splash.CloseWithFade();
         }
         finally
