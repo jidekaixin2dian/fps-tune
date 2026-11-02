@@ -41,6 +41,9 @@ public sealed class AppSettings
     public bool HotkeyEnabled { get; set; } = true;
     public bool NotifyOnComplete { get; set; } = true;
 
+    // 更新完成后「这个版本改了什么」的弹窗只弹一次：记下已经看过的版本。
+    public string WhatsNewSeenVersion { get; set; } = "";
+
     // 低配模式: 减弱动效与阴影、拉长采样间隔
     public bool LowSpecMode { get; set; }
 

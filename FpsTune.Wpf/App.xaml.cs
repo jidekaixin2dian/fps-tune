@@ -158,6 +158,12 @@ public partial class App : Application
             };
             mainWindow.Show();
             splash.Owner = mainWindow;
+            // 更新装好并重启后，把「这个版本改了什么」告诉用户；没有未读说明就什么都不做。
+            mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                try { Views.WhatsNewWindow.ShowIfPending(mainWindow); }
+                catch { /* 弹窗失败不影响主界面，下次启动还会再试。 */ }
+            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             splash.SetPhase(92, Str.T("Str.SplashPhaseData"));
             _autoProfileService = new AutoProfileService();
             _autoProfileService.Start();

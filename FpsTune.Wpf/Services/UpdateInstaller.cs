@@ -98,6 +98,8 @@ internal static class UpdateInstaller
                     parent.StartTime.ToUniversalTime().Ticks, snapshotHash, DateTimeOffset.UtcNow, package.Hash, mode);
                 UpdateRecovery.SaveAttempt(attempt);
                 unpublishedId = null;
+                // 安装前记下这版的 Release 说明：装好重启后用它弹「更新了什么」，失败则不匹配当前版本、不会弹。
+                if (mode == "upgrade") WhatsNewService.Record(info.Version, info.Notes);
                 if (UpdateRecovery.WorkerOverride is not null) UpdateRecovery.WorkerOverride(attempt, token).GetAwaiter().GetResult();
                 else UpdateWorker.Start(attempt, token);
             }, token);

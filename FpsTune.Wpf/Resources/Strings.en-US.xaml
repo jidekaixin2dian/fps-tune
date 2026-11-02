@@ -1292,7 +1292,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReleaseChanges">本次主要更新</s:String>
     <s:String x:Key="Str.ReleaseDownloadPage">前往下载页面</s:String>
     <s:String x:Key="Str.ReleaseExeHint">优先下载 EXE 安装版，已包含所需 .NET 运行时。</s:String>
-    <s:String x:Key="Str.ReleaseNotesEmpty">此版本暂未提供更新说明，可前往下载页面查看。</s:String>
+    <s:String x:Key="Str.ReleaseNotesEmpty">This release has no notes yet; check the download page.</s:String>
+    <s:String x:Key="Str.WhatsNewTitle">Update installed</s:String>
+    <s:String x:Key="Str.WhatsNewVersion">Updated to {0}</s:String>
+    <s:String x:Key="Str.WhatsNewIntro">What changed in this version</s:String>
+    <s:String x:Key="Str.WhatsNewClose">Got it</s:String>
     <s:String x:Key="Str.SessionGuideTitle">第一次使用：记录一段游戏表现</s:String>
     <s:String x:Key="Str.SessionGuideSteps" xml:space="preserve">1. 先在“检测”页定位游戏，填写分辨率、画质和测试场景。&#x0a;2. 点击“开始记录”，切回游戏完成同一段场景；到时自动保存，也可手动停止。&#x0a;3. 在历史记录中选择两次会话，比较占用、帧率与帧时间，并导出结果。</s:String>
     <s:String x:Key="Str.SessionChartGuide">曲线从左到右展示最近采样：CPU、内存、GPU 看占用率；显存看已用容量。曲线升高表示占用增加，帧率结果请查看保存后的会话。</s:String>
