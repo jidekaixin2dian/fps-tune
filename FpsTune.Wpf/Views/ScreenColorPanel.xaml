@@ -23,16 +23,18 @@
 
    <!-- 左侧固定：无论右侧筛选、调参、编辑 ICC 或切到独立方案，这块实机图始终在旁边。 -->
    <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,22,0" VerticalAlignment="Stretch">
-    <StackPanel>
-     <DockPanel Margin="0,0,0,10">
+    <Grid>
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+     <DockPanel Grid.Row="0" Margin="0,0,0,10">
       <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.ColorPreviewTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
       <TextBlock x:Name="PreviewModeHint" DockPanel.Dock="Right" Text="{DynamicResource Str.ColorPreviewStickyHint}"
                  Style="{StaticResource MutedTextStyle}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"/>
      </DockPanel>
-     <controls:ColorPreviewControl x:Name="ColorPreview"/>
+     <!-- 图片占满剩余高度：下面的说明行永远是 Auto，高度不够时缩的是图，不再是字。 -->
+     <controls:ColorPreviewControl Grid.Row="1" x:Name="ColorPreview"/>
 
      <!-- 旧的重复滤镜选择区保留 namescope 和状态，但不再出现在界面上。 -->
-     <Border x:Name="FilterPickerBox" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,14,0,0">
+     <Border Grid.Row="2" x:Name="FilterPickerBox" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,14,0,0">
       <StackPanel>
        <DockPanel Margin="0,0,0,10">
         <CheckBox x:Name="IccEnabledCheck" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorIccEnabled}" Checked="IccToggle_Changed" Unchecked="IccToggle_Changed" VerticalAlignment="Center"/>
@@ -50,7 +52,7 @@
        <TextBlock x:Name="IccFileText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
       </StackPanel>
      </Border>
-    </StackPanel>
+    </Grid>
    </Border>
 
    <Grid x:Name="ControlsPane" Grid.Column="1">

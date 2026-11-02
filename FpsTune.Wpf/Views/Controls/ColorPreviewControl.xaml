@@ -1,28 +1,36 @@
 <UserControl x:Class="FpsTune.Wpf.Views.Controls.ColorPreviewControl"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls">
- <StackPanel>
-  <DockPanel Margin="0,0,0,10">
+ <Grid>
+  <Grid.RowDefinitions>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="*"/>
+   <RowDefinition Height="Auto"/>
+   <RowDefinition Height="Auto"/>
+  </Grid.RowDefinitions>
+  <DockPanel Grid.Row="0" Margin="0,0,0,10">
    <Button x:Name="LoadImageButton" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorPreviewLoad}" Click="LoadImage_Click" Style="{StaticResource SecondaryButtonStyle}"/>
    <StackPanel VerticalAlignment="Center">
     <controls:FileNameLabel x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}" Margin="0,0,10,0"/>
     <TextBlock Text="{DynamicResource Str.ColorPreviewSourceHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,3,10,0"/>
    </StackPanel>
   </DockPanel>
-  <ComboBox x:Name="ScreenshotCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Screenshot_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorPreviewScene}">
+  <ComboBox Grid.Row="1" x:Name="ScreenshotCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Screenshot_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorPreviewScene}">
    <ComboBoxItem Content="{DynamicResource Str.ColorPreviewDelta}"/>
    <ComboBoxItem Content="{DynamicResource Str.ColorPreviewValorant}"/>
    <ComboBoxItem x:Name="CustomSceneItem" Content="{DynamicResource Str.ColorPreviewCustom}" Visibility="Collapsed"/>
    <ComboBoxItem x:Name="RecentSceneItem" Content="{DynamicResource Str.ColorPreviewRecent}"/>
   </ComboBox>
   <!-- 明确预览看的是哪一种效果：游戏能看到的（gamma + 数字振动）还是读 ICC 的程序看到的。 -->
-  <WrapPanel Margin="0,0,0,10">
+  <WrapPanel Grid.Row="2" Margin="0,0,0,10">
    <RadioButton x:Name="ChannelGame" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelGame}"
                 IsChecked="True" Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelGame}"/>
    <RadioButton x:Name="ChannelManaged" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelManaged}"
                 Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelManaged}"/>
   </WrapPanel>
-  <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch" MaxHeight="460">
+  <Viewbox Grid.Row="3" x:Name="ComparisonViewbox" Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="180">
   <Grid x:Name="ComparisonViewport" Width="960" Height="540" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
   <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
    <!-- 尺寸交给布局：固定高度 + 撑满可用宽度（最多 880），不再用代码算像素——算错过一次，
@@ -65,7 +73,7 @@
   </Border>
   </Grid>
   </Viewbox>
-  <TextBlock Text="{DynamicResource Str.ColorPreviewDrag}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-  <TextBlock x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewGameHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
- </StackPanel>
+  <TextBlock Grid.Row="4" Text="{DynamicResource Str.ColorPreviewDrag}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+  <TextBlock Grid.Row="5" x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewGameHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
+ </Grid>
 </UserControl>

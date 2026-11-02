@@ -560,6 +560,13 @@ public sealed class ModernWorkspaceUiTests
                     $"slider={slider.ActualWidth:0.##}x{slider.ActualHeight:0.##} surface={surface.ActualWidth:0.##}x{surface.ActualHeight:0.##}");
                 Assert.True(slider.ActualHeight > surface.ActualHeight * 0.9,
                     $"slider={slider.ActualWidth:0.##}x{slider.ActualHeight:0.##} surface={surface.ActualWidth:0.##}x{surface.ActualHeight:0.##}");
+                // 图片占满剩余高度，说明文字永远是 Auto 行：两条提示都必须完整落在控件内。
+                var viewbox = (Viewbox)preview.FindName("ComparisonViewbox");
+                Assert.True(viewbox.ActualHeight > 300, $"viewbox={viewbox.ActualWidth:0.##}x{viewbox.ActualHeight:0.##}");
+                var status = (TextBlock)preview.FindName("PreviewStatus");
+                var statusBottom = status.TranslatePoint(new Point(0, status.ActualHeight), preview).Y;
+                Assert.True(statusBottom <= preview.ActualHeight + 0.5,
+                    $"statusBottom={statusBottom:0.##} previewHeight={preview.ActualHeight:0.##}");
             }
             finally { window.Close(); }
         });
