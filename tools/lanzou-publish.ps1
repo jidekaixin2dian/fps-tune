@@ -37,6 +37,7 @@ param(
     [string]$Session = 'fpstune-lanzou',
     [string]$Profile = (Join-Path $env:USERPROFILE '.fpstune-browser\lanzou'),
     [switch]$Probe,
+    [string]$Folder = '',
     [int]$TimeoutSeconds = 180
 )
 
@@ -44,7 +45,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $uploadPage = 'https://pc.woozooo.com/mydisk.php?item=files&action=index'
 # 蓝奏云 PC 版历史上换过控件，按优先级逐个试；页面改版时用 -Probe 看实际结构再补。
-$fileInputSelectors = @('#selectfiles', 'input[type=file]', '#file', 'input[name=file]')
+# 只认真实 file input：#selectfiles 是 A 标签（不是输入框），CDP 会报 "not a file input element"。
+$fileInputSelectors = @('input[type=file]', 'input[name=file]', '#file')
 $loginPrompts = @('input[type=password]', '#loginform', 'input[name=username]')
 
 function Invoke-Browser {
@@ -100,13 +102,19 @@ $script:LanzouLauncher = if ($agentBrowser -like '*.ps1') { @('pwsh', '-NoProfil
 
 Write-Host "打开蓝奏云文件页（会话 $Session）…"
 Invoke-Browser -Arguments @('open', $uploadPage) | Out-Null
+if ($Folder) {
+    # 进到指定文件夹再上传（默认落在根目录）。
+    Invoke-Browser -Arguments @('click', "text=$Folder") -AllowFailure | Out-Null
+    Start-Sleep -Seconds 2
+    Write-Host "已进入文件夹：$Folder"
+}
 $url = (Invoke-Browser -Arguments @('get', 'url')).Trim()
 
 # 登录态判据：停在文件页（mydisk.php）且没有密码框，且能找到上传控件。
 # 早期的 #nickname 之类标记在 pc.woozooo.com 这套老界面上根本不存在，会误判成未登录。
 $needsLogin = ($loginPrompts | Where-Object { Test-Element $_ }).Count -gt 0
 $uploadReady = ($fileInputSelectors | Where-Object { Test-Element $_ }).Count -gt 0
-$loggedIn = -not $needsLogin -and $uploadReady -and $url.Contains('mydisk.php', StringComparison.OrdinalIgnoreCase)
+$loggedIn = -not $needsLogin -and $uploadReady -and $url.Contains('mydisk.php', [StringComparison]::OrdinalIgnoreCase)
 if (-not $loggedIn -and $needsLogin) {
     Write-Warning @"
 蓝奏云会话尚未登录。请手动登录一次（会弹出真实浏览器窗口，cookie 保存在 $Profile）：
