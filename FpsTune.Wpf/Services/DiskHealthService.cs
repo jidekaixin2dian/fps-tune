@@ -38,7 +38,8 @@ internal sealed class WmiDiskHealthApi : IDiskHealthApi
 {
     public DiskHealthSnapshot Read()
     {
-        var details = ReadReliability(out var detailed);
+        var details = ReadReliability(out _);
+        var busTypes = ReadBusTypes();
         var rows = new List<DiskHealthRow>();
         try
         {
@@ -54,6 +55,7 @@ internal sealed class WmiDiskHealthApi : IDiskHealthApi
                     var name = (disk["Model"]?.ToString() ?? Str.T("Str.DiskHealthUnknownDisk")).Trim();
                     var bus = (disk["InterfaceType"]?.ToString() ?? "").Trim();
                     var media = (disk["MediaType"]?.ToString() ?? "").Trim();
+                    if (busTypes.TryGetValue(index, out var actualBus)) bus = actualBus;
                     if (media.Length > 0 && !bus.Contains(media, StringComparison.OrdinalIgnoreCase))
                         bus = bus.Length == 0 ? media : bus + " · " + media;
                     var status = (disk["Status"]?.ToString() ?? "").Trim();
@@ -74,6 +76,33 @@ internal sealed class WmiDiskHealthApi : IDiskHealthApi
         {
             return new([], Str.T("Str.DiskHealthUnavailable"), PrivacyScrub.Sanitize(ex.Message));
         }
+    }
+
+    private static Dictionary<string, string> ReadBusTypes()
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var scope = new ManagementScope(@"\\.\root\Microsoft\Windows\Storage");
+            scope.Connect();
+            using var searcher = new ManagementObjectSearcher(scope, new ObjectQuery("SELECT DeviceId,BusType FROM MSFT_PhysicalDisk"));
+            foreach (ManagementObject disk in searcher.Get())
+            {
+                using (disk)
+                {
+                    var id = disk["DeviceId"]?.ToString() ?? "";
+                    var raw = disk["BusType"]?.ToString() ?? "";
+                    var name = raw switch
+                    {
+                        "17" => "NVMe", "11" => "SATA", "8" => "RAID", "7" => "USB", "10" => "SAS",
+                        "9" => "iSCSI", "12" => "SD", "13" => "MMC", "3" => "ATA", _ => ""
+                    };
+                    if (id.Length > 0 && name.Length > 0) result[id] = name;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or ManagementException or System.Runtime.InteropServices.COMException) { }
+        return result;
     }
 
     private static Dictionary<string, string> ReadReliability(out bool available)

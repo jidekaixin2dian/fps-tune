@@ -1993,6 +1993,7 @@
     <s:String x:Key="Str.FilterRuleNotActive">未应用</s:String>
     <s:String x:Key="Str.FilterCategoryFavorites">常用</s:String>
     <s:String x:Key="Str.FilterFavoriteAdd">设为常用：{0}</s:String>
+    <s:String x:Key="Str.FilterFavoriteAddShort">设为常用</s:String>
     <s:String x:Key="Str.FilterFavoriteRemove">取消常用：{0}</s:String>
     <s:String x:Key="Str.FilterFavoriteEmpty">还没有常用滤镜，选一个预设后点“设为常用”。</s:String>
     <s:String x:Key="Str.FilterShowAll">显示全部 {0} 条</s:String>

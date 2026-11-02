@@ -1993,6 +1993,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FilterRuleNotActive">Not applied</s:String>
     <s:String x:Key="Str.FilterCategoryFavorites">Favorites</s:String>
     <s:String x:Key="Str.FilterFavoriteAdd">Favorite: {0}</s:String>
+    <s:String x:Key="Str.FilterFavoriteAddShort">Add favorite</s:String>
     <s:String x:Key="Str.FilterFavoriteRemove">Unfavorite: {0}</s:String>
     <s:String x:Key="Str.FilterFavoriteEmpty">No favorites yet. Select a filter and choose Favorite.</s:String>
     <s:String x:Key="Str.FilterShowAll">Show all {0}</s:String>

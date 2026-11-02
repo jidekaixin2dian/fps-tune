@@ -202,10 +202,11 @@ public partial class FilterCenterPanel : UserControl
             ShowAllButton.Content = Str.T("Str.FilterShowAll", matches.Count);
             EmptyFilterText.Text = PresetList.Children.Count == 0 && _category == "favorites"
                 ? Str.T("Str.FilterFavoriteEmpty") : "";
-            FavoriteButton.Content = _selected is { } selected && FilterPreferenceStore.IsFavorite(selected.FileName)
-                ? Str.T("Str.FilterFavoriteRemove", selected.Name)
-                : Str.T("Str.FilterFavoriteAdd", _selected?.Name ?? "—");
+            FavoriteButton.Content = _selected is { } selected
+                ? Str.T(FilterPreferenceStore.IsFavorite(selected.FileName) ? "Str.FilterFavoriteRemove" : "Str.FilterFavoriteAdd", selected.Name)
+                : Str.T("Str.FilterFavoriteAddShort");
             FavoriteButton.IsEnabled = _selected is not null;
+            AutomationProperties.SetName(FavoriteButton, FavoriteButton.Content?.ToString() ?? "");
         }
         finally { _rendering = false; }
     }
