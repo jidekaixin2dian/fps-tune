@@ -229,6 +229,7 @@
                 <TextBlock Text="{DynamicResource Str.MaintenanceUpdateHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
             <Button Grid.Column="1" Tag="update" Content="{DynamicResource Str.MaintenanceOpen}" ToolTip="{DynamicResource Str.MaintenanceUpdate}" Click="OpenTool_Click" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center"/>
         </Grid></StackPanel></Border>
+                    <views:DpcLatencyPanel x:Name="DpcPanel" Margin="0,18,0,0"/>
                 </StackPanel></ScrollViewer>
             </Grid>
         </Grid>

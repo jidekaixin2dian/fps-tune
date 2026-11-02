@@ -5,17 +5,19 @@
   <DockPanel Margin="0,0,0,10">
    <Button x:Name="LoadImageButton" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorPreviewLoad}" Click="LoadImage_Click" Style="{StaticResource SecondaryButtonStyle}"/>
    <StackPanel VerticalAlignment="Center">
-    <TextBlock Text="{DynamicResource Str.ColorPreviewTitle}" Style="{StaticResource SectionLabelStyle}"/>
-    <controls:FileNameLabel x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}"  Margin="0,3,10,0"/>
+    <controls:FileNameLabel x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}" Margin="0,0,10,0"/>
+    <TextBlock Text="{DynamicResource Str.ColorPreviewSourceHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,3,10,0"/>
    </StackPanel>
   </DockPanel>
   <ComboBox x:Name="ScreenshotCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Screenshot_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorPreviewScene}">
    <ComboBoxItem Content="{DynamicResource Str.ColorPreviewDelta}"/>
    <ComboBoxItem Content="{DynamicResource Str.ColorPreviewValorant}"/>
    <ComboBoxItem x:Name="CustomSceneItem" Content="{DynamicResource Str.ColorPreviewCustom}" Visibility="Collapsed"/>
+   <ComboBoxItem x:Name="RecentSceneItem" Content="{DynamicResource Str.ColorPreviewRecent}"/>
   </ComboBox>
-  <Grid x:Name="ComparisonViewport" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
-  <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" MinWidth="520" MaxWidth="880" Height="260" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
+  <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch" MaxHeight="460">
+  <Grid x:Name="ComparisonViewport" Width="960" Height="540" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
+  <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
    <!-- 尺寸交给布局：固定高度 + 撑满可用宽度（最多 880），不再用代码算像素——算错过一次，
         预览被压成一条竖线、分界手柄也就点不到了。 -->
    <Grid x:Name="ComparisonSurface" ClipToBounds="True">
@@ -53,6 +55,7 @@
    </Grid>
   </Border>
   </Grid>
+  </Viewbox>
   <TextBlock Text="{DynamicResource Str.ColorPreviewDrag}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
   <TextBlock x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
  </StackPanel>

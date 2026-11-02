@@ -15,7 +15,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "Version", "License", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "Version", "License", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -36,6 +36,8 @@ public static class CliHost
         public string? Group { get; set; }
         public int? Duration { get; set; }
         public string? CsvPath { get; set; }
+        public bool OutSpecified { get; set; }
+        public string? OutPath { get; set; }
     }
 
     public static bool IsCliInvocation(IReadOnlyList<string> args)
@@ -70,6 +72,7 @@ public static class CliHost
                 "Restore" => RunRestore(options, output),
                 "ListRestore" => RunListRestore(options, output),
                 "Experiment" => RunExperiment(options, output),
+                "DpcLatency" => RunDpcLatency(options, output),
                 _ => RunHelp(output),
             };
         }
@@ -367,6 +370,24 @@ public static class CliHost
         return exitCode;
     }
 
+    /// <summary>管理员子进程入口：GUI 通过 runas 调用，结果写临时 JSON，不弹控制台。</summary>
+    private static int RunDpcLatency(CliOptions options, TextWriter output)
+    {
+        var report = DpcLatencyService.Measure(options.Duration ?? DpcLatencyService.DefaultSeconds);
+        var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
+        if (!string.IsNullOrWhiteSpace(options.OutPath))
+        {
+            var full = Path.GetFullPath(options.OutPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+            File.WriteAllText(full, json, new UTF8Encoding(false));
+        }
+        else
+        {
+            output.WriteLine(json);
+        }
+        return report.Ok ? 0 : 1;
+    }
+
     private static void WriteUsage(TextWriter output)
     {
         var presets = string.Join("、", OptimizationCatalog.PresetNames);
@@ -381,6 +402,7 @@ public static class CliHost
               FpsTune.exe -Restore [-Items <id1,id2,...>] [-BackupFile <备份文件路径>] [-Json]
               FpsTune.exe -ListRestore [-Json]
               FpsTune.exe -Experiment -Baseline | -Test -Group <group-1|group-2|group-3> | -Report [-Simulate] [-Duration <秒>] [-CsvPath <csv>] [-Json]
+              FpsTune.exe -DpcLatency [-Duration <秒>] [-Out <json>] [-Json]
               FpsTune.exe -Help
 
             说明:
@@ -517,6 +539,18 @@ public static class CliHost
                     else
                         options.CsvPath = args[++i];
                     break;
+                case "out" when inline is not null:
+                    options.OutSpecified = true;
+                    if (string.IsNullOrWhiteSpace(inline)) error = "-Out 不能为空";
+                    else options.OutPath = inline;
+                    break;
+                case "out":
+                    options.OutSpecified = true;
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
+                        error = "-Out 缺少值";
+                    else
+                        options.OutPath = args[++i];
+                    break;
                 default:
                     error = "未知参数: " + token;
                     break;
@@ -535,17 +569,19 @@ public static class CliHost
         var hasApplyOnly = options.ItemsSpecified || options.PresetSpecified;
         var hasGame = options.GameSpecified;
         var hasBackupFile = options.BackupFileSpecified;
+        var hasOut = options.OutSpecified;
         if (options.GameSpecified && !FpsTune.Wpf.Core.BackupService.IsValidExecutablePath(options.GamePath))
             return Str.T("Str.CliGameInvalid");
         return verb switch
         {
-            "Detect" when hasApplyOnly || hasBackupFile => "-Detect 只接受 -Game 和 -Json",
-            "Restore" when options.PresetSpecified || hasGame => "-Restore 只接受 -Items、-BackupFile 和 -Json",
-            "ListRestore" when hasApplyOnly || hasGame || hasBackupFile => "-ListRestore 只接受 -Json",
-            "Version" when hasApplyOnly || hasGame || hasBackupFile => "-Version 不接受额外参数",
-            "License" when hasApplyOnly || hasGame || hasBackupFile => "-License does not accept additional arguments",
-            "Help" when hasApplyOnly || hasGame || hasBackupFile => "-Help 不接受额外参数",
-            "?" when hasApplyOnly || hasGame || hasBackupFile => "-Help 不接受额外参数",
+            "Detect" when hasApplyOnly || hasBackupFile || hasOut => "-Detect 只接受 -Game 和 -Json",
+            "Restore" when options.PresetSpecified || hasGame || hasOut => "-Restore 只接受 -Items、-BackupFile 和 -Json",
+            "ListRestore" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-ListRestore 只接受 -Json",
+            "DpcLatency" when hasApplyOnly || hasGame || hasBackupFile => "-DpcLatency 只接受 -Duration、-Out 和 -Json",
+            "Version" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Version 不接受额外参数",
+            "License" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-License does not accept additional arguments",
+            "Help" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Help 不接受额外参数",
+            "?" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Help 不接受额外参数",
             _ => null
         };
     }

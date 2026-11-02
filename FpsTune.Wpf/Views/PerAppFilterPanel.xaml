@@ -1,63 +1,116 @@
 <UserControl x:Class="FpsTune.Wpf.Views.PerAppFilterPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <Style x:Key="RuleItemStyle" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template"><Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="RuleBorder" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusControl}" Padding="12,10">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="RuleBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="RuleBorder" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                            <Setter TargetName="RuleBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value></Setter>
+        </Style>
+    </UserControl.Resources>
     <StackPanel>
-        <TextBlock Text="{DynamicResource Str.FilterAppsTitle}" Style="{StaticResource CardTitleStyle}"/>
-        <TextBlock Text="{DynamicResource Str.FilterAppsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-        <CheckBox x:Name="WatcherCheck" Content="{DynamicResource Str.FilterWatcherToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,10,0,0" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
-        <TextBlock x:Name="WatcherStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite"/>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{DynamicResource Str.FilterAppsTitle}" Style="{StaticResource CardTitleStyle}"/>
+                <TextBlock Text="{DynamicResource Str.FilterAppsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+            </StackPanel>
+            <CheckBox x:Name="WatcherCheck" Grid.Column="1" Content="{DynamicResource Str.FilterWatcherToggle}" Style="{StaticResource ToggleSwitchStyle}"
+                      VerticalAlignment="Top" Margin="16,0,0,0" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
+        </Grid>
+        <TextBlock x:Name="WatcherStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite"/>
+
         <Expander Header="{DynamicResource Str.FilterRuleDiagnosticsTitle}" Margin="0,8,0,0">
             <StackPanel Margin="0,8,0,0">
                 <TextBlock x:Name="DiagnosticsText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                <Button x:Name="RefreshStatusButton" Content="{DynamicResource Str.MaintenanceRefresh}" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left" Click="RefreshStatus_Click" Margin="0,6,0,0"/>
+                <Button x:Name="RefreshStatusButton" Content="{DynamicResource Str.MaintenanceRefresh}" Style="{StaticResource GhostButtonStyle}"
+                        HorizontalAlignment="Left" Click="RefreshStatus_Click" Margin="0,6,0,0"/>
             </StackPanel>
         </Expander>
-        <ItemsControl x:Name="RuleList" Margin="0,10,0,0">
-            <ItemsControl.ItemTemplate><DataTemplate>
-                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="12,10" Margin="0,0,0,8">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <StackPanel>
+
+        <DockPanel Margin="0,16,0,6">
+            <Button x:Name="NewRuleButton" DockPanel.Dock="Right" Content="{DynamicResource Str.FilterRuleNew}" Style="{StaticResource SecondaryButtonStyle}" Click="NewRule_Click"/>
+            <TextBlock Text="{DynamicResource Str.FilterRuleListTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
+        </DockPanel>
+        <TextBlock x:Name="EmptyRulesText" Text="{DynamicResource Str.FilterRuleEmpty}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,8"/>
+        <ListBox x:Name="RuleList" MaxHeight="240" BorderThickness="0" Background="Transparent" Padding="0"
+                 ItemContainerStyle="{StaticResource RuleItemStyle}" SelectionChanged="RuleList_SelectionChanged"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate><DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding Details}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="8,0,0,0"
+                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{DynamicResource Str.FilterRuleActive}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
                         </StackPanel>
-                        <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                            <Button Content="{Binding EnabledText}" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="ToggleRule_Click" Margin="0,0,4,0"/>
-                            <Button Content="✕" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="RemoveRule_Click" AutomationProperties.Name="{Binding RemoveName}"/>
-                        </WrapPanel>
+                        <TextBlock Text="{Binding Details}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                    <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button Content="{Binding EnabledText}" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="ToggleRule_Click" Margin="0,0,2,0"/>
+                        <Button Content="✕" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="RemoveRule_Click" AutomationProperties.Name="{Binding RemoveName}"/>
+                    </WrapPanel>
+                </Grid>
+            </DataTemplate></ListBox.ItemTemplate>
+        </ListBox>
+
+        <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,8,0,0">
+            <StackPanel>
+                <TextBlock x:Name="EditorTitle" Text="{DynamicResource Str.FilterRuleNew}" Style="{StaticResource SectionLabelStyle}"/>
+                <StackPanel Margin="0,10,0,0">
+                    <TextBlock Text="{DynamicResource Str.FilterRulePresetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="RulePresetCombo" Style="{StaticResource SelectComboBoxStyle}" DisplayMemberPath="Name"
+                              AutomationProperties.Name="{DynamicResource Str.FilterRulePresetLabel}" VerticalContentAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Margin="0,8,0,0">
+                    <TextBlock Text="{DynamicResource Str.FilterRuleTargetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox x:Name="RuleProcessBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
+                                 AutomationProperties.Name="{DynamicResource Str.FilterRuleProcess}" ToolTip="{DynamicResource Str.FilterRuleTargetHint}"/>
+                        <Button x:Name="BrowseRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleBrowse}" Style="{StaticResource GhostButtonStyle}" Margin="10,0,0,0" Click="BrowseRule_Click"/>
                     </Grid>
-                </Border>
-            </DataTemplate></ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <StackPanel Margin="0,10,0,0">
-            <TextBlock Text="{DynamicResource Str.FilterRulePresetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <ComboBox x:Name="RulePresetCombo" Style="{StaticResource SelectComboBoxStyle}" DisplayMemberPath="Name"
-                          AutomationProperties.Name="{DynamicResource Str.FilterRulePresetLabel}" VerticalContentAlignment="Center"/>
-                <Button x:Name="AddRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleAdd}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" Click="AddRule_Click"/>
-            </Grid>
-        </StackPanel>
-        <StackPanel Margin="0,8,0,0">
-            <TextBlock Text="{DynamicResource Str.FilterRuleTargetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="RuleProcessBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleProcess}" ToolTip="{DynamicResource Str.FilterRuleTargetHint}"/>
-                <Button x:Name="BrowseRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleBrowse}" Style="{StaticResource GhostButtonStyle}" Margin="10,0,0,0" Click="BrowseRule_Click"/>
-            </Grid>
-        </StackPanel>
-        <StackPanel Margin="0,8,0,0">
-            <TextBlock Text="{DynamicResource Str.FilterRuleTitle}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-            <TextBox x:Name="RuleTitleBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleTitle}"/>
-        </StackPanel>
-        <WrapPanel Margin="0,8,0,0">
-            <StackPanel Margin="0,0,12,8"><TextBlock Text="{DynamicResource Str.FilterRuleVibrance}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                <ComboBox x:Name="RuleVibranceCombo" MinWidth="150" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="RuleVibrance_Changed" AutomationProperties.Name="{DynamicResource Str.FilterRuleVibrance}"/>
+                </StackPanel>
+                <StackPanel Margin="0,8,0,0">
+                    <TextBlock Text="{DynamicResource Str.FilterRuleTitle}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="RuleTitleBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleTitle}"/>
+                </StackPanel>
+                <WrapPanel Margin="0,8,0,0">
+                    <StackPanel Margin="0,0,12,8"><TextBlock Text="{DynamicResource Str.FilterRuleVibrance}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                        <ComboBox x:Name="RuleVibranceCombo" MinWidth="150" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="RuleVibrance_Changed" AutomationProperties.Name="{DynamicResource Str.FilterRuleVibrance}"/>
+                    </StackPanel>
+                    <CheckBox x:Name="RuleScreenCheck" Content="{DynamicResource Str.FilterRuleScreen}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center" Margin="0,0,12,8"/>
+                    <CheckBox x:Name="RuleEnabledCheck" Content="{DynamicResource Str.FilterRuleEnabled}" IsChecked="True" VerticalAlignment="Center" Margin="0,0,0,8"/>
+                </WrapPanel>
+                <Grid Margin="0,4,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{DynamicResource Str.FilterAppsRuleHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,12,0"/>
+                    <Button x:Name="AddRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleAdd}" Style="{StaticResource PrimaryButtonStyle}"
+                            Click="AddRule_Click" VerticalAlignment="Bottom"/>
+                </Grid>
             </StackPanel>
-            <CheckBox x:Name="RuleScreenCheck" Content="{DynamicResource Str.FilterRuleScreen}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center" Margin="0,0,12,8"/>
-            <CheckBox x:Name="RuleEnabledCheck" Content="{DynamicResource Str.FilterRuleEnabled}" IsChecked="True" VerticalAlignment="Center" Margin="0,0,0,8"/>
-        </WrapPanel>
-        <TextBlock Text="{DynamicResource Str.FilterAppsRuleHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-        <WrapPanel Margin="0,8,0,0">
+        </Border>
+        <WrapPanel Margin="0,10,0,0">
             <Button x:Name="ExportRulesButton" Content="{DynamicResource Str.FilterRuleExport}" Style="{StaticResource GhostButtonStyle}" Click="ExportRules_Click" Margin="0,0,8,8"/>
             <Button x:Name="ImportRulesButton" Content="{DynamicResource Str.FilterRuleImport}" Style="{StaticResource GhostButtonStyle}" Click="ImportRules_Click" Margin="0,0,0,8"/>
         </WrapPanel>

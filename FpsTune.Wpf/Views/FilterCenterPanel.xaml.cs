@@ -25,12 +25,6 @@ public partial class FilterCenterPanel : UserControl
     /// <summary>选中滤镜：宿主页据此刷新截图对比预览。</summary>
     internal event Action<FilterChoice>? ChoiceChanged;
 
-    /// <summary>「应用滤镜」：交给宿主页走单一写入路径（色彩 + ICC + 振动一起确认）。</summary>
-    internal event Action? ApplyRequested;
-
-    /// <summary>「还原原始」：同上，统一还原。</summary>
-    internal event Action? RestoreRequested;
-
     /// <summary>当前选中的分类键（供测试与宿主页读取）。</summary>
     internal string Category => _category;
 
@@ -63,58 +57,15 @@ public partial class FilterCenterPanel : UserControl
     {
         try
         {
-            var library = await Task.Run(() => GameFilterLibrary.Presets);
+            var library = await Task.Run(() => GameFilterCatalog.All);
             if (!_loaded) return;
-            _choices = BuildChoices(library);
+            _choices = library.Select(p => new FilterChoice(p.FileName, p.Name, p.Category, p.Fit, p.Avoid,
+                p.Generated, p.Vibrance)).ToList();
             BuildCategoryChips();
             RenderPresetList();
         }
         catch (Exception ex) { ApplyStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
-
-    /// <summary>把 43 个内置 .icc 与生成式预设（IccFilterPreset）合成一张列表；重复的按文件名去重。</summary>
-    private static List<FilterChoice> BuildChoices(IReadOnlyList<GameFilterPreset> library)
-    {
-        var list = new List<FilterChoice>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var preset in library)
-        {
-            if (!seen.Add(preset.FileName)) continue;
-            IccFilterPreset? generated = null;
-            if (preset.FileName.StartsWith(GameFilterLibrary.GeneratedPrefix, StringComparison.Ordinal)
-                && Enum.TryParse<IccFilterPreset>(preset.FileName[GameFilterLibrary.GeneratedPrefix.Length..], out var parsed))
-                generated = parsed;
-            list.Add(new FilterChoice(preset.FileName, preset.Name, preset.Category, preset.Fit, preset.Avoid, generated,
-                preset.Vibrance ?? (generated is { } g ? IccProfileGenerator.VibranceFor(g) : null)));
-        }
-        foreach (var preset in Enum.GetValues<IccFilterPreset>())
-        {
-            if (!seen.Add(GameFilterLibrary.GeneratedPrefix + preset)) continue;
-            var keys = IccProfileGenerator.ResourceKeysFor(preset);
-            list.Add(new FilterChoice(GameFilterLibrary.GeneratedPrefix + preset, Str.T(keys.Title),
-                GeneratedCategory(preset), Str.T(keys.Description), "", preset, IccProfileGenerator.VibranceFor(preset)));
-        }
-        return list;
-    }
-
-    private static string GeneratedCategory(IccFilterPreset preset) => preset switch
-    {
-        IccFilterPreset.Vivid or IccFilterPreset.Warm or IccFilterPreset.Cool or IccFilterPreset.Muted => "color",
-        IccFilterPreset.ShadowBoost or IccFilterPreset.Dehaze => "bright",
-        IccFilterPreset.NightGuard or IccFilterPreset.Soft or IccFilterPreset.ShadowGentle or IccFilterPreset.ContrastGentle => "soft",
-        IccFilterPreset.Neutral => "game",
-        IccFilterPreset.Deexposure or IccFilterPreset.DeexposureStrong => "deexpose",
-        IccFilterPreset.Daylight or IccFilterPreset.Bright or IccFilterPreset.SoftBright or IccFilterPreset.ClearBright
-            or IccFilterPreset.ClearBright2 or IccFilterPreset.Lively => "bright",
-        IccFilterPreset.VividLively or IccFilterPreset.Cinema => "color",
-        IccFilterPreset.NightScene or IccFilterPreset.Foggy => "deexpose",
-        IccFilterPreset.ArenaCool or IccFilterPreset.GameGenshin or IccFilterPreset.GameKarakin or IccFilterPreset.GameGw2
-            or IccFilterPreset.GameApex or IccFilterPreset.GameNaraka or IccFilterPreset.GameMyth or IccFilterPreset.GameR6
-            or IccFilterPreset.GameValorant or IccFilterPreset.GameNaraka2 or IccFilterPreset.GameCod16 => "game",
-        IccFilterPreset.VipSaturated or IccFilterPreset.VipDeepVivid or IccFilterPreset.VipWarmClear
-            or IccFilterPreset.VipCoolSuppress => "color",
-        _ => "color",
-    };
 
     /// <summary>分类 chips：全部 + 出现过的分组（按固定顺序，未知分类排在后面）。</summary>
     private void BuildCategoryChips()
@@ -266,14 +217,6 @@ public partial class FilterCenterPanel : UserControl
     }
 
     internal void ReportStatus(string text) => ApplyStatus.Text = text;
-
-    private void Apply_Click(object sender, RoutedEventArgs e)
-    {
-        if (_selected is null) { ApplyStatus.Text = Str.T("Str.FilterPickFirst"); return; }
-        ApplyRequested?.Invoke();
-    }
-
-    private void Restore_Click(object sender, RoutedEventArgs e) => RestoreRequested?.Invoke();
 
     private void OpenFolder_Click(object sender, RoutedEventArgs e)
     {

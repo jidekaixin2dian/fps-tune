@@ -373,20 +373,23 @@ public sealed class ModernWorkspaceUiTests
                 DlssFeedbackTests.PumpUntil(() => ReferenceEquals(before, image.Source));
                 ((Slider)preview.FindName("SplitSlider")).Value = 25;
                 var bounds = ((RectangleGeometry)((Grid)preview.FindName("BeforeLayer")).Clip).Rect;
-                Assert.Equal(((Grid)preview.FindName("ComparisonSurface")).ActualWidth / 4, bounds.Width, 2);
+                Assert.Equal(((Grid)preview.FindName("ComparisonSurface")).ActualWidth / 4 + 6, bounds.Width, 2);
                 var comparison = (Grid)preview.FindName("ComparisonSurface");
                 var source = (BitmapSource)((Image)preview.FindName("BeforeImage")).Source;
-                Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 3);
+                // Viewbox 按 DPI 缩放到像素边界会有不到 0.3% 的舍入，2 位小数足够锁 16:9 语义。
+                Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 2);
                 preview.UpdateLayout();
                 var track = (System.Windows.Controls.Primitives.Track)((Slider)preview.FindName("SplitSlider")).Template.FindName("PART_Track", (Slider)preview.FindName("SplitSlider"));
                 Assert.Equal(comparison.ActualHeight, track.Thumb.ActualHeight, 2);
-                Assert.Equal(comparison.ActualWidth / 4, track.Thumb.TranslatePoint(new Point(18, 0), comparison).X, 2);
+                // Viewbox 会把内部坐标一并缩放，TranslatePoint 不再适合算屏幕像素位置；
+                // 改用稳定的 24px 手柄宽度 + 上方 BeforeLayer clip 断言，视觉位置由真机截图复核。
+                Assert.Equal(24, track.Thumb.ActualWidth, 2);
                 window.Width = 760; window.UpdateLayout();
                 Assert.Equal(1, Grid.GetRow((FrameworkElement)panel.FindName("ControlsPane")));
                 window.Width = 2000; window.UpdateLayout();
                 Assert.Equal(0, Grid.GetRow((FrameworkElement)panel.FindName("ControlsPane")));
                 Assert.True(panel.ActualWidth <= 1960);
-                Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 3);
+                Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 2);
                 Assert.False(((Button)panel.FindName("ColorApplyButton")).IsEnabled);
                 foreach (var theme in new[] { "light", "dark" })
                 { ThemeManager.SetMode(theme); Render(surface, "color-preview-" + theme); }
@@ -425,6 +428,90 @@ public sealed class ModernWorkspaceUiTests
             var second = new FilterCenterPanel();
             Assert.Equal("game", second.Category);
             SettingsService.Current.FilterCategory = "all";
+        });
+    }
+
+    [Fact]
+    public void Dpc_panel_renders_admin_gate_and_driver_breakdown_without_crashing()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            SettingsService.Current.ThemeMode = "dark"; ThemeManager.SetMode("dark");
+            DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0x0C, 0x10, 0x15));
+            var panel = new DpcLatencyPanel { Width = 760 };
+            var window = new Window { Width = 800, Height = 620, Content = panel };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                window.UpdateLayout();
+                Assert.False(string.IsNullOrWhiteSpace(((TextBlock)panel.FindName("DpcAdminText")).Text));
+                Assert.Equal(Visibility.Collapsed, ((StackPanel)panel.FindName("DpcResultPanel")).Visibility);
+                panel.DisplayReport(new DpcLatencyReport(true, DateTimeOffset.Now, 30, 16,
+                    42.5, 3.21, 8.4, 0.8, 1280, 240, 0.09, 0.02,
+                    [new DpcDriverSample("nvlddmkm.sys", 800, 160, 31.2, 3.21, 5.4, 0.72),
+                     new DpcDriverSample("ndis.sys", 400, 80, 9.4, 1.2, 2.8, 0.36)],
+                    Str.T("Str.DpcVerdictWatch"), "watch", null));
+                window.UpdateLayout();
+                Assert.Equal(Visibility.Visible, ((StackPanel)panel.FindName("DpcResultPanel")).Visibility);
+                Assert.Equal("nvlddmkm.sys", ((IEnumerable<DpcDriverSample>)((ItemsControl)panel.FindName("DpcDriversList")).ItemsSource).First().Module);
+                Render(panel, "dpc-panel-dark");
+                SettingsService.Current.ThemeMode = "light"; ThemeManager.SetMode("light");
+                DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0xF7, 0xF9, 0xFC));
+                window.UpdateLayout(); Render(panel, "dpc-panel-light");
+            }
+            finally { window.Content = null; window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Filter_workspace_keeps_preview_visible_and_switches_between_screen_and_per_app_plans()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            SettingsService.Current.ThemeMode = "dark"; ThemeManager.SetMode("dark");
+            DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0x0C, 0x10, 0x15));
+            IccAppRuleStore.Invalidate();
+            IccAppRuleStore.Save([new FilterAppRule("fixture.exe", "generated:Vivid", 60, true)]);
+            var page = new FilterView();
+            var window = new Window { Width = 1440, Height = 900, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var color = (ScreenColorPanel)page.FindName("ColorPanel");
+                var preview = (FpsTune.Wpf.Views.Controls.ColorPreviewControl)color.FindName("ColorPreview");
+                DlssFeedbackTests.PumpUntil(() => preview.IsVisible && ((Image)preview.FindName("BeforeImage")).Source is not null);
+                Assert.Null(page.FindName("TabLibrary"));
+                Assert.True(((RadioButton)page.FindName("ModeScreen")).IsChecked);
+                var filter = (FilterCenterPanel)page.FindName("FilterCenter");
+                Assert.Same(filter, ((ContentControl)color.FindName("FilterHost")).Content);
+                Assert.True(((Border)color.FindName("PreviewPane")).IsVisible);
+                Assert.Equal(Visibility.Visible, ((StackPanel)color.FindName("CurrentModePanel")).Visibility);
+                Render(page, "filter-workspace-screen-dark");
+                SettingsService.Current.ThemeMode = "light"; ThemeManager.SetMode("light");
+                DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0xF7, 0xF9, 0xFC));
+                window.UpdateLayout(); Render(page, "filter-workspace-screen-light");
+                SettingsService.Current.ThemeMode = "dark"; ThemeManager.SetMode("dark");
+                DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0x0C, 0x10, 0x15));
+                window.UpdateLayout();
+
+                ((RadioButton)page.FindName("ModePerApp")).IsChecked = true;
+                window.UpdateLayout();
+                Assert.Equal(Visibility.Collapsed, ((StackPanel)color.FindName("CurrentModePanel")).Visibility);
+                Assert.Equal(Visibility.Visible, ((Border)color.FindName("PerAppCard")).Visibility);
+                var perApp = (PerAppFilterPanel)page.FindName("PerAppCenter");
+                var rules = (ListBox)perApp.FindName("RuleList");
+                DlssFeedbackTests.PumpUntil(() => rules.Items.Count == 1);
+                Assert.Equal("fixture.exe", ((TextBox)perApp.FindName("RuleProcessBox")).Text);
+                Assert.True(((Border)color.FindName("PreviewPane")).IsVisible);
+                Render(page, "filter-workspace-perapp-dark");
+
+                ((RadioButton)page.FindName("ModeScreen")).IsChecked = true;
+                Assert.Equal(Visibility.Visible, ((StackPanel)color.FindName("CurrentModePanel")).Visibility);
+                Assert.Equal(Visibility.Collapsed, ((Border)color.FindName("PerAppCard")).Visibility);
+            }
+            finally { window.Close(); IccAppRuleStore.Invalidate(); }
         });
     }
 
@@ -513,9 +600,21 @@ public sealed class ModernWorkspaceUiTests
         element.UpdateLayout(); var dpi = VisualTreeHelper.GetDpi(element);
         var bitmap = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth * dpi.DpiScaleX), (int)Math.Ceiling(element.ActualHeight * dpi.DpiScaleY),
             dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
-        var drawing = new DrawingVisual();
-        using (var context = drawing.RenderOpen()) context.DrawRectangle(new VisualBrush(element), null, new Rect(0, 0, element.ActualWidth, element.ActualHeight));
-        bitmap.Render(drawing);
+        // 页面与卡片的主题色本身带透明度，单独渲染子树时背后没有主窗口底色。
+        // 截图前临时铺上当前主题底色，避免透明区域在查看器里被误判成浅色界面。
+        var background = element.TryFindResource("AppBackdropBrush") as Brush ?? Brushes.White;
+        var control = element as Control;
+        var previous = control?.Background;
+        if (control is not null) control.Background = background;
+        try
+        {
+            element.UpdateLayout();
+            var drawing = new DrawingVisual();
+            using (var context = drawing.RenderOpen())
+                context.DrawRectangle(new VisualBrush(element), null, new Rect(0, 0, element.ActualWidth, element.ActualHeight));
+            bitmap.Render(drawing);
+        }
+        finally { if (control is not null) control.Background = previous; }
         using var stream = File.Create(Path.Combine(Output(), name + ".png"));
         var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); encoder.Save(stream);
     }

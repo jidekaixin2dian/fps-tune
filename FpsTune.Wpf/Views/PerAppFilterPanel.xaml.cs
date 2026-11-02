@@ -11,10 +11,16 @@ public partial class PerAppFilterPanel : UserControl
     private readonly ForegroundFilterWatcher? _watcher;
     private readonly DispatcherTimer _statusTimer;
     private bool _suppress;
+    private bool _refreshing;
+    private string? _editingKey;
+    private string? _lastActive;
     private sealed record PresetChoice(string FileName, string Name, int? Vibrance);
     private sealed record VibranceChoice(int? Percent, string Label)
     { public override string ToString() => Label; }
-    private sealed record RuleRow(FilterAppRule Rule, string Summary, string Details, string EnabledText, string RemoveName);
+    private sealed record RuleRow(FilterAppRule Rule, string Summary, string Details, string EnabledText, string RemoveName, bool IsActive);
+
+    /// <summary>选中某个应用方案时，把它的进程名交给宿主页切换左侧实拍图。</summary>
+    internal event Action<string?>? PreviewRequested;
 
     public PerAppFilterPanel() : this(App.FilterWatcher) { }
     internal PerAppFilterPanel(ForegroundFilterWatcher? watcher)
@@ -22,7 +28,7 @@ public partial class PerAppFilterPanel : UserControl
         InitializeComponent();
         _watcher = watcher;
         RulePresetCombo.ItemsSource = new[] { new PresetChoice("", Str.T("Str.FilterRuleNoIcc"), null) }
-            .Concat(GameFilterLibrary.Presets.Select(p => new PresetChoice(p.FileName, p.Name, p.Vibrance))).ToList();
+            .Concat(GameFilterCatalog.All.Select(p => new PresetChoice(p.FileName, p.Name, p.Vibrance))).ToList();
         RulePresetCombo.SelectedIndex = 0;
         RuleVibranceCombo.ItemsSource = new[] { new VibranceChoice(null, Str.T("Str.FilterRuleVibranceDefault")) }
             .Concat(Enumerable.Range(0, 101).Select(i => new VibranceChoice(i, i + "%"))).ToList();
@@ -35,6 +41,16 @@ public partial class PerAppFilterPanel : UserControl
         _statusTimer.Tick += (_, _) => UpdateWatcherStatus();
         Loaded += (_, _) => { UpdateWatcherStatus(); _statusTimer.Start(); };
         Unloaded += (_, _) => _statusTimer.Stop();
+    }
+
+    internal void ActivateSelection()
+    {
+        if (RuleList.Items.Count == 0)
+        {
+            NewRule();
+            return;
+        }
+        if (RuleList.SelectedItem is null) RuleList.SelectedIndex = 0;
     }
 
     private void Watcher_Changed(object sender, RoutedEventArgs e)
@@ -68,17 +84,87 @@ public partial class PerAppFilterPanel : UserControl
             status.Suppressed ? Str.T("Str.FullscreenReasonTakeover") : Str.T("Str.FilterRuleNotActive"),
             status.ScreenIncluded ? Str.T("Str.FilterRuleOn") : Str.T("Str.FilterRuleOff"),
             status.Vibrance?.ToString() ?? "—");
+        var active = status.ActiveProcess;
+        if (active != _lastActive)
+        {
+            _lastActive = active;
+            RefreshRules();
+        }
     }
 
     private void RefreshRules()
     {
-        RuleList.ItemsSource = IccAppRuleStore.Rules.Select(rule => new RuleRow(rule,
-            Str.T("Str.FilterRuleSummary", rule.ProcessName, rule.PresetFileName),
-            Str.T("Str.FilterRuleDetails", rule.MatchKind == FilterAppMatchKind.Path ? rule.ExePath : rule.PresetFileName,
-                rule.Vibrance?.ToString() ?? Str.T("Str.FilterRuleVibranceDefault"), rule.IncludeScreen ? Str.T("Str.FilterRuleOn") : Str.T("Str.FilterRuleOff"))
-            + (rule.TitleContains.Length > 0 ? " · " + rule.TitleContains : ""),
+        var status = _watcher?.Status;
+        var selectedKey = _editingKey;
+        var rules = IccAppRuleStore.Rules;
+        var rows = rules.Select(rule => new RuleRow(rule,
+            Str.T("Str.FilterRuleSummary", rule.ProcessName,
+                string.IsNullOrWhiteSpace(rule.PresetFileName) ? Str.T("Str.FilterRuleVibranceOnly") : PresetName(rule.PresetFileName)),
+            BuildDetails(rule),
             rule.Enabled ? Str.T("Str.FilterRuleOn") : Str.T("Str.FilterRuleOff"),
-            Str.T("Str.FilterRuleRemoveName", rule.ProcessName))).ToList();
+            Str.T("Str.FilterRuleRemoveName", rule.ProcessName),
+            status?.ActiveProcess is { } active && status.ActivePreset is { } preset
+                && active.Equals(rule.ProcessName, StringComparison.OrdinalIgnoreCase)
+                && preset.Equals(rule.PresetFileName, StringComparison.OrdinalIgnoreCase))).ToList();
+        _refreshing = true;
+        try
+        {
+            RuleList.ItemsSource = rows;
+            if (selectedKey is not null)
+                RuleList.SelectedItem = rows.FirstOrDefault(r => r.Rule.Key == selectedKey);
+        }
+        finally { _refreshing = false; }
+        EmptyRulesText.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static string BuildDetails(FilterAppRule rule)
+    {
+        var target = rule.MatchKind == FilterAppMatchKind.Path && rule.ExePath.Length > 0 ? rule.ExePath : rule.ProcessName;
+        var title = rule.TitleContains.Length > 0 ? " · " + Str.T("Str.FilterRuleTitleShort", rule.TitleContains) : "";
+        var screen = rule.IncludeScreen ? Str.T("Str.FilterRuleOn") : Str.T("Str.FilterRuleOff");
+        return Str.T("Str.FilterRuleDetails", target,
+            rule.Vibrance?.ToString() ?? Str.T("Str.FilterRuleVibranceDefault"), screen) + title;
+    }
+
+    private static string PresetName(string fileName)
+        => GameFilterCatalog.All.FirstOrDefault(p => p.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase))?.Name
+           ?? fileName;
+
+    private void NewRule_Click(object sender, RoutedEventArgs e) => NewRule();
+
+    private void NewRule()
+    {
+        _editingKey = null;
+        _refreshing = true;
+        RuleList.SelectedItem = null;
+        _refreshing = false;
+        RuleProcessBox.Text = RuleTitleBox.Text = "";
+        RulePresetCombo.SelectedIndex = 0;
+        RuleVibranceCombo.SelectedIndex = 0;
+        RuleScreenCheck.IsChecked = false;
+        RuleEnabledCheck.IsChecked = true;
+        EditorTitle.Text = Str.T("Str.FilterRuleNew");
+        AddRuleButton.Content = Str.T("Str.FilterRuleAdd");
+        RuleStatus.Text = "";
+        PreviewRequested?.Invoke(null);
+    }
+
+    private void RuleList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_refreshing || RuleList.SelectedItem is not RuleRow row) return;
+        _editingKey = row.Rule.Key;
+        var rule = row.Rule;
+        RuleProcessBox.Text = rule.MatchKind == FilterAppMatchKind.Path ? rule.ExePath : rule.ProcessName;
+        RuleTitleBox.Text = rule.TitleContains;
+        RulePresetCombo.SelectedItem = RulePresetCombo.Items.OfType<PresetChoice>()
+            .FirstOrDefault(p => p.FileName.Equals(rule.PresetFileName, StringComparison.OrdinalIgnoreCase)) ?? RulePresetCombo.Items[0];
+        RuleVibranceCombo.SelectedIndex = Math.Clamp((rule.Vibrance ?? -1) + 1, 0, RuleVibranceCombo.Items.Count - 1);
+        RuleScreenCheck.IsChecked = rule.IncludeScreen;
+        RuleEnabledCheck.IsChecked = rule.Enabled;
+        EditorTitle.Text = Str.T("Str.FilterRuleEditing", rule.ProcessName);
+        AddRuleButton.Content = Str.T("Str.FilterRuleSaveChanges");
+        RuleStatus.Text = "";
+        PreviewRequested?.Invoke(rule.ProcessName);
     }
 
     private void AddRule_Click(object sender, RoutedEventArgs e)
@@ -97,10 +183,15 @@ public partial class PerAppFilterPanel : UserControl
                 preset.FileName, vibrance, RuleScreenCheck.IsChecked == true, fullPath,
                 RuleTitleBox.Text.Trim(), RuleEnabledCheck.IsChecked == true,
                 fullPath.Length > 0 ? FilterAppMatchKind.Path : FilterAppMatchKind.ProcessName);
-            var rules = IccAppRuleStore.Rules.Where(r => r.Key != rule.Key).ToList(); rules.Add(rule);
-            IccAppRuleStore.Save(rules); FilterPreferenceStore.NoteUsed(preset.FileName);
-            RuleProcessBox.Text = RuleTitleBox.Text = "";
-            RefreshRules(); _watcher?.ApplySettings();
+            var rules = IccAppRuleStore.Rules.Where(r => r.Key != _editingKey && r.Key != rule.Key).ToList();
+            rules.Add(rule);
+            IccAppRuleStore.Save(rules);
+            if (preset.FileName.Length > 0) FilterPreferenceStore.NoteUsed(preset.FileName);
+            _editingKey = rule.Key;
+            RefreshRules();
+            RuleList.SelectedItem = RuleList.Items.OfType<RuleRow>().FirstOrDefault(r => r.Rule.Key == rule.Key);
+            _watcher?.ApplySettings();
+            PreviewRequested?.Invoke(rule.ProcessName);
             RuleStatus.Text = Str.T("Str.FilterRuleSaved", rule.ProcessName);
         }
         catch (Exception ex) { RuleStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
@@ -122,7 +213,11 @@ public partial class PerAppFilterPanel : UserControl
     private void RemoveRule_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: FilterAppRule rule }) return;
-        IccAppRuleStore.Remove(rule.Key); RefreshRules(); _watcher?.ApplySettings();
+        if (!DialogService.Confirm(Str.T("Str.FilterRuleRemoveTitle"), Str.T("Str.FilterRuleRemoveConfirm", rule.ProcessName), danger: true))
+            return;
+        IccAppRuleStore.Remove(rule.Key);
+        if (_editingKey == rule.Key) NewRule();
+        RefreshRules(); _watcher?.ApplySettings();
     }
 
     private void RuleVibrance_Changed(object sender, SelectionChangedEventArgs e) { }
@@ -145,7 +240,8 @@ public partial class PerAppFilterPanel : UserControl
             var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "JSON|*.json", CheckFileExists = true };
             if (dialog.ShowDialog() != true) return;
             var rules = IccAppRuleStore.Import(dialog.FileName);
-            RefreshRules(); _watcher?.ApplySettings(); RuleStatus.Text = Str.T("Str.FilterRuleTransferDone", rules.Count);
+            _editingKey = null; RefreshRules(); NewRule(); _watcher?.ApplySettings();
+            RuleStatus.Text = Str.T("Str.FilterRuleTransferDone", rules.Count);
         }
         catch (Exception ex) { RuleStatus.Text = Str.T("Str.FilterRuleTransferFailed", PrivacyScrub.Sanitize(ex.Message)); }
     }

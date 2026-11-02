@@ -50,15 +50,22 @@ public partial class FilterView : UserControl
         // Preserve the page namescope and handlers while hosting all color controls together.
         ((Panel)VibranceContent.Parent).Children.Remove(VibranceContent);
         ((Panel)IccAdvanced.Parent).Children.Remove(IccAdvanced);
+        ((Panel)SectionAutomation.Parent).Children.Remove(SectionAutomation);
+        ((Panel)FilterCenter.Parent).Children.Remove(FilterCenter);
+        ((Panel)PerAppCenter.Parent).Children.Remove(PerAppCenter);
         ColorPanel.VibranceContent = VibranceContent;
         ColorPanel.IccContent = IccAdvanced;
+        ColorPanel.AutomationContent = SectionAutomation;
+        ColorPanel.FilterContent = FilterCenter;
+        ColorPanel.PerAppContent = PerAppCenter;
         ColorPanel.Unified = true;
+        ColorPanel.SetMode(false);
+        ColorPanel.ShowPreviewForProcess(AppState.GamePath);
+        PerAppCenter.PreviewRequested += process => ColorPanel.ShowPreviewForProcess(process);
         // 滤镜选择已统一到上面的滤镜列表，色彩面板不再重复一套筛选入口。
         ColorPanel.SetFilterPickerVisible(false);
         ColorPanel.BusyChanged += busy => { _busy = busy; ++_refreshGen; SetDisplayInputEnabled(!busy); if (!busy) Refresh(); };
         FilterCenter.ChoiceChanged += OnFilterChoiceChanged;
-        FilterCenter.ApplyRequested += () => ColorPanel.RequestApply();
-        FilterCenter.RestoreRequested += () => ColorPanel.RequestRestore();
         var choices = Enum.GetValues<IccFilterPreset>().Select(preset =>
         {
             var keys = IccProfileGenerator.ResourceKeysFor(preset);
@@ -130,30 +137,22 @@ public partial class FilterView : UserControl
         dialog.ShowDialog();
     }
 
-    /// <summary>命令面板跳「画面与色彩」时先切到对应分类页签，再滚到该卡。</summary>
+    /// <summary>命令面板跳「画面与色彩」时回到当前屏幕方案顶部。</summary>
     internal void RevealColor()
     {
-        if (TabColor is not null) TabColor.IsChecked = true;
-        ApplySection(SectionKind.Color);
-        CardVib.BringIntoView();
+        ModeScreen.IsChecked = true;
+        ColorPanel.SetMode(false);
+        ColorPanel.FocusWorkspace();
     }
 
-    /// <summary>分类页签：一次只显示一组，避免整页几屏长（用户反馈内容太多、滚轮难用）。</summary>
-    private enum SectionKind { Library, Color, Automation }
-
-    private void Section_Changed(object sender, RoutedEventArgs e)
+    /// <summary>整页只有两种应用范围；滤镜、参数和自定义 ICC 始终在「当前屏幕」下。</summary>
+    private void Mode_Changed(object sender, RoutedEventArgs e)
     {
-        if (SectionLibrary is null) return;   // InitializeComponent 期间 IsChecked=True 会先触发一次
-        ApplySection(sender == TabColor ? SectionKind.Color
-            : sender == TabAutomation ? SectionKind.Automation
-            : SectionKind.Library);
-    }
-
-    private void ApplySection(SectionKind section)
-    {
-        SectionLibrary.Visibility = section == SectionKind.Library ? Visibility.Visible : Visibility.Collapsed;
-        SectionColor.Visibility = section == SectionKind.Color ? Visibility.Visible : Visibility.Collapsed;
-        SectionAutomation.Visibility = section == SectionKind.Automation ? Visibility.Visible : Visibility.Collapsed;
+        if (ColorPanel is null || ModeScreen is null) return;
+        var perApp = ModePerApp.IsChecked == true;
+        ColorPanel.SetMode(perApp);
+        if (perApp) PerAppCenter.ActivateSelection();
+        else ColorPanel.ShowPreviewForProcess(AppState.GamePath);
     }
 
     // ---------- 目标显示器 ----------

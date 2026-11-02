@@ -49,16 +49,17 @@ public partial class ColorPreviewControl : UserControl
     private async Task SelectScreenshotAsync()
     {
         var index = ScreenshotCombo.SelectedIndex;
-        if (index < 0 || index > 2 || !IsVisible) return;
-        var key = index == 2 ? _customPath : index.ToString();
+        if (index < 0 || index > 3 || !IsVisible) return;
+        var recent = index == 3 ? FindRecentScreenshot() : null;
+        var key = index == 2 ? _customPath : index == 3 ? recent : index.ToString();
         if (key == _loadingKey && key is not null) return;
         var generation = ++_loadGeneration; _loadingKey = key;
         try
         {
             BitmapSource? source;
-            if (index == 2)
+            if (index is 2 or 3)
             {
-                var path = _customPath;
+                var path = index == 2 ? _customPath : recent;
                 source = path is null ? null : await Task.Run(() => WallpaperService.Decode(path));
             }
             else source = await Task.Run(() =>
@@ -71,10 +72,47 @@ public partial class ColorPreviewControl : UserControl
                 image.EndInit(); image.Freeze(); return image;
             });
             if (source is null || generation != _loadGeneration || !IsVisible) return;
-            await ShowSourceAsync(source, index == 2 ? _customName! : Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
+            var name = index switch
+            {
+                2 => _customName!,
+                3 => Path.GetFileName(recent!),
+                _ => Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant")
+            };
+            await ShowSourceAsync(source, name);
         }
-        catch { if (generation == _loadGeneration) PreviewStatus.Text = Str.T("Str.ColorPreviewLoadFailed"); }
+        catch
+        {
+            if (generation == _loadGeneration)
+                PreviewStatus.Text = Str.T(index == 3 ? "Str.ColorPreviewRecentEmpty" : "Str.ColorPreviewLoadFailed");
+        }
         finally { if (generation == _loadGeneration) _loadingKey = null; }
+    }
+
+    /// <summary>按当前游戏自动切到对应实机图；未知游戏保留用户当前选择。</summary>
+    internal void SetGameSuggestion(string? game)
+    {
+        var name = Path.GetFileNameWithoutExtension(game ?? "").ToLowerInvariant();
+        var index = name.Contains("delta", StringComparison.Ordinal) ? 0
+            : name.Contains("valorant", StringComparison.Ordinal) ? 1 : -1;
+        if (index >= 0 && ScreenshotCombo.SelectedIndex != index) ScreenshotCombo.SelectedIndex = index;
+    }
+
+    private static string? FindRecentScreenshot()
+    {
+        try
+        {
+            var dirs = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "Screenshots"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Captures"),
+            };
+            return dirs.Where(Directory.Exists)
+                .SelectMany(dir => Directory.EnumerateFiles(dir).Where(f =>
+                    f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)))
+                .Select(path => new FileInfo(path)).OrderByDescending(f => f.LastWriteTimeUtc)
+                .Select(f => f.FullName).FirstOrDefault();
+        }
+        catch { return null; }
     }
     private async Task ShowSourceAsync(BitmapSource source, string name)
     {

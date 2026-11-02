@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -17,6 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- 只读内核 ETW（DPC/ISR 采样） -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="4.0.0" />
     <!-- WMI 查询（内存频率体检），避免再启动 powershell.exe 子进程 -->
     <PackageReference Include="System.Management" Version="10.0.12" />
   </ItemGroup>

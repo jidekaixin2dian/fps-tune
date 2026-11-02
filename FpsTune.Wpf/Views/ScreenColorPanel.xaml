@@ -16,54 +16,97 @@
     </ControlTemplate></Setter.Value></Setter>
    </Style>
   </UserControl.Resources>
- <StackPanel MaxWidth="1520" HorizontalAlignment="Stretch">
-  <TextBlock Text="{DynamicResource Str.ColorPanelTitle}" Style="{StaticResource CardTitleStyle}"/>
-  <TextBlock Text="{DynamicResource Str.ColorPanelHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,16"/>
 
-  <Grid x:Name="WorkspaceGrid" SizeChanged="Workspace_SizeChanged">
-   <Grid.ColumnDefinitions><ColumnDefinition x:Name="PreviewColumn" Width="*"/><ColumnDefinition x:Name="ControlsColumn" Width="420"/></Grid.ColumnDefinitions>
-   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-   <StackPanel x:Name="PreviewPane" Margin="0,0,24,0">
-    <Border x:Name="FilterPickerBox" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,0,0,14">
+  <Grid x:Name="WorkspaceGrid" MaxWidth="1640" HorizontalAlignment="Stretch" SizeChanged="Workspace_SizeChanged">
+   <Grid.ColumnDefinitions><ColumnDefinition x:Name="PreviewColumn" Width="*"/><ColumnDefinition x:Name="ControlsColumn" Width="480"/></Grid.ColumnDefinitions>
+   <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+   <!-- 左侧固定：无论右侧筛选、调参、编辑 ICC 或切到独立方案，这块实机图始终在旁边。 -->
+   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,22,0" VerticalAlignment="Stretch">
+    <StackPanel>
+     <DockPanel Margin="0,0,0,10">
+      <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.ColorPreviewTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
+      <TextBlock x:Name="PreviewModeHint" DockPanel.Dock="Right" Text="{DynamicResource Str.ColorPreviewStickyHint}"
+                 Style="{StaticResource MutedTextStyle}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+     </DockPanel>
+     <controls:ColorPreviewControl x:Name="ColorPreview"/>
+
+     <!-- 旧的重复滤镜选择区保留 namescope 和状态，但不再出现在界面上。 -->
+     <Border x:Name="FilterPickerBox" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14" Margin="0,14,0,0">
+      <StackPanel>
+       <DockPanel Margin="0,0,0,10">
+        <CheckBox x:Name="IccEnabledCheck" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorIccEnabled}" Checked="IccToggle_Changed" Unchecked="IccToggle_Changed" VerticalAlignment="Center"/>
+        <TextBlock Text="{DynamicResource Str.ColorChooseFilter}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
+       </DockPanel>
+       <ComboBox x:Name="ColorModeCombo" Visibility="Collapsed" SelectedIndex="0" SelectionChanged="Mode_Changed">
+        <ComboBoxItem Content="{DynamicResource Str.ColorScreenMode}"/><ComboBoxItem Content="{DynamicResource Str.ColorIccMode}"/>
+       </ComboBox>
+       <ComboBox x:Name="IccPresetCombo" Visibility="Collapsed" SelectionChanged="IccPreset_Changed"/>
+       <ListBox x:Name="FilterChips" PreviewMouseLeftButtonUp="FilterChips_Click" BorderThickness="0" Background="Transparent" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ItemsSource="{Binding ItemsSource, ElementName=IccPresetCombo}" SelectedItem="{Binding SelectedItem, ElementName=IccPresetCombo, Mode=TwoWay}" ItemContainerStyle="{StaticResource FilterChipStyle}" AutomationProperties.Name="{DynamicResource Str.ColorChooseFilter}">
+        <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
+        <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" FontSize="13"/></DataTemplate></ListBox.ItemTemplate>
+       </ListBox>
+       <TextBlock x:Name="FilterDescription" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+       <TextBlock x:Name="IccFileText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
+      </StackPanel>
+     </Border>
+    </StackPanel>
+   </Border>
+
+   <Grid x:Name="ControlsPane" Grid.Column="1">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+    <!-- 一套按钮只服务一个完整方案：应用时同时处理滤镜、画面参数和振动；还原同样一次处理。 -->
+    <Border x:Name="ActionBar" Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,0,0,12">
      <StackPanel>
-      <DockPanel Margin="0,0,0,10">
-       <CheckBox x:Name="IccEnabledCheck" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorIccEnabled}" Checked="IccToggle_Changed" Unchecked="IccToggle_Changed" VerticalAlignment="Center"/>
-       <TextBlock Text="{DynamicResource Str.ColorChooseFilter}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
-      </DockPanel>
-      <ComboBox x:Name="ColorModeCombo" Visibility="Collapsed" SelectedIndex="0" SelectionChanged="Mode_Changed">
-       <ComboBoxItem Content="{DynamicResource Str.ColorScreenMode}"/><ComboBoxItem Content="{DynamicResource Str.ColorIccMode}"/>
-      </ComboBox>
-      <ComboBox x:Name="IccPresetCombo" Visibility="Collapsed" SelectionChanged="IccPreset_Changed"/>
-      <ListBox x:Name="FilterChips" PreviewMouseLeftButtonUp="FilterChips_Click" BorderThickness="0" Background="Transparent" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled" ItemsSource="{Binding ItemsSource, ElementName=IccPresetCombo}" SelectedItem="{Binding SelectedItem, ElementName=IccPresetCombo, Mode=TwoWay}" ItemContainerStyle="{StaticResource FilterChipStyle}" AutomationProperties.Name="{DynamicResource Str.ColorChooseFilter}">
-       <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
-       <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}" FontSize="13"/></DataTemplate></ListBox.ItemTemplate>
-      </ListBox>
-      <TextBlock x:Name="FilterDescription" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,3,0,0"/>
-      <TextBlock x:Name="IccFileText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed"/>
-      <ContentControl x:Name="IccHost" Margin="0,10,0,0"/>
+      <WrapPanel>
+       <Button x:Name="ColorApplyButton" Content="{DynamicResource Str.FilterApplyAll}" Style="{StaticResource PrimaryButtonStyle}" Click="Apply_Click" Margin="0,0,8,8"/>
+       <Button x:Name="ColorRestoreButton" Content="{DynamicResource Str.FilterRestoreAll}" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" Margin="0,0,0,8"/>
+      </WrapPanel>
+      <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,2,0,0"/>
      </StackPanel>
     </Border>
-    <controls:ColorPreviewControl x:Name="ColorPreview"/>
 
-   </StackPanel>
-   <StackPanel x:Name="ControlsPane" Grid.Column="1">
-  <Border Margin="0,0,0,14">
-   <StackPanel>
-    <WrapPanel>
-     <Button x:Name="ColorApplyButton" Content="{DynamicResource Str.ColorApplyTitle}" Style="{StaticResource PrimaryButtonStyle}" Click="Apply_Click" Margin="0,0,8,8"/>
-     <Button x:Name="ColorRestoreButton" Content="{DynamicResource Str.ColorRestoreAll}" Style="{StaticResource SecondaryButtonStyle}" Click="Restore_Click" Margin="0,0,0,8"/>
-    </WrapPanel>
-    <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-   </StackPanel>
-  </Border>
-    <TextBlock Text="{DynamicResource Str.ColorParametersLayer}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,8"/>
-    <Expander Header="{DynamicResource Str.ColorParameterPresets}" Margin="0,0,0,6"><ComboBox x:Name="ColorPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreset}" Margin="0,8,0,0"/></Expander>
-    <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,18,0,0"/>
-    <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" HorizontalAlignment="Left" Style="{StaticResource SecondaryButtonStyle}" Click="Reset_Click" Margin="0,0,0,20"/>
-    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,12,0,0"><ContentControl x:Name="VibranceHost"/></Border>
+    <ScrollViewer x:Name="ControlsScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+     <StackPanel>
+     <StackPanel x:Name="CurrentModePanel" Margin="0,0,4,0">
+      <!-- 滤镜选择、收藏、搜索与编辑 ICC 统一在这一栏。 -->
+      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+       <ContentControl x:Name="FilterHost"/>
+      </Border>
 
-   </StackPanel>
+      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+       <StackPanel>
+        <TextBlock Text="{DynamicResource Str.ColorParametersLayer}" Style="{StaticResource CardTitleStyle}"/>
+        <Expander Header="{DynamicResource Str.ColorParameterPresets}" Margin="0,10,0,4">
+         <ComboBox x:Name="ColorPresetCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Preset_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreset}" Margin="0,8,0,0"/>
+        </Expander>
+        <UniformGrid x:Name="ParameterGrid" Columns="2" Margin="0,14,0,0"/>
+        <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" HorizontalAlignment="Left" Style="{StaticResource SecondaryButtonStyle}" Click="Reset_Click" Margin="0,4,0,0"/>
+       </StackPanel>
+      </Border>
+
+      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+       <StackPanel>
+        <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
+        <ContentControl x:Name="VibranceHost"/>
+       </StackPanel>
+      </Border>
+
+      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+       <ContentControl x:Name="IccHost"/>
+      </Border>
+
+      <Expander x:Name="AutomationExpander" Header="{DynamicResource Str.FilterAutomationSection}" IsExpanded="False" Margin="0,0,0,14">
+       <ContentControl x:Name="AutomationHost" Margin="0,12,0,0"/>
+      </Expander>
+     </StackPanel>
+
+     <Border x:Name="PerAppCard" Style="{StaticResource CardStyle}" Padding="20,16" Visibility="Collapsed">
+      <ContentControl x:Name="PerAppHost"/>
+     </Border>
+     </StackPanel>
+    </ScrollViewer>
+   </Grid>
   </Grid>
-
- </StackPanel>
 </UserControl>

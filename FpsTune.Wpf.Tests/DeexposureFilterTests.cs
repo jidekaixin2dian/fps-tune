@@ -93,7 +93,8 @@ public sealed class DeexposureFilterTests : IDisposable
     public void All_builtin_presets_have_category()
     {
         var presets = GameFilterLibrary.Presets.Where(p => p.Builtin && !p.FileName.StartsWith("generated:", StringComparison.Ordinal)).ToList();
-        Assert.Equal(43, presets.Count);
+        // 内置 ICC 会随版本继续增加；这里锁“至少原有 43 条且全部有分类”，不把新增素材当失败。
+        Assert.True(presets.Count >= 43, $"built-in preset count={presets.Count}");
         Assert.All(presets, p => Assert.Contains(p.Category, new[] { "soft", "deexpose", "bright", "color", "game", "face" }));
         // 每个分类都有成员
         Assert.Contains(presets, p => p.Category == "soft");

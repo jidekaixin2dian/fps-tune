@@ -70,6 +70,20 @@
     },
     {
       "License": "MIT",
+      "Directory": "traceevent",
+      "Files": [
+        {
+          "Sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "Path": "licenses/traceevent/LICENSE.txt"
+        }
+      ],
+      "Name": "Microsoft.Diagnostics.Tracing.TraceEvent",
+      "Version": "4.0.0",
+      "Source": "https://www.nuget.org/packages/Microsoft.Diagnostics.Tracing.TraceEvent/4.0.0",
+      "Scope": "Redistributed package for read-only kernel ETW DPC/ISR sampling; transitive dependencies are MIT .NET Foundation packages"
+    },
+    {
+      "License": "MIT",
       "Directory": "nvapi",
       "Files": [
         {

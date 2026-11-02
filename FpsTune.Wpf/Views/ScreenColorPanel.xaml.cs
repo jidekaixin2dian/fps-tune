@@ -21,6 +21,24 @@ public partial class ScreenColorPanel : UserControl
     internal bool Unified { get; set; }
     public object VibranceContent { get => VibranceHost.Content; set => VibranceHost.Content = value; }
     public object IccContent { get => IccHost.Content; set => IccHost.Content = value; }
+    public object FilterContent { get => FilterHost.Content; set => FilterHost.Content = value; }
+    public object PerAppContent { get => PerAppHost.Content; set => PerAppHost.Content = value; }
+    public object AutomationContent { get => AutomationHost.Content; set => AutomationHost.Content = value; }
+
+    /// <summary>当前屏幕方案 / 独立游戏方案共用左侧实拍图，只切换右侧控制区。</summary>
+    internal void SetMode(bool perApp)
+    {
+        CurrentModePanel.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
+        ActionBar.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
+        PerAppCard.Visibility = perApp ? Visibility.Visible : Visibility.Collapsed;
+        PreviewModeHint.Text = Str.T(perApp ? "Str.FilterPerAppPreviewHint" : "Str.ColorPreviewStickyHint");
+        ControlsScroll.ScrollToTop();
+    }
+
+    internal void ShowPreviewForProcess(string? processName)
+        => ColorPreview.SetGameSuggestion(processName);
+
+    internal void FocusWorkspace() => ControlsScroll.ScrollToTop();
     private bool IccMode => ColorModeCombo?.SelectedIndex == 1;
     private IccFilterPreset? Preset => (IccPresetCombo.SelectedItem as Choice)?.Preset;
     private readonly List<Slider> _sliders = [];
@@ -134,10 +152,8 @@ public partial class ScreenColorPanel : UserControl
         => FilterPickerBox.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
 
     /// <summary>由外部（滤镜列表的「应用滤镜」）触发的统一应用：色彩 + ICC + 振动一起走确认流程。</summary>
-    internal void RequestApply() => Apply_Click(this, new RoutedEventArgs());
 
     /// <summary>由外部触发的还原：屏幕色彩、ICC、振动一并回滚。</summary>
-    internal void RequestRestore() => Restore_Click(this, new RoutedEventArgs());
     private void Mode_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || ColorPresetCombo is null) return;
@@ -249,10 +265,12 @@ public partial class ScreenColorPanel : UserControl
     }
     private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        var wide = e.NewSize.Width >= 820;
-        ControlsColumn.Width = wide ? new GridLength(e.NewSize.Width >= 1100 ? 420 : 360) : new GridLength(0);
+        // 常规窗口固定双栏：左侧实拍图不动，右侧唯一控制栏滚动。
+        // 极窄窗口才上下堆叠，避免把图片压到无法判断颜色。
+        var wide = e.NewSize.Width >= 980;
+        ControlsColumn.Width = wide ? new GridLength(e.NewSize.Width >= 1280 ? 500 : 430) : new GridLength(0);
         Grid.SetColumn(ControlsPane, wide ? 1 : 0); Grid.SetRow(ControlsPane, wide ? 0 : 1);
-        PreviewPane.Margin = new Thickness(0, 0, wide ? 24 : 0, wide ? 0 : 20);
+        PreviewPane.Margin = new Thickness(0, 0, wide ? 22 : 0, wide ? 0 : 16);
     }
     private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; MarkDraft(); }
     private async void Apply_Click(object sender, RoutedEventArgs e)
