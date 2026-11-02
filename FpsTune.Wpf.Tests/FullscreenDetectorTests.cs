@@ -427,6 +427,27 @@ public sealed class FullscreenDetectorTests : IDisposable
     }
 
     [Fact]
+    public void Pending_receipt_is_cleared_when_the_screen_already_holds_the_original_curve()
+    {
+        DisplayTopology.Override = () => DisplayTopology.MarkIndependent([
+            new IccDisplayInfo(@"\\.\DISPLAY1", 123, 0, 0, "0001", true, DisplayId, "Screen A", true),
+        ]);
+        var gamma = new FakeGamma { Ramp = LinearRamp() };
+        TransientGamma.ApiOverride = gamma;
+
+        var original = (ushort[])gamma.Ramp.Clone();
+        var expected = ScreenColorService.BuildRamp(ScreenColorSettings.ForPreset(IccFilterPreset.Vivid), original);
+        FullscreenPendingStore.Save(new FullscreenPending(
+            FullscreenPendingStore.CurrentVersion, DisplayId, FullscreenPresetWatcher.ChannelGamma,
+            nameof(IccFilterPreset.Vivid), DateTime.Now, original, expected));
+
+        // 屏上已经是原始曲线（例如用户自己还原过）：不应报“被外部接管”，凭证也不该留。
+        Assert.True(FullscreenPresetWatcher.RestoreOnStartup());
+        Assert.Equal(original, gamma.Ramp);
+        Assert.False(File.Exists(FullscreenPendingStore.FilePath));
+    }
+
+    [Fact]
     public void Startup_restore_refuses_to_overwrite_when_the_user_changed_colors_meanwhile()
     {
         DisplayTopology.Override = () => DisplayTopology.MarkIndependent([

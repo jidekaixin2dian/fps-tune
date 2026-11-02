@@ -143,8 +143,13 @@ internal static class TransientGamma
         DisplayTopology.ValidateConnection(display);
         if (Api.IsHdr(display)) throw new InvalidOperationException(Str.T("Str.ColorHdr"));
 
+        // 已经回到原始曲线（用户手动还原过，或上一次退出时已写回）：凭证的用途已经满足，
+        // 这里算还原完成，不再按“被外部接管”报失败——否则每次启动都会重复报错并永久留着凭证。
+        var current = Api.Read(display);
+        if (ScreenColorService.Matches(current, original)) return true;
+
         // 只还原「确实是本工具写进去的那一版」：用户自己又调过色就别盖回去。
-        if (!ScreenColorService.Matches(Api.Read(display), expected))
+        if (!ScreenColorService.Matches(current, expected))
             throw new InvalidOperationException(Str.T("Str.ColorRestoreDrift"));
 
         Api.Write(display, original);
