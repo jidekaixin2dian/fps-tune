@@ -12,7 +12,10 @@
         </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="28,14,28,18">
+        <!-- 内容至少和视口一样高，最后一块「继续使用 + 常用入口」吃掉剩余高度：全屏不再留一块空白。 -->
+        <Grid Margin="28,14,28,18" MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <StackPanel Grid.Row="0">
 
             <!-- 卡 0：一键优化大卡（点进统一页，方案 chips 快捷预选） -->
             <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
@@ -106,8 +109,9 @@
                 </UniformGrid>
             </Border>
 
-            <!-- 卡 3：继续使用 + 常用入口（最近访问 + 六入口网格） -->
-            <Border Style="{StaticResource CardStyle}" Padding="24,20">
+            </StackPanel>
+            <!-- 卡 3：继续使用 + 常用入口（最近访问 + 六入口网格），随窗口长高 -->
+            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="24,20" VerticalAlignment="Stretch">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.HomeRecent}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <WrapPanel x:Name="RecentPagesPanel" Margin="0,10,0,0"/>
@@ -123,6 +127,6 @@
                     </UniformGrid>
                 </StackPanel>
             </Border>
-        </StackPanel>
+        </Grid>
     </ScrollViewer>
 </UserControl>

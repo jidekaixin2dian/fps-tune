@@ -560,6 +560,22 @@ public partial class MainWindow : Window
 
     internal void OpenDeltaFixFromHome() => NavigateTo("deltafix");
 
+    /// <summary>Ctrl +/-/0 整体缩放：范围 0.85–1.25，再小会把 13 号字压到不可读。</summary>
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if ((System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == 0) return;
+        double? step = e.Key switch
+        {
+            System.Windows.Input.Key.OemPlus or System.Windows.Input.Key.Add => 0.05,
+            System.Windows.Input.Key.OemMinus or System.Windows.Input.Key.Subtract => -0.05,
+            System.Windows.Input.Key.D0 or System.Windows.Input.Key.NumPad0 => null,
+            _ => double.MaxValue,
+        };
+        if (step is { } s && s == double.MaxValue) return;
+        var current = step is null ? 1d : Math.Clamp(UiZoom.ScaleX + step.Value, 0.85, 1.25);
+        UiZoom.ScaleX = UiZoom.ScaleY = Math.Round(current, 2);
+        e.Handled = true;
+    }
     public void NavigateTo(string key)
     {
         switch (key)

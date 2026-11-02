@@ -70,5 +70,6 @@ internal static class WallpaperService
             return _cachedImage;
         }
     }
-    internal static double NormalizeOpacity(double value) => double.IsFinite(value) ? Math.Clamp(value, 0.05, 0.35) : 0.18;
+    // 上限放开到 80%：用户要求能更明显地看到自定义壁纸，下限仍是 5% 以免完全看不出背景。
+    internal static double NormalizeOpacity(double value) => double.IsFinite(value) ? Math.Clamp(value, 0.05, 0.8) : 0.18;
 }
