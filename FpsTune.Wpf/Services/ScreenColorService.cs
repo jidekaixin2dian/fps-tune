@@ -154,7 +154,7 @@ public static class ScreenColorService
         return (40 - steps) / 10d;
     }
 
-    internal static ushort[] BuildRamp(ScreenColorSettings settings, ushort[] baseline)
+    internal static ushort[] BuildRamp(ScreenColorSettings settings, ushort[] baseline, IccCurves? filter = null)
     {
         settings.Validate();
         if (baseline.Length != 768) throw new InvalidDataException(Str.T("Str.ColorLength"));
@@ -164,6 +164,9 @@ public static class ScreenColorService
         for (var i = 0; i < 256; i++)
         {
             var y = MapTone(i / 255d, settings, gains[c]);
+            // 滤镜曲线叠在画面参数之后：ICC 预设的 rTRC/gTRC/bTRC 就是它要的画面变化，
+            // 折进 ramp 后游戏（不读色彩管理）也能看到；没有滤镜时这一段恒等。
+            if (filter is not null) y = SampleCurve(filter.Channels[c], y);
             var index = y * 255;
             var lo = (int)index;
             result[c * 256 + i] = (ushort)Math.Round(baseline[c * 256 + lo] * (1 - (index - lo))
@@ -171,6 +174,16 @@ public static class ScreenColorService
         }
         return result;
     }
+    /// <summary>按 256 点表线性插值取曲线值（滤镜曲线与预览共用同一套采样）。</summary>
+    internal static double SampleCurve(double[] curve, double x)
+    {
+        if (curve.Length < 2) return x;
+        var position = Math.Clamp(x, 0, 1) * 255;
+        var lo = (int)Math.Floor(position);
+        var hi = Math.Min(255, lo + 1);
+        return curve[lo] + (curve[hi] - curve[lo]) * (position - lo);
+    }
+
     // Endpoint-preserving curves keep contrast/brightness from flattening a range of
     // shadow values to black. The ICC inverse and preview shader use the same mapping.
     internal static double MapTone(double x, ScreenColorSettings settings, double gain)
@@ -189,7 +202,8 @@ public static class ScreenColorService
         y += settings.Highlight / 100 * w * y * (1 - y) * 2;
         return Math.Pow(Math.Clamp(y, 0, 1), 100 / gain);
     }
-    public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false, bool preserveIcc = false)
+    public static bool Apply(ScreenColorSettings settings, string id, bool startNewBaselineOnDrift = false, bool preserveIcc = false,
+        IccCurves? filter = null)
     {
         settings.Validate();
         using var gate = SystemMutationGate.Acquire();
@@ -208,7 +222,7 @@ public static class ScreenColorService
             r = new(id, display.FriendlyName, current, current, new());
             rebased = true;
         }
-        var ramp = BuildRamp(settings, r.Original);
+        var ramp = BuildRamp(settings, r.Original, filter);
         r = r with { Expected = ramp, Settings = settings, Previous = current };
         Save(r);
         DisplayTopology.ValidateConnection(display);

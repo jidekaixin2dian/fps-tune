@@ -40,8 +40,14 @@ internal static class ColorWorkspaceService
             }
             if (applyScreen)
             {
-                ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift, preserveIcc: iccMode);
+                // 滤镜（ICC 预设）真正能被游戏看到的那一半：把它的 TRC 曲线折进 gamma ramp。
+                // ICC 关联只影响主动读色彩管理的程序，游戏不读，所以两条路一起写。
+                // 只有真的选了滤镜（ICC 模式）才折曲线；否则默认预设会把画面白白改掉。
+                var filter = iccMode ? ReadFilterCurves(preset, file) : null;
+                ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift, preserveIcc: iccMode, filter: filter);
                 outcomes.Add(Str.T("Str.ColorApplied"));
+                if (filter is not null && !filter.IsIdentity)
+                    outcomes.Add(Str.T("Str.ColorFilterCurveApplied"));
             }
             if (vibrance is { } percent)
             {
@@ -55,6 +61,18 @@ internal static class ColorWorkspaceService
             throw new InvalidOperationException(string.Join("\n", outcomes.Append(Str.T("Str.ColorWorkspaceFailed", ex.Message))), ex);
         }
     }
+    /// <summary>读取当前选择的滤镜曲线（.icc 文件或生成式预设）；读不到按「没有滤镜」处理，不阻断写入。</summary>
+    private static IccCurves? ReadFilterCurves(IccFilterPreset? preset, string? file)
+    {
+        try
+        {
+            if (file is not null) return IccCurveReader.TryRead(System.IO.File.ReadAllBytes(file));
+            if (preset is { } p) return IccCurveReader.TryRead(IccProfileGenerator.Build(p));
+            return null;
+        }
+        catch { return null; }
+    }
+
     internal static string Restore(string identity)
     {
         using var gate = SystemMutationGate.Acquire();

@@ -349,11 +349,12 @@ public sealed class ModernWorkspaceUiTests
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 var gamePixels = RenderImage();
                 Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
-                // 游戏不读 ICC：换 ICC 预设后「游戏内效果」逐像素不变，不存在双重叠加。
+                // 语义已改（2026-11-02）：游戏不读 ICC 关联，但滤镜的 TRC 曲线会折进 gamma ramp，
+                // 所以「游戏内效果」换预设必须变——这正是用户反馈「滤镜无效」要修的地方。
                 render = preview.RenderedRevision;
                 ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5;
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
-                Assert.Equal(gamePixels, RenderImage());
+                Assert.False(gamePixels.SequenceEqual(RenderImage()));
                 // 「色彩管理应用」才是 ICC + gamma：两者各算一次，必须与游戏视图不同。
                 render = preview.RenderedRevision;
                 ((RadioButton)preview.FindName("ChannelManaged")).IsChecked = true;

@@ -1531,7 +1531,7 @@
     <s:String x:Key="Str.ColorPreviewSplit">原图与滤镜对比分隔位置</s:String>
     <s:String x:Key="Str.ColorPreviewChannelGame">游戏内效果</s:String>
     <s:String x:Key="Str.ColorPreviewChannelManaged">色彩管理应用</s:String>
-    <s:String x:Key="Str.ColorPreviewGameHint">预览的是游戏里实际看到的效果：显示器 gamma + 数字振动。</s:String>
+    <s:String x:Key="Str.ColorPreviewGameHint">预览的是游戏里实际看到的效果：滤镜曲线 + 画面参数 + 数字振动。</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">无法载入图片，请选择有效的 PNG / JPG（不超过 20 MB、6400 万像素）。</s:String>
     <s:String x:Key="Str.ColorSelectIcc">请选择 ICC 预设或载入配置文件。</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">数字振动已应用：{0}%。</s:String>
@@ -1541,6 +1541,7 @@
     <s:String x:Key="Str.ColorIccMode">ICC + 画面参数</s:String>
     <s:String x:Key="Str.ColorRestoreAll">还原本屏色彩改动</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”和已调整的数字振动一起应用到选定显示器，并保存原值。</s:String>
+    <s:String x:Key="Str.ColorFilterCurveApplied">滤镜曲线已并入屏幕（游戏可见）</s:String>
     <s:String x:Key="Str.ColorPreviewManagedHint">预览的是读取 ICC 的程序看到的颜色：ICC 配置文件 + gamma。</s:String>
     <s:String x:Key="Str.ColorPreviewManagedEmpty">这个视图要有一条 ICC 滤镜，先在右侧滤镜列表里选一条。</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">截图饱和度为近似预览，实际档位由显卡驱动处理。</s:String>

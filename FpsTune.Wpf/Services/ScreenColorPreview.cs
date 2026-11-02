@@ -24,14 +24,14 @@ internal static class ScreenColorPreview
     /// 预览使用与写入完全相同的 <see cref="ScreenColorService.BuildRamp"/>（含暗部平衡与高光窗），
     /// 所以预览与实际写入不会各自维护一套曲线。数字振动按驱动同款思路做亮度保持的饱和度插值。
     /// </summary>
-    internal static BitmapSource Apply(BitmapSource source, ScreenColorSettings settings, double vibrancePercent = 50)
+    internal static BitmapSource Apply(BitmapSource source, ScreenColorSettings settings, double vibrancePercent = 50, IccCurves? filter = null)
     {
         settings.Validate();
         var image = new FormatConvertedBitmap(source, PixelFormats.Bgra32, null, 0);
         var stride = image.PixelWidth * 4;
         var pixels = new byte[stride * image.PixelHeight];
         image.CopyPixels(pixels, stride, 0);
-        var ramp = ScreenColorService.BuildRamp(settings, IdentityRamp());
+        var ramp = ScreenColorService.BuildRamp(settings, IdentityRamp(), filter);
         var lut = new byte[768];
         for (var c = 0; c < 3; c++)
         for (var i = 0; i < 256; i++)

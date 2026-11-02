@@ -36,6 +36,7 @@ public partial class ColorPreviewControl : UserControl
     private bool _renderPending;
     private readonly object _iccLock = new();
     private BitmapSource? _iccSource;
+    private IccCurves? _filterCurves;
     private string? _iccKey;
     private int _rendered;
     private BitmapSource? _renderedSource;
@@ -179,6 +180,14 @@ public partial class ColorPreviewControl : UserControl
         ShowHint();
         RequestRender();
     }
+    /// <summary>游戏通道用的滤镜曲线：选了滤镜但 ICC 只服务色彩管理程序，这里把曲线折进 gamma 映射，
+    /// 预览才等于游戏里实际看到的效果。</summary>
+    public void SetFilterCurves(IccCurves? curves)
+    {
+        _filterCurves = curves;
+        RequestRender();
+    }
+
     public async Task SetIccProfileAsync(string? path)
     {
         if (_profile == path) return;
@@ -234,7 +243,7 @@ public partial class ColorPreviewControl : UserControl
                 _renderPending = false;
                 var source = _renderSource;
                 if (source is null || !IsVisible) break;
-                var settings = _settings; var vibrance = _vibrance;
+                var settings = _settings; var vibrance = _vibrance; var filter = _filterCurves;
                 var channel = _channel; var profile = _profile;
                 var generation = ++_generation;
                 BitmapSource image;
@@ -245,7 +254,7 @@ public partial class ColorPreviewControl : UserControl
                         var basis = source;
                         if (channel == PreviewChannelKind.ColorManaged && profile is not null)
                             basis = IccConverted(source, profile);
-                        return ScreenColorPreview.Apply(basis, settings, vibrance);
+                        return ScreenColorPreview.Apply(basis, settings, vibrance, filter);
                     });
                 }
                 catch (Exception ex)
