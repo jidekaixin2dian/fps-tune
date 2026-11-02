@@ -1974,6 +1974,8 @@
     <s:String x:Key="Str.FilterRuleVibrance">数字振动（留空沿用预设）</s:String>
     <s:String x:Key="Str.FilterRuleScreen">同时应用预设的画面参数（gamma）</s:String>
     <s:String x:Key="Str.FilterRuleTitle">窗口标题包含（可选）</s:String>
+    <s:String x:Key="Str.FilterRuleTargetLabel">游戏或程序</s:String>
+    <s:String x:Key="Str.FilterRuleTargetHint">填进程名（如 cs2.exe）或完整 exe 路径；完整路径优先，可按标题区分启动器与本体。</s:String>
     <s:String x:Key="Str.FilterRuleEnabled">启用这条方案</s:String>
     <s:String x:Key="Str.FilterRuleBrowse">选择 exe</s:String>
     <s:String x:Key="Str.FilterRuleSaved">已保存方案：{0}</s:String>

@@ -1974,6 +1974,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FilterRuleVibrance">Vibrance (blank follows preset)</s:String>
     <s:String x:Key="Str.FilterRuleScreen">Also apply the preset's picture settings (gamma)</s:String>
     <s:String x:Key="Str.FilterRuleTitle">Window title contains (optional)</s:String>
+    <s:String x:Key="Str.FilterRuleTargetLabel">Game or app</s:String>
+    <s:String x:Key="Str.FilterRuleTargetHint">Enter a process name (cs2.exe) or a full exe path; full paths win, and the title can distinguish a launcher from the game.</s:String>
     <s:String x:Key="Str.FilterRuleEnabled">Enable this plan</s:String>
     <s:String x:Key="Str.FilterRuleBrowse">Choose exe</s:String>
     <s:String x:Key="Str.FilterRuleSaved">Plan saved: {0}</s:String>

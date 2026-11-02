@@ -28,18 +28,27 @@
                 </Border>
             </DataTemplate></ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Grid Margin="0,10,0,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <ComboBox x:Name="RulePresetCombo" Style="{StaticResource SelectComboBoxStyle}" DisplayMemberPath="Name"
-                      AutomationProperties.Name="{DynamicResource Str.FilterRulePresetLabel}" VerticalContentAlignment="Center"/>
-            <Button x:Name="AddRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleAdd}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" Click="AddRule_Click"/>
-        </Grid>
-        <Grid Margin="0,8,0,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <TextBox x:Name="RuleProcessBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleProcess}"/>
-            <Button x:Name="BrowseRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleBrowse}" Style="{StaticResource GhostButtonStyle}" Margin="10,0,0,0" Click="BrowseRule_Click"/>
-        </Grid>
-        <TextBox x:Name="RuleTitleBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" Margin="0,8,0,0" AutomationProperties.Name="{DynamicResource Str.FilterRuleTitle}" ToolTip="{DynamicResource Str.FilterRuleTitle}"/>
+        <StackPanel Margin="0,10,0,0">
+            <TextBlock Text="{DynamicResource Str.FilterRulePresetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <ComboBox x:Name="RulePresetCombo" Style="{StaticResource SelectComboBoxStyle}" DisplayMemberPath="Name"
+                          AutomationProperties.Name="{DynamicResource Str.FilterRulePresetLabel}" VerticalContentAlignment="Center"/>
+                <Button x:Name="AddRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleAdd}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" Click="AddRule_Click"/>
+            </Grid>
+        </StackPanel>
+        <StackPanel Margin="0,8,0,0">
+            <TextBlock Text="{DynamicResource Str.FilterRuleTargetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="RuleProcessBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleProcess}" ToolTip="{DynamicResource Str.FilterRuleTargetHint}"/>
+                <Button x:Name="BrowseRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleBrowse}" Style="{StaticResource GhostButtonStyle}" Margin="10,0,0,0" Click="BrowseRule_Click"/>
+            </Grid>
+        </StackPanel>
+        <StackPanel Margin="0,8,0,0">
+            <TextBlock Text="{DynamicResource Str.FilterRuleTitle}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+            <TextBox x:Name="RuleTitleBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleTitle}"/>
+        </StackPanel>
         <WrapPanel Margin="0,8,0,0">
             <StackPanel Margin="0,0,12,8"><TextBlock Text="{DynamicResource Str.FilterRuleVibrance}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
                 <ComboBox x:Name="RuleVibranceCombo" MinWidth="150" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="RuleVibrance_Changed" AutomationProperties.Name="{DynamicResource Str.FilterRuleVibrance}"/>
