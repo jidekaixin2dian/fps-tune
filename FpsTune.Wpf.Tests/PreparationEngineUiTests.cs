@@ -32,20 +32,20 @@ public sealed class PreparationEngineUiTests
                 window.NavigateTo("opt"); window.UpdateLayout();
                 var view = (OptimizeView)((ContentControl)window.FindName("PageHost")).Content;
                 var items = view.ItemsView.Cast<OptimizationItemViewModel>().ToList();
-                var overlay = items.Single(i => i.Id == "power-overlay-perf");
                 var filterKeys = items.Single(i => i.Id == "filter-keys-off");
-                // 电源模式项只在支持现代滑块的系统上可用；CI 机器常常不支持，按实际能力断言而不是硬编码。
+                // 电源模式项只在支持现代滑块的系统上出现；CI 机器常常不支持，按实际能力断言而不是硬编码。
                 var overlaySupported = OptimizationCatalog.Items.Single(i => i.Id == "power-overlay-perf").Available;
-                Assert.Equal(overlaySupported, overlay.Available);
+                var overlay = items.SingleOrDefault(i => i.Id == "power-overlay-perf");
+                Assert.Equal(overlaySupported, overlay is not null);
                 Assert.True(filterKeys.Available);
-                Assert.NotEqual(overlay.Name, overlay.Description);
+                if (overlay is not null) Assert.NotEqual(overlay.Name, overlay.Description);
                 var list = (ListBox)view.FindName("ItemList");
                 foreach (var mode in new[] { "dark", "light" })
                 {
                     ThemeManager.SetMode(mode); window.UpdateLayout();
                     // 离屏窗口的 HWND 表面不随主题重合成，整页证据用视图级截图（铺窗口底色）。
                     Render(view, $"opt-page-{mode}", backdropKey: "ConsoleBackgroundBrush");
-                    RenderRow(window, list, overlay, $"power-overlay-{mode}");
+                    if (overlay is not null) RenderRow(window, list, overlay, $"power-overlay-{mode}");
                     RenderRow(window, list, filterKeys, $"filter-keys-{mode}");
                 }
                 ThemeManager.SetMode("dark");
