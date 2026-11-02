@@ -265,7 +265,14 @@ public sealed class ReadabilityAndFramesUiTests
                             "filters" => "Str.NavFilters", "crosshair" => "Str.CrosshairTitle",
                             "session" => "Str.NavSession", "ab" => "Str.NavAb", "backup" => "Str.NavBackup", "tools" => "Str.NavTools", "settings" => "Str.NavSettings", _ => null };
                         if (titleKey is not null)
-                            Assert.Contains(Descendants(page).OfType<TextBlock>(), t => t.Text == Str.T(titleKey) && t.FontSize == 22);
+                        {
+                            // 字号从 PageTitleStyle 现取：以前写死 22，样式改成 24 后这条断言就一直假失败。
+                            var titleSize = ((Style)app.FindResource("PageTitleStyle")).Setters.OfType<Setter>()
+                                .Where(s => s.Property == TextBlock.FontSizeProperty).Select(s => (double)s.Value).FirstOrDefault(24);
+                            Assert.True(
+                                Descendants(page).OfType<TextBlock>().Any(t => t.Text == Str.T(titleKey) && Math.Abs(t.FontSize - titleSize) < 0.01),
+                                $"route={route} theme={theme} 标题没有按 PageTitleStyle({titleSize}) 渲染：期望 '{Str.T(titleKey)}'");
+                        }
                         if (page is ConsoleView)
                             foreach (var name in new[] { "CpuText", "MemoryText", "GpuText", "TunedText" })
                                 Assert.Equal(((FontFamily)app.FindResource("FontBody")).Source, ((TextBlock)page.FindName(name)).FontFamily.Source);
@@ -843,7 +850,8 @@ public sealed class ReadabilityAndFramesUiTests
     {
         window.UpdateLayout();
         var texts = Descendants(window).OfType<TextBlock>().Where(t => t.IsVisible && !string.IsNullOrWhiteSpace(t.Text)).ToArray();
-        Assert.DoesNotContain(texts, t => t.FontSize < 13);
+        var tooSmall = texts.Where(t => t.FontSize < 13).Select(t => $"{t.Text}({t.FontSize})").Distinct().ToArray();
+        Assert.True(tooSmall.Length == 0, $"{name} 有小于 13 号的可见文字：" + string.Join(" | ", tooSmall.Take(6)));
         report.Add(new { page = name, count = texts.Length, minFontDip = texts.Select(t => t.FontSize).DefaultIfEmpty(12).Min(),
             below13 = texts.Where(t => t.FontSize < 13).Select(t => new { t.Text, t.FontSize }).ToArray() });
         Render((FrameworkElement)window.FindName("ChromeRoot"), name);

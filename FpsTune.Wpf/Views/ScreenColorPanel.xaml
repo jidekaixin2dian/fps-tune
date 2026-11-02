@@ -28,7 +28,7 @@
      <DockPanel Grid.Row="0" Margin="0,0,0,10">
       <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.ColorPreviewTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
       <TextBlock x:Name="PreviewModeHint" DockPanel.Dock="Right" Text="{DynamicResource Str.ColorPreviewStickyHint}"
-                 Style="{StaticResource MutedTextStyle}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                 Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
      </DockPanel>
      <!-- 图片占满剩余高度：下面的说明行永远是 Auto，高度不够时缩的是图，不再是字。 -->
      <controls:ColorPreviewControl Grid.Row="1" x:Name="ColorPreview"/>

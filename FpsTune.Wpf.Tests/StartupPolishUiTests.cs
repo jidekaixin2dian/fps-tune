@@ -12,6 +12,7 @@ namespace FpsTune.Wpf.Tests;
 /// 本轮三处界面修正的契约：
 /// 一键优化方案收敛成一个下拉、外置准星颜色改完立刻生效且有同款预览、网络探测三个控件等高对齐。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class StartupPolishUiTests
 {
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";

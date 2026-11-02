@@ -14,7 +14,7 @@
    <Button x:Name="LoadImageButton" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorPreviewLoad}" Click="LoadImage_Click" Style="{StaticResource SecondaryButtonStyle}"/>
    <StackPanel VerticalAlignment="Center">
     <controls:FileNameLabel x:Name="ImageNameText" Text="{DynamicResource Str.ColorPreviewSample}" Margin="0,0,10,0"/>
-    <TextBlock Text="{DynamicResource Str.ColorPreviewSourceHint}" Style="{StaticResource MutedTextStyle}" FontSize="12" Margin="0,3,10,0"/>
+    <TextBlock Text="{DynamicResource Str.ColorPreviewSourceHint}" Style="{StaticResource MutedTextStyle}" Margin="0,3,10,0"/>
    </StackPanel>
   </DockPanel>
   <ComboBox Grid.Row="1" x:Name="ScreenshotCombo" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="Screenshot_Changed" Margin="0,0,0,10" AutomationProperties.Name="{DynamicResource Str.ColorPreviewScene}">

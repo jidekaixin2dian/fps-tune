@@ -7,6 +7,7 @@ namespace FpsTune.Wpf.Tests;
 /// 0.4.0 最小化行为迁移专项：旧默认"最小化进托盘"一次性回归任务栏最小化；
 /// 迁移只发生一次，此后用户手动开启不被翻转。全部走 RootOverride 临时目录。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class TrayMinimizeMigrationTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), "fps-tune-tests", Guid.NewGuid().ToString("N"));

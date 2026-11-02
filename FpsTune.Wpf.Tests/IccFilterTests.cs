@@ -102,7 +102,8 @@ public class IccProfileGeneratorTests
                 Assert.InRange(pixels[c], 0, 1); Assert.InRange(pixels[255 * 4 + c], 253, 255);
                 for (var i = 8; i <= 64; i++)
                 {
-                    Assert.True(pixels[i * 4 + c] >= i / 2, $"{preset} crushed gray {i}, channel {c}");
+                    // 8 位输出按整数取整，误差 ±1 码属于量化；再低就是真的压暗了（沉艳这类预设本来就压黑，但不许压穿）。
+                    Assert.True(pixels[i * 4 + c] + 1 >= i / 2, $"{preset} crushed gray {i}, channel {c} — curve 4..16 = " + string.Join(",", Enumerable.Range(4, 13).Select(k => pixels[k * 4 + c])));
                     Assert.True(pixels[i * 4 + c] >= pixels[(i - 1) * 4 + c], $"{preset} reversed shadows");
                 }
             }
@@ -111,7 +112,7 @@ public class IccProfileGeneratorTests
             if (preset == IccFilterPreset.Neutral)
                 for (var i = 0; i < 256; i++) Assert.InRange((int)pixels[i * 4 + 1] - i, -2, 2);
         }
-        Assert.Equal(11, hashes.Count);
+        Assert.Equal(Enum.GetValues<IccFilterPreset>().Length, hashes.Count); // 每条预设都必须产出各自的曲线
     }
 
     private static uint ReadBe32(byte[] b, int off)

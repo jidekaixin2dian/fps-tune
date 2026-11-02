@@ -246,8 +246,9 @@ public sealed class DlssFeedbackTests
     {
         var type = typeof(DisplayQualityView).GetNestedType("StateSnapshot", BindingFlags.NonPublic)!;
         var state = new DisplayQualityService.DlssState(exe, covered, covered ? 11u : null, true);
+        // StateSnapshot 现在是 9 个参数：启用/支持/有游戏 + 名称/可执行 + DLSS 状态/错误 + DRS/错误
         var snapshot = Activator.CreateInstance(type, true, true, true, exe, exe,
-            state, null, null, null, null, null, null, null);
+            state, null, null, null);
         typeof(DisplayQualityView).GetMethod("ApplyDlssState", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(page, [snapshot]);
     }
