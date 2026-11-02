@@ -36,7 +36,8 @@
   </Grid>
   <Viewbox Grid.Row="3" x:Name="ComparisonViewbox" Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="180">
   <Grid x:Name="ComparisonViewport" Width="960" Height="540" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
-  <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
+  <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1"
+          controls:SurfaceChrome.Normalize="False">
    <!-- 尺寸交给布局：固定高度 + 撑满可用宽度（最多 880），不再用代码算像素——算错过一次，
         预览被压成一条竖线、分界手柄也就点不到了。 -->
    <Grid x:Name="ComparisonSurface" ClipToBounds="True">

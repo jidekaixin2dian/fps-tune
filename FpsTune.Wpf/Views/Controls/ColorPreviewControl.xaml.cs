@@ -342,8 +342,9 @@ public partial class ColorPreviewControl : UserControl
         var width = ComparisonSurface.ActualWidth;
         var height = ComparisonSurface.ActualHeight;
         if (width <= 0 || height <= 0) return;
-        // 外框圆角 12 减 1px 边框，内层用 11 才和外框弧线对齐。
-        ComparisonSurface.Clip = new RectangleGeometry(new Rect(0, 0, width, height), 11, 11);
+        // 内层圆角 = 外框圆角 - 1px 边框，弧线才和外框对齐（外框换主题/改圆角时这里跟着走）。
+        var radius = Math.Max(0, ComparisonFrame?.CornerRadius.TopLeft ?? 12) - 1;
+        ComparisonSurface.Clip = new RectangleGeometry(new Rect(0, 0, width, height), radius, radius);
     }
     private void Split_Changed(object sender, RoutedPropertyChangedEventArgs<double> e) => UpdateSplit();
     private void UpdateSplit()
