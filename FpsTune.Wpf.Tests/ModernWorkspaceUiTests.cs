@@ -334,7 +334,7 @@ public sealed class ModernWorkspaceUiTests
                 var neutralPixels = RenderImage();
                 var render = preview.RenderedRevision;
                 ((ComboBox)panel.FindName("ColorPresetCombo")).SelectedIndex = 4;
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 // 预览按写入同款曲线重算像素：源图不变，合成结果必须变。
                 Assert.NotSame(before, image.Source);
                 Assert.False(neutralPixels.SequenceEqual(RenderImage()));
@@ -346,24 +346,24 @@ public sealed class ModernWorkspaceUiTests
                 render = preview.RenderedRevision;
                 for (var i = 0; i < 8; i++) ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5 + i % 2;
                 Assert.Equal(brightnessValue, brightness.Value);
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 var gamePixels = RenderImage();
                 Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
                 // 游戏不读 ICC：换 ICC 预设后「游戏内效果」逐像素不变，不存在双重叠加。
                 render = preview.RenderedRevision;
                 ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5;
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 Assert.Equal(gamePixels, RenderImage());
                 // 「色彩管理应用」才是 ICC + gamma：两者各算一次，必须与游戏视图不同。
                 render = preview.RenderedRevision;
                 ((RadioButton)preview.FindName("ChannelManaged")).IsChecked = true;
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 Assert.Equal(PreviewChannelKind.ColorManaged, preview.Channel);
                 var managedPixels = RenderImage();
                 Assert.False(gamePixels.SequenceEqual(managedPixels));
                 render = preview.RenderedRevision;
                 brightness.Value = 10;
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 Assert.False(managedPixels.SequenceEqual(RenderImage()));
                 Assert.Equal(Str.T("Str.ColorPreviewManagedHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
                 Assert.Equal(1, ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex);
@@ -391,7 +391,7 @@ public sealed class ModernWorkspaceUiTests
                 ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex = 0;
                 render = preview.RenderedRevision;
                 ((RadioButton)preview.FindName("ChannelGame")).IsChecked = true;
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 Assert.Equal(PreviewChannelKind.Game, preview.Channel);
                 Assert.False(managedOnly.SequenceEqual(RenderImage()));
                 ((Slider)preview.FindName("SplitSlider")).Value = 25;

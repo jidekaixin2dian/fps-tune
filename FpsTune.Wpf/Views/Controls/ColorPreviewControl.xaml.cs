@@ -60,6 +60,9 @@ public partial class ColorPreviewControl : UserControl
     internal int RenderedRevision => _rendered;
     /// <summary>最近一帧实际使用的数字振动档：测试等它到位再比像素，避免读到上一帧。</summary>
     internal double RenderedVibrance { get; private set; }
+    /// <summary>最后一次真正画到界面上的帧代号：与 <see cref="CurrentGeneration"/> 相等才说明没有在途的旧帧。</summary>
+    internal int RenderedGeneration { get; private set; }
+    internal int CurrentGeneration => _generation;
     /// <summary>最后一次重绘所用的源图；换图后它能区分“新图还没画完”和“画完了”。</summary>
     internal BitmapSource? RenderedSource => _renderedSource;
     private void ReleaseImages()
@@ -255,6 +258,7 @@ public partial class ColorPreviewControl : UserControl
                     AfterImage.Source = image;
                     _renderedSource = source;
                     RenderedVibrance = vibrance;
+                    RenderedGeneration = generation;
                     _rendered++;
                     ShowHint();
                 }
