@@ -57,10 +57,11 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(75, Levels["A"]); Assert.NotEqual(LinearRamp(), Ramps["A"]);
         var settings = new ScreenColorSettings(Brightness: 5, Contrast: 112);
         ColorWorkspaceService.Apply("A", settings, true, IccFilterPreset.Cool, null, null);
-        Assert.Equal(ScreenColorService.BuildRamp(settings, LinearRamp()), Ramps["A"]);
+        // 新契约：ICC 模式写屏时会把滤镜曲线折进 ramp，游戏才看得到。
+        Assert.Equal(ScreenColorService.BuildRamp(settings, LinearRamp(), IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Cool))), Ramps["A"]);
         Assert.Contains("FpsTune-Cool-v3.icc", Profiles["A"]);
         ColorWorkspaceService.Apply("A", settings with { Gamma = 1.1 }, true, IccFilterPreset.Warm, null, 80);
-        Assert.Equal(ScreenColorService.BuildRamp(settings with { Gamma = 1.1 }, LinearRamp()), Ramps["A"]);
+        Assert.Equal(ScreenColorService.BuildRamp(settings with { Gamma = 1.1 }, LinearRamp(), IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Warm))), Ramps["A"]);
         Assert.Contains("FpsTune-Warm-v3.icc", Profiles["A"]); Assert.Equal(80, Levels["A"]);
         ColorWorkspaceService.Restore("A");
         Assert.Equal(LinearRamp(), Ramps["A"]); Assert.Equal(new[] { "a.icm" }, Profiles["A"]); Assert.Equal(30, Levels["A"]);

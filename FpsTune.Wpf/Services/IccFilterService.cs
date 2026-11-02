@@ -229,8 +229,13 @@ public static class IccFilterService
     private static string EnsureCustomInstalled(IIccSystemApi api, string sourcePath, string colorDir)
     {
         byte[] bytes = File.ReadAllBytes(sourcePath);
-        var hash8 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes))[..8];
-        string name = $"{CustomProfilePrefix}{hash8}{Path.GetExtension(sourcePath)}";
+        // 同一个预设永远装成同一个文件名（FpsTune-filter-X.icc → FpsTune-X.icc）；
+        // 只有不认识的名字才退回内容哈希，避免系统色彩目录越积越多。
+        var stem = Path.GetFileNameWithoutExtension(sourcePath);
+        if (stem.StartsWith("FpsTune-filter-", StringComparison.OrdinalIgnoreCase)) stem = stem["FpsTune-filter-".Length..];
+        string name = string.IsNullOrWhiteSpace(stem) || stem.Length > 80
+            ? $"{CustomProfilePrefix}{Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes))[..8]}{Path.GetExtension(sourcePath)}"
+            : $"FpsTune-{stem}{Path.GetExtension(sourcePath)}";
         string installedPath = Path.Combine(colorDir, name);
         if (IccProfileFile.IsDisplayProfile(installedPath))
             return name;
@@ -281,8 +286,26 @@ public static class IccFilterService
         if (!after.SequenceEqual(backup.ListBefore) || verified != backup.DefaultProfile)
             throw new InvalidOperationException("还原后验证失败，备份已保留，可重试。");
 
+        // 清掉我们装进色彩目录、但还原后已不被关联的 profile（含历史 FpsTune-Custom-* 残留）。
+        TryRemoveUnusedInstalledProfiles(colorDir, after);
         DeleteBackup(backup.Identity);
         return true;
+    }
+
+    /// <summary>只删"我们装的（FpsTune- 前缀）且当前没有任何关联"的文件，系统/厂商 profile 不动。</summary>
+    private static void TryRemoveUnusedInstalledProfiles(string? colorDir, string[] associations)
+    {
+        if (string.IsNullOrWhiteSpace(colorDir) || !Directory.Exists(colorDir)) return;
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(colorDir, "FpsTune-*.icc"))
+            {
+                var name = Path.GetFileName(file);
+                if (associations.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
+                try { File.Delete(file); } catch { }
+            }
+        }
+        catch { }
     }
 
     /// <summary>把预设 profile 写到本地并安装进系统色彩目录（幂等）。返回系统色彩目录内的文件名。</summary>

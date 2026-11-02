@@ -224,7 +224,10 @@ public partial class FilterCenterPanel : UserControl
         if (choice.Generated is not null) return null;
         if (_tempProfiles.TryGetValue(choice.FileName, out var cached) && File.Exists(cached)) return cached;
         var bytes = await Task.Run(() => GameFilterLibrary.ReadPreset(choice.FileName));
-        var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + Guid.NewGuid().ToString("N") + ".icc");
+        // 稳定文件名（按预设名）：以前每次点击都生成 GUID，系统色彩目录里就按内容哈希长出新 profile，
+
+        // 点十次留十个 FpsTune-Custom-xxxx.icc。
+        var temp = Path.Combine(Path.GetTempPath(), "FpsTune-filter-" + choice.FileName);
         await File.WriteAllBytesAsync(temp, bytes);
         _tempProfiles[choice.FileName] = temp;
         return temp;
