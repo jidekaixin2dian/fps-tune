@@ -60,6 +60,14 @@ public sealed class ProductNotificationTests
         Assert.Contains("Main changes", notes); Assert.Contains("Saved preferences", notes);
         Assert.Contains("Display controls", notes); Assert.DoesNotContain("https://", notes);
         Assert.DoesNotContain("<script>", notes); Assert.DoesNotContain("**", notes);
+        // 更新浮窗的「本版要点」：取前三条列表项、去掉 Markdown 与链接语法，超长截断。
+        var highlight = ReleaseNotesText.Highlight("# 0.4.0\n- **最大的一次更新**，建议所有用户更新\n- 新增游戏配置与对比\n- 修复分界手柄拖不动\n- 第四条不该出现");
+        Assert.Equal(3, highlight.Split('\n').Length);
+        Assert.Contains("最大的一次更新", highlight);
+        Assert.DoesNotContain("**", highlight);
+        Assert.DoesNotContain("第四条", highlight);
+        Assert.Equal("", ReleaseNotesText.Highlight("没有列表项的一段说明"));
+        Assert.Equal("", ReleaseNotesText.Highlight(null));
         Assert.True(ReleaseNotesText.Format(new string('x', 20000)).Length <= 12000);
         Assert.False(string.IsNullOrWhiteSpace(ReleaseNotesText.Format(null)));
     }

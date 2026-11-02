@@ -15,4 +15,23 @@ internal static class ReleaseNotesText
         text = text.Replace("**", "").Replace("`", "").Trim();
         return text.Length == 0 ? Str.T("Str.ReleaseNotesEmpty") : text;
     }
+
+    /// <summary>本版要点：从 Release 说明里挑前几条列表项，给更新浮窗做一眼可读的摘要。</summary>
+    internal static string Highlight(string? notes, int max = 3)
+    {
+        if (string.IsNullOrWhiteSpace(notes)) return "";
+        var lines = notes[..Math.Min(notes.Length, 12000)].Replace("\r", "").Split('\n');
+        var bullets = new List<string>();
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (line.Length < 2) continue;
+            if (line[0] is not ('-' or '*' or '•')) continue;
+            var item = Format(line.TrimStart('-', '*', '•', ' '));
+            if (item.Length == 0) continue;
+            bullets.Add(item.Length > 64 ? item[..63] + "…" : item);
+            if (bullets.Count == max) break;
+        }
+        return string.Join("\n", bullets.Select(b => "· " + b));
+    }
 }

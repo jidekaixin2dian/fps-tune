@@ -1289,6 +1289,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CommunitySaveFailed">无法保存“不再提醒”。请重试，或取消勾选后关闭。</s:String>
     <s:String x:Key="Str.CommunityJoin">一键加群</s:String>
     <s:String x:Key="Str.CommunityLater">稍后</s:String>
+    <s:String x:Key="Str.UpdateHighlights">Highlights</s:String>
     <s:String x:Key="Str.ReleaseChanges">本次主要更新</s:String>
     <s:String x:Key="Str.ReleaseDownloadPage">前往下载页面</s:String>
     <s:String x:Key="Str.ReleaseExeHint">优先下载 EXE 安装版，已包含所需 .NET 运行时。</s:String>

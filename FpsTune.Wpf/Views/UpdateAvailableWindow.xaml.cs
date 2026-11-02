@@ -22,6 +22,9 @@ public partial class UpdateAvailableWindow : Window
         InitializeComponent();
         VersionText.Text = $"{UpdateService.DisplayVersion} → {info.ReleaseTag ?? info.Version}";
         NotesText.Text = ReleaseNotesText.Format(info.Notes);
+        var highlights = ReleaseNotesText.Highlight(info.Notes);
+        HighlightText.Text = highlights;
+        HighlightPanel.Visibility = string.IsNullOrWhiteSpace(highlights) ? Visibility.Collapsed : Visibility.Visible;
         _backup = UpdateMirrors.FindBackupLink(info.Notes);
         BackupDownloadButton.Visibility = _backup is null ? Visibility.Collapsed : Visibility.Visible;
         if (_backup?.Password is { } password)
