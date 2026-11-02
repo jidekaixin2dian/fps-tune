@@ -17,12 +17,12 @@
    </Style>
   </UserControl.Resources>
 
-  <Grid x:Name="WorkspaceGrid" MaxWidth="1640" HorizontalAlignment="Stretch" SizeChanged="Workspace_SizeChanged">
-   <Grid.ColumnDefinitions><ColumnDefinition x:Name="PreviewColumn" Width="*"/><ColumnDefinition x:Name="ControlsColumn" Width="420"/></Grid.ColumnDefinitions>
+  <Grid x:Name="WorkspaceGrid" MaxWidth="2200" HorizontalAlignment="Stretch" SizeChanged="Workspace_SizeChanged">
+   <Grid.ColumnDefinitions><ColumnDefinition x:Name="PreviewColumn" Width="*"/><ColumnDefinition x:Name="ControlsColumn" Width="380"/></Grid.ColumnDefinitions>
    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
    <!-- 左侧固定：无论右侧筛选、调参、编辑 ICC 或切到独立方案，这块实机图始终在旁边。 -->
-   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,22,0" VerticalAlignment="Top">
+   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="16,14" Margin="0,0,18,0" VerticalAlignment="Top">
     <Grid>
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
      <DockPanel Grid.Row="0" Margin="0,0,0,10">

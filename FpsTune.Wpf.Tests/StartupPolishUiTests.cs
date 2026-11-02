@@ -4,6 +4,7 @@ using System.Windows.Media;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using FpsTune.Wpf.Views;
+using FpsTune.Wpf.Views.Controls;
 using Xunit;
 
 namespace FpsTune.Wpf.Tests;
@@ -228,6 +229,38 @@ public sealed class StartupPolishUiTests
                 Assert.Equal(Str.T(scan.GameFound ? "Str.DeltaFixStateDone" : "Str.DeltaFixStatePending"), stepOne.Text);
             }
             finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Color_preview_gives_width_to_the_image_in_window_and_fullscreen()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(StartupPolishUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var panel = new ScreenColorPanel();
+            try
+            {
+                var window = new MainWindowStub(panel) { Width = 1100, Height = 820 };
+                app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+                panel.UpdateLayout();
+                var controls = (ColumnDefinition)panel.FindName("ControlsColumn");
+                var previewColumn = (ColumnDefinition)panel.FindName("PreviewColumn");
+                var workspace = (Grid)panel.FindName("WorkspaceGrid");
+                var viewbox = (FrameworkElement)FindAll<ColorPreviewControl>(panel).Single().FindName("ComparisonViewbox");
+
+                // 常规窗口：右栏按 32% 夹到下限 360，其余宽度全给实拍图。
+                Assert.Equal(360d, controls.Width.Value, 1);
+                Assert.True(previewColumn.ActualWidth > controls.Width.Value, $"左栏没有比右栏宽：{previewColumn.ActualWidth:0}");
+                Assert.True(viewbox.ActualWidth > 400, $"常规窗口下预览太小：{viewbox.ActualWidth:0}");
+
+                // 宽屏/全屏：工作区不再卡 1640，右栏夹到上限 460，其余归预览。
+                Assert.True(workspace.MaxWidth >= 2000, $"工作区最大宽度仍被卡在 {workspace.MaxWidth}");
+                panel.Width = 2000; panel.UpdateLayout();
+                Assert.Equal(460d, controls.Width.Value, 1);
+                Assert.True(previewColumn.ActualWidth > 1200, $"宽屏下左栏仍然偏窄：{previewColumn.ActualWidth:0}");
+            }
+            finally { app.MainWindow.Content = null; }
         });
     }
 
