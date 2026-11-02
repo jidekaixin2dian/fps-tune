@@ -22,7 +22,7 @@
    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
    <!-- 左侧固定：无论右侧筛选、调参、编辑 ICC 或切到独立方案，这块实机图始终在旁边。 -->
-   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,22,0" VerticalAlignment="Stretch">
+   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,22,0" VerticalAlignment="Top">
     <Grid>
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
      <DockPanel Grid.Row="0" Margin="0,0,0,10">
