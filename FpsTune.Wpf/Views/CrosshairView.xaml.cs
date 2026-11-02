@@ -50,6 +50,20 @@ public partial class CrosshairView : UserControl
         CrosshairPreviewHost.Content = CrosshairShape.Build(CrosshairConfig.FromSettings());
     }
 
+    /// <summary>离开颜色框时把内容归一成 #RRGGBB 写回，避免框里留着不被接受的输入。</summary>
+    private void Crosshair_ColorCommitted(object sender, RoutedEventArgs e)
+    {
+        if (!_ready || _suppress) return;
+        var normalized = CrosshairConfig.NormalizeColor(CrosshairColorBox.Text);
+        if (!string.Equals(CrosshairColorBox.Text, normalized, StringComparison.Ordinal))
+        {
+            _suppress = true;
+            CrosshairColorBox.Text = normalized;
+            _suppress = false;
+        }
+        Crosshair_Changed(sender, e);
+    }
+
     private void Crosshair_Changed(object sender, RoutedEventArgs e)
     {
         if (!_ready || _suppress) return;
