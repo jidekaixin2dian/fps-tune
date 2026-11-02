@@ -160,6 +160,7 @@ public partial class ColorPreviewControl : UserControl
     public void SetVibrance(double percent)
     {
         _vibrance = Math.Clamp(percent, 0, 100);
+        ShowHint();
         RequestRender();
     }
     public async Task SetIccProfileAsync(string? path)
@@ -167,6 +168,7 @@ public partial class ColorPreviewControl : UserControl
         if (_profile == path) return;
         _profile = path;
         ClearIccCache();
+        ShowHint();
         RequestRender();
         await Task.CompletedTask;
     }
@@ -198,6 +200,9 @@ public partial class ColorPreviewControl : UserControl
     /// <summary>拖动滑杆会连续触发，用「渲染中就排一次」的合并策略，避免逐次排队变慢。</summary>
     private void RequestRender()
     {
+        // 提示文案描述的是当前选择（哪条通道、有没有 ICC、振动档位），不依赖这一帧是否画完：
+        // 图片还没载入或正在切换时也要说对，否则会停在上一句上。
+        ShowHint();
         if (_renderSource is null || !IsVisible) return;
         if (_rendering) { _renderPending = true; return; }
         _ = RenderAsync();
