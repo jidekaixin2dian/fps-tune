@@ -13,19 +13,19 @@
     <s:String x:Key="Str.NavQuickOpt">One-click Optimize</s:String>
     <s:String x:Key="Str.NavDisplay">Display &amp; Quality</s:String>
     <s:String x:Key="Str.NavFilters">Picture &amp; color</s:String>
-    <s:String x:Key="Str.FilterPageIntro">The real-game preview stays visible while you pick a filter or adjust the picture. One Apply writes ICC, picture settings, and vibrance together.</s:String>
+    <s:String x:Key="Str.FilterPageIntro">The screenshot stays visible while you pick a filter or adjust the picture. One Apply writes ICC, picture settings, and vibrance together.</s:String>
     <s:String x:Key="Str.FilterModeScreen">Current screen</s:String>
     <s:String x:Key="Str.FilterModePerApp">Per-app plans</s:String>
     <s:String x:Key="Str.FilterPickerTitle">Choose a filter</s:String>
-    <s:String x:Key="Str.FilterPickerHint">Selection previews on the real-game screenshot immediately. Use Apply all to write it to the screen.</s:String>
+    <s:String x:Key="Str.FilterPickerHint">Selection previews on the screenshot immediately. Use Apply all to write it to the screen.</s:String>
     <s:String x:Key="Str.FilterEditorSection">Create a custom filter</s:String>
     <s:String x:Key="Str.FilterApplyAll">Apply all</s:String>
     <s:String x:Key="Str.FilterRestoreAll">Restore original</s:String>
     <s:String x:Key="Str.FilterAutomationSection">Automation and frame fixes</s:String>
     <s:String x:Key="Str.ColorPreviewStickyHint">Stays visible while editing</s:String>
     <s:String x:Key="Str.FilterPerAppPreviewHint">Selected app</s:String>
-    <s:String x:Key="Str.ColorPreviewRecent">Recent screenshot</s:String>
-    <s:String x:Key="Str.ColorPreviewRecentEmpty">No image found in the Windows screenshots folders. Use Load image.</s:String>
+    <s:String x:Key="Str.ColorPreviewRecent">Newest Windows screenshot</s:String>
+    <s:String x:Key="Str.ColorPreviewRecentEmpty">No PNG or JPG in the Windows screenshots folders yet. Press Win + PrtSc, or use Load image.</s:String>
     <s:String x:Key="Str.FilterRuleListTitle">App plans</s:String>
     <s:String x:Key="Str.FilterRuleNew">New plan</s:String>
     <s:String x:Key="Str.FilterRuleEmpty">No per-app plan yet. Choose a filter and app, then save; it applies when that app comes to the foreground.</s:String>
@@ -719,7 +719,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.IccFileMissing">The selected file does not exist.</s:String>
     <s:String x:Key="Str.IccFileExtUnsupported">Only .icc / .icm profile files are supported.</s:String>
     <s:String x:Key="Str.IccFileNotDisplay">The selected file is not a usable display ICC profile (mntr/RGB display class required).</s:String>
-    <s:String x:Key="Str.IccApplied">Association saved and verified: {0}. Color-managed applications use this profile. Adjust the whole display under Display filters and parameters.</s:String>
+    <s:String x:Key="Str.IccApplied">Association saved and verified: {0}. Color-managed applications use this profile. Adjust the whole display under the picture settings on the Color page.</s:String>
     <s:String x:Key="Str.IccApplyFailed">Apply failed: {0}</s:String>
 
     <!-- Display page sub-tabs -->
@@ -1526,8 +1526,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.UpdatePreparingRollback">Preparing the current version for rollback…</s:String>
     <s:String x:Key="Str.UpdatePreparingInstall">Protecting settings and backups before installation…</s:String>
     <s:String x:Key="Str.UpdateDownloadIncomplete">Download incomplete. Please retry.</s:String>
-    <s:String x:Key="Str.ColorPreviewTitle">Real-game comparison</s:String>
-    <s:String x:Key="Str.ColorPreviewSourceHint">Choose a game-matched screenshot, a recent capture, or load your own</s:String>
+    <s:String x:Key="Str.ColorPreviewTitle">Screenshot comparison</s:String>
+    <s:String x:Key="Str.ColorPreviewSourceHint">Choose a sample screenshot matched to the game, the newest Windows screenshot, or load your own</s:String>
     <s:String x:Key="Str.ColorPreviewLoad">Load screenshot…</s:String>
     <s:String x:Key="Str.ColorPreviewSample">Waiting for a game screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">Original</s:String>
@@ -1574,8 +1574,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryAutoWaiting">Enabled; waiting for the threshold.</s:String>
     <s:String x:Key="Str.MemoryAutoOff">Automatic cleanup is off.</s:String>
     <s:String x:Key="Str.ColorPreviewScene">Game screenshot</s:String>
-    <s:String x:Key="Str.ColorPreviewDelta">Delta Force · gameplay screenshot</s:String>
-    <s:String x:Key="Str.ColorPreviewValorant">VALORANT · gameplay screenshot</s:String>
+    <s:String x:Key="Str.ColorPreviewDelta">Delta Force · sample screenshot</s:String>
+    <s:String x:Key="Str.ColorPreviewValorant">VALORANT · sample screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">Custom screenshot</s:String>
     <s:String x:Key="Str.ColorIccLayer">ICC color profile</s:String>
     <s:String x:Key="Str.ColorParametersLayer">2 · Fine-tune display</s:String>

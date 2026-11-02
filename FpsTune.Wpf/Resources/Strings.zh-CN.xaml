@@ -13,19 +13,19 @@
     <s:String x:Key="Str.NavQuickOpt">一键优化</s:String>
     <s:String x:Key="Str.NavDisplay">显示与画质</s:String>
     <s:String x:Key="Str.NavFilters">画面与色彩</s:String>
-    <s:String x:Key="Str.FilterPageIntro">选滤镜、调画面参数时，左侧实机截图始终可见；应用一次同时处理 ICC、画面参数和数字振动。</s:String>
+    <s:String x:Key="Str.FilterPageIntro">选滤镜、调画面参数时，左侧截图始终可见；应用一次同时处理 ICC、画面参数和数字振动。</s:String>
     <s:String x:Key="Str.FilterModeScreen">当前屏幕</s:String>
     <s:String x:Key="Str.FilterModePerApp">独立游戏方案</s:String>
     <s:String x:Key="Str.FilterPickerTitle">选择滤镜</s:String>
-    <s:String x:Key="Str.FilterPickerHint">选中即在左侧实机截图预览，点右上“应用整套”才写入屏幕。</s:String>
+    <s:String x:Key="Str.FilterPickerHint">选中即在左侧截图预览，点右上“应用整套”才写入屏幕。</s:String>
     <s:String x:Key="Str.FilterEditorSection">创建自定义滤镜</s:String>
     <s:String x:Key="Str.FilterApplyAll">应用整套</s:String>
     <s:String x:Key="Str.FilterRestoreAll">还原原始</s:String>
     <s:String x:Key="Str.FilterAutomationSection">自动化与修帧</s:String>
     <s:String x:Key="Str.ColorPreviewStickyHint">调参时保持可见</s:String>
     <s:String x:Key="Str.FilterPerAppPreviewHint">当前选中应用</s:String>
-    <s:String x:Key="Str.ColorPreviewRecent">最近的截图</s:String>
-    <s:String x:Key="Str.ColorPreviewRecentEmpty">在 Windows 截图目录中没有找到图片，请点“载入截图”。</s:String>
+    <s:String x:Key="Str.ColorPreviewRecent">Windows 截图里最新的一张</s:String>
+    <s:String x:Key="Str.ColorPreviewRecentEmpty">截图文件夹里还没有 PNG / JPG 图片。先按 Win + PrtSc 截一张，或点“载入截图”。</s:String>
     <s:String x:Key="Str.FilterRuleListTitle">应用方案</s:String>
     <s:String x:Key="Str.FilterRuleNew">新建方案</s:String>
     <s:String x:Key="Str.FilterRuleEmpty">还没有独立方案。选择滤镜和应用后保存，前台进入该程序时自动套用。</s:String>
@@ -719,7 +719,7 @@
     <s:String x:Key="Str.IccFileMissing">所选文件不存在。</s:String>
     <s:String x:Key="Str.IccFileExtUnsupported">只支持 .icc / .icm 配置文件。</s:String>
     <s:String x:Key="Str.IccFileNotDisplay">所选文件不是可用的显示器 ICC 配置文件（需要 mntr/RGB 显示类）。</s:String>
-    <s:String x:Key="Str.IccApplied">已关联并读回确认：{0}。此配置供支持颜色管理的应用使用；整屏效果在“画面滤镜与参数”中调节。</s:String>
+    <s:String x:Key="Str.IccApplied">已关联并读回确认：{0}。此配置供支持颜色管理的应用使用；整屏效果在“画面与色彩”的画面参数里调。</s:String>
     <s:String x:Key="Str.IccApplyFailed">应用失败：{0}</s:String>
 
     <!-- 显示页二级页签 -->
@@ -1181,7 +1181,7 @@
     <s:String x:Key="Str.DisplayLegacyBackup">旧版 ICC 备份未记录屏幕身份，无法安全自动还原。备份已保留，请在 Windows 颜色管理中核对原始关联。</s:String>
     <s:String x:Key="Str.DisplayWriteUnconfirmed">驱动读回值与目标值不一致，备份已保留，可重试或还原。</s:String>
     <s:String x:Key="Str.DisplayVibConfirm">目标屏幕：{0}&#10;&#10;将把这块屏幕的数字振动设为 {1}%。桌面、网页和游戏观感都会变化。应用前保存原档位，只还原这块屏幕。</s:String>
-    <s:String x:Key="Str.DisplayIccConfirm">目标屏幕：{0}&#10;&#10;保存并切换此屏幕的 ICC 配置，供支持颜色管理的应用使用；原始关联会备份，可随时还原。整屏亮度和对比度请使用“画面滤镜与参数”。</s:String>
+    <s:String x:Key="Str.DisplayIccConfirm">目标屏幕：{0}&#10;&#10;保存并切换此屏幕的 ICC 配置，供支持颜色管理的应用使用；原始关联会备份，可随时还原。整屏亮度和对比度请使用“画面与色彩”的画面参数。</s:String>
     <s:String x:Key="Str.DisplayVibApplied">已保存并读回确认：{0}%。仅选定屏幕生效。</s:String>
     <s:String x:Key="Str.DisplayApplyFailed">应用失败：{0}</s:String>
     <s:String x:Key="Str.DisplayRestoreFailed">还原失败：{0}</s:String>
@@ -1517,8 +1517,8 @@
     <s:String x:Key="Str.UpdatePreparingRollback">正在准备当前版本的还原安装包…</s:String>
     <s:String x:Key="Str.UpdatePreparingInstall">正在保护设置与备份，准备退出并安装…</s:String>
     <s:String x:Key="Str.UpdateDownloadIncomplete">下载未完成，请重试。</s:String>
-    <s:String x:Key="Str.ColorPreviewTitle">实机截图对比</s:String>
-    <s:String x:Key="Str.ColorPreviewSourceHint">选择按游戏匹配的实机图、最近截图，或载入自己的截图</s:String>
+    <s:String x:Key="Str.ColorPreviewTitle">截图对比</s:String>
+    <s:String x:Key="Str.ColorPreviewSourceHint">选择按游戏匹配的示例截图、Windows 截图里最新的一张，或载入自己的截图</s:String>
     <s:String x:Key="Str.ColorPreviewLoad">载入截图…</s:String>
     <s:String x:Key="Str.ColorPreviewSample">等待载入游戏截图</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">原图</s:String>
@@ -1540,7 +1540,7 @@
     <s:String x:Key="Str.ColorPreviewManagedEmpty">这个视图要有一条 ICC 滤镜，先在右侧滤镜列表里选一条。</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">截图饱和度为近似预览，实际档位由显卡驱动处理。</s:String>
     <s:String x:Key="Str.ColorPreviewIccFailed">ICC 无法预览：{0}</s:String>
-    <s:String x:Key="Str.ColorPreviewEmpty">载入游戏实机截图，查看调整前后的变化</s:String>
+    <s:String x:Key="Str.ColorPreviewEmpty">载入一张游戏截图，查看调整前后的变化</s:String>
     <s:String x:Key="Str.MemoryProcessProtected">此进程受保护，不能整理。</s:String>
     <s:String x:Key="Str.MemoryProcessChanged">应用已重启或目标已变化，请刷新后重选。</s:String>
     <s:String x:Key="Str.MemoryProcessReadFailed">已整理，但无法读取整理后占用：{0}</s:String>
@@ -1590,8 +1590,8 @@
     <s:String x:Key="Str.MemoryStandbyChange">待机缓存：{0} → {1}</s:String>
     <s:String x:Key="Str.MemoryRunReadFailed">最新内存状态读取失败：{0}。请点击“刷新”重试。</s:String>
     <s:String x:Key="Str.ColorPreviewScene">预览游戏截图</s:String>
-    <s:String x:Key="Str.ColorPreviewDelta">三角洲行动 · 实机截图</s:String>
-    <s:String x:Key="Str.ColorPreviewValorant">无畏契约 · 实机截图</s:String>
+    <s:String x:Key="Str.ColorPreviewDelta">三角洲行动 · 示例截图</s:String>
+    <s:String x:Key="Str.ColorPreviewValorant">无畏契约 · 示例截图</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">自选截图</s:String>
     <s:String x:Key="Str.ColorIccLayer">ICC 色彩配置</s:String>
     <s:String x:Key="Str.ColorParametersLayer">2 · 微调画面</s:String>

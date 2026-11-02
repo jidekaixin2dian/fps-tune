@@ -76,6 +76,16 @@ public partial class ColorPreviewControl : UserControl
         var index = ScreenshotCombo.SelectedIndex;
         if (index < 0 || index > 3 || !IsVisible) return;
         var recent = index == 3 ? FindRecentScreenshot() : null;
+        // 选到「Windows 截图里最新的一张」但目录里没有图：说清要做什么，不要留一张旧图或空状态。
+        if (index == 3 && recent is null)
+        {
+            _source = null; _renderSource = null; ClearIccCache(); _loadingKey = null;
+            BeforeImage.Source = AfterImage.Source = null;
+            EmptyHint.Visibility = Visibility.Visible;
+            ImageNameText.Text = Str.T("Str.ColorPreviewRecent");
+            PreviewStatus.Text = Str.T("Str.ColorPreviewRecentEmpty");
+            return;
+        }
         var key = index == 2 ? _customPath : index == 3 ? recent : index.ToString();
         if (key == _loadingKey && key is not null) return;
         var generation = ++_loadGeneration; _loadingKey = key;
@@ -133,7 +143,8 @@ public partial class ColorPreviewControl : UserControl
             };
             return dirs.Where(Directory.Exists)
                 .SelectMany(dir => Directory.EnumerateFiles(dir).Where(f =>
-                    f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)))
+                    f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                    || f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)))
                 .Select(path => new FileInfo(path)).OrderByDescending(f => f.LastWriteTimeUtc)
                 .Select(f => f.FullName).FirstOrDefault();
         }
