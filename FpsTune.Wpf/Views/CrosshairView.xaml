@@ -34,25 +34,28 @@
             <StackPanel>
                 <Border Style="{StaticResource CardStyle}" Padding="24,20" MaxWidth="900" HorizontalAlignment="Left"><StackPanel>
                     <CheckBox x:Name="CrosshairCheck" Content="{DynamicResource Str.CrosshairToggle}" Style="{StaticResource ToggleSwitchStyle}" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
-                    <WrapPanel Margin="0,16,0,0">
-                        <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairStyleLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <ComboBox x:Name="CrosshairStyleBox" MinWidth="120" AutomationProperties.Name="{DynamicResource Str.CrosshairStyleLabel}" SelectionChanged="Crosshair_Changed">
+                    <!-- 两列栅格：每个滑杆都吃满自己那一列（以前挤在 WrapPanel 里只有一小截轨道）。 -->
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <StackPanel Margin="0,0,20,14"><TextBlock Text="{DynamicResource Str.CrosshairStyleLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                            <ComboBox x:Name="CrosshairStyleBox" HorizontalAlignment="Stretch" AutomationProperties.Name="{DynamicResource Str.CrosshairStyleLabel}" SelectionChanged="Crosshair_Changed">
                                 <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCross}" Tag="cross"/>
                                 <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleDot}" Tag="dot"/>
                                 <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCrossDot}" Tag="crossdot"/>
                                 <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCircle}" Tag="circle"/>
                             </ComboBox></StackPanel>
-                        <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairColorLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="CrosshairColorBox" MinWidth="110" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" TextChanged="Crosshair_ColorChanged" LostFocus="Crosshair_ColorCommitted"/></StackPanel>
-                        <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairSizeLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairSizeSlider" MinWidth="140" Minimum="4" Maximum="48" Value="12" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairSizeLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairGapLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairGapSlider" MinWidth="140" Minimum="0" Maximum="30" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairGapLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairThicknessLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairThicknessSlider" MinWidth="140" Minimum="1" Maximum="10" Value="2" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairThicknessLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                        <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairOpacityLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <Slider x:Name="CrosshairOpacitySlider" MinWidth="140" Minimum="10" Maximum="100" Value="90" TickFrequency="5" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairOpacityLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
-                    </WrapPanel>
+                        <StackPanel Grid.Column="1" Margin="0,0,0,14"><TextBlock Text="{DynamicResource Str.CrosshairColorLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                            <TextBox x:Name="CrosshairColorBox" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" TextChanged="Crosshair_ColorChanged" LostFocus="Crosshair_ColorCommitted"/></StackPanel>
+                        <StackPanel Grid.Row="1" Margin="0,0,20,14"><TextBlock Text="{DynamicResource Str.CrosshairSizeLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                            <Slider x:Name="CrosshairSizeSlider" Style="{StaticResource FillSliderStyle}" Minimum="4" Maximum="48" Value="12" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairSizeLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,14"><TextBlock Text="{DynamicResource Str.CrosshairGapLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                            <Slider x:Name="CrosshairGapSlider" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="30" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairGapLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
+                        <StackPanel Grid.Row="2" Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.CrosshairThicknessLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                            <Slider x:Name="CrosshairThicknessSlider" Style="{StaticResource FillSliderStyle}" Minimum="1" Maximum="10" Value="2" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairThicknessLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
+                        <StackPanel Grid.Row="2" Grid.Column="1"><TextBlock Text="{DynamicResource Str.CrosshairOpacityLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
+                            <Slider x:Name="CrosshairOpacitySlider" Style="{StaticResource FillSliderStyle}" Minimum="10" Maximum="100" Value="90" TickFrequency="5" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairOpacityLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
+                    </Grid>
                     <!-- 调色盘：预设色 + HSV 三滑杆，与上面的十六进制框双向同步（改哪边另一侧立刻跟上）。 -->
                     <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,0,0,16"
                             AutomationProperties.AutomationId="CrosshairPalette">
@@ -68,7 +71,7 @@
                             <Grid Margin="0,2,0,0">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="48"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Str.CrosshairHue}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,8"/>
-                                <Slider x:Name="CrosshairHueSlider" Grid.Column="1" Minimum="0" Maximum="360" Value="140" TickFrequency="1" IsSnapToTickEnabled="True"
+                                <Slider x:Name="CrosshairHueSlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="360" Value="140" TickFrequency="1" IsSnapToTickEnabled="True"
                                         Margin="0,0,10,8" ValueChanged="Crosshair_HsvChanged" AutomationProperties.Name="{DynamicResource Str.CrosshairHue}"/>
                                 <TextBlock x:Name="CrosshairHueValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center" Margin="0,0,0,8"
                                            Typography.NumeralAlignment="Tabular" Text="140°"/>
@@ -76,7 +79,7 @@
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="48"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Str.CrosshairSaturation}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,8"/>
-                                <Slider x:Name="CrosshairSaturationSlider" Grid.Column="1" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                <Slider x:Name="CrosshairSaturationSlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"
                                         Margin="0,0,10,8" ValueChanged="Crosshair_HsvChanged" AutomationProperties.Name="{DynamicResource Str.CrosshairSaturation}"/>
                                 <TextBlock x:Name="CrosshairSaturationValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center" Margin="0,0,0,8"
                                            Typography.NumeralAlignment="Tabular" Text="100%"/>
@@ -84,7 +87,7 @@
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="48"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Str.CrosshairBrightness}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <Slider x:Name="CrosshairBrightnessSlider" Grid.Column="1" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                <Slider x:Name="CrosshairBrightnessSlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"
                                         Margin="0,0,10,0" ValueChanged="Crosshair_HsvChanged" AutomationProperties.Name="{DynamicResource Str.CrosshairBrightness}"/>
                                 <TextBlock x:Name="CrosshairBrightnessValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center"
                                            Typography.NumeralAlignment="Tabular" Text="100%"/>

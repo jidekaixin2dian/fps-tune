@@ -1141,9 +1141,10 @@
                 </ControlTemplate></Setter.Value></Setter>
             </Style>
                 <Style x:Key="TuneSliderStyle" TargetType="Slider">
-            <!-- 全站滑杆限宽：杜绝铺满整行的长调节线（用户 2026-11-01 明确要求） -->
-            <Setter Property="MaxWidth" Value="260"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <!-- 基础滑杆：只管外观与模板，不限制宽度。
+                 默认（隐式样式）仍是紧凑行用的限宽 260；需要「标签在左、数值在右、轨道吃满」的行
+                 显式用 TuneSliderStyle / FillSliderStyle（用户 2026-11-02：该铺满的地方铺满，
+                 只给一小截轨道反直觉）。 -->
             <Setter Property="Height" Value="22"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="IsMoveToPointEnabled" Value="True"/>
@@ -1198,7 +1199,15 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style TargetType="Slider" BasedOn="{StaticResource TuneSliderStyle}"/>
+        <!-- 铺满可用宽度：与 TuneSliderStyle 同外观，只是显式拉伸（语义名，读 XAML 时一眼知道该行是满宽）。 -->
+        <Style x:Key="FillSliderStyle" TargetType="Slider" BasedOn="{StaticResource TuneSliderStyle}">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <!-- 默认紧凑行：限宽 260、靠左（历史规则，短行/多列排布仍用它）。 -->
+        <Style TargetType="Slider" BasedOn="{StaticResource TuneSliderStyle}">
+            <Setter Property="MaxWidth" Value="260"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
 </ResourceDictionary>
     </Application.Resources>
 </Application>

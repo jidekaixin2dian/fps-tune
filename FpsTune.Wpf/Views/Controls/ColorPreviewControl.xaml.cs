@@ -328,8 +328,22 @@ public partial class ColorPreviewControl : UserControl
 
     private void UpdatePreviewHeight()
     {
-        // 尺寸完全交给布局（固定高度 + 撑满宽度），这里只刷新分界线。
+        // 尺寸完全交给布局（固定高度 + 撑满宽度），这里只刷新分界线与圆角裁剪。
+        ApplySurfaceClip();
         UpdateSplit();
+    }
+
+    /// <summary>
+    /// 对比区四角都裁成圆角：外框 Border 只画自己的圆角，里面的图片是方的，不裁会露出左上角那种直角。
+    /// </summary>
+    private void ApplySurfaceClip()
+    {
+        if (ComparisonSurface is null) return;
+        var width = ComparisonSurface.ActualWidth;
+        var height = ComparisonSurface.ActualHeight;
+        if (width <= 0 || height <= 0) return;
+        // 外框圆角 12 减 1px 边框，内层用 11 才和外框弧线对齐。
+        ComparisonSurface.Clip = new RectangleGeometry(new Rect(0, 0, width, height), 11, 11);
     }
     private void Split_Changed(object sender, RoutedPropertyChangedEventArgs<double> e) => UpdateSplit();
     private void UpdateSplit()

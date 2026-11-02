@@ -109,7 +109,19 @@ public partial class CrosshairView : UserControl
             CrosshairBrightnessSlider.Value);
         UpdatePaletteReadouts(hex);
         if (!_ready || _paletteSync || _suppress) return;
+        // 滑杆只是「跟着框里的颜色取整回填」时，不要把预设色/手输的精确值改写成取整后的颜色。
+        if (SlidersMirrorCurrentColor()) return;
         ApplyColor(hex);
+    }
+
+    /// <summary>三个滑杆是否正好等于十六进制框里颜色取整后的 HSV（回填态，不该反写颜色）。</summary>
+    private bool SlidersMirrorCurrentColor()
+    {
+        if (!CrosshairColorMath.TryParse(CrosshairColorBox.Text, out var rgb)) return false;
+        var (hue, saturation, value) = CrosshairColorMath.ToHsv(rgb);
+        return Math.Abs(Math.Round(hue) - CrosshairHueSlider.Value) < 0.001
+            && Math.Abs(Math.Round(saturation) - CrosshairSaturationSlider.Value) < 0.001
+            && Math.Abs(Math.Round(value) - CrosshairBrightnessSlider.Value) < 0.001;
     }
 
     /// <summary>唯一写入口：归一颜色 → 回填十六进制框 → 同步调色盘 → 保存设置并刷新预览。</summary>

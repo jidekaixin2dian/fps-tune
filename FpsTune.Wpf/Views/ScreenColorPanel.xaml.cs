@@ -89,6 +89,8 @@ public partial class ScreenColorPanel : UserControl
             {
                 text.Visibility = Visibility.Collapsed;
                 row.Margin = new Thickness(0);
+                slider.Style = (Style)FindResource("TuneSliderStyle");
+                System.Windows.Automation.AutomationProperties.SetAutomationId(slider, "ColorDarkBalanceSlider");
                 slider.ValueChanged += (_, _) => UpdateDarkBalanceGamma(slider.Value);
                 DarkBalanceRowHost.Children.Add(row);
             }

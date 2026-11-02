@@ -7,8 +7,6 @@
    <RowDefinition Height="Auto"/>
    <RowDefinition Height="Auto"/>
    <RowDefinition Height="*"/>
-   <RowDefinition Height="Auto"/>
-   <RowDefinition Height="Auto"/>
   </Grid.RowDefinitions>
   <DockPanel Grid.Row="0" Margin="0,0,0,10">
    <Button x:Name="LoadImageButton" DockPanel.Dock="Right" Content="{DynamicResource Str.ColorPreviewLoad}" Click="LoadImage_Click" Style="{StaticResource SecondaryButtonStyle}"/>
@@ -24,12 +22,18 @@
    <ComboBoxItem x:Name="RecentSceneItem" Content="{DynamicResource Str.ColorPreviewRecent}"/>
   </ComboBox>
   <!-- 明确预览看的是哪一种效果：游戏能看到的（gamma + 数字振动）还是读 ICC 的程序看到的。 -->
-  <WrapPanel Grid.Row="2" Margin="0,0,0,10">
-   <RadioButton x:Name="ChannelGame" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelGame}"
-                IsChecked="True" Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelGame}"/>
-   <RadioButton x:Name="ChannelManaged" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelManaged}"
-                Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelManaged}"/>
-  </WrapPanel>
+  <!-- 通道选择 + 一句状态说明共用一行：底部不再压两行小字，画面能多占一块高度。 -->
+  <Grid Grid.Row="2" Margin="0,0,0,10">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <WrapPanel>
+    <RadioButton x:Name="ChannelGame" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelGame}"
+                 IsChecked="True" Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelGame}"/>
+    <RadioButton x:Name="ChannelManaged" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelManaged}"
+                 Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelManaged}"/>
+   </WrapPanel>
+   <TextBlock Grid.Column="1" x:Name="PreviewStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+              VerticalAlignment="Center" Margin="12,0,0,0"/>
+  </Grid>
   <Viewbox Grid.Row="3" x:Name="ComparisonViewbox" Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="180">
   <Grid x:Name="ComparisonViewport" Width="960" Height="540" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
   <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
@@ -73,7 +77,6 @@
   </Border>
   </Grid>
   </Viewbox>
-  <TextBlock Grid.Row="4" Text="{DynamicResource Str.ColorPreviewDrag}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-  <TextBlock Grid.Row="5" x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewGameHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
  </Grid>
+
 </UserControl>

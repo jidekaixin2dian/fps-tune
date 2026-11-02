@@ -18,7 +18,7 @@
   </UserControl.Resources>
 
   <Grid x:Name="WorkspaceGrid" MaxWidth="1640" HorizontalAlignment="Stretch" SizeChanged="Workspace_SizeChanged">
-   <Grid.ColumnDefinitions><ColumnDefinition x:Name="PreviewColumn" Width="*"/><ColumnDefinition x:Name="ControlsColumn" Width="480"/></Grid.ColumnDefinitions>
+   <Grid.ColumnDefinitions><ColumnDefinition x:Name="PreviewColumn" Width="*"/><ColumnDefinition x:Name="ControlsColumn" Width="420"/></Grid.ColumnDefinitions>
    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
    <!-- 左侧固定：无论右侧筛选、调参、编辑 ICC 或切到独立方案，这块实机图始终在旁边。 -->

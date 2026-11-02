@@ -184,6 +184,13 @@ public sealed class StartupPolishUiTests
                 Assert.Equal("#00E5FF", colorBox.Text);
                 Assert.Equal(2d, swatch.BorderThickness.Left);
                 Assert.DoesNotContain(swatches.Children.OfType<Button>().Where(b => b != swatch), b => b.BorderThickness.Left > 1);
+
+                // ④ 预设色是精确值：滑杆只是取整回填，不能把 #00E5FF 改写成 #00D9FF 这种取整色。
+                app.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                System.Threading.Thread.Sleep(200);
+                app.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                Assert.Equal("#00E5FF", colorBox.Text);
+                Assert.Equal("#00E5FF", SettingsService.Current.CrosshairColor);
             }
             finally
             {

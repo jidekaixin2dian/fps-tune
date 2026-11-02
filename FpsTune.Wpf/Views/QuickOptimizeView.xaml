@@ -21,7 +21,7 @@
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.QuickOptGameLabel}" Style="{StaticResource SectionLabelStyle}" FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.QuickOptGameLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="1" x:Name="GameBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptGameLabel}"
                               SelectionChanged="GameBox_SelectionChanged">
@@ -30,7 +30,7 @@
                 </Grid>
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.QuickOptPlanLabel}" Style="{StaticResource SectionLabelStyle}" FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.QuickOptPlanLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <!-- 方案改成下拉：一排七个单选太吵，方案内容是固定的，选一个就够。 -->
                     <ComboBox Grid.Column="1" x:Name="PlanBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptPlanLabel}"
@@ -38,24 +38,24 @@
                 </Grid>
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.QuickOptPowerLabel}" Style="{StaticResource SectionLabelStyle}" FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.QuickOptPowerLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <CheckBox Grid.Column="1" x:Name="PowerCheck" Content="{DynamicResource Str.QuickOptPowerToggle}" Style="{StaticResource ToggleSwitchStyle}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 </Grid>
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.QuickOptResolutionLabel}" Style="{StaticResource SectionLabelStyle}" FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.QuickOptResolutionLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="1" x:Name="ResolutionBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptResolutionLabel}"/>
                 </Grid>
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.QuickOptDlssLabel}" Style="{StaticResource SectionLabelStyle}" FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.QuickOptDlssLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="1" x:Name="DlssBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptDlssLabel}"/>
                 </Grid>
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.QuickOptFilterLabel}" Style="{StaticResource SectionLabelStyle}" FontSize="15" VerticalAlignment="Center"/>
+                    <TextBlock Text="{DynamicResource Str.QuickOptFilterLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="1" x:Name="FilterBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
                               Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptFilterLabel}"/>
                 </Grid>
