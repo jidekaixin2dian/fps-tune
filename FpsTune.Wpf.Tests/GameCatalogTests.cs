@@ -8,7 +8,7 @@ public sealed class GameCatalogTests
     [Fact]
     public void Embedded_catalog_keeps_existing_identities_and_finds_new_clients_without_launchers()
     {
-        Assert.Equal(19,GameCatalog.All.Count);
+        Assert.Equal(35,GameCatalog.All.Count);
         var root=Path.Combine(DlssFeedbackTests.RepoRoot(),"work","shell037","catalog-fixture-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         foreach(var game in GameCatalog.All.TakeLast(5))

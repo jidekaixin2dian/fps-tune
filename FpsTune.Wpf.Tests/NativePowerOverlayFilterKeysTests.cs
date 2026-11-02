@@ -27,6 +27,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
         BackupService.BackupDirOverride = null;
         RegistryHelper.SnapshotOverride = null;
         NativePowerOverlay.ReadOverride = null;
+        OptimizationCatalog.Invalidate();
         NativePowerOverlay.WriteOverride = null;
         NativePowerOverlay.SupportedOverride = null;
         try { Directory.Delete(_dir, recursive: true); } catch { /* 临时目录清理失败可忽略 */ }
@@ -46,6 +47,8 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     private void FakeOverlay()
     {
         NativePowerOverlay.SupportedOverride = () => true;
+        // 目录里的 Available 是首次解析时烘焙的：换了能力注入就要重建，否则 apply 会被当成不可用跳过。
+        OptimizationCatalog.Invalidate();
         NativePowerOverlay.ReadOverride = () => _overlay;
         NativePowerOverlay.WriteOverride = guid => { _overlay = guid; return 0; };
     }
@@ -78,6 +81,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     {
         FakeRegistry();
         NativePowerOverlay.SupportedOverride = () => true;
+        OptimizationCatalog.Invalidate();
         NativePowerOverlay.ReadOverride = () => _overlay;
         NativePowerOverlay.WriteOverride = _ => 5;
         var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);

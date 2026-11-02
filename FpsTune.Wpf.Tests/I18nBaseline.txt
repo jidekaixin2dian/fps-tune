@@ -22,7 +22,7 @@ MainWindow.xaml.cs	2
 Services/AdminHelper.cs	2
 Services/AutoProfileActivityStore.cs	5
 Services/AutoProfileService.cs	33
-Services/CliHost.cs	49
+Services/CliHost.cs	52
 Services/DiagnosticReportExporter.cs	81
 Services/DialogService.cs	4
 Services/DigitalVibranceService.cs	8
@@ -54,3 +54,7 @@ Views/OptimizeView.xaml.cs	21
 Views/SessionView.xaml.cs	45
 Views/SettingsView.xaml.cs	29
 Views/WeChatQrWindow.xaml	1
+Services/GameFilterLibrary.cs	56
+Services/UpdateMirrors.cs	1
+Views/QuickOptimizeView.xaml.cs	7
+Views/MaintenanceView.MemoryApps.cs	1

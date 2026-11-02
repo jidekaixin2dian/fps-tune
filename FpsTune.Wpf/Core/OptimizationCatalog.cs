@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.Json;
 
 namespace FpsTune.Wpf.Core;
@@ -100,6 +100,18 @@ public static class OptimizationCatalog
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// 丢掉缓存：<c>Available</c> 依赖运行时能力（例如系统是否提供现代电源模式），
+    /// 能力或注入状态变化后必须重建，否则拿到的还是旧目录。
+    /// </summary>
+    internal static void Invalidate()
+    {
+        lock (Gate)
+        {
+            _cache = null;
+        }
     }
 
     private static CatalogData Ensure()
