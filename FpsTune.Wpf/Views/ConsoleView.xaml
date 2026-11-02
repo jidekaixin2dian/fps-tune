@@ -13,7 +13,7 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <!-- 内容至少和视口一样高，最后一块「继续使用 + 常用入口」吃掉剩余高度：全屏不再留一块空白。 -->
-        <Grid Margin="28,14,28,18" MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+        <Grid Margin="32,26,32,28" MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <StackPanel Grid.Row="0">
 

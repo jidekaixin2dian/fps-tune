@@ -10,20 +10,84 @@
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="0,0,14,0">
-                <Border Style="{StaticResource CardStyle}"><StackPanel>
+                <!-- 步骤条：三步各自独立，做过的步骤显示已完成，并可单独还原（备份目录改回原名）。 -->
+                <Border Style="{StaticResource CardStyle}" Padding="24,20" AutomationProperties.AutomationId="DeltaFixWizard">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.DeltaFixWizardTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                        <UniformGrid Columns="3" Margin="0,12,0,0">
+                            <Border x:Name="StepPill1" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="12,10" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource AccentSoftBrush}" VerticalAlignment="Center">
+                                        <TextBlock Text="1" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource Str.DeltaFixStepScan}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                        <TextBlock x:Name="StepState1" Text="{DynamicResource Str.DeltaFixStatePending}" FontSize="13.5"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="StepPill2" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="12,10" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource AccentSoftBrush}" VerticalAlignment="Center">
+                                        <TextBlock Text="2" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource Str.DeltaFixStepPso}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                        <TextBlock x:Name="StepState2" Text="{DynamicResource Str.DeltaFixStatePending}" FontSize="13.5"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border x:Name="StepPill3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="12,10">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="24" Height="24" CornerRadius="12" Background="{DynamicResource AccentSoftBrush}" VerticalAlignment="Center">
+                                        <TextBlock Text="3" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{DynamicResource Str.DeltaFixStepSaved}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                        <TextBlock x:Name="StepState3" Text="{DynamicResource Str.DeltaFixStatePending}" FontSize="13.5"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardStyle}" Margin="0,20,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.DeltaFixScanTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="ScanText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixGameSteps}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    <Button x:Name="RescanButton" Content="{DynamicResource Str.DeltaFixRescan}" Style="{StaticResource GhostButtonStyle}"
+                            HorizontalAlignment="Left" Margin="0,10,0,0" Click="Rescan_Click"/>
                 </StackPanel></Border>
-                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
+
+                <Border Style="{StaticResource CardStyle}" Margin="0,20,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.DeltaFixPsoTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixPsoHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                    <Button x:Name="PsoFixButton" Content="{DynamicResource Str.DeltaFixPsoAction}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,10,0,0" Click="PsoFix_Click"/>
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button x:Name="PsoFixButton" Content="{DynamicResource Str.DeltaFixPsoAction}" Style="{StaticResource PrimaryButtonStyle}"
+                                Margin="0,0,8,0" Click="PsoFix_Click"/>
+                        <Button x:Name="PsoRestoreButton" Content="{DynamicResource Str.DeltaFixRestoreStep}" Style="{StaticResource SecondaryButtonStyle}"
+                                Click="PsoRestore_Click"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="PsoStatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                 </StackPanel></Border>
-                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
+
+                <Border Style="{StaticResource CardStyle}" Margin="0,20,0,0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.DeltaFixLegacyTitle}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixLegacyHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                    <Button x:Name="LegacyFixButton" Content="{DynamicResource Str.DeltaFixLegacyAction}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,10,0,0" Click="LegacyFix_Click"/>
+                    <WrapPanel Margin="0,10,0,0">
+                        <Button x:Name="LegacyFixButton" Content="{DynamicResource Str.DeltaFixLegacyAction}" Style="{StaticResource SecondaryButtonStyle}"
+                                Margin="0,0,8,0" Click="LegacyFix_Click"/>
+                        <Button x:Name="LegacyRestoreButton" Content="{DynamicResource Str.DeltaFixRestoreStep}" Style="{StaticResource SecondaryButtonStyle}"
+                                Click="LegacyRestore_Click"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="LegacyStatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                     <TextBlock Text="{DynamicResource Str.DeltaFixLaunchArgs}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
                 </StackPanel></Border>
                 <TextBlock x:Name="ResultText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,18,0,0"/>

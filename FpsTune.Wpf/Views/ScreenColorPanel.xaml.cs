@@ -44,6 +44,8 @@ public partial class ScreenColorPanel : UserControl
     private bool IccMode => ColorModeCombo?.SelectedIndex == 1;
     private IccFilterPreset? Preset => (IccPresetCombo.SelectedItem as Choice)?.Preset;
     private readonly List<Slider> _sliders = [];
+    /// <summary>暗部平衡在滑杆列表里的下标（ParameterGrid 里被提到独立卡片，顺序不能变）。</summary>
+    private const int DarkBalanceIndex = 7;
     public event Action<bool>? BusyChanged;
     private sealed record Choice(string Label, IccFilterPreset? Preset) { public override string ToString() => Label; }
     public ScreenColorPanel()
@@ -81,8 +83,19 @@ public partial class ScreenColorPanel : UserControl
                 if (!_syncing) { MarkDraft(); ColorPresetCombo.SelectedIndex = 0; UpdatePreview(); }
             };
             var header = new DockPanel(); DockPanel.SetDock(entry, Dock.Right); header.Children.Add(entry); header.Children.Add(text);
-            row.Children.Add(header); row.Children.Add(slider); ParameterGrid.Children.Add(row); _sliders.Add(slider);
+            row.Children.Add(header); row.Children.Add(slider);
+            // 暗部平衡单独占一张卡片（滤镜列表正下方），卡片标题已写名字，行内标签就不重复了。
+            if (i == DarkBalanceIndex)
+            {
+                text.Visibility = Visibility.Collapsed;
+                row.Margin = new Thickness(0);
+                slider.ValueChanged += (_, _) => UpdateDarkBalanceGamma(slider.Value);
+                DarkBalanceRowHost.Children.Add(row);
+            }
+            else ParameterGrid.Children.Add(row);
+            _sliders.Add(slider);
         }
+        UpdateDarkBalanceGamma(_sliders[DarkBalanceIndex].Value);
         ColorPresetCombo.ItemsSource = new[] { new Choice(Str.T("Str.ColorCustom"), null) }
             .Concat(Enum.GetValues<IccFilterPreset>().Select(preset => new Choice(ScreenColorSettings.TitleFor(preset), preset)))
             .ToArray();
@@ -182,6 +195,14 @@ public partial class ScreenColorPanel : UserControl
     }
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
         _sliders[4].Value, _sliders[5].Value, _sliders[6].Value, _sliders[8].Value, _sliders[7].Value);
+    /// <summary>暗部平衡的实时等效 γ：与「编辑 ICC」里那块同一套换算，读数随滑块走。</summary>
+    private void UpdateDarkBalanceGamma(double value)
+    {
+        if (DarkBalanceGammaText is null) return;
+        DarkBalanceGammaText.Text = Str.T("Str.FilterEditorDarkBalanceGammaValue",
+            ScreenColorService.DarkBalanceGamma(value).ToString("0.00", CultureInfo.InvariantCulture));
+    }
+
     private void ShowSettings(ScreenColorSettings s)
     {
         _syncing = true;

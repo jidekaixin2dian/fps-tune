@@ -40,8 +40,11 @@ public sealed class WallpaperTests : IDisposable
         Assert.Throws<InvalidDataException>(() => WallpaperService.Import(source));
         Assert.Equal("keep", File.ReadAllText(WallpaperService.AssetPath));
     }
+    // 18384b6 把上限从 0.35 放开到 0.8（用户反馈壁纸看不清），下限仍是 0.05；
+    // 这里按新契约断言，并额外锁住「区间内的值原样保留」。
     [Theory]
-    [InlineData(double.NaN, 0.18)] [InlineData(double.PositiveInfinity, 0.18)] [InlineData(1, 0.35)] [InlineData(-1, 0.05)]
+    [InlineData(double.NaN, 0.18)] [InlineData(double.PositiveInfinity, 0.18)] [InlineData(1, 0.8)]
+    [InlineData(0.95, 0.8)] [InlineData(0.35, 0.35)] [InlineData(0, 0.05)] [InlineData(-1, 0.05)]
     public void Opacity_is_finite_and_preserves_content_contrast(double input, double expected)
         => Assert.Equal(expected, WallpaperService.NormalizeOpacity(input));
     public void Dispose() { UserDataPaths.RootOverride = _previous; Directory.Delete(_root, true); }

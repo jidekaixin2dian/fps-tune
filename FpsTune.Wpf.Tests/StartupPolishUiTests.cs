@@ -140,6 +140,90 @@ public sealed class StartupPolishUiTests
             finally { window.Close(); }
         });
     }
+    [Fact]
+    public void Crosshair_palette_swatches_hsv_and_hex_box_share_one_state()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(StartupPolishUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var before = SettingsService.Current.CrosshairColor;
+            var view = new CrosshairView();
+            try
+            {
+                app.MainWindow = new MainWindowStub(view); DlssFeedbackTests.PrepareBackgroundWindow(app.MainWindow); app.MainWindow.Show();
+                var colorBox = (TextBox)view.FindName("CrosshairColorBox");
+                var swatches = (WrapPanel)view.FindName("CrosshairSwatchPanel");
+                var hue = (Slider)view.FindName("CrosshairHueSlider");
+                var saturation = (Slider)view.FindName("CrosshairSaturationSlider");
+                var brightness = (Slider)view.FindName("CrosshairBrightnessSlider");
+                var chip = (Border)view.FindName("CrosshairColorSwatch");
+                Assert.NotNull(swatches); Assert.NotNull(chip);
+                Assert.Equal(CrosshairColorMath.Presets.Length, swatches.Children.Count);
+
+                // ① 十六进制框 → 调色盘与当前色块
+                colorBox.Text = "#FF3B30";
+                Assert.Equal("#FF3B30", SettingsService.Current.CrosshairColor);
+                Assert.InRange(hue.Value, 0, 10);
+                Assert.InRange(saturation.Value, 75, 90);
+                Assert.Equal(100d, brightness.Value);
+                var brush = Assert.IsType<SolidColorBrush>(chip.Background);
+                Assert.Equal(Color.FromRgb(0xFF, 0x3B, 0x30), brush.Color);
+
+                // ② HSV 滑杆 → 十六进制框与设置
+                saturation.Value = 50;
+                Assert.NotEqual("#FF3B30", colorBox.Text);
+                Assert.True(CrosshairColorMath.TryParse(colorBox.Text, out var parsed), colorBox.Text);
+                Assert.InRange(parsed.G, 110, 145);
+                Assert.Equal(colorBox.Text, SettingsService.Current.CrosshairColor);
+                Assert.Equal(Color.FromRgb(parsed.R, parsed.G, parsed.B), ((SolidColorBrush)chip.Background).Color);
+
+                // ③ 预设色块 → 两处都是它，且只有它带强调边框
+                var swatch = swatches.Children.OfType<Button>().First(b => (string?)b.Tag == "#00E5FF");
+                swatch.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                Assert.Equal("#00E5FF", SettingsService.Current.CrosshairColor);
+                Assert.Equal("#00E5FF", colorBox.Text);
+                Assert.Equal(2d, swatch.BorderThickness.Left);
+                Assert.DoesNotContain(swatches.Children.OfType<Button>().Where(b => b != swatch), b => b.BorderThickness.Left > 1);
+            }
+            finally
+            {
+                SettingsService.Current.CrosshairColor = before;
+                SettingsService.Save(SettingsService.Current);
+                app.MainWindow.Content = null;
+            }
+        });
+    }
+
+    [Fact]
+    public void Frame_fix_page_is_a_three_step_wizard_with_per_step_revert()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(StartupPolishUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var window = new MainWindow { Width = 1180, Height = 760 };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                window.NavigateTo("deltafix"); window.UpdateLayout();
+                var page = (DeltaFixView)((ContentControl)window.FindName("PageHost")).Content;
+                // 页面在 Loaded 时才扫描（同真实进入页面的时序），先等这一步落地再断言状态。
+                DlssFeedbackTests.PumpUntil(() => ((TextBlock)page.FindName("ScanText")).Text.Length > 0);
+                foreach (var name in new[] { "StepPill1", "StepPill2", "StepPill3", "StepState1", "StepState2", "StepState3",
+                             "PsoFixButton", "PsoRestoreButton", "LegacyFixButton", "LegacyRestoreButton", "RescanButton" })
+                    Assert.NotNull(page.FindName(name));
+                // 还原按钮的可用性跟着真实扫描结果走（有备份才能还原），不能自说自话。
+                var scan = DeltaFrameFixService.Scan();
+                Assert.Equal(scan.PsoBackup is not null, ((Button)page.FindName("PsoRestoreButton")).IsEnabled);
+                Assert.Equal(scan.SavedBackup is not null || scan.DxBackup is not null,
+                    ((Button)page.FindName("LegacyRestoreButton")).IsEnabled);
+                Assert.Equal(scan.GameFound, ((Button)page.FindName("PsoFixButton")).IsEnabled);
+                var stepOne = (TextBlock)page.FindName("StepState1");
+                Assert.Equal(Str.T(scan.GameFound ? "Str.DeltaFixStateDone" : "Str.DeltaFixStatePending"), stepOne.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
     private static IEnumerable<T> FindAll<T>(DependencyObject root) where T : DependencyObject
     {
         var count = VisualTreeHelper.GetChildrenCount(root);

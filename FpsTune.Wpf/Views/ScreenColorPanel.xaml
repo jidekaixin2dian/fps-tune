@@ -22,7 +22,7 @@
    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
    <!-- 左侧固定：无论右侧筛选、调参、编辑 ICC 或切到独立方案，这块实机图始终在旁边。 -->
-   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,22,0" VerticalAlignment="Stretch">
+   <Border x:Name="PreviewPane" Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,22,0" VerticalAlignment="Stretch">
     <Grid>
      <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
      <DockPanel Grid.Row="0" Margin="0,0,0,10">
@@ -73,11 +73,39 @@
      <StackPanel>
      <StackPanel x:Name="CurrentModePanel" Margin="0,0,4,0">
       <!-- 滤镜选择、收藏、搜索与编辑 ICC 统一在这一栏。 -->
-      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+      <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
        <ContentControl x:Name="FilterHost"/>
       </Border>
 
-      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+      <!-- 暗部平衡：选滤镜时最常调的项，单独一张卡放在滤镜列表正下方；滑块本体仍由下方循环生成（与画面参数同一份状态）。 -->
+      <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20" AutomationProperties.AutomationId="DarkBalanceCard">
+       <StackPanel>
+        <Grid>
+         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <TextBlock Text="{DynamicResource Str.ColorDarkBalance}" Style="{StaticResource CardTitleStyle}"/>
+          <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+           <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceTag}" FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
+          </Border>
+         </StackPanel>
+         <TextBlock Grid.Column="1" x:Name="DarkBalanceGammaText" Text="γ 1.00"
+                    FontFamily="{StaticResource FontStat}" Typography.NumeralAlignment="Tabular" FontSize="17"
+                    FontWeight="{DynamicResource StrongEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"
+                    VerticalAlignment="Center" AutomationProperties.AutomationId="DarkBalanceGammaText"
+                    AutomationProperties.Name="{DynamicResource Str.FilterEditorDarkBalanceGamma}"/>
+        </Grid>
+        <StackPanel x:Name="DarkBalanceRowHost" Margin="0,12,0,0"/>
+        <Grid Margin="0,2,0,0">
+         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+         <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceBright}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+         <TextBlock Grid.Column="1" Text="{DynamicResource Str.FilterEditorDarkBalanceNeutral}" Style="{StaticResource MutedTextStyle}" FontSize="13" HorizontalAlignment="Center"/>
+         <TextBlock Grid.Column="2" Text="{DynamicResource Str.FilterEditorDarkBalanceDark}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+        </Grid>
+        <TextBlock Text="{DynamicResource Str.FilterEditorDarkBalanceHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+       </StackPanel>
+      </Border>
+
+      <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
        <StackPanel>
         <TextBlock Text="{DynamicResource Str.ColorParametersLayer}" Style="{StaticResource CardTitleStyle}"/>
         <Expander Header="{DynamicResource Str.ColorParameterPresets}" Margin="0,10,0,4">
@@ -88,14 +116,14 @@
        </StackPanel>
       </Border>
 
-      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+      <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
        <StackPanel>
         <TextBlock Text="{DynamicResource Str.VibCard}" Style="{StaticResource CardTitleStyle}" Margin="0,0,0,10"/>
         <ContentControl x:Name="VibranceHost"/>
        </StackPanel>
       </Border>
 
-      <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,0,0,14">
+      <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
        <ContentControl x:Name="IccHost"/>
       </Border>
 
@@ -104,7 +132,7 @@
       </Expander>
      </StackPanel>
 
-     <Border x:Name="PerAppCard" Style="{StaticResource CardStyle}" Padding="20,16" Visibility="Collapsed">
+     <Border x:Name="PerAppCard" Style="{StaticResource CardStyle}" Padding="24,20" Visibility="Collapsed">
       <ContentControl x:Name="PerAppHost"/>
      </Border>
      </StackPanel>

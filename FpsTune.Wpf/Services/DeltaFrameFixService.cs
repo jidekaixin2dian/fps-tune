@@ -12,7 +12,10 @@ public sealed record DeltaFrameScan(
     long DxCacheBytes,
     string? PsoCacheDir,
     string? SavedDir,
-    string? Error);
+    string? Error,
+    string? PsoBackup = null,
+    string? SavedBackup = null,
+    string? DxBackup = null);
 
 /// <summary>三角洲掉帧修复 · 单步结果。</summary>
 public sealed record DeltaFixStep(string Name, bool Succeeded, string Detail);
@@ -45,7 +48,8 @@ public static class DeltaFrameFixService
             var psoBytes = DirSize(pso);
             var savedBytes = DirSize(saved) - psoBytes;
             var dx = DxCacheDir();
-            return new(true, dir, psoBytes, Math.Max(0, savedBytes), DirSize(dx), pso, saved, null);
+            return new(true, dir, psoBytes, Math.Max(0, savedBytes), DirSize(dx), pso, saved, null,
+                LatestBackup(pso), LatestBackup(saved), LatestBackup(dx));
         }
         catch (Exception ex)
         {
@@ -85,6 +89,53 @@ public static class DeltaFrameFixService
             steps.Add(new(Str.T("Str.DeltaFixDxName"), false, PrivacyScrub.Sanitize(ex.Message)));
         }
         return steps;
+    }
+
+    /// <summary>同目录下最近一次 <c>&lt;名字&gt;.bak-yyyyMMdd-HHmmss</c> 备份；没有返回 null。</summary>
+    public static string? LatestBackup(string? dir)
+    {
+        if (string.IsNullOrWhiteSpace(dir)) return null;
+        var parent = Path.GetDirectoryName(dir);
+        if (parent is null || !Directory.Exists(parent)) return null;
+        try
+        {
+            return Directory.GetDirectories(parent, Path.GetFileName(dir) + ".bak-*")
+                .OrderByDescending(path => path, StringComparer.Ordinal).FirstOrDefault();
+        }
+        catch { return null; }
+    }
+
+    /// <summary>向导第 2 步的还原：把 PSOCache 的备份目录改回原名。</summary>
+    public static DeltaFixStep RestorePsoCache(string? gameExe)
+    {
+        var scan = Scan(gameExe);
+        if (!scan.GameFound || scan.PsoCacheDir is null)
+            return new(Str.T("Str.DeltaFixPsoName"), false, Str.T("Str.DeltaFixNeedGame"));
+        return RestoreDir(scan.PsoCacheDir);
+    }
+
+    /// <summary>向导第 3 步的还原：把 Saved 的备份目录改回原名。</summary>
+    public static DeltaFixStep RestoreSaved(string? gameExe)
+    {
+        var scan = Scan(gameExe);
+        if (!scan.GameFound || scan.SavedDir is null)
+            return new(Str.T("Str.DeltaFixSavedName"), false, Str.T("Str.DeltaFixNeedGame"));
+        return RestoreDir(scan.SavedDir);
+    }
+
+    /// <summary>还原本轮改名备份的 NVIDIA DXCache。</summary>
+    public static DeltaFixStep RestoreDxCache() => RestoreDir(DxCacheDir() ?? "");
+
+    private static DeltaFixStep RestoreDir(string dir)
+    {
+        if (string.IsNullOrWhiteSpace(dir)) return new("", false, Str.T("Str.DeltaFixRestoreNothing"));
+        var name = Path.GetFileName(dir);
+        var backup = LatestBackup(dir);
+        if (backup is null) return new(name, false, Str.T("Str.DeltaFixRestoreNothing"));
+        // 游戏重新启动后会把 PSOCache/Saved 重新建出来：这时不能覆盖新数据，备份留着由用户决定。
+        if (Directory.Exists(dir)) return new(name, false, Str.T("Str.DeltaFixRestoreConflict", backup));
+        Directory.Move(backup, dir);
+        return new(name, true, Str.T("Str.DeltaFixRestored", dir));
     }
 
     private static DeltaFixStep RenameDir(string dir)

@@ -410,6 +410,84 @@ public sealed class GameAutomationTests : IDisposable
     }
 
     [Fact]
+    public void Delta_frame_fix_steps_revert_individually_and_keep_the_backup_on_conflict()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "fps-tune-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "Saved", "PSOCache"));
+        File.WriteAllText(Path.Combine(root, "Saved", "PSOCache", "shared.bin"), "shader");
+        Directory.CreateDirectory(Path.Combine(root, "Saved", "Settings"));
+        File.WriteAllText(Path.Combine(root, "Saved", "Settings", "user.cfg"), "graphics");
+        File.WriteAllText(Path.Combine(root, "DeltaForceClient-Win64-Shipping.exe"), "stub");
+        var gameExe = Path.Combine(root, "DeltaForceClient-Win64-Shipping.exe");
+        var fakeDx = Path.Combine(root, "DxCache");
+        Directory.CreateDirectory(fakeDx);
+        File.WriteAllText(Path.Combine(fakeDx, "shader.bin"), "stub");
+        DeltaFrameFixService.DxCacheDirOverride = fakeDx;
+        try
+        {
+            // 执行 → 扫描能看见备份 → 还原后目录与内容原样回来
+            Assert.True(DeltaFrameFixService.FixPsoCache(gameExe).Succeeded);
+            Assert.NotNull(DeltaFrameFixService.Scan(gameExe).PsoBackup);
+            var restored = DeltaFrameFixService.RestorePsoCache(gameExe);
+            Assert.True(restored.Succeeded, restored.Detail);
+            Assert.Equal("shader", File.ReadAllText(Path.Combine(root, "Saved", "PSOCache", "shared.bin")));
+            Assert.Null(DeltaFrameFixService.Scan(gameExe).PsoBackup);
+
+            // 冲突：备份还在，但游戏已重建同名目录 → 不覆盖新数据，备份保留
+            Assert.True(DeltaFrameFixService.FixPsoCache(gameExe).Succeeded);
+            Directory.CreateDirectory(Path.Combine(root, "Saved", "PSOCache"));
+            var conflict = DeltaFrameFixService.RestorePsoCache(gameExe);
+            Assert.False(conflict.Succeeded);
+            Assert.True(Directory.Exists(Path.Combine(root, "Saved", "PSOCache")));
+            Assert.NotNull(DeltaFrameFixService.Scan(gameExe).PsoBackup);
+
+            // Saved + DXCache 一步还原（DXCache 没有备份时如实报"没有可还原的备份"）
+            var steps = DeltaFrameFixService.FixLegacy(gameExe);
+            Assert.All(steps, s => Assert.True(s.Succeeded, s.Detail));
+            Assert.True(DeltaFrameFixService.RestoreSaved(gameExe).Succeeded);
+            Assert.True(File.Exists(Path.Combine(root, "Saved", "Settings", "user.cfg")));
+            Assert.True(DeltaFrameFixService.RestoreDxCache().Succeeded);
+            Assert.True(Directory.Exists(fakeDx));
+            Assert.False(DeltaFrameFixService.RestoreDxCache().Succeeded);
+        }
+        finally
+        {
+            DeltaFrameFixService.DxCacheDirOverride = null;
+            try { Directory.Delete(root, recursive: true); } catch { /* 清理失败可忽略 */ }
+        }
+    }
+
+    [Fact]
+    public void Crosshair_color_math_round_trips_between_hex_and_hsv()
+    {
+        Assert.True(CrosshairColorMath.TryParse("#FF3B30", out var parsed));
+        Assert.Equal((byte)0xFF, parsed.R);
+        Assert.Equal((byte)0x3B, parsed.G);
+        Assert.False(CrosshairColorMath.TryParse("12", out _));
+        Assert.False(CrosshairColorMath.TryParse("zzzzzz", out _));
+
+        var (hue, saturation, value) = CrosshairColorMath.ToHsv((0x00, 0xFF, 0x66));
+        Assert.InRange(hue, 143, 146);
+        Assert.Equal(100d, saturation, 3);
+        Assert.Equal(100d, value, 3);
+
+        Assert.Equal("#00FF00", CrosshairColorMath.FromHsv(120, 100, 100));
+        Assert.Equal("#FFFFFF", CrosshairColorMath.FromHsv(0, 0, 100));
+        Assert.Equal("#000000", CrosshairColorMath.FromHsv(0, 0, 0));
+
+        // 调色盘滑杆步进是 1 度 / 1%，预设色经过这一格后应当还原成同一个颜色（允许 ±4 量化误差）。
+        foreach (var hex in CrosshairColorMath.Presets)
+        {
+            Assert.True(CrosshairColorMath.TryParse(hex, out var rgb), hex);
+            var (h, s, v) = CrosshairColorMath.ToHsv(rgb);
+            Assert.True(CrosshairColorMath.TryParse(CrosshairColorMath.FromHsv(Math.Round(h), Math.Round(s), Math.Round(v)), out var round), hex);
+            Assert.InRange(Math.Abs(round.R - rgb.R), 0, 4);
+            Assert.InRange(Math.Abs(round.G - rgb.G), 0, 4);
+            Assert.InRange(Math.Abs(round.B - rgb.B), 0, 4);
+        }
+    }
+
+    [Fact]
     public void Crosshair_config_normalizes_and_adaptive_hide()
     {
         Assert.Equal("cross", CrosshairConfig.NormalizeStyle("CROSS"));

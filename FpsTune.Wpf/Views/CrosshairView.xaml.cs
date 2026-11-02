@@ -1,5 +1,7 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Media;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 
@@ -12,6 +14,8 @@ public partial class CrosshairView : UserControl
     // 只允许 OnInitialized 全部完成后响应真实交互，避免半初始化状态触达 catch 回滚分支。
     private bool _ready;
     private bool _suppress;
+    // 调色盘回填滑块时不能再反过来写设置（否则每次刷新都算一次用户改动）。
+    private bool _paletteSync;
 
     public CrosshairView() { InitializeComponent(); }
 
@@ -29,6 +33,8 @@ public partial class CrosshairView : UserControl
         CrosshairGapSlider.Value = Math.Clamp(settings.CrosshairGap, 0, 30);
         CrosshairThicknessSlider.Value = Math.Clamp(settings.CrosshairThickness, 1, 10);
         CrosshairOpacitySlider.Value = Math.Clamp(settings.CrosshairOpacity, 10, 100);
+        BuildSwatches();
+        SyncPalette(CrosshairColorBox.Text);
         _ready = true;
         UpdatePreview();
     }
@@ -40,6 +46,7 @@ public partial class CrosshairView : UserControl
         var text = (CrosshairColorBox.Text ?? "").Trim();
         if (text.Length == 6 && !text.StartsWith('#')) text = "#" + text;
         if (text.Length != 7 || !text.StartsWith('#') || !text.Skip(1).All(Uri.IsHexDigit)) return;
+        SyncPalette(text);
         Crosshair_Changed(sender, e);
     }
 
@@ -61,8 +68,102 @@ public partial class CrosshairView : UserControl
             CrosshairColorBox.Text = normalized;
             _suppress = false;
         }
+        SyncPalette(normalized);
         Crosshair_Changed(sender, e);
     }
+
+    // ── 调色盘 ────────────────────────────────────────────────────────────────
+    // 三个入口（预设色块 / HSV 滑杆 / 十六进制框）都汇到 ApplyColor，只有它写设置，
+    // 另一侧只做回填，避免「改滑块又触发写设置」的循环。
+
+    private void BuildSwatches()
+    {
+        if (CrosshairSwatchPanel is null) return;
+        foreach (var hex in CrosshairColorMath.Presets)
+        {
+            var swatch = new Button
+            {
+                Tag = hex,
+                Background = new SolidColorBrush(ParseColor(hex)),
+                Style = (Style)FindResource("CrosshairSwatchStyle"),
+                ToolTip = hex
+            };
+            AutomationProperties.SetName(swatch, hex);
+            swatch.Click += Swatch_Click;
+            CrosshairSwatchPanel.Children.Add(swatch);
+        }
+    }
+
+    private void Swatch_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string hex }) return;
+        ApplyColor(hex);
+    }
+
+    private void Crosshair_HsvChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        // InitializeComponent 期间滑杆按 XAML 里的默认值逐个触发 ValueChanged，后面的滑杆/读数还没建好。
+        if (CrosshairHueValue is null || CrosshairSaturationSlider is null || CrosshairBrightnessSlider is null
+            || CrosshairSaturationValue is null || CrosshairBrightnessValue is null) return;
+        var hex = CrosshairColorMath.FromHsv(CrosshairHueSlider.Value, CrosshairSaturationSlider.Value,
+            CrosshairBrightnessSlider.Value);
+        UpdatePaletteReadouts(hex);
+        if (!_ready || _paletteSync || _suppress) return;
+        ApplyColor(hex);
+    }
+
+    /// <summary>唯一写入口：归一颜色 → 回填十六进制框 → 同步调色盘 → 保存设置并刷新预览。</summary>
+    private void ApplyColor(string color)
+    {
+        var normalized = CrosshairConfig.NormalizeColor(color);
+        if (!string.Equals(CrosshairColorBox.Text, normalized, StringComparison.Ordinal))
+        {
+            _suppress = true;
+            CrosshairColorBox.Text = normalized;
+            _suppress = false;
+        }
+        SyncPalette(normalized);
+        Crosshair_Changed(this, new RoutedEventArgs());
+    }
+
+    /// <summary>按当前颜色回填 HSV 滑杆与读数（色块与选中态由 UpdatePaletteReadouts 统一刷）。</summary>
+    private void SyncPalette(string? text)
+    {
+        if (!CrosshairColorMath.TryParse(text, out var rgb)) return;
+        var (hue, saturation, value) = CrosshairColorMath.ToHsv(rgb);
+        _paletteSync = true;
+        try
+        {
+            CrosshairHueSlider.Value = hue;
+            CrosshairSaturationSlider.Value = saturation;
+            CrosshairBrightnessSlider.Value = value;
+        }
+        finally { _paletteSync = false; }
+        // 读数按滑杆现值（已按 1 取整）算，保证色块、读数与框里的十六进制永远同色。
+        UpdatePaletteReadouts(CrosshairColorMath.FromHsv(CrosshairHueSlider.Value, CrosshairSaturationSlider.Value,
+            CrosshairBrightnessSlider.Value));
+    }
+
+    /// <summary>读数、当前色块与预设选中态：读数取滑杆现值，选中的预设色以十六进制框为准。</summary>
+    private void UpdatePaletteReadouts(string hex)
+    {
+        if (CrosshairHueValue is null || CrosshairColorSwatch is null) return;
+        var current = CrosshairConfig.NormalizeColor(CrosshairColorBox?.Text ?? hex);
+        CrosshairHueValue.Text = $"{CrosshairHueSlider.Value:0}°";
+        CrosshairSaturationValue.Text = $"{CrosshairSaturationSlider.Value:0}%";
+        CrosshairBrightnessValue.Text = $"{CrosshairBrightnessSlider.Value:0}%";
+        CrosshairColorSwatch.Background = new SolidColorBrush(ParseColor(current));
+        if (CrosshairSwatchPanel is null) return;
+        foreach (var child in CrosshairSwatchPanel.Children.OfType<Button>())
+        {
+            var selected = string.Equals(child.Tag as string, current, StringComparison.OrdinalIgnoreCase);
+            child.BorderThickness = new Thickness(selected ? 2 : 1);
+            child.SetResourceReference(Control.BorderBrushProperty, selected ? "AccentBrush" : "BorderBrush");
+        }
+    }
+
+    private static Color ParseColor(string hex)
+        => CrosshairColorMath.TryParse(hex, out var rgb) ? Color.FromRgb(rgb.R, rgb.G, rgb.B) : Color.FromRgb(0x00, 0xFF, 0x66);
 
     private void Crosshair_Changed(object sender, RoutedEventArgs e)
     {
@@ -96,6 +197,7 @@ public partial class CrosshairView : UserControl
             _suppress = true;
             CrosshairCheck.IsChecked = backup.Enabled;
             CrosshairAdaptiveCheck.IsChecked = backup.AdaptiveHide;
+            CrosshairColorBox.Text = backup.Color;
             _suppress = false;
         }
     }
