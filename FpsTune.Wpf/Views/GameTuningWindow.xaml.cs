@@ -140,9 +140,15 @@ public partial class GameTuningWindow : Window
     }
     private void OpenFrameFix_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new DeltaFrameFixWindow { Owner = this };
-        DialogService.PrepareWindowForTest?.Invoke(dialog);
-        dialog.ShowDialog();
+        // 掉帧修复已是主窗口里的独立页面：先关掉本窗口，再让主窗口切过去。
+        if (Owner is MainWindow main)
+        {
+            Close();
+            main.OpenDeltaFixFromHome();
+            return;
+        }
+        // 没有主窗口（例如测试宿主）时退回页面路由不可用：直接提示，不再造一个重复的弹窗。
+        DialogService.Warning(Str.T("Str.DeltaFixTitle"), Str.T("Str.DeltaFixNeedMainWindow"));
     }
     private void Command_Changed(object sender, TextChangedEventArgs e) { if (CommandPreview is not null) UpdateCommand(); }
     private void UpdateCommand()

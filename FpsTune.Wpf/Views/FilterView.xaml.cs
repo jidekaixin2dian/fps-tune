@@ -131,12 +131,7 @@ public partial class FilterView : UserControl
     }
 
     private void OpenDeltaFix_Click(object sender, RoutedEventArgs e) => OpenDeltaFix();
-    internal void OpenDeltaFix()
-    {
-        var dialog = new DeltaFrameFixWindow { Owner = Window.GetWindow(this) };
-        DialogService.PrepareWindowForTest?.Invoke(dialog);
-        dialog.ShowDialog();
-    }
+    internal void OpenDeltaFix() => (Window.GetWindow(this) as MainWindow)?.NavigateTo("deltafix");
 
     /// <summary>命令面板跳「画面与色彩」时回到当前屏幕方案顶部。</summary>
     internal void RevealColor()

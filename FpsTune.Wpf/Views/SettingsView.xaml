@@ -5,7 +5,8 @@
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <Style x:Key="WallpaperSliderStyle" TargetType="Slider">
-            <Setter Property="MaxWidth" Value="260"/>
+            <!-- 模板里的轨道靠 Slider 自身宽度撑开：只给 MaxWidth + Left 会让它缩成拇指大小，轨道整条看不见。 -->
+            <Setter Property="Width" Value="260"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="IsMoveToPointEnabled" Value="True"/>
@@ -492,7 +493,7 @@
                             <Slider x:Name="WallpaperOpacitySlider" Style="{StaticResource WallpaperSliderStyle}" Margin="0,4,0,0"
                                     AutomationProperties.Name="{DynamicResource Str.WallpaperOpacity}"
                                     Minimum="0.05" Maximum="0.35" Value="0.18" SmallChange="0.01" LargeChange="0.05" ValueChanged="WallpaperOpacity_Changed"/>
-                            <Grid Margin="4,-2,4,12"><TextBlock Text="5%" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
+                            <Grid Width="260" HorizontalAlignment="Left" Margin="0,2,0,12"><TextBlock Text="5%" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
                                 <TextBlock Text="35%" HorizontalAlignment="Right" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/></Grid>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="{DynamicResource Str.WallpaperChoose}" Click="WallpaperChoose_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"/>

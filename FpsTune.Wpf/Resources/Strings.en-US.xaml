@@ -2092,6 +2092,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DeltaFixLegacyHint">Renames Saved as a backup (graphics and keys back to defaults, reversible) and cleans NVIDIA DXCache. Try after the 9.4 fix if stutter remains.</s:String>
     <s:String x:Key="Str.DeltaFixLegacyAction">One-click fix (Saved backup + DXCache)</s:String>
     <s:String x:Key="Str.DeltaFixLegacyConfirm">Rename Saved as a backup and clean NVIDIA DXCache? Graphics and keys return to defaults; remove the .bak-… suffix from the backup folder name to restore.</s:String>
+    <s:String x:Key="Str.DeltaFixNeedMainWindow">Open the frame-fix page from the main window.</s:String>
     <s:String x:Key="Str.DeltaFixLaunchArgs">Some users cannot enter the game on DX11: add -dx12 or -dx11 to the launcher launch options (Steam: right-click game → Properties → General → Launch options).</s:String>
     <s:String x:Key="Str.DeltaFixStepResult">{0}: {1}; {2}</s:String>
     <s:String x:Key="Str.DeltaFixRenamed">Renamed to backup → {0}</s:String>

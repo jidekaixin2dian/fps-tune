@@ -1,0 +1,33 @@
+<UserControl x:Class="FpsTune.Wpf.Views.DeltaFixView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{DynamicResource AppBackgroundBrush}" FontFamily="{StaticResource FontBody}">
+    <Grid Margin="32,26,32,28">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,14">
+            <TextBlock Text="{DynamicResource Str.DeltaFixTitle}" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="{DynamicResource Str.DeltaFixIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+        </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="0,0,14,0">
+                <Border Style="{StaticResource CardStyle}"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixScanTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock x:Name="ScanText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixGameSteps}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                </StackPanel></Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixPsoTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixPsoHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                    <Button x:Name="PsoFixButton" Content="{DynamicResource Str.DeltaFixPsoAction}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,10,0,0" Click="PsoFix_Click"/>
+                </StackPanel></Border>
+                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixLegacyTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixLegacyHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                    <Button x:Name="LegacyFixButton" Content="{DynamicResource Str.DeltaFixLegacyAction}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,10,0,0" Click="LegacyFix_Click"/>
+                    <TextBlock Text="{DynamicResource Str.DeltaFixLaunchArgs}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                </StackPanel></Border>
+                <TextBlock x:Name="ResultText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,18,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

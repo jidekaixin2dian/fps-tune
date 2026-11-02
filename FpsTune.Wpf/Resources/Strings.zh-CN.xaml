@@ -2092,6 +2092,7 @@
     <s:String x:Key="Str.DeltaFixLegacyHint">把 Saved 整目录改名备份（画质与按键回默认，可改回原名恢复），并清 NVIDIA DXCache。9.4 修复后仍卡顿再考虑。</s:String>
     <s:String x:Key="Str.DeltaFixLegacyAction">一键修复（Saved 备份 + 清 DXCache）</s:String>
     <s:String x:Key="Str.DeltaFixLegacyConfirm">把 Saved 整目录改名备份并清 NVIDIA DXCache？画质与按键会回到默认；把备份目录名里的 .bak-… 去掉即可恢复原设置。</s:String>
+    <s:String x:Key="Str.DeltaFixNeedMainWindow">请从主窗口打开掉帧修复页面。</s:String>
     <s:String x:Key="Str.DeltaFixLaunchArgs">部分用户 DX11 无法进游戏：在启动器启动参数里填 -dx12 或 -dx11（Steam：右键游戏 → 属性 → 通用 → 启动选项）。</s:String>
     <s:String x:Key="Str.DeltaFixStepResult">{0}：{1}；{2}</s:String>
     <s:String x:Key="Str.DeltaFixRenamed">已改名备份 → {0}</s:String>

@@ -1,38 +1,20 @@
 using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media.Animation;
+using System.Windows.Controls;
 using FpsTune.Wpf.Services;
-using FpsTune.Wpf.Views.Controls;
 
 namespace FpsTune.Wpf.Views;
 
-public partial class DeltaFrameFixWindow : Window
+/// <summary>三角洲掉帧修复：独立页面（原为弹窗），扫描与两步修复逻辑不变。</summary>
+public partial class DeltaFixView : UserControl
 {
-    public DeltaFrameFixWindow()
+    public DeltaFixView()
     {
         InitializeComponent();
-        Loaded += (_, _) => { Refresh(); PlayEntrance(); };
+        Loaded += (_, _) => Refresh();
     }
 
-    /// <summary>弹窗入场：淡入 + 轻微上浮与放大，系统关闭动画或低配模式下直接静态呈现。</summary>
-    private void PlayEntrance()
-    {
-        if (!UiMotion.Enabled) return;
-        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
-        Shell.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170))
-        { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-        var grow = new DoubleAnimation(0.965, 1, TimeSpan.FromMilliseconds(210)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop };
-        ShellScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleXProperty, grow);
-        ShellScale.BeginAnimation(System.Windows.Media.ScaleTransform.ScaleYProperty, grow);
-        ShellOffset.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty,
-            new DoubleAnimation(16, 0, TimeSpan.FromMilliseconds(210)) { EasingFunction = ease, FillBehavior = FillBehavior.Stop });
-    }
-
-    private void Header_MouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton != MouseButton.Left) return;
-        try { DragMove(); } catch (InvalidOperationException) { /* 鼠标已释放，忽略 */ }
-    }
+    /// <summary>回到本页时重新扫描一次（PSO/Saved 缓存可能已被游戏重建）。</summary>
+    internal void Reload() => Refresh();
 
     private void Refresh()
     {
@@ -78,6 +60,4 @@ public partial class DeltaFrameFixWindow : Window
         catch (Exception ex) { ResultText.Text = PrivacyScrub.Sanitize(ex.Message); }
         finally { LegacyFixButton.IsEnabled = true; }
     }
-
-    private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 }

@@ -165,6 +165,7 @@ public partial class MainWindow : Window
             ["display"] = () => new DisplayQualityView(),
             ["filters"] = () => new FilterView(),
             ["crosshair"] = () => new CrosshairView(),
+            ["deltafix"] = () => new DeltaFixView(),
             ["quick"] = () => new QuickOptimizeView(),
             ["session"] = () => new SessionView(),
             ["ab"] = () => new AbExperimentView(),
@@ -557,11 +558,7 @@ public partial class MainWindow : Window
         }
     }
 
-    internal void OpenDeltaFixFromHome()
-    {
-        NavigateTo("filters");
-        Dispatcher.BeginInvoke(() => { if (GetPage("filters") is FilterView filter) filter.OpenDeltaFix(); });
-    }
+    internal void OpenDeltaFixFromHome() => NavigateTo("deltafix");
 
     public void NavigateTo(string key)
     {
