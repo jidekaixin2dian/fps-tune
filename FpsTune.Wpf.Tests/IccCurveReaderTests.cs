@@ -45,8 +45,9 @@ public sealed class IccCurveReaderTests
             {
                 Assert.Equal(256, channel.Length);
                 Assert.All(channel, v => Assert.InRange(v, 0, 1));
-                Assert.Equal(0, channel[0], 3);
-                Assert.Equal(1, channel[255], 3);
+                // vcgt 校准表端点允许不满量（校准后常被裁到 0.85–1.0），TRC 曲线则应当到 1。
+                Assert.InRange(channel[0], 0, 0.1);
+                Assert.InRange(channel[255], 0.85, 1.0);
             }
             if (!curves.IsIdentity) nonIdentity++;
         }

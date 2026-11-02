@@ -231,6 +231,31 @@ public static class ScreenColorService
         Save(r with { Previous = null });
         return rebased;
     }
+    /// <summary>
+    /// 写完后守一段时间：改数字振动后显卡会异步重建颜色管线，把刚写的 gamma 顶回原始值
+    /// （真机实测：写入后约 0.5–1s 被抹平，用户看到的就是"闪一下就没"）。
+    /// 这里逐次读回，漂了就补写；全部尝试后仍不一致返回 false，交给调用方如实报告。
+    /// </summary>
+    public static bool EnsureRampSticks(string id, int attempts = 5, int delayMs = 400)
+    {
+        var stable = false;
+        for (var i = 0; i < attempts; i++)
+        {
+            Thread.Sleep(delayMs);
+            using var gate = SystemMutationGate.Acquire();
+            var r = Load(id);
+            if (r is null) return false;
+            var display = Require(id);
+            if (!Matches(Api.Read(display), r.Expected))
+            {
+                Api.Write(display, r.Expected);
+                stable = Matches(Api.Read(display), r.Expected);
+            }
+            else stable = true;
+        }
+        return stable;
+    }
+
     public static bool Restore(string id)
     {
         using var gate = SystemMutationGate.Acquire();

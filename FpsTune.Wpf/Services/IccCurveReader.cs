@@ -44,6 +44,10 @@ public static class IccCurveReader
             if (offset + tagCount * 12L > data.Length) return null;
             var channels = new double[3][];
             var table = false; var para = false; var unsupported = false;
+            // vcgt 是显示器校准 ramp（预设真正的"效果"所在），有它就优先用它：
+            // rTRC/gTRC/bTRC 只是色彩转换曲线，观感差异远小于 vcgt。
+            var vcgt = ReadVcgt(data, tagCount);
+            if (vcgt is not null) return IccCurves.FromCurves(vcgt, true, false);
             var tags = new[] { "rTRC", "gTRC", "bTRC" };
             for (var c = 0; c < 3; c++)
             {
@@ -65,6 +69,40 @@ public static class IccCurveReader
             return IccCurves.FromCurves(channels, table, para, unsupported);
         }
         catch { return null; }
+    }
+
+    /// <summary>vcgt 校准 tag（type 0：3×256 个 u16）——直接当成 ramp 用，有就优先。</summary>
+    private static double[][]? ReadVcgt(byte[] data, uint tagCount)
+    {
+        for (var t = 0; t < tagCount; t++)
+        {
+            var record = 132 + t * 12;
+            if (!Matches(data, record, "vcgt")) continue;
+            var offset = (int)ReadUInt32(data, record + 4);
+            var size = (int)ReadUInt32(data, record + 8);
+            if (offset < 0 || size < 12 || offset + (long)size > data.Length) return null;
+            var type = ReadUInt32(data, offset + 8);
+            if (type != 0) return null;
+            // 每个通道的条目数不一定是 256：我们这批预设是 257 条（size 1554）。按实际长度取再采样 256 点。
+            var entries = (size - 12) / 6;
+            if (entries < 2 || offset + 12L + entries * 3L * 2L > data.Length) return null;
+            var channels = new double[3][];
+            for (var c = 0; c < 3; c++)
+            {
+                var raw = new double[entries];
+                for (var i = 0; i < entries; i++)
+                    raw[i] = ReadUInt16(data, offset + 12 + (c * entries + i) * 2) / 65535d;
+                channels[c] = SampleTable(raw);
+            }
+            // 表异常（起点很高/终点偏低/非单调）就当没有 vcgt，回退到 TRC——宁可不套，也不要套一条错的。
+            foreach (var channel in channels)
+            {
+                if (channel[0] > 0.1 || channel[255] < 0.85) return null;
+                for (var i = 1; i < 256; i++) if (channel[i] < channel[i - 1] - 1e-6) return null;
+            }
+            return channels;
+        }
+        return null;
     }
 
     /// <summary>读一个曲线 tag：返回 256 点采样；curv 表按线性插值，para 按 ICC 规范公式。</summary>
