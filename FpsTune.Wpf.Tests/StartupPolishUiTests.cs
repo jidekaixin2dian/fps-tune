@@ -98,6 +98,48 @@ public sealed class StartupPolishUiTests
         });
     }
 
+    [Fact]
+    public void Wallpaper_opacity_slider_keeps_its_track_width()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(StartupPolishUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var view = new SettingsView();
+            try
+            {
+                app.MainWindow = new MainWindowStub(view); DlssFeedbackTests.PrepareBackgroundWindow(app.MainWindow); app.MainWindow.Show();
+                var slider = (Slider)view.FindName("WallpaperOpacitySlider");
+                Assert.NotNull(slider);
+                // 模板只有 MaxWidth + Left 时轨道会被挤成拇指大小（用户看到“只剩一个圆点”），
+                // 所以样式必须给出实宽；这条断言直接盯住那段样式，不依赖卡片是否在当前分段里显示。
+                var style = slider.Style;
+                Assert.NotNull(style);
+                var width = style!.Setters.OfType<Setter>().FirstOrDefault(s => ReferenceEquals(s.Property, FrameworkElement.WidthProperty))?.Value;
+                Assert.Equal(260d, Assert.IsType<double>(width));
+                Assert.DoesNotContain(style.Setters.OfType<Setter>(), s => ReferenceEquals(s.Property, FrameworkElement.MaxWidthProperty));
+            }
+            finally { app.MainWindow.Content = null; }
+        });
+    }
+
+    [Fact]
+    public void Frame_fix_is_a_page_route_not_a_dialog()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(StartupPolishUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var window = new MainWindow { Width = 1180, Height = 720 };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                window.NavigateTo("deltafix"); window.UpdateLayout();
+                var page = ((ContentControl)window.FindName("PageHost")).Content;
+                Assert.IsType<DeltaFixView>(page);
+                Assert.NotNull(((FrameworkElement)page).FindName("PsoFixButton"));
+            }
+            finally { window.Close(); }
+        });
+    }
     private static IEnumerable<T> FindAll<T>(DependencyObject root) where T : DependencyObject
     {
         var count = VisualTreeHelper.GetChildrenCount(root);

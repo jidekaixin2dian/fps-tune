@@ -577,6 +577,8 @@ public partial class MainWindow : Window
             case "backup": NavBackup.IsChecked = true; break;
             case "tools": NavTools.IsChecked = true; break;
             case "settings": NavSettings.IsChecked = true; break;
+            // 掉帧修复是从按钮进入的页面，没有对应的 NavButton 勾选态，直接切页。
+            case "deltafix": SwitchPage(GetPage("deltafix")); break;
         }
     }
 
