@@ -34,8 +34,9 @@ public sealed class PreparationEngineUiTests
                 var items = view.ItemsView.Cast<OptimizationItemViewModel>().ToList();
                 var overlay = items.Single(i => i.Id == "power-overlay-perf");
                 var filterKeys = items.Single(i => i.Id == "filter-keys-off");
-                // 本机为支持现代电源模式的 Win11；两项都应可用。
-                Assert.True(overlay.Available);
+                // 电源模式项只在支持现代滑块的系统上可用；CI 机器常常不支持，按实际能力断言而不是硬编码。
+                var overlaySupported = OptimizationCatalog.Items.Single(i => i.Id == "power-overlay-perf").Available;
+                Assert.Equal(overlaySupported, overlay.Available);
                 Assert.True(filterKeys.Available);
                 Assert.NotEqual(overlay.Name, overlay.Description);
                 var list = (ListBox)view.FindName("ItemList");

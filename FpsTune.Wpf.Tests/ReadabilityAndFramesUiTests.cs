@@ -544,7 +544,8 @@ public sealed class ReadabilityAndFramesUiTests
         RunUi((app, root) =>
         {
             var original = AppState.GamePath!;
-            var unavailable = ItemCatalog.All.Single(d => !d.Available);
+            // 不可用项的数量取决于本机能力（例如没有 Win11 电源滑块时多一项），取第一项即可。
+            var unavailable = ItemCatalog.All.FirstOrDefault(d => !d.Available) ?? ItemCatalog.All[0] with { Available = false };
             var unavailableItem = new OptimizationItem(unavailable.Id, unavailable.DisplayName, unavailable.DisplayDescription, unavailable.DisplaySideEffect,
                 unavailable.Admin, unavailable.Reboot, false, "not available", false, unavailable.Group);
             AppState.Items.Add(unavailableItem);

@@ -58,6 +58,8 @@ public partial class ColorPreviewControl : UserControl
     internal PreviewChannelKind Channel => _channel;
     /// <summary>每完成一次重绘加一，测试用它等“这一帧真的换掉了”，不靠 sleep。</summary>
     internal int RenderedRevision => _rendered;
+    /// <summary>最近一帧实际使用的数字振动档：测试等它到位再比像素，避免读到上一帧。</summary>
+    internal double RenderedVibrance { get; private set; }
     /// <summary>最后一次重绘所用的源图；换图后它能区分“新图还没画完”和“画完了”。</summary>
     internal BitmapSource? RenderedSource => _renderedSource;
     private void ReleaseImages()
@@ -252,6 +254,7 @@ public partial class ColorPreviewControl : UserControl
                 {
                     AfterImage.Source = image;
                     _renderedSource = source;
+                    RenderedVibrance = vibrance;
                     _rendered++;
                     ShowHint();
                 }

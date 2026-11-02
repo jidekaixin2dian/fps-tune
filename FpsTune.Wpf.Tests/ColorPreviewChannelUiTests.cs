@@ -58,7 +58,8 @@ public sealed class ColorPreviewChannelUiTests
                 render = preview.RenderedRevision;
                 preview.SetSettings(new());
                 preview.SetVibrance(70);
-                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                // 两次设置会合并成一帧：等这一帧真的带上 70 档再比像素，否则可能读到合并前的旧帧。
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render && preview.RenderedVibrance == 70);
                 Assert.False(neutral.SequenceEqual(Pixels((BitmapSource)after.Source!)));
                 render = preview.RenderedRevision;
                 preview.SetVibrance(50);
