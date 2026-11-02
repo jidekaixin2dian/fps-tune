@@ -2073,6 +2073,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CrosshairOpacityLabel">Opacity</s:String>
     <s:String x:Key="Str.CrosshairAdaptiveToggle">AW tactical hold: auto-hide while right mouse held</s:String>
     <s:String x:Key="Str.CrosshairAdaptiveHint">Hides while aiming (right mouse held), returns when released; also hides while this app is in the foreground so settings stay unobstructed.</s:String>
+    <s:String x:Key="Str.CrosshairPreviewTitle">Crosshair preview</s:String>
+    <s:String x:Key="Str.CrosshairPreviewHint">Shows the current colour, shape and opacity. If you cannot see it in game, switch back to the game window first — it is hidden while this app is in the foreground.</s:String>
     <s:String x:Key="Str.DeltaFixTab">Frame fix</s:String>
     <s:String x:Key="Str.DeltaFixTitle">Delta Force frame fix</s:String>
     <s:String x:Key="Str.DeltaFixOpen">Open frame fix</s:String>

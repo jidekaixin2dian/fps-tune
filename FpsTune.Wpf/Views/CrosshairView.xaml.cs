@@ -30,6 +30,24 @@ public partial class CrosshairView : UserControl
         CrosshairThicknessSlider.Value = Math.Clamp(settings.CrosshairThickness, 1, 10);
         CrosshairOpacitySlider.Value = Math.Clamp(settings.CrosshairOpacity, 10, 100);
         _ready = true;
+        UpdatePreview();
+    }
+
+    /// <summary>颜色输入：能解析成 #RRGGBB 就立刻生效，不用等失去焦点。</summary>
+    private void Crosshair_ColorChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_ready || _suppress) return;
+        var text = (CrosshairColorBox.Text ?? "").Trim();
+        if (text.Length == 6 && !text.StartsWith('#')) text = "#" + text;
+        if (text.Length != 7 || !text.StartsWith('#') || !text.Skip(1).All(Uri.IsHexDigit)) return;
+        Crosshair_Changed(sender, e);
+    }
+
+    /// <summary>设置页预览：与覆盖窗同一份图形，颜色/样式/透明度改完立刻能看到。</summary>
+    private void UpdatePreview()
+    {
+        if (CrosshairPreviewHost is null) return;
+        CrosshairPreviewHost.Content = CrosshairShape.Build(CrosshairConfig.FromSettings());
     }
 
     private void Crosshair_Changed(object sender, RoutedEventArgs e)
@@ -49,6 +67,7 @@ public partial class CrosshairView : UserControl
             settings.CrosshairAdaptiveHide = CrosshairAdaptiveCheck.IsChecked == true;
             SettingsService.Save(settings);
             App.ApplyCrosshairSettings();
+            UpdatePreview();
         }
         catch (Exception)
         {

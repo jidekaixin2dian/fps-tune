@@ -39,51 +39,9 @@ public sealed class CrosshairOverlayWindow : Window
         _config = config;
         Opacity = config.Opacity / 100.0;
         _root.Children.Clear();
-        var color = BrushFromHex(config.Color);
-        double length = config.Size, thickness = config.Thickness, gap = config.Gap;
-        switch (config.Style)
-        {
-            case "dot":
-                _root.Children.Add(Shape(new Ellipse { Width = length, Height = length, Fill = color }));
-                break;
-            case "circle":
-                _root.Children.Add(Shape(new Ellipse
-                {
-                    Width = length * 2, Height = length * 2,
-                    Stroke = color, StrokeThickness = thickness,
-                }));
-                break;
-            case "crossdot":
-                AddCross(_root, color, length, thickness, gap);
-                _root.Children.Add(Shape(new Ellipse { Width = thickness, Height = thickness, Fill = color }));
-                break;
-            default: // cross
-                AddCross(_root, color, length, thickness, gap);
-                break;
-        }
+        // 图形与设置页预览共用同一份构建逻辑，颜色/样式/尺寸不会出现两套。
+        _root.Children.Add(CrosshairShape.Build(config));
         RefreshFrame();
-    }
-
-    private static void AddCross(Grid root, Brush color, double length, double thickness, double gap)
-    {
-        root.Children.Add(Shape(new Rectangle { Width = thickness, Height = length, Fill = color, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(0, 0, 0, gap) }));
-        root.Children.Add(Shape(new Rectangle { Width = thickness, Height = length, Fill = color, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, gap, 0, 0) }));
-        root.Children.Add(Shape(new Rectangle { Width = length, Height = thickness, Fill = color, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(gap, 0, 0, 0) }));
-        root.Children.Add(Shape(new Rectangle { Width = length, Height = thickness, Fill = color, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 0, gap, 0) }));
-    }
-
-    private static FrameworkElement Shape(FrameworkElement element)
-    {
-        element.HorizontalAlignment = HorizontalAlignment.Center;
-        element.VerticalAlignment = VerticalAlignment.Center;
-        element.IsHitTestVisible = false;
-        return element;
-    }
-
-    private static Brush BrushFromHex(string hex)
-    {
-        try { return (Brush)(new BrushConverter().ConvertFromString(hex) ?? Brushes.Lime); }
-        catch { return Brushes.Lime; }
     }
 
     public void StartPolling() => _timer.Start();

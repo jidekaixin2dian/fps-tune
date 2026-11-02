@@ -21,7 +21,7 @@
                                 <ComboBoxItem Content="{DynamicResource Str.CrosshairStyleCircle}" Tag="circle"/>
                             </ComboBox></StackPanel>
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairColorLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                            <TextBox x:Name="CrosshairColorBox" MinWidth="110" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" LostFocus="Crosshair_Changed"/></StackPanel>
+                            <TextBox x:Name="CrosshairColorBox" MinWidth="110" Height="30" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CrosshairColorLabel}" TextChanged="Crosshair_ColorChanged" LostFocus="Crosshair_Changed"/></StackPanel>
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairSizeLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
                             <Slider x:Name="CrosshairSizeSlider" MinWidth="140" Minimum="4" Maximum="48" Value="12" TickFrequency="1" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairSizeLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairGapLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
@@ -31,6 +31,16 @@
                         <StackPanel Margin="0,0,20,12"><TextBlock Text="{DynamicResource Str.CrosshairOpacityLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
                             <Slider x:Name="CrosshairOpacitySlider" MinWidth="140" Minimum="10" Maximum="100" Value="90" TickFrequency="5" IsSnapToTickEnabled="True" AutomationProperties.Name="{DynamicResource Str.CrosshairOpacityLabel}" ValueChanged="Crosshair_Changed"/></StackPanel>
                     </WrapPanel>
+                    <!-- 覆盖准星在本程序前台时会自动隐藏，光看屏幕看不出改没改；这里给一份同款图形的预览。 -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <Border Width="150" Height="150" Background="#0E1218" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}">
+                            <ContentControl x:Name="CrosshairPreviewHost" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center" Margin="14,0,0,0" MaxWidth="380">
+                            <TextBlock Text="{DynamicResource Str.CrosshairPreviewTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock Text="{DynamicResource Str.CrosshairPreviewHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
                     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,14,0,0" Margin="0,4,0,0"><StackPanel>
                         <CheckBox x:Name="CrosshairAdaptiveCheck" Content="{DynamicResource Str.CrosshairAdaptiveToggle}" Style="{StaticResource ToggleSwitchStyle}" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
                         <TextBlock Text="{DynamicResource Str.CrosshairAdaptiveHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>

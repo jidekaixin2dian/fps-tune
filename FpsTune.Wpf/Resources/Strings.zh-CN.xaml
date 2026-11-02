@@ -2073,6 +2073,8 @@
     <s:String x:Key="Str.CrosshairOpacityLabel">不透明度</s:String>
     <s:String x:Key="Str.CrosshairAdaptiveToggle">AW 战术据枪：按住右键自动隐藏</s:String>
     <s:String x:Key="Str.CrosshairAdaptiveHint">开镜（按住右键）时准星自动隐藏，松开恢复；本应用窗口在前台时也会暂时隐藏，不影响设置操作。</s:String>
+    <s:String x:Key="Str.CrosshairPreviewTitle">准星预览</s:String>
+    <s:String x:Key="Str.CrosshairPreviewHint">这里显示当前颜色、样式和透明度的实际效果。游戏里看不到准星时先切回游戏窗口——本程序在前台会临时隐藏它。</s:String>
     <s:String x:Key="Str.DeltaFixTab">掉帧修复</s:String>
     <s:String x:Key="Str.DeltaFixTitle">三角洲掉帧修复</s:String>
     <s:String x:Key="Str.DeltaFixOpen">打开掉帧修复</s:String>

@@ -31,10 +31,10 @@
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <TextBlock Text="{DynamicResource Str.QuickOptPlanLabel}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
-                    <Border Grid.Column="1" Background="Transparent" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="3" HorizontalAlignment="Left">
-                        <!-- 方案 chips 由 catalog 预设生成（均衡/保守/竞技/观感/笔记本/直播 + 全量） -->
-                        <WrapPanel x:Name="PlanList"/>
-                    </Border>
+                    <!-- 方案改成下拉：一排七个单选太吵，方案内容是固定的，选一个就够。 -->
+                    <ComboBox Grid.Column="1" x:Name="PlanBox" MinWidth="320" Height="36" HorizontalAlignment="Left"
+                              Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.QuickOptPlanLabel}"
+                              SelectionChanged="Plan_Changed"/>
                 </Grid>
                 <Grid Margin="0,18,0,0">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
