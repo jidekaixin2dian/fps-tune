@@ -43,6 +43,12 @@ public class UpdateSourceTests
             修复若干问题。
             备用下载：https://hikar1.lanzouq.com/s/abcde
             """;
+        // 真实发布说明里的写法：链接单独一行、下一行「密码：xxxx」，客户端要能同时取出链接与密码。
+        var live = "## 备用下载（GitHub 直连不稳时）\n\n- 蓝奏云：https://jxdy.lanzouw.com/i03xk4ee6zmb\n- 密码：h3k1\n";
+        var backup = UpdateMirrors.FindBackupLink(live);
+        Assert.NotNull(backup);
+        Assert.Equal("https://jxdy.lanzouw.com/i03xk4ee6zmb", backup!.Url);
+        Assert.Equal("h3k1", backup.Password);
         Assert.Equal("https://hikar1.lanzouq.com/s/abcde", UpdateMirrors.FindBackupDownload(notes));
     }
 
