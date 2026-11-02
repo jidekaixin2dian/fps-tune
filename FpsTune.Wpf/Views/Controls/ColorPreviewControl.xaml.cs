@@ -8,25 +8,42 @@ using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Views.Controls;
 
+/// <summary>预览到底展示哪一种效果：游戏能看到的，还是读取色彩管理的应用看到的。</summary>
+public enum PreviewChannelKind
+{
+    /// <summary>显示器 gamma（含暗部平衡、高光）+ 数字振动。游戏实际看到的就是这个。</summary>
+    Game,
+    /// <summary>ICC 配置文件 + gamma。只有主动读取色彩管理的程序会这样显示。</summary>
+    ColorManaged,
+}
+
 public partial class ColorPreviewControl : UserControl
 {
     private BitmapSource? _source;
+    private BitmapSource? _renderSource;
     private ScreenColorSettings _settings = new();
-    private readonly ColorPreviewEffect _effect = new();
     private double _vibrance = 50;
     private string? _profile;
+    private PreviewChannelKind _channel = PreviewChannelKind.Game;
     private int _generation;
     private int _loadGeneration;
     private string? _customPath;
     private string? _loadingKey;
     private string? _customName;
     private bool _selecting;
+    private bool _ready;
+    private bool _rendering;
+    private bool _renderPending;
+    private readonly object _iccLock = new();
+    private BitmapSource? _iccSource;
+    private string? _iccKey;
+    private int _rendered;
+    private BitmapSource? _renderedSource;
 
     public ColorPreviewControl()
     {
         InitializeComponent();
         BeforeImage.Source = AfterImage.Source = _source;
-        AfterImage.Effect = _effect;
         ScreenshotCombo.SelectedIndex = 0;
         Loaded += async (_, _) => { if (IsVisible) await SelectScreenshotAsync(); };
         IsVisibleChanged += async (_, _) =>
@@ -35,11 +52,19 @@ public partial class ColorPreviewControl : UserControl
             else if (IsLoaded && _source is null) await SelectScreenshotAsync();
         };
         Unloaded += (_, _) => ReleaseImages();
+        _ready = true;
+        ShowHint();
     }
+    internal PreviewChannelKind Channel => _channel;
+    /// <summary>每完成一次重绘加一，测试用它等“这一帧真的换掉了”，不靠 sleep。</summary>
+    internal int RenderedRevision => _rendered;
+    /// <summary>最后一次重绘所用的源图；换图后它能区分“新图还没画完”和“画完了”。</summary>
+    internal BitmapSource? RenderedSource => _renderedSource;
     private void ReleaseImages()
     {
         ++_generation; ++_loadGeneration; _loadingKey = null;
-        _source = null; BeforeImage.Source = AfterImage.Source = null;
+        _source = null; _renderSource = null; ClearIccCache();
+        BeforeImage.Source = AfterImage.Source = null;
         EmptyHint.Visibility = Visibility.Visible;
     }
     private async void Screenshot_Changed(object sender, SelectionChangedEventArgs e)
@@ -117,63 +142,134 @@ public partial class ColorPreviewControl : UserControl
     private async Task ShowSourceAsync(BitmapSource source, string name)
     {
         _source = source;
+        _renderSource = ScreenColorPreview.Downscale(source, 1440);
+        ClearIccCache();
         EmptyHint.Visibility = Visibility.Collapsed;
-        BeforeImage.Source = AfterImage.Source = source;
+        BeforeImage.Source = AfterImage.Source = _renderSource;
         ImageNameText.Text = name;
         UpdatePreviewHeight();
-        await RefreshImageAsync();
+        RequestRender();
+        await Task.CompletedTask;
     }
     public void SetSettings(ScreenColorSettings settings)
     {
         settings.Validate();
         _settings = settings;
-        _effect.Set(settings, _vibrance);
+        RequestRender();
     }
     public void SetVibrance(double percent)
     {
         _vibrance = Math.Clamp(percent, 0, 100);
-        _effect.Set(_settings, _vibrance);
-        ShowHint();
+        RequestRender();
     }
     public async Task SetIccProfileAsync(string? path)
     {
         if (_profile == path) return;
         _profile = path;
-        await RefreshImageAsync();
+        ClearIccCache();
+        RequestRender();
+        await Task.CompletedTask;
+    }
+
+    /// <summary>测试与外部切换用；两个 RadioButton 与它保持同一状态。</summary>
+    internal void SetChannel(PreviewChannelKind channel)
+    {
+        if (ChannelGame is null || ChannelManaged is null) return;
+        if (channel == PreviewChannelKind.Game) ChannelGame.IsChecked = true;
+        else ChannelManaged.IsChecked = true;
+    }
+    private void Channel_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_ready) return;
+        _channel = ChannelManaged.IsChecked == true ? PreviewChannelKind.ColorManaged : PreviewChannelKind.Game;
+        ShowHint();
+        RequestRender();
     }
     private void ShowHint()
     {
-        PreviewStatus.Text = Str.T(_profile is null ? "Str.ColorPreviewHint" : "Str.ColorPreviewIccHint")
-            + (_vibrance == 50 ? "" : " " + Str.T("Str.ColorPreviewVibranceHint"));
+        var text = Str.T(_channel == PreviewChannelKind.Game ? "Str.ColorPreviewGameHint" : "Str.ColorPreviewManagedHint");
+        if (_channel == PreviewChannelKind.ColorManaged && _profile is null)
+            text = Str.T("Str.ColorPreviewManagedEmpty");
+        else if (_vibrance != 50)
+            text += " " + Str.T("Str.ColorPreviewVibranceHint");
+        PreviewStatus.Text = text;
     }
-    private async Task RefreshImageAsync()
+
+    /// <summary>拖动滑杆会连续触发，用「渲染中就排一次」的合并策略，避免逐次排队变慢。</summary>
+    private void RequestRender()
     {
-        var generation = ++_generation;
-        var source = _source; var profile = _profile;
-        if (source is null || !IsVisible) return;
+        if (_renderSource is null || !IsVisible) return;
+        if (_rendering) { _renderPending = true; return; }
+        _ = RenderAsync();
+    }
+
+    private async Task RenderAsync()
+    {
+        _rendering = true;
         try
         {
-            BitmapSource image = source;
-            if (profile is not null)
-                image = await Task.Run(() =>
+            while (true)
+            {
+                _renderPending = false;
+                var source = _renderSource;
+                if (source is null || !IsVisible) break;
+                var settings = _settings; var vibrance = _vibrance;
+                var channel = _channel; var profile = _profile;
+                var generation = ++_generation;
+                BitmapSource image;
+                try
                 {
-                    if (new FileInfo(profile).Length > 16 * 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
-                    var snapshot = ScreenColorPreview.CacheIccProfile(File.ReadAllBytes(profile));
-                    var converted = new ColorConvertedBitmap(source, new ColorContext(PixelFormats.Bgra32),
-                        new ColorContext(new Uri(snapshot, UriKind.Absolute)), PixelFormats.Rgba64);
-                    converted.Freeze(); return converted;
-                });
-            if (generation != _generation) return;
-            AfterImage.Source = image;
-            ShowHint();
+                    image = await Task.Run(() =>
+                    {
+                        var basis = source;
+                        if (channel == PreviewChannelKind.ColorManaged && profile is not null)
+                            basis = IccConverted(source, profile);
+                        return ScreenColorPreview.Apply(basis, settings, vibrance);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    if (generation == _generation) PreviewStatus.Text = Str.T("Str.ColorPreviewIccFailed", ex.Message);
+                    break;
+                }
+                if (generation == _generation && IsVisible && ReferenceEquals(source, _renderSource))
+                {
+                    AfterImage.Source = image;
+                    _renderedSource = source;
+                    _rendered++;
+                    ShowHint();
+                }
+                if (!_renderPending) break;
+            }
         }
-        catch (Exception ex)
+        finally { _rendering = false; }
+    }
+
+    /// <summary>ICC 转换只做一次（按配置文件缓存），拖动滑杆时不重复解 profile。</summary>
+    private BitmapSource IccConverted(BitmapSource source, string profile)
+    {
+        lock (_iccLock)
         {
-            if (generation != _generation) return;
-            AfterImage.Source = source;
-            PreviewStatus.Text = Str.T("Str.ColorPreviewIccFailed", ex.Message);
+            if (_iccSource is not null && _iccKey == profile) return _iccSource;
+            if (new FileInfo(profile).Length > 16 * 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
+            var snapshot = ScreenColorPreview.CacheIccProfile(File.ReadAllBytes(profile));
+            var converted = new ColorConvertedBitmap(source, new ColorContext(PixelFormats.Bgra32),
+                new ColorContext(new Uri(snapshot, UriKind.Absolute)), PixelFormats.Bgra32);
+            // WPF 的转换是惰性的：先落到位图再冻结，避免每帧重新算一次色彩变换。
+            var width = converted.PixelWidth; var height = converted.PixelHeight;
+            var pixels = new byte[width * height * 4];
+            converted.CopyPixels(pixels, width * 4, 0);
+            var materialized = BitmapSource.Create(width, height, 96, 96, PixelFormats.Bgra32, null, pixels, width * 4);
+            materialized.Freeze();
+            _iccSource = materialized; _iccKey = profile;
+            return _iccSource;
         }
     }
+    private void ClearIccCache()
+    {
+        lock (_iccLock) { _iccSource = null; _iccKey = null; }
+    }
+
     internal async Task LoadImageAsync(string path)
     {
         var generation = ++_loadGeneration;

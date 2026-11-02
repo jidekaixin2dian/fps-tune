@@ -122,17 +122,30 @@ public sealed class PreparationHudUiTests
                 { var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(ScreenColorPreview.Sample())); encoder.Save(file); }
                 var original = File.ReadAllBytes(path); var load = preview.LoadImageAsync(path); DlssFeedbackTests.PumpUntil(() => load.IsCompleted); load.GetAwaiter().GetResult();
                 var profile = Path.Combine(root, "preview.icm"); File.WriteAllBytes(profile, IccProfileGenerator.Build(IccProfileGenerator.ParamsFor(IccFilterPreset.Warm)));
+                var revision = preview.RenderedRevision;
                 var convert = preview.SetIccProfileAsync(profile); DlssFeedbackTests.PumpUntil(() => convert.IsCompleted); convert.GetAwaiter().GetResult();
-                Assert.IsType<ColorConvertedBitmap>(after.Source); ((Slider)preview.FindName("SplitSlider")).Value = 27;
+                // 默认是「游戏内效果」：ICC 不参与合成，所以 after 不是 ColorConvertedBitmap。
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > revision);
+                Assert.IsAssignableFrom<BitmapSource>(after.Source);
+                Assert.Equal(PreviewChannelKind.Game, preview.Channel);
+                Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                revision = preview.RenderedRevision;
+                ((RadioButton)preview.FindName("ChannelManaged")).IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > revision);
+                Assert.Equal(PreviewChannelKind.ColorManaged, preview.Channel);
+                Assert.Equal(Str.T("Str.ColorPreviewManagedHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                ((Slider)preview.FindName("SplitSlider")).Value = 27;
                 var samples = new List<object>();
                 for (var i = 0; i < 5; i++)
                 {
                     var raster = Assert.IsAssignableFrom<BitmapSource>(before.Source);
                     var pixels = raster.PixelWidth * (long)raster.PixelHeight;
+                    var render = preview.RenderedRevision;
                     preview.Visibility = Visibility.Collapsed; Assert.Null(before.Source); Assert.Null(after.Source);
-                    samples.Add(new { round = i, activePixels = pixels, hiddenReferencedPixels = 0 });
+                    samples.Add(new { round = i, activePixels = pixels, hiddenReferencedPixels = 0, channel = preview.Channel.ToString() });
                     preview.Visibility = Visibility.Visible;
-                    DlssFeedbackTests.PumpUntil(() => after.Source is ColorConvertedBitmap);
+                    DlssFeedbackTests.PumpUntil(() => after.Source is BitmapSource && preview.RenderedRevision > render);
+                    Assert.Equal(PreviewChannelKind.ColorManaged, preview.Channel);
                     Assert.Equal(2, ((ComboBox)preview.FindName("ScreenshotCombo")).SelectedIndex); Assert.Equal(27, ((Slider)preview.FindName("SplitSlider")).Value);
                     Assert.Equal("custom.png", ((FileNameLabel)preview.FindName("ImageNameText")).Text);
                 }

@@ -98,11 +98,12 @@ public partial class ScreenColorPanel : UserControl
         var generation = ++_previewGeneration;
         try
         {
-            string? profile = null;
-            if (IccMode)
+            // 只要选了 ICC（不管当前是哪种写入模式），预览都有可切的「色彩管理」视图；
+            // 「游戏内效果」视图本身不使用这份 profile。
+            string? profile = _iccFile;
+            if (profile is null && (IccMode || Preset is not null))
             {
-                profile = _iccFile;
-                if (profile is null && Preset is { } preset)
+                if (Preset is { } preset)
                 {
                     if (!_profileTasks.TryGetValue(preset, out var pending))
                         _profileTasks[preset] = pending = Task.Run(() => ScreenColorPreview.CacheIccProfile(IccProfileGenerator.Build(preset)));

@@ -15,6 +15,13 @@
    <ComboBoxItem x:Name="CustomSceneItem" Content="{DynamicResource Str.ColorPreviewCustom}" Visibility="Collapsed"/>
    <ComboBoxItem x:Name="RecentSceneItem" Content="{DynamicResource Str.ColorPreviewRecent}"/>
   </ComboBox>
+  <!-- 明确预览看的是哪一种效果：游戏能看到的（gamma + 数字振动）还是读 ICC 的程序看到的。 -->
+  <WrapPanel Margin="0,0,0,10">
+   <RadioButton x:Name="ChannelGame" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelGame}"
+                IsChecked="True" Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelGame}"/>
+   <RadioButton x:Name="ChannelManaged" GroupName="previewChannel" Style="{StaticResource ChoiceTabStyle}" Content="{DynamicResource Str.ColorPreviewChannelManaged}"
+                Checked="Channel_Changed" AutomationProperties.Name="{DynamicResource Str.ColorPreviewChannelManaged}"/>
+  </WrapPanel>
   <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Stretch" MaxHeight="460">
   <Grid x:Name="ComparisonViewport" Width="960" Height="540" SizeChanged="Comparison_SizeChanged" IsVisibleChanged="Viewport_IsVisibleChanged">
   <Border x:Name="ComparisonFrame" HorizontalAlignment="Stretch" Background="#11151B" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="1">
@@ -57,6 +64,6 @@
   </Grid>
   </Viewbox>
   <TextBlock Text="{DynamicResource Str.ColorPreviewDrag}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-  <TextBlock x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
+  <TextBlock x:Name="PreviewStatus" Text="{DynamicResource Str.ColorPreviewGameHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,7,0,0"/>
  </StackPanel>
 </UserControl>

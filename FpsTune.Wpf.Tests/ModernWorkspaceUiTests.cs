@@ -332,28 +332,46 @@ public sealed class ModernWorkspaceUiTests
                     bitmap.CopyPixels(pixels, bitmap.PixelWidth * 4, 0); return pixels;
                 }
                 var neutralPixels = RenderImage();
+                var render = preview.RenderedRevision;
                 ((ComboBox)panel.FindName("ColorPresetCombo")).SelectedIndex = 4;
-                Assert.Same(before, image.Source); // Sliders update shader constants, never recreate the screenshot.
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                // 预览按写入同款曲线重算像素：源图不变，合成结果必须变。
+                Assert.NotSame(before, image.Source);
                 Assert.False(neutralPixels.SequenceEqual(RenderImage()));
                 Assert.Same(original, ((Image)preview.FindName("BeforeImage")).Source);
                 ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex = 1;
                 var parameterGrid = (System.Windows.Controls.Primitives.UniformGrid)panel.FindName("ParameterGrid");
                 var brightness = ((StackPanel)parameterGrid.Children[0]).Children.OfType<Slider>().Single();
                 var brightnessValue = brightness.Value;
+                render = preview.RenderedRevision;
                 for (var i = 0; i < 8; i++) ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5 + i % 2;
                 Assert.Equal(brightnessValue, brightness.Value);
-                DlssFeedbackTests.PumpUntil(() => image.Source is ColorConvertedBitmap);
-                Assert.DoesNotContain("ICC 无法", ((TextBlock)preview.FindName("PreviewStatus")).Text);
-                var iccPixels = RenderImage(); var iccSource = image.Source;
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                var gamePixels = RenderImage();
+                Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                // 游戏不读 ICC：换 ICC 预设后「游戏内效果」逐像素不变，不存在双重叠加。
+                render = preview.RenderedRevision;
+                ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5;
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                Assert.Equal(gamePixels, RenderImage());
+                // 「色彩管理应用」才是 ICC + gamma：两者各算一次，必须与游戏视图不同。
+                render = preview.RenderedRevision;
+                ((RadioButton)preview.FindName("ChannelManaged")).IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                Assert.Equal(PreviewChannelKind.ColorManaged, preview.Channel);
+                var managedPixels = RenderImage();
+                Assert.False(gamePixels.SequenceEqual(managedPixels));
+                render = preview.RenderedRevision;
                 brightness.Value = 10;
-                Assert.False(iccPixels.SequenceEqual(RenderImage()));
-                Assert.Same(iccSource, image.Source);
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                Assert.False(managedPixels.SequenceEqual(RenderImage()));
+                Assert.Equal(Str.T("Str.ColorPreviewManagedHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
                 Assert.Equal(1, ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex);
-                Assert.Equal(6, ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex);
+                Assert.Equal(5, ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex);
                 foreach (var index in new[] { 0, 1 })
                 {
                     scene.SelectedIndex = index;
-                    DlssFeedbackTests.PumpUntil(() => image.Source is ColorConvertedBitmap
+                    DlssFeedbackTests.PumpUntil(() => ReferenceEquals(preview.RenderedSource, ((Image)preview.FindName("BeforeImage")).Source)
                         && ((FileNameLabel)preview.FindName("ImageNameText")).Text == Str.T(index == 0 ? "Str.ColorPreviewDelta" : "Str.ColorPreviewValorant"));
                     var active = ((Image)preview.FindName("BeforeImage")).Source;
                     if (index == 0)
@@ -368,9 +386,14 @@ public sealed class ModernWorkspaceUiTests
                     foreach (var theme in new[] { "light", "dark" })
                     { ThemeManager.SetMode(theme); Render(surface, "game-icc-" + index + "-" + theme); }
                 }
-                before = ((Image)preview.FindName("BeforeImage")).Source;
+                // 关掉 ICC 写入模式后切回「游戏内效果」：合成结果里不再有 ICC，与色彩管理视图不同。
+                var managedOnly = RenderImage();
                 ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex = 0;
-                DlssFeedbackTests.PumpUntil(() => ReferenceEquals(before, image.Source));
+                render = preview.RenderedRevision;
+                ((RadioButton)preview.FindName("ChannelGame")).IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
+                Assert.Equal(PreviewChannelKind.Game, preview.Channel);
+                Assert.False(managedOnly.SequenceEqual(RenderImage()));
                 ((Slider)preview.FindName("SplitSlider")).Value = 25;
                 var bounds = ((RectangleGeometry)((Grid)preview.FindName("BeforeLayer")).Clip).Rect;
                 Assert.Equal(((Grid)preview.FindName("ComparisonSurface")).ActualWidth / 4 + 6, bounds.Width, 2);
