@@ -539,6 +539,38 @@ public sealed class ModernWorkspaceUiTests
     }
 
     [Fact]
+    public void Filter_selection_clears_with_the_panel_ICC_and_can_be_selected_again()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            IccAppRuleStore.Invalidate();
+            var page = new FilterView();
+            var window = new Window { Width = 1440, Height = 900, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var color = (ScreenColorPanel)page.FindName("ColorPanel");
+                var filter = (FilterCenterPanel)page.FindName("FilterCenter");
+                var chips = (WrapPanel)filter.FindName("PresetList");
+                DlssFeedbackTests.PumpUntil(() => chips.Children.OfType<RadioButton>().Any());
+                var first = chips.Children.OfType<RadioButton>().First();
+                first.IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => ((ComboBox)color.FindName("ColorModeCombo")).SelectedIndex == 1);
+                // 面板丢了 ICC（还原原始后的系统状态）时列表选中态跟着清空，避免亮着却点不动。
+                filter.ClearSelection();
+                Assert.DoesNotContain(chips.Children.OfType<RadioButton>(), r => r.IsChecked == true);
+                ((ComboBox)color.FindName("ColorModeCombo")).SelectedIndex = 0;
+                var again = chips.Children.OfType<RadioButton>().First();
+                again.IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => ((ComboBox)color.FindName("ColorModeCombo")).SelectedIndex == 1);
+                Assert.True(again.IsChecked);
+            }
+            finally { window.Close(); IccAppRuleStore.Invalidate(); }
+        });
+    }
+
+    [Fact]
     public void Per_app_panel_adds_and_toggle_disables_a_rule_and_renders_diagnostics()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }

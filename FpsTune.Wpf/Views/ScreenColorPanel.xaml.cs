@@ -19,6 +19,8 @@ public partial class ScreenColorPanel : UserControl
     private string? _iccFile;
     private string? _lastOutcome;
     internal bool Unified { get; set; }
+    /// <summary>面板的 ICC 选择被系统状态刷新清空时通知宿主，让滤镜列表同步取消选中。</summary>
+    internal event Action? IccSelectionCleared;
     public object VibranceContent { get => VibranceHost.Content; set => VibranceHost.Content = value; }
     public object IccContent { get => IccHost.Content; set => IccHost.Content = value; }
     public object FilterContent { get => FilterHost.Content; set => FilterHost.Content = value; }
@@ -234,6 +236,8 @@ public partial class ScreenColorPanel : UserControl
         _screenSupported = s.Supported; _iccSupported = states.Icc.CanApply; _iccRestorable = states.Icc.Restorable;
         _restorable = s.Restorable || states.Icc.Restorable;
         Availability();
+        // 系统上已经没有我们的 ICC（例如刚还原原始）：列表里那条选中态也不算数了。
+        if (_iccFile is null && Preset is null) IccSelectionCleared?.Invoke();
         IsEnabled = true;
     }
     public void PauseForTargetChange() { ++_generation; _identity = null; _dirty = false; IsEnabled = false; }

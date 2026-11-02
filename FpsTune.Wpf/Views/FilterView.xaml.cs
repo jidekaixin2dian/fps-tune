@@ -66,6 +66,7 @@ public partial class FilterView : UserControl
         ColorPanel.SetFilterPickerVisible(false);
         ColorPanel.BusyChanged += busy => { _busy = busy; ++_refreshGen; SetDisplayInputEnabled(!busy); if (!busy) Refresh(); };
         FilterCenter.ChoiceChanged += OnFilterChoiceChanged;
+        ColorPanel.IccSelectionCleared += FilterCenter.ClearSelection;
         var choices = Enum.GetValues<IccFilterPreset>().Select(preset =>
         {
             var keys = IccProfileGenerator.ResourceKeysFor(preset);

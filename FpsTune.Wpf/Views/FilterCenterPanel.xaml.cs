@@ -147,6 +147,9 @@ public partial class FilterCenterPanel : UserControl
                 };
                 AutomationProperties.SetName(radio, choice.Name);
                 radio.Checked += (_, _) => SelectChoice(choice);
+                // 选中态会跨“还原原始”等操作保留，再点同一条时 Checked 不再触发；
+                // 按下时若本来就是选中态，就再套一次，避免列表亮着却点不动。
+                radio.PreviewMouseLeftButtonDown += (_, _) => { if (radio.IsChecked == true) SelectChoice(choice); };
                 PresetList.Children.Add(radio);
             }
             ShowAllButton.Visibility = collapsed ? Visibility.Visible : Visibility.Collapsed;
@@ -189,6 +192,17 @@ public partial class FilterCenterPanel : UserControl
         FavoriteButton.IsEnabled = true;
         FavoriteButton.SetValue(AutomationProperties.NameProperty, FavoriteButton.Content);
         ChoiceChanged?.Invoke(choice);
+    }
+
+    /// <summary>色彩面板的 ICC 选择被清掉（例如“还原原始”）时，列表也跟着清空，避免列表亮着却点不动。</summary>
+    internal void ClearSelection()
+    {
+        if (_selected is null) return;
+        _selected = null;
+        PresetFitText.Text = "";
+        PresetAvoidText.Text = "";
+        ApplyStatus.Text = "";
+        RenderPresetList();
     }
 
     private void ShowAll_Click(object sender, RoutedEventArgs e)
