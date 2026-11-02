@@ -428,6 +428,51 @@ public sealed class ModernWorkspaceUiTests
         });
     }
 
+    [Fact]
+    public void Per_app_panel_adds_and_toggle_disables_a_rule_and_renders_diagnostics()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            IccAppRuleStore.Invalidate();
+            var panel = new PerAppFilterPanel(null);
+            var window = new Window { Width = 1180, Height = 900, Content = new ScrollViewer { Content = panel } };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                DlssFeedbackTests.PumpUntil(() => ((ComboBox)panel.FindName("RulePresetCombo")).Items.Count > 20);
+                var combo = (ComboBox)panel.FindName("RulePresetCombo");
+                Assert.True(combo.Items.Count >= 50, $"preset count={combo.Items.Count}");
+                combo.SelectedIndex = 1; // 第 0 项是“不绑定 ICC”，默认选择需要显式换成第一条滤镜。
+                var process = (TextBox)panel.FindName("RuleProcessBox");
+                process.Text = "fixture.exe";
+                ((TextBox)panel.FindName("RuleTitleBox")).Text = "Fixture Game";
+                ((Button)panel.FindName("AddRuleButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var list = (ItemsControl)panel.FindName("RuleList");
+                Assert.Single(list.Items);
+                window.UpdateLayout(); panel.UpdateLayout();
+                DlssFeedbackTests.PumpUntil(() => Descendants(list).OfType<Button>().Any(b => b.Tag is FilterAppRule));
+                var toggle = Descendants(list).OfType<Button>().First(b => b.Tag is FilterAppRule);
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => IccAppRuleStore.Rules.Single().Enabled == false);
+                Assert.False(IccAppRuleStore.Rules.Single().Enabled);
+                Assert.Contains(Str.T("Str.FilterRuleDiagnosticsTitle"), Descendants(panel).OfType<Expander>().Select(e => e.Header?.ToString()));
+                Render(panel, "perapp-panel-dark");
+            }
+            finally { window.Content = null; window.Close(); IccAppRuleStore.Invalidate(); }
+        });
+    }
+
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            yield return child;
+            foreach (var nested in Descendants(child)) yield return nested;
+        }
+    }
+
     private static bool IsChild() => Environment.GetEnvironmentVariable("FPSTUNE_DLSS_UI_TEST_CHILD") == "1";
     private static void RunUi(Action<Application, string> test)
     {

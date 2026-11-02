@@ -5,7 +5,8 @@ namespace FpsTune.Wpf.Services;
 internal static class ColorWorkspaceService
 {
     internal static string Apply(string identity, ScreenColorSettings settings, bool iccMode,
-        IccFilterPreset? preset, string? file, int? vibrance, bool applyScreen = true, bool restoreIcc = false)
+        IccFilterPreset? preset, string? file, int? vibrance, bool applyScreen = true, bool restoreIcc = false,
+        bool startNewBaselineOnDrift = true)
     {
         settings.Validate();
         using var gate = SystemMutationGate.Acquire();
@@ -33,18 +34,18 @@ internal static class ColorWorkspaceService
                 outcomes.Add("ICC: " + Str.T("Str.ColorRestored"));
             if (iccMode)
             {
-                var name = file is not null ? IccFilterService.ApplyFromFile(file, identity, true)
-                    : IccFilterService.Apply(preset!.Value, identity, true);
+                var name = file is not null ? IccFilterService.ApplyFromFile(file, identity, startNewBaselineOnDrift)
+                    : IccFilterService.Apply(preset!.Value, identity, startNewBaselineOnDrift);
                 outcomes.Add(Str.T("Str.IccApplied", System.IO.Path.GetFileName(name)));
             }
             if (applyScreen)
             {
-                ScreenColorService.Apply(settings, identity, true, preserveIcc: iccMode);
+                ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift, preserveIcc: iccMode);
                 outcomes.Add(Str.T("Str.ColorApplied"));
             }
             if (vibrance is { } percent)
             {
-                DigitalVibranceService.SetPercent(percent, identity, true);
+                DigitalVibranceService.SetPercent(percent, identity, startNewBaselineOnDrift);
                 outcomes.Add(Str.T("Str.ColorVibranceApplied", percent));
             }
             return string.Join("\n", outcomes);

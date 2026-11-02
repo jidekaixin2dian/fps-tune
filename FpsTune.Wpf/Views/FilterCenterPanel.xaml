@@ -1,6 +1,7 @@
 <UserControl x:Class="FpsTune.Wpf.Views.FilterCenterPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:FpsTune.Wpf.Views"
     Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
         <Style x:Key="PresetCardStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
@@ -42,6 +43,11 @@
                  内层可滚动区域会吞掉鼠标滚轮，页面滚到这一块就卡住。 -->
             <WrapPanel x:Name="CategoryList" Margin="0,0,0,6"/>
             <WrapPanel x:Name="PresetList" Margin="0,0,0,8"/>
+            <Button x:Name="ShowAllButton" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left"
+                    Click="ShowAll_Click" Margin="0,0,0,8" Visibility="Collapsed"/>
+            <TextBlock x:Name="EmptyFilterText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+            <Button x:Name="FavoriteButton" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left"
+                    IsEnabled="False" Click="Favorite_Click" Margin="0,0,0,4"/>
         </StackPanel>
         <!-- 不再套内层 ScrollViewer：嵌套滚动区会吞掉滚轮，整页只能滚一半（用户两次反馈）。 -->
             <StackPanel Grid.Row="1" Margin="0,10,0,0">
@@ -119,25 +125,10 @@
                     </Grid>
                 </StackPanel></Border>
 
-                <!-- 独立程序滤镜 -->
-                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
-                    <TextBlock Text="{DynamicResource Str.FilterAppsTitle}" Style="{StaticResource CardTitleStyle}"/>
-                    <TextBlock Text="{DynamicResource Str.FilterAppsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                    <CheckBox x:Name="WatcherCheck" Content="{DynamicResource Str.FilterWatcherToggle}" Style="{StaticResource ToggleSwitchStyle}" Margin="0,10,0,0" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
-                    <TextBlock x:Name="WatcherStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                    <ItemsControl x:Name="RuleList" Margin="0,10,0,0"><ItemsControl.ItemTemplate><DataTemplate>
-                        <Grid Margin="0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" TextTrimming="CharacterEllipsis"/>
-                            <Button Grid.Column="1" Content="✕" Tag="{Binding}" Style="{StaticResource GhostButtonStyle}" Click="RemoveRule_Click" AutomationProperties.Name="{DynamicResource Str.FilterRuleRemove}"/>
-                        </Grid>
-                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-                    <Grid Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBox x:Name="RuleProcessBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleProcess}"/>
-                        <Button x:Name="AddRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleAdd}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" Click="AddRule_Click"/>
-                    </Grid>
-                    <TextBlock Text="{DynamicResource Str.FilterAppsRuleHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                </StackPanel></Border>
+                <!-- 独立游戏方案（规则编辑、诊断、导入导出独立成控件） -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0">
+                    <views:PerAppFilterPanel Margin="0,0,0,0"/>
+                </Border>
             </StackPanel>
     </Grid>
 </UserControl>

@@ -16,9 +16,9 @@ public partial class FilterCenterPanel : UserControl
 {
     private FilterChoice? _selected;
     private bool _loaded;
-    private readonly ForegroundFilterWatcher? _watcher;
     private IReadOnlyList<FilterChoice> _choices = [];
     private string _category = "all";
+    private bool _showAll;
     private bool _rendering;
     private readonly Dictionary<string, string> _tempProfiles = new(StringComparer.OrdinalIgnoreCase);
 
@@ -43,29 +43,24 @@ public partial class FilterCenterPanel : UserControl
         "color" => Str.T("Str.FilterCategoryColor"),
         "game" => Str.T("Str.FilterCategoryGame"),
         "face" => Str.T("Str.FilterCategoryFace"),
+        "favorites" => Str.T("Str.FilterCategoryFavorites"),
         _ => Str.T("Str.FilterCategoryAll"),
     };
 
     /// <summary>分类固定顺序：室内柔和 → 压暗去曝 → 提亮通透 → 色彩风格 → 游戏专属 → 人物暗场。</summary>
     private static readonly string[] CategoryOrder = ["soft", "deexpose", "bright", "color", "game", "face"];
 
-    public FilterCenterPanel() : this(App.FilterWatcher) { }
-    internal FilterCenterPanel(ForegroundFilterWatcher? watcher)
+    public FilterCenterPanel()
     {
         InitializeComponent();
-        _watcher = watcher;
         // 记住上次用的分类：下次打开滤镜页直接落在那组，不用每次从「全部」翻。
         var saved = SettingsService.Current.FilterCategory;
         if (!string.IsNullOrWhiteSpace(saved)) _category = saved;
         Loaded += async (_, _) => { if (!_loaded) { _loaded = true; await LoadAsync(); } };
-        _ = _watcher;
     }
 
     private async Task LoadAsync()
     {
-        WatcherCheck.IsChecked = SettingsService.Current.FilterWatcherEnabled;
-        UpdateWatcherStatus();
-        RefreshRules();
         try
         {
             var library = await Task.Run(() => GameFilterLibrary.Presets);
@@ -126,7 +121,7 @@ public partial class FilterCenterPanel : UserControl
     {
         CategoryList.Children.Clear();
         var present = _choices.Select(c => c.Category).Where(c => !string.IsNullOrEmpty(c)).Distinct().ToList();
-        var keys = new List<string> { "all" };
+        var keys = new List<string> { "all", "favorites" };
         keys.AddRange(CategoryOrder.Where(present.Contains));
         keys.AddRange(present.Where(c => !CategoryOrder.Contains(c)).OrderBy(c => c, StringComparer.Ordinal));
         // 记住的分类可能因为自定义滤镜被删而消失，落回「全部」。
@@ -146,6 +141,7 @@ public partial class FilterCenterPanel : UserControl
             {
                 if (_category == key) return;
                 _category = key;
+                _showAll = false;
                 SaveCategory();
                 RenderPresetList();
             };
@@ -157,6 +153,7 @@ public partial class FilterCenterPanel : UserControl
     private void Search_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
         if (_rendering || PresetList is null) return;
+        _showAll = false;
         RenderPresetList();
     }
 
@@ -175,10 +172,19 @@ public partial class FilterCenterPanel : UserControl
         try
         {
             var keyword = (SearchBox?.Text ?? "").Trim();
-            foreach (var choice in _choices.Where(c => _category == "all" || c.Category == _category)
+            var ranked = FilterPreferenceStore.Rank(_choices.Select(c => new FilterPreferenceChoice(c.FileName)))
+                .Select((item, index) => (item.FileName, Index: index))
+                .ToDictionary(x => x.FileName, x => x.Index, StringComparer.OrdinalIgnoreCase);
+            var matches = _choices.Where(c => _category == "all"
+                         || _category == "favorites" && FilterPreferenceStore.IsFavorite(c.FileName)
+                         || c.Category == _category)
                          .Where(c => keyword.Length == 0
                              || c.Name.Contains(keyword, StringComparison.CurrentCultureIgnoreCase)
-                             || c.Fit.Contains(keyword, StringComparison.CurrentCultureIgnoreCase)))
+                             || c.Fit.Contains(keyword, StringComparison.CurrentCultureIgnoreCase))
+                         .OrderBy(c => ranked.GetValueOrDefault(c.FileName, int.MaxValue))
+                         .ToList();
+            var collapsed = !_showAll && keyword.Length == 0 && _category == "all" && matches.Count > 24;
+            foreach (var choice in collapsed ? matches.Take(24) : matches)
             {
                 var radio = new RadioButton
                 {
@@ -192,6 +198,14 @@ public partial class FilterCenterPanel : UserControl
                 radio.Checked += (_, _) => SelectChoice(choice);
                 PresetList.Children.Add(radio);
             }
+            ShowAllButton.Visibility = collapsed ? Visibility.Visible : Visibility.Collapsed;
+            ShowAllButton.Content = Str.T("Str.FilterShowAll", matches.Count);
+            EmptyFilterText.Text = PresetList.Children.Count == 0 && _category == "favorites"
+                ? Str.T("Str.FilterFavoriteEmpty") : "";
+            FavoriteButton.Content = _selected is { } selected && FilterPreferenceStore.IsFavorite(selected.FileName)
+                ? Str.T("Str.FilterFavoriteRemove", selected.Name)
+                : Str.T("Str.FilterFavoriteAdd", _selected?.Name ?? "—");
+            FavoriteButton.IsEnabled = _selected is not null;
         }
         finally { _rendering = false; }
     }
@@ -218,7 +232,24 @@ public partial class FilterCenterPanel : UserControl
             ? ""
             : string.IsNullOrWhiteSpace(choice.Avoid) ? "" : Str.T("Str.FilterAvoid", choice.Avoid);
         ApplyStatus.Text = "";
+        FavoriteButton.Content = FilterPreferenceStore.IsFavorite(choice.FileName)
+            ? Str.T("Str.FilterFavoriteRemove", choice.Name) : Str.T("Str.FilterFavoriteAdd", choice.Name);
+        FavoriteButton.IsEnabled = true;
+        FavoriteButton.SetValue(AutomationProperties.NameProperty, FavoriteButton.Content);
         ChoiceChanged?.Invoke(choice);
+    }
+
+    private void ShowAll_Click(object sender, RoutedEventArgs e)
+    {
+        _showAll = true;
+        RenderPresetList();
+    }
+
+    private void Favorite_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is null) return;
+        FilterPreferenceStore.ToggleFavorite(_selected.FileName);
+        RenderPresetList();
     }
 
     /// <summary>把 .icc 预设物化成临时文件，供色彩面板的预览与应用使用（同一条缓存）。</summary>
@@ -320,63 +351,4 @@ public partial class FilterCenterPanel : UserControl
     private static Func<double[], double, double[]> SaturationColumn(double saturation)
         => (primary, luminance) => Enumerable.Range(0, 3)
             .Select(i => primary[i] / saturation + (1 - 1 / saturation) * luminance * (StdRXyz[i] + StdGXyz[i] + StdBXyz[i])).ToArray();
-
-    private bool _suppressUiCheck;
-
-    private void Watcher_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiCheck || WatcherCheck.IsChecked is null) return;
-        var settings = SettingsService.Current;
-        var old = settings.FilterWatcherEnabled;
-        settings.FilterWatcherEnabled = WatcherCheck.IsChecked == true;
-        try
-        {
-            SettingsService.Save(settings);
-            App.FilterWatcher?.ApplySettings();
-            UpdateWatcherStatus();
-        }
-        catch (Exception ex)
-        {
-            settings.FilterWatcherEnabled = old;
-            _suppressUiCheck = true; WatcherCheck.IsChecked = old; _suppressUiCheck = false;
-            WatcherStatus.Text = PrivacyScrub.Sanitize(ex.Message);
-        }
-    }
-    private void UpdateWatcherStatus()
-    {
-        var status = App.FilterWatcher?.Status;
-        WatcherStatus.Text = status is { Enabled: true, ActiveProcess: { } active }
-            ? Str.T("Str.FilterWatcherActive", active, status.ActivePreset ?? "—")
-            : Str.T("Str.FilterWatcherIdle");
-    }
-
-    private void RefreshRules()
-    {
-        RuleList.ItemsSource = IccAppRuleStore.Rules
-            .Select(r => $"{r.ProcessName} → {r.PresetFileName}").ToList();
-    }
-
-    private void AddRule_Click(object sender, RoutedEventArgs e)
-    {
-        var process = RuleProcessBox.Text.Trim();
-        if (_selected is not { } choice) { ApplyStatus.Text = Str.T("Str.FilterPickFirst"); return; }
-        if (process.Length == 0) { ApplyStatus.Text = Str.T("Str.FilterRuleNeedProcess"); return; }
-        if (choice.Generated is not null) { ApplyStatus.Text = Str.T("Str.FilterRuleGenerated"); return; }
-        var rules = IccAppRuleStore.Rules.ToList();
-        rules.Add(new FilterAppRule(process, choice.FileName));
-        IccAppRuleStore.Save(rules);
-        RuleProcessBox.Text = "";
-        RefreshRules();
-        App.FilterWatcher?.ApplySettings();
-    }
-
-    private void RemoveRule_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string text }) return;
-        var process = text.Split(" → ")[0];
-        var rules = IccAppRuleStore.Rules.Where(r => !r.ProcessName.Equals(process, StringComparison.OrdinalIgnoreCase)).ToList();
-        IccAppRuleStore.Save(rules);
-        RefreshRules();
-        App.FilterWatcher?.ApplySettings();
-    }
 }

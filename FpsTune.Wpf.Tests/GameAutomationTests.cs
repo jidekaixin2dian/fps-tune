@@ -337,11 +337,11 @@ public sealed class GameAutomationTests : IDisposable
         Assert.Equal(presets[0].FileName, Assert.Single(IccAppRuleStore.Rules).PresetFileName);
         Assert.NotNull(IccAppRuleStore.Match("CS2.EXE"));
         Assert.Null(IccAppRuleStore.Match("other.exe"));
-        // 守护：前台命中 → 应用；离开 → 还原
+        // 守护：连续两次确认后应用；离开同样需确认，避免切窗抖动。
         var applied = new List<string?>(); var restores = 0;
         ForegroundFilterWatcher.ApplyOverride = _ => { applied.Add("apply"); return true; };
         ForegroundFilterWatcher.RestoreOverride = () => { restores++; return true; };
-        ForegroundFilterWatcher.ForegroundProcessOverride = () => "cs2";
+        ForegroundFilterWatcher.ForegroundProcessOverride = () => new("cs2");
         ForegroundFilterWatcher.DisplayOverride = () => "DISPLAY1";
         var settings = SettingsService.Current;
         var oldWatcher = settings.FilterWatcherEnabled;
@@ -349,10 +349,10 @@ public sealed class GameAutomationTests : IDisposable
         try
         {
             using var watcher = new ForegroundFilterWatcher();
-            watcher.Poll();
+            watcher.Poll(); watcher.Poll();
             Assert.True(watcher.Status.ActivePreset is not null);
-            ForegroundFilterWatcher.ForegroundProcessOverride = () => "explorer";
-            watcher.Poll();
+            ForegroundFilterWatcher.ForegroundProcessOverride = () => new("explorer");
+            watcher.Poll(); watcher.Poll();
             Assert.Null(watcher.Status.ActivePreset);
             Assert.Equal(1, restores);
         }

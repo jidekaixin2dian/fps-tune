@@ -45,6 +45,22 @@
                         </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                         <TextBlock x:Name="NoDrives" Text="{DynamicResource Str.MaintenanceNoDrives}" Style="{StaticResource MutedTextStyle}" Visibility="Collapsed"/>
                     </StackPanel></Border>
+<Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
+    <DockPanel><Button x:Name="DiskHealthRefresh" DockPanel.Dock="Right" Content="{DynamicResource Str.MaintenanceRefresh}" Style="{StaticResource SecondaryButtonStyle}" Click="DiskHealthRefresh_Click"/>
+        <StackPanel><TextBlock Text="{DynamicResource Str.DiskHealthTitle}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
+            <TextBlock Text="{DynamicResource Str.DiskHealthHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel></DockPanel>
+    <ItemsControl x:Name="DiskHealthList" Margin="0,14,0,0"><ItemsControl.ItemTemplate><DataTemplate>
+        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,0,0,8"><StackPanel>
+            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Column="1" Text="{Binding Size}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="16,0,0,0"/>
+            </Grid>
+            <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"/>
+            <TextBlock Text="{Binding Detail}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"/>
+        </StackPanel></Border>
+    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+    <TextBlock x:Name="DiskHealthStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+</StackPanel></Border>
 <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel><Grid Margin="0,10,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.MaintenanceTemporary}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                 <TextBlock Text="{DynamicResource Str.MaintenanceTemporaryHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>

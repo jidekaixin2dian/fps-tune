@@ -18,8 +18,26 @@ public partial class MaintenanceView : UserControl
         _background = background ?? new();
         InitializeComponent();
         InitializeMemory();
-        Loaded += async (_, _) => await RefreshSnapshotAsync();
+        Loaded += async (_, _) => { await RefreshSnapshotAsync(); await RefreshDiskHealthAsync(); };
     }
+    private bool _diskHealthBusy;
+    private sealed record DiskHealthView(string Name, string Size, string Summary, string Detail);
+    private async Task RefreshDiskHealthAsync()
+    {
+        if (_diskHealthBusy) return;
+        _diskHealthBusy = true; DiskHealthRefresh.IsEnabled = false;
+        DiskHealthStatus.Text = Str.T("Str.DiskHealthLoading");
+        try
+        {
+            var snapshot = await Task.Run(DiskHealthService.Read);
+            DiskHealthList.ItemsSource = snapshot.Disks.Select(d => new DiskHealthView(d.Name,
+                DiskHealthService.FormatSize(d.SizeBytes), d.Bus + " · " + d.Health, d.Detail)).ToList();
+            DiskHealthStatus.Text = snapshot.Error is { } error ? error : snapshot.Boundary;
+        }
+        catch (Exception ex) { DiskHealthStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        finally { _diskHealthBusy = false; DiskHealthRefresh.IsEnabled = true; }
+    }
+    private async void DiskHealthRefresh_Click(object sender, RoutedEventArgs e) => await RefreshDiskHealthAsync();
     private bool _snapshotBusy;
     private sealed record DriveRow(string Name, string Amount, double UsedPercent, bool LowSpace);
     private sealed record ProcessRow(string Name, int Pid, string Amount);
