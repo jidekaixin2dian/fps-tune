@@ -93,7 +93,7 @@ public static class CliHost
     }
 
     /// <summary>
-    /// 登录计划任务（FilterRestoreTask）的入口：只还原上次没还原干净的滤镜凭证，
+    /// 登录自启动项（FilterRestoreAutostart，HKCU Run 键）的入口：只还原上次没还原干净的滤镜凭证，
     /// 不启动界面、不套任何新滤镜。0 = 没有待还原的或已全部还原；1 = 有还原失败（凭证保留）。
     /// </summary>
     private static int RunFilterRestore(CliOptions options, TextWriter output)

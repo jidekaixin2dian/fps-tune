@@ -4,34 +4,34 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>
-/// 开机还原计划任务的同步契约：跟两个滤镜功能的开关走，该建建、该删删、幂等；
-/// 免安装（RootOverride）形态一律不注册。真实 schtasks 用注入替换，测试不写系统计划任务。
+/// 开机还原自启动项（HKCU Run 键）的同步契约：跟两个滤镜功能的开关走，该写就写、该删就删、
+/// 幂等、值带完整引号路径；免安装（RootOverride）形态一律不注册。注册表走注入，不写真注册表。
 /// 与其它动全局静态（RootOverride/SettingsService.Current）的测试互斥（BackupService serial）。
 /// </summary>
 [Collection("BackupService serial")]
-public sealed class FilterRestoreTaskTests : IDisposable
+public sealed class FilterRestoreAutostartTests : IDisposable
 {
-    private readonly List<string> _executed = new();
-    private bool _taskExists;
+    private string? _value;
+    private int _writes;
     private string? _oldRootOverride;
 
-    public FilterRestoreTaskTests()
+    public FilterRestoreAutostartTests()
     {
         _oldRootOverride = UserDataPaths.RootOverride;
         UserDataPaths.RootOverride = null; // Sync 对 RootOverride 短路，测试走完整路径
-        FilterRestoreTask.TaskExistsOverride = _ => _taskExists;
-        FilterRestoreTask.RunnerOverride = args => { _executed.Add(args); return 0; };
+        FilterRestoreAutostart.ValueReaderOverride = () => _value;
+        FilterRestoreAutostart.ValueWriterOverride = v => { _value = v; _writes++; };
     }
 
     public void Dispose()
     {
-        FilterRestoreTask.TaskExistsOverride = null;
-        FilterRestoreTask.RunnerOverride = null;
+        FilterRestoreAutostart.ValueReaderOverride = null;
+        FilterRestoreAutostart.ValueWriterOverride = null;
         UserDataPaths.RootOverride = _oldRootOverride;
     }
 
     [Fact]
-    public void Task_is_created_when_a_filter_feature_is_on_and_removed_when_both_off()
+    public void Autostart_is_written_when_a_filter_feature_is_on_and_removed_when_both_off()
     {
         var settings = SettingsService.Current;
         var oldPerApp = settings.FilterWatcherEnabled;
@@ -40,23 +40,22 @@ public sealed class FilterRestoreTaskTests : IDisposable
         {
             settings.FilterWatcherEnabled = true;
             settings.FullscreenPresetEnabled = false;
-            _taskExists = false;
-            FilterRestoreTask.Sync();
-            Assert.Single(_executed);
-            Assert.Contains("/Create", _executed[0]);
-            Assert.Contains(FilterRestoreTask.TaskName, _executed[0]);
-            Assert.Contains("-FilterRestore", _executed[0]);
+            _value = null; _writes = 0;
+            FilterRestoreAutostart.Sync();
+            Assert.Equal(1, _writes);
+            Assert.NotNull(_value);
+            Assert.EndsWith("-FilterRestore", _value);
+            Assert.StartsWith("\"", _value);
 
-            _taskExists = true;
-            _executed.Clear();
-            FilterRestoreTask.Sync(); // 已存在且该存在：幂等不动
-            Assert.Empty(_executed);
+            _writes = 0;
+            FilterRestoreAutostart.Sync(); // 已是目标值：幂等不动
+            Assert.Equal(0, _writes);
 
             settings.FilterWatcherEnabled = false;
             settings.FullscreenPresetEnabled = false;
-            FilterRestoreTask.Sync();
-            Assert.Single(_executed);
-            Assert.Contains("/Delete", _executed[0]);
+            FilterRestoreAutostart.Sync();
+            Assert.Equal(1, _writes);
+            Assert.Null(_value);
         }
         finally
         {
@@ -67,15 +66,16 @@ public sealed class FilterRestoreTaskTests : IDisposable
     }
 
     [Fact]
-    public void Portable_or_test_runs_never_register_the_task()
+    public void Portable_or_test_runs_never_register_the_autostart()
     {
         UserDataPaths.RootOverride = Path.Combine(Path.GetTempPath(), "fpstune-portable-" + Guid.NewGuid().ToString("N"));
         try
         {
             SettingsService.Current.FilterWatcherEnabled = true;
-            _taskExists = false;
-            FilterRestoreTask.Sync();
-            Assert.Empty(_executed);
+            _value = null; _writes = 0;
+            FilterRestoreAutostart.Sync();
+            Assert.Equal(0, _writes);
+            Assert.Null(_value);
         }
         finally
         {
@@ -93,12 +93,12 @@ public sealed class FilterRestoreTaskTests : IDisposable
         {
             settings.FilterWatcherEnabled = false;
             settings.FullscreenPresetEnabled = false;
-            Assert.False(FilterRestoreTask.ShouldExist());
+            Assert.False(FilterRestoreAutostart.ShouldExist());
             settings.FilterWatcherEnabled = true;
-            Assert.True(FilterRestoreTask.ShouldExist());
+            Assert.True(FilterRestoreAutostart.ShouldExist());
             settings.FilterWatcherEnabled = false;
             settings.FullscreenPresetEnabled = true;
-            Assert.True(FilterRestoreTask.ShouldExist());
+            Assert.True(FilterRestoreAutostart.ShouldExist());
         }
         finally
         {

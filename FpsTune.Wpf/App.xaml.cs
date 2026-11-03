@@ -212,8 +212,8 @@ public partial class App : Application
             // 全屏方案守护：先做一次崩溃残留还原，再开始轮询。
             _fullscreenPreset = new FullscreenPresetWatcher();
             _fullscreenPreset.Start();
-            // 开机还原计划任务随功能开关同步（该建建、该删删，幂等；失败不影响本程序）。
-            try { FilterRestoreTask.Sync(); }
+            // 开机还原自启动项随功能开关同步（该写写、该删删，幂等；失败不影响本程序）。
+            try { FilterRestoreAutostart.Sync(); }
             catch { /* 同步失败不影响启动 */ }
             ApplyCrosshairSettings();
             MemoryAutomation = new MemoryAutoCleanupService();
