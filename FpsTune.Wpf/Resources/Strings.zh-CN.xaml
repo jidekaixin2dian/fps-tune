@@ -334,6 +334,7 @@
     <s:String x:Key="Str.InstallLocationDesktop">桌面</s:String>
     <s:String x:Key="Str.InstallRepairStepUninstall">已补上卸载项</s:String>
     <s:String x:Key="Str.InstallRepairStepShortcut">已在{0}补上快捷方式</s:String>
+    <s:String x:Key="Str.InstallRepairUserStartMenu">已在用户开始菜单补上快捷方式（公共开始菜单需要管理员权限）</s:String>
     <s:String x:Key="Str.InstallRepairStepStray">安装目录里还有 {0} 个文件不在安装记录里；重新安装一次安装包可以让目录回到单文件形态</s:String>
     <s:String x:Key="Str.InstallRepairNothing">安装信息本来就是完整的</s:String>
     <s:String x:Key="Str.InstallRepairFailUninstall">卸载项写入失败：{0}</s:String>

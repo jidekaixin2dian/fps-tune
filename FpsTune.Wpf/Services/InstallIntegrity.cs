@@ -91,6 +91,13 @@ internal static class InstallIntegrity
     internal static string StartMenuShortcut => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs", AppName + ".lnk");
 
+    /// <summary>用户级开始菜单（无需管理员）。公共开始菜单写不进去时的回退位置。</summary>
+    internal static string UserStartMenuShortcut => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs", AppName + ".lnk");
+
+    /// <summary>开始菜单快捷方式的候选位置，优先全体用户（与安装器一致），回退当前用户。</summary>
+    internal static string[] StartMenuShortcutPaths => [StartMenuShortcut, UserStartMenuShortcut];
+
     internal static string DesktopShortcut => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory), AppName + ".lnk");
 
@@ -117,8 +124,8 @@ internal static class InstallIntegrity
                 string.IsNullOrWhiteSpace(uninstallString) ? "" : Scrub(uninstallString)));
         }
 
-        if (!ShortcutPointsHere(StartMenuShortcut))
-            details.Add(new InstallGapState(InstallGap.StartMenuShortcut, Scrub(StartMenuShortcut)));
+        if (!StartMenuShortcutPaths.Any(ShortcutPointsHere))
+            details.Add(new InstallGapState(InstallGap.StartMenuShortcut, Scrub(UserStartMenuShortcut)));
 
         if (!ShortcutPointsHere(DesktopShortcut))
             details.Add(new InstallGapState(InstallGap.DesktopShortcut, Scrub(DesktopShortcut)));
@@ -151,21 +158,41 @@ internal static class InstallIntegrity
             }
         }
 
-        foreach (var (gap, path, label) in new[]
-                 {
-                     (InstallGap.StartMenuShortcut, StartMenuShortcut, Str.T("Str.InstallLocationStartMenu")),
-                     (InstallGap.DesktopShortcut, DesktopShortcut, Str.T("Str.InstallLocationDesktop")),
-                 })
+        if (state.Gaps.Contains(InstallGap.StartMenuShortcut))
         {
-            if (!state.Gaps.Contains(gap)) continue;
+            // 公共开始菜单需要管理员；写不进去就落到用户级开始菜单——开始菜单搜索照样能找到。
+            var lastFailure = "";
+            var created = false;
+            foreach (var path in StartMenuShortcutPaths)
+            {
+                try
+                {
+                    CreateShortcut(path, state.ExecutablePath);
+                    steps.Add(path == StartMenuShortcut
+                        ? Str.T("Str.InstallRepairStepShortcut", Str.T("Str.InstallLocationStartMenu"))
+                        : Str.T("Str.InstallRepairUserStartMenu"));
+                    created = true;
+                    break;
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException or COMException)
+                {
+                    lastFailure = ex.Message;
+                }
+            }
+            if (!created)
+                failures.Add(Str.T("Str.InstallRepairFailShortcut", Str.T("Str.InstallLocationStartMenu"), lastFailure));
+        }
+
+        if (state.Gaps.Contains(InstallGap.DesktopShortcut))
+        {
             try
             {
-                CreateShortcut(path, state.ExecutablePath);
-                steps.Add(Str.T("Str.InstallRepairStepShortcut", label));
+                CreateShortcut(DesktopShortcut, state.ExecutablePath);
+                steps.Add(Str.T("Str.InstallRepairStepShortcut", Str.T("Str.InstallLocationDesktop")));
             }
             catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException or COMException)
             {
-                failures.Add(Str.T("Str.InstallRepairFailShortcut", label, ex.Message));
+                failures.Add(Str.T("Str.InstallRepairFailShortcut", Str.T("Str.InstallLocationDesktop"), ex.Message));
             }
         }
 

@@ -131,6 +131,30 @@ public sealed class InstallIntegrityTests : IDisposable
     }
 
     [Fact]
+    public void Start_menu_shortcut_falls_back_to_the_user_start_menu_without_admin_rights()
+    {
+        // 公共开始菜单（ProgramData）需要管理员，标准权限的修复写不进去：
+        // 回退到用户级开始菜单，开始菜单搜索照样能找到，不再整体报修复失败。
+        MarkInstalled();
+        InstallIntegrity.ShortcutCreateOverride = (path, target) =>
+        {
+            if (path == InstallIntegrity.StartMenuShortcut)
+                throw new UnauthorizedAccessException("模拟无管理员权限");
+            _created.Add(path);
+            _shortcuts[path] = (path, target);
+        };
+        var before = InstallIntegrity.Inspect()!;
+
+        var result = InstallIntegrity.Repair(before);
+
+        Assert.True(result.Ok);
+        Assert.True(_shortcuts.ContainsKey(InstallIntegrity.UserStartMenuShortcut));
+        Assert.True(_shortcuts.ContainsKey(InstallIntegrity.DesktopShortcut));
+        Assert.False(_shortcuts.ContainsKey(InstallIntegrity.StartMenuShortcut));
+        Assert.True(InstallIntegrity.Inspect()!.IsComplete);
+    }
+
+    [Fact]
     public void Repair_does_not_touch_shortcuts_that_already_exist()
     {
         MarkInstalled();

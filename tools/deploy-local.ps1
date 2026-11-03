@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 把已构建的产物部署到本机安装目录，并当场核对「安装信息」还是完整的。
 
@@ -130,12 +130,19 @@ foreach ($file in $sourceFiles) {
 }
 
 # 4) 多出来的文件挪进备份目录，而不是删掉：用户可能还在用旧版排障。
+#    目录同样要挪：旧版安装器留下的 amd64\ 这类遗留载荷，新卸载器并不认识。
 $strays = @(Get-ChildItem -LiteralPath $installFull -File -Force | Where-Object { $keep -notcontains $_.Name })
+$strayDirs = @(Get-ChildItem -LiteralPath $installFull -Directory -Force)
 $moved = @()
 foreach ($file in $strays) {
     $target = Join-Path $backupRoot ('stray-' + $file.Name)
     Move-Item -LiteralPath $file.FullName -Destination $target -Force
     $moved += $file.Name
+}
+foreach ($dir in $strayDirs) {
+    $target = Join-Path $backupRoot ('stray-dir-' + $dir.Name)
+    Move-Item -LiteralPath $dir.FullName -Destination $target -Force
+    $moved += ($dir.Name + '\')
 }
 if ($moved.Count -gt 0) {
     Write-Host ("移除安装记录之外的文件 {0} 个（已挪进备份）：{1}" -f $moved.Count, ($moved -join ', '))

@@ -334,6 +334,7 @@
     <s:String x:Key="Str.InstallLocationDesktop">desktop</s:String>
     <s:String x:Key="Str.InstallRepairStepUninstall">Restored the uninstall entry</s:String>
     <s:String x:Key="Str.InstallRepairStepShortcut">Created the {0} shortcut</s:String>
+    <s:String x:Key="Str.InstallRepairUserStartMenu">Created the shortcut in your user Start menu (the all-users Start menu requires administrator rights)</s:String>
     <s:String x:Key="Str.InstallRepairStepStray">{0} files in the install folder are not in the install record; run the Setup package again to return the folder to its single-file layout</s:String>
     <s:String x:Key="Str.InstallRepairNothing">Installation information was already complete</s:String>
     <s:String x:Key="Str.InstallRepairFailUninstall">Failed to write the uninstall entry: {0}</s:String>
