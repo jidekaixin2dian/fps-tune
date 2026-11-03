@@ -174,6 +174,13 @@ public partial class App : Application
                     try { Views.WhatsNewWindow.ShowIfPending(mainWindow); }
                     catch { /* 弹窗失败不影响主界面，下次启动还会再试。 */ }
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                // 安装信息被外部工具清掉时（卸载项没了、快捷方式没了），程序本体还能跑，
+                // 但开始菜单和应用列表里都找不到它。开机就问一次，修不修由用户决定。
+                mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try { PromptInstallRepair(); }
+                    catch { /* 询问失败不影响启动 */ }
+                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 if (!string.IsNullOrWhiteSpace(settingsWarning))
                 {
                     mainWindow.Dispatcher.BeginInvoke(new Action(() =>
@@ -210,6 +217,40 @@ public partial class App : Application
             AutomaticRecording.ApplySettings();
 
         }));
+    }
+
+    /// <summary>
+    /// 启动时只问一次：安装记录还在、但卸载项或快捷方式已被清掉时，给出修复选项。
+    /// 用户拒绝就记进设置，下次不再问；设置页「安装信息」仍可随时手动修。
+    /// </summary>
+    private static void PromptInstallRepair()
+    {
+        if (SettingsService.Current.InstallRepairDeclined) return;
+        var state = InstallIntegrity.Inspect();
+        if (state is null || state.IsComplete) return;
+        var labels = state.Details.Select(d => d.Gap switch
+        {
+            InstallGap.UninstallEntry => Str.T("Str.InstallGapUninstall"),
+            InstallGap.StartMenuShortcut => Str.T("Str.InstallGapStartMenu"),
+            InstallGap.DesktopShortcut => Str.T("Str.InstallGapDesktop"),
+            _ => "",
+        }).Where(s => s.Length > 0).ToArray();
+        if (labels.Length == 0) return; // 只剩「目录里有额外文件」不打扰用户
+
+        var proceed = DialogService.Confirm(
+            Str.T("Str.InstallRepairTitle"),
+            Str.T("Str.InstallRepairBody") + "\n\n" + string.Join("\n", labels),
+            confirmText: Str.T("Str.InstallRepair"),
+            cancelText: Str.T("Str.InstallRepairLater"));
+        if (!proceed)
+        {
+            SettingsService.Current.InstallRepairDeclined = true;
+            SettingsService.Save(SettingsService.Current);
+            return;
+        }
+        var result = InstallIntegrity.Repair(state);
+        if (result.Ok) DialogService.Info(Str.T("Str.InstallInfoTitle"), Str.T("Str.InstallRepairOk") + "\n" + string.Join("\n", result.Steps));
+        else DialogService.Warning(Str.T("Str.InstallRepairTitle"), Str.T("Str.InstallRepairFailed", result.Summary));
     }
 
     protected override void OnExit(ExitEventArgs e)

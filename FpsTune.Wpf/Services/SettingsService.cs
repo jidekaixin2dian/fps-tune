@@ -91,6 +91,9 @@ public sealed class AppSettings
     public double CrosshairOpacity { get; set; } = 90;
     public bool CrosshairAdaptiveHide { get; set; } = true;
 
+    // 安装信息被外部工具清掉时开机问过一次「要不要补回来」；用户说以后再说就不再打扰。
+    public bool InstallRepairDeclined { get; set; }
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||

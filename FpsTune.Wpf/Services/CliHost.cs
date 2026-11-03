@@ -15,7 +15,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "Version", "License", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "InstallCheck", "InstallRepair", "Version", "License", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -73,6 +73,8 @@ public static class CliHost
                 "ListRestore" => RunListRestore(options, output),
                 "Experiment" => RunExperiment(options, output),
                 "DpcLatency" => RunDpcLatency(options, output),
+                "InstallCheck" => RunInstallCheck(options, output),
+                "InstallRepair" => RunInstallRepair(options, output),
                 _ => RunHelp(output),
             };
         }
@@ -388,6 +390,56 @@ public static class CliHost
         return report.Ok ? 0 : 1;
     }
 
+    /// <summary>安装信息自检（只读）。部署脚本用它核对「装着的这份」有没有被弄成孤儿目录。</summary>
+    private static int RunInstallCheck(CliOptions options, TextWriter output)
+    {
+        var state = InstallIntegrity.Inspect();
+        if (state is null)
+        {
+            if (options.Json) output.WriteLine("{\"managed\":false}");
+            else output.WriteLine("免安装运行（目录里没有 unins000.dat），没有安装信息可查。");
+            return 0;
+        }
+
+        if (options.Json)
+        {
+            var payload = new
+            {
+                managed = true,
+                installDirectory = state.InstallDirectory,
+                executable = state.ExecutablePath,
+                complete = state.IsComplete,
+                gaps = state.Details.Select(d => new { gap = d.Gap.ToString(), detail = d.Detail, strayCount = d.StrayCount }),
+            };
+            output.WriteLine(JsonSerializer.Serialize(payload));
+        }
+        else
+        {
+            output.WriteLine($"安装目录: {state.InstallDirectory}");
+            output.WriteLine(state.IsComplete ? "安装信息: 完整" : "安装信息: 缺失 " + string.Join("、", state.Details.Select(d => d.Gap)));
+        }
+        return state.IsComplete ? 0 : 2;
+    }
+
+    private static int RunInstallRepair(CliOptions options, TextWriter output)
+    {
+        var state = InstallIntegrity.Inspect();
+        if (state is null)
+        {
+            if (!options.Json) output.WriteLine("免安装运行，没有需要修复的安装信息。");
+            return 0;
+        }
+        var result = InstallIntegrity.Repair(state);
+        if (options.Json)
+            output.WriteLine(JsonSerializer.Serialize(new { ok = result.Ok, summary = result.Summary, steps = result.Steps }));
+        else
+        {
+            foreach (var step in result.Steps) output.WriteLine("- " + step);
+            if (!result.Ok) output.WriteLine("修复失败: " + result.Summary);
+        }
+        return result.Ok ? 0 : 1;
+    }
+
     private static void WriteUsage(TextWriter output)
     {
         var presets = string.Join("、", OptimizationCatalog.PresetNames);
@@ -403,6 +455,8 @@ public static class CliHost
               FpsTune.exe -ListRestore [-Json]
               FpsTune.exe -Experiment -Baseline | -Test -Group <group-1|group-2|group-3> | -Report [-Simulate] [-Duration <秒>] [-CsvPath <csv>] [-Json]
               FpsTune.exe -DpcLatency [-Duration <秒>] [-Out <json>] [-Json]
+              FpsTune.exe -InstallCheck [-Json]
+              FpsTune.exe -InstallRepair [-Json]
               FpsTune.exe -Help
 
             说明:
@@ -578,6 +632,8 @@ public static class CliHost
             "Restore" when options.PresetSpecified || hasGame || hasOut => "-Restore 只接受 -Items、-BackupFile 和 -Json",
             "ListRestore" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-ListRestore 只接受 -Json",
             "DpcLatency" when hasApplyOnly || hasGame || hasBackupFile => "-DpcLatency 只接受 -Duration、-Out 和 -Json",
+            "InstallCheck" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-InstallCheck 只接受 -Json",
+            "InstallRepair" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-InstallRepair 只接受 -Json",
             "Version" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Version 不接受额外参数",
             "License" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-License does not accept additional arguments",
             "Help" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Help 不接受额外参数",

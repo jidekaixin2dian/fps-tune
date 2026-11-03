@@ -552,6 +552,20 @@
             <TextBlock Text="{DynamicResource Str.UpdateHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="StartupUpdateCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.CheckUpdatesOnStartup}" Checked="StartupUpdate_Changed" Unchecked="StartupUpdate_Changed"/>
     </Grid>
+                    <Grid Style="{StaticResource SettingsRow}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="{DynamicResource Str.InstallInfoTitle}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+                            <TextBlock x:Name="InstallStateText" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                        </StackPanel>
+                        <Button x:Name="InstallRepairButton"
+                                Grid.Column="1"
+                                Content="{DynamicResource Str.InstallRepair}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                VerticalAlignment="Center" MinWidth="110"
+                                Visibility="Collapsed"
+                                Click="InstallRepair_Click"/>
+                    </Grid>
                     <TextBlock Text="{DynamicResource Str.ContactNote}"
                                Foreground="{DynamicResource WarningBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}" Margin="0,18,0,0"/>
                     <Expander Header="{DynamicResource Str.DisclaimerTitle}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" Margin="0,18,0,0">

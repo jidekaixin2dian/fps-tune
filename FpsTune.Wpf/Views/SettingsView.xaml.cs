@@ -221,6 +221,7 @@ public partial class SettingsView : UserControl
         _autoBindingsReady = true;
         _suppressUiEvents = false;
         RefreshAdminStatus();
+        RefreshInstallState();
         _ = RefreshAutoProfileDataAsync();
     }
 
@@ -738,6 +739,47 @@ public partial class SettingsView : UserControl
 
     private void AdminRestartButton_Click(object sender, RoutedEventArgs e)
         => AdminHelper.RestartAsAdministrator();
+
+    private void RefreshInstallState()
+    {
+        var state = InstallIntegrity.Inspect();
+        if (state is null)
+        {
+            InstallStateText.Text = Str.T("Str.InstallInfoPortable");
+            InstallRepairButton.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        InstallStateText.Text = state.IsComplete
+            ? Str.T("Str.InstallInfoOk")
+            : Str.T("Str.InstallInfoMissing", string.Join("\n", state.Details.Select(DescribeGap)));
+        InstallRepairButton.Visibility = state.IsComplete ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private static string DescribeGap(InstallGapState detail) => detail.Gap switch
+    {
+        InstallGap.UninstallEntry => Str.T("Str.InstallGapUninstall"),
+        InstallGap.StartMenuShortcut => Str.T("Str.InstallGapStartMenu"),
+        InstallGap.DesktopShortcut => Str.T("Str.InstallGapDesktop"),
+        InstallGap.StrayFiles => Str.T("Str.InstallGapStray", detail.StrayCount),
+        _ => "",
+    };
+
+    private void InstallRepair_Click(object sender, RoutedEventArgs e)
+    {
+        var state = InstallIntegrity.Inspect();
+        if (state is null)
+        {
+            RefreshInstallState();
+            return;
+        }
+        var result = InstallIntegrity.Repair(state);
+        RefreshInstallState();
+        if (result.Ok)
+            InstallStateText.Text = Str.T("Str.InstallRepairOk") + " " + string.Join("\n", result.Steps);
+        else
+            DialogService.Warning(Str.T("Str.InstallRepairTitle"), Str.T("Str.InstallRepairFailed", result.Summary));
+    }
 
     private static void OpenInExplorer(string path)
     {
