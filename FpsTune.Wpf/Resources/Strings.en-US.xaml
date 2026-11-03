@@ -1540,6 +1540,15 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewSplit">Original and filter comparison split</s:String>
     <s:String x:Key="Str.ColorPreviewChannelGame">In-game look</s:String>
     <s:String x:Key="Str.ColorPreviewChannelManaged">Color-managed apps</s:String>
+    <s:String x:Key="Str.SystemIccTitle">System color management</s:String>
+    <s:String x:Key="Str.SystemIccNone">No profile associated</s:String>
+    <s:String x:Key="Str.SystemIccHasRamp">with calibration ramp (changes the screen)</s:String>
+    <s:String x:Key="Str.SystemIccNoRamp">no calibration ramp (color-managed apps only)</s:String>
+    <s:String x:Key="Str.SystemIccLoadingOn">Windows calibration loading on</s:String>
+    <s:String x:Key="Str.SystemIccLoadingOff">Windows calibration loading off</s:String>
+    <s:String x:Key="Str.SystemIccApply">Write its ramp to the screen</s:String>
+    <s:String x:Key="Str.SystemIccRefresh">Reload</s:String>
+    <s:String x:Key="Str.SystemIccApplied">Applied the calibration ramp from "{0}".</s:String>
     <s:String x:Key="Str.ColorIccNoCalibration">This ICC has no calibration table (vcgt): it only affects color-managed apps, not games.</s:String>
     <s:String x:Key="Str.ColorFilterCurveApplied">Filter curve folded into the screen (visible in games)</s:String>
     <s:String x:Key="Str.ColorPreviewGameHint">In-game look</s:String>

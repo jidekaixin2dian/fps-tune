@@ -71,6 +71,17 @@
                 <StackPanel Margin="0,14,0,0">
                     <TextBlock Text="{DynamicResource Str.IccCard}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock x:Name="IccCurrentText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    <!-- Windows 设置里「颜色配置文件」磁贴只做关联：屏幕会不会变，取决于那个 ICC 里有没有 vcgt 校准表。 -->
+                    <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.SystemIccTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="SystemIccText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button x:Name="SystemIccApplyButton" Content="{DynamicResource Str.SystemIccApply}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="150" Margin="0,0,8,0" Click="SystemIccApply_Click"/>
+                                <Button x:Name="SystemIccRefreshButton" Content="{DynamicResource Str.SystemIccRefresh}" Style="{StaticResource GhostButtonStyle}" MinWidth="90" Click="SystemIccRefresh_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                     <StackPanel x:Name="IccSupportedPanel" Visibility="Collapsed" Margin="0,14,0,0">
                         <TextBlock Text="{DynamicResource Str.IccPresetLabel}" Style="{StaticResource MutedTextStyle}"/>
                         <ItemsControl Visibility="Collapsed" x:Name="IccPresetList" Margin="0,10,0,0">

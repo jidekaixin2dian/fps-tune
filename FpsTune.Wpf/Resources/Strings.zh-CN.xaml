@@ -1541,6 +1541,15 @@
     <s:String x:Key="Str.ColorIccMode">ICC + 画面参数</s:String>
     <s:String x:Key="Str.ColorRestoreAll">还原本屏色彩改动</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”和已调整的数字振动一起应用到选定显示器，并保存原值。</s:String>
+    <s:String x:Key="Str.SystemIccTitle">系统色彩管理</s:String>
+    <s:String x:Key="Str.SystemIccNone">没有关联配置文件</s:String>
+    <s:String x:Key="Str.SystemIccHasRamp">带校准表（会改变屏幕）</s:String>
+    <s:String x:Key="Str.SystemIccNoRamp">没有校准表（只对读色彩管理的程序生效）</s:String>
+    <s:String x:Key="Str.SystemIccLoadingOn">Windows 校准加载已开</s:String>
+    <s:String x:Key="Str.SystemIccLoadingOff">Windows 校准加载已关</s:String>
+    <s:String x:Key="Str.SystemIccApply">把它的校准表写进屏幕</s:String>
+    <s:String x:Key="Str.SystemIccRefresh">重新读取</s:String>
+    <s:String x:Key="Str.SystemIccApplied">已把「{0}」的校准表写进屏幕</s:String>
     <s:String x:Key="Str.ColorIccNoCalibration">这个 ICC 里没有校准表（vcgt），只能关联给读色彩管理的程序，游戏里看不到变化。</s:String>
     <s:String x:Key="Str.ColorFilterCurveApplied">滤镜曲线已并入屏幕（游戏可见）</s:String>
     <s:String x:Key="Str.ColorPreviewManagedHint">色彩管理效果</s:String>

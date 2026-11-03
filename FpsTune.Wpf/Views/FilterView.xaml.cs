@@ -495,6 +495,45 @@ public partial class FilterView : UserControl
 
         IccStateText.Text = _iccStatus ?? (state.Restorable ? Str.T("Str.IccOriginalSaved") : "");
         if (_iccStatus is null && state.BackupNotice is not null) IccStateText.Text = state.BackupNotice;
+        RefreshSystemIcc();
+    }
+
+    /// <summary>Windows 当前给这块屏关联的 ICC：里面有没有校准表、系统会不会加载它。</summary>
+    private void RefreshSystemIcc()
+    {
+        try
+        {
+            var info = SystemColorProfile.Read();
+            var name = info.ProfileName ?? Str.T("Str.SystemIccNone");
+            var ramp = info.HasCalibration ? Str.T("Str.SystemIccHasRamp") : Str.T("Str.SystemIccNoRamp");
+            var loading = info.CalibrationLoadingEnabled ? Str.T("Str.SystemIccLoadingOn") : Str.T("Str.SystemIccLoadingOff");
+            SystemIccText.Text = $"{name} · {ramp} · {loading}";
+            SystemIccApplyButton.IsEnabled = !_busy && info.CanApply;
+        }
+        catch (Exception ex)
+        {
+            SystemIccText.Text = PrivacyScrub.Sanitize(ex.Message);
+            SystemIccApplyButton.IsEnabled = false;
+        }
+    }
+
+    private void SystemIccRefresh_Click(object sender, RoutedEventArgs e) => RefreshSystemIcc();
+
+    /// <summary>
+    /// 把 Windows 当前关联的那个 ICC 的校准表（vcgt）立刻写进屏幕。
+    /// Windows 设置里的「颜色配置文件」只做关联，校准表要等系统加载（登录/切换时）；这里直接写，等同于 1U 的 icc.gamma.apply。
+    /// </summary>
+    private void SystemIccApply_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || _displayIdentity is not { } identity) return;
+        var info = SystemColorProfile.Read();
+        if (!info.CanApply || info.Curves is null) { RefreshSystemIcc(); return; }
+        var curves = info.Curves; var name = info.ProfileName ?? "";
+        _ = IccApplyCore(() =>
+        {
+            ScreenColorService.Apply(new ScreenColorSettings(), identity, startNewBaselineOnDrift: true, filter: curves);
+            return Str.T("Str.SystemIccApplied", name);
+        });
     }
 
     private void SetIccPresetCardsEnabled(bool enabled) => IccPresetList.IsEnabled = enabled;
