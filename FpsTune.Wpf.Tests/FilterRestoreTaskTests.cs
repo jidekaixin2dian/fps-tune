@@ -6,7 +6,9 @@ namespace FpsTune.Wpf.Tests;
 /// <summary>
 /// 开机还原计划任务的同步契约：跟两个滤镜功能的开关走，该建建、该删删、幂等；
 /// 免安装（RootOverride）形态一律不注册。真实 schtasks 用注入替换，测试不写系统计划任务。
+/// 与其它动全局静态（RootOverride/SettingsService.Current）的测试互斥（BackupService serial）。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class FilterRestoreTaskTests : IDisposable
 {
     private readonly List<string> _executed = new();
