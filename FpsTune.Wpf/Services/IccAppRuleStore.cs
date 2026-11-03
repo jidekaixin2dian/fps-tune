@@ -23,6 +23,7 @@ public sealed record AppRuleScreen(
             settings.Red, settings.Green, settings.Blue, settings.Highlight, settings.DarkBalance, settings.DarkBalanceEnabled);
 
     /// <summary>序列化回来的值可能被手改过：超出取值范围就不接受，让规则回落到预设默认。</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsValid
     {
         get { try { ToSettings().Validate(); return true; } catch (ArgumentOutOfRangeException) { return false; } }

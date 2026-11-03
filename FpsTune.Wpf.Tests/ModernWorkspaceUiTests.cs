@@ -543,6 +543,16 @@ public sealed class ModernWorkspaceUiTests
                 // 独立程序滤镜页不放截图对比：规则不该被一张大图挤到屏幕外。
                 Assert.Equal(Visibility.Collapsed, ((Border)color.FindName("PreviewPane")).Visibility);
                 Render(page, "filter-workspace-perapp-dark");
+                // 浅色主题 + 窄窗口（接近最小窗口）也要在位：这两张是给真机核对用的离屏渲染证据。
+                SettingsService.Current.ThemeMode = "light"; ThemeManager.SetMode("light");
+                DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0xF7, 0xF9, 0xFC));
+                window.UpdateLayout(); Render(page, "filter-workspace-perapp-light");
+                window.Width = 900; window.Height = 720; window.UpdateLayout();
+                Render(page, "filter-workspace-perapp-narrow");
+                window.Width = 1440; window.Height = 900;
+                SettingsService.Current.ThemeMode = "dark"; ThemeManager.SetMode("dark");
+                DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == Color.FromRgb(0x0C, 0x10, 0x15));
+                window.UpdateLayout();
 
                 ((RadioButton)page.FindName("ModeScreen")).IsChecked = true;
                 Assert.Equal(Visibility.Visible, ((StackPanel)color.FindName("CurrentModePanel")).Visibility);
