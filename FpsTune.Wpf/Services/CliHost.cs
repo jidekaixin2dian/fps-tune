@@ -15,7 +15,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "InstallCheck", "InstallRepair", "Version", "License", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "InstallCheck", "InstallRepair", "FilterRestore", "Version", "License", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -75,6 +75,7 @@ public static class CliHost
                 "DpcLatency" => RunDpcLatency(options, output),
                 "InstallCheck" => RunInstallCheck(options, output),
                 "InstallRepair" => RunInstallRepair(options, output),
+                "FilterRestore" => RunFilterRestore(options, output),
                 _ => RunHelp(output),
             };
         }
@@ -89,6 +90,38 @@ public static class CliHost
     {
         output.WriteLine("FpsTune " + UpdateService.DisplayVersion);
         return 0;
+    }
+
+    /// <summary>
+    /// 登录计划任务（FilterRestoreTask）的入口：只还原上次没还原干净的滤镜凭证，
+    /// 不启动界面、不套任何新滤镜。0 = 没有待还原的或已全部还原；1 = 有还原失败（凭证保留）。
+    /// </summary>
+    private static int RunFilterRestore(CliOptions options, TextWriter output)
+    {
+        var restored = new List<string>();
+        var errors = new List<string>();
+        try
+        {
+            if (FullscreenPresetWatcher.RestoreOnStartup()) restored.Add("fullscreen");
+        }
+        catch (Exception ex) { errors.Add(PrivacyScrub.Sanitize(ex.Message)); }
+        try
+        {
+            if (PerAppFilterExecution.RestoreOnStartup()) restored.Add("perapp");
+        }
+        catch (Exception ex) { errors.Add(PrivacyScrub.Sanitize(ex.Message)); }
+
+        if (options.Json)
+        {
+            output.WriteLine(JsonSerializer.Serialize(new { restored, errors }));
+        }
+        else
+        {
+            if (restored.Count > 0) output.WriteLine("已还原: " + string.Join("、", restored));
+            else if (errors.Count == 0) output.WriteLine("没有待还原的滤镜。");
+            foreach (var error in errors) output.WriteLine("还原失败: " + error);
+        }
+        return errors.Count == 0 ? 0 : 1;
     }
 
     private static int RunLicense(TextWriter output)
@@ -457,6 +490,7 @@ public static class CliHost
               FpsTune.exe -DpcLatency [-Duration <秒>] [-Out <json>] [-Json]
               FpsTune.exe -InstallCheck [-Json]
               FpsTune.exe -InstallRepair [-Json]
+              FpsTune.exe -FilterRestore [-Json]
               FpsTune.exe -Help
 
             说明:
@@ -634,6 +668,7 @@ public static class CliHost
             "DpcLatency" when hasApplyOnly || hasGame || hasBackupFile => "-DpcLatency 只接受 -Duration、-Out 和 -Json",
             "InstallCheck" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-InstallCheck 只接受 -Json",
             "InstallRepair" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-InstallRepair 只接受 -Json",
+            "FilterRestore" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-FilterRestore 只接受 -Json",
             "Version" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Version 不接受额外参数",
             "License" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-License does not accept additional arguments",
             "Help" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-Help 不接受额外参数",
