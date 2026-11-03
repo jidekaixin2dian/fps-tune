@@ -1402,7 +1402,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorBackupLarge">Display backup is too large. The original file was preserved.</s:String>
     <s:String x:Key="Str.ColorBackupInvalid">Display backup is invalid. The original file was preserved.</s:String>
     <s:String x:Key="Str.ColorHdr">This display is currently in HDR mode. Turn HDR off before using SDR display adjustments.</s:String>
-    <s:String x:Key="Str.ColorChoose">Choose a preset or adjust the parameters, then click Apply.</s:String>
+    <s:String x:Key="Str.ColorChoose">Not applied</s:String>
     <s:String x:Key="Str.ColorOverwritten">Windows or another color application changed the display curve. Review it before continuing.</s:String>
     <s:String x:Key="Str.ColorVerified">The display curve was written and read back successfully.</s:String>
     <s:String x:Key="Str.ColorLength">Invalid display curve length.</s:String>
