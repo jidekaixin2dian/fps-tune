@@ -15,7 +15,7 @@
                     <Button x:Name="ThroughButton" Content="{DynamicResource Str.HudThrough}" Style="{StaticResource GhostButtonStyle}" Padding="8,0" Height="26" MinHeight="26" Click="Through_Click" Focusable="False"/>
                     <Button x:Name="CloseHudButton" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Background="{DynamicResource NotificationBackgroundBrush}" Padding="8,0" Height="26" MinHeight="26" Click="Close_Click" Focusable="False"/>
                 </StackPanel>
-                <TextBlock x:Name="LockedHint" Grid.Column="1" Text="{DynamicResource Str.HudLockedShort}" Visibility="Collapsed" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock x:Name="LockedHint" Grid.Column="1" Text="{DynamicResource Str.HudLockedShort}" Visibility="Collapsed" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center"/>
             </Grid>
             </Border>
             <UniformGrid x:Name="HudMetrics" Columns="2" Margin="4,6,4,2">

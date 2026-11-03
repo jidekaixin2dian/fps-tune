@@ -34,6 +34,7 @@ public partial class MainWindow
     {
         if (_loadingHudAppearance || HudTransparencyLabel is null || HudCenterOption is null || HudOptionsStatus is null) return;
         HudTransparencyLabel.Text = Str.T("Str.HudTransparency", HudTransparencySlider.Value.ToString("F0"));
+        System.Windows.Automation.AutomationProperties.SetName(HudTransparencySlider, HudTransparencyLabel.Text);
         HudController.PreviewAppearance(new(HudCompactOption.IsChecked == true ? "compact" : HudCardOption.IsChecked == true ? "card" : "strip", HudTransparencySlider.Value,
             HudLeftOption.IsChecked == true ? "top-left" : HudRightOption.IsChecked == true ? "top-right" : "top-center"));
         HudOptionsStatus.Text = "";

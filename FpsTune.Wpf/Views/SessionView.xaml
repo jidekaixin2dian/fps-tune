@@ -359,7 +359,7 @@
                                         <Style.Triggers><DataTrigger Binding="{Binding Trend}" Value="good"><Setter Property="Foreground" Value="{DynamicResource OkBrush}"/></DataTrigger><DataTrigger Binding="{Binding Trend}" Value="attention"><Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/></DataTrigger></Style.Triggers>
                                     </Style></TextBlock.Style>
                                 </TextBlock>
-                                <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="12" Margin="0,3,0,12" TextWrapping="Wrap"><Run Text="{DynamicResource Str.ComparisonRelativeShort}"/><Run Text="{Binding Relative, Mode=OneWay}"/></TextBlock>
+                                <TextBlock Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,3,0,12" TextWrapping="Wrap"><Run Text="{DynamicResource Str.ComparisonRelativeShort}"/><Run Text="{Binding Relative, Mode=OneWay}"/></TextBlock>
                                 <DockPanel><TextBlock Text="A" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding AVal}" HorizontalAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" FontSize="13"/></DockPanel>
                                 <ProgressBar Style="{StaticResource ThinMeterStyle}" Maximum="{Binding Maximum}" Value="{Binding AChartValue}" Foreground="{DynamicResource ChartSecondaryBrush}" Margin="0,6,0,10"/>
                                 <DockPanel><TextBlock Text="B" Style="{StaticResource MutedTextStyle}"/><TextBlock Text="{Binding BVal}" HorizontalAlignment="Right" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap" FontSize="13"/></DockPanel>

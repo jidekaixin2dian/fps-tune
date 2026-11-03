@@ -31,18 +31,18 @@
                     <StackPanel>
                         <DockPanel>
                             <Border x:Name="DpcVerdictBadge" DockPanel.Dock="Left" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="8,2" VerticalAlignment="Center">
-                                <TextBlock x:Name="DpcVerdictText" Text="—" FontSize="12" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
+                                <TextBlock x:Name="DpcVerdictText" Text="—" FontSize="13" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
                             </Border>
                             <TextBlock x:Name="DpcMeasuredText" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </DockPanel>
                         <UniformGrid Columns="4" Margin="0,12,0,0">
-                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcCpuShare}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcCpuShare}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                                 <TextBlock x:Name="DpcCpuText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
-                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcMax}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcMax}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                                 <TextBlock x:Name="DpcMaxText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
-                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcIsrShare}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcIsrShare}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                                 <TextBlock x:Name="IsrCpuText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
-                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcSamples}" Style="{StaticResource MutedTextStyle}" FontSize="12"/>
+                            <StackPanel><TextBlock Text="{DynamicResource Str.DpcSamples}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
                                 <TextBlock x:Name="DpcSamplesText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
                         </UniformGrid>
                     </StackPanel>
@@ -51,23 +51,23 @@
                 <TextBlock Text="{DynamicResource Str.DpcDriversTitle}" Style="{StaticResource MutedTextStyle}" Margin="0,12,0,6"/>
                 <Grid Margin="0,0,0,4">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="86"/><ColumnDefinition Width="86"/><ColumnDefinition Width="66"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.DpcDriverModule}" Style="{StaticResource MutedTextStyle}" FontSize="11"/>
-                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.DpcDriverTotal}" Style="{StaticResource MutedTextStyle}" FontSize="11" HorizontalAlignment="Right"/>
-                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.DpcDriverMax}" Style="{StaticResource MutedTextStyle}" FontSize="11" HorizontalAlignment="Right"/>
-                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.DpcDriverCount}" Style="{StaticResource MutedTextStyle}" FontSize="11" HorizontalAlignment="Right"/>
+                    <TextBlock Text="{DynamicResource Str.DpcDriverModule}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                    <TextBlock Grid.Column="1" Text="{DynamicResource Str.DpcDriverTotal}" Style="{StaticResource MutedTextStyle}" FontSize="13" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="2" Text="{DynamicResource Str.DpcDriverMax}" Style="{StaticResource MutedTextStyle}" FontSize="13" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="3" Text="{DynamicResource Str.DpcDriverCount}" Style="{StaticResource MutedTextStyle}" FontSize="13" HorizontalAlignment="Right"/>
                 </Grid>
                 <ItemsControl x:Name="DpcDriversList">
                     <ItemsControl.ItemTemplate><DataTemplate>
                         <Grid Margin="0,2">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="86"/><ColumnDefinition Width="86"/><ColumnDefinition Width="66"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Module}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Grid.Column="1" Text="{Binding CombinedTotalMs, StringFormat={}{0:0.0} ms}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular"/>
-                            <TextBlock Grid.Column="2" Text="{Binding CombinedMaxMs, StringFormat={}{0:0.00} ms}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular"/>
-                            <TextBlock Grid.Column="3" Text="{Binding CombinedCount}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="12" HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular"/>
+                            <TextBlock Text="{Binding Module}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="1" Text="{Binding CombinedTotalMs, StringFormat={}{0:0.0} ms}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular"/>
+                            <TextBlock Grid.Column="2" Text="{Binding CombinedMaxMs, StringFormat={}{0:0.00} ms}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular"/>
+                            <TextBlock Grid.Column="3" Text="{Binding CombinedCount}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" HorizontalAlignment="Right" Typography.NumeralAlignment="Tabular"/>
                         </Grid>
                     </DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{DynamicResource Str.DpcDriverLimit}" Style="{StaticResource MutedTextStyle}" FontSize="11" Margin="0,6,0,0"/>
+                <TextBlock Text="{DynamicResource Str.DpcDriverLimit}" Style="{StaticResource MutedTextStyle}" FontSize="13" Margin="0,6,0,0"/>
             </StackPanel>
         </StackPanel>
     </Border>

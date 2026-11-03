@@ -342,6 +342,7 @@
     <s:String x:Key="Str.InstallRepairNoShellLink">The system shortcut component is not registered</s:String>
     <s:String x:Key="Str.InstallRepairNoShortcutObject">Cannot create the shortcut object</s:String>
     <s:String x:Key="Str.FilterWatcherRetryWait">Last write did not succeed; retrying automatically</s:String>
+    <s:String x:Key="Str.SessionStartFailed">Could not start recording: {0}</s:String>
     <s:String x:Key="Str.DlssOverrideNote">Override preset (applies to the currently located game; this override wins over an in-game upscaling choice)</s:String>
     <s:String x:Key="Str.PresetK">K preset (recommended)</s:String>
     <s:String x:Key="Str.PresetKDesc">New-generation model · widely used, stable</s:String>
@@ -1327,7 +1328,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AbGuideSteps" xml:space="preserve">1. 选择同一个游戏、分辨率、画质与固定场景，先完成基线采样。&#x0a;2. 按下方向导应用方案，再在相同场景完成对照采样。&#x0a;3. 查看两次结果，多测几轮后决定保留设置或还原。</s:String>
     <s:String x:Key="Str.FpsMetricsGuide">平均 FPS 看整体速度；1% Low 看较慢时刻，越高越顺畅；P99 是较慢帧的耗时（毫秒），越低越好。历史曲线的横轴是实验记录，纵轴是 FPS。</s:String>
     <s:String x:Key="Str.DisclaimerTitle">免责声明</s:String>
-    <s:String x:Key="Str.DisclaimerBody">性能分析基于本机采样与统计，可能受到游戏场景、后台负载、驱动与硬件差异影响。占用分析用于排查方向，单次差值与相关性不能保证优化收益。测试条件由用户填写；请在相同条件下复测。系统和驱动调整前请确认目标与影响，并保留原值备份。软件按许可证所述条件提供。</s:String>
+    <s:String x:Key="Str.DisclaimerBody">Performance analysis is based on local sampling and statistics and may be affected by the game scenario, background load, driver and hardware differences. Usage analysis is for troubleshooting direction; a single difference and correlation do not guarantee optimization gains. Test conditions are entered by the user; retest under the same conditions. Before adjusting the system or drivers, confirm the target and impact, and keep a backup of the original values. The GPU name change only affects the Windows device name, not the hardware identity or the GPU capabilities. Standby cache already counts as available memory; clearing it does not mean the same amount of usable memory or game performance gains. The software is provided under the terms of its license.</s:String>
     <s:String x:Key="Str.FrameLimitTitle">游戏帧率控制（NVIDIA）</s:String>
     <s:String x:Key="Str.FrameLimitIntro">优先使用游戏内限帧，选择能稳定达到的帧率；驱动限帧适合补充游戏缺少的选项。勾选本次要调整的项目。</s:String>
     <s:String x:Key="Str.FrameForeground">游戏帧率上限</s:String>

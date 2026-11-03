@@ -182,12 +182,12 @@ public partial class FilterView : UserControl
         var vib = default(VibranceState);
         var vibError = default(string);
         try { vib = DigitalVibranceService.GetState(displayIdentity); }
-        catch (Exception ex) { vibError = ex.Message; }
+        catch (Exception ex) { vibError = PrivacyScrub.Sanitize(ex.Message); }
 
         var icc = default(IccFilterService.IccState);
         var iccError = default(string);
         try { icc = IccFilterService.GetState(displayIdentity); }
-        catch (Exception ex) { iccError = ex.Message; }
+        catch (Exception ex) { iccError = PrivacyScrub.Sanitize(ex.Message); }
 
         return new ColorSnapshot(vib, vibError, icc, iccError);
     }
@@ -208,7 +208,7 @@ public partial class FilterView : UserControl
         IReadOnlyList<IccDisplayInfo> displays;
         string? displayError = null;
         try { displays = await Task.Run(DisplayTopology.GetDisplays); }
-        catch (Exception ex) { displays = []; displayError = ex.Message; }
+        catch (Exception ex) { displays = []; displayError = PrivacyScrub.Sanitize(ex.Message); }
         if (_busy || gen != _refreshGen) return;
         _displayIdentity ??= displays.FirstOrDefault(d => d.IsPrimary)?.Identity;
         _displaySyncing = true;
@@ -435,7 +435,7 @@ public partial class FilterView : UserControl
         }
         catch (Exception ex)
         {
-            _vibStatus = Str.T("Str.DisplayApplyFailed", ex.Message);
+            _vibStatus = Str.T("Str.DisplayApplyFailed", PrivacyScrub.Sanitize(ex.Message));
             DialogService.Warning(Str.T("Str.OperationFailed"), _vibStatus);
         }
         finally
@@ -462,7 +462,7 @@ public partial class FilterView : UserControl
         }
         catch (Exception ex)
         {
-            _vibStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
+            _vibStatus = Str.T("Str.DisplayRestoreFailed", PrivacyScrub.Sanitize(ex.Message));
             DialogService.Warning(Str.T("Str.OperationFailed"), _vibStatus);
         }
         finally
@@ -600,7 +600,7 @@ public partial class FilterView : UserControl
         }
         catch (Exception ex)
         {
-            _iccStatus = Str.T("Str.IccApplyFailed", ex.Message);
+            _iccStatus = Str.T("Str.IccApplyFailed", PrivacyScrub.Sanitize(ex.Message));
             DialogService.Warning(Str.T("Str.OperationFailed"), _iccStatus);
         }
         finally
@@ -632,7 +632,7 @@ public partial class FilterView : UserControl
         }
         catch (Exception ex)
         {
-            _iccStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
+            _iccStatus = Str.T("Str.DisplayRestoreFailed", PrivacyScrub.Sanitize(ex.Message));
             DialogService.Warning(Str.T("Str.OperationFailed"), _iccStatus);
         }
         finally

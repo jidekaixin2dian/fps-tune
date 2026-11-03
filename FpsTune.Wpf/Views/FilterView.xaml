@@ -53,6 +53,7 @@
                                    Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" MinWidth="64"/>
                         <Slider Grid.Column="1" x:Name="VibSlider" Minimum="0" Maximum="100" TickFrequency="5"
                                 IsSnapToTickEnabled="False" ValueChanged="VibSlider_Changed" Style="{StaticResource TuneSliderStyle}"
+                                AutomationProperties.Name="{DynamicResource Str.VibCard}"
                                 VerticalAlignment="Center" Margin="14,0,18,0"/>
                         <Button Grid.Column="2" x:Name="VibRecommendedButton" Content="{DynamicResource Str.VibRecommendedSet}"
                                 Style="{StaticResource SecondaryButtonStyle}" MinWidth="90" Padding="10,8" VerticalAlignment="Center"

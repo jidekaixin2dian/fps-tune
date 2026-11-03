@@ -232,10 +232,30 @@ public partial class SettingsView : UserControl
         var settings = SettingsService.Current;
         if (settings.ThemeMode == mode)
             return;
-        settings.ThemeMode = mode;
-        SettingsService.Save(settings);
+        var previous = settings.ThemeMode;
+        try
+        {
+            settings.ThemeMode = mode;
+            SettingsService.Save(settings);
+        }
+        catch (Exception ex)
+        {
+            settings.ThemeMode = previous;
+            WarnToggleFailed(Str.T("Str.SettingsAppearance"), ex);
+            _suppressUiEvents = true;
+            try
+            {
+                (previous == "light" ? ThemeLightRadio : previous == "system" ? ThemeSystemRadio : ThemeDarkRadio).IsChecked = true;
+            }
+            finally { _suppressUiEvents = false; }
+            return;
+        }
         ThemeManager.SetMode(mode);
     }
+
+    /// <summary>开关保存失败：弹窗说明，并把勾选态翻回去（界面显示的必须和真实保存的一致）。</summary>
+    private void WarnToggleFailed(string title, Exception ex)
+        => DialogService.Warning(title, Str.T("Str.SettingsSaveFailed", PrivacyScrub.Sanitize(ex.Message)));
 
     // ---------- 游戏路径 ----------
 
@@ -324,7 +344,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.StartupShort"), Str.T("Str.SettingsSaveFailed", ex.Message));
+            DialogService.Warning(Str.T("Str.StartupShort"), Str.T("Str.SettingsSaveFailed", PrivacyScrub.Sanitize(ex.Message)));
         }
     }
 
@@ -335,8 +355,19 @@ public partial class SettingsView : UserControl
         if (_suppressUiEvents)
             return;
         var s = SettingsService.Current;
-        s.MinimizeToTray = TrayCheck.IsChecked == true;
-        SettingsService.Save(s);
+        var previous = s.MinimizeToTray;
+        try
+        {
+            s.MinimizeToTray = TrayCheck.IsChecked == true;
+            SettingsService.Save(s);
+        }
+        catch (Exception ex)
+        {
+            s.MinimizeToTray = previous;
+            RollbackToggle(TrayCheck);
+            WarnToggleFailed(Str.T("Str.TrayShort"), ex);
+            return;
+        }
         TrayService.ApplySettings();
     }
 
@@ -352,7 +383,7 @@ public partial class SettingsView : UserControl
             _suppressUiEvents = true;
             CloseActionBox.SelectedIndex = previous switch { CloseBehavior.Tray => 1, CloseBehavior.Exit => 2, _ => 0 };
             _suppressUiEvents = false;
-            DialogService.Warning(Str.T("Str.CloseSettingTitle"), Str.T("Str.CloseRememberFailed") + "\n" + ex.Message);
+            DialogService.Warning(Str.T("Str.CloseSettingTitle"), Str.T("Str.CloseRememberFailed") + "\n" + PrivacyScrub.Sanitize(ex.Message));
         }
     }
 
@@ -361,16 +392,38 @@ public partial class SettingsView : UserControl
         if (_suppressUiEvents)
             return;
         var s = SettingsService.Current;
-        s.HotkeyEnabled = HotkeyCheck.IsChecked == true;
-        SettingsService.Save(s);
+        var previous = s.HotkeyEnabled;
+        try
+        {
+            s.HotkeyEnabled = HotkeyCheck.IsChecked == true;
+            SettingsService.Save(s);
+        }
+        catch (Exception ex)
+        {
+            s.HotkeyEnabled = previous;
+            RollbackToggle(HotkeyCheck);
+            WarnToggleFailed(Str.T("Str.HotkeyShort"), ex);
+            return;
+        }
         (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
     }
 
     private void StartupUpdate_Changed(object sender, RoutedEventArgs e)
     {
         if (_suppressUiEvents) return;
-        SettingsService.Current.CheckUpdatesOnStartup = StartupUpdateCheck.IsChecked == true;
-        SettingsService.Save(SettingsService.Current);
+        var settings = SettingsService.Current;
+        var previous = settings.CheckUpdatesOnStartup;
+        try
+        {
+            settings.CheckUpdatesOnStartup = StartupUpdateCheck.IsChecked == true;
+            SettingsService.Save(settings);
+        }
+        catch (Exception ex)
+        {
+            settings.CheckUpdatesOnStartup = previous;
+            RollbackToggle(StartupUpdateCheck);
+            WarnToggleFailed(Str.T("Str.CheckUpdatesOnStartup"), ex);
+        }
     }
 
     private void NotifySetting_Changed(object sender, RoutedEventArgs e)
@@ -378,8 +431,18 @@ public partial class SettingsView : UserControl
         if (_suppressUiEvents)
             return;
         var s = SettingsService.Current;
-        s.NotifyOnComplete = NotifyCheck.IsChecked == true;
-        SettingsService.Save(s);
+        var previous = s.NotifyOnComplete;
+        try
+        {
+            s.NotifyOnComplete = NotifyCheck.IsChecked == true;
+            SettingsService.Save(s);
+        }
+        catch (Exception ex)
+        {
+            s.NotifyOnComplete = previous;
+            RollbackToggle(NotifyCheck);
+            WarnToggleFailed(Str.T("Str.NotifyShort"), ex);
+        }
     }
 
     private void LowSpecSetting_Changed(object sender, RoutedEventArgs e)
@@ -387,12 +450,31 @@ public partial class SettingsView : UserControl
         if (_suppressUiEvents)
             return;
         var s = SettingsService.Current;
-        s.LowSpecMode = LowSpecCheck.IsChecked == true;
-        SettingsService.Save(s);
+        var previous = s.LowSpecMode;
+        try
+        {
+            s.LowSpecMode = LowSpecCheck.IsChecked == true;
+            SettingsService.Save(s);
+        }
+        catch (Exception ex)
+        {
+            s.LowSpecMode = previous;
+            RollbackToggle(LowSpecCheck);
+            WarnToggleFailed(Str.T("Str.LowSpecShort"), ex);
+            return;
+        }
         UiPerformance.LowSpec = s.LowSpecMode;
         App.LiveMetrics.SetInterval(TimeSpan.FromSeconds(s.LowSpecMode ? 3 : 1));
         // 重算卡片阴影等资源
         ThemeManager.SetMode(s.ThemeMode);
+    }
+
+    /// <summary>开关保存失败时把勾选态翻回去；_suppressUiEvents 防止回滚触发再保存。</summary>
+    private void RollbackToggle(System.Windows.Controls.Primitives.ToggleButton toggle)
+    {
+        _suppressUiEvents = true;
+        try { toggle.IsChecked = !toggle.IsChecked; }
+        finally { _suppressUiEvents = false; }
     }
 
     // ---------- 按游戏自动应用 ----------
@@ -429,7 +511,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            SetAutoProfileStatus(Str.T("Str.SettingsScanFailed", ex.Message), warning: true);
+            SetAutoProfileStatus(Str.T("Str.SettingsScanFailed", PrivacyScrub.Sanitize(ex.Message)), warning: true);
         }
     }
 
@@ -601,7 +683,7 @@ public partial class SettingsView : UserControl
             _suppressUiEvents = true;
             AutoProfileCheck.IsChecked = oldValue;
             _suppressUiEvents = false;
-            SetAutoProfileStatus(Str.T("Str.SettingsAutoApplySaveFailed", ex.Message), warning: true);
+            SetAutoProfileStatus(Str.T("Str.SettingsAutoApplySaveFailed", PrivacyScrub.Sanitize(ex.Message)), warning: true);
         }
     }
 
@@ -654,7 +736,7 @@ public partial class SettingsView : UserControl
             AutoAffinityCheck.IsChecked = oldAffinity;
             _suppressUiEvents = false;
             // 保存失败必须说一声：前面三个勾选框会被静默弹回，否则用户以为设置已经生效
-            SetAutoSessionStatus(Str.T("Str.AutoSessionSaveFailed", ex.Message), warning: true);
+            SetAutoSessionStatus(Str.T("Str.AutoSessionSaveFailed", PrivacyScrub.Sanitize(ex.Message)), warning: true);
         }
     }
 
@@ -695,7 +777,7 @@ public partial class SettingsView : UserControl
         catch (Exception ex)
         {
             settings.AutoProfileBindings = oldBindings;
-            error = ex.Message;
+            error = PrivacyScrub.Sanitize(ex.Message);
             return false;
         }
     }
@@ -790,7 +872,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.OpenFolder"), Str.T("Str.SettingsOpenFailed", ex.Message));
+            DialogService.Warning(Str.T("Str.OpenFolder"), Str.T("Str.SettingsOpenFailed", PrivacyScrub.Sanitize(ex.Message)));
         }
     }
 
@@ -824,7 +906,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.DiagnosticReport"), Str.T("Str.DiagExportFailed", ex.Message));
+            DialogService.Warning(Str.T("Str.DiagnosticReport"), Str.T("Str.DiagExportFailed", PrivacyScrub.Sanitize(ex.Message)));
             return;
         }
 
@@ -903,7 +985,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            UpdateStatusText.Text = Str.T("Str.UpdateFailed", ex.Message);
+            UpdateStatusText.Text = Str.T("Str.UpdateFailed", PrivacyScrub.Sanitize(ex.Message));
         }
         finally
         {

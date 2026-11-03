@@ -231,11 +231,22 @@ public partial class SessionView : UserControl
             return;
         }
         _preparationHint = null;
-        if (!Service.Start(name, conditions) && !TryArchiveUnreadableSession(name, conditions))
+        try
         {
-            DialogService.Warning(
-                Str.T("Str.NavSession"),
-                Str.T("Str.SessionStartBusy", Path.Combine(PerformanceSessionStore.SessionsDir, "_active.json")));
+            if (!Service.Start(name, conditions) && !TryArchiveUnreadableSession(name, conditions))
+            {
+                DialogService.Warning(
+                    Str.T("Str.NavSession"),
+                    Str.T("Str.SessionStartBusy", Path.Combine(PerformanceSessionStore.SessionsDir, "_active.json")));
+                RefreshControlState();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Start 在开局准备运行中、条件非法等情况下会抛 InvalidOperationException/ArgumentException：
+            // 写状态行而不是全局错误框，用户看得到原因也能直接重试。
+            RunStateText.Text = Str.T("Str.SessionStartFailed", PrivacyScrub.Sanitize(ex.Message));
             RefreshControlState();
             return;
         }

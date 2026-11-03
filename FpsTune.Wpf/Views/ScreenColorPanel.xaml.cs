@@ -171,7 +171,7 @@ public partial class ScreenColorPanel : UserControl
             }
             if (generation == _previewGeneration) await ColorPreview.SetIccProfileAsync(profile);
         }
-        catch (Exception ex) { if (generation == _previewGeneration) ColorStatus.Text = ex.Message; }
+        catch (Exception ex) { if (generation == _previewGeneration) ColorStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
     internal void SetVibrance(int? value, bool restorable = false, bool draft = false)
     { _vibrance = value; _vibranceRestorable = restorable; _vibranceDirty = draft; if (draft) MarkDraft(); ColorPreview.SetVibrance(value ?? 50); Availability(); }
@@ -692,7 +692,7 @@ public partial class ScreenColorPanel : UserControl
         _busy = true; ++_generation; IsEnabled = false; BusyChanged?.Invoke(true);
         string result;
         try { result = await Task.Run(action); _dirty = false; }
-        catch (Exception ex) { result = ex.Message; DialogService.Warning(Str.T("Str.ColorIncomplete"), result); }
+        catch (Exception ex) { result = PrivacyScrub.Sanitize(ex.Message); DialogService.Warning(Str.T("Str.ColorIncomplete"), result); }
         finally { _busy = false; IsEnabled = true; }
         _lastOutcome = result; BusyChanged?.Invoke(false);
         if (_identity is not null) await RefreshFor(_identity);

@@ -169,6 +169,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="{DynamicResource Str.CurrentGame}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
                         <ComboBox Grid.Column="1" x:Name="GameSwitcher" Style="{StaticResource SelectComboBoxStyle}"
+                                  AutomationProperties.Name="{DynamicResource Str.CurrentGame}"
                                   Margin="8,0,0,0" MaxDropDownHeight="280"
                                   SelectionChanged="GameSwitcher_SelectionChanged"/>
                         <Button Grid.Column="2" Content="{DynamicResource Str.Rescan}"

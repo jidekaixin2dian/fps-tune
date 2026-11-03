@@ -91,7 +91,7 @@ public partial class ConsoleView : UserControl
             GameContextService.SwitchTo(profile.ExePath);
             await RefreshDataAsync();
         }
-        catch (Exception ex) { DialogService.Warning(Str.T("Str.GameLocateIncomplete"), ex.Message); }
+        catch (Exception ex) { DialogService.Warning(Str.T("Str.GameLocateIncomplete"), PrivacyScrub.Sanitize(ex.Message)); }
         finally { _locating = false; LocateDeltaButton.IsEnabled = true; RefreshGameSwitcher(); UpdatePreparation(); }
     }
 
