@@ -22,7 +22,7 @@ MainWindow.xaml.cs	2
 Services/AdminHelper.cs	2
 Services/AutoProfileActivityStore.cs	5
 Services/AutoProfileService.cs	33
-Services/CliHost.cs	61
+Services/CliHost.cs	66
 Services/DiagnosticReportExporter.cs	81
 Services/DialogService.cs	4
 Services/DigitalVibranceService.cs	8

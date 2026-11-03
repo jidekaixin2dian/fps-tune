@@ -265,7 +265,8 @@ public static class IccFilterService
         var backup = ReadForDisplay(display);
         if (backup is null)
         {
-            if (identity is null) throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+            // 备份不存在、或损坏刚被自愈清掉（HasRestorableBackup 只看文件存在，可能还来得及读到）：
+            // 如实说「没有可还原的」，而不是报「目标已变化」把用户吓住。
             return false;
         }
         if (display.AssociationSubKey != backup.AssociationSubKey)

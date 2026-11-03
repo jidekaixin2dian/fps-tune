@@ -41,7 +41,10 @@
     <!-- 0.3.7 = 关闭去向与托盘、标题栏状态、新矢量标识与游戏识别扩展（开发中） -->
     <!-- 0.4.1 = 大版本迭代：窗口化游戏优化、游戏高精度计时器 0.5ms（opt-in）、
          后台资源只读采样（CPU/磁盘/网络）；用户 2026-11-01 点名大版本并要求可见变化 -->
-    <VersionPrefix>0.4.1</VersionPrefix>
+    <!-- 0.4.2 = 全面审查修复轮：计时器探测失效、守护失败后不重试、坏备份锁死、
+         安装信息自检修复（InstallIntegrity + deploy-local）、方案热键 Ctrl+Alt+1/2/3、
+         托盘切方案、方案导出导入、开机还原计划任务、DRS 读回逐项报错（1U 对标轮） -->
+    <VersionPrefix>0.4.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>
