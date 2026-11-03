@@ -39,7 +39,7 @@ public sealed class ColorPreviewChannelUiTests
                 DlssFeedbackTests.PumpUntil(() => after.Source is not null && preview.RenderedRevision > 0);
 
                 Assert.Equal(PreviewChannelKind.Game, preview.Channel);
-                Assert.Equal(Str.T("Str.ColorPreviewGameHint"), status.Text);
+                Assert.Equal(string.Empty, status.Text); // 通道由单选钮标明，状态行不再重复
                 var neutral = Pixels((BitmapSource)after.Source!);
                 Assert.Equal(Pixels((BitmapSource)before.Source!), neutral);
 
@@ -80,7 +80,7 @@ public sealed class ColorPreviewChannelUiTests
                 ((RadioButton)preview.FindName("ChannelManaged")).IsChecked = true;
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > render);
                 Assert.Equal(PreviewChannelKind.ColorManaged, preview.Channel);
-                Assert.Equal(Str.T("Str.ColorPreviewManagedHint"), status.Text);
+                Assert.Equal(string.Empty, status.Text); // 通道由单选钮标明，状态行不再重复
                 var managed = Pixels((BitmapSource)after.Source!);
                 Assert.False(neutral.SequenceEqual(managed));
                 Assert.Equal(Pixels(ScreenColorPreview.Apply(IccConverted((BitmapSource)before.Source!, profile), new())), managed);

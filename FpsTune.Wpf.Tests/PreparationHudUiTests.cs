@@ -128,12 +128,12 @@ public sealed class PreparationHudUiTests
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > revision);
                 Assert.IsAssignableFrom<BitmapSource>(after.Source);
                 Assert.Equal(PreviewChannelKind.Game, preview.Channel);
-                Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                Assert.Equal(string.Empty, ((TextBlock)preview.FindName("PreviewStatus")).Text); // 通道由单选钮标明
                 revision = preview.RenderedRevision;
                 ((RadioButton)preview.FindName("ChannelManaged")).IsChecked = true;
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > revision);
                 Assert.Equal(PreviewChannelKind.ColorManaged, preview.Channel);
-                Assert.Equal(Str.T("Str.ColorPreviewManagedHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                Assert.Equal(string.Empty, ((TextBlock)preview.FindName("PreviewStatus")).Text); // 通道由单选钮标明
                 ((Slider)preview.FindName("SplitSlider")).Value = 27;
                 var samples = new List<object>();
                 for (var i = 0; i < 5; i++)

@@ -1531,7 +1531,6 @@
     <s:String x:Key="Str.ColorPreviewSplit">原图与滤镜对比分隔位置</s:String>
     <s:String x:Key="Str.ColorPreviewChannelGame">游戏内效果</s:String>
     <s:String x:Key="Str.ColorPreviewChannelManaged">色彩管理应用</s:String>
-    <s:String x:Key="Str.ColorPreviewGameHint">游戏内效果</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">无法载入图片，请选择有效的 PNG / JPG（不超过 20 MB、6400 万像素）。</s:String>
     <s:String x:Key="Str.ColorSelectIcc">请选择 ICC 预设或载入配置文件。</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">数字振动已应用：{0}%。</s:String>
@@ -1541,6 +1540,8 @@
     <s:String x:Key="Str.ColorIccMode">ICC + 画面参数</s:String>
     <s:String x:Key="Str.ColorRestoreAll">还原本屏色彩改动</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”和已调整的数字振动一起应用到选定显示器，并保存原值。</s:String>
+    <s:String x:Key="Str.ColorLiveTuning">实时调色</s:String>
+    <s:String x:Key="Str.ColorApplyBarTitle">按当前调色参数应用</s:String>
     <s:String x:Key="Str.SystemIccTitle">系统色彩管理</s:String>
     <s:String x:Key="Str.SystemIccNone">没有关联配置文件</s:String>
     <s:String x:Key="Str.SystemIccHasRamp">带校准表（会改变屏幕）</s:String>
@@ -1552,7 +1553,6 @@
     <s:String x:Key="Str.SystemIccApplied">已把「{0}」的校准表写进屏幕</s:String>
     <s:String x:Key="Str.ColorIccNoCalibration">这个 ICC 里没有校准表（vcgt），只能关联给读色彩管理的程序，游戏里看不到变化。</s:String>
     <s:String x:Key="Str.ColorFilterCurveApplied">滤镜曲线已并入屏幕（游戏可见）</s:String>
-    <s:String x:Key="Str.ColorPreviewManagedHint">色彩管理效果</s:String>
     <s:String x:Key="Str.ColorPreviewManagedEmpty">这个视图要有一条 ICC 滤镜，先在右侧滤镜列表里选一条。</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">饱和度为近似预览</s:String>
     <s:String x:Key="Str.ColorPreviewIccFailed">ICC 无法预览：{0}</s:String>

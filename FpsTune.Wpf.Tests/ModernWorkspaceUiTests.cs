@@ -355,7 +355,7 @@ public sealed class ModernWorkspaceUiTests
                     "换 ICC 预设后画面参数应当跟着变（预设就是一套调色）");
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 var gamePixels = RenderImage();
-                Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                Assert.Equal(string.Empty, ((TextBlock)preview.FindName("PreviewStatus")).Text); // 通道由单选钮标明
                 // 语义已改（2026-11-02）：游戏不读 ICC 关联，但滤镜的 TRC 曲线会折进 gamma ramp，
                 // 所以「游戏内效果」换预设必须变——这正是用户反馈「滤镜无效」要修的地方。
                 render = preview.RenderedRevision;
@@ -373,7 +373,7 @@ public sealed class ModernWorkspaceUiTests
                 brightness.Value = 10;
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 Assert.False(managedPixels.SequenceEqual(RenderImage()));
-                Assert.Equal(Str.T("Str.ColorPreviewManagedHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
+                Assert.Equal(string.Empty, ((TextBlock)preview.FindName("PreviewStatus")).Text); // 通道由单选钮标明
                 Assert.Equal(1, ((ComboBox)panel.FindName("ColorModeCombo")).SelectedIndex);
                 Assert.Equal(5, ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex);
                 foreach (var index in new[] { 0, 1 })
@@ -415,10 +415,11 @@ public sealed class ModernWorkspaceUiTests
                 // Viewbox 会把内部坐标一并缩放，TranslatePoint 不再适合算屏幕像素位置；
                 // 改用稳定的 24px 手柄宽度 + 上方 BeforeLayer clip 断言，视觉位置由真机截图复核。
                 Assert.Equal(24, track.Thumb.ActualWidth, 2);
+                // 1U 版式下窄窗口把预设列收起（宽度 0），调色区固定在第 3 行；宽屏恢复左列。
                 window.Width = 760; window.UpdateLayout();
-                Assert.Equal(1, Grid.GetRow((FrameworkElement)panel.FindName("ControlsPane")));
+                Assert.Equal(0d, ((ColumnDefinition)panel.FindName("PresetColumn")).Width.Value, 1);
                 window.Width = 2000; window.UpdateLayout();
-                Assert.Equal(0, Grid.GetRow((FrameworkElement)panel.FindName("ControlsPane")));
+                Assert.True(((ColumnDefinition)panel.FindName("PresetColumn")).Width.Value > 300);
                 Assert.True(panel.ActualWidth <= 1960);
                 Assert.Equal((double)source.PixelWidth / source.PixelHeight, comparison.ActualWidth / comparison.ActualHeight, 2);
                 Assert.False(((Button)panel.FindName("ColorApplyButton")).IsEnabled);

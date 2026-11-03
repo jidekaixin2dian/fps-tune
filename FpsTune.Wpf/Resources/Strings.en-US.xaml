@@ -1540,6 +1540,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewSplit">Original and filter comparison split</s:String>
     <s:String x:Key="Str.ColorPreviewChannelGame">In-game look</s:String>
     <s:String x:Key="Str.ColorPreviewChannelManaged">Color-managed apps</s:String>
+    <s:String x:Key="Str.ColorLiveTuning">Live tuning</s:String>
+    <s:String x:Key="Str.ColorApplyBarTitle">Apply current tuning</s:String>
     <s:String x:Key="Str.SystemIccTitle">System color management</s:String>
     <s:String x:Key="Str.SystemIccNone">No profile associated</s:String>
     <s:String x:Key="Str.SystemIccHasRamp">with calibration ramp (changes the screen)</s:String>
@@ -1551,7 +1553,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SystemIccApplied">Applied the calibration ramp from "{0}".</s:String>
     <s:String x:Key="Str.ColorIccNoCalibration">This ICC has no calibration table (vcgt): it only affects color-managed apps, not games.</s:String>
     <s:String x:Key="Str.ColorFilterCurveApplied">Filter curve folded into the screen (visible in games)</s:String>
-    <s:String x:Key="Str.ColorPreviewGameHint">In-game look</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">Cannot load image. Choose a valid PNG or JPG (up to 20 MB and 64 megapixels).</s:String>
     <s:String x:Key="Str.ColorSelectIcc">Select an ICC preset or load a profile.</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">Digital vibrance applied: {0}%.</s:String>
@@ -1561,7 +1562,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorIccMode">ICC + display parameters</s:String>
     <s:String x:Key="Str.ColorRestoreAll">Restore screen color changes</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">Apply {0} and edited vibrance together to the selected monitor, saving originals.</s:String>
-    <s:String x:Key="Str.ColorPreviewManagedHint">Color-managed look</s:String>
     <s:String x:Key="Str.ColorPreviewManagedEmpty">This view needs an ICC filter. Pick one in the filter list on the right.</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">saturation is approximate</s:String>
     <s:String x:Key="Str.ColorPreviewIccFailed">ICC preview failed: {0}</s:String>

@@ -336,13 +336,14 @@ public partial class ScreenColorPanel : UserControl
     }
     private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        // 常规窗口固定双栏：左侧实拍图不动，右侧唯一控制栏滚动。
-        // 极窄窗口才上下堆叠，避免把图片压到无法判断颜色。
-        // 右栏宽度按比例给（32%），只夹在 360–460：窗口和全屏下都把宽度让给实拍图。
+        // 1U 版式：常规窗口左列预设（340–420）、右列「上预览 + 下实时调色 + 底部应用栏」。
+        // 窄窗口把预设列收起成一列顶部滚动条，预览与调色在同一个滚动区里顺序排下去。
         var wide = e.NewSize.Width >= 980;
-        ControlsColumn.Width = wide ? new GridLength(Math.Clamp(e.NewSize.Width * 0.32, 360, 460)) : new GridLength(0);
-        Grid.SetColumn(ControlsPane, wide ? 1 : 0); Grid.SetRow(ControlsPane, wide ? 0 : 1);
-        PreviewPane.Margin = new Thickness(0, 0, wide ? 18 : 0, wide ? 0 : 16);
+        PresetColumn.Width = wide ? new GridLength(Math.Clamp(e.NewSize.Width * 0.26, 340, 420)) : new GridLength(0);
+        Grid.SetColumn(PresetPane, 0);
+        Grid.SetColumnSpan(PresetPane, wide ? 1 : 2);
+        PresetPane.Margin = new Thickness(0, 0, wide ? 16 : 0, wide ? 0 : 12);
+        PresetPane.Height = double.NaN;
     }
     private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; MarkDraft(); }
     private async void Apply_Click(object sender, RoutedEventArgs e)

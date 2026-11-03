@@ -212,13 +212,15 @@ public partial class ColorPreviewControl : UserControl
         ShowHint();
         RequestRender();
     }
+    /// <summary>状态行只放「当前选择的实际差异」（没有 ICC、振动不是 50%），不再重复通道名——
+    /// 通道已经由上面两个单选钮标明，重复一遍反而像多了一个标签。</summary>
     private void ShowHint()
     {
-        var text = Str.T(_channel == PreviewChannelKind.Game ? "Str.ColorPreviewGameHint" : "Str.ColorPreviewManagedHint");
+        var text = string.Empty;
         if (_channel == PreviewChannelKind.ColorManaged && _profile is null)
             text = Str.T("Str.ColorPreviewManagedEmpty");
         else if (_vibrance != 50)
-            text += " " + Str.T("Str.ColorPreviewVibranceHint");
+            text = Str.T("Str.ColorPreviewVibranceHint");
         PreviewStatus.Text = text;
     }
 

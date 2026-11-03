@@ -244,21 +244,21 @@ public sealed class StartupPolishUiTests
                 var window = new MainWindowStub(panel) { Width = 1100, Height = 820 };
                 app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
                 panel.UpdateLayout();
-                var controls = (ColumnDefinition)panel.FindName("ControlsColumn");
+                // 1U 版式：左列预设，右列「预览 + 实时调色」。预设列按 26% 夹在 340–420。
+                var presets = (ColumnDefinition)panel.FindName("PresetColumn");
                 var previewColumn = (ColumnDefinition)panel.FindName("PreviewColumn");
                 var workspace = (Grid)panel.FindName("WorkspaceGrid");
                 var viewbox = (FrameworkElement)FindAll<ColorPreviewControl>(panel).Single().FindName("ComparisonViewbox");
 
-                // 常规窗口：右栏按 32% 夹到下限 360，其余宽度全给实拍图。
-                Assert.Equal(360d, controls.Width.Value, 1);
-                Assert.True(previewColumn.ActualWidth > controls.Width.Value, $"左栏没有比右栏宽：{previewColumn.ActualWidth:0}");
+                Assert.Equal(340d, presets.Width.Value, 1);
+                Assert.True(previewColumn.ActualWidth > presets.Width.Value, $"预览列没有比预设列宽：{previewColumn.ActualWidth:0}");
                 Assert.True(viewbox.ActualWidth > 400, $"常规窗口下预览太小：{viewbox.ActualWidth:0}");
 
-                // 宽屏/全屏：工作区不再卡 1640，右栏夹到上限 460，其余归预览。
+                // 宽屏/全屏：工作区不再卡 1640，预设列夹到上限 420，其余归预览。
                 Assert.True(workspace.MaxWidth >= 2000, $"工作区最大宽度仍被卡在 {workspace.MaxWidth}");
                 panel.Width = 2000; panel.UpdateLayout();
-                Assert.Equal(460d, controls.Width.Value, 1);
-                Assert.True(previewColumn.ActualWidth > 1200, $"宽屏下左栏仍然偏窄：{previewColumn.ActualWidth:0}");
+                Assert.Equal(420d, presets.Width.Value, 1);
+                Assert.True(previewColumn.ActualWidth > 1200, $"宽屏下预览列仍然偏窄：{previewColumn.ActualWidth:0}");
             }
             finally { app.MainWindow.Content = null; }
         });
