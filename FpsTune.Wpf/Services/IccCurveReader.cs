@@ -99,14 +99,28 @@ public static class IccCurveReader
             var type = ReadUInt32(data, offset + 8);
             if (type != 0) return null;
 
-            // 16 字节头：channels/entries 明确写出来，数据是交织三元组。
+            // 16 字节头：channels/entries 明确写出来，数据按通道平铺（真实文件的实测布局）。
             if (size >= 16)
             {
                 var channelsField = ReadUInt16(data, offset + 12);
                 var entriesField = ReadUInt16(data, offset + 14);
-                if (channelsField == 3 && entriesField is >= 2 and <= 1024
-                    && offset + 16L + entriesField * 3L * 2L <= data.Length + 2)
-                    return ReadInterleaved(data, offset + 16, entriesField);
+                if (channelsField == 3 && entriesField is >= 2 and <= 1024)
+                {
+                    // 声明 256、实际每通道 257 条，个别文件的头/尾还会错开一两个采样（实测厂商文件就是这样）。
+                    // 与其猜布局，不如把「每通道条数 × 起始偏移」的几种候选都试一遍，取第一条能通过校验的。
+                    var available = (size - 16) / 2;
+                    foreach (var plane in new[] { (available + 2) / 3, available / 3 })
+                    {
+                        if (plane < 2) continue;
+                        foreach (var delta in new[] { 0, -1, 1 })
+                        {
+                            var start = offset + 16 + delta * 2;
+                            if (start < offset || start + (plane * 3L * 2L) > data.Length + 4) continue;
+                            var candidate = ReadPlanar(data, start, plane, available - delta);
+                            if (candidate is not null) return candidate;
+                        }
+                    }
+                }
             }
 
             // 老布局：12 字节头 + 按通道平铺。
@@ -125,15 +139,18 @@ public static class IccCurveReader
         return null;
     }
 
-    /// <summary>交织三元组：第 i 个三元组是 (R,G,B) 的第 i 个采样。</summary>
-    private static double[][]? ReadInterleaved(byte[] data, int start, int entries)
+    /// <summary>按通道平铺：第 c 个通道占 [c*plane, (c+1)*plane) 条，越界的采样夹到最后一个可用值。</summary>
+    private static double[][]? ReadPlanar(byte[] data, int start, int plane, int available)
     {
-        var channels = new[] { new double[entries], new double[entries], new double[entries] };
-        for (var i = 0; i < entries; i++)
-            for (var c = 0; c < 3; c++)
-                channels[c][i] = ReadUInt16(data, start + (i * 3 + c) * 2) / 65535d;
-        if (!Validate(channels.Select(SampleTable).ToArray())) return null;
-        return channels.Select(SampleTable).ToArray();
+        var channels = new[] { new double[plane], new double[plane], new double[plane] };
+        for (var c = 0; c < 3; c++)
+        for (var i = 0; i < plane; i++)
+        {
+            var index = Math.Min(c * plane + i, available - 1);
+            channels[c][i] = ReadUInt16(data, start + index * 2) / 65535d;
+        }
+        var sampled = channels.Select(SampleTable).ToArray();
+        return Validate(sampled) ? sampled : null;
     }
 
     /// <summary>端点与单调性：量化 + 真实测量会有极小回折，容差按 1/255 的十分之一给。</summary>

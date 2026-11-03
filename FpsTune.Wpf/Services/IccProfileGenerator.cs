@@ -316,8 +316,8 @@ public static class IccProfileGenerator
     private static byte[] VcgtTag(ScreenColorSettings settings)
     {
         // 与 Windows / 1U 的真实文件同布局：16 字节头（sig + reserved + type + channels + entries），
-        // 后面 256 个「R,G,B 交织」三元组 → 16 + 1536 = 1552 字节。
-        const int entries = 256;
+        // 后面按通道平铺（实测真实文件每通道 257 条）→ 16 + 3×257×2 = 1558 字节。
+        const int entries = 257;
         var gains = new[] { settings.Red, settings.Green, settings.Blue };
         using var ms = new MemoryStream();
         var bw = new BinaryWriter(ms);
@@ -326,8 +326,8 @@ public static class IccProfileGenerator
         bw.Write(Be32(0));              // type 0 = 表格型
         bw.Write(Be16(3));              // 3 个通道
         bw.Write(Be16(entries));
-        for (var i = 0; i < entries; i++)
         for (var c = 0; c < 3; c++)
+        for (var i = 0; i < entries; i++)
         {
             var x = i / (entries - 1d);
             var y = Math.Clamp(ScreenColorService.MapTone(x, settings, gains[c]), 0, 1);
