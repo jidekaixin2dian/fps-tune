@@ -208,14 +208,20 @@ public partial class PerAppFilterPanel : UserControl
             var rules = IccAppRuleStore.Rules;
             var games = await Task.Run(() => PerAppGameCollector.Scan(rules, refresh: true));
             _scanned = true;
-            if (showCandidates) ShowCandidates(games);
+            if (showCandidates)
+            {
+                ShowCandidates(games);
+                RuleStatus.Text = CandidateTitle.Text;
+            }
             else
             {
                 var added = PerAppGameCollector.Collect(games, CurrentTemplate());
                 RefreshRules();
-                RefreshAutoBlock();
                 _autoStatus = added > 0 ? Str.T("Str.FilterAppsCollected", added) : Str.T("Str.FilterAppsNothingNew");
                 RefreshAutoBlock();
+                // 收编完把候选列表的状态一起刷新，否则它还写着「还没收录」，点添加只会提示已在列表里。
+                if (CandidateBox.Visibility == Visibility.Visible)
+                    ShowCandidates(PerAppGameCollector.Scan(IccAppRuleStore.Rules));
                 RuleStatus.Text = _autoStatus;
                 _watcher?.ApplySettings();
             }
@@ -235,7 +241,6 @@ public partial class PerAppFilterPanel : UserControl
         CandidateList.ItemsSource = games.Select(game => new CandidateRow(game.Name, game.ExePath, game.Tracked)).ToList();
         CandidateTitle.Text = Str.T("Str.FilterAppsScanResult", games.Count, games.Count(game => !game.Tracked));
         CandidateBox.Visibility = games.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-        RuleStatus.Text = CandidateTitle.Text;
     }
 
     private void CandidateAdd_Click(object sender, RoutedEventArgs e)
@@ -261,7 +266,7 @@ public partial class PerAppFilterPanel : UserControl
         if (dialog.ShowDialog() != true) return;
         try
         {
-            var path = IccAppRuleStore.NormalizePath(dialog.FileName);
+            var path = IccAppRuleStore.DisplayPath(dialog.FileName);
             if (path.Length == 0) { RuleStatus.Text = Str.T("Str.FilterRuleNeedProcess"); return; }
             if (IccAppRuleStore.Rules.Any(r => r.Key == new FilterAppRule(Path.GetFileName(path), "", null, false, path,
                     "", true, FilterAppMatchKind.Path).Key))

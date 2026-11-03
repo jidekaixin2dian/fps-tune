@@ -49,10 +49,12 @@ public static class PerAppGameCollector
         {
             if (game.Tracked) continue;
             if (rules.Count >= IccAppRuleStore.MaxRules) break;
-            var path = IccAppRuleStore.NormalizePath(game.ExePath);
-            if (path.Length == 0) continue;
-            if (rules.Any(r => r.Key == BuildRule(game.Name, path, template).Key)) continue;
-            rules.Add(BuildRule(game.Name, path, template));
+            // 存原始大小写的完整路径（界面要显示它），匹配时再按大小写不敏感比较。
+            var display = IccAppRuleStore.DisplayPath(game.ExePath);
+            if (display.Length == 0) continue;
+            var rule = BuildRule(display, template);
+            if (rules.Any(r => r.Key == rule.Key)) continue;
+            rules.Add(rule);
             added++;
         }
         if (added > 0) IccAppRuleStore.Save(rules);
@@ -80,9 +82,9 @@ public static class PerAppGameCollector
     /// <summary>已收编（自动）的条数，界面上的「全自动 · 已收录 N 个」用它。</summary>
     public static int CollectedCount(IReadOnlyList<FilterAppRule> rules) => rules.Count(r => r.Auto);
 
-    private static FilterAppRule BuildRule(string name, string normalizedPath, FilterAutoTemplate template)
-        => new(Path.GetFileName(normalizedPath), template.PresetFileName, template.Vibrance, template.IncludeScreen,
-            normalizedPath, "", true, FilterAppMatchKind.Path, Auto: true, Screen: template.Screen);
+    private static FilterAppRule BuildRule(string displayPath, FilterAutoTemplate template)
+        => new(Path.GetFileName(displayPath), template.PresetFileName, template.Vibrance, template.IncludeScreen,
+            displayPath, "", true, FilterAppMatchKind.Path, Auto: true, Screen: template.Screen);
 }
 
 /// <summary>范围判定：给「没收录到的游戏也自动应用」用，真实按 exe 路径与全屏状态判断。</summary>

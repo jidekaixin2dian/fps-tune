@@ -187,7 +187,8 @@ public static class IccAppRuleStore
             {
                 ProcessName = NormalizeProcess(rule.ProcessName),
                 PresetFileName = preset.Trim(),
-                ExePath = NormalizePath(rule.ExePath),
+                // 存原始大小写给界面看；匹配与去重走 NormalizedTarget（大小写不敏感）。
+                ExePath = DisplayPath(rule.ExePath) is { Length: > 0 } displayPath ? displayPath : NormalizePath(rule.ExePath),
                 TitleContains = title.Trim(),
                 // 画面快照是「锦上添花」：越界就丢掉，退回预设默认值，别让一条坏数据把整个规则废掉。
                 Screen = rule.Screen is { IsValid: true } screen ? screen : null,
@@ -221,6 +222,19 @@ public static class IccAppRuleStore
         if (text.Length == 0 || text.Any(char.IsControl) || !Path.IsPathRooted(text)
             || !text.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return "";
         try { return Path.GetFullPath(text).ToLowerInvariant(); }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException) { return ""; }
+    }
+
+    /// <summary>
+    /// 保存进规则里的路径：补全成完整路径但**保留原始大小写**，界面上的「已保存的程序」才不是一串小写。
+    /// 匹配与去重仍走 <see cref="NormalizePath"/>（大小写不敏感），两者互不影响。
+    /// </summary>
+    internal static string DisplayPath(string? path)
+    {
+        var text = (path ?? "").Trim().Trim('"').Replace('/', '\\');
+        if (text.Length == 0 || text.Any(char.IsControl) || !Path.IsPathRooted(text)
+            || !text.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) return "";
+        try { return Path.GetFullPath(text); }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException) { return ""; }
     }
 }
