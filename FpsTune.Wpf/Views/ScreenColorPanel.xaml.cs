@@ -19,6 +19,10 @@ public partial class ScreenColorPanel : UserControl
     private string? _iccFile;
     /// <summary>_iccFile 对应的预设名：内置资产原名（如 1.1·柔和.icc）或用户文件名，写规则时用它而不是临时路径。</summary>
     private string? _iccFilePreset;
+    // vcgt 解析缓存：拖滑杆时每次 ValueChanged 都要这条曲线，同文件只在变化后重读。
+    private IccCurves? _curvesCache;
+    private string? _curvesCachePath;
+    private DateTime _curvesCacheWriteTime;
     private string? _lastOutcome;
     internal bool Unified { get; set; }
     /// <summary>面板的 ICC 选择被系统状态刷新清空时通知宿主，让滤镜列表同步取消选中。</summary>
@@ -256,8 +260,16 @@ public partial class ScreenColorPanel : UserControl
             // 只有**外部导入的 .icc** 才折：内置预设的 vcgt 与 ForPreset 的画面参数是同一条曲线，
             // 两边都折就等于套两遍（画面过重）。预设的观感由 settings=ForPreset 承担，
             // ICC 文件照样关联给读色彩管理的程序，vcgt 也会被系统当成校准表使用。
-            if (_iccFile is not null && File.Exists(_iccFile)) return IccCurveReader.TryRead(File.ReadAllBytes(_iccFile));
-            return null;
+            if (_iccFile is null || !File.Exists(_iccFile)) return null;
+            // 拖滑杆每次 ValueChanged 都会走到这里：同一文件只在变化后重读一次，别每帧读盘解析。
+            var writeTime = File.GetLastWriteTimeUtc(_iccFile);
+            if (_curvesCache is { } cached && _curvesCachePath == _iccFile && _curvesCacheWriteTime == writeTime)
+                return cached;
+            var curves = IccCurveReader.TryRead(File.ReadAllBytes(_iccFile));
+            _curvesCache = curves;
+            _curvesCachePath = _iccFile;
+            _curvesCacheWriteTime = writeTime;
+            return curves;
         }
         catch { return null; }
     }

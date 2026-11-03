@@ -68,7 +68,9 @@ internal sealed class GameTimerResolutionService : IDisposable
             string? running = null;
             foreach (var game in games)
             {
-                if (!probe(Path.GetFileName(game.ExePath), game.ExePath)) continue;
+                // Process.GetProcessesByName 匹配的是不带扩展名的 ProcessName；
+                // 传完整文件名（xxx.exe）永远查不到进程，开关就成了摆设。
+                if (!probe(Path.GetFileNameWithoutExtension(game.ExePath), game.ExePath)) continue;
                 running = game.Name;
                 break;
             }
@@ -135,7 +137,7 @@ internal sealed class GameTimerResolutionService : IDisposable
 
     private static IReadOnlyList<StateStore.GameProfile> LibraryGames() => GameLibraryService.Read();
 
-    private static bool DefaultProbe(string processName, string? exePath)
+    internal static bool DefaultProbe(string processName, string? exePath)
     {
         Process[]? processes = null;
         try

@@ -185,8 +185,10 @@ public partial class App : Application
                 {
                     mainWindow.Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        DialogService.Warning(Str.T("Str.SettingsLoadFailedTitle"),
-                            Str.T("Str.SettingsLoadFailedBody", settingsWarning!, Path.Combine(UserDataPaths.Root, "settings.json")));
+                        var body = SettingsService.SettingsFileCorrupt
+                            ? Str.T("Str.SettingsCorruptBody", settingsWarning!, Path.Combine(UserDataPaths.Root, "settings.json"))
+                            : Str.T("Str.SettingsLoadFailedBody", settingsWarning!, Path.Combine(UserDataPaths.Root, "settings.json"));
+                        DialogService.Warning(Str.T("Str.SettingsLoadFailedTitle"), body);
                     }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 }
             }

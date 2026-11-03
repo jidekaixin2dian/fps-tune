@@ -341,6 +341,7 @@
     <s:String x:Key="Str.InstallRepairNoPermission">No permission to write the installation information</s:String>
     <s:String x:Key="Str.InstallRepairNoShellLink">The system shortcut component is not registered</s:String>
     <s:String x:Key="Str.InstallRepairNoShortcutObject">Cannot create the shortcut object</s:String>
+    <s:String x:Key="Str.FilterWatcherRetryWait">Last write did not succeed; retrying automatically</s:String>
     <s:String x:Key="Str.DlssOverrideNote">Override preset (applies to the currently located game; this override wins over an in-game upscaling choice)</s:String>
     <s:String x:Key="Str.PresetK">K preset (recommended)</s:String>
     <s:String x:Key="Str.PresetKDesc">New-generation model · widely used, stable</s:String>
@@ -2766,6 +2767,7 @@ DNS：{3} · 解析地址：{4}</s:String>
 
     <!-- Settings load failure, crosshair save, session retention cap, in-game automation -->
     <s:String x:Key="Str.SettingsLoadFailedTitle">Could not load settings</s:String>
+    <s:String x:Key="Str.SettingsCorruptBody">The configuration file could not be read (corrupted content: {0}). This session runs on default settings; the original file is kept as settings.json.corrupt in the same folder — keep it if you want to recover your old settings. The file is at {1}.</s:String>
     <s:String x:Key="Str.SettingsLoadFailedBody">This launch could not read the configuration file: {0}. To avoid overwriting your existing settings, nothing is written back to disk this time; the file is still at {1}.</s:String>
     <s:String x:Key="Str.CrosshairSaveFailed">Saving the crosshair settings failed</s:String>
     <s:String x:Key="Str.SessionHistoryRetention">Keeps the 30 most recent sessions; older ones are deleted automatically.</s:String>

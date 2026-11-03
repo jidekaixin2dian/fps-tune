@@ -212,6 +212,52 @@ public sealed class PerAppFilterTests : IDisposable
     }
 
     [Fact]
+    public void Watcher_retries_the_apply_after_a_failed_write_instead_of_giving_up_for_the_session()
+    {
+        // 回归：Apply 失败进退避后，状态机在退避期内把决策重新提交（_current=rule），
+        // 后续 Update 恒为 None——这一局游戏里滤镜再也不套。修复后退避期内决策被退回，
+        // 退避到期重新去抖再试。
+        var old = SettingsService.Current.FilterWatcherEnabled;
+        var oldFullscreen = SettingsService.Current.FullscreenPresetEnabled;
+        var oldBackoff = ForegroundFilterWatcher.RetryBackoff;
+        IccAppRuleStore.Save([Rule("cs2.exe", "generated:Vivid", 80, true)]);
+        SettingsService.Current.FilterWatcherEnabled = true;
+        SettingsService.Current.FullscreenPresetEnabled = false;
+        ForegroundFilterWatcher.RetryBackoff = TimeSpan.FromMilliseconds(300);
+        var applies = 0;
+        ForegroundFilterWatcher.ForegroundProcessOverride = () => new("cs2.exe", @"C:\Games\cs2.exe", "Counter-Strike 2");
+        ForegroundFilterWatcher.DisplayOverride = () => "D1";
+        ForegroundFilterWatcher.ApplyOverride = _ =>
+        {
+            applies++;
+            return applies > 1; // 第一次失败，之后成功
+        };
+        ForegroundFilterWatcher.RestoreOverride = () => true;
+        try
+        {
+            using var watcher = new ForegroundFilterWatcher();
+            watcher.Poll(); watcher.Poll();
+            Assert.Equal(1, applies); // 第一次尝试失败
+
+            watcher.Poll(); watcher.Poll(); // 退避期内：决策被退回，不再尝试
+            Assert.Equal(1, applies);
+            Assert.Null(watcher.Status.ActivePreset);
+
+            Thread.Sleep(350); // 退避到期 → 重新去抖 → 第二次尝试成功
+            watcher.Poll(); watcher.Poll();
+            Assert.Equal(2, applies);
+            Assert.Equal("generated:Vivid", watcher.Status.ActivePreset);
+        }
+        finally
+        {
+            ForegroundFilterWatcher.RetryBackoff = oldBackoff;
+            SettingsService.Current.FilterWatcherEnabled = old;
+            SettingsService.Current.FullscreenPresetEnabled = oldFullscreen;
+            SettingsService.Save(SettingsService.Current);
+        }
+    }
+
+    [Fact]
     public void Preference_store_toggles_favorites_and_ranks_favorites_before_recent()
     {
         Assert.True(FilterPreferenceStore.ToggleFavorite("a.icc"));

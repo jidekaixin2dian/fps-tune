@@ -197,9 +197,14 @@ public static class SettingsService
             SettingsFileUnreadable = true;
             LoadWarning = ex.Message;
         }
-        catch
+        catch (Exception ex)
         {
+            // 内容损坏（JSON 读不出来）：留档 .corrupt、原文件保留，按默认值启动。
+            // 与 IO 路径不同，这里允许回写——文件已经是坏的，覆盖它才能让用户重新保存设置；
+            // 旧内容仍可从 settings.json.corrupt 找回。损坏这事要明说，不能静默吞掉。
             AtomicFile.PreserveCorrupt(SettingsFile);
+            SettingsFileCorrupt = true;
+            LoadWarning = ex.Message;
             Current = CreateDefault();
         }
     }
@@ -238,6 +243,9 @@ public static class SettingsService
         try { Save(settings); }
         catch { /* 写回失败时下次启动重试；本次会话已按任务栏最小化运行 */ }
     }
+
+    /// <summary>true = 这次启动发现配置文件内容损坏（已留档 .corrupt 并按默认值运行，允许回写）。</summary>
+    public static bool SettingsFileCorrupt { get; private set; }
 
     public static void Save(AppSettings settings)
     {

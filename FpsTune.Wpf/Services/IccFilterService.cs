@@ -72,9 +72,13 @@ public static class IccFilterService
             if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
             return ParseBackup(File.ReadAllText(path));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException or IOException)
         {
-            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"), ex);
+            // 损坏的备份既不能当「无改动」让 Apply 拿滤镜态当基线，也不能永远卡死 Apply/Restore：
+            // 留档 .corrupt 后清掉，按无备份处理（Apply 会用当前真实状态重建基线）。
+            try { AtomicFile.PreserveCorrupt(path); } catch { }
+            try { File.Delete(path); } catch { }
+            return null;
         }
     }
 
@@ -237,7 +241,9 @@ public static class IccFilterService
             ? $"{CustomProfilePrefix}{Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes))[..8]}{Path.GetExtension(sourcePath)}"
             : $"FpsTune-{stem}{Path.GetExtension(sourcePath)}";
         string installedPath = Path.Combine(colorDir, name);
-        if (IccProfileFile.IsDisplayProfile(installedPath))
+        // 与预设同一条幂等口径：已安装且逐字节一致才跳过——用户改了同名源文件后要能重装，
+        // 否则屏幕上永远是旧版滤镜（真实投诉来源）。
+        if (File.Exists(installedPath) && File.ReadAllBytes(installedPath).SequenceEqual(bytes))
             return name;
 
         string localPath = Path.Combine(BackupDir(), "custom", name);

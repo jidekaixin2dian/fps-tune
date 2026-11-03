@@ -123,7 +123,7 @@ public sealed class Evolution040Tests : IDisposable
             using var service = new GameTimerResolutionService
             {
                 GamesProvider = () => [new StateStore.GameProfile("g1", @"C:\Games\Fixture.exe", "Fixture", DateTime.Now)],
-                RunningProbe = (processName, exePath) => processName == "Fixture.exe" && exePath == @"C:\Games\Fixture.exe",
+                RunningProbe = (processName, exePath) => processName == "Fixture" && exePath == @"C:\Games\Fixture.exe",
             };
             service.Poll();
             Assert.True(service.Status.Active);
@@ -177,6 +177,30 @@ public sealed class Evolution040Tests : IDisposable
         {
             settings.GameTimerBoostEnabled = oldEnabled;
             SettingsService.Save(settings);
+        }
+    }
+
+    [Fact]
+    public void Default_probe_matches_process_name_without_extension()
+    {
+        // 回归：探测名曾把 "xxx.exe" 传给 Process.GetProcessesByName（匹配不带扩展名的
+        // ProcessName），导致「游戏运行时 0.5ms」开关 100% 静默失效。用真实进程钉住行为。
+        using var process = System.Diagnostics.Process.Start(
+            new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c ping -n 5 127.0.0.1 > nul")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+            });
+        try
+        {
+            var exePath = process!.MainModule?.FileName;
+            Assert.False(string.IsNullOrWhiteSpace(exePath));
+            Assert.True(GameTimerResolutionService.DefaultProbe("cmd", exePath));
+            Assert.False(GameTimerResolutionService.DefaultProbe("fpstune-nonexistent-probe", null));
+        }
+        finally
+        {
+            try { process!.Kill(); } catch { }
         }
     }
 

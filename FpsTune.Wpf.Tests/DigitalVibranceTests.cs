@@ -87,13 +87,21 @@ public class DigitalVibranceTests : IDisposable
     }
 
     [Fact]
-    public void Corrupt_backup_is_preserved_and_prevents_another_write()
+    public void Corrupt_backup_is_archived_then_treated_as_absent_so_the_display_is_not_locked()
     {
+        // 回归：损坏的备份曾让这块屏的 Apply/Restore 永久抛异常，用户无法自行解困。
+        // 现在留档 .corrupt 后按无备份处理，Apply 正常重建基线。
         var file = Path.Combine(_backupDir, "vibrance.json");
         File.WriteAllText(file, "{broken");
-        Assert.Throws<InvalidDataException>(() => DigitalVibranceService.SetPercent(75));
-        Assert.Equal(0, _api.Current);
-        Assert.Equal("{broken", File.ReadAllText(file));
+        _api.Current = 10;
+
+        DigitalVibranceService.SetPercent(75);
+
+        Assert.Equal(47, _api.Current);
+        Assert.Equal("{broken", File.ReadAllText(file + ".corrupt")); // 旧内容留档可找回
+        Assert.True(DigitalVibranceService.GetState().Restorable);
+        Assert.True(DigitalVibranceService.Restore());
+        Assert.Equal(10, _api.Current);
     }
 
     [Fact]

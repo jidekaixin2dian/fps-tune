@@ -341,6 +341,7 @@
     <s:String x:Key="Str.InstallRepairNoPermission">没有写入安装信息的权限</s:String>
     <s:String x:Key="Str.InstallRepairNoShellLink">系统没有注册快捷方式组件</s:String>
     <s:String x:Key="Str.InstallRepairNoShortcutObject">无法创建快捷方式对象</s:String>
+    <s:String x:Key="Str.FilterWatcherRetryWait">上一次写入没有成功，稍后自动重试</s:String>
     <s:String x:Key="Str.DlssOverrideNote">覆盖预设（作用于当前定位的游戏；与游戏内超分设置冲突时以本覆盖为准）</s:String>
     <s:String x:Key="Str.PresetK">K 预设（推荐）</s:String>
     <s:String x:Key="Str.PresetKDesc">新一代模型 · 社区常用，稳定</s:String>
@@ -2769,6 +2770,7 @@ DNS：{3} · 解析地址：{4}</s:String>
 
     <!-- 启动读配置失败、准星保存、会话保留上限、游戏时自动化 -->
     <s:String x:Key="Str.SettingsLoadFailedTitle">设置读取失败</s:String>
+    <s:String x:Key="Str.SettingsCorruptBody">配置文件读不出来（内容损坏：{0}）。这次启动按默认设置运行，原文件已留档为同目录的 settings.json.corrupt，想找回旧设置就不要删它。配置文件在 {1}。</s:String>
     <s:String x:Key="Str.SettingsLoadFailedBody">这次启动没能读取配置文件：{0}。为免覆盖原有设置，本轮不会把设置写回磁盘；文件仍在 {1}。</s:String>
     <s:String x:Key="Str.CrosshairSaveFailed">准星设置保存失败</s:String>
     <s:String x:Key="Str.SessionHistoryRetention">保留最近 30 条会话，超出后自动删除最旧的。</s:String>

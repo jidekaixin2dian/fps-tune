@@ -16,8 +16,32 @@ internal static class ScreenColorPreview
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)) + ".icc");
         lock (ProfileLock)
+        {
             if (!File.Exists(path)) AtomicFile.WriteAllBytes(path, bytes);
+            TrimCache(directory, maxFiles: 40);
+        }
         return path;
+    }
+
+    /// <summary>缓存只是源文件的按内容寻址副本，随时可重建：超过上限清最旧的，目录不能无界增长。</summary>
+    private static void TrimCache(string directory, int maxFiles)
+    {
+        try
+        {
+            var files = Directory.EnumerateFiles(directory, "*.icc")
+                .Select(f => new FileInfo(f))
+                .OrderBy(f => f.LastWriteTimeUtc)
+                .ToList();
+            foreach (var file in files.Take(Math.Max(0, files.Count - maxFiles)))
+            {
+                try { file.Delete(); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            }
+        }
+        catch
+        {
+            // 清理失败不影响本次预览
+        }
     }
 
     /// <summary>

@@ -400,12 +400,15 @@ public class IccFilterServiceTests : IDisposable
     }
 
     [Fact]
-    public void Corrupt_icc_backup_is_preserved()
+    public void Corrupt_icc_backup_is_archived_then_treated_as_absent()
     {
+        // 回归：损坏的备份曾让这块屏的 Apply/Restore 永久抛异常，用户无法自行解困。
+        // 现在留档 .corrupt 后按无备份处理：Restore 如实说没有可还原的，Apply 能重建基线。
         var file = Path.Combine(_backupDir, "backup.json");
         File.WriteAllText(file, "{broken");
-        Assert.Throws<InvalidDataException>(() => IccFilterService.Restore());
-        Assert.Equal("{broken", File.ReadAllText(file));
+        Assert.False(IccFilterService.Restore());
+        Assert.Equal("{broken", File.ReadAllText(file + ".corrupt"));
+        Assert.False(File.Exists(file));
     }
 
     private sealed class FakeIccApi : IIccSystemApi

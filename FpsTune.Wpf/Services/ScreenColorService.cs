@@ -112,11 +112,21 @@ public static class ScreenColorService
     {
         var path = ReceiptPath(id);
         if (!File.Exists(path)) return null;
-        if (new FileInfo(path).Length > 100000) throw new InvalidDataException(Str.T("Str.ColorBackupLarge"));
-        var r = ParseReceipt(File.ReadAllText(path));
-        if (r.Identity != id)
-            throw new InvalidDataException(Str.T("Str.ColorBackupInvalid"));
-        return r;
+        try
+        {
+            if (new FileInfo(path).Length > 100000) throw new InvalidDataException(Str.T("Str.ColorBackupLarge"));
+            var r = ParseReceipt(File.ReadAllText(path));
+            if (r.Identity != id)
+                throw new InvalidDataException(Str.T("Str.ColorBackupInvalid"));
+            return r;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException or IOException)
+        {
+            // 损坏的凭证留档后清掉，按无备份处理：否则这块屏的 Apply/Restore 永久卡死。
+            try { AtomicFile.PreserveCorrupt(path); } catch { }
+            try { File.Delete(path); } catch { }
+            return null;
+        }
     }
     private static void Save(Receipt r) => AtomicFile.WriteAllTextDurable(ReceiptPath(r.Identity), JsonSerializer.Serialize(r), new System.Text.UTF8Encoding(false));
     internal static bool Matches(ushort[] a, ushort[] b) => a.Length == 768 && b.Length == 768

@@ -54,6 +54,9 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     internal static Func<string?>? DisplayOverride { get; set; }
     internal static Func<int, bool>? ProcessAliveOverride { get; set; }
 
+    /// <summary>写入/还原失败后的重试退避（测试可缩短）。</summary>
+    internal static TimeSpan RetryBackoff = TimeSpan.FromSeconds(10);
+
     public ForegroundFilterWatcher() : this(null) { }
     internal ForegroundFilterWatcher(IPerAppForegroundProbe? probe = null)
     {
@@ -71,6 +74,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
 
     internal void ApplySettings()
     {
+        _nextRetryAt = DateTime.MinValue; // 用户明确改设置：立即重试，不等退避
         _state.Reset();
         Poll();
     }
@@ -87,6 +91,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     internal void Resume()
     {
         _paused = false;
+        _nextRetryAt = DateTime.MinValue;
         _state.Reset();
         Poll();
     }
@@ -127,20 +132,24 @@ internal sealed class ForegroundFilterWatcher : IDisposable
             if (_paused)
             {
                 _state.Reset();
-                Disengage(Str.T("Str.FilterWatcherReasonStopped"), false);
+                if (DateTime.UtcNow >= _nextRetryAt)
+                    Disengage(Str.T("Str.FilterWatcherReasonStopped"), false);
                 SetDetail(Str.T("Str.FilterWatcherStopped"));
                 return;
             }
             if (!enabled || suppressed)
             {
                 _state.Reset();
-                Disengage(Str.T(suppressed ? "Str.FullscreenReasonTakeover" : "Str.FilterWatcherReasonOff"), suppressed);
+                if (DateTime.UtcNow >= _nextRetryAt)
+                    Disengage(Str.T(suppressed ? "Str.FullscreenReasonTakeover" : "Str.FilterWatcherReasonOff"), suppressed);
                 SetDetail(Str.T(suppressed ? "Str.FilterWatcherSuppressed" : "Str.FilterWatcherIdle"));
                 return;
             }
             // 游戏已经退出但 GetForegroundWindow 仍可能返回失效窗口，不能把“窗口没了”当 Unknown
             // 永久保留。按已应用进程 ID 明确识别退出边沿，先还原再继续本轮。
-            if (_applied && _appliedPid > 0 && !IsProcessAlive(_appliedPid))
+            // 还原持续失败（显示器拔出等）时按退避重试，别每 500ms 刷一次还原和一条失败记录。
+            if (_applied && _appliedPid > 0 && !IsProcessAlive(_appliedPid)
+                && DateTime.UtcNow >= _nextRetryAt)
             {
                 _state.Reset();
                 Disengage(Str.T("Str.FilterWatcherReasonExit"), false);
@@ -165,9 +174,19 @@ internal sealed class ForegroundFilterWatcher : IDisposable
             var decision = _state.Update(rule, rule is null ? null : display);
             if (decision.Action == PerAppFilterAction.Restore)
                 Disengage(Str.T("Str.FilterWatcherReasonLeave"), false);
-            else if (decision.Action == PerAppFilterAction.Apply && rule is not null && display is not null
-                && DateTime.UtcNow >= _nextRetryAt)
-                Engage(display, rule, app!);
+            else if (decision.Action == PerAppFilterAction.Apply && rule is not null && display is not null)
+            {
+                if (DateTime.UtcNow >= _nextRetryAt)
+                    Engage(display, rule, app!);
+                else
+                {
+                    // 上一次写入失败后处于退避期。Apply 决策返回时状态机已把目标提交
+                    // （_current=rule，后续 Update 直接 None）——不退回的话「已提交但未生效」
+                    // 会永久卡住，退避到了也不再重试。这里清掉让它退避到期后重新去抖。
+                    _state.Reset();
+                    SetDetail(Str.T("Str.FilterWatcherRetryWait"));
+                }
+            }
             else if (rule is not null && display is null)
                 SetError(Str.T("Str.DisplayDisconnected"));
             else
@@ -177,7 +196,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         {
             // 写入失败时状态机已推进；清空并退避，避免永远认为"已应用"或每秒刷日志。
             _state.Reset();
-            _nextRetryAt = DateTime.UtcNow.AddSeconds(10);
+            _nextRetryAt = DateTime.UtcNow.Add(RetryBackoff);
             SetError(ex.Message);
             Record(AutoProfileActivityStore.KindFailed, Str.T("Str.FilterWatcherFailed", PrivacyScrub.Sanitize(ex.Message)));
         }
@@ -248,7 +267,9 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         catch (Exception ex)
         {
             // 恢复失败时重新标为已接管，后续轮询会继续尝试；绝不能丢掉 pending 后遗忘。
+            // 退避 10 秒再试，别在显示器拔出这类持续性故障上每 500ms 刷一次还原和失败记录。
             lock (_gate) { _applied = true; _appliedRule = previous; _appliedDisplay = identity; _lastError = ex.Message; _detail = ex.Message; }
+            _nextRetryAt = DateTime.UtcNow.Add(RetryBackoff);
             Record(AutoProfileActivityStore.KindFailed, Str.T("Str.FilterWatcherRestoreFailed", PrivacyScrub.Sanitize(ex.Message)));
         }
     }

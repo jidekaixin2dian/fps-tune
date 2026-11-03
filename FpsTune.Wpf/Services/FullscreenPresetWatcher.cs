@@ -29,6 +29,9 @@ internal sealed class FullscreenPresetWatcher : IDisposable
     /// <summary>测试注入：替换真实 Win32 探针。</summary>
     internal static Func<IForegroundProbe>? ProbeFactory;
 
+    /// <summary>套方案失败后的重试退避（测试可缩短）。</summary>
+    internal static TimeSpan RetryBackoff = TimeSpan.FromSeconds(10);
+
     private readonly FullscreenDetector _detector;
     private readonly FullscreenDebouncer _debouncer;
     private readonly System.Threading.Timer _timer;
@@ -41,6 +44,7 @@ internal sealed class FullscreenPresetWatcher : IDisposable
     private string? _appliedChannel;
     private string? _activeProcess;
     private string? _lastIdentity;
+    private DateTime _nextEngageAt;
     private int _polling;
     private int _disposed;
 
@@ -68,6 +72,7 @@ internal sealed class FullscreenPresetWatcher : IDisposable
     /// <summary>设置或方案变化后立即重估，并清掉旧样本。</summary>
     internal void ApplySettings()
     {
+        _nextEngageAt = DateTime.MinValue; // 用户明确改设置：立即重试，不等退避
         _debouncer.Reset();
         Poll();
     }
@@ -124,13 +129,21 @@ internal sealed class FullscreenPresetWatcher : IDisposable
                 && !GamePathService.IsKnownGameExecutable(processName ?? string.Empty))
                 state = ForegroundScreenState.NotFullscreen;
 
-            if (!_debouncer.Update(state, DateTime.UtcNow)) return;
+            if (!_debouncer.Update(state, DateTime.UtcNow))
+            {
+                // Engage 只在翻转 tick 被调用的旧写法，失败一次（去抖已提交但没套上）就再也不会重试。
+                // 已判定全屏但尚未生效时按退避重试；Engage 对同目标幂等，成功后这里不再触发。
+                if (_debouncer.Committed && !_applied && DateTime.UtcNow >= _nextEngageAt)
+                    Engage(settings, preset, identity);
+                return;
+            }
 
             if (_debouncer.Committed) Engage(settings, preset, identity);
             else Disengage(Str.T("Str.FullscreenReasonLeave"));
         }
         catch (Exception ex)
         {
+            _nextEngageAt = DateTime.UtcNow.Add(RetryBackoff);
             Record(AutoProfileActivityStore.KindFailed,
                 Str.T("Str.FullscreenFailed", PrivacyScrub.Sanitize(ex.Message)));
         }
@@ -145,10 +158,7 @@ internal sealed class FullscreenPresetWatcher : IDisposable
         var channel = NormalizeChannel(settings.FullscreenPresetChannel);
         var target = identity ?? _lastIdentity;
         if (target is null)
-        {
-            Record(AutoProfileActivityStore.KindFailed, Str.T("Str.FullscreenFailed", Str.T("Str.DisplayDisconnected")));
-            return;
-        }
+            throw new InvalidOperationException(Str.T("Str.DisplayDisconnected"));
 
         lock (_gate)
         {
@@ -157,6 +167,17 @@ internal sealed class FullscreenPresetWatcher : IDisposable
         }
         // 换屏 / 换方案 / 换通道：先把上一次的改动还原干净再重来。
         Disengage(Str.T("Str.FullscreenReasonRetarget"));
+
+        // 还原失败留下的孤儿凭证（_applied 已清但 pending 还在）必须先消化掉：
+        // 否则下面的 Apply 会把含真正原始 ramp 的凭证覆盖掉，用户桌面回不去。
+        if (!_applied && FullscreenPendingStore.Load() is { } orphan)
+        {
+            _ = orphan.Channel == ChannelGamma
+                ? TransientGamma.Restore(orphan)
+                : IccFilterService.Restore(orphan.Identity);
+            FullscreenPendingStore.Delete();
+            Record(AutoProfileActivityStore.KindInfo, Str.T("Str.FullscreenRestored", Str.T("Str.FullscreenReasonRetarget")));
+        }
 
         FullscreenPending pending;
         if (channel == ChannelGamma)

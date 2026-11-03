@@ -133,7 +133,15 @@ public static class DigitalVibranceService
         MigrateLegacy(backup, api);
         api.SetLevel(backup.Level);
         VerifyLevel(api, backup.Level, min, max);
-        File.Delete(BackupPath(backup.Display));
+        try
+        {
+            File.Delete(BackupPath(backup.Display));
+        }
+        catch (IOException)
+        {
+            // 档位已还原并验证过；凭证暂时删不掉（被占用）只影响下次重复还原的判定，
+            // 重试路径幂等可自愈，不该向用户报「还原失败」。
+        }
         return true;
     }
     private static void VerifyLevel(INvibranceApi api, int expected, int min, int max)
@@ -190,17 +198,21 @@ public static class DigitalVibranceService
 
     private static VibranceBackup? ReadBackup(string? identity = null)
     {
-        if (!File.Exists(BackupPath(identity)))
+        var path = BackupPath(identity);
+        if (!File.Exists(path))
             return null;
         try
         {
-            if (new FileInfo(BackupPath(identity)).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
-            return System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(BackupPath(identity)))
+            if (new FileInfo(path).Length > 1024 * 1024) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+            return System.Text.Json.JsonSerializer.Deserialize<VibranceBackup>(File.ReadAllText(path))
                 ?? throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidDataException or System.Text.Json.JsonException or IOException)
         {
-            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"), ex);
+            // 损坏的备份留档后清掉，按无备份处理：否则这块屏的 Apply/Restore 永久卡死。
+            try { AtomicFile.PreserveCorrupt(path); } catch { }
+            try { File.Delete(path); } catch { }
+            return null;
         }
     }
 
