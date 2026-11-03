@@ -61,6 +61,16 @@ public sealed class AppSettings
     public bool AutoAffinityIsolateEnabled { get; set; }
     // 独立程序滤镜守护（opt-in，默认关闭）：前台进程命中规则时切滤镜 ICC。
     public bool FilterWatcherEnabled { get; set; }
+    // 关闭后保持：关掉主窗口不退出，留在托盘里继续跟随（默认关）。
+    public bool FilterWatcherKeepAfterExit { get; set; }
+    // 进游戏时提示：自动套上滤镜时弹一次托盘气泡（默认关）。
+    public bool FilterApplyNotify { get; set; }
+    // 切出游戏就恢复（默认开＝一直沿用的前台跟随）；关掉后改成跟进程走，切到桌面也保持，进程退出才还原。
+    public bool FilterRestoreOnFocusLoss { get; set; } = true;
+    // 没收录到的游戏也自动应用：按下面的范围当场判断，用「全自动模板」套上。
+    public bool FilterAutoFallbackEnabled { get; set; }
+    // 全自动范围：fullscreen（全屏游戏）/ gamedir（仅游戏目录）/ any（所有前台程序）。
+    public string FilterAutoScope { get; set; } = "fullscreen";
 
     // 全屏自动切换画面方案（opt-in，默认关闭）：游戏进全屏时套用选定方案，退出全屏还原。
     // 与上面的进程规则守护互斥：两个都开时只生效全屏方案。

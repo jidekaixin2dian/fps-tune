@@ -15,7 +15,9 @@ public sealed record FilterWatcherStatus(
     bool Suppressed = false,
     int? Vibrance = null,
     bool ScreenIncluded = false,
-    string? LastError = null);
+    string? LastError = null,
+    bool Paused = false,
+    bool ActiveAuto = false);
 
 /// <summary>前台探针接口：进程身份、路径、标题及所在屏可由 fake 替代。</summary>
 internal interface IPerAppForegroundProbe
@@ -42,6 +44,9 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     private DateTime _nextRetryAt;
     private int _polling;
     private int _disposed;
+    private bool _paused;
+    private DateTime _fullscreenCheckedAt;
+    private bool _fullscreen;
 
     internal static Func<ForegroundAppInfo?>? ForegroundProcessOverride { get; set; }
     internal static Func<string?, bool>? ApplyOverride { get; set; }
@@ -69,15 +74,63 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         _state.Reset();
         Poll();
     }
+
+    /// <summary>界面上的「停止」：立刻停下并还原，开关保持开着；再次开启跟随（或点「重新启动」）恢复。</summary>
+    internal void Pause()
+    {
+        _paused = true;
+        _state.Reset();
+        if (_applied) Disengage(Str.T("Str.FilterWatcherReasonStopped"), false);
+        SetDetail(Str.T("Str.FilterWatcherStopped"));
+    }
+
+    internal void Resume()
+    {
+        _paused = false;
+        _state.Reset();
+        Poll();
+    }
+
+    internal bool Paused => _paused;
     private void TimerTick(object? state) => Poll();
+
+    /// <summary>没有规则命中时，按「全自动」模板与范围判断要不要当场套上（「没收录也自动应用」）。</summary>
+    private FilterAppRule? FallbackRule(ForegroundAppInfo app, AppSettings settings)
+    {
+        if (!settings.FilterAutoFallbackEnabled) return null;
+        if (FilterSchemeStore.AutoTemplate is not { PresetFileName.Length: > 0 } template) return null;
+        var scope = PerAppAutoScopeRules.Parse(settings.FilterAutoScope);
+        var fullscreen = scope == PerAppAutoScope.Fullscreen && ForegroundFullscreen();
+        if (!PerAppAutoScopeRules.Matches(scope, app.ExePath, fullscreen)) return null;
+        return new FilterAppRule(app.ProcessName, template.PresetFileName, template.Vibrance, template.IncludeScreen,
+            app.ExePath, "", true, FilterAppMatchKind.Path, Auto: true, Screen: template.Screen);
+    }
+
+    /// <summary>全屏判定要枚举显示拓扑，不能每 500ms 都跑；一秒内的重复询问用缓存值。</summary>
+    private bool ForegroundFullscreen()
+    {
+        var now = DateTime.UtcNow;
+        if (now - _fullscreenCheckedAt < TimeSpan.FromSeconds(1)) return _fullscreen;
+        _fullscreenCheckedAt = now;
+        _fullscreen = PerAppAutoScopeRules.IsForegroundFullscreen();
+        return _fullscreen;
+    }
 
     internal void Poll()
     {
         if (Volatile.Read(ref _disposed) != 0 || Interlocked.Exchange(ref _polling, 1) != 0) return;
         try
         {
-            var enabled = SettingsService.Current.FilterWatcherEnabled;
+            var settings = SettingsService.Current;
+            var enabled = settings.FilterWatcherEnabled;
             var suppressed = FullscreenPresetWatcher.SuppressesForegroundRules;
+            if (_paused)
+            {
+                _state.Reset();
+                Disengage(Str.T("Str.FilterWatcherReasonStopped"), false);
+                SetDetail(Str.T("Str.FilterWatcherStopped"));
+                return;
+            }
             if (!enabled || suppressed)
             {
                 _state.Reset();
@@ -94,11 +147,21 @@ internal sealed class ForegroundFilterWatcher : IDisposable
                 return;
             }
             var app = ReadForeground();
-            var rule = IccAppRuleStore.Match(app);
+            var matched = IccAppRuleStore.Match(app);
+            // 命中但什么都没设的规则＝「跟随桌面」：不套模板、也不写屏，就当它不存在但也不让全自动兜底接管。
+            var rule = matched is { HasEffect: true } ? matched : null;
+            if (rule is null && app is not null && matched is null) rule = FallbackRule(app, settings);
             var display = ReadDisplay();
             lock (_gate) _active = app;
             // 路径/标题读失败保持当前状态，不把短暂 Unknown 当成退出。
             if (app is null && _applied) return;
+            // 关掉「切出游戏就恢复」＝跟进程走：切到桌面、微信、网页都保持，只有游戏进程退出才还原。
+            if (rule is null && _applied && !settings.FilterRestoreOnFocusLoss
+                && !(_appliedPid > 0 && !IsProcessAlive(_appliedPid)))
+            {
+                SetDetail(Str.T("Str.FilterWatcherKeeping", _appliedRule?.ProcessName ?? ""));
+                return;
+            }
             var decision = _state.Update(rule, rule is null ? null : display);
             if (decision.Action == PerAppFilterAction.Restore)
                 Disengage(Str.T("Str.FilterWatcherReasonLeave"), false);
@@ -145,6 +208,23 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         AutoProfileActivityStore.Append(new AutoProfileEvent(DateTime.Now, AutoProfileActivityStore.KindApplied,
             app.ProcessName, rule.PresetFileName,
             Str.T("Str.FilterWatcherApplied", app.ProcessName, outcome)));
+        // 「进游戏时提示」：只弹托盘气泡，不抢焦点、不打断游戏。
+        if (SettingsService.Current.FilterApplyNotify)
+        {
+            try { TrayService.NotifyComplete(Str.T("Str.FilterApplyNotifyTitle"), Str.T("Str.FilterApplyNotifyBody", app.ProcessName, PresetLabel(rule.PresetFileName))); }
+            catch { /* 气泡失败不影响已经写进屏幕的滤镜 */ }
+        }
+    }
+
+    /// <summary>预设文件名 → 界面上的名字（生成式预设按枚举标题，外部 .icc 用文件名）。</summary>
+    private static string PresetLabel(string presetFileName)
+    {
+        if (string.IsNullOrWhiteSpace(presetFileName)) return Str.T("Str.FilterRuleVibranceOnly");
+        if (presetFileName.StartsWith(GameFilterLibrary.GeneratedPrefix, StringComparison.Ordinal)
+            && Enum.TryParse<IccFilterPreset>(presetFileName[GameFilterLibrary.GeneratedPrefix.Length..], ignoreCase: false, out var preset))
+            return ScreenColorSettings.TitleFor(preset);
+        return GameFilterCatalog.All.FirstOrDefault(p => p.FileName.Equals(presetFileName, StringComparison.OrdinalIgnoreCase))?.Name
+            ?? System.IO.Path.GetFileNameWithoutExtension(presetFileName);
     }
 
     private void Disengage(string reason, bool suppressed)
@@ -181,7 +261,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
                 return new(SettingsService.Current.FilterWatcherEnabled, _active?.ProcessName,
                     _applied ? _appliedRule?.PresetFileName : null, _detail,
                     FullscreenPresetWatcher.SuppressesForegroundRules, _appliedRule?.Vibrance,
-                    _appliedRule?.IncludeScreen == true, _lastError);
+                    _appliedRule?.IncludeScreen == true, _lastError, _paused, _appliedRule?.Auto == true);
         }
     }
 

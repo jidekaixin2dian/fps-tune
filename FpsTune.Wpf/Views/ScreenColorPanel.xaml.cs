@@ -21,18 +21,25 @@ public partial class ScreenColorPanel : UserControl
     internal bool Unified { get; set; }
     /// <summary>面板的 ICC 选择被系统状态刷新清空时通知宿主，让滤镜列表同步取消选中。</summary>
     internal event Action? IccSelectionCleared;
+    /// <summary>应用目标切到某个程序／方案载入时，把这档数字振动交给宿主页去同步滑块。</summary>
+    internal event Action<int?>? VibranceSuggested;
     public object VibranceContent { get => VibranceHost.Content; set => VibranceHost.Content = value; }
     public object IccContent { get => IccHost.Content; set => IccHost.Content = value; }
     public object FilterContent { get => FilterHost.Content; set => FilterHost.Content = value; }
     public object PerAppContent { get => PerAppHost.Content; set => PerAppHost.Content = value; }
     public object AutomationContent { get => AutomationHost.Content; set => AutomationHost.Content = value; }
 
-    /// <summary>当前屏幕方案 / 独立游戏方案共用左侧实拍图，只切换右侧控制区。</summary>
+    /// <summary>当前屏幕方案 / 独立程序滤镜共用左侧实拍图，只切换右侧控制区。</summary>
     internal void SetMode(bool perApp)
     {
+        _perAppMode = perApp;
         CurrentModePanel.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
         ActionBar.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
         PerAppCard.Visibility = perApp ? Visibility.Visible : Visibility.Collapsed;
+        // 独立程序滤镜页是「管程序」的页面：1U 在这一页不放截图对比与滤镜列表，我们也不让大图把规则挤到屏幕外。
+        PreviewPane.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
+        PresetPane.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
+        ApplyColumns(ActualWidth, perApp);
         PreviewModeHint.Text = Str.T(perApp ? "Str.FilterPerAppPreviewHint" : "Str.ColorPreviewStickyHint");
         ControlsScroll.ScrollToTop();
     }
@@ -48,6 +55,26 @@ public partial class ScreenColorPanel : UserControl
     private const int DarkBalanceIndex = 7;
     public event Action<bool>? BusyChanged;
     private sealed record Choice(string Label, IccFilterPreset? Preset) { public override string ToString() => Label; }
+
+    /// <summary>应用栏的「应用到」：桌面＝现在这套屏幕设置，全部游戏＝全自动模板，其余是某条规则的 exe。</summary>
+    internal enum ApplyTargetKind { Desktop, AutoTemplate, Rule }
+
+    private sealed record ApplyTargetChoice(ApplyTargetKind Kind, string? RuleKey, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    private sealed record SchemeChoice(string Id, string Label)
+    {
+        public override string ToString() => Label;
+    }
+
+    private string _applyTarget = "desktop";
+    private bool _targetSyncing;
+    private bool _perAppMode;
+
+    /// <summary>当前应用目标（desktop / auto / rule:&lt;key&gt;），给专项用例核对。</summary>
+    internal string ApplyTargetKey => _applyTarget;
     public ScreenColorPanel()
     {
         InitializeComponent();
@@ -110,6 +137,8 @@ public partial class ScreenColorPanel : UserControl
         ColorPresetCombo.SelectedIndex = 0; IccPresetCombo.SelectedIndex = 1;
         _syncing = false;
         ColorApplyButton.IsEnabled = ColorRestoreButton.IsEnabled = false;
+        RefreshApplyTargets();
+        RefreshSchemes();
         UpdatePreview();
     }
     private async void UpdatePreview()
@@ -206,6 +235,12 @@ public partial class ScreenColorPanel : UserControl
         IccFileText.Text = _iccFile is null ? "" : Path.GetFileName(_iccFile);
         IccFileText.Visibility = IccMode && _iccFile is not null ? Visibility.Visible : Visibility.Collapsed;
         ColorRestoreButton.IsEnabled = !_busy && (_restorable || _vibranceRestorable);
+        ApplyTargetCombo.IsEnabled = !_busy;
+        SaveSchemeButton.IsEnabled = !_busy;
+        var hasSchemes = SchemeCombo is { Items.Count: > 0 };
+        if (SchemeCombo is not null) SchemeCombo.IsEnabled = !_busy && hasSchemes;
+        LoadSchemeButton.IsEnabled = !_busy && hasSchemes;
+        DeleteSchemeButton.IsEnabled = !_busy && hasSchemes && SchemeCombo!.SelectedItem is not null;
     }
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
         _sliders[4].Value, _sliders[5].Value, _sliders[6].Value, _sliders[8].Value, _sliders[7].Value,
@@ -300,6 +335,8 @@ public partial class ScreenColorPanel : UserControl
         Availability();
         // 系统上已经没有我们的 ICC（例如刚还原原始）：列表里那条选中态也不算数了。
         if (_iccFile is null && Preset is null) IccSelectionCleared?.Invoke();
+        RefreshApplyTargets();
+        RefreshSchemes();
         IsEnabled = true;
     }
     public void PauseForTargetChange() { ++_generation; _identity = null; _dirty = false; IsEnabled = false; }
@@ -334,21 +371,266 @@ public partial class ScreenColorPanel : UserControl
     {
         if (!_syncing && ColorModeCombo is not null) ColorModeCombo.SelectedIndex = IccEnabledCheck.IsChecked == true ? 1 : 0;
     }
-    private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e)
+    private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e) => ApplyColumns(e.NewSize.Width, _perAppMode);
+
+    /// <summary>
+    /// 1U 版式：常规窗口左列预设（340–420）、右列「上预览 + 下实时调色 + 底部应用栏」；
+    /// 窄窗口（< 980）收起预设列；独立程序滤镜页不用左列，整页给规则。
+    /// </summary>
+    private void ApplyColumns(double width, bool perApp)
     {
-        // 1U 版式：常规窗口左列预设（340–420）、右列「上预览 + 下实时调色 + 底部应用栏」。
-        // 窄窗口把预设列收起成一列顶部滚动条，预览与调色在同一个滚动区里顺序排下去。
-        var wide = e.NewSize.Width >= 980;
-        PresetColumn.Width = wide ? new GridLength(Math.Clamp(e.NewSize.Width * 0.26, 340, 420)) : new GridLength(0);
+        var wide = !perApp && width >= 980;
+        PresetColumn.Width = wide ? new GridLength(Math.Clamp(width * 0.26, 340, 420)) : new GridLength(0);
         Grid.SetColumn(PresetPane, 0);
         Grid.SetColumnSpan(PresetPane, wide ? 1 : 2);
         PresetPane.Margin = new Thickness(0, 0, wide ? 16 : 0, wide ? 0 : 12);
         PresetPane.Height = double.NaN;
     }
     private void Reset_Click(object sender, RoutedEventArgs e) { ShowSettings(new()); ColorPresetCombo.SelectedIndex = 0; MarkDraft(); }
+
+    // ---------- 应用栏：应用到哪儿 / 滤镜方案 ----------
+
+    /// <summary>重建「应用到」下拉：桌面、全部游戏（全自动模板）、以及每条规则进去时的目标程序。</summary>
+    internal void RefreshApplyTargets()
+    {
+        if (ApplyTargetCombo is null) return;
+        _targetSyncing = true;
+        try
+        {
+            var items = new List<ApplyTargetChoice>
+            {
+                new(ApplyTargetKind.Desktop, null, Str.T("Str.ColorApplyTargetDesktop")),
+                new(ApplyTargetKind.AutoTemplate, null, Str.T("Str.ColorApplyTargetAuto")),
+            };
+            items.AddRange(IccAppRuleStore.Rules.Select(rule =>
+                new ApplyTargetChoice(ApplyTargetKind.Rule, rule.Key, Str.T("Str.ColorApplyTargetRule", ExeOf(rule)))));
+            ApplyTargetCombo.ItemsSource = items;
+            var current = items.FirstOrDefault(item => TargetKey(item).Equals(_applyTarget, StringComparison.Ordinal)) ?? items[0];
+            ApplyTargetCombo.SelectedItem = current;
+            _applyTarget = TargetKey(current);
+        }
+        finally { _targetSyncing = false; }
+    }
+
+    /// <summary>独立程序滤镜页的「编辑调色」：把应用目标切到这条规则，并把它的滤镜与参数填进面板。</summary>
+    internal void SetApplyTarget(string ruleKey)
+    {
+        _applyTarget = "rule:" + ruleKey;
+        RefreshApplyTargets();
+        if (IccAppRuleStore.Rules.FirstOrDefault(r => r.Key == ruleKey) is { } rule) ShowRuleDraft(rule);
+    }
+
+    private static string TargetKey(ApplyTargetChoice choice) => choice.Kind switch
+    {
+        ApplyTargetKind.AutoTemplate => "auto",
+        ApplyTargetKind.Rule => "rule:" + choice.RuleKey,
+        _ => "desktop",
+    };
+
+    private static string ExeOf(FilterAppRule rule)
+        => rule.ExePath.Length > 0 ? Path.GetFileName(rule.ExePath) : rule.ProcessName;
+
+    private void ApplyTarget_DropDownOpened(object sender, EventArgs e) => RefreshApplyTargets();
+
+    private void ApplyTarget_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_targetSyncing || ApplyTargetCombo.SelectedItem is not ApplyTargetChoice choice) return;
+        _applyTarget = TargetKey(choice);
+        if (choice is { Kind: ApplyTargetKind.Rule, RuleKey: { } key }
+            && IccAppRuleStore.Rules.FirstOrDefault(r => r.Key == key) is { } rule)
+        {
+            ShowRuleDraft(rule);
+            ColorStatus.Text = Str.T("Str.ColorApplyTargetRuleHint", ExeOf(rule));
+        }
+        else if (choice.Kind == ApplyTargetKind.AutoTemplate)
+            ColorStatus.Text = Str.T("Str.ColorApplyTargetAutoHint");
+        else ColorStatus.Text = "";
+    }
+
+    /// <summary>把某条规则的内容填进面板（切换应用目标 / 编辑调色）：全是草稿，仍要点「应用整套」。</summary>
+    private void ShowRuleDraft(FilterAppRule rule)
+    {
+        IccFilterPreset? preset = null;
+        _syncing = true;
+        try
+        {
+            if (rule.PresetFileName.Length == 0)
+            {
+                _iccFile = null; ColorModeCombo.SelectedIndex = 0; IccPresetCombo.SelectedIndex = 0;
+            }
+            else if (TryParseGenerated(rule.PresetFileName, out var parsed))
+            {
+                _iccFile = null; preset = parsed; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(parsed);
+            }
+            else
+            {
+                _iccFile = UserPresetPath(rule.PresetFileName); ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0;
+            }
+        }
+        finally { _syncing = false; }
+        if (rule.Screen is { IsValid: true } screen) ShowSettings(screen.ToSettings());
+        else if (preset is { } selected) ShowSettings(ScreenColorSettings.ForPreset(selected));
+        _vibranceDirty = rule.Vibrance is not null;
+        _vibrance = rule.Vibrance;
+        VibranceSuggested?.Invoke(rule.Vibrance);
+        _dirty = true; MarkDraft(); Availability(); UpdatePreview();
+    }
+
+    private static bool TryParseGenerated(string presetFileName, out IccFilterPreset preset)
+    {
+        preset = default;
+        return presetFileName.StartsWith(GameFilterLibrary.GeneratedPrefix, StringComparison.Ordinal)
+               && Enum.TryParse(presetFileName[GameFilterLibrary.GeneratedPrefix.Length..], ignoreCase: false, out preset);
+    }
+
+    private static string? UserPresetPath(string fileName)
+    {
+        if (fileName.Length == 0) return null;
+        var path = Path.Combine(GameFilterLibrary.UserDir, Path.GetFileName(fileName));
+        return File.Exists(path) ? path : null;
+    }
+
+    /// <summary>当前滤镜写成规则能存的名字：生成式用 generated:枚举，外部 .icc 先拷进滤镜目录再记文件名。</summary>
+    private string SelectedPresetName()
+    {
+        if (Preset is { } preset) return GameFilterLibrary.GeneratedPrefix + preset.ToString();
+        if (_iccFile is { Length: > 0 } file && File.Exists(file))
+        {
+            try { return GameFilterLibrary.SaveUserPreset(Path.GetFileName(file), File.ReadAllBytes(file)); }
+            catch { return ""; }
+        }
+        return "";
+    }
+
+    private int? DraftVibrance()
+        => _vibranceDirty ? _vibrance : Preset is { } preset ? IccProfileGenerator.VibranceFor(preset) : null;
+
+    private bool DraftIncludeScreen(ScreenColorSettings settings)
+        => Preset is not null || settings != new ScreenColorSettings();
+
+    private void ApplyToTarget(ApplyTargetChoice choice)
+    {
+        var presetName = SelectedPresetName();
+        var settings = Values();
+        var vibrance = DraftVibrance();
+        var snapshot = AppRuleScreen.FromSettings(settings);
+        var includeScreen = DraftIncludeScreen(settings);
+        if (presetName.Length == 0 && vibrance is null && !includeScreen)
+        { ColorStatus.Text = Str.T("Str.FilterNeedPresetFirst"); return; }
+        try
+        {
+            if (choice.Kind == ApplyTargetKind.AutoTemplate) { SaveAutoTemplate(presetName, vibrance, includeScreen, snapshot); return; }
+            var rule = IccAppRuleStore.Rules.FirstOrDefault(r => r.Key == choice.RuleKey);
+            if (rule is null) { RefreshApplyTargets(); return; }
+            // 「自动」规则跟着全自动模板走（徽章不许说谎）：改它就等于改模板。
+            if (rule.Auto) { SaveAutoTemplate(presetName, vibrance, includeScreen, snapshot); return; }
+            IccAppRuleStore.Save(IccAppRuleStore.Rules.Select(r => r.Key == rule.Key
+                ? r with { PresetFileName = presetName, Vibrance = vibrance, IncludeScreen = includeScreen, Screen = snapshot }
+                : r).ToList());
+            if (presetName.Length > 0) FilterPreferenceStore.NoteUsed(presetName);
+            ColorStatus.Text = Str.T("Str.FilterRuleApplied", rule.ProcessName);
+            RefreshApplyTargets();
+            App.FilterWatcher?.ApplySettings();
+        }
+        catch (Exception ex) { ColorStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    /// <summary>把当前这套写成全自动模板，并让已收编的规则立刻跟着变。</summary>
+    private void SaveAutoTemplate(string presetName, int? vibrance, bool includeScreen, AppRuleScreen snapshot)
+    {
+        var template = FilterSchemeStore.SaveAutoTemplate(presetName, vibrance, includeScreen, snapshot);
+        var updated = PerAppGameCollector.ApplyTemplate(template);
+        ColorStatus.Text = Str.T("Str.FilterAutoTemplateSaved", updated);
+        RefreshApplyTargets();
+        App.FilterWatcher?.ApplySettings();
+    }
+
+    /// <summary>重建「方案」下拉：存下来的滤镜方案（预设 + 振动 + 画面参数）。</summary>
+    internal void RefreshSchemes()
+    {
+        if (SchemeCombo is null) return;
+        var schemes = FilterSchemeStore.Schemes;
+        var currentId = (SchemeCombo.SelectedItem as SchemeChoice)?.Id;
+        SchemeCombo.ItemsSource = schemes.Select(s => new SchemeChoice(s.Id, s.Name)).ToList();
+        SchemeCombo.SelectedItem = SchemeCombo.Items.OfType<SchemeChoice>().FirstOrDefault(c => c.Id == currentId)
+            ?? (SchemeCombo.Items.Count > 0 ? SchemeCombo.Items[0] : null);
+        var has = schemes.Count > 0;
+        SchemeCombo.IsEnabled = !_busy && has;
+        LoadSchemeButton.IsEnabled = !_busy && has;
+        DeleteSchemeButton.IsEnabled = !_busy && has && SchemeCombo.SelectedItem is not null;
+    }
+
+    private string SchemeDraftName()
+    {
+        if (Preset is { } preset) return ScreenColorSettings.TitleFor(preset);
+        if (_iccFile is { Length: > 0 } file) return Path.GetFileNameWithoutExtension(file);
+        return Str.T("Str.FilterSchemeCustomName");
+    }
+
+    private void SaveScheme_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        var presetName = SelectedPresetName();
+        var settings = Values();
+        if (presetName.Length == 0 && !DraftIncludeScreen(settings))
+        { ColorStatus.Text = Str.T("Str.FilterNeedPresetFirst"); return; }
+        try
+        {
+            var scheme = FilterSchemeStore.Save(SchemeDraftName(), presetName, DraftVibrance(),
+                DraftIncludeScreen(settings), AppRuleScreen.FromSettings(settings));
+            RefreshSchemes();
+            SchemeCombo.SelectedItem = SchemeCombo.Items.OfType<SchemeChoice>().FirstOrDefault(c => c.Id == scheme.Id);
+            ColorStatus.Text = Str.T("Str.FilterSchemeSaved", scheme.Name);
+        }
+        catch (Exception ex) { ColorStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    private void LoadScheme_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || SchemeCombo.SelectedItem is not SchemeChoice choice) return;
+        if (FilterSchemeStore.Find(choice.Id) is not { } scheme) { RefreshSchemes(); return; }
+        IccFilterPreset? preset = null;
+        _syncing = true;
+        try
+        {
+            if (scheme.PresetFileName.Length == 0)
+            {
+                _iccFile = null; ColorModeCombo.SelectedIndex = 0; IccPresetCombo.SelectedIndex = 0;
+            }
+            else if (TryParseGenerated(scheme.PresetFileName, out var parsed))
+            {
+                _iccFile = null; preset = parsed; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(parsed);
+            }
+            else { _iccFile = UserPresetPath(scheme.PresetFileName); ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0; }
+        }
+        finally { _syncing = false; }
+        if (scheme.Screen is { IsValid: true } screen) ShowSettings(screen.ToSettings());
+        else if (preset is { } selected) ShowSettings(ScreenColorSettings.ForPreset(selected));
+        _vibranceDirty = scheme.Vibrance is not null;
+        _vibrance = scheme.Vibrance;
+        VibranceSuggested?.Invoke(scheme.Vibrance);
+        _dirty = true; MarkDraft(); Availability(); UpdatePreview();
+        ColorStatus.Text = Str.T("Str.FilterSchemeLoaded", scheme.Name);
+    }
+
+    private void DeleteScheme_Click(object sender, RoutedEventArgs e)
+    {
+        if (SchemeCombo.SelectedItem is not SchemeChoice choice) return;
+        if (!DialogService.Confirm(Str.T("Str.FilterSchemeDeleteTitle"), Str.T("Str.FilterSchemeDeleteConfirm", choice.Label), danger: true)) return;
+        FilterSchemeStore.Remove(choice.Id);
+        RefreshSchemes();
+        ColorStatus.Text = Str.T("Str.FilterSchemeDeleted", choice.Label);
+    }
     private async void Apply_Click(object sender, RoutedEventArgs e)
     {
-        if (_busy || _identity is null) return;
+        if (_busy) return;
+        // 应用到某个程序 / 全部游戏时写的是规则与模板，跟当前屏幕无关，不需要显示器身份。
+        if (ApplyTargetCombo.SelectedItem is ApplyTargetChoice { Kind: not ApplyTargetKind.Desktop } target)
+        {
+            ApplyToTarget(target);
+            return;
+        }
+        if (_identity is null) return;
         var settings = Values(); var identity = _identity;
         var restoreIcc = !IccMode && _iccRestorable;
         if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorWorkspaceConfirm", IccMode ? Str.T("Str.ColorIccMode") : Str.T(restoreIcc ? "Str.ColorIccOffMode" : "Str.ColorScreenMode")), confirmText: Str.T("Str.ColorApply"))) return;

@@ -92,7 +92,10 @@ internal static class PerAppFilterExecution
     {
         var plan = PerAppFilterPlan.Create(identity, rule);
         var (preset, file) = plan.ResolveIcc();
-        var settings = preset is { } p ? ScreenColorSettings.ForPreset(p) : new ScreenColorSettings();
+        // 规则自己存的画面参数优先（应用栏「应用到某程序」时存的快照）；没存就用预设默认值。
+        var settings = rule.Screen is { IsValid: true } screen
+            ? screen.ToSettings()
+            : preset is { } p ? ScreenColorSettings.ForPreset(p) : new ScreenColorSettings();
         // 凭证先持久化，标明接管了这块屏；实际备份仍由底层三条既有服务负责。
         WritePending(new Pending(1, identity, rule.ProcessName, rule.PresetFileName, DateTime.Now));
         try

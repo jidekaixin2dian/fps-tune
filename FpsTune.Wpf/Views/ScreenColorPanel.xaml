@@ -133,7 +133,7 @@
 
     <!-- 底部常驻应用栏（1U：先调参数，再决定怎么应用） -->
     <Border x:Name="ActionBar" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,12,0,0">
-     <StackPanel>
+     <StackPanel Grid.IsSharedSizeScope="True">
       <DockPanel>
        <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.ColorApplyBarTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
        <WrapPanel HorizontalAlignment="Right">
@@ -142,6 +142,27 @@
         <Button x:Name="ColorResetButton" Content="{DynamicResource Str.ColorReset}" Style="{StaticResource GhostButtonStyle}" Click="Reset_Click"/>
        </WrapPanel>
       </DockPanel>
+      <!-- 应用到：桌面 / 全部游戏（全自动模板）/ 进游戏时·xxx.exe -->
+      <Grid Margin="0,12,0,0">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="applyBarLabel"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <TextBlock Text="{DynamicResource Str.ColorApplyTarget}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+       <ComboBox x:Name="ApplyTargetCombo" Grid.Column="1" MinWidth="240" MaxWidth="340"
+                 Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="ApplyTarget_Changed" DropDownOpened="ApplyTarget_DropDownOpened"
+                 AutomationProperties.Name="{DynamicResource Str.ColorApplyTarget}"/>
+       <Button x:Name="SaveSchemeButton" Grid.Column="2" Content="{DynamicResource Str.FilterSchemeSave}" Style="{StaticResource GhostButtonStyle}"
+               Margin="12,0,0,0" Click="SaveScheme_Click"/>
+      </Grid>
+      <!-- 存下来的滤镜方案：载入回来继续调，或直接删掉 -->
+      <Grid Margin="0,8,0,0">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="applyBarLabel"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <TextBlock Text="{DynamicResource Str.FilterSchemeTitle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+       <ComboBox x:Name="SchemeCombo" Grid.Column="1" MinWidth="240" MaxWidth="340"
+                 Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.FilterSchemeTitle}"/>
+       <Button x:Name="LoadSchemeButton" Grid.Column="2" Content="{DynamicResource Str.FilterSchemeLoad}" Style="{StaticResource GhostButtonStyle}"
+               Margin="12,0,0,0" Click="LoadScheme_Click"/>
+       <Button x:Name="DeleteSchemeButton" Grid.Column="3" Content="{DynamicResource Str.FilterSchemeDelete}" Style="{StaticResource GhostButtonStyle}"
+               Margin="8,0,0,0" Click="DeleteScheme_Click"/>
+      </Grid>
       <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
      </StackPanel>
     </Border>

@@ -535,13 +535,19 @@ public sealed class ModernWorkspaceUiTests
                 var perApp = (PerAppFilterPanel)page.FindName("PerAppCenter");
                 var rules = (ListBox)perApp.FindName("RuleList");
                 DlssFeedbackTests.PumpUntil(() => rules.Items.Count == 1);
-                Assert.Equal("fixture.exe", ((TextBox)perApp.FindName("RuleProcessBox")).Text);
-                Assert.True(((Border)color.FindName("PreviewPane")).IsVisible);
+                // 规则行按 1U 收成「exe 名 + 徽章 + 四个动作」，不再有内嵌编辑表单。
+                var row = rules.Items[0]!;
+                Assert.Equal("fixture.exe", (string)row.GetType().GetProperty("ExeName")!.GetValue(row)!);
+                Assert.NotNull(perApp.FindName("DaemonToggleButton"));
+                Assert.NotNull(perApp.FindName("FallbackCheck"));
+                // 独立程序滤镜页不放截图对比：规则不该被一张大图挤到屏幕外。
+                Assert.Equal(Visibility.Collapsed, ((Border)color.FindName("PreviewPane")).Visibility);
                 Render(page, "filter-workspace-perapp-dark");
 
                 ((RadioButton)page.FindName("ModeScreen")).IsChecked = true;
                 Assert.Equal(Visibility.Visible, ((StackPanel)color.FindName("CurrentModePanel")).Visibility);
                 Assert.Equal(Visibility.Collapsed, ((Border)color.FindName("PerAppCard")).Visibility);
+                Assert.Equal(Visibility.Visible, ((Border)color.FindName("PreviewPane")).Visibility);
             }
             finally { window.Close(); IccAppRuleStore.Invalidate(); }
         });
@@ -631,37 +637,127 @@ public sealed class ModernWorkspaceUiTests
     }
 
     [Fact]
-    public void Per_app_panel_adds_and_toggle_disables_a_rule_and_renders_diagnostics()
+    public void Per_app_panel_renders_the_three_1u_sections_and_rule_actions_write_through()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
         RunUi((app, _) =>
         {
             IccAppRuleStore.Invalidate();
+            var settings = SettingsService.Current;
+            var oldEnabled = settings.FilterWatcherEnabled;
+            settings.FilterWatcherEnabled = false;
+            IccAppRuleStore.Save([new FilterAppRule("fixture.exe", "generated:Vivid", 60, true, Auto: true)]);
             var panel = new PerAppFilterPanel(null);
             var window = new Window { Width = 1180, Height = 900, Content = new ScrollViewer { Content = panel } };
             app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
             try
             {
-                DlssFeedbackTests.PumpUntil(() => ((ComboBox)panel.FindName("RulePresetCombo")).Items.Count > 20);
-                var combo = (ComboBox)panel.FindName("RulePresetCombo");
-                Assert.True(combo.Items.Count >= 50, $"preset count={combo.Items.Count}");
-                combo.SelectedIndex = 1; // 第 0 项是“不绑定 ICC”，默认选择需要显式换成第一条滤镜。
-                var process = (TextBox)panel.FindName("RuleProcessBox");
-                process.Text = "fixture.exe";
-                ((TextBox)panel.FindName("RuleTitleBox")).Text = "Fixture Game";
-                ((Button)panel.FindName("AddRuleButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                var list = (ItemsControl)panel.FindName("RuleList");
-                Assert.Single(list.Items);
+                var list = (ListBox)panel.FindName("RuleList");
+                DlssFeedbackTests.PumpUntil(() => list.Items.Count == 1);
                 window.UpdateLayout(); panel.UpdateLayout();
-                DlssFeedbackTests.PumpUntil(() => Descendants(list).OfType<Button>().Any(b => b.Tag is FilterAppRule));
-                var toggle = Descendants(list).OfType<Button>().First(b => b.Tag is FilterAppRule);
-                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                DlssFeedbackTests.PumpUntil(() => IccAppRuleStore.Rules.Single().Enabled == false);
-                Assert.False(IccAppRuleStore.Rules.Single().Enabled);
-                Assert.Contains(Str.T("Str.FilterRuleDiagnosticsTitle"), Descendants(panel).OfType<Expander>().Select(e => e.Header?.ToString()));
+                // 1U 三块都在：顶部扫描/添加/开关、运行状态行（三复选框 + 停止）、底部全自动收录与范围
+                Assert.NotNull(((Button)panel.FindName("ScanButton")).Content);
+                Assert.NotNull(((Button)panel.FindName("AddExeButton")).Content);
+                Assert.Equal(3, new[] { "KeepAfterExitCheck", "NotifyCheck", "RestoreOnLeaveCheck" }
+                    .Count(name => panel.FindName(name) is CheckBox));
+                Assert.NotNull((Button)panel.FindName("DaemonToggleButton"));
+                Assert.Contains("1", ((TextBlock)panel.FindName("AutoTitle")).Text);
+                Assert.NotNull((RadioButton)panel.FindName("ScopeFullscreenRadio"));
+                Assert.NotNull((RadioButton)panel.FindName("ScopeGameDirRadio"));
+                Assert.NotNull((RadioButton)panel.FindName("ScopeAnyRadio"));
                 Render(panel, "perapp-panel-dark");
+
+                // 转为手动：自动徽章消失，这条规则从此自己说了算。
+                DlssFeedbackTests.PumpUntil(() => Descendants(list).OfType<Button>().Any(b => b.Tag is FilterAppRule));
+                ButtonAction(list, Str.T("Str.FilterAppsToManual"));
+                DlssFeedbackTests.PumpUntil(() => !IccAppRuleStore.Rules.Single().Auto);
+                Assert.False(IccAppRuleStore.Rules.Single().Auto);
+
+                // 重置为桌面设置：清掉这条规则自己的滤镜与参数，变成「跟随桌面」。
+                DlssFeedbackTests.PumpUntil(() => Descendants(list).OfType<Button>().Any(b => Equals(b.Content, Str.T("Str.FilterAppsResetDesktop"))));
+                ButtonAction(list, Str.T("Str.FilterAppsResetDesktop"));
+                DlssFeedbackTests.PumpUntil(() => !IccAppRuleStore.Rules.Single().HasEffect);
+                Assert.Equal("", IccAppRuleStore.Rules.Single().PresetFileName);
+
+                // 顶部开关：写回设置并让守护重估。
+                var toggle = (CheckBox)panel.FindName("WatcherCheck");
+                toggle.IsChecked = true;
+                DlssFeedbackTests.PumpUntil(() => SettingsService.Current.FilterWatcherEnabled);
+                Assert.True(SettingsService.Current.FilterWatcherEnabled);
             }
-            finally { window.Content = null; window.Close(); IccAppRuleStore.Invalidate(); }
+            finally
+            {
+                settings.FilterWatcherEnabled = oldEnabled;
+                window.Content = null; window.Close(); IccAppRuleStore.Invalidate();
+            }
+        });
+    }
+
+    private static void ButtonAction(DependencyObject list, string content)
+    {
+        var button = Descendants(list).OfType<Button>().First(b => Equals(b.Content, content));
+        button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    }
+
+    [Fact]
+    public void Apply_bar_targets_a_rule_store_the_auto_template_and_saves_schemes_without_touching_the_screen()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            IccAppRuleStore.Invalidate(); FilterSchemeStore.Invalidate();
+            IccAppRuleStore.Save([new FilterAppRule("cs2.exe", "generated:Warm", 20, false, Auto: true)]);
+            var panel = new ScreenColorPanel();
+            var window = new Window { Width = 1180, Height = 900, Content = new ScrollViewer { Content = panel } };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                window.UpdateLayout(); panel.UpdateLayout();
+                var targets = (ComboBox)panel.FindName("ApplyTargetCombo");
+                // 桌面 + 全部游戏 + 每条规则一条，与 1U 的「应用到」一致。
+                Assert.Equal(3, targets.Items.Count);
+                Assert.Equal("desktop", panel.ApplyTargetKey);
+                Assert.Contains(targets.Items.Cast<object>(),
+                    item => (string)item.GetType().GetProperty("Label")!.GetValue(item)! == Str.T("Str.ColorApplyTargetRule", "cs2.exe"));
+
+                // 选「进游戏时 · cs2.exe」：应用目标切过去，面板填上这条规则的滤镜（草稿）。
+                targets.SelectedItem = targets.Items.Cast<object>().Last();
+                window.UpdateLayout();
+                Assert.StartsWith("rule:", panel.ApplyTargetKey);
+
+                // 存为方案：把当前滤镜+参数存下来，方案下拉立刻能看到。
+                panel.SelectGeneratedPreset(IccFilterPreset.Vivid);
+                window.UpdateLayout();
+                ((Button)panel.FindName("SaveSchemeButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var schemes = FilterSchemeStore.Schemes;
+                Assert.Single(schemes);
+                Assert.True(File.Exists(Path.Combine(UserDataPaths.Root, "game-filters", "schemes.json")));
+                var schemeCombo = (ComboBox)panel.FindName("SchemeCombo");
+                Assert.Single(schemeCombo.Items);
+
+                // 应用到规则：写进规则（自动规则＝改全自动模板），不写屏幕。
+                var before = IccAppRuleStore.Rules.Single();
+                ((Button)panel.FindName("ColorApplyButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => FilterSchemeStore.AutoTemplate is not null);
+                var template = FilterSchemeStore.AutoTemplate!;
+                Assert.Equal(GameFilterLibrary.GeneratedPrefix + nameof(IccFilterPreset.Vivid), template.PresetFileName);
+                Assert.True(IccAppRuleStore.Rules.Single().Auto);
+                Assert.Equal(before.Key, IccAppRuleStore.Rules.Single().Key);
+
+                // 手动规则：应用时只改这一条，模板不动。
+                IccAppRuleStore.Save([IccAppRuleStore.Rules.Single() with { Auto = false }]);
+                panel.RefreshApplyTargets();
+                ((Button)panel.FindName("ColorApplyButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => IccAppRuleStore.Rules.Single().PresetFileName
+                    == GameFilterLibrary.GeneratedPrefix + nameof(IccFilterPreset.Vivid));
+                Assert.False(IccAppRuleStore.Rules.Single().Auto);
+                Render(panel, "apply-bar-targets");
+            }
+            finally
+            {
+                window.Content = null; window.Close();
+                IccAppRuleStore.Invalidate(); FilterSchemeStore.Invalidate();
+            }
         });
     }
 

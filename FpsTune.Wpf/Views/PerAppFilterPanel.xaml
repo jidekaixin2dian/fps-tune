@@ -24,54 +24,129 @@
                 </ControlTemplate>
             </Setter.Value></Setter>
         </Style>
+        <!-- 候选程序行：名字 + 路径 + 添加 -->
+        <Style x:Key="CandidateItemStyle" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template"><Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="{DynamicResource RadiusControl}" Padding="10,8">
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value></Setter>
+        </Style>
+        <!-- 规则行上的小徽章 -->
+        <Style x:Key="RuleBadgeStyle" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
     <StackPanel>
-        <Grid>
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="{DynamicResource Str.FilterAppsTitle}" Style="{StaticResource CardTitleStyle}"/>
-                <TextBlock Text="{DynamicResource Str.FilterAppsHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
-            </StackPanel>
-            <CheckBox x:Name="WatcherCheck" Grid.Column="1" Content="{DynamicResource Str.FilterWatcherToggle}" Style="{StaticResource ToggleSwitchStyle}"
-                      VerticalAlignment="Top" Margin="16,0,0,0" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
-        </Grid>
-        <TextBlock x:Name="WatcherStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite"/>
-
-        <Expander Header="{DynamicResource Str.FilterRuleDiagnosticsTitle}" Margin="0,8,0,0">
-            <StackPanel Margin="0,8,0,0">
-                <TextBlock x:Name="DiagnosticsText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                <Button x:Name="RefreshStatusButton" Content="{DynamicResource Str.MaintenanceRefresh}" Style="{StaticResource GhostButtonStyle}"
-                        HorizontalAlignment="Left" Click="RefreshStatus_Click" Margin="0,6,0,0"/>
-            </StackPanel>
-        </Expander>
-
-        <DockPanel Margin="0,16,0,6">
-            <Button x:Name="NewRuleButton" DockPanel.Dock="Right" Content="{DynamicResource Str.FilterRuleNew}" Style="{StaticResource SecondaryButtonStyle}" Click="NewRule_Click"/>
-            <TextBlock Text="{DynamicResource Str.FilterRuleListTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
+        <!-- 1) 顶部：自动扫描 / 手动添加 exe / 独立程序滤镜开关 -->
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Left" Text="{DynamicResource Str.FilterAppsTitle}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"/>
+            <WrapPanel HorizontalAlignment="Right">
+                <Button x:Name="ScanButton" Content="{DynamicResource Str.FilterAppsScan}" Style="{StaticResource SecondaryButtonStyle}"
+                        Click="Scan_Click" Margin="0,0,8,4" VerticalAlignment="Center"/>
+                <Button x:Name="AddExeButton" Content="{DynamicResource Str.FilterAppsAddExe}" Style="{StaticResource GhostButtonStyle}"
+                        Click="AddExe_Click" Margin="0,0,12,4" VerticalAlignment="Center"/>
+                <CheckBox x:Name="WatcherCheck" Content="{DynamicResource Str.FilterAppsToggle}" Style="{StaticResource ToggleSwitchStyle}"
+                          VerticalAlignment="Center" Margin="0,0,0,4" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
+            </WrapPanel>
         </DockPanel>
-        <TextBlock x:Name="EmptyRulesText" Text="{DynamicResource Str.FilterRuleEmpty}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,8"/>
-        <ListBox x:Name="RuleList" MaxHeight="240" BorderThickness="0" Background="Transparent" Padding="0"
+
+        <!-- 2) 运行状态行：状态 + 工作范围 + 三个复选框 + 停止 -->
+        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,10" Margin="0,10,0,0">
+            <StackPanel>
+                <DockPanel>
+                    <Button x:Name="DaemonToggleButton" DockPanel.Dock="Right" Style="{StaticResource GhostButtonStyle}" Click="DaemonToggle_Click"
+                            Content="{DynamicResource Str.FilterAppsStop}" VerticalAlignment="Center"/>
+                    <WrapPanel VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource Str.FilterAppsDaemon}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Border x:Name="DaemonChip" Style="{StaticResource RuleBadgeStyle}" Margin="8,0,0,0">
+                            <TextBlock x:Name="DaemonStateText" Text="{DynamicResource Str.FilterAppsOff}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                        </Border>
+                        <TextBlock x:Name="DaemonNote" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="Wrap"/>
+                    </WrapPanel>
+                </DockPanel>
+                <WrapPanel Margin="0,8,0,0">
+                    <CheckBox x:Name="KeepAfterExitCheck" Content="{DynamicResource Str.FilterAppsKeepOnClose}" Margin="0,0,18,0"
+                              Checked="KeepAfterExit_Changed" Unchecked="KeepAfterExit_Changed"/>
+                    <CheckBox x:Name="NotifyCheck" Content="{DynamicResource Str.FilterAppsNotifyOnEnter}" Margin="0,0,18,0"
+                              Checked="Notify_Changed" Unchecked="Notify_Changed"/>
+                    <CheckBox x:Name="RestoreOnLeaveCheck" Content="{DynamicResource Str.FilterAppsRestoreOnLeave}"
+                              Checked="RestoreOnLeave_Changed" Unchecked="RestoreOnLeave_Changed"/>
+                </WrapPanel>
+                <TextBlock x:Name="WatcherStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"
+                           AutomationProperties.LiveSetting="Polite"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 自动扫描的结果：扫到哪些游戏、哪些还没收录 -->
+        <Border x:Name="CandidateBox" Visibility="Collapsed" Background="{DynamicResource SurfaceBrush}"
+                CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,10,0,0">
+            <StackPanel>
+                <TextBlock x:Name="CandidateTitle" Style="{StaticResource SectionLabelStyle}"/>
+                <ListBox x:Name="CandidateList" MaxHeight="220" BorderThickness="0" Background="Transparent" Padding="0" Margin="0,8,0,0"
+                         ItemContainerStyle="{StaticResource CandidateItemStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate><DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding ExePath}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="{Binding ActionText}" Tag="{Binding}" Style="{StaticResource GhostButtonStyle}"
+                                    IsEnabled="{Binding CanAdd}" Click="CandidateAdd_Click" VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <!-- 3) 规则列表：exe + [自动] + 编辑调色 / 转为手动 / 重置为桌面设置 / 删除 -->
+        <TextBlock Text="{DynamicResource Str.FilterAppsRuleListTitle}" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6"/>
+        <TextBlock x:Name="EmptyRulesText" Text="{DynamicResource Str.FilterAppsEmpty}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+        <ListBox x:Name="RuleList" MaxHeight="300" BorderThickness="0" Background="Transparent" Padding="0"
                  ItemContainerStyle="{StaticResource RuleItemStyle}" SelectionChanged="RuleList_SelectionChanged"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
             <ListBox.ItemTemplate><DataTemplate>
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel Margin="0,0,8,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" TextWrapping="Wrap"/>
-                            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="6,1" Margin="8,0,0,0"
-                                    Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="{DynamicResource Str.FilterRuleActive}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                    <StackPanel Margin="0,0,10,0">
+                        <WrapPanel>
+                            <TextBlock Text="{Binding ExeName}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center"/>
+                            <Border Style="{StaticResource RuleBadgeStyle}" Visibility="{Binding AutoBadgeVisibility}">
+                                <TextBlock Text="{DynamicResource Str.FilterAppsAutoBadge}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Details}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            <Border Style="{StaticResource RuleBadgeStyle}" Visibility="{Binding NoFilterBadgeVisibility}">
+                                <TextBlock Text="{DynamicResource Str.FilterAppsNoFilter}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                            </Border>
+                            <Border Style="{StaticResource RuleBadgeStyle}" Visibility="{Binding ActiveBadgeVisibility}">
+                                <TextBlock Text="{DynamicResource Str.FilterAppsActive}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
+                        </WrapPanel>
+                        <TextBlock Text="{Binding ExePath}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                        <TextBlock Text="{Binding Summary}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Content="{Binding EnabledText}" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="ToggleRule_Click" Margin="0,0,2,0"/>
-                        <Button Tag="{Binding Rule}" Click="RemoveRule_Click"
+                        <Button Content="{DynamicResource Str.FilterAppsEdit}" Tag="{Binding Rule}" Style="{StaticResource PrimaryButtonStyle}"
+                                Padding="10,6" Margin="0,0,4,4" Click="EditRule_Click"/>
+                        <Button Content="{DynamicResource Str.FilterAppsToManual}" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}"
+                                Padding="10,6" Margin="0,0,4,4" Click="ToManual_Click" Visibility="{Binding ToManualVisibility}"/>
+                        <Button Content="{DynamicResource Str.FilterAppsResetDesktop}" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}"
+                                Padding="10,6" Margin="0,0,4,4" Click="ResetDesktop_Click"/>
+                        <Button Tag="{Binding Rule}" Click="RemoveRule_Click" Padding="10,6" Margin="0,0,0,4"
                                 AutomationProperties.Name="{Binding RemoveName}" ToolTip="{Binding RemoveName}">
                             <Button.Style>
-                                <!-- 删除是危险动作：悬停时图标转危险色，与旁边的启用/停用按钮区分开 -->
+                                <!-- 删除是危险动作：悬停时图标转危险色，与旁边的动作区分开 -->
                                 <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
@@ -89,42 +164,38 @@
             </DataTemplate></ListBox.ItemTemplate>
         </ListBox>
 
-        <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,8,0,0">
+        <!-- 4) 底部：全自动收录与识别范围 -->
+        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,12,0,0">
             <StackPanel>
-                <TextBlock x:Name="EditorTitle" Text="{DynamicResource Str.FilterRuleNew}" Style="{StaticResource SectionLabelStyle}"/>
-                <StackPanel Margin="0,10,0,0">
-                    <TextBlock Text="{DynamicResource Str.FilterRulePresetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                    <ComboBox x:Name="RulePresetCombo" Style="{StaticResource SelectComboBoxStyle}" DisplayMemberPath="Name"
-                              AutomationProperties.Name="{DynamicResource Str.FilterRulePresetLabel}" VerticalContentAlignment="Center"/>
-                </StackPanel>
-                <StackPanel Margin="0,8,0,0">
-                    <TextBlock Text="{DynamicResource Str.FilterRuleTargetLabel}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBox x:Name="RuleProcessBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center"
-                                 AutomationProperties.Name="{DynamicResource Str.FilterRuleProcess}" ToolTip="{DynamicResource Str.FilterRuleTargetHint}"/>
-                        <Button x:Name="BrowseRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleBrowse}" Style="{StaticResource GhostButtonStyle}" Margin="10,0,0,0" Click="BrowseRule_Click"/>
-                    </Grid>
-                </StackPanel>
-                <StackPanel Margin="0,8,0,0">
-                    <TextBlock Text="{DynamicResource Str.FilterRuleTitle}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                    <TextBox x:Name="RuleTitleBox" Style="{StaticResource InputTextBoxStyle}" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterRuleTitle}"/>
-                </StackPanel>
-                <WrapPanel Margin="0,8,0,0">
-                    <StackPanel Margin="0,0,12,8"><TextBlock Text="{DynamicResource Str.FilterRuleVibrance}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,4"/>
-                        <ComboBox x:Name="RuleVibranceCombo" MinWidth="150" Style="{StaticResource SelectComboBoxStyle}" SelectionChanged="RuleVibrance_Changed" AutomationProperties.Name="{DynamicResource Str.FilterRuleVibrance}"/>
+                <DockPanel>
+                    <Button x:Name="RecollectButton" DockPanel.Dock="Right" Content="{DynamicResource Str.FilterAppsRecollect}"
+                            Style="{StaticResource SecondaryButtonStyle}" Click="Recollect_Click" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="AutoTitle" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center" Margin="0,0,12,0" TextWrapping="Wrap"/>
+                </DockPanel>
+                <CheckBox x:Name="FallbackCheck" Content="{DynamicResource Str.FilterAppsFallback}" Margin="0,12,0,0"
+                          Checked="Fallback_Changed" Unchecked="Fallback_Changed"/>
+                <RadioButton x:Name="ScopeFullscreenRadio" GroupName="perAppScope" Margin="0,8,0,0" Checked="Scope_Changed">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeFullscreen}"/>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeFullscreenNote}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
-                    <CheckBox x:Name="RuleScreenCheck" Content="{DynamicResource Str.FilterRuleScreen}" Style="{StaticResource ToggleSwitchStyle}" VerticalAlignment="Center" Margin="0,0,12,8"/>
-                    <CheckBox x:Name="RuleEnabledCheck" Content="{DynamicResource Str.FilterRuleEnabled}" IsChecked="True" VerticalAlignment="Center" Margin="0,0,0,8"/>
-                </WrapPanel>
-                <Grid Margin="0,4,0,0">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{DynamicResource Str.FilterAppsRuleHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,12,0"/>
-                    <Button x:Name="AddRuleButton" Grid.Column="1" Content="{DynamicResource Str.FilterRuleAdd}" Style="{StaticResource PrimaryButtonStyle}"
-                            Click="AddRule_Click" VerticalAlignment="Bottom"/>
-                </Grid>
+                </RadioButton>
+                <RadioButton x:Name="ScopeGameDirRadio" GroupName="perAppScope" Margin="0,8,0,0" Checked="Scope_Changed">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeGameDir}"/>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeGameDirNote}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="ScopeAnyRadio" GroupName="perAppScope" Margin="0,8,0,0" Checked="Scope_Changed">
+                    <StackPanel>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeAny}"/>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeAnyNote}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </RadioButton>
+                <TextBlock x:Name="AutoStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
+
         <WrapPanel Margin="0,10,0,0">
             <Button x:Name="ExportRulesButton" Content="{DynamicResource Str.FilterRuleExport}" Style="{StaticResource GhostButtonStyle}" Click="ExportRules_Click" Margin="0,0,8,8"/>
             <Button x:Name="ImportRulesButton" Content="{DynamicResource Str.FilterRuleImport}" Style="{StaticResource GhostButtonStyle}" Click="ImportRules_Click" Margin="0,0,0,8"/>

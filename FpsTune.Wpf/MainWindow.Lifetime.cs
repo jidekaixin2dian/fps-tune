@@ -14,6 +14,12 @@ public partial class MainWindow
     private WindowState _restoreState = WindowState.Normal;
     internal Func<bool> EnsureTray { get; set; } = TrayService.EnsureCreated;
 
+    /// <summary>开关开着、守护没被「停止」、并且用户勾了「关闭后保持」时，关窗不能顺手停掉滤镜。</summary>
+    private static bool KeepsFilterWatcherRunning()
+        => SettingsService.Current.FilterWatcherKeepAfterExit
+           && SettingsService.Current.FilterWatcherEnabled
+           && App.FilterWatcher is { Paused: false };
+
     // User actions share one entry. Programmatic Close remains an intentional exit,
     // including tray Exit, updating, session-save continuation and OS shutdown.
     internal void RequestUserClose()
@@ -24,6 +30,8 @@ public partial class MainWindow
         {
             var action = CloseBehavior.Normalize(SettingsService.Current.CloseAction);
             var remember = false;
+            // 「关闭后保持」：独立程序滤镜还在跑的时候，关窗不退出、留托盘继续跟随（否则游戏滤镜会跟着一起停）。
+            if (action == CloseBehavior.Ask && KeepsFilterWatcherRunning()) action = CloseBehavior.Tray;
             if (action == CloseBehavior.Ask)
             {
                 var dialog = new CloseChoiceWindow { Owner = this };

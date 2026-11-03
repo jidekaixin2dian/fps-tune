@@ -62,6 +62,15 @@ public partial class FilterView : UserControl
         ColorPanel.SetMode(false);
         ColorPanel.ShowPreviewForProcess(AppState.GamePath);
         PerAppCenter.PreviewRequested += process => ColorPanel.ShowPreviewForProcess(process);
+        // 「编辑调色」：切回调色工作区，把应用目标设成这条规则，滤镜与参数填进面板（草稿，仍要点应用）。
+        PerAppCenter.EditRequested += ruleKey =>
+        {
+            ModeScreen.IsChecked = true;
+            ColorPanel.SetMode(false);
+            ColorPanel.SetApplyTarget(ruleKey);
+            ColorPanel.FocusWorkspace();
+        };
+        ColorPanel.VibranceSuggested += suggestion => SuggestVibrance(suggestion);
         // 滤镜选择已统一到上面的滤镜列表，色彩面板不再重复一套筛选入口。
         ColorPanel.SetFilterPickerVisible(false);
         ColorPanel.BusyChanged += busy => { _busy = busy; ++_refreshGen; SetDisplayInputEnabled(!busy); if (!busy) Refresh(); };

@@ -7,8 +7,32 @@ namespace FpsTune.Wpf.Services;
 public enum FilterAppMatchKind { ProcessName, Path }
 
 /// <summary>
+/// 在某台程序上应用的画面参数快照。应用栏把这些参数应用到某个游戏时存进规则，
+/// 之后前台命中就直接按这份值写屏；null = 用预设自带的<b>ForPreset</b> 默认值。
+/// </summary>
+public sealed record AppRuleScreen(
+    double Brightness = 0, double Contrast = 100, double Gamma = 1, double Shadows = 0,
+    double Red = 100, double Green = 100, double Blue = 100, double Highlight = 0,
+    double DarkBalance = ScreenColorService.DefaultDarkBalance, bool DarkBalanceEnabled = false)
+{
+    public ScreenColorSettings ToSettings()
+        => new(Brightness, Contrast, Gamma, Shadows, Red, Green, Blue, Highlight, DarkBalance, DarkBalanceEnabled);
+
+    public static AppRuleScreen FromSettings(ScreenColorSettings settings)
+        => new(settings.Brightness, settings.Contrast, settings.Gamma, settings.Shadows,
+            settings.Red, settings.Green, settings.Blue, settings.Highlight, settings.DarkBalance, settings.DarkBalanceEnabled);
+
+    /// <summary>序列化回来的值可能被手改过：超出取值范围就不接受，让规则回落到预设默认。</summary>
+    public bool IsValid
+    {
+        get { try { ToSettings().Validate(); return true; } catch (ArgumentOutOfRangeException) { return false; } }
+    }
+}
+
+/// <summary>
 /// 独立游戏方案的规则。预设同时支持内置 .icc 与 generated: 枚举；振动和画面参数各自可选。
 /// Enabled=false 保留规则但跳过；IncludeScreen=true 才应用预设附带的 gamma 画面参数。
+/// Auto=true 是「自动扫描收编」来的规则：它跟着全自动模板走，用户在应用栏单独改它就转成手动。
 /// </summary>
 public sealed record FilterAppRule(
     string ProcessName,
@@ -18,10 +42,15 @@ public sealed record FilterAppRule(
     string ExePath = "",
     string TitleContains = "",
     bool Enabled = true,
-    FilterAppMatchKind MatchKind = FilterAppMatchKind.ProcessName)
+    FilterAppMatchKind MatchKind = FilterAppMatchKind.ProcessName,
+    bool Auto = false,
+    AppRuleScreen? Screen = null)
 {
     /// <summary>旧 schema 没有规则 ID；以规范化匹配条件作为稳定身份，不用“→”拆显示字符串。</summary>
     public string Key => string.Join("|", MatchKind, NormalizedTarget, TitleContains.Trim().ToLowerInvariant());
+
+    /// <summary>这条规则会不会真的改画面；false = 跟随桌面设置（应用时不写任何东西）。</summary>
+    public bool HasEffect => PresetFileName.Length > 0 || Vibrance is not null || IncludeScreen;
 
     internal string NormalizedTarget => MatchKind == FilterAppMatchKind.Path
         ? IccAppRuleStore.NormalizePath(ExePath)
@@ -58,7 +87,7 @@ public static class FilterAppRuleMatcher
 public static class IccAppRuleStore
 {
     private sealed record RuleFile(int SchemaVersion, List<FilterAppRule> Rules);
-    private const int SchemaVersion = 2;
+    private const int SchemaVersion = 3;
     public const int MaxRules = 64;
     private const int MaxImportBytes = 256 * 1024;
     private const int MaxTextLength = 4096;
@@ -149,7 +178,9 @@ public static class IccAppRuleStore
             if (rule is null || string.IsNullOrWhiteSpace(rule.ProcessName) && string.IsNullOrWhiteSpace(rule.ExePath)) continue;
             var preset = rule.PresetFileName ?? "";
             var title = rule.TitleContains ?? "";
-            if (preset.Length > 260 || (preset.Length == 0 && rule.Vibrance is null && !rule.IncludeScreen)
+            // 「还没设滤镜」的规则要能留住：手动添加 exe、以及「重置为桌面设置」都会产生这种规则，
+            // 它们在列表里显示为未设滤镜、进程序时什么都不做（跟随桌面）。
+            if (preset.Length > 260
                 || (rule.ProcessName ?? "").Length > MaxTextLength || (rule.ExePath ?? "").Length > MaxTextLength
                 || title.Length > 120 || rule.Vibrance is < 0 or > 100) continue;
             var normalized = rule with
@@ -158,6 +189,9 @@ public static class IccAppRuleStore
                 PresetFileName = preset.Trim(),
                 ExePath = NormalizePath(rule.ExePath),
                 TitleContains = title.Trim(),
+                // 画面快照是「锦上添花」：越界就丢掉，退回预设默认值，别让一条坏数据把整个规则废掉。
+                Screen = rule.Screen is { IsValid: true } screen ? screen : null,
+                Auto = rule.Auto,
             };
             // 显式路径规则必须给完整路径；进程名规则只保存 basename，避免 UI 输入全路径后静默错配。
             if (normalized.MatchKind == FilterAppMatchKind.Path)
