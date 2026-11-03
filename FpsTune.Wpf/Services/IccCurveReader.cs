@@ -79,7 +79,14 @@ public static class IccCurveReader
         catch { return null; }
     }
 
-    /// <summary>vcgt 校准 tag（type 0：3×256 个 u16）——直接当成 ramp 用，有就优先。</summary>
+    /// <summary>
+    /// vcgt 校准 tag（type 0）。真实文件的布局（Windows 自带的、1U 的预设、显示器厂商的都一样）：
+    /// <c>sig(4) + reserved(4) + type(4) + channels(u16) + entries(u16)</c> 共 16 字节头，
+    /// 后面是 <c>entries</c> 个「R,G,B 交织」的 u16 三元组（256 条 → 1536 字节，整条 tag 1552–1554 字节）。
+    /// 之前按「12 字节头 + 257 条按通道平铺」解析，于是所有真实校准表都被判成异常而丢弃——
+    /// 这就是「在 Windows 里换 ICC 没反应」的直接原因。
+    /// 老的 12 字节头/平铺布局仍兼容（我们 0.4.1 早期写出的文件是那种）。
+    /// </summary>
     private static double[][]? ReadVcgt(byte[] data, uint tagCount)
     {
         for (var t = 0; t < tagCount; t++)
@@ -91,26 +98,54 @@ public static class IccCurveReader
             if (offset < 0 || size < 12 || offset + (long)size > data.Length) return null;
             var type = ReadUInt32(data, offset + 8);
             if (type != 0) return null;
-            // 每个通道的条目数不一定是 256：我们这批预设是 257 条（size 1554）。按实际长度取再采样 256 点。
+
+            // 16 字节头：channels/entries 明确写出来，数据是交织三元组。
+            if (size >= 16)
+            {
+                var channelsField = ReadUInt16(data, offset + 12);
+                var entriesField = ReadUInt16(data, offset + 14);
+                if (channelsField == 3 && entriesField is >= 2 and <= 1024
+                    && offset + 16L + entriesField * 3L * 2L <= data.Length + 2)
+                    return ReadInterleaved(data, offset + 16, entriesField);
+            }
+
+            // 老布局：12 字节头 + 按通道平铺。
             var entries = (size - 12) / 6;
             if (entries < 2 || offset + 12L + entries * 3L * 2L > data.Length) return null;
-            var channels = new double[3][];
+            var planar = new double[3][];
             for (var c = 0; c < 3; c++)
             {
                 var raw = new double[entries];
                 for (var i = 0; i < entries; i++)
                     raw[i] = ReadUInt16(data, offset + 12 + (c * entries + i) * 2) / 65535d;
-                channels[c] = SampleTable(raw);
+                planar[c] = SampleTable(raw);
             }
-            // 表异常（起点很高/终点偏低/非单调）就当没有 vcgt，回退到 TRC——宁可不套，也不要套一条错的。
-            foreach (var channel in channels)
-            {
-                if (channel[0] > 0.1 || channel[255] < 0.85) return null;
-                for (var i = 1; i < 256; i++) if (channel[i] < channel[i - 1] - 1e-6) return null;
-            }
-            return channels;
+            return Validate(planar) ? planar : null;
         }
         return null;
+    }
+
+    /// <summary>交织三元组：第 i 个三元组是 (R,G,B) 的第 i 个采样。</summary>
+    private static double[][]? ReadInterleaved(byte[] data, int start, int entries)
+    {
+        var channels = new[] { new double[entries], new double[entries], new double[entries] };
+        for (var i = 0; i < entries; i++)
+            for (var c = 0; c < 3; c++)
+                channels[c][i] = ReadUInt16(data, start + (i * 3 + c) * 2) / 65535d;
+        if (!Validate(channels.Select(SampleTable).ToArray())) return null;
+        return channels.Select(SampleTable).ToArray();
+    }
+
+    /// <summary>端点与单调性：量化 + 真实测量会有极小回折，容差按 1/255 的十分之一给。</summary>
+    private static bool Validate(double[][] channels)
+    {
+        foreach (var channel in channels)
+        {
+            if (channel[0] > 0.1 || channel[^1] < 0.85) return false;
+            for (var i = 1; i < channel.Length; i++)
+                if (channel[i] < channel[i - 1] - 1e-4) return false;
+        }
+        return true;
     }
 
     /// <summary>读一个曲线 tag：返回 256 点采样；curv 表按线性插值，para 按 ICC 规范公式。</summary>

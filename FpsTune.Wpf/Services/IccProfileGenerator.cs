@@ -315,17 +315,19 @@ public static class IccProfileGenerator
     /// </summary>
     private static byte[] VcgtTag(ScreenColorSettings settings)
     {
-        const int entries = 257;
+        // 与 Windows / 1U 的真实文件同布局：16 字节头（sig + reserved + type + channels + entries），
+        // 后面 256 个「R,G,B 交织」三元组 → 16 + 1536 = 1552 字节。
+        const int entries = 256;
         var gains = new[] { settings.Red, settings.Green, settings.Blue };
         using var ms = new MemoryStream();
         var bw = new BinaryWriter(ms);
-        // 表头 12 字节（sig + reserved + type），紧跟 3×257 个 u16 = 1542 → 整条 tag 1554 字节，
-        // 与 1U 内置预设的 vcgt 尺寸完全一致（读取端就是这么解析的）。
         bw.Write(FourCC("vcgt"));
         bw.Write(Be32(0));
         bw.Write(Be32(0));              // type 0 = 表格型
-        for (var c = 0; c < 3; c++)
+        bw.Write(Be16(3));              // 3 个通道
+        bw.Write(Be16(entries));
         for (var i = 0; i < entries; i++)
+        for (var c = 0; c < 3; c++)
         {
             var x = i / (entries - 1d);
             var y = Math.Clamp(ScreenColorService.MapTone(x, settings, gains[c]), 0, 1);

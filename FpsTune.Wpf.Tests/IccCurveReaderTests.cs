@@ -1,3 +1,4 @@
+using System.Text;
 using FpsTune.Wpf.Core;
 using FpsTune.Wpf.Services;
 using Xunit;
@@ -67,11 +68,49 @@ public sealed class IccCurveReaderTests
             Assert.All(curves!.Channels, channel => Assert.Equal(256, channel.Length));
             // 结构对齐 1U：预设自带 vcgt 校准表（3×257 u16 = 1554 字节），观感就在这条表里。
             Assert.True(ContainsTag(icc, "vcgt"), $"{preset} 的剖面里没有 vcgt");
-            Assert.Equal(1554, VcgtSize(icc));
+            // 16 字节头 + 256 个交织三元组 = 1552 字节（真实 Windows/1U 文件的布局）
+            Assert.Equal(1552, VcgtSize(icc));
             Assert.True(curves.EncodedRamp, $"{preset} 的曲线应当来自 vcgt（编码值→编码值）");
             if (!curves.IsIdentity) parsed++;
         }
         Assert.True(parsed >= 8, $"生成式预设里只有 {parsed} 条改变了曲线");
+    }
+
+    [Fact]
+    public void Reads_the_real_world_interleaved_vcgt_layout()
+    {
+        // 真实文件的布局（Windows 自带、1U 预设、显示器厂商都一样）：16 字节头 + 256 个交织三元组，
+        // 而且真实测量会有极小回折。以前按「12 字节头 + 按通道平铺」解析，全部被判成异常丢弃。
+        static double Curve(double x) => Math.Pow(x, 1.1);
+        var entries = 256;
+        var payload = new List<byte>();
+        payload.AddRange(Encoding.ASCII.GetBytes("vcgt"));
+        payload.AddRange(new byte[4]);                  // reserved
+        payload.AddRange(new byte[4]);                  // type 0
+        payload.AddRange(new byte[] { 0, 3 });           // channels = 3
+        payload.AddRange(new byte[] { 1, 0 });           // entries = 256
+        for (var i = 0; i < entries; i++)
+        for (var c = 0; c < 3; c++)
+        {
+            var v = Math.Clamp(Curve(i / (entries - 1d)), 0, 1);
+            var raw = (ushort)Math.Round(v * 65535);
+            if (i == 100 && c == 0) raw -= 8;            // 模拟量化/测量的微小回折
+            payload.Add((byte)(raw >> 8));
+            payload.Add((byte)raw);
+        }
+        var icc = new byte[128 + 4 + 12 + payload.Count];
+        icc[128 + 3] = 1;                                // tagCount = 1
+        Encoding.ASCII.GetBytes("vcgt").CopyTo(icc, 132);
+        BitConverter.GetBytes(System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(144)).CopyTo(icc, 136);
+        BitConverter.GetBytes(System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(payload.Count)).CopyTo(icc, 140);
+        payload.ToArray().CopyTo(icc, 144);
+
+        var curves = IccCurveReader.TryRead(icc);
+        Assert.NotNull(curves);
+        Assert.True(curves!.EncodedRamp);
+        Assert.InRange(curves.Channels[0][0], 0, 0.01);
+        Assert.InRange(curves.Channels[0][255], 0.99, 1.0);
+        Assert.InRange(curves.Channels[0][128], Curve(128 / 255d) - 0.02, Curve(128 / 255d) + 0.02);
     }
 
     private static bool ContainsTag(byte[] icc, string signature) => TagSize(icc, signature) > 0;
