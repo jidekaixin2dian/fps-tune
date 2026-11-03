@@ -71,7 +71,7 @@
                     <WrapPanel VerticalAlignment="Center">
                         <TextBlock Text="{DynamicResource Str.FilterAppsDaemon}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                         <Border x:Name="DaemonChip" Style="{StaticResource RuleBadgeStyle}" Margin="8,0,0,0">
-                            <TextBlock x:Name="DaemonStateText" Text="{DynamicResource Str.FilterAppsOff}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock x:Name="DaemonStateText" Text="{DynamicResource Str.FilterAppsOff}" FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
                         </Border>
                         <TextBlock x:Name="DaemonNote" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="Wrap"/>
                     </WrapPanel>
@@ -101,7 +101,7 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,10,0">
                                 <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding ExePath}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                <TextBlock Text="{Binding ExePath}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,3,0,0"/>
                             </StackPanel>
                             <Button Grid.Column="1" Content="{Binding ActionText}" Tag="{Binding}" Style="{StaticResource GhostButtonStyle}"
                                     IsEnabled="{Binding CanAdd}" Click="CandidateAdd_Click" VerticalAlignment="Center"/>
@@ -124,17 +124,17 @@
                         <WrapPanel>
                             <TextBlock Text="{Binding ExeName}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center"/>
                             <Border Style="{StaticResource RuleBadgeStyle}" Visibility="{Binding AutoBadgeVisibility}">
-                                <TextBlock Text="{DynamicResource Str.FilterAppsAutoBadge}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="{DynamicResource Str.FilterAppsAutoBadge}" FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
                             <Border Style="{StaticResource RuleBadgeStyle}" Visibility="{Binding NoFilterBadgeVisibility}">
-                                <TextBlock Text="{DynamicResource Str.FilterAppsNoFilter}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <TextBlock Text="{DynamicResource Str.FilterAppsNoFilter}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}"/>
                             </Border>
                             <Border Style="{StaticResource RuleBadgeStyle}" Visibility="{Binding ActiveBadgeVisibility}">
-                                <TextBlock Text="{DynamicResource Str.FilterAppsActive}" FontSize="11" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="{DynamicResource Str.FilterAppsActive}" FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
                         </WrapPanel>
-                        <TextBlock Text="{Binding ExePath}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
-                        <TextBlock Text="{Binding Summary}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding ExePath}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                        <TextBlock Text="{Binding Summary}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
                         <Button Content="{DynamicResource Str.FilterAppsEdit}" Tag="{Binding Rule}" Style="{StaticResource PrimaryButtonStyle}"
@@ -177,19 +177,19 @@
                 <RadioButton x:Name="ScopeFullscreenRadio" GroupName="perAppScope" Margin="0,8,0,0" Checked="Scope_Changed">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.FilterAppsScopeFullscreen}"/>
-                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeFullscreenNote}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeFullscreenNote}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                 </RadioButton>
                 <RadioButton x:Name="ScopeGameDirRadio" GroupName="perAppScope" Margin="0,8,0,0" Checked="Scope_Changed">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.FilterAppsScopeGameDir}"/>
-                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeGameDirNote}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeGameDirNote}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                 </RadioButton>
                 <RadioButton x:Name="ScopeAnyRadio" GroupName="perAppScope" Margin="0,8,0,0" Checked="Scope_Changed">
                     <StackPanel>
                         <TextBlock Text="{DynamicResource Str.FilterAppsScopeAny}"/>
-                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeAnyNote}" Style="{StaticResource MutedTextStyle}" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="{DynamicResource Str.FilterAppsScopeAnyNote}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                 </RadioButton>
                 <TextBlock x:Name="AutoStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>

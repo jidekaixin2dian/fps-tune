@@ -116,6 +116,29 @@ public partial class FilterCenterPanel : UserControl
         DarkBalanceGammaText.Text = e.NewValue.ToString("0", CultureInfo.InvariantCulture);
     }
 
+    /// <summary>1U 的滤镜行内容：左边名字（超长省略），右边灰色分类标签。</summary>
+    private static FrameworkElement BuildRowContent(FilterChoice choice)
+    {
+        var row = new DockPanel { LastChildFill = true, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var tag = new TextBlock
+        {
+            Text = CategoryLabel(choice.Category),
+            FontSize = 13,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8, 0, 2, 0),
+        };
+        tag.SetResourceReference(TextBlock.ForegroundProperty, "TextMutedBrush");
+        DockPanel.SetDock(tag, Dock.Right);
+        row.Children.Add(tag);
+        row.Children.Add(new TextBlock
+        {
+            Text = choice.Name,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        return row;
+    }
+
     private void RenderPresetList()
     {
         PresetList.Children.Clear();
@@ -140,10 +163,10 @@ public partial class FilterCenterPanel : UserControl
                 var radio = new RadioButton
                 {
                     GroupName = "filterPresets",
-                    Content = choice.Name,
-                    Style = (Style)Resources["PresetCardStyle"],
+                    Style = (Style)Resources["FilterRowStyle"],
                     Tag = choice,
                     IsChecked = ReferenceEquals(choice, _selected),
+                    Content = BuildRowContent(choice),
                 };
                 AutomationProperties.SetName(radio, choice.Name);
                 radio.Checked += (_, _) => SelectChoice(choice);

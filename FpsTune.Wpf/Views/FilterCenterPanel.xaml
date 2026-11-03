@@ -6,6 +6,32 @@
         <Style x:Key="PresetCardStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
             <Setter Property="Margin" Value="0,0,10,10"/>
         </Style>
+        <!-- 滤镜行：1U 的 .icc-filter-item —— 一条一行、整行吃满、无边框，悬停浅底、选中强调底 + 强调文字。 -->
+        <Style x:Key="FilterRowStyle" TargetType="RadioButton">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Margin" Value="0,0,0,1"/>
+            <Setter Property="Template"><Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Row" Background="{TemplateBinding Background}" CornerRadius="{DynamicResource RadiusControl}" Padding="8,6">
+                        <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Row" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value></Setter>
+        </Style>
         <!-- 没有内容就收起来：这三行在未选中预设时是空的，留着会撑出一大块空白 -->
         <Style x:Key="CollapseWhenEmpty" TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
             <Style.Triggers>
@@ -39,10 +65,12 @@
                     </TextBlock.Style>
                 </TextBlock>
             </Grid>
-            <!-- 分类 chips（全部 + 按场景分组）。预设列表不套内层 ScrollViewer：
-                 内层可滚动区域会吞掉鼠标滚轮，页面滚到这一块就卡住。 -->
-            <WrapPanel x:Name="CategoryList" Margin="0,0,0,6"/>
-            <WrapPanel x:Name="PresetList" Margin="0,0,0,8"/>
+            <!-- 分类：单行（放不下就横向滚动），不折行占掉半个面板 -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,6">
+                <StackPanel x:Name="CategoryList" Orientation="Horizontal"/>
+            </ScrollViewer>
+            <!-- 滤镜列表：1U 的一条一行，整行可点，右对齐分类标签 -->
+            <StackPanel x:Name="PresetList" Margin="0,0,0,8"/>
             <Button x:Name="ShowAllButton" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left"
                     Click="ShowAll_Click" Margin="0,0,0,8" Visibility="Collapsed"/>
             <TextBlock x:Name="EmptyFilterText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>

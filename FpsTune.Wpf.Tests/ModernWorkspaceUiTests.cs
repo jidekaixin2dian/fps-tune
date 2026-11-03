@@ -443,8 +443,9 @@ public sealed class ModernWorkspaceUiTests
             app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
             try
             {
-                DlssFeedbackTests.PumpUntil(() => first.FindName("CategoryList") is WrapPanel chips && chips.Children.Count > 1);
-                var list = (WrapPanel)first.FindName("CategoryList");
+                DlssFeedbackTests.PumpUntil(() => first.FindName("CategoryList") is StackPanel chips && chips.Children.Count > 1);
+                // 分类是单行（放不下就横向滚动），不再是会折成四行的 chips 墙。
+                var list = (StackPanel)first.FindName("CategoryList");
                 var soft = list.Children.OfType<RadioButton>().Single(c => (string)c.Tag == "soft");
                 soft.IsChecked = true;
                 DlssFeedbackTests.PumpUntil(() => SettingsService.Current.FilterCategory == "soft");
@@ -628,7 +629,8 @@ public sealed class ModernWorkspaceUiTests
             {
                 var color = (ScreenColorPanel)page.FindName("ColorPanel");
                 var filter = (FilterCenterPanel)page.FindName("FilterCenter");
-                var chips = (WrapPanel)filter.FindName("PresetList");
+                // 滤镜列表按 1U 一条一行，整行可点（不再是两列 chips）。
+                var chips = (StackPanel)filter.FindName("PresetList");
                 DlssFeedbackTests.PumpUntil(() => chips.Children.OfType<RadioButton>().Any());
                 var first = chips.Children.OfType<RadioButton>().First();
                 first.IsChecked = true;
