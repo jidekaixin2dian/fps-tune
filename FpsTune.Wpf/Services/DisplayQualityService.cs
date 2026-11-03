@@ -491,14 +491,19 @@ public static partial class DisplayQualityService
     {
         using var verify = api.OpenSession();
         var profile = verify.FindApplicationOwner(gameExe);
+        // 全部读回一遍再报：只报第一条会让 8 项写成功 7 项的预设显示成「应用失败」，
+        // 用户也不知道该重试还是还原哪些。失败项全部列出来。
+        var failed = new List<string>();
         foreach (var setting in expected)
         {
             uint value = 0;
             var exists = profile is not null && verify.TryGetOverrideDword(profile, setting.SettingId, out value);
             trace?.Readback(setting.SettingId, exists, value);
             if (exists != setting.Existed || exists && value != setting.Value)
-                throw new InvalidOperationException(Str.T("Str.NvDrsReadbackFailed", setting.SettingId.ToString("X8")));
+                failed.Add(setting.SettingId.ToString("X8"));
         }
+        if (failed.Count > 0)
+            throw new InvalidOperationException(Str.T("Str.NvDrsReadbackFailedMany", failed.Count, string.Join(", ", failed)));
     }
 
     private static void ValidateGameExe(string gameExe)
