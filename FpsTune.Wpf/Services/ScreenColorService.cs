@@ -171,9 +171,11 @@ public static class ScreenColorService
         for (var i = 0; i < 256; i++)
         {
             var y = MapTone(i / 255d, effective, gains[c]);
-            // 滤镜曲线叠在画面参数之后：ICC 预设的 rTRC/gTRC/bTRC 就是它要的画面变化，
-            // 折进 ramp 后游戏（不读色彩管理）也能看到；没有滤镜时这一段恒等。
-            if (filter is not null) y = SampleCurve(filter.Channels[c], y);
+            // 只有 vcgt 校准表（编码值→编码值的 ramp）才折进屏幕曲线。
+            // TRC 是 ICC 的「显示响应」曲线（编码值→线性光），我们生成预设时存的是 MapTone 的反函数：
+            // 折进来会与上面的 MapTone 抵消，所有预设最后都等于同一条 sRGB 解码曲线——
+            // 表现就是「换了滤镜看着一样、整体还发暗」。预设各自的观感由画面参数（MapTone）承担。
+            if (filter is { EncodedRamp: true }) y = SampleCurve(filter.Channels[c], y);
             var index = y * 255;
             var lo = (int)index;
             result[c * 256 + i] = (ushort)Math.Round(baseline[c * 256 + lo] * (1 - (index - lo))

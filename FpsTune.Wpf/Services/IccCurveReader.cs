@@ -3,13 +3,19 @@ using System.IO;
 namespace FpsTune.Wpf.Services;
 
 /// <summary>
-/// ICC 预设 → 3×256 通道曲线（0–1）。这是「让滤镜在游戏里真正生效」的第一步：
-/// 游戏和多数全屏程序不读色彩管理，只有显示器的 gamma ramp 能被它们看到，
-/// 所以要把 .icc 里的 rTRC/gTRC/bTRC 曲线取出来，和画面参数一起合成进 ramp。
-/// 只处理我们自有预设实际用到的 <c>curv</c>（TABLE/lut8-16）与 <c>para</c>（1–4 型）；
-/// 3D LUT（mft1/mft2）与色度矩阵不在这一层的表达范围内，遇到时按恒等曲线处理并标记。
+/// ICC 预设 → 3×256 通道曲线（0–1）。
+///
+/// 关键区别（踩过一次坑）：曲线有两种语义，只有一种是「编码值→编码值」的 ramp：
+/// - <c>vcgt</c> 校准表：显示器校准 ramp，输入输出都是屏幕编码值，可以**直接**折进 gamma ramp；
+/// - <c>rTRC/gTRC/bTRC</c>：ICC 规定的**显示响应曲线**（编码值→线性光）。我们自己生成的预设里存的是
+///   <c>MapTone</c> 的反函数，把它当 ramp 用会与画面参数里的 <c>MapTone</c> 抵消，
+///   所有预设最后都变成同一条「sRGB 解码」曲线（画面整体发暗、预设之间毫无区别）。
+///   所以 TRC 只登记不折入，<see cref="EncodedRamp"/> 为 false。
+///
+/// 只处理 <c>curv</c>（TABLE/lut8-16）与 <c>para</c>（1–4 型）；3D LUT（mft1/mft2）与色度矩阵不在这一层，
+/// 遇到时按恒等曲线处理并标记。
 /// </summary>
-public sealed record IccCurves(double[][] Channels, bool HasTable, bool HasParametric, bool Unsupported)
+public sealed record IccCurves(double[][] Channels, bool HasTable, bool HasParametric, bool Unsupported, bool EncodedRamp = false)
 {
     /// <summary>是否是一条什么都不做的曲线（三通道全恒等）。</summary>
     public bool IsIdentity => !HasTable && !HasParametric || Channels.All(IsIdentityChannel);
@@ -17,8 +23,8 @@ public sealed record IccCurves(double[][] Channels, bool HasTable, bool HasParam
     private static bool IsIdentityChannel(double[] channel)
         => channel.Length == 256 && Enumerable.Range(0, 256).All(i => Math.Abs(channel[i] - i / 255d) < 1e-6);
 
-    public static IccCurves FromCurves(double[][] channels, bool table, bool para, bool unsupported = false)
-        => new(channels, table, para, unsupported);
+    public static IccCurves FromCurves(double[][] channels, bool table, bool para, bool unsupported = false, bool encodedRamp = false)
+        => new(channels, table, para, unsupported, encodedRamp);
 
     /// <summary>恒等曲线（没有滤镜时用）。</summary>
     public static IccCurves Identity { get; } = new(
@@ -47,7 +53,9 @@ public static class IccCurveReader
             // vcgt 是显示器校准 ramp（预设真正的"效果"所在），有它就优先用它：
             // rTRC/gTRC/bTRC 只是色彩转换曲线，观感差异远小于 vcgt。
             var vcgt = ReadVcgt(data, tagCount);
-            if (vcgt is not null) return IccCurves.FromCurves(vcgt, true, false);
+            // 只有 vcgt 是「编码值→编码值」的 ramp，可以直接折进屏幕 gamma；
+            // TRC 是「编码值→线性」的显示响应，折进去只会与画面参数互相抵消（见类型注释）。
+            if (vcgt is not null) return IccCurves.FromCurves(vcgt, true, false, encodedRamp: true);
             var tags = new[] { "rTRC", "gTRC", "bTRC" };
             for (var c = 0; c < 3; c++)
             {

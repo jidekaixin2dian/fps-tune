@@ -64,6 +64,8 @@ public sealed class IccCurveReaderTests
             var curves = IccCurveReader.TryRead(IccProfileGenerator.Build(preset));
             Assert.NotNull(curves);
             Assert.All(curves!.Channels, channel => Assert.Equal(256, channel.Length));
+            // 生成式预设只有 TRC（编码→线性），不能当成屏幕校准表折进 ramp——见 IccCurves 的注释。
+            Assert.False(curves.EncodedRamp, $"{preset} 的曲线不该被当作 vcgt 校准表");
             if (!curves.IsIdentity) parsed++;
         }
         Assert.True(parsed >= 8, $"生成式预设里只有 {parsed} 条改变了曲线");

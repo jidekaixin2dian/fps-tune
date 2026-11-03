@@ -46,7 +46,9 @@ internal static class ColorWorkspaceService
                 var filter = iccMode ? ReadFilterCurves(preset, file) : null;
                 ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift, preserveIcc: iccMode, filter: filter);
                 outcomes.Add(Str.T("Str.ColorApplied"));
-                if (filter is not null && !filter.IsIdentity)
+                // 只有真的折了校准 ramp（vcgt）才敢说「曲线已并入屏幕」；
+                // TRC 型预设不再折（见 IccCurves 注释），它的观感由画面参数承担，别谎报。
+                if (filter is { EncodedRamp: true } && !filter.IsIdentity)
                     outcomes.Add(Str.T("Str.ColorFilterCurveApplied"));
             }
             if (vibrance is { } percent)

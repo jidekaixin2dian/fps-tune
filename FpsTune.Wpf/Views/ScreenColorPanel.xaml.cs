@@ -155,6 +155,9 @@ public partial class ScreenColorPanel : UserControl
         _syncing = true;
         try { _iccFile = null; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(preset); }
         finally { _syncing = false; }
+        // 选中滤镜＝把这套预设的画面参数填进面板（草稿，仍需点「应用」）。
+        // 滤镜列表走的是这条路（_syncing 期间不会触发 IccPreset_Changed），必须在这里补一次。
+        ShowSettings(ScreenColorSettings.ForPreset(preset));
         _dirty = true; MarkDraft(); Availability(); UpdatePreview();
     }
 
@@ -311,6 +314,10 @@ public partial class ScreenColorPanel : UserControl
         if (_syncing || ColorPreview is null) return;
         _iccFile = null; MarkDraft();
         if (Preset is not null) ColorModeCombo.SelectedIndex = 1;
+        // 选中滤镜＝把这套预设的画面参数填进面板（草稿，仍需点「应用」）。
+        // 以前这里什么都不填：滤镜的观感全指望折进 ramp 的 ICC 曲线，结果曲线抵消成恒等，
+        // 用户看到的就是「换滤镜没反应、预览都一样」。
+        if (Preset is { } preset) ShowSettings(ScreenColorSettings.ForPreset(preset));
         Availability(); UpdatePreview();
     }
     private void FilterChips_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)

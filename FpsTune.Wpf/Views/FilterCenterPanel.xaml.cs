@@ -179,13 +179,8 @@ public partial class FilterCenterPanel : UserControl
     {
         if (_rendering) return; // 重渲染时回填选中态不算用户重新选择，避免重复套预览
         _selected = choice;
-        // 生成式预设的 Fit 本身就是一句说明，不再套「适合：」模板。
-        PresetFitText.Text = choice.Generated is not null
-            ? choice.Fit
-            : string.IsNullOrWhiteSpace(choice.Fit) ? "" : Str.T("Str.FilterFit", choice.Fit);
-        PresetAvoidText.Text = choice.Generated is not null
-            ? ""
-            : string.IsNullOrWhiteSpace(choice.Avoid) ? "" : Str.T("Str.FilterAvoid", choice.Avoid);
+        // 用户要求去掉「适用：… / 不适合：…」这类说明文字：选滤镜时只看名字与效果，
+        // 不再在下方堆两句场景建议。
         ApplyStatus.Text = "";
         FavoriteButton.Content = FilterPreferenceStore.IsFavorite(choice.FileName)
             ? Str.T("Str.FilterFavoriteRemove", choice.Name) : Str.T("Str.FilterFavoriteAdd", choice.Name);
@@ -199,8 +194,6 @@ public partial class FilterCenterPanel : UserControl
     {
         if (_selected is null) return;
         _selected = null;
-        PresetFitText.Text = "";
-        PresetAvoidText.Text = "";
         ApplyStatus.Text = "";
         RenderPresetList();
     }

@@ -343,9 +343,16 @@ public sealed class ModernWorkspaceUiTests
                 var parameterGrid = (System.Windows.Controls.Primitives.UniformGrid)panel.FindName("ParameterGrid");
                 var brightness = ((StackPanel)parameterGrid.Children[0]).Children.OfType<Slider>().Single();
                 var brightnessValue = brightness.Value;
+                var parameterSliders = parameterGrid.Children.OfType<StackPanel>()
+                    .SelectMany(child => child.Children.OfType<Slider>()).ToArray();
+                var parameterValues = parameterSliders.Select(slider => slider.Value).ToArray();
+                // 新契约（2026-11-03）：选中滤镜＝把该预设的画面参数填进面板（草稿，仍需点「应用」）。
+                // 旧契约刻意不动滑杆，把滤镜观感全压给折进 ramp 的 ICC 曲线；结果曲线与画面参数互相抵消，
+                // 所有预设预览都一样——正是用户反馈的「所有 ICC 滤镜看着区别不大」。
                 render = preview.RenderedRevision;
                 for (var i = 0; i < 8; i++) ((ComboBox)panel.FindName("IccPresetCombo")).SelectedIndex = 5 + i % 2;
-                Assert.Equal(brightnessValue, brightness.Value);
+                Assert.False(parameterValues.SequenceEqual(parameterSliders.Select(slider => slider.Value)),
+                    "换 ICC 预设后画面参数应当跟着变（预设就是一套调色）");
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedGeneration == preview.CurrentGeneration);
                 var gamePixels = RenderImage();
                 Assert.Equal(Str.T("Str.ColorPreviewGameHint"), ((TextBlock)preview.FindName("PreviewStatus")).Text);
