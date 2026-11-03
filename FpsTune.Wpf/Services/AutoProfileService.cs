@@ -193,7 +193,10 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
             var gameExe = StateStore.FindGameByProcessName(processName)?.ExePath;
             if (gameExe is not null)
             {
-                System.Windows.Application.Current?.Dispatcher.Invoke(
+                // 这里在轮询线程上，必须用 BeginInvoke：App.OnExit 会在 UI 线程上等本服务排空
+                // （Dispose → GetAwaiter().GetResult() → _pollsDrained），同步 Invoke 会和那次排空互相等死，
+                // 表现为「点关闭后窗口不消失」。TrayService 里同一处坑已有相同注释。
+                System.Windows.Application.Current?.Dispatcher.BeginInvoke(
                     () => GameContextService.SwitchTo(gameExe, detectIfMissing: true));
             }
             if (activeBindings.TryGetValue(processName, out var binding))

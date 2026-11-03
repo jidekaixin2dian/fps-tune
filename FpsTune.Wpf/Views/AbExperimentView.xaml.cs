@@ -204,12 +204,14 @@ public partial class AbExperimentView : UserControl
         if (_wizard.IsFutureSchema)
             StatusText.Text = _wizard.CompatibilityError;
         else if (_wizard.LastError is { } err)
-            StatusText.Text = "上次出现问题：" + err
-                + (_wizard.LastErrorStep is { } failed ? $" 可重试：{WizardSteps.DisplayName(failed)}。" : " 可重试对应步骤。");
+            StatusText.Text = Str.T("Str.AbLastError", err)
+                + " " + (_wizard.LastErrorStep is { } failed
+                    ? Str.T("Str.AbRetryStep", WizardSteps.DisplayName(failed))
+                    : Str.T("Str.AbRetryAnyStep"));
         else if (!_wizard.BaselineDone)
             StatusText.Text = Str.T("Str.AbReadySimulate");
         else if (_wizard.Groups.Count < WizardSteps.Groups.Length)
-            StatusText.Text = $"基线已完成（平均 {_wizard.BaselineAvgFps:0.#} FPS）。继续测试候选组，或生成报告。";
+            StatusText.Text = Str.T("Str.AbBaselineDoneContinue", _wizard.BaselineAvgFps);
         else
             StatusText.Text = Str.T("Str.AbAllTested");
     }
@@ -241,15 +243,16 @@ public partial class AbExperimentView : UserControl
             baselineLevel = "running";
         steps.Add(new WizardStepVm(
             WizardSteps.Baseline,
-            "1 · 基线采样",
+            Str.T("Str.AbStepBaseline"),
             _wizard.RunningStep == WizardSteps.Baseline
                 ? Str.T("Str.Running")
                 : _wizard.BaselineDone
-                ? $"完成（平均 {_wizard.BaselineAvgFps:0.#} FPS，CV {_wizard.BaselineCv:0.###}{(_wizard.BaselineStable ? "" : "，不稳定")}）"
+                ? Str.T("Str.AbStepDone", _wizard.BaselineAvgFps, _wizard.BaselineCv,
+                    _wizard.BaselineStable ? "" : Str.T("Str.AbUnstableSuffix"))
                 : Str.T("Str.StatusToRun"),
             baselineLevel,
             _wizard.BaselineDone
-                ? $"1% low {_wizard.BaselineP1Low:0.#} · {_wizard.BaselineAt:yy-MM-dd HH:mm}。基线稳定后才能测试候选组。"
+                ? Str.T("Str.AbBaselineDetail", _wizard.BaselineP1Low, _wizard.BaselineAt)
                 : Str.T("Str.AbBaselineHint"),
             _wizard.BaselineDone ? Str.T("Str.Resample") : Str.T("Str.StartSampling"),
             !_running && !_wizard.IsFutureSchema,
@@ -267,13 +270,17 @@ public partial class AbExperimentView : UserControl
                 $"{2 + Array.IndexOf(WizardSteps.Groups, group)} · {WizardSteps.DisplayName(group)}",
                 isRunning
                     ? Str.T("Str.Running")
-                    : result is null ? (blocked is null ? Str.T("Str.StatusToRun") : Str.T("Str.Locked")) : result.Keep == true ? "完成：保留" : result.Reverted ? "完成：已还原" : "完成：未还原",
+                    : result is null
+                    ? (blocked is null ? Str.T("Str.StatusToRun") : Str.T("Str.Locked"))
+                    : Str.T("Str.AbStepDoneVerdict", result.Keep == true ? Str.T("Str.Keep")
+                        : result.Reverted ? Str.T("Str.Restored") : Str.T("Str.NotRestored")),
                 isRunning ? "running" : result is null ? "" : result.Keep == true ? "done" : result.Reverted ? "reverted" : "error",
                 isRunning
-                    ? "脚本正在执行，请保持游戏场景固定；可取消并在结果未知时检查后重试。"
+                    ? Str.T("Str.AbStepRunningHint")
                     : result is null
                     ? (blocked is not null ? blocked : Str.T("Str.AbCandidateHint"))
-                    : $"{result.Reason}（平均 {result.AvgFps:0.#} FPS · 1% low {result.P1Low:0.#} · {result.CompletedAt:yy-MM-dd HH:mm}{(result.Simulated ? " · 模拟" : "")}）",
+                    : Str.T("Str.AbGroupDetail", result.Reason, result.AvgFps, result.P1Low, result.CompletedAt,
+                        result.Simulated ? " · " + Str.T("Str.AbSimulated") : ""),
                 isRunning ? Str.T("Str.Running") : Str.T("Str.Run"),
                 !_running && !_wizard.IsFutureSchema && blocked is null,
                 options,
@@ -285,11 +292,11 @@ public partial class AbExperimentView : UserControl
         var reportRunning = _wizard.RunningStep == WizardSteps.Report;
         steps.Add(new WizardStepVm(
             WizardSteps.Report,
-            "5 · 生成报告",
-            reportRunning ? Str.T("Str.Running") : _wizard.ReportGenerated ? $"已生成（{_wizard.ReportAt:yy-MM-dd HH:mm}）" : reportBlocked is null ? Str.T("Str.StatusToRun") : Str.T("Str.Locked"),
+            Str.T("Str.AbStepReport"),
+            reportRunning ? Str.T("Str.Running") : _wizard.ReportGenerated ? Str.T("Str.AbReportAt", _wizard.ReportAt) : reportBlocked is null ? Str.T("Str.StatusToRun") : Str.T("Str.Locked"),
             reportRunning ? "running" : _wizard.ReportGenerated ? "done" : "",
             reportRunning
-                ? "正在合成脚本原始指标与会话摘要；可取消并在结果未知时重试。"
+                ? Str.T("Str.AbReportRunningHint")
                 : reportBlocked is null
                     ? Str.T("Str.AbReportHint")
                     : reportBlocked,
@@ -304,9 +311,9 @@ public partial class AbExperimentView : UserControl
 
     private List<WizardSessionOption> BuildSessionOptions()
     {
-        var options = new List<WizardSessionOption> { new(null, "（不关联会话）") };
+        var options = new List<WizardSessionOption> { new(null, Str.T("Str.AbNoSession")) };
         foreach (var s in PerformanceSessionStore.LoadAll().Take(15))
-            options.Add(new WizardSessionOption(s.Id, $"{s.Name} · {s.StartedAt:MM-dd HH:mm} · {s.Samples.Count} 样本"));
+            options.Add(new WizardSessionOption(s.Id, Str.T("Str.AbSessionOption", s.Name, s.StartedAt, s.Samples.Count)));
         return options;
     }
 
@@ -356,7 +363,7 @@ public partial class AbExperimentView : UserControl
         }
         if (ExperimentWizardStore.TrySave(_wizard, out var error))
             return true;
-        StatusText.Text = "向导状态保存失败：" + error + "。本次结果未被可靠记录，请先解决权限/磁盘问题后重试。";
+        StatusText.Text = Str.T("Str.AbSaveFailed", error);
         return false;
     }
 
@@ -366,7 +373,7 @@ public partial class AbExperimentView : UserControl
             return;
         _cancelRequested = true;
         CancelRunButton.IsEnabled = false;
-        StatusText.Text = "正在取消当前步骤……将停止脚本，当前结果不会形成结论。";
+        StatusText.Text = Str.T("Str.AbCancelling");
         _runCancellation.Cancel();
     }
 
@@ -387,7 +394,7 @@ public partial class AbExperimentView : UserControl
         var blocked = ExperimentWizard.CanRunStep(_wizard, vm.Step);
         if (blocked is not null)
         {
-            StatusText.Text = "无法开始：" + blocked;
+            StatusText.Text = Str.T("Str.AbCannotStart", blocked);
             return;
         }
 
@@ -400,7 +407,7 @@ public partial class AbExperimentView : UserControl
         _wizard = ExperimentWizard.WithRunning(_wizard, vm.Step);
         if (!SaveWizardState())
         {
-            _wizard = ExperimentWizard.WithError(_wizard, vm.Step, "向导状态无法保存，步骤尚未启动。请解决权限/磁盘问题后重试。");
+            _wizard = ExperimentWizard.WithError(_wizard, vm.Step, Str.T("Str.AbSaveBlockedStart"));
             _running = false;
             _runCancellation = null;
             CancelRunButton.IsEnabled = false;
@@ -408,8 +415,8 @@ public partial class AbExperimentView : UserControl
             return;
         }
         RebuildWizardUi();
-        StatusText.Text = $"正在运行：{WizardSteps.DisplayName(vm.Step)}……运行期间步骤按钮已禁用，请保持游戏场景固定。";
-        RawBox.Text = "正在运行： " + WizardSteps.DisplayName(vm.Step);
+        StatusText.Text = Str.T("Str.AbRunningStatus", WizardSteps.DisplayName(vm.Step));
+        RawBox.Text = Str.T("Str.AbRunningRaw", WizardSteps.DisplayName(vm.Step));
         ResetMetrics();
 
         try
@@ -434,10 +441,10 @@ public partial class AbExperimentView : UserControl
         }
         catch (OperationCanceledException)
         {
-            RawBox.Text = "步骤已取消。脚本未完成，结果未知；如果候选组已经应用，请先检查/还原设置，再重试。";
+            RawBox.Text = Str.T("Str.AbStepCancelledRaw");
             _wizard = ExperimentWizard.WithRawOutput(_wizard, RawBox.Text);
             ApplyStepResult(vm.Step, false, null, sessionId,
-                "用户取消了步骤；脚本已停止，结果未知。请检查候选设置后重试。");
+                Str.T("Str.AbStepCancelledDetail"));
         }
         catch (Exception ex)
         {
@@ -452,7 +459,7 @@ public partial class AbExperimentView : UserControl
             _running = false;
             _wizard = _wizard with { RunningStep = null, RunningSince = null };
             if (_cancelRequested && _wizard.LastError is null)
-                _wizard = ExperimentWizard.WithError(_wizard, vm.Step, "用户取消了步骤；结果未知，可重试。");
+                _wizard = ExperimentWizard.WithError(_wizard, vm.Step, Str.T("Str.AbStepCancelledShort"));
             SaveWizardState();
             RebuildWizardUi();
             RefreshHistory();
@@ -465,9 +472,10 @@ public partial class AbExperimentView : UserControl
     {
         if (!success)
         {
-            _wizard = ExperimentWizard.WithError(_wizard, step,
-                $"步骤执行失败{(exceptionMessage is null ? "（脚本返回非零退出码）" : "：" + exceptionMessage)}");
-            StatusText.Text = "执行失败，详见原始输出。可重试该步骤。";
+            _wizard = ExperimentWizard.WithError(_wizard, step, exceptionMessage is null
+                ? Str.T("Str.AbStepExecFailedNonZero")
+                : Str.T("Str.AbStepExecFailedReason", exceptionMessage));
+            StatusText.Text = Str.T("Str.AbExecFailedStatus");
             return;
         }
 
@@ -478,22 +486,22 @@ public partial class AbExperimentView : UserControl
         }
         catch
         {
-            _wizard = ExperimentWizard.WithError(_wizard, step, "脚本输出无法解析为 JSON（可能被其他输出污染）。");
-            StatusText.Text = "输出解析失败，详见原始输出。";
+            _wizard = ExperimentWizard.WithError(_wizard, step, Str.T("Str.AbOutputNotJson"));
+            StatusText.Text = Str.T("Str.AbOutputParseFailed");
             return;
         }
         if (root is not JsonObject obj)
         {
-            _wizard = ExperimentWizard.WithError(_wizard, step, "脚本输出不是 JSON 对象。");
-            StatusText.Text = "输出解析失败，详见原始输出。";
+            _wizard = ExperimentWizard.WithError(_wizard, step, Str.T("Str.AbOutputNotObject"));
+            StatusText.Text = Str.T("Str.AbOutputParseFailed");
             return;
         }
 
         if (obj["ok"]?.GetValue<bool>() == false)
         {
-            var error = obj["error"]?.GetValue<string>() ?? "脚本报告失败（未提供原因）";
+            var error = obj["error"]?.GetValue<string>() ?? Str.T("Str.AbEngineFailedNoReason");
             _wizard = ExperimentWizard.WithError(_wizard, step, error);
-            StatusText.Text = "步骤未完成：" + error;
+            StatusText.Text = Str.T("Str.AbStepIncomplete", error);
             return;
         }
 
@@ -505,8 +513,8 @@ public partial class AbExperimentView : UserControl
                 || !TryReadRequiredMetric(summary, "p1Low", out var p1)
                 || !TryReadRequiredMetric(summary, "cv", out var cv))
             {
-                _wizard = ExperimentWizard.WithError(_wizard, step, "脚本基线结果缺少有效指标，未保存为完成状态。");
-                StatusText.Text = "基线结果无效，详见原始输出。";
+                _wizard = ExperimentWizard.WithError(_wizard, step, Str.T("Str.AbBaselineMetricsMissing"));
+                StatusText.Text = Str.T("Str.AbBaselineInvalid");
                 return;
             }
             var stable = summary?["stable"]?.GetValue<bool>() ?? false;
@@ -522,8 +530,8 @@ public partial class AbExperimentView : UserControl
             if (!TryReadRequiredMetric(summary, "avgFps", out var avg)
                 || !TryReadRequiredMetric(summary, "p1Low", out var p1))
             {
-                _wizard = ExperimentWizard.WithError(_wizard, step, "脚本候选组结果缺少有效指标，未保存为完成状态。");
-                StatusText.Text = "候选组结果无效，详见原始输出。";
+                _wizard = ExperimentWizard.WithError(_wizard, step, Str.T("Str.AbGroupMetricsMissing"));
+                StatusText.Text = Str.T("Str.AbGroupInvalid");
                 return;
             }
             var keep = obj["keep"]?.GetValue<bool>() == true;
@@ -534,7 +542,9 @@ public partial class AbExperimentView : UserControl
                     obj["samplerMode"]?.GetValue<string>() == "simulated", DateTime.Now),
                 sessionId);
             SetMetrics(summary);
-            DecisionText.Text = keep ? "keep / 保留" : reverted ? "revert / 已还原" : "revert 未完成 / 未还原";
+            DecisionText.Text = keep
+                ? Str.T("Str.Keep")
+                : reverted ? Str.T("Str.Restored") : Str.T("Str.VerdictRestoreIncomplete");
             StatusText.Text = obj["message"]?.GetValue<string>() ?? Str.T("Str.AbTestDone");
             TrayService.NotifyComplete(Str.T("Str.AppNameAb"), StatusText.Text);
         }
@@ -548,14 +558,14 @@ public partial class AbExperimentView : UserControl
                     .OfType<JsonObject>()
                     .Any(group => string.Equals(group["id"]?.GetValue<string>(), id, StringComparison.Ordinal))) )
             {
-                _wizard = ExperimentWizard.WithError(_wizard, step, "脚本报告缺少完整基线或候选组指标，未标记为已生成。");
-                StatusText.Text = "报告结果不完整，详见原始输出。";
+                _wizard = ExperimentWizard.WithError(_wizard, step, Str.T("Str.AbReportMetricsMissing"));
+                StatusText.Text = Str.T("Str.AbReportIncomplete");
                 return;
             }
             if (!TryComposeReportFile(obj, out var reportError))
             {
-                _wizard = ExperimentWizard.WithError(_wizard, step, reportError ?? "报告文件写入失败。");
-                StatusText.Text = "报告写入失败，详见原始输出。可重试。";
+                _wizard = ExperimentWizard.WithError(_wizard, step, reportError ?? Str.T("Str.AbReportWriteFailedShort"));
+                StatusText.Text = Str.T("Str.AbReportWriteFailedStatus");
                 return;
             }
             _wizard = ExperimentWizard.WithReportGenerated(_wizard);
@@ -565,8 +575,8 @@ public partial class AbExperimentView : UserControl
         }
         else
         {
-            _wizard = ExperimentWizard.WithError(_wizard, step, $"脚本返回模式（{mode}）与请求步骤（{step}）不匹配。");
-            StatusText.Text = "结果与步骤不匹配，详见原始输出。";
+            _wizard = ExperimentWizard.WithError(_wizard, step, Str.T("Str.AbModeMismatch", mode, step));
+            StatusText.Text = Str.T("Str.AbModeMismatchStatus");
         }
     }
 
@@ -589,29 +599,30 @@ public partial class AbExperimentView : UserControl
     {
         error = null;
         var sb = new StringBuilder();
-        sb.AppendLine("# FPS 帧律 · A/B 实验报告");
+        sb.AppendLine("# " + Str.T("Str.AbReportTitle"));
         sb.AppendLine();
-        sb.AppendLine($"- 生成时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine("- 结论口径：仅来自实际/模拟采样的统计比较；启发式数据不代表因果，不承诺固定 FPS 提升。");
+        sb.AppendLine(Str.T("Str.AbReportTimeLine", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+        sb.AppendLine(Str.T("Str.AbReportScopeLine"));
         sb.AppendLine();
 
         var baseline = scriptReport["baseline"] as JsonObject;
-        sb.AppendLine("## 基线");
+        sb.AppendLine(Str.T("Str.AbReportBaselineSection"));
         sb.AppendLine();
         if (baseline is not null)
-            sb.AppendLine($"平均 {baseline["avgFps"]} FPS · 1% low {baseline["p1Low"]} · P99 {baseline["p99Ms"]} ms · 卡顿 {baseline["stutters"]} · CV {baseline["cv"]}");
+            sb.AppendLine(Str.T("Str.AbReportBaselineLine", baseline["avgFps"], baseline["p1Low"], baseline["p99Ms"], baseline["stutters"], baseline["cv"]));
         else
-            sb.AppendLine("（无基线数据）");
+            sb.AppendLine(Str.T("Str.AbReportNoBaseline"));
         if (_wizard.BaselineSessionId is { } bsId
             && PerformanceSessionStore.LoadAll().FirstOrDefault(s => s.Id == bsId) is { } bsSession)
         {
             sb.AppendLine();
-            sb.AppendLine($"关联性能会话：{bsSession.Name}（{bsSession.StartedAt:yyyy-MM-dd HH:mm}，{bsSession.Samples.Count} 样本）");
+            sb.AppendLine(Str.T("Str.AbReportSessionLine", bsSession.Name,
+                bsSession.StartedAt.ToString("yyyy-MM-dd HH:mm"), bsSession.Samples.Count));
             sb.AppendLine(FormatSessionSummaryLine(bsSession));
         }
 
         sb.AppendLine();
-        sb.AppendLine("## 候选组结论");
+        sb.AppendLine(Str.T("Str.AbReportGroupsSection"));
         sb.AppendLine();
         var groups = scriptReport["groups"] as JsonArray;
         if (groups is not null && groups.Count > 0)
@@ -619,23 +630,25 @@ public partial class AbExperimentView : UserControl
             foreach (var g in groups.OfType<JsonObject>())
             {
                 var id = g["id"]?.GetValue<string>() ?? "";
-                sb.AppendLine($"- **{g["name"]?.GetValue<string>() ?? id}（{id}）**：{(g["keep"]?.GetValue<bool>() == true ? Str.T("Str.Keep") : g["reverted"]?.GetValue<bool>() == true ? Str.T("Str.Restored") : Str.T("Str.NotRestored"))}"
-                              + $" —— 平均 {g["summary"]?["avgFps"]} FPS、1% low {g["summary"]?["p1Low"]}。{g["reason"]?.GetValue<string>()}");
+                var verdict = g["keep"]?.GetValue<bool>() == true ? Str.T("Str.Keep")
+                    : g["reverted"]?.GetValue<bool>() == true ? Str.T("Str.Restored") : Str.T("Str.NotRestored");
+                sb.AppendLine(Str.T("Str.AbReportGroupLine", g["name"]?.GetValue<string>() ?? id, id, verdict)
+                              + " — " + Str.T("Str.AbReportGroupMetrics", g["summary"]?["avgFps"], g["summary"]?["p1Low"], g["reason"]?.GetValue<string>() ?? ""));
                 if (_wizard.GroupResult(id)?.SessionId is { } sid
                     && PerformanceSessionStore.LoadAll().FirstOrDefault(s => s.Id == sid) is { } session)
                 {
-                    sb.AppendLine($"  - 关联性能会话：{session.Name}（{session.StartedAt:yyyy-MM-dd HH:mm}）");
+                    sb.AppendLine("  - " + Str.T("Str.AbReportSessionLineShort", session.Name, session.StartedAt.ToString("yyyy-MM-dd HH:mm")));
                     sb.AppendLine("    - " + FormatSessionSummaryLine(session));
                 }
             }
         }
         else
         {
-            sb.AppendLine("（尚未测试任何候选组）");
+            sb.AppendLine(Str.T("Str.AbReportNoGroups"));
         }
 
         sb.AppendLine();
-        sb.AppendLine("## 脚本原始输出（JSON）");
+        sb.AppendLine(Str.T("Str.AbReportRawSection"));
         sb.AppendLine();
         sb.AppendLine("```json");
         sb.AppendLine(scriptReport.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
@@ -646,12 +659,12 @@ public partial class AbExperimentView : UserControl
             var dir = Path.Combine(UserDataPaths.Root, "experiment");
             Directory.CreateDirectory(dir);
             AtomicFile.WriteAllText(Path.Combine(dir, "report-latest.md"), sb.ToString(), new UTF8Encoding(false));
-            RawBox.Text = sb.ToString() + "\n\n（原始 JSON 输出见脚本；文件已保存 report-latest.md）";
+            RawBox.Text = sb.ToString() + "\n\n" + Str.T("Str.AbReportSavedNote");
             return true;
         }
         catch (Exception ex)
         {
-            error = "报告文件写入失败：" + ex.Message;
+            error = Str.T("Str.AbReportWriteFailed", ex.Message);
             RawBox.Text = error + "\n\n" + sb;
             return false;
         }
@@ -660,12 +673,12 @@ public partial class AbExperimentView : UserControl
     private static string FormatSessionSummaryLine(PerformanceSession session)
     {
         var sum = SessionStatistics.Summarize(session);
-        var parts = new List<string> { $"{sum.SampleCount} 样本" };
-        if (sum.Cpu is { } c) parts.Add($"CPU 平均 {c.Avg}% / 95 位 {c.HighP95}%");
-        if (sum.Mem is { } m) parts.Add($"内存平均 {m.Avg}%");
-        if (sum.Gpu is { } g) parts.Add($"GPU 平均 {g.Avg}%");
-        if (sum.VramAvgMib is { } v) parts.Add($"显存平均 {v:0} MiB");
-        return Str.T("Str.SummaryLabel") + string.Join(" · ", parts) + "（启发式判断，不代表因果）";
+        var parts = new List<string> { Str.T("Str.AbSamplesCount", sum.SampleCount) };
+        if (sum.Cpu is { } c) parts.Add(Str.T("Str.AbSummaryCpu", c.Avg, c.HighP95));
+        if (sum.Mem is { } m) parts.Add(Str.T("Str.AbSummaryMem", m.Avg));
+        if (sum.Gpu is { } g) parts.Add(Str.T("Str.AbSummaryGpu", g.Avg));
+        if (sum.VramAvgMib is { } v) parts.Add(Str.T("Str.AbSummaryVram", v));
+        return Str.T("Str.SummaryLabel") + string.Join(" · ", parts) + " " + Str.T("Str.AbSummaryNote");
     }
 
     // ---------- 指标瓦片 ----------
@@ -857,12 +870,12 @@ public partial class AbExperimentView : UserControl
 
     private static string BuildTooltip(ExperimentRun r)
     {
-        var time = r.Time == DateTime.MinValue ? "" : $"\n{r.Time:yyyy-MM-dd HH:mm}";
+        var time = r.Time == DateTime.MinValue ? "" : "\n" + r.Time.ToString("yyyy-MM-dd HH:mm");
         var verdict = r.Keep is null
             ? ""
-            : $"\n结论：{(r.Keep == true ? Str.T("Str.Keep") : r.Reverted == true ? Str.T("Str.Restored") : Str.T("Str.NotRestored"))}";
-        var reason = string.IsNullOrWhiteSpace(r.Reason) ? "" : $"\n{r.Reason}";
-        return $"{r.Name}（{r.Id}）{time}\n平均 {r.AvgFps} FPS · 1% low {r.P1Low} FPS{verdict}{reason}";
+            : "\n" + Str.T("Str.AbTooltipVerdict", r.Keep == true ? Str.T("Str.Keep") : r.Reverted == true ? Str.T("Str.Restored") : Str.T("Str.NotRestored"));
+        var reason = string.IsNullOrWhiteSpace(r.Reason) ? "" : "\n" + r.Reason;
+        return Str.T("Str.AbTooltipBody", r.Name, r.Id, time, r.AvgFps, r.P1Low, verdict, reason);
     }
 
     // 原始输出框自身可滚: 滚到尽头时把滚轮还给页面根滚动(与检测页同款)

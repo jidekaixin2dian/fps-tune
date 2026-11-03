@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using FpsTune.Wpf.Services;
 
@@ -59,4 +60,8 @@ public partial class PreparationHistoryWindow : Window
         if (dialog.ShowDialog(this) == true) ExportSelected(dialog.FileName);
     }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+    private void Header_Drag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+    }
 }

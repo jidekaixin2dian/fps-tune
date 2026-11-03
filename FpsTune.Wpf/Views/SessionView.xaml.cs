@@ -45,7 +45,7 @@ public partial class SessionView : UserControl
             var game = !string.IsNullOrWhiteSpace(AppState.GamePath)
                 ? GamePathService.LabelFor(AppState.GamePath)
                 : Str.T("Str.Comparison");
-            SessionNameBox.Text = $"{game} · 对照记录 {DateTime.Now:MM-dd HH:mm}";
+            SessionNameBox.Text = Str.T("Str.SessionDefaultName", game, DateTime.Now);
         }
         _preparationHint = Str.T("Str.RecordMatchHint");
         UpdateRunState();
@@ -137,9 +137,9 @@ public partial class SessionView : UserControl
         else if (Service.IsRunning)
         {
             var unavailable = Service.CurrentUnavailableReasons;
-            var missing = unavailable.Count == 0 ? Str.T("Str.None") : string.Join("；", unavailable.Keys);
-            RunStateText.Text = $"采样中：{Service.SessionName} · 已运行 {FormatDuration(Service.Elapsed)} · " +
-                                $"样本 {Service.RunningBuffer.Count} · 间隔 {Service.SampleIntervalSeconds:0.#} 秒 · 缺失指标：{missing}";
+            var missing = unavailable.Count == 0 ? Str.T("Str.None") : string.Join(Str.T("Str.ListSeparatorSemicolon"), unavailable.Keys);
+            RunStateText.Text = Str.T("Str.SessionRunningLine", Service.SessionName, FormatDuration(Service.Elapsed),
+                Service.RunningBuffer.Count, Service.SampleIntervalSeconds, missing);
             if (Service.CurrentFpsUnavailableReasonKey is { } fpsKey)
                 RunStateText.Text += " · " + Str.T("Str.FpsUnavailableShort", Str.T(fpsKey));
         }
@@ -179,8 +179,8 @@ public partial class SessionView : UserControl
                 ? $"{used / t * 100.0:0}%"
                 : $"{used / 1024.0 / 1024.0:0} MiB";
             VramTotalText.Text = total is { } tt && tt > 0
-                ? $"{used / 1024.0 / 1024.0:0} / {tt / 1024.0 / 1024.0:0} MiB（注册表报告容量）"
-                : "显存容量不可用，无法计算占比";
+                ? Str.T("Str.SessionVramCapacity", used / 1024.0 / 1024.0, tt / 1024.0 / 1024.0)
+                : Str.T("Str.SessionVramCapacityUnknown");
         }
         else
         {
@@ -222,7 +222,7 @@ public partial class SessionView : UserControl
             name = PerformanceSessionService.DefaultSessionName();
         if (!PerformanceSessionService.IsValidSessionName(name))
         {
-            DialogService.Warning("性能会话", "会话名称包含不能用于文件的字符，请修改后重试。");
+            DialogService.Warning(Str.T("Str.NavSession"), Str.T("Str.SessionNameInvalid"));
             return;
         }
         if (!TryReadConditions(out var conditions))
@@ -234,10 +234,8 @@ public partial class SessionView : UserControl
         if (!Service.Start(name, conditions) && !TryArchiveUnreadableSession(name, conditions))
         {
             DialogService.Warning(
-                "性能会话",
-                "无法开始会话：另一个 FpsTune 实例正在使用性能会话，或上次中断会话尚未处理。\n\n" +
-                "如确认只有一个实例在运行，可关闭程序后删除或改名这个文件：\n" +
-                Path.Combine(PerformanceSessionStore.SessionsDir, "_active.json"));
+                Str.T("Str.NavSession"),
+                Str.T("Str.SessionStartBusy", Path.Combine(PerformanceSessionStore.SessionsDir, "_active.json")));
             RefreshControlState();
             return;
         }
@@ -255,23 +253,21 @@ public partial class SessionView : UserControl
             return false;
 
         var go = DialogService.Confirm(
-            "性能会话",
-            "上次未完成的会话快照无法被当前版本读取（通常来自更新的版本，或文件已损坏）。\n\n" +
-            "可以把它改名留档（不删除、不参与统计），然后立即开始新会话。\n\n要现在归档吗？",
+            Str.T("Str.NavSession"),
+            Str.T("Str.SessionUnreadableConfirm"),
             confirmText: Str.T("Str.ArchiveAndStart"));
         if (!go)
             return false;
 
         if (!PerformanceSessionStore.TryArchiveUnreadableActiveSnapshot(out var archived, out var error))
         {
-            DialogService.Warning("性能会话", "归档失败：" + error);
+            DialogService.Warning(Str.T("Str.NavSession"), Str.T("Str.SessionArchiveFailed", error));
             return false;
         }
 
         DialogService.Info(
-            "性能会话",
-            "已留档为：" + Environment.NewLine + Path.GetFileName(archived) + Environment.NewLine +
-            Environment.NewLine + "文件仍在会话目录中，可随时手动找回。");
+            Str.T("Str.NavSession"),
+            Str.T("Str.SessionArchived", Path.GetFileName(archived)));
         return Service.Start(name, conditions);
     }
 
@@ -346,7 +342,7 @@ public partial class SessionView : UserControl
             RefreshAll();
             DialogService.Warning(
                 Str.T("Str.CancelFailed"),
-                "未能安全写入取消标记，会话快照仍保留，未将本次会话视为已取消。请重试或先检查本地磁盘。\n\n" + ex.Message);
+                Str.T("Str.SessionCancelMarkFailed", ex.Message));
         }
     }
 
@@ -383,7 +379,7 @@ public partial class SessionView : UserControl
         catch (Exception ex)
         {
             if (generation == _historyGeneration && IsLoaded)
-                RunStateText.Text = "历史记录读取失败：" + ex.Message;
+                RunStateText.Text = Str.T("Str.SessionHistoryLoadFailed", ex.Message);
         }
         finally
         {
@@ -399,9 +395,9 @@ public partial class SessionView : UserControl
             var sum = summaries[s.Id];
             var avgParts = new List<string>();
             if (sum.Cpu is { } c) avgParts.Add($"CPU {c.Avg}%");
-            if (sum.Mem is { } m) avgParts.Add($"内存 {m.Avg}%");
+            if (sum.Mem is { } m) avgParts.Add(Str.T("Str.SessionMemAvg", m.Avg));
             if (sum.Gpu is { } g) avgParts.Add($"GPU {g.Avg}%");
-            if (sum.VramAvgMib is { } v) avgParts.Add($"显存 {v:0} MiB");
+            if (sum.VramAvgMib is { } v) avgParts.Add(Str.T("Str.SessionVramAvg", v));
             if (s.Fps is { } fps) avgParts.Add($"FPS {fps.AvgFps:0}");
             return new SessionListVm(
                 s.Id,
@@ -438,18 +434,19 @@ public partial class SessionView : UserControl
         {
             Title = Str.T("Str.ExportSessionJson"),
             Filter = "JSON (*.json)|*.json",
-            FileName = $"FpsTune-会话-{SanitizeFileName(session.Name)}-{session.StartedAt:yyyyMMdd-HHmmss}.json"
+            FileName = Str.T("Str.SessionExportFilePrefix") + SanitizeFileName(session.Name)
+                + "-" + session.StartedAt.ToString("yyyyMMdd-HHmmss") + ".json"
         };
         if (dlg.ShowDialog() != true)
             return;
         try
         {
             SessionExporter.ExportJson(session, dlg.FileName);
-            DialogService.Info(Str.T("Str.ExportDone"), "JSON 已保存到所选位置。文件内容不含路径与用户名。");
+            DialogService.Info(Str.T("Str.ExportDone"), Str.T("Str.SessionJsonSaved"));
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.ExportFailed"), "JSON 导出失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.ExportFailed"), Str.T("Str.SessionJsonExportFailed", ex.Message));
         }
     }
 
@@ -462,18 +459,19 @@ public partial class SessionView : UserControl
         {
             Title = Str.T("Str.ExportSessionCsv"),
             Filter = "CSV (*.csv)|*.csv",
-            FileName = $"FpsTune-会话-{SanitizeFileName(session.Name)}-{session.StartedAt:yyyyMMdd-HHmmss}.csv"
+            FileName = Str.T("Str.SessionExportFilePrefix") + SanitizeFileName(session.Name)
+                + "-" + session.StartedAt.ToString("yyyyMMdd-HHmmss") + ".csv"
         };
         if (dlg.ShowDialog() != true)
             return;
         try
         {
             SessionExporter.ExportCsv(session, dlg.FileName);
-            DialogService.Info(Str.T("Str.ExportDone"), "CSV 已保存到所选位置。缺失样本为空单元格。");
+            DialogService.Info(Str.T("Str.ExportDone"), Str.T("Str.SessionCsvSaved"));
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.ExportFailed"), "CSV 导出失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.ExportFailed"), Str.T("Str.SessionCsvExportFailed", ex.Message));
         }
     }
 
@@ -484,7 +482,7 @@ public partial class SessionView : UserControl
             return;
         if (!DialogService.Confirm(
                 Str.T("Str.DeleteSession"),
-                $"确定删除所选 {selected.Count} 个会话？此操作只删除这些会话文件，不影响其他数据。",
+                Str.T("Str.SessionDeleteConfirm", selected.Count),
                 danger: true, confirmText: Str.T("Str.Delete")))
             return;
         var failed = new List<string>();
@@ -511,7 +509,7 @@ public partial class SessionView : UserControl
         var selected = HistoryList.SelectedItems.OfType<SessionListVm>().ToList();
         if (selected.Count != 1)
         {
-            DialogService.Info("性能会话", Str.T("Str.SelectExactlyOneSession"));
+            DialogService.Info(Str.T("Str.NavSession"), Str.T("Str.SelectExactlyOneSession"));
             return null;
         }
         var path = Path.Combine(PerformanceSessionStore.SessionsDir, PerformanceSessionStore.FileNameFor(selected[0].Id));
@@ -567,17 +565,17 @@ public partial class SessionView : UserControl
                 "Bottleneck", level, Str.T("Str.BottleneckTitle"), detail, null, null, Array.Empty<string>()));
         }
 
-        InsightTargetText.Text = $"依据会话「{session.Name}」（{session.StartedAt:MM-dd HH:mm} 起，{summary.SampleCount} 个样本）";
+        InsightTargetText.Text = Str.T("Str.SessionInsightTarget", session.Name, session.StartedAt, summary.SampleCount);
         InsightList.ItemsSource = findings.Select(f => new InsightVm(
             f.Kind,
             f.Level,
             f.Title,
             f.Detail,
             (f.WindowStart is { } ws && f.WindowEnd is { } we
-                ? $"时间范围 {ws:HH:mm:ss} - {we:HH:mm:ss}"
+                ? Str.T("Str.SessionInsightWindow", ws, we)
                 : "") +
             (f.MissingSignals.Count > 0
-                ? (f.WindowStart is { } ? " · " : "") + Str.T("Str.MissingSignal") + string.Join("、", f.MissingSignals)
+                ? (f.WindowStart is { } ? " · " : "") + Str.T("Str.MissingSignal") + string.Join(Str.T("Str.ListSeparator"), f.MissingSignals)
                 : ""),
             KindLabel(f.Kind))).ToList();
     }
@@ -612,7 +610,7 @@ public partial class SessionView : UserControl
 
     private sealed record CompareSourceVm(string Id, string Name, DateTime StartedAt)
     {
-        public string Display => $"{Name}（{StartedAt:MM-dd HH:mm}）";
+        public string Display => Str.T("Str.SessionDisplayName", Name, StartedAt);
     }
 
     private void Compare_SelectionChanged(object sender, SelectionChangedEventArgs e) => RebuildCompare();

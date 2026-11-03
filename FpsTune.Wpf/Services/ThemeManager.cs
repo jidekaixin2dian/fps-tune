@@ -78,6 +78,9 @@ public static class ThemeManager
         // 选中态软底：强调色 13% 透明铺底，深/浅主题下都刚好托住文字不抢层级
         SetBrush("AccentSoftBrush", WithAlpha(accent, studio || resolved == "light" ? (byte)0x20 : (byte)0x24));
         SetBrush("DangerBrush", t.Danger);
+        SetBrush("OnDangerBrush", Parse("#FFFFFF"));
+        // 模态遮罩：浅色主题下用深墨色而不是纯黑，深色主题保持 60% 黑。
+        SetBrush("ScrimBrush", Parse(resolved == "light" ? "#B30A0E14" : "#99000000"));
         SetBrush("WarningBrush", t.Warning);
         SetBrush("OkBrush", t.Ok);
         Application.Current.Resources["PrimaryColor"] = t.Primary;

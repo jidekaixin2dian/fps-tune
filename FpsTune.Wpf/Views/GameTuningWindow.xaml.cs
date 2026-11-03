@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -165,4 +166,8 @@ public partial class GameTuningWindow : Window
     private void Official_Click(object sender, RoutedEventArgs e)
     { try { Process.Start(new ProcessStartInfo(GameTuning.Source(_gamePath)) { UseShellExecute = true }); } catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); } }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+    private void Header_Drag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+    }
 }

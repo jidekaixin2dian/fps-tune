@@ -68,7 +68,22 @@
                     </StackPanel>
                     <WrapPanel Grid.Column="1" VerticalAlignment="Center">
                         <Button Content="{Binding EnabledText}" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="ToggleRule_Click" Margin="0,0,2,0"/>
-                        <Button Content="✕" Tag="{Binding Rule}" Style="{StaticResource GhostButtonStyle}" Click="RemoveRule_Click" AutomationProperties.Name="{Binding RemoveName}"/>
+                        <Button Tag="{Binding Rule}" Click="RemoveRule_Click"
+                                AutomationProperties.Name="{Binding RemoveName}" ToolTip="{Binding RemoveName}">
+                            <Button.Style>
+                                <!-- 删除是危险动作：悬停时图标转危险色，与旁边的启用/停用按钮区分开 -->
+                                <Style TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Path Data="M0 0 L10 10 M10 0 L0 10"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  Width="11" Height="11" StrokeThickness="1.4"/>
+                        </Button>
                     </WrapPanel>
                 </Grid>
             </DataTemplate></ListBox.ItemTemplate>

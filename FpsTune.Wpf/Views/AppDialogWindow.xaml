@@ -51,7 +51,7 @@
                         </Viewbox>
                     </Grid>
                 </Border>
-                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" Background="Transparent" MouseLeftButtonDown="Header_Drag">
                     <TextBlock x:Name="TitleTextBlock"
                                Text="{DynamicResource Str.Prompt}"
                                FontSize="18"

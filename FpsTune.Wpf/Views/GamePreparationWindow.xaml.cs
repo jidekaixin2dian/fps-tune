@@ -167,6 +167,10 @@ public partial class GamePreparationWindow : Window
     private void Run_Click(object sender, RoutedEventArgs e) => Save(true);
     private void ReviewBasics_Click(object sender, RoutedEventArgs e) { ReviewBasics = true; DialogResult = false; }
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+    private void Header_Drag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+    }
     private bool SameGame()
     {
         if (string.Equals(_gamePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) return true;

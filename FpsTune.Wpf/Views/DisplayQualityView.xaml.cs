@@ -117,7 +117,7 @@ public partial class DisplayQualityView : UserControl
             GameChip.Visibility = Visibility.Collapsed;
             return;
         }
-        GameChipText.Text = Str.T("Str.CurrentGame") + "：" + label;
+        GameChipText.Text = Str.T("Str.GameChipCurrent", label);
         GameChip.ToolTip = exe;
         GameChip.Visibility = Visibility.Visible;
     }
@@ -260,7 +260,7 @@ public partial class DisplayQualityView : UserControl
 
         if (s.DlssError is not null)
         {
-            StateText.Text = _dlssStatus ?? ("读取覆盖状态失败：" + s.DlssError);
+            StateText.Text = _dlssStatus ?? Str.T("Str.DlssReadFailed", s.DlssError);
             ApplyButton.IsEnabled = false;
             RestoreButton.IsEnabled = false;
             SetBadge(TabStatusDlss, TabBadgeDlss, "—");
@@ -270,8 +270,8 @@ public partial class DisplayQualityView : UserControl
         var state = s.Dlss!;
         SyncPresetCardSelection(state);
         StateText.Text = _dlssStatus ?? (state.Covered
-            ? $"当前覆盖：{PresetLabel(state.PresetValue ?? 0)}"
-                + (state.Restorable ? "（本工具写入，可还原）" : "（其他工具/驱动既有配置，应用时将自动备份原值）")
+            ? Str.T("Str.DlssCovered", PresetLabel(state.PresetValue ?? 0))
+                + (state.Restorable ? Str.T("Str.DlssCoveredSelf") : Str.T("Str.DlssCoveredOther"))
             : Str.T("Str.NotOverriddenInGame"));
         ApplyButton.IsEnabled = true;
         RestoreButton.IsEnabled = state.Covered || state.Restorable;
@@ -336,11 +336,11 @@ public partial class DisplayQualityView : UserControl
     private static string PresetLabel(uint value) => value switch
     {
         (uint)DlssPreset.Latest => Str.T("Str.LatestPreset"),
-        (uint)DlssPreset.PresetM => "M 预设（新一代模型·高端）",
-        (uint)DlssPreset.PresetK => "K 预设（新一代模型·推荐）",
-        (uint)DlssPreset.PresetJ => "J 预设（新一代模型）",
-        (uint)DlssPreset.PresetE => "E 预设（旧一代 CNN 模型）",
-        _ => $"预设 0x{value:X}"
+        (uint)DlssPreset.PresetM => Str.T("Str.DlssPresetM"),
+        (uint)DlssPreset.PresetK => Str.T("Str.DlssPresetK"),
+        (uint)DlssPreset.PresetJ => Str.T("Str.DlssPresetJ"),
+        (uint)DlssPreset.PresetE => Str.T("Str.DlssPresetE"),
+        _ => Str.T("Str.DlssPresetUnknown", value)
     };
 
     private DlssPreset? SelectedPreset()
@@ -363,7 +363,7 @@ public partial class DisplayQualityView : UserControl
         var preset = SelectedPreset();
         if (preset is null)
         {
-            DialogService.Warning("显示与画质", Str.T("Str.SelectPresetFirst"));
+            DialogService.Warning(Str.T("Str.DisplayTitle"), Str.T("Str.SelectPresetFirst"));
             return;
         }
 
@@ -428,7 +428,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            _dlssStatus = "还原失败：" + ex.Message;
+            _dlssStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
             DialogService.Warning(Str.T("Str.OperationFailed"), _dlssStatus);
         }
         finally
@@ -489,7 +489,7 @@ public partial class DisplayQualityView : UserControl
 
         if (s.DrsError is not null)
         {
-            DrsStateText.Text = "读取驱动 3D 设置失败：" + s.DrsError;
+            DrsStateText.Text = Str.T("Str.DrsReadFailed", s.DrsError);
             DrsApplyButton.IsEnabled = false;
             DrsRestoreButton.IsEnabled = false;
             SetBadge(TabStatusDrs, TabBadgeDrs, "—");
@@ -627,7 +627,7 @@ public partial class DisplayQualityView : UserControl
         {
             var exeName = Path.GetFileName(path);
             await Task.Run(() => DisplayQualityService.ApplyCompetitivePreset(exeName, desktopHighEnd));
-            _drsStatus = "已应用竞技推荐（高质量 + 最高性能 + " + traaLabel + " + 预渲染 1 帧）。";
+            _drsStatus = Str.T("Str.DrsEsportsApplied", traaLabel);
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
@@ -635,7 +635,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            _drsStatus = "应用失败：" + ex.Message;
+            _drsStatus = Str.T("Str.ApplyFailed", ex.Message);
             DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
         }
         finally
@@ -679,7 +679,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            _drsStatus = "应用失败：" + ex.Message;
+            _drsStatus = Str.T("Str.ApplyFailed", ex.Message);
             DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
         }
         finally
@@ -716,7 +716,7 @@ public partial class DisplayQualityView : UserControl
         }
         catch (Exception ex)
         {
-            _drsStatus = "还原失败：" + ex.Message;
+            _drsStatus = Str.T("Str.DisplayRestoreFailed", ex.Message);
             DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
         }
         finally

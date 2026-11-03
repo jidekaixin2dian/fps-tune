@@ -188,4 +188,9 @@ public partial class ProfileManagerWindow : Window
 
     private void Close_Click(object sender, RoutedEventArgs e)
         => Close();
+
+    private void Header_Drag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+    }
 }

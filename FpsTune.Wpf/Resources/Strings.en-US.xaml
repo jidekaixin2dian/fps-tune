@@ -17,7 +17,7 @@
     <s:String x:Key="Str.FilterModeScreen">Current screen</s:String>
     <s:String x:Key="Str.FilterModePerApp">Per-app plans</s:String>
     <s:String x:Key="Str.FilterPickerTitle">Choose a filter</s:String>
-    <s:String x:Key="Str.FilterPickerHint">Selection previews on the screenshot immediately. Use Apply all to write it to the screen.</s:String>
+    <s:String x:Key="Str.FilterPickerHint">Picking a filter previews it on the left screenshot; Apply all writes it to the screen.</s:String>
     <s:String x:Key="Str.FilterEditorSection">Create a custom filter</s:String>
     <s:String x:Key="Str.FilterApplyAll">Apply all</s:String>
     <s:String x:Key="Str.FilterRestoreAll">Restore original</s:String>
@@ -199,7 +199,7 @@
     <s:String x:Key="Str.ListRestorable">List restorable items</s:String>
     <s:String x:Key="Str.ExportLog">Export log →</s:String>
     <s:String x:Key="Str.BackupDir">Backup folder</s:String>
-    <s:String x:Key="Str.OpenArrow">Open →</s:String>
+    <s:String x:Key="Str.OpenArrow">Open</s:String>
     <s:String x:Key="Str.GuiTempDir">GUI temp folder</s:String>
     <s:String x:Key="Str.CurrentStatus">Current status</s:String>
     <s:String x:Key="Str.WaitingAction">Waiting</s:String>
@@ -236,7 +236,6 @@
     <s:String x:Key="Str.ToggleHint">选择项目后，点击“审阅并应用”。</s:String>
     <s:String x:Key="Str.ReviewAndApply">Review and apply →</s:String>
     <s:String x:Key="Str.HomeTitle">System-level frame rate console</s:String>
-    <s:String x:Key="Str.HomeSubtitle">Detect → explain → confirm → apply → restore · never touches game files · never injects · every change is reversible</s:String>
     <s:String x:Key="Str.StartDetect">Start detection →</s:String>
     <s:String x:Key="Str.HomeDetectDesc">查看硬件信息、游戏路径与优化项状态</s:String>
     <s:String x:Key="Str.HomeOptDesc">Presets and per-item toggles, system-level tuning, one-click restore</s:String>
@@ -250,7 +249,6 @@
     <s:String x:Key="Str.SessionReady">Ready. Enter a name and start; you can stop and save at any time, or cancel to discard.</s:String>
     <s:String x:Key="Str.VramDedicatedShort">VRAM (dedicated)</s:String>
     <s:String x:Key="Str.PerformanceInsights">Performance insights</s:String>
-    <s:String x:Key="Str.InsightsDisclaimer">These are heuristic observations: they only describe correlations between signals during sampling. They imply no causation and predict no FPS gain.</s:String>
     <s:String x:Key="Str.SelectSessionHint">Shown after you pick a past session or finish a sampling run.</s:String>
     <s:String x:Key="Str.HistorySessions">Past sessions</s:String>
     <s:String x:Key="Str.ExportJson">Export JSON</s:String>
@@ -288,7 +286,7 @@
     <s:String x:Key="Str.Clear">Clear</s:String>
     <s:String x:Key="Str.NotSpecified">Not specified</s:String>
     <s:String x:Key="Str.AutoApplyByGame">Auto-apply per game</s:String>
-    <s:String x:Key="Str.AutoApplyDesc">Polls the launch edge by process name every 3 seconds only. It never reads process paths or memory and never injects. If two clients share one process name, the current interface cannot tell them apart and only one binding can be kept.</s:String>
+    <s:String x:Key="Str.AutoApplyDesc">Checks for game launches by process name every 3 seconds. Two clients that share one process name can only bind one of them.</s:String>
     <s:String x:Key="Str.AutoApplyToggle">Apply the matching profile automatically when a bound game launches</s:String>
     <s:String x:Key="Str.TipScannedGames">Scanned game candidates</s:String>
     <s:String x:Key="Str.TipSavedProfiles">Saved profiles</s:String>
@@ -318,7 +316,7 @@
     <s:String x:Key="Str.GitHubHome">GitHub page</s:String>
     <s:String x:Key="Str.NotChecked">Not checked</s:String>
     <s:String x:Key="Str.ContactNote">Contact is for cooperation and feedback only.</s:String>
-    <s:String x:Key="Str.DlssOverrideNote">Override preset (applies to the currently located game; if you also pick an upscaling option in game, this override wins)</s:String>
+    <s:String x:Key="Str.DlssOverrideNote">Override preset (applies to the currently located game; this override wins over an in-game upscaling choice)</s:String>
     <s:String x:Key="Str.PresetK">K preset (recommended)</s:String>
     <s:String x:Key="Str.PresetKDesc">New-generation model · widely used, stable</s:String>
     <s:String x:Key="Str.FollowGameDesc">No override; the in-game setting decides</s:String>
@@ -677,7 +675,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ManualIntelItem4">iGPU performance depends on system memory bandwidth: dual-channel memory is the baseline — fix that first if you're on a single stick.</s:String>
     <s:String x:Key="Str.ManualIntelNote">These are orientation notes, not an official Intel recommendation; names and locations vary by machine and driver version.</s:String>
     <s:String x:Key="Str.ManualUnknownBody">Could not identify the GPU vendor. Open your GPU's own control panel to see what's adjustable; for on-screen look, the "ICC filter" card on this page is a vendor-neutral fallback.</s:String>
-    <s:String x:Key="Str.ManualFooter">This checklist is read-only guidance: it only explains where settings are and what they do — the tool never changes them, and no frame-rate gains are promised. Compiled from vendor documentation and community consensus (verified 2026-09); not an official recommendation.</s:String>
 
     <!-- Splash screen -->
     <s:String x:Key="Str.SplashLoading">Loading…</s:String>
@@ -1092,7 +1089,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DiskHealthUnknownDisk">Unnamed disk</s:String>
     <s:String x:Key="Str.DiskHealthBasicOnly">Windows reports only basic health for this disk; no readable SMART detail.</s:String>
     <s:String x:Key="Str.DiskHealthDetailedReady">SMART detail read from Windows storage reliability counters.</s:String>
-    <s:String x:Key="Str.DiskHealthDetailBoundary">Some or all disks expose basic health only. Temperature, wear, and power-on time usually require running as administrator or a drive/driver that supports Windows reliability counters. Missing fields are not guessed.</s:String>
+    <s:String x:Key="Str.DiskHealthDetailBoundary">Some or all disks expose basic health only. Temperature, wear, and power-on time require running as administrator, or a drive/driver that supports Windows reliability counters.</s:String>
     <s:String x:Key="Str.DiskHealthNoDisk">No physical disk found.</s:String>
     <s:String x:Key="Str.DiskHealthUnavailable">Could not read disk health.</s:String>
     <s:String x:Key="Str.DiskHealthTemp">Temp</s:String>
@@ -1145,7 +1142,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DpcDriverTotal">Total</s:String>
     <s:String x:Key="Str.DpcDriverMax">Max</s:String>
     <s:String x:Key="Str.DpcDriverCount">Count</s:String>
-    <s:String x:Key="Str.DpcDriverLimit">Total is DPC plus ISR time for that driver. Sampling is read-only: no driver is loaded and no background service is left behind.</s:String>
+    <s:String x:Key="Str.DpcDriverLimit">Total is DPC plus ISR time for that driver.</s:String>
     <s:String x:Key="Str.DpcVerdictGood">Normal</s:String>
     <s:String x:Key="Str.DpcVerdictWatch">Elevated, recheck</s:String>
     <s:String x:Key="Str.DpcVerdictHigh">Abnormally high</s:String>
@@ -1206,7 +1203,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ConditionTargetMissed">Actual duration differs from the target</s:String>
     <s:String x:Key="Str.ConditionFpsMissing">At least one session has no real FPS capture</s:String>
     <s:String x:Key="Str.ConditionMatch">已记录的游戏、分辨率、画质与场景一致。</s:String>
-    <s:String x:Key="Str.ConditionWarning">Compare with care: {0}. The table shows recorded differences without concluding an optimization benefit.</s:String>
+    <s:String x:Key="Str.ConditionWarning">Conditions differ: {0}.</s:String>
     <s:String x:Key="Str.ConditionSelectPrevious">Select one past session with recorded test conditions first.</s:String>
     <s:String x:Key="Str.ConditionCopied">Conditions filled in. Confirm the current game and its actual settings before starting.</s:String>
     <s:String x:Key="Str.ConditionStopFailed">Timed save failed: {0}. Check the local records; retained snapshots are not treated as a successful save.</s:String>
@@ -1268,7 +1265,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.OptScopeNoAdmin">No administrator required</s:String>
     <s:String x:Key="Str.OptScopeNoRestart">No restart required</s:String>
     <s:String x:Key="Str.OptScopeEffects">Has side-effect notes</s:String>
-    <s:String x:Key="Str.OptShowSelected">Show selection</s:String>
     <s:String x:Key="Str.OptClearSelection">Clear all selections</s:String>
     <s:String x:Key="Str.OptReviewApply">Review and apply</s:String>
     <s:String x:Key="Str.OptHiddenSelection">{0} selected items are hidden by this filter; review shows the full list before applying.</s:String>
@@ -1338,7 +1334,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryFailed">整理失败：{0}</s:String>
     <s:String x:Key="Str.MemoryNativeFailed">Windows 未能完成内存整理</s:String>
     <s:String x:Key="Str.MemoryBusy">Finish capture, A/B testing or game preparation before cleaning memory.</s:String>
-    <s:String x:Key="Str.MemoryAdmin">整理内存需要管理员权限。请以管理员身份重启，然后进入“维护工具 → 内存整理”再次点击整理。</s:String>
+    <s:String x:Key="Str.MemoryAdmin">Organizing memory needs administrator rights. Restart as administrator, then open Tools → Memory cleanup and try again.</s:String>
     <s:String x:Key="Str.DetectOverview">检测概览</s:String>
     <s:String x:Key="Str.DetectSearch">搜索优化项目名称或说明</s:String>
     <s:String x:Key="Str.AllCategories">全部分类</s:String>
@@ -1451,7 +1447,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceBright">Brighter · γ1.40</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceNeutral">Neutral · 45</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceDark">Darker · γ0.30</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 leaves the image untouched; move right to brighten, left to darken. Uses the same 12-step curve as the reference tool, so values snap.</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 keeps the original look; move right to brighten and left to darken. The value snaps to the nearest step.</s:String>
     <s:String x:Key="Str.ColorCustom">Custom parameters</s:String>
     <s:String x:Key="Str.ColorShadowPreset">Shadow boost</s:String>
     <s:String x:Key="Str.ColorDehaze">Dehaze</s:String>
@@ -1832,7 +1828,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SessionTemplateSave">保存当前游戏模板</s:String>
     <s:String x:Key="Str.SessionTemplateLoad">载入模板</s:String>
     <s:String x:Key="Str.SessionTemplateDelete">删除模板</s:String>
-    <s:String x:Key="Str.SessionTemplateHint">模板保存本页条件；自动记录沿用分辨率、画质和场景，持续到游戏退出。参数仅用于记录，不修改游戏或显示设置。</s:String>
+    <s:String x:Key="Str.SessionTemplateHint">A template stores the conditions on this page; automatic recording reuses resolution, quality, and scene until the game exits.</s:String>
     <s:String x:Key="Str.SessionTemplateSelectGame">请先在首页选择游戏，再管理录制条件模板。</s:String>
     <s:String x:Key="Str.SessionTemplateBusy">录制期间保留本次条件，结束后可管理模板。</s:String>
     <s:String x:Key="Str.SessionTemplateSaved">已保存「{0}」的录制条件模板。</s:String>
@@ -2083,7 +2079,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CrosshairThicknessLabel">Thickness</s:String>
     <s:String x:Key="Str.CrosshairOpacityLabel">Opacity</s:String>
     <s:String x:Key="Str.CrosshairAdaptiveToggle">AW tactical hold: auto-hide while right mouse held</s:String>
-    <s:String x:Key="Str.CrosshairAdaptiveHint">Hides while aiming (right mouse held), returns when released; also hides while this app is in the foreground so settings stay unobstructed.</s:String>
+    <s:String x:Key="Str.CrosshairAdaptiveHint">Hides while aiming (right mouse held) and returns when released; also hides while this app is in the foreground.</s:String>
     <s:String x:Key="Str.CrosshairPreviewTitle">Crosshair preview</s:String>
     <s:String x:Key="Str.CrosshairPreviewHint">Shows the current colour, shape and opacity. If you cannot see it in game, switch back to the game window first — it is hidden while this app is in the foreground.</s:String>
     <s:String x:Key="Str.DeltaFixTab">Frame fix</s:String>
@@ -2431,9 +2427,9 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TuningBusy">正在录制、准备或处理其他操作，请完成后再试。</s:String>
     <s:String x:Key="Str.TuningUnsupported">目前竞技调校支持三角洲行动、无畏契约与 CS2。</s:String>
     <s:String x:Key="Str.TuningDlssTitle">三角洲 DLSS</s:String>
-    <s:String x:Key="Str.TuningDlssHint">沿用“显示与画质”的按游戏 DLSS 预设覆盖。游戏需启用 DLSS 超分辨率；该覆盖不会替你开启游戏内超分或帧生成。</s:String>
+    <s:String x:Key="Str.TuningDlssHint">Reuses the per-game DLSS preset override from Display &amp; Quality; DLSS upscaling must be enabled in game.</s:String>
     <s:String x:Key="Str.TuningCs2Title">生成 CS2 限帧命令</s:String>
-    <s:String x:Key="Str.TuningCs2Hint">分别设置对局和菜单上限。复制后粘贴到 CS2 控制台执行；生成与复制不会改动游戏文件。</s:String>
+    <s:String x:Key="Str.TuningCs2Hint">Sets match and menu limits separately; copy and paste into the CS2 console to run.</s:String>
     <s:String x:Key="Str.TuningMatchCap">对局上限</s:String>
     <s:String x:Key="Str.TuningMenuCap">菜单上限</s:String>
     <s:String x:Key="Str.TuningCommandRange">填写 0 或 20–1000 FPS；0 表示不限制。</s:String>
@@ -2465,4 +2461,200 @@ DNS：{3} · 解析地址：{4}</s:String>
 {0}
 
 {1}</s:String>
+    <!-- 2026-11-03：界面文案外置（A/B 实验、性能会话、检测、控制台、设置、优化、显示与画质、社区窗口）。
+         Keys mirror Strings.zh-CN.xaml one to one; keep both files in sync. -->
+
+    <!-- A/B experiment: wizard state, verdicts, report -->
+    <s:String x:Key="Str.AbLastError">Last run had a problem: {0}</s:String>
+    <s:String x:Key="Str.AbRetryStep">Retry: {0}.</s:String>
+    <s:String x:Key="Str.AbRetryAnyStep">You can retry that step.</s:String>
+    <s:String x:Key="Str.AbBaselineDoneContinue">Baseline done ({0:0.#} FPS average). Test a candidate group next, or generate the report.</s:String>
+    <s:String x:Key="Str.AbStepBaseline">1 · Baseline sampling</s:String>
+    <s:String x:Key="Str.AbStepDone">Done ({0:0.#} FPS average, CV {1:0.###}{2})</s:String>
+    <s:String x:Key="Str.AbUnstableSuffix">, unstable</s:String>
+    <s:String x:Key="Str.AbBaselineDetail">1% low {0:0.#} · {1:yy-MM-dd HH:mm}. Candidate groups unlock once the baseline is stable.</s:String>
+    <s:String x:Key="Str.AbStepDoneVerdict">Done: {0}</s:String>
+    <s:String x:Key="Str.AbStepRunningHint">The script is running; keep the game scene fixed. You can cancel, then check the result before retrying.</s:String>
+    <s:String x:Key="Str.AbGroupDetail">{0} ({1:0.#} FPS average · 1% low {2:0.#} · {3:yy-MM-dd HH:mm}{4})</s:String>
+    <s:String x:Key="Str.AbSimulated">simulated</s:String>
+    <s:String x:Key="Str.AbStepReport">5 · Generate report</s:String>
+    <s:String x:Key="Str.AbReportAt">Generated ({0:yy-MM-dd HH:mm})</s:String>
+    <s:String x:Key="Str.AbReportRunningHint">Combining the script metrics with session summaries; you can cancel and retry if the result is unknown.</s:String>
+    <s:String x:Key="Str.AbNoSession">(no session)</s:String>
+    <s:String x:Key="Str.AbSessionOption">{0} · {1:MM-dd HH:mm} · {2} samples</s:String>
+    <s:String x:Key="Str.AbSaveFailed">Saving the wizard state failed: {0}. This result was not recorded reliably; fix the permission or disk problem and try again.</s:String>
+    <s:String x:Key="Str.AbCancelling">Cancelling the current step… the script will stop and this run will not produce a verdict.</s:String>
+    <s:String x:Key="Str.AbCannotStart">Cannot start: {0}</s:String>
+    <s:String x:Key="Str.AbSaveBlockedStart">The wizard state cannot be saved, so the step did not start. Fix the permission or disk problem and try again.</s:String>
+    <s:String x:Key="Str.AbRunningStatus">Running: {0}… step buttons are disabled while it runs; keep the game scene fixed.</s:String>
+    <s:String x:Key="Str.AbRunningRaw">Running: {0}</s:String>
+    <s:String x:Key="Str.AbStepCancelledRaw">Step cancelled. The script did not finish, so the result is unknown; if the candidate group was applied, check or revert the settings before retrying.</s:String>
+    <s:String x:Key="Str.AbStepCancelledDetail">The step was cancelled; the script stopped and the result is unknown. Check the candidate settings and try again.</s:String>
+    <s:String x:Key="Str.AbStepCancelledShort">The step was cancelled; the result is unknown and you can retry.</s:String>
+    <s:String x:Key="Str.AbStepExecFailedNonZero">The step failed (the script returned a non-zero exit code)</s:String>
+    <s:String x:Key="Str.AbStepExecFailedReason">The step failed: {0}</s:String>
+    <s:String x:Key="Str.AbExecFailedStatus">The step failed; see the raw output. You can retry it.</s:String>
+    <s:String x:Key="Str.AbOutputNotJson">The script output is not valid JSON (it may contain other output).</s:String>
+    <s:String x:Key="Str.AbOutputParseFailed">Parsing the output failed; see the raw output.</s:String>
+    <s:String x:Key="Str.AbOutputNotObject">The script output is not a JSON object.</s:String>
+    <s:String x:Key="Str.AbEngineFailedNoReason">The script reported a failure without a reason</s:String>
+    <s:String x:Key="Str.AbStepIncomplete">The step did not finish: {0}</s:String>
+    <s:String x:Key="Str.AbBaselineMetricsMissing">The baseline result has no usable metrics, so it was not saved as complete.</s:String>
+    <s:String x:Key="Str.AbBaselineInvalid">The baseline result is invalid; see the raw output.</s:String>
+    <s:String x:Key="Str.AbGroupMetricsMissing">The candidate group result has no usable metrics, so it was not saved as complete.</s:String>
+    <s:String x:Key="Str.AbGroupInvalid">The candidate group result is invalid; see the raw output.</s:String>
+    <s:String x:Key="Str.AbReportMetricsMissing">The report is missing the baseline or candidate group metrics, so it was not marked as generated.</s:String>
+    <s:String x:Key="Str.AbReportIncomplete">The report result is incomplete; see the raw output.</s:String>
+    <s:String x:Key="Str.AbReportWriteFailedShort">Writing the report file failed.</s:String>
+    <s:String x:Key="Str.AbReportWriteFailedStatus">Writing the report failed; see the raw output. You can retry.</s:String>
+    <s:String x:Key="Str.AbModeMismatch">The script returned mode ({0}), which does not match the requested step ({1}).</s:String>
+    <s:String x:Key="Str.AbModeMismatchStatus">The result does not match the step; see the raw output.</s:String>
+    <s:String x:Key="Str.AbReportTimeLine">- Generated: {0}</s:String>
+    <s:String x:Key="Str.AbReportScopeLine">- Basis: a statistical comparison of real or simulated samples only; heuristic data is not causal evidence and no fixed FPS gain is promised.</s:String>
+    <s:String x:Key="Str.AbReportBaselineSection">## Baseline</s:String>
+    <s:String x:Key="Str.AbReportBaselineLine">Average {0} FPS · 1% low {1} · P99 {2} ms · stutters {3} · CV {4}</s:String>
+    <s:String x:Key="Str.AbReportNoBaseline">(no baseline data)</s:String>
+    <s:String x:Key="Str.AbReportSessionLine">Linked session: {0} ({1}, {2} samples)</s:String>
+    <s:String x:Key="Str.AbReportGroupsSection">## Candidate group results</s:String>
+    <s:String x:Key="Str.AbReportGroupLine">- **{0} ({1})**: {2}</s:String>
+    <s:String x:Key="Str.AbReportGroupMetrics">average {0} FPS, 1% low {1}. {2}</s:String>
+    <s:String x:Key="Str.AbReportSessionLineShort">Linked session: {0} ({1})</s:String>
+    <s:String x:Key="Str.AbReportNoGroups">(no candidate group tested yet)</s:String>
+    <s:String x:Key="Str.AbReportRawSection">## Raw script output (JSON)</s:String>
+    <s:String x:Key="Str.AbReportSavedNote">(the raw JSON output stays with the script; the file was saved as report-latest.md)</s:String>
+    <s:String x:Key="Str.AbReportWriteFailed">Writing the report file failed: {0}</s:String>
+    <s:String x:Key="Str.AbSamplesCount">{0} samples</s:String>
+    <s:String x:Key="Str.AbSummaryCpu">CPU average {0}% / p95 {1}%</s:String>
+    <s:String x:Key="Str.AbSummaryMem">Memory average {0}%</s:String>
+    <s:String x:Key="Str.AbSummaryGpu">GPU average {0}%</s:String>
+    <s:String x:Key="Str.AbSummaryVram">VRAM average {0:0} MiB</s:String>
+    <s:String x:Key="Str.AbSummaryNote">(heuristic, not causal)</s:String>
+    <s:String x:Key="Str.AbTooltipVerdict">Verdict: {0}</s:String>
+    <s:String x:Key="Str.AbTooltipBody">{0} ({1}){2}&#x0a;Average {3} FPS · 1% low {4} FPS{5}{6}</s:String>
+    <s:String x:Key="Str.VerdictRestoreIncomplete">Restore incomplete</s:String>
+
+    <!-- Shared list separators -->
+    <s:String x:Key="Str.ListSeparator">, </s:String>
+    <s:String x:Key="Str.ListSeparatorSemicolon">; </s:String>
+
+    <!-- Performance sessions -->
+    <s:String x:Key="Str.SessionName">Session name</s:String>
+    <s:String x:Key="Str.SessionDefaultName">{0} · reference run {1:MM-dd HH:mm}</s:String>
+    <s:String x:Key="Str.SessionRunningLine">Sampling: {0} · running {1} · samples {2} · interval {3:0.#} s · missing metrics: {4}</s:String>
+    <s:String x:Key="Str.SessionVramCapacity">{0:0} / {1:0} MiB (capacity reported by the registry)</s:String>
+    <s:String x:Key="Str.SessionVramCapacityUnknown">VRAM capacity is unavailable, so no share can be shown</s:String>
+    <s:String x:Key="Str.SessionNameInvalid">The session name contains characters that cannot be used in a file name; change it and try again.</s:String>
+    <s:String x:Key="Str.SessionStartBusy">Cannot start the session: another FpsTune instance is using the session feature, or an interrupted session has not been handled yet.&#x0a;&#x0a;If only one instance is running, close the app and delete or rename this file:&#x0a;{0}</s:String>
+    <s:String x:Key="Str.SessionUnreadableConfirm">The unfinished session snapshot cannot be read by this version (usually written by a newer version, or the file is damaged).&#x0a;&#x0a;You can rename it out of the way (it is not deleted and never counted), then start a new session right away.&#x0a;&#x0a;Archive it now?</s:String>
+    <s:String x:Key="Str.SessionArchiveFailed">Archiving failed: {0}</s:String>
+    <s:String x:Key="Str.SessionArchived">Archived as: {0}&#x0a;&#x0a;The file stays in the session folder, so you can find it again by hand.</s:String>
+    <s:String x:Key="Str.SessionCancelMarkFailed">The cancel marker could not be written safely. The session snapshot is kept and this session is not treated as cancelled. Try again, or check the local disk first.&#x0a;&#x0a;{0}</s:String>
+    <s:String x:Key="Str.SessionHistoryLoadFailed">Loading the history failed: {0}</s:String>
+    <s:String x:Key="Str.SessionMemAvg">Memory {0}%</s:String>
+    <s:String x:Key="Str.SessionVramAvg">VRAM {0:0} MiB</s:String>
+    <s:String x:Key="Str.SessionJsonSaved">JSON saved to the selected location. The file contains no paths or user names.</s:String>
+    <s:String x:Key="Str.SessionJsonExportFailed">Exporting JSON failed: {0}</s:String>
+    <s:String x:Key="Str.SessionCsvSaved">CSV saved to the selected location. Missing samples are empty cells.</s:String>
+    <s:String x:Key="Str.SessionCsvExportFailed">Exporting CSV failed: {0}</s:String>
+    <s:String x:Key="Str.SessionDeleteConfirm">Delete the {0} selected sessions? Only these session files are removed; other data stays.</s:String>
+    <s:String x:Key="Str.SessionInsightTarget">Based on session "{0}" (from {1:MM-dd HH:mm}, {2} samples)</s:String>
+    <s:String x:Key="Str.SessionInsightWindow">Window {0:HH:mm:ss} - {1:HH:mm:ss}</s:String>
+    <s:String x:Key="Str.SessionDisplayName">{0} ({1:MM-dd HH:mm})</s:String>
+    <s:String x:Key="Str.SessionExportFilePrefix">FpsTune-session-</s:String>
+
+    <!-- Detection page -->
+    <s:String x:Key="Str.DetectVramHintUnknown">Capacity unavailable; showing usage only</s:String>
+    <s:String x:Key="Str.DetectVramCounterMissing">GPU Adapter Memory counter not provided</s:String>
+    <s:String x:Key="Str.DetectLoadedItems">Loaded {0} items into the Optimize page.</s:String>
+    <s:String x:Key="Str.DetectCheckName">Checkup</s:String>
+    <s:String x:Key="Str.DetectCheckItemName">Checkup item</s:String>
+    <s:String x:Key="Str.DetectDumpHardware">== Hardware ==</s:String>
+    <s:String x:Key="Str.DetectDumpMem">Memory: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpOs">OS: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpLaptop">Laptop: {0}  Admin: {1}</s:String>
+    <s:String x:Key="Str.DetectDumpGamePath">Game path: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpChecks">== Checkup ==</s:String>
+    <s:String x:Key="Str.DetectDumpItems">== Items ({0}) ==</s:String>
+    <s:String x:Key="Str.DetectDumpStatusDone">[done]</s:String>
+    <s:String x:Key="Str.DetectDumpStatusTodo">[not applied]</s:String>
+    <s:String x:Key="Str.DetectDumpDescription">Description: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpSideEffect">Side effect: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpCurrent">Current: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpRequirement">Requires: {0}</s:String>
+
+    <!-- Console home -->
+    <s:String x:Key="Str.ConsoleReadyTitleFmt">{0} · Match prep</s:String>
+    <s:String x:Key="Str.ConsoleReadyTitle">Match prep</s:String>
+    <s:String x:Key="Str.ConsoleReadyCount">Game ready · {0} baseline settings to review; record one match first as a reference.</s:String>
+    <s:String x:Key="Str.ConsoleLocateGame">Locate game</s:String>
+    <s:String x:Key="Str.ConsoleBasicAdviceCount">Baseline advice · {0}</s:String>
+    <s:String x:Key="Str.ConsoleBasicAdvice">Baseline advice</s:String>
+
+    <!-- Settings page -->
+    <s:String x:Key="Str.SettingsSaveFailed">Saving the setting failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsOpenFailed">Opening failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsProfileLoadFailed">Loading the profiles failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsScanDone">Scanned {0} game candidates and {1} profiles</s:String>
+    <s:String x:Key="Str.SettingsScanFailed">Scanning failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsProcessBound">Process "{0}" is already bound. Polling cannot tell same-named CN and international builds apart, so it cannot be added twice.</s:String>
+    <s:String x:Key="Str.SettingsBindSaveFailed">Saving the binding failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsBound">Bound "{0}" → "{1}"</s:String>
+    <s:String x:Key="Str.SettingsToggleSaveFailed">Saving the binding switch failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsUnbindSaveFailed">Saving the binding removal failed: {0}</s:String>
+    <s:String x:Key="Str.SettingsUnbound">Removed the binding "{0}"</s:String>
+    <s:String x:Key="Str.SettingsActivityProfile">profile "{0}"</s:String>
+    <s:String x:Key="Str.SettingsActivityTrigger">Trigger: applies once when a bound process starts; it does not re-apply while that process keeps running, and fires again only after every same-named process has exited and one starts again.</s:String>
+    <s:String x:Key="Str.SettingsActivityScanDone">Last scan {0:HH:mm:ss} (poll #{1} this round, 3 s apart).</s:String>
+    <s:String x:Key="Str.SettingsActivityNoScan">No scan yet this round (polling starts once the background service runs with an enabled binding).</s:String>
+    <s:String x:Key="Str.SettingsActivityAuditLimit">The audit log keeps at most 200 entries and never stores full user paths.</s:String>
+    <s:String x:Key="Str.SettingsAutoApplySaveFailed">Saving the auto-apply switch failed: {0}</s:String>
+    <s:String x:Key="Str.ActivityFilter">Activity filter</s:String>
+    <s:String x:Key="Str.FilterExecutableAll">Executable (*.exe)|*.exe|All files (*.*)|*.*</s:String>
+
+    <!-- Backup log -->
+    <s:String x:Key="Str.ExecException">Execution error</s:String>
+    <s:String x:Key="Str.FilterLogText">Log file (*.txt)|*.txt|All files (*.*)|*.*</s:String>
+
+    <!-- Optimize page -->
+    <s:String x:Key="Str.OptCustomPaneIntro">Custom selection&#x0a;&#x0a;Turning an item on adds it to the pending list; apply at the bottom when you have confirmed.&#x0a;&#x0a;Click an item to see its current state and side effects.&#x0a;&#x0a;Search and category filters only change what the list shows; they never clear selections in other categories.</s:String>
+    <s:String x:Key="Str.OptPresetPaneIntro">{0} · {1} items</s:String>
+    <s:String x:Key="Str.Unconfirmed">Not confirmed</s:String>
+    <s:String x:Key="Str.OptRestoreConfirmAll">Found {0} backup files. Every system change they record will be restored item by item.&#x0a;&#x0a;Continue?</s:String>
+    <s:String x:Key="Str.Skipped">Skipped</s:String>
+    <s:String x:Key="Str.ApplyDone">Apply finished</s:String>
+    <s:String x:Key="Str.ItemsCountFmt">{0} items</s:String>
+    <s:String x:Key="Str.RequiresRebootSuffix">, restart required</s:String>
+
+    <!-- Display and quality -->
+    <s:String x:Key="Str.DlssReadFailed">Reading the override state failed: {0}</s:String>
+    <s:String x:Key="Str.DlssCovered">Current override: {0}</s:String>
+    <s:String x:Key="Str.DlssCoveredSelf">(written by this tool, can be restored)</s:String>
+    <s:String x:Key="Str.DlssCoveredOther">(existing config from another tool or the driver; the current value is backed up before applying)</s:String>
+    <s:String x:Key="Str.DlssPresetM">M preset (newer model, high-end)</s:String>
+    <s:String x:Key="Str.DlssPresetK">K preset (newer model, recommended)</s:String>
+    <s:String x:Key="Str.DlssPresetJ">J preset (newer model)</s:String>
+    <s:String x:Key="Str.DlssPresetE">E preset (older CNN model)</s:String>
+    <s:String x:Key="Str.DlssPresetUnknown">Preset 0x{0:X}</s:String>
+    <s:String x:Key="Str.DrsReadFailed">Reading the driver 3D settings failed: {0}</s:String>
+    <s:String x:Key="Str.DrsEsportsApplied">Esports recommendation applied (high quality + max performance + {0} + 1 pre-rendered frame).</s:String>
+    <s:String x:Key="Str.ApplyFailed">Applying failed: {0}</s:String>
+    <s:String x:Key="Str.FilterExecutable">Executable (*.exe)|*.exe</s:String>
+    <s:String x:Key="Str.FrameCap60">Frame cap 60</s:String>
+    <s:String x:Key="Str.FrameCap120">Frame cap 120</s:String>
+    <s:String x:Key="Str.FrameCap144">Frame cap 144</s:String>
+    <s:String x:Key="Str.FrameCap165">Frame cap 165</s:String>
+    <s:String x:Key="Str.FrameCap240">Frame cap 240</s:String>
+    <s:String x:Key="Str.ConditionResolutionWidth">Resolution width</s:String>
+    <s:String x:Key="Str.ConditionResolutionHeight">Resolution height</s:String>
+    <s:String x:Key="Str.GameChipCurrent">Current game: {0}</s:String>
+
+    <!-- Community window -->
+    <s:String x:Key="Str.CommunityQq">QQ group 659528489</s:String>
+
+    <!-- Settings load failure, crosshair save, session retention cap, in-game automation -->
+    <s:String x:Key="Str.SettingsLoadFailedTitle">Could not load settings</s:String>
+    <s:String x:Key="Str.SettingsLoadFailedBody">This launch could not read the configuration file: {0}. To avoid overwriting your existing settings, nothing is written back to disk this time; the file is still at {1}.</s:String>
+    <s:String x:Key="Str.CrosshairSaveFailed">Saving the crosshair settings failed</s:String>
+    <s:String x:Key="Str.SessionHistoryRetention">Keeps the 30 most recent sessions; older ones are deleted automatically.</s:String>
+    <s:String x:Key="Str.AutoSessionSaveFailed">Saving the in-game automation switch failed: {0}</s:String>
 </ResourceDictionary>

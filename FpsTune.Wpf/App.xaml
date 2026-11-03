@@ -118,6 +118,10 @@
             <SolidColorBrush po:Freeze="False" x:Key="AccentBrush" Color="#22D3EE"/>
             <SolidColorBrush po:Freeze="False" x:Key="AccentSoftBrush" Color="#2422D3EE"/>
             <SolidColorBrush po:Freeze="False" x:Key="DangerBrush" Color="#F87171"/>
+            <!-- 危险色底上的文字：全站唯一一处不能跟着主色走的前景色，单独成键避免代码里写死 White。 -->
+            <SolidColorBrush po:Freeze="False" x:Key="OnDangerBrush" Color="#FFFFFF"/>
+            <!-- 模态遮罩：深色主题用黑色、浅色主题用深墨，避免浅色界面盖上一层灰黑。 -->
+            <SolidColorBrush po:Freeze="False" x:Key="ScrimBrush" Color="#99000000"/>
             <SolidColorBrush po:Freeze="False" x:Key="WarningBrush" Color="#F2B75C"/>
             <SolidColorBrush po:Freeze="False" x:Key="OkBrush" Color="#34D399"/>
             <LinearGradientBrush po:Freeze="False" x:Key="AppBackdropBrush" StartPoint="0,0" EndPoint="0,1">
@@ -157,7 +161,10 @@
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}">
+                    <!-- 1px 常驻边框 + 透明刷子：悬停/选中只换颜色，厚度不变，避免切换时整行重排。
+                         之前写 BorderThickness="0"，所有 BorderBrush 触发器都不产生像素，
+                         页签与预设卡在悬停时毫无反馈，选中也没有预期描边。 -->
+                    <Border x:Name="Choice" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -168,6 +175,22 @@
                     </ControlTemplate.Triggers>
                 </ControlTemplate></Setter.Value></Setter>
             </Style>
+            <!-- 预设卡三件套：DisplayQualityView 与 FilterView 的历史模板都引用这三个键。
+                 FilterView 的 ICC 预设列表虽然被写死 Collapsed、目前不会实例化模板，
+                 但键只定义在 DisplayQualityView 的本地资源里，一旦有人把它显示出来就是 XamlParseException。
+                 提到全局后两处都能解析（页面本地定义仍然优先）。 -->
+            <Style x:Key="PresetCard" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="16,12"/><Setter Property="Margin" Value="0,0,10,10"/>
+            </Style>
+            <Style x:Key="PresetCardText" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
+            </Style>
+            <Style x:Key="PresetCardNote" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Margin" Value="0,3,0,0"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
             <Style x:Key="SectionNavigationStyle" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
@@ -177,13 +200,14 @@
                 <Setter Property="Margin" Value="0,0,0,6"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="SectionBorder" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0" CornerRadius="{DynamicResource RadiusControl}" Padding="16,12">
+                    <Border x:Name="SectionBorder" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="16,12">
                         <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter TargetName="SectionBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="SectionBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="SectionBorder" Property="BorderThickness" Value="2"/></Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="SectionBorder" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/></Trigger>
+                        <!-- 键盘焦点只换颜色、不改厚度：改厚度会让整条导航在 Tab 时上下跳 1px。 -->
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="SectionBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
                         <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.4"/></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate></Setter.Value></Setter>
@@ -447,11 +471,19 @@
                                                FontSize="{TemplateBinding FontSize}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 </StackPanel>
+                                <Border x:Name="Indicator" Width="2" Height="16" CornerRadius="1"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center" Margin="14,0,0,0"
+                                        Background="{DynamicResource AccentBrush}" Visibility="Collapsed"/>
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsActive" Value="True">
+                                    <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                    <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -524,12 +556,23 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ComboBoxItem">
-                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="{DynamicResource RadiusControl}">
-                                            <ContentPresenter VerticalAlignment="Center"/>
-                                        </Border>
+                                        <Grid>
+                                            <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="{DynamicResource RadiusControl}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                            <!-- 选中标记：之前只有悬停高亮，收起再打开时看不出当前选的是哪一项。 -->
+                                            <Border x:Name="SelectedMark" Width="2" CornerRadius="1" Margin="2,7,0,7"
+                                                    HorizontalAlignment="Left" Background="{DynamicResource AccentBrush}"
+                                                    Visibility="Collapsed"/>
+                                        </Grid>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsHighlighted" Value="True">
                                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                <Setter TargetName="SelectedMark" Property="Visibility" Value="Visible"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                                             </Trigger>
                                             <Trigger Property="IsEnabled" Value="False">
                                                 <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
@@ -572,6 +615,11 @@
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsHighlighted" Value="True">
                                     <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                </Trigger>
+                                <!-- 「更多」菜单里的管理员状态行是禁用项，必须看得出来不可点（原来看起来和可点项一样）。 -->
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.55"/>
+                                    <Setter TargetName="Bd" Property="Background" Value="Transparent"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -707,6 +755,10 @@
                                     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                                     <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                                 </Trigger>
+                                <!-- 幽灵按钮占了全站绝大多数按钮，之前按下没有任何反馈（低配关掉动画时连缩放都没有）。 -->
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Root" Property="Opacity" Value="0.75"/>
+                                </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter TargetName="Root" Property="Opacity" Value="0.35"/>
                                 </Trigger>
@@ -748,6 +800,11 @@
                                 <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                                     <Setter TargetName="Border" Property="BorderThickness" Value="1"/>
+                                </Trigger>
+                                <!-- 被禁用的输入框（如未勾选时的帧率上限）必须看得出来：之前与可编辑状态完全一样，点了没反应像卡死。 -->
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="Border" Property="Opacity" Value="0.45"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -1067,6 +1124,7 @@
                                     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                                <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -1136,7 +1194,9 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True"><Setter TargetName="TabSurface" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/><Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/></Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="TabSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate></Setter.Value></Setter>
             </Style>

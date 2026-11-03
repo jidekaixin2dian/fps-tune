@@ -159,8 +159,8 @@ public sealed class ModernWorkspaceUiTests
                 Assert.Equal(2, calls); Assert.Equal(1, reviewCounts[2]); Assert.Equal(Visibility.Collapsed, hiddenStates[2]);
                 Assert.True(((FrameworkElement)page.FindName("OptimizationItemsCard")).IsEnabled);
                 accept.Stop();
-                ((Button)page.FindName("ShowSelectedButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                Assert.Empty(((TextBox)page.FindName("SearchBox")).Text);
+                // 「显示已选」按钮已删除：它就是「仅看已选」这个筛选值，两个入口并排会让人以为功能不同。
+                ((ComboBox)page.FindName("ScopeFilter")).SelectedIndex = 2;
                 Assert.Single(page.ItemsView.Cast<object>());
                 ((Button)page.FindName("ClearSelectionButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert.Empty(page.Items.Where(i => i.IsChecked));

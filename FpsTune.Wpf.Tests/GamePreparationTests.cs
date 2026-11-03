@@ -23,8 +23,12 @@ public sealed class GamePreparationTests
         Assert.Equal(1, memory.Purges); Assert.True(memory.AllPriorities);
         Assert.Equal(30, screens.Levels["A"]); Assert.Equal(75, screens.Levels["B"]);
         Assert.Equal(new[] { "a.icm" }, screens.Profiles["A"]);
+        // 「切换画面滤镜」现在和滤镜页同一条路径：ICC 预设会被关联（装入 FpsTune-<预设>.icc）。
+        Assert.Contains(screens.Profiles["B"], p => p.StartsWith("FpsTune-", StringComparison.OrdinalIgnoreCase));
         Assert.True(ScreenColorService.Restore("B")); Assert.True(DigitalVibranceService.Restore("B"));
         Assert.Equal(MultiDisplayColorTests.LinearRamp(), screens.Ramps["B"]);
+        // 还原要连 ICC 一起还：否则预设一直挂在系统色彩管理里，用户以为已经回到原样。
+        Assert.True(IccFilterService.Restore("B"));
         Assert.Equal(new[] { "b.icm" }, screens.Profiles["B"]); Assert.Equal(60, screens.Levels["B"]);
     }
 

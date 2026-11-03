@@ -68,7 +68,8 @@
                                 <TextBlock Text="{DynamicResource Str.CrosshairPaletteTitle}" Style="{StaticResource SectionLabelStyle}" VerticalAlignment="Center"/>
                             </DockPanel>
                             <WrapPanel x:Name="CrosshairSwatchPanel"/>
-                            <Grid Margin="0,2,0,0">
+                            <!-- 单条最多 460：卡宽 900 时 0–360 的色相要拖 750px 才走完，手感极差。 -->
+                            <Grid Margin="0,2,0,0" MaxWidth="460" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="48"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Str.CrosshairHue}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,8"/>
                                 <Slider x:Name="CrosshairHueSlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="360" Value="140" TickFrequency="1" IsSnapToTickEnabled="True"
@@ -76,7 +77,7 @@
                                 <TextBlock x:Name="CrosshairHueValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center" Margin="0,0,0,8"
                                            Typography.NumeralAlignment="Tabular" Text="140°"/>
                             </Grid>
-                            <Grid>
+                            <Grid MaxWidth="460" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="48"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Str.CrosshairSaturation}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,8"/>
                                 <Slider x:Name="CrosshairSaturationSlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"
@@ -84,7 +85,7 @@
                                 <TextBlock x:Name="CrosshairSaturationValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center" Margin="0,0,0,8"
                                            Typography.NumeralAlignment="Tabular" Text="100%"/>
                             </Grid>
-                            <Grid>
+                            <Grid MaxWidth="460" HorizontalAlignment="Left">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="48"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Str.CrosshairBrightness}" FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                 <Slider x:Name="CrosshairBrightnessSlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"

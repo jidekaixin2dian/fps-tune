@@ -47,6 +47,7 @@
                             <Grid Width="190" Height="34">
                                 <TextBox x:Name="SearchBox"
                                          Style="{StaticResource InputTextBoxStyle}"
+                                         AutomationProperties.Name="{DynamicResource Str.SearchItemsShort}"
                                          VerticalContentAlignment="Center"
                                          FontSize="13"
                                          TextChanged="SearchBox_TextChanged"/>
@@ -100,8 +101,7 @@
                             <ComboBoxItem Tag="noRestart" Content="{DynamicResource Str.OptScopeNoRestart}"/>
                             <ComboBoxItem Tag="effects" Content="{DynamicResource Str.OptScopeEffects}"/>
                         </ComboBox>
-                        <Button x:Name="ShowSelectedButton" Content="{DynamicResource Str.OptShowSelected}" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Click="ShowSelected_Click"/>
-                        <Button x:Name="ClearSelectionButton" Content="{DynamicResource Str.OptClearSelection}" Style="{StaticResource GhostButtonStyle}" Margin="6,0,0,0" Click="ClearSelection_Click"/>
+                        <Button x:Name="ClearSelectionButton" Content="{DynamicResource Str.OptClearSelection}" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Click="ClearSelection_Click"/>
                     </WrapPanel>
                     <ListBox x:Name="ItemList"
                              Grid.Row="3"
@@ -201,11 +201,7 @@
                                  VerticalScrollBarVisibility="Auto"
                                  Background="Transparent">
                             <FlowDocument x:Name="OutputDoc" PagePadding="0" Background="Transparent"
-                                  FontFamily="{StaticResource FontBody}" FontSize="13">
-                                <Paragraph Foreground="{DynamicResource TextSecondaryBrush}">
-                                    选择预设后点击“应用”。
-                                </Paragraph>
-                            </FlowDocument>
+                                  FontFamily="{StaticResource FontBody}" FontSize="13"/>
                         </FlowDocumentScrollViewer>
      </Grid>
    </Border>

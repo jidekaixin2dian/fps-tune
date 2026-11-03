@@ -137,7 +137,12 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                         string result;
                         if (options.IccPreset is { } value)
                         {
-                            ScreenColorService.Apply(ScreenColorSettings.ForPreset(value), options.DisplayIdentity!);
+                            // 必须走滤镜页同一个入口：先前这里直接调 ScreenColorService.Apply，
+                            // 那条路 preserveIcc 默认 false，会先把滤镜页已关联的 ICC 预设还原掉、
+                            // 备份也删掉，然后只写 gamma——准备结果却报「切换画面滤镜成功」。
+                            ColorWorkspaceService.Apply(options.DisplayIdentity!,
+                                ScreenColorSettings.ForPreset(value), iccMode: true,
+                                preset: value, file: null, vibrance: null);
                             result = ScreenColorSettings.TitleFor(value);
                         }
                         else result = (ScreenColorService.Restore(options.DisplayIdentity!) | IccFilterService.Restore(options.DisplayIdentity))

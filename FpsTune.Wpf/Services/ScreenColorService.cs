@@ -197,7 +197,10 @@ public static class ScreenColorService
     {
         // 暗部平衡=游戏加加「DefinitionEnhancedDark」的等比幂律曲线：输入先上抬 1/256（黑位不落到 0，
         // 这就是"暗部平衡"的观感来源），再按 12 档 γ 做幂运算；γ=1 时与改造前完全等价。
-        var darkGamma = DarkBalanceGamma(settings.DarkBalance);
+        // 开关关着时按中性值参与——BuildRamp 曾经在调用前替换过 settings，但 MapTone 也被
+        // IccProfileGenerator 等直接调用，那些路径会按滑杆值算出一条「黑位被抬起」的曲线，
+        // 与实际写屏用的中性曲线不一致（黑位发灰、ICC 与屏幕对不上）。所以判断放进这里一处。
+        var darkGamma = DarkBalanceGamma(settings.DarkBalanceEnabled ? settings.DarkBalance : NeutralDarkBalance);
         var input = darkGamma == 1 ? x : Math.Clamp(x + 1 / 256d, 0, 1);
         var y = Math.Pow(input, darkGamma / settings.Gamma);
         y += settings.Shadows / 100 * 4 * y * Math.Pow(1 - y, 2);

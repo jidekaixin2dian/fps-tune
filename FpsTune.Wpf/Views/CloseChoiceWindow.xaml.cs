@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Views;
@@ -18,4 +19,8 @@ public partial class CloseChoiceWindow : Window
         DialogResult = true;
     }
     private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+    private void Header_Drag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
+    }
 }

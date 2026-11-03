@@ -42,11 +42,6 @@
         <Style x:Key="TabBadgeTextStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
         </Style>
         <!-- 驱动 3D 字段组：上标签下控件，两列网格用 -->
         <Style x:Key="DrsFieldLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource SectionLabelStyle}">
@@ -333,11 +328,11 @@
                                         <CheckBox x:Name="MainCapCheck" Content="{DynamicResource Str.FrameForeground}" Checked="FrameInputs_Changed" Unchecked="FrameInputs_Changed"/>
                                         <TextBox x:Name="MainCapBox" Text="144" MaxLength="4" Style="{StaticResource InputTextBoxStyle}" TextChanged="FrameInputs_Changed" Margin="0,6,0,0" AutomationProperties.Name="{DynamicResource Str.FrameForeground}"/>
                                         <TextBlock x:Name="FrameBudgetText" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/><WrapPanel Margin="0,10,0,0">
-                                            <Button Content="60" Tag="60" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
-                                            <Button Content="120" Tag="120" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
-                                            <Button Content="144" Tag="144" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
-                                            <Button Content="165" Tag="165" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
-                                            <Button Content="240" Tag="240" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"/>
+                                            <Button Content="60" Tag="60" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6" AutomationProperties.Name="{DynamicResource Str.FrameCap60}"/>
+                                            <Button Content="120" Tag="120" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6" AutomationProperties.Name="{DynamicResource Str.FrameCap120}"/>
+                                            <Button Content="144" Tag="144" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6" AutomationProperties.Name="{DynamicResource Str.FrameCap144}"/>
+                                            <Button Content="165" Tag="165" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6" AutomationProperties.Name="{DynamicResource Str.FrameCap165}"/>
+                                            <Button Content="240" Tag="240" Click="FramePreset_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6" AutomationProperties.Name="{DynamicResource Str.FrameCap240}"/>
                                         </WrapPanel>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
@@ -442,9 +437,10 @@
                             <ListBox.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4"/></ItemsPanelTemplate></ListBox.ItemsPanel>
                             <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem">
                                 <Setter Property="Margin" Value="0,0,10,10"/><Setter Property="Padding" Value="14,14"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/><Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
+                                <Setter Property="Cursor" Value="Hand"/>
                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                                 <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="PresetSurface" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
-                                    <ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
+                                    <ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
                                 </ControlTemplate></Setter.Value></Setter>
                             </Style></ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/><TextBlock Text="{DynamicResource Str.GpuIdentityRecommended}" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="10,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsRecommended}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ListBox.ItemTemplate>

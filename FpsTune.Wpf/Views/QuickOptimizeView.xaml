@@ -12,8 +12,8 @@
 
         <!-- 页头 -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="{DynamicResource Str.QuickOptTitle}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-            <TextBlock Text="{DynamicResource Str.QuickOptIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,6,0,0" TextWrapping="Wrap"/>
+            <TextBlock Text="{DynamicResource Str.QuickOptTitle}" Style="{StaticResource PageTitleStyle}"/>
+            <TextBlock Text="{DynamicResource Str.QuickOptIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
         </StackPanel>
 
         <!-- 卡 1：选择 -->

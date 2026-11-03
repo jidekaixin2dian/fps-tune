@@ -523,6 +523,19 @@ public partial class MainWindow : Window
         var key = _pageCache.FirstOrDefault(kv => ReferenceEquals(kv.Value, page)).Key;
         if (!string.IsNullOrEmpty(key)) RememberRecentPage(key);
         if (key == "home" && page is ConsoleView console) console.RefreshRecentPages();
+        // "掉帧修复"是经动作项进入的页面，没有 NavButton 勾选态；激活态挂在动作项上，
+        // 进入时清掉其他页签的残留选中，保证侧栏任一时刻最多一项高亮。
+        // 用缓存键判断而不是取页面实例：GetPage 首次会构造页面，切任何页都会顺带把掉帧页建出来。
+        var onDeltaFix = string.Equals(key, "deltafix", StringComparison.Ordinal);
+        NavDeltaFix.IsActive = onDeltaFix;
+        if (onDeltaFix)
+        {
+            foreach (var radio in AllNavButtons)
+            {
+                if (radio.IsChecked == true)
+                    radio.IsChecked = false;
+            }
+        }
         if (!ReferenceEquals(page, GetPage("home"))) StartupNavigationRequested?.Invoke(this, EventArgs.Empty);
     }
 
@@ -593,7 +606,7 @@ public partial class MainWindow : Window
             case "backup": NavBackup.IsChecked = true; break;
             case "tools": NavTools.IsChecked = true; break;
             case "settings": NavSettings.IsChecked = true; break;
-            // 掉帧修复是从按钮进入的页面，没有对应的 NavButton 勾选态，直接切页。
+            // 掉帧修复是从按钮进入的页面，激活态由 SwitchPage 挂在 NavDeltaFix 上。
             case "deltafix": SwitchPage(GetPage("deltafix")); break;
         }
     }

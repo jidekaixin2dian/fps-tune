@@ -17,7 +17,7 @@
     <s:String x:Key="Str.FilterModeScreen">当前屏幕</s:String>
     <s:String x:Key="Str.FilterModePerApp">独立游戏方案</s:String>
     <s:String x:Key="Str.FilterPickerTitle">选择滤镜</s:String>
-    <s:String x:Key="Str.FilterPickerHint">选中即在左侧截图预览，点右上“应用整套”才写入屏幕。</s:String>
+    <s:String x:Key="Str.FilterPickerHint">点选滤镜在左侧截图里预览，点右上“应用整套”应用到屏幕。</s:String>
     <s:String x:Key="Str.FilterEditorSection">创建自定义滤镜</s:String>
     <s:String x:Key="Str.FilterApplyAll">应用整套</s:String>
     <s:String x:Key="Str.FilterRestoreAll">还原原始</s:String>
@@ -199,7 +199,7 @@
     <s:String x:Key="Str.ListRestorable">列出可还原项</s:String>
     <s:String x:Key="Str.ExportLog">导出日志 →</s:String>
     <s:String x:Key="Str.BackupDir">备份目录</s:String>
-    <s:String x:Key="Str.OpenArrow">打开 →</s:String>
+    <s:String x:Key="Str.OpenArrow">打开</s:String>
     <s:String x:Key="Str.GuiTempDir">GUI 临时目录</s:String>
     <s:String x:Key="Str.CurrentStatus">当前状态</s:String>
     <s:String x:Key="Str.WaitingAction">等待操作</s:String>
@@ -236,7 +236,6 @@
     <s:String x:Key="Str.ToggleHint">选择项目后，点击“审阅并应用”。</s:String>
     <s:String x:Key="Str.ReviewAndApply">审阅并应用 →</s:String>
     <s:String x:Key="Str.HomeTitle">系统层帧率优化控制台</s:String>
-    <s:String x:Key="Str.HomeSubtitle">检测 → 解释 → 确认 → 执行 → 还原 · 不碰游戏文件 · 不注入进程 · 所有改动可还原</s:String>
     <s:String x:Key="Str.StartDetect">开始检测 →</s:String>
     <s:String x:Key="Str.HomeDetectDesc">查看硬件信息、游戏路径与优化项状态</s:String>
     <s:String x:Key="Str.HomeOptDesc">预设与逐项开关、系统层优化、一键还原</s:String>
@@ -250,7 +249,6 @@
     <s:String x:Key="Str.SessionReady">就绪。输入名称后点击开始；运行中可随时停止并保存，或取消丢弃。</s:String>
     <s:String x:Key="Str.VramDedicatedShort">显存（专用）</s:String>
     <s:String x:Key="Str.PerformanceInsights">性能洞察</s:String>
-    <s:String x:Key="Str.InsightsDisclaimer">以下为启发式判断：仅描述采样期间信号的相关性，不代表因果，也不预测 FPS 提升。</s:String>
     <s:String x:Key="Str.SelectSessionHint">选择历史会话或完成一次采样后显示。</s:String>
     <s:String x:Key="Str.HistorySessions">历史会话</s:String>
     <s:String x:Key="Str.ExportJson">导出 JSON</s:String>
@@ -288,7 +286,7 @@
     <s:String x:Key="Str.Clear">清除</s:String>
     <s:String x:Key="Str.NotSpecified">未指定</s:String>
     <s:String x:Key="Str.AutoApplyByGame">按游戏自动应用</s:String>
-    <s:String x:Key="Str.AutoApplyDesc">仅按游戏进程名每 3 秒轮询启动边沿，不读取进程路径、内存或注入进程。国服与国际服若使用同一进程名，当前接口无法区分，只能保留一个绑定。</s:String>
+    <s:String x:Key="Str.AutoApplyDesc">按游戏进程名每 3 秒检查一次启动；国服与国际服用同一进程名时只能绑定其中一个。</s:String>
     <s:String x:Key="Str.AutoApplyToggle">检测到绑定游戏启动时自动应用对应方案</s:String>
     <s:String x:Key="Str.TipScannedGames">已扫描的游戏候选</s:String>
     <s:String x:Key="Str.TipSavedProfiles">已保存的配置方案</s:String>
@@ -318,7 +316,7 @@
     <s:String x:Key="Str.GitHubHome">GitHub 主页</s:String>
     <s:String x:Key="Str.NotChecked">未检查</s:String>
     <s:String x:Key="Str.ContactNote">联系方式仅接受合作/反馈。</s:String>
-    <s:String x:Key="Str.DlssOverrideNote">覆盖预设（作用于当前定位的游戏；游戏内若自行选择超分设置，以本覆盖为准）</s:String>
+    <s:String x:Key="Str.DlssOverrideNote">覆盖预设（作用于当前定位的游戏；与游戏内超分设置冲突时以本覆盖为准）</s:String>
     <s:String x:Key="Str.PresetK">K 预设（推荐）</s:String>
     <s:String x:Key="Str.PresetKDesc">新一代模型 · 社区常用，稳定</s:String>
     <s:String x:Key="Str.FollowGameDesc">不覆盖，由游戏内设置决定</s:String>
@@ -677,7 +675,6 @@
     <s:String x:Key="Str.ManualIntelItem4">核显性能依赖系统内存带宽：双通道内存是基本前提，单通道先补这个。</s:String>
     <s:String x:Key="Str.ManualIntelNote">以上是取向说明，不是 Intel 官方推荐；名称与位置随机型与驱动版本可能不同。</s:String>
     <s:String x:Key="Str.ManualUnknownBody">未能识别显卡厂商。可打开显卡自带的控制面板查看可调项；画面取向可先用本页「ICC 滤镜」兜底。</s:String>
-    <s:String x:Key="Str.ManualFooter">本清单为只读指引：只说明设置位置与取向，不代替你修改设置，也不承诺帧数收益。依据厂商官方文档与社区共识整理（2026-09 查证），非官方推荐。</s:String>
 
     <!-- 启动画面 -->
     <s:String x:Key="Str.SplashLoading">正在加载…</s:String>
@@ -1092,7 +1089,7 @@
     <s:String x:Key="Str.DiskHealthUnknownDisk">未命名磁盘</s:String>
     <s:String x:Key="Str.DiskHealthBasicOnly">这块盘只提供了 Windows 健康状态，没有可读取的 SMART 明细。</s:String>
     <s:String x:Key="Str.DiskHealthDetailedReady">SMART 明细已读取，温度与磨损来自 Windows 存储可靠性计数器。</s:String>
-    <s:String x:Key="Str.DiskHealthDetailBoundary">部分或全部磁盘只提供基础健康状态。温度、磨损、通电时间通常需要以管理员身份运行，或该硬盘/驱动不支持 Windows 可靠性计数器；这里不会用推测值补空。</s:String>
+    <s:String x:Key="Str.DiskHealthDetailBoundary">部分或全部磁盘只提供基础健康状态。温度、磨损、通电时间需要以管理员身份运行，或该硬盘/驱动不支持 Windows 可靠性计数器。</s:String>
     <s:String x:Key="Str.DiskHealthNoDisk">没有找到物理磁盘。</s:String>
     <s:String x:Key="Str.DiskHealthUnavailable">无法读取磁盘健康信息。</s:String>
     <s:String x:Key="Str.DiskHealthTemp">温度</s:String>
@@ -1145,7 +1142,7 @@
     <s:String x:Key="Str.DpcDriverTotal">总耗时</s:String>
     <s:String x:Key="Str.DpcDriverMax">最长</s:String>
     <s:String x:Key="Str.DpcDriverCount">次数</s:String>
-    <s:String x:Key="Str.DpcDriverLimit">总耗时为该驱动 DPC 与 ISR 的累计；采样只读，不加载驱动，也不留后台服务。</s:String>
+    <s:String x:Key="Str.DpcDriverLimit">总耗时为该驱动 DPC 与 ISR 的累计。</s:String>
     <s:String x:Key="Str.DpcVerdictGood">正常</s:String>
     <s:String x:Key="Str.DpcVerdictWatch">偏高，建议复查</s:String>
     <s:String x:Key="Str.DpcVerdictHigh">异常偏高</s:String>
@@ -1206,7 +1203,7 @@
     <s:String x:Key="Str.ConditionTargetMissed">实际时长偏离目标</s:String>
     <s:String x:Key="Str.ConditionFpsMissing">至少一个会话未取得真实 FPS</s:String>
     <s:String x:Key="Str.ConditionMatch">已记录的游戏、分辨率、画质与场景一致。</s:String>
-    <s:String x:Key="Str.ConditionWarning">请谨慎对照：{0}。下方只展示记录差异，不据此判定优化收益。</s:String>
+    <s:String x:Key="Str.ConditionWarning">对照条件不同：{0}。</s:String>
     <s:String x:Key="Str.ConditionSelectPrevious">先在历史记录中选中一个有测试条件的会话。</s:String>
     <s:String x:Key="Str.ConditionCopied">条件已填入；请确认当前游戏及游戏内设置，再开始采样。</s:String>
     <s:String x:Key="Str.ConditionStopFailed">定时保存失败：{0}。请检查本地会话记录，保留的快照不会被当成保存成功。</s:String>
@@ -1268,7 +1265,6 @@
     <s:String x:Key="Str.OptScopeNoAdmin">无需管理员</s:String>
     <s:String x:Key="Str.OptScopeNoRestart">无需重启</s:String>
     <s:String x:Key="Str.OptScopeEffects">有副作用说明</s:String>
-    <s:String x:Key="Str.OptShowSelected">显示已选</s:String>
     <s:String x:Key="Str.OptClearSelection">清空全部选择</s:String>
     <s:String x:Key="Str.OptReviewApply">审阅并应用</s:String>
     <s:String x:Key="Str.OptHiddenSelection">其中 {0} 项被当前筛选隐藏；应用前将列出完整清单。</s:String>
@@ -1338,7 +1334,7 @@
     <s:String x:Key="Str.MemoryFailed">整理失败：{0}</s:String>
     <s:String x:Key="Str.MemoryNativeFailed">Windows 未能完成内存整理</s:String>
     <s:String x:Key="Str.MemoryBusy">请先结束性能记录、A/B 实验或开局准备，再整理内存。</s:String>
-    <s:String x:Key="Str.MemoryAdmin">整理内存需要管理员权限。请以管理员身份重启，然后进入“维护工具 → 内存整理”再次点击整理。</s:String>
+    <s:String x:Key="Str.MemoryAdmin">整理内存需要管理员权限。请以管理员身份重启，然后进入“常用工具 → 内存整理”再次点击整理。</s:String>
     <s:String x:Key="Str.DetectOverview">检测概览</s:String>
     <s:String x:Key="Str.DetectSearch">搜索优化项目名称或说明</s:String>
     <s:String x:Key="Str.AllCategories">全部分类</s:String>
@@ -1823,7 +1819,7 @@
     <s:String x:Key="Str.SessionTemplateSave">保存当前游戏模板</s:String>
     <s:String x:Key="Str.SessionTemplateLoad">载入模板</s:String>
     <s:String x:Key="Str.SessionTemplateDelete">删除模板</s:String>
-    <s:String x:Key="Str.SessionTemplateHint">模板保存本页条件；自动记录沿用分辨率、画质和场景，持续到游戏退出。参数仅用于记录，不修改游戏或显示设置。</s:String>
+    <s:String x:Key="Str.SessionTemplateHint">模板保存本页填写的条件；自动记录沿用分辨率、画质和场景，录到游戏退出。</s:String>
     <s:String x:Key="Str.SessionTemplateSelectGame">请先在首页选择游戏，再管理录制条件模板。</s:String>
     <s:String x:Key="Str.SessionTemplateBusy">录制期间保留本次条件，结束后可管理模板。</s:String>
     <s:String x:Key="Str.SessionTemplateSaved">已保存「{0}」的录制条件模板。</s:String>
@@ -2003,7 +1999,7 @@
     <s:String x:Key="Str.FilterEditorDarkBalanceBright">提亮 · γ1.40</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceNeutral">原样 · 45</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalanceDark">压暗 · γ0.30</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 是原样，往右提亮、往左压暗；用游戏加加同一套 12 档曲线，数值会自动取整。</s:String>
+    <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 为原样；往右提亮、往左压暗，调整后自动对齐档位。</s:String>
     <s:String x:Key="Str.FilterCategoryAll">全部</s:String>
     <s:String x:Key="Str.FilterCategorySoft">柔和护眼</s:String>
     <s:String x:Key="Str.FilterCategoryDeexpose">压暗去曝</s:String>
@@ -2083,7 +2079,7 @@
     <s:String x:Key="Str.CrosshairThicknessLabel">粗细</s:String>
     <s:String x:Key="Str.CrosshairOpacityLabel">不透明度</s:String>
     <s:String x:Key="Str.CrosshairAdaptiveToggle">AW 战术据枪：按住右键自动隐藏</s:String>
-    <s:String x:Key="Str.CrosshairAdaptiveHint">开镜（按住右键）时准星自动隐藏，松开恢复；本应用窗口在前台时也会暂时隐藏，不影响设置操作。</s:String>
+    <s:String x:Key="Str.CrosshairAdaptiveHint">开镜（按住右键）时自动隐藏，松开恢复；切回本应用窗口时暂时隐藏。</s:String>
     <s:String x:Key="Str.CrosshairPreviewTitle">准星预览</s:String>
     <s:String x:Key="Str.CrosshairPreviewHint">这里显示当前颜色、样式和透明度的实际效果。游戏里看不到准星时先切回游戏窗口——本程序在前台会临时隐藏它。</s:String>
     <s:String x:Key="Str.DeltaFixTab">掉帧修复</s:String>
@@ -2434,9 +2430,9 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TuningBusy">正在录制、准备或处理其他操作，请完成后再试。</s:String>
     <s:String x:Key="Str.TuningUnsupported">目前竞技调校支持三角洲行动、无畏契约与 CS2。</s:String>
     <s:String x:Key="Str.TuningDlssTitle">三角洲 DLSS</s:String>
-    <s:String x:Key="Str.TuningDlssHint">沿用“显示与画质”的按游戏 DLSS 预设覆盖。游戏需启用 DLSS 超分辨率；该覆盖不会替你开启游戏内超分或帧生成。</s:String>
+    <s:String x:Key="Str.TuningDlssHint">沿用“显示与画质”的按游戏 DLSS 预设覆盖；需要在游戏内启用 DLSS 超分辨率。</s:String>
     <s:String x:Key="Str.TuningCs2Title">生成 CS2 限帧命令</s:String>
-    <s:String x:Key="Str.TuningCs2Hint">分别设置对局和菜单上限。复制后粘贴到 CS2 控制台执行；生成与复制不会改动游戏文件。</s:String>
+    <s:String x:Key="Str.TuningCs2Hint">分别设置对局和菜单上限；复制后粘贴到 CS2 控制台执行。</s:String>
     <s:String x:Key="Str.TuningMatchCap">对局上限</s:String>
     <s:String x:Key="Str.TuningMenuCap">菜单上限</s:String>
     <s:String x:Key="Str.TuningCommandRange">填写 0 或 20–1000 FPS；0 表示不限制。</s:String>
@@ -2468,4 +2464,200 @@ DNS：{3} · 解析地址：{4}</s:String>
 {0}
 
 {1}</s:String>
+    <!-- 2026-11-03：界面文案外置（A/B 实验、性能会话、检测、控制台、设置、优化、显示与画质、社区窗口）。
+         这些键与 Strings.en-US.xaml 一一对应，新增/修改必须两边同时改。 -->
+
+    <!-- A/B 实验：向导状态、判定、报告 -->
+    <s:String x:Key="Str.AbLastError">上次出现问题：{0}</s:String>
+    <s:String x:Key="Str.AbRetryStep">可重试：{0}。</s:String>
+    <s:String x:Key="Str.AbRetryAnyStep">可重试对应步骤。</s:String>
+    <s:String x:Key="Str.AbBaselineDoneContinue">基线已完成（平均 {0:0.#} FPS）。继续测试候选组，或生成报告。</s:String>
+    <s:String x:Key="Str.AbStepBaseline">1 · 基线采样</s:String>
+    <s:String x:Key="Str.AbStepDone">完成（平均 {0:0.#} FPS，CV {1:0.###}{2}）</s:String>
+    <s:String x:Key="Str.AbUnstableSuffix">，不稳定</s:String>
+    <s:String x:Key="Str.AbBaselineDetail">1% low {0:0.#} · {1:yy-MM-dd HH:mm}。基线稳定后才能测试候选组。</s:String>
+    <s:String x:Key="Str.AbStepDoneVerdict">完成：{0}</s:String>
+    <s:String x:Key="Str.AbStepRunningHint">脚本正在执行，请保持游戏场景固定；可取消并在结果未知时检查后重试。</s:String>
+    <s:String x:Key="Str.AbGroupDetail">{0}（平均 {1:0.#} FPS · 1% low {2:0.#} · {3:yy-MM-dd HH:mm}{4}）</s:String>
+    <s:String x:Key="Str.AbSimulated">模拟</s:String>
+    <s:String x:Key="Str.AbStepReport">5 · 生成报告</s:String>
+    <s:String x:Key="Str.AbReportAt">已生成（{0:yy-MM-dd HH:mm}）</s:String>
+    <s:String x:Key="Str.AbReportRunningHint">正在合成脚本原始指标与会话摘要；可取消并在结果未知时重试。</s:String>
+    <s:String x:Key="Str.AbNoSession">（不关联会话）</s:String>
+    <s:String x:Key="Str.AbSessionOption">{0} · {1:MM-dd HH:mm} · {2} 样本</s:String>
+    <s:String x:Key="Str.AbSaveFailed">向导状态保存失败：{0}。本次结果未被可靠记录，请先解决权限或磁盘问题后重试。</s:String>
+    <s:String x:Key="Str.AbCancelling">正在取消当前步骤……将停止脚本，当前结果不会形成结论。</s:String>
+    <s:String x:Key="Str.AbCannotStart">无法开始：{0}</s:String>
+    <s:String x:Key="Str.AbSaveBlockedStart">向导状态无法保存，步骤尚未启动。请解决权限或磁盘问题后重试。</s:String>
+    <s:String x:Key="Str.AbRunningStatus">正在运行：{0}……运行期间步骤按钮已禁用，请保持游戏场景固定。</s:String>
+    <s:String x:Key="Str.AbRunningRaw">正在运行： {0}</s:String>
+    <s:String x:Key="Str.AbStepCancelledRaw">步骤已取消。脚本未完成，结果未知；如果候选组已经应用，请先检查或还原设置，再重试。</s:String>
+    <s:String x:Key="Str.AbStepCancelledDetail">用户取消了步骤；脚本已停止，结果未知。请检查候选设置后重试。</s:String>
+    <s:String x:Key="Str.AbStepCancelledShort">用户取消了步骤；结果未知，可重试。</s:String>
+    <s:String x:Key="Str.AbStepExecFailedNonZero">步骤执行失败（脚本返回非零退出码）</s:String>
+    <s:String x:Key="Str.AbStepExecFailedReason">步骤执行失败：{0}</s:String>
+    <s:String x:Key="Str.AbExecFailedStatus">执行失败，详见原始输出。可重试该步骤。</s:String>
+    <s:String x:Key="Str.AbOutputNotJson">脚本输出无法解析为 JSON（可能混入了其他输出）。</s:String>
+    <s:String x:Key="Str.AbOutputParseFailed">输出解析失败，详见原始输出。</s:String>
+    <s:String x:Key="Str.AbOutputNotObject">脚本输出不是 JSON 对象。</s:String>
+    <s:String x:Key="Str.AbEngineFailedNoReason">脚本报告失败（未提供原因）</s:String>
+    <s:String x:Key="Str.AbStepIncomplete">步骤未完成：{0}</s:String>
+    <s:String x:Key="Str.AbBaselineMetricsMissing">脚本基线结果缺少有效指标，未保存为完成状态。</s:String>
+    <s:String x:Key="Str.AbBaselineInvalid">基线结果无效，详见原始输出。</s:String>
+    <s:String x:Key="Str.AbGroupMetricsMissing">脚本候选组结果缺少有效指标，未保存为完成状态。</s:String>
+    <s:String x:Key="Str.AbGroupInvalid">候选组结果无效，详见原始输出。</s:String>
+    <s:String x:Key="Str.AbReportMetricsMissing">脚本报告缺少完整基线或候选组指标，未标记为已生成。</s:String>
+    <s:String x:Key="Str.AbReportIncomplete">报告结果不完整，详见原始输出。</s:String>
+    <s:String x:Key="Str.AbReportWriteFailedShort">报告文件写入失败。</s:String>
+    <s:String x:Key="Str.AbReportWriteFailedStatus">报告写入失败，详见原始输出。可重试。</s:String>
+    <s:String x:Key="Str.AbModeMismatch">脚本返回模式（{0}）与请求步骤（{1}）不匹配。</s:String>
+    <s:String x:Key="Str.AbModeMismatchStatus">结果与步骤不匹配，详见原始输出。</s:String>
+    <s:String x:Key="Str.AbReportTimeLine">- 生成时间：{0}</s:String>
+    <s:String x:Key="Str.AbReportScopeLine">- 结论口径：仅来自实际或模拟采样的统计比较；启发式数据不代表因果，不承诺固定 FPS 提升。</s:String>
+    <s:String x:Key="Str.AbReportBaselineSection">## 基线</s:String>
+    <s:String x:Key="Str.AbReportBaselineLine">平均 {0} FPS · 1% low {1} · P99 {2} ms · 卡顿 {3} · CV {4}</s:String>
+    <s:String x:Key="Str.AbReportNoBaseline">（无基线数据）</s:String>
+    <s:String x:Key="Str.AbReportSessionLine">关联性能会话：{0}（{1}，{2} 样本）</s:String>
+    <s:String x:Key="Str.AbReportGroupsSection">## 候选组结论</s:String>
+    <s:String x:Key="Str.AbReportGroupLine">- **{0}（{1}）**：{2}</s:String>
+    <s:String x:Key="Str.AbReportGroupMetrics">平均 {0} FPS、1% low {1}。{2}</s:String>
+    <s:String x:Key="Str.AbReportSessionLineShort">关联性能会话：{0}（{1}）</s:String>
+    <s:String x:Key="Str.AbReportNoGroups">（尚未测试任何候选组）</s:String>
+    <s:String x:Key="Str.AbReportRawSection">## 脚本原始输出（JSON）</s:String>
+    <s:String x:Key="Str.AbReportSavedNote">（原始 JSON 输出见脚本；文件已保存 report-latest.md）</s:String>
+    <s:String x:Key="Str.AbReportWriteFailed">报告文件写入失败：{0}</s:String>
+    <s:String x:Key="Str.AbSamplesCount">{0} 样本</s:String>
+    <s:String x:Key="Str.AbSummaryCpu">CPU 平均 {0}% / 95 位 {1}%</s:String>
+    <s:String x:Key="Str.AbSummaryMem">内存平均 {0}%</s:String>
+    <s:String x:Key="Str.AbSummaryGpu">GPU 平均 {0}%</s:String>
+    <s:String x:Key="Str.AbSummaryVram">显存平均 {0:0} MiB</s:String>
+    <s:String x:Key="Str.AbSummaryNote">（启发式判断，不代表因果）</s:String>
+    <s:String x:Key="Str.AbTooltipVerdict">结论：{0}</s:String>
+    <s:String x:Key="Str.AbTooltipBody">{0}（{1}）{2}&#x0a;平均 {3} FPS · 1% low {4} FPS{5}{6}</s:String>
+    <s:String x:Key="Str.VerdictRestoreIncomplete">未完成还原</s:String>
+
+    <!-- 通用分隔符（列表拼接；英文用逗号） -->
+    <s:String x:Key="Str.ListSeparator">、</s:String>
+    <s:String x:Key="Str.ListSeparatorSemicolon">；</s:String>
+
+    <!-- 性能会话 -->
+    <s:String x:Key="Str.SessionName">会话名称</s:String>
+    <s:String x:Key="Str.SessionDefaultName">{0} · 对照记录 {1:MM-dd HH:mm}</s:String>
+    <s:String x:Key="Str.SessionRunningLine">采样中：{0} · 已运行 {1} · 样本 {2} · 间隔 {3:0.#} 秒 · 缺失指标：{4}</s:String>
+    <s:String x:Key="Str.SessionVramCapacity">{0:0} / {1:0} MiB（注册表报告容量）</s:String>
+    <s:String x:Key="Str.SessionVramCapacityUnknown">显存容量不可用，无法计算占比</s:String>
+    <s:String x:Key="Str.SessionNameInvalid">会话名称包含不能用于文件的字符，请修改后重试。</s:String>
+    <s:String x:Key="Str.SessionStartBusy">无法开始会话：另一个 FpsTune 实例正在使用性能会话，或上次中断的会话尚未处理。&#x0a;&#x0a;如确认只有一个实例在运行，可关闭程序后删除或改名这个文件：&#x0a;{0}</s:String>
+    <s:String x:Key="Str.SessionUnreadableConfirm">上次未完成的会话快照无法被当前版本读取（通常来自更新的版本，或文件已损坏）。&#x0a;&#x0a;可以把它改名留档（不删除、不参与统计），然后立即开始新会话。&#x0a;&#x0a;要现在归档吗？</s:String>
+    <s:String x:Key="Str.SessionArchiveFailed">归档失败：{0}</s:String>
+    <s:String x:Key="Str.SessionArchived">已留档为：{0}&#x0a;&#x0a;文件仍在会话目录中，可随时手动找回。</s:String>
+    <s:String x:Key="Str.SessionCancelMarkFailed">未能安全写入取消标记，会话快照仍保留，未将本次会话视为已取消。请重试或先检查本地磁盘。&#x0a;&#x0a;{0}</s:String>
+    <s:String x:Key="Str.SessionHistoryLoadFailed">历史记录读取失败：{0}</s:String>
+    <s:String x:Key="Str.SessionMemAvg">内存 {0}%</s:String>
+    <s:String x:Key="Str.SessionVramAvg">显存 {0:0} MiB</s:String>
+    <s:String x:Key="Str.SessionJsonSaved">JSON 已保存到所选位置。文件内容不含路径与用户名。</s:String>
+    <s:String x:Key="Str.SessionJsonExportFailed">JSON 导出失败：{0}</s:String>
+    <s:String x:Key="Str.SessionCsvSaved">CSV 已保存到所选位置。缺失样本为空单元格。</s:String>
+    <s:String x:Key="Str.SessionCsvExportFailed">CSV 导出失败：{0}</s:String>
+    <s:String x:Key="Str.SessionDeleteConfirm">确定删除所选 {0} 个会话？此操作只删除这些会话文件，不影响其他数据。</s:String>
+    <s:String x:Key="Str.SessionInsightTarget">依据会话「{0}」（{1:MM-dd HH:mm} 起，{2} 个样本）</s:String>
+    <s:String x:Key="Str.SessionInsightWindow">时间范围 {0:HH:mm:ss} - {1:HH:mm:ss}</s:String>
+    <s:String x:Key="Str.SessionDisplayName">{0}（{1:MM-dd HH:mm}）</s:String>
+    <s:String x:Key="Str.SessionExportFilePrefix">FpsTune-会话-</s:String>
+
+    <!-- 检测页 -->
+    <s:String x:Key="Str.DetectVramHintUnknown">容量不可得，仅显示用量</s:String>
+    <s:String x:Key="Str.DetectVramCounterMissing">未提供 GPU Adapter Memory 计数器</s:String>
+    <s:String x:Key="Str.DetectLoadedItems">已加载 {0} 个优化项到优化页。</s:String>
+    <s:String x:Key="Str.DetectCheckName">体检</s:String>
+    <s:String x:Key="Str.DetectCheckItemName">体检项</s:String>
+    <s:String x:Key="Str.DetectDumpHardware">== 硬件 ==</s:String>
+    <s:String x:Key="Str.DetectDumpMem">内存: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpOs">系统: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpLaptop">笔记本: {0}  管理员: {1}</s:String>
+    <s:String x:Key="Str.DetectDumpGamePath">游戏路径: {0}</s:String>
+    <s:String x:Key="Str.DetectDumpChecks">== 体检 ==</s:String>
+    <s:String x:Key="Str.DetectDumpItems">== 优化项（{0} 项） ==</s:String>
+    <s:String x:Key="Str.DetectDumpStatusDone">[已达标]</s:String>
+    <s:String x:Key="Str.DetectDumpStatusTodo">[未应用]</s:String>
+    <s:String x:Key="Str.DetectDumpDescription">说明：{0}</s:String>
+    <s:String x:Key="Str.DetectDumpSideEffect">副作用：{0}</s:String>
+    <s:String x:Key="Str.DetectDumpCurrent">当前：{0}</s:String>
+    <s:String x:Key="Str.DetectDumpRequirement">要求：{0}</s:String>
+
+    <!-- 控制台首页 -->
+    <s:String x:Key="Str.ConsoleReadyTitleFmt">{0} · 开局准备</s:String>
+    <s:String x:Key="Str.ConsoleReadyTitle">开局准备</s:String>
+    <s:String x:Key="Str.ConsoleReadyCount">游戏已就绪 · {0} 项基础设置待审阅；可先记录一局作为对照。</s:String>
+    <s:String x:Key="Str.ConsoleLocateGame">定位游戏</s:String>
+    <s:String x:Key="Str.ConsoleBasicAdviceCount">基础建议 · {0}</s:String>
+    <s:String x:Key="Str.ConsoleBasicAdvice">基础建议</s:String>
+
+    <!-- 设置页 -->
+    <s:String x:Key="Str.SettingsSaveFailed">设置失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsOpenFailed">打开失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsProfileLoadFailed">方案读取失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsScanDone">已扫描 {0} 个游戏候选、{1} 个方案</s:String>
+    <s:String x:Key="Str.SettingsScanFailed">扫描失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsProcessBound">进程名「{0}」已经绑定。轮询无法区分同名国服或国际服，不能重复添加。</s:String>
+    <s:String x:Key="Str.SettingsBindSaveFailed">绑定保存失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsBound">已绑定「{0}」→「{1}」</s:String>
+    <s:String x:Key="Str.SettingsToggleSaveFailed">绑定开关保存失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsUnbindSaveFailed">绑定删除保存失败：{0}</s:String>
+    <s:String x:Key="Str.SettingsUnbound">已删除绑定「{0}」</s:String>
+    <s:String x:Key="Str.SettingsActivityProfile">方案「{0}」</s:String>
+    <s:String x:Key="Str.SettingsActivityTrigger">触发条件：启用绑定的进程出现启动边沿时自动应用一次；进程持续存在不重复应用，全部同名进程退出后再次启动才可再次触发。</s:String>
+    <s:String x:Key="Str.SettingsActivityScanDone">最后扫描 {0:HH:mm:ss}（本轮第 {1} 次轮询，间隔 3 秒）。</s:String>
+    <s:String x:Key="Str.SettingsActivityNoScan">本轮尚未扫描（后台服务启动且有启用绑定时开始轮询）。</s:String>
+    <s:String x:Key="Str.SettingsActivityAuditLimit">审计记录最多保留 200 条，不含完整用户路径。</s:String>
+    <s:String x:Key="Str.SettingsAutoApplySaveFailed">自动应用开关保存失败：{0}</s:String>
+    <s:String x:Key="Str.ActivityFilter">活动筛选</s:String>
+    <s:String x:Key="Str.FilterExecutableAll">可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*</s:String>
+
+    <!-- 备份日志 -->
+    <s:String x:Key="Str.ExecException">执行异常</s:String>
+    <s:String x:Key="Str.FilterLogText">日志文件 (*.txt)|*.txt|所有文件 (*.*)|*.*</s:String>
+
+    <!-- 优化页 -->
+    <s:String x:Key="Str.OptCustomPaneIntro">自定义选择&#x0a;&#x0a;打开开关将项目加入待应用清单，确认后在底部应用。&#x0a;&#x0a;点击项目查看当前状态与副作用。&#x0a;&#x0a;搜索和分类只影响列表显示，不会取消其他分类的选择。</s:String>
+    <s:String x:Key="Str.OptPresetPaneIntro">{0} · {1} 项</s:String>
+    <s:String x:Key="Str.Unconfirmed">未确认</s:String>
+    <s:String x:Key="Str.OptRestoreConfirmAll">共找到 {0} 个备份文件，将把它们记录的全部系统改动逐项恢复为原值。&#x0a;&#x0a;确定继续吗？</s:String>
+    <s:String x:Key="Str.Skipped">跳过</s:String>
+    <s:String x:Key="Str.ApplyDone">应用完成</s:String>
+    <s:String x:Key="Str.ItemsCountFmt">{0} 项</s:String>
+    <s:String x:Key="Str.RequiresRebootSuffix">，需重启</s:String>
+
+    <!-- 显示与画质 -->
+    <s:String x:Key="Str.DlssReadFailed">读取覆盖状态失败：{0}</s:String>
+    <s:String x:Key="Str.DlssCovered">当前覆盖：{0}</s:String>
+    <s:String x:Key="Str.DlssCoveredSelf">（本工具写入，可还原）</s:String>
+    <s:String x:Key="Str.DlssCoveredOther">（其他工具或驱动既有配置，应用前会备份原值）</s:String>
+    <s:String x:Key="Str.DlssPresetM">M 预设（新一代模型·高端）</s:String>
+    <s:String x:Key="Str.DlssPresetK">K 预设（新一代模型·推荐）</s:String>
+    <s:String x:Key="Str.DlssPresetJ">J 预设（新一代模型）</s:String>
+    <s:String x:Key="Str.DlssPresetE">E 预设（旧一代 CNN 模型）</s:String>
+    <s:String x:Key="Str.DlssPresetUnknown">预设 0x{0:X}</s:String>
+    <s:String x:Key="Str.DrsReadFailed">读取驱动 3D 设置失败：{0}</s:String>
+    <s:String x:Key="Str.DrsEsportsApplied">已应用竞技推荐（高质量 + 最高性能 + {0} + 预渲染 1 帧）。</s:String>
+    <s:String x:Key="Str.ApplyFailed">应用失败：{0}</s:String>
+    <s:String x:Key="Str.FilterExecutable">可执行文件 (*.exe)|*.exe</s:String>
+    <s:String x:Key="Str.FrameCap60">帧率上限 60</s:String>
+    <s:String x:Key="Str.FrameCap120">帧率上限 120</s:String>
+    <s:String x:Key="Str.FrameCap144">帧率上限 144</s:String>
+    <s:String x:Key="Str.FrameCap165">帧率上限 165</s:String>
+    <s:String x:Key="Str.FrameCap240">帧率上限 240</s:String>
+    <s:String x:Key="Str.ConditionResolutionWidth">分辨率宽</s:String>
+    <s:String x:Key="Str.ConditionResolutionHeight">分辨率高</s:String>
+    <s:String x:Key="Str.GameChipCurrent">当前游戏：{0}</s:String>
+
+    <!-- 社区窗口 -->
+    <s:String x:Key="Str.CommunityQq">QQ 659528489</s:String>
+
+    <!-- 启动读配置失败、准星保存、会话保留上限、游戏时自动化 -->
+    <s:String x:Key="Str.SettingsLoadFailedTitle">设置读取失败</s:String>
+    <s:String x:Key="Str.SettingsLoadFailedBody">这次启动没能读取配置文件：{0}。为免覆盖原有设置，本轮不会把设置写回磁盘；文件仍在 {1}。</s:String>
+    <s:String x:Key="Str.CrosshairSaveFailed">准星设置保存失败</s:String>
+    <s:String x:Key="Str.SessionHistoryRetention">保留最近 30 条会话，超出后自动删除最旧的。</s:String>
+    <s:String x:Key="Str.AutoSessionSaveFailed">游戏时自动化开关保存失败：{0}</s:String>
 </ResourceDictionary>

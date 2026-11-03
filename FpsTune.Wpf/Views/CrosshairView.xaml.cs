@@ -17,6 +17,9 @@ public partial class CrosshairView : UserControl
     // 调色盘回填滑块时不能再反过来写设置（否则每次刷新都算一次用户改动）。
     private bool _paletteSync;
 
+    // 保存失败每次进页面只提示一次：滑杆每拖一格都会触发，连弹会烦。
+    private bool _saveFailureReported;
+
     public CrosshairView() { InitializeComponent(); }
 
     protected override void OnInitialized(EventArgs e)
@@ -196,7 +199,7 @@ public partial class CrosshairView : UserControl
             App.ApplyCrosshairSettings();
             UpdatePreview();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             settings.CrosshairEnabled = backup.Enabled;
             settings.CrosshairStyle = backup.Style;
@@ -211,6 +214,12 @@ public partial class CrosshairView : UserControl
             CrosshairAdaptiveCheck.IsChecked = backup.AdaptiveHide;
             CrosshairColorBox.Text = backup.Color;
             _suppress = false;
+            // 以前这里只把数值弹回去，用户只看到滑杆自己跳回原样，不知道为什么。
+            if (!_saveFailureReported)
+            {
+                _saveFailureReported = true;
+                DialogService.Warning(Str.T("Str.CrosshairSaveFailed"), ex.Message);
+            }
         }
     }
 }

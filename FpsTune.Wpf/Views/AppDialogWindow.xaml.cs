@@ -50,7 +50,7 @@ public partial class AppDialogWindow : Window
             ConfirmButton.Style = (Style)Application.Current.Resources["SecondaryButtonStyle"];
             ConfirmButton.Background = (Brush)Application.Current.Resources["DangerBrush"];
             ConfirmButton.BorderBrush = Brushes.Transparent;
-            ConfirmButton.Foreground = Brushes.White;
+            ConfirmButton.SetResourceReference(ForegroundProperty, "OnDangerBrush");
         }
     }
 
@@ -70,5 +70,10 @@ public partial class AppDialogWindow : Window
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
         DialogResult = false;
+    }
+
+    private void Header_Drag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed) DragMove();
     }
 }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using FpsTune.Wpf.Services;
@@ -93,26 +94,7 @@ public static class HardwareInfoService
         const string fallback = "未识别到内存频率，可在任务管理器 / CPU-Z 查看";
         try
         {
-            var speeds = new List<int>();
-            var configured = new List<int>();
-            // WMI 的 searcher/集合/对象都是 COM 资源，必须显式释放（对照 DetectionService 的写法）
-            using var searcher = new System.Management.ManagementObjectSearcher(
-                "SELECT Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
-            using var results = searcher.Get();
-            foreach (System.Management.ManagementObject mo in results)
-            {
-                try
-                {
-                    if (int.TryParse(mo["Speed"]?.ToString(), out var s) && s > 0)
-                        speeds.Add(s);
-                    if (int.TryParse(mo["ConfiguredClockSpeed"]?.ToString(), out var c) && c > 0)
-                        configured.Add(c);
-                }
-                finally
-                {
-                    mo.Dispose();
-                }
-            }
+            var (speeds, configured) = QueryMemoryClocks();
 
             if (speeds.Count == 0)
                 return ("attention", fallback);
@@ -131,6 +113,39 @@ public static class HardwareInfoService
         {
             return ("attention", fallback);
         }
+    }
+
+    /// <summary>
+    /// WMI 查询单独成方法并禁止内联。System.Management 程序集缺失/加载失败时，JIT 会在**方法入栈阶段**
+    /// 就抛 FileNotFoundException，调用方方法体里的 try/catch 根本来不及执行（错误日志里
+    /// `HardwareInfoService.GetGpuName → FileNotFoundException: System.Management` 就是这个原因，
+    /// 后果是整块硬件信息刷不出来）。拆成独立方法后，加载失败会落进调用方的 catch，
+    /// 只剩「读不到」而不是「页面挂掉」。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static (List<int> Speeds, List<int> Configured) QueryMemoryClocks()
+    {
+        var speeds = new List<int>();
+        var configured = new List<int>();
+        // WMI 的 searcher/集合/对象都是 COM 资源，必须显式释放（对照 DetectionService 的写法）
+        using var searcher = new System.Management.ManagementObjectSearcher(
+            "SELECT Speed, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
+        using var results = searcher.Get();
+        foreach (System.Management.ManagementObject mo in results)
+        {
+            try
+            {
+                if (int.TryParse(mo["Speed"]?.ToString(), out var s) && s > 0)
+                    speeds.Add(s);
+                if (int.TryParse(mo["ConfiguredClockSpeed"]?.ToString(), out var c) && c > 0)
+                    configured.Add(c);
+            }
+            finally
+            {
+                mo.Dispose();
+            }
+        }
+        return (speeds, configured);
     }
 
     public static string GetPcieLinkText()
@@ -229,14 +244,12 @@ public static class HardwareInfoService
         try
         {
             var cands = new List<(string Name, bool Pci, string Pnp)>();
-            using var searcher = new System.Management.ManagementObjectSearcher(
-                "SELECT Name, PNPDeviceID FROM Win32_VideoController");
-            foreach (var mo in searcher.Get())
+            foreach (var (rawName, rawPnp) in QueryVideoControllers())
             {
-                var name = (mo["Name"]?.ToString() ?? "").Trim();
+                var name = rawName;
                 if (name.Length == 0 || IsVirtualOrBasicGpu(name))
                     continue;
-                var pnp = (mo["PNPDeviceID"]?.ToString() ?? "").Trim();
+                var pnp = rawPnp;
                 // MatchingDeviceId 不含 REV 与实例号，先把 WMI 的 PNP ID 截齐再比对
                 var revIdx = pnp.IndexOf("&rev_", StringComparison.OrdinalIgnoreCase);
                 if (revIdx > 0)
@@ -273,6 +286,30 @@ public static class HardwareInfoService
         {
         }
         return "未知 GPU";
+    }
+
+    /// <summary>
+    /// 同 <see cref="QueryMemoryClocks"/>：WMI 访问独立成方法并禁止内联，
+    /// 让 System.Management 加载失败落进调用方的 catch，而不是在 GetGpuName 入栈时直接抛出去。
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static List<(string Name, string Pnp)> QueryVideoControllers()
+    {
+        var devices = new List<(string Name, string Pnp)>();
+        using var searcher = new System.Management.ManagementObjectSearcher(
+            "SELECT Name, PNPDeviceID FROM Win32_VideoController");
+        foreach (System.Management.ManagementObject mo in searcher.Get())
+        {
+            try
+            {
+                devices.Add(((mo["Name"]?.ToString() ?? "").Trim(), (mo["PNPDeviceID"]?.ToString() ?? "").Trim()));
+            }
+            finally
+            {
+                mo.Dispose();
+            }
+        }
+        return devices;
     }
 
     private static double GetRamGB()

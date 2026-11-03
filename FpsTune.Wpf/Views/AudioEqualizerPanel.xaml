@@ -6,16 +6,26 @@
     <Grid Width="28" Background="Transparent">
      <Border Width="4" Background="{DynamicResource BorderBrush}" CornerRadius="2"/>
      <Track x:Name="PART_Track" Orientation="Vertical" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{Binding Value,RelativeSource={RelativeSource TemplatedParent},Mode=TwoWay}">
-      <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton>
-      <Track.Thumb><Thumb Width="16" Height="16"><Thumb.Template><ControlTemplate TargetType="Thumb"><Ellipse Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource SurfaceBrush}" StrokeThickness="2"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
-      <Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.IncreaseRepeatButton>
+      <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge" Focusable="False"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.DecreaseRepeatButton>
+      <Track.Thumb><Thumb x:Name="Knob" Width="16" Height="16"><Thumb.Template><ControlTemplate TargetType="Thumb"><Ellipse x:Name="Dot" Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource SurfaceBrush}" StrokeThickness="2"/>
+       <!-- 十段均衡器的滑块原来悬停、拖动、键盘聚焦、禁用全都没有反应。 -->
+       <ControlTemplate.Triggers>
+        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Dot" Property="Fill" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="Dot" Property="Stroke" Value="{DynamicResource AccentBrush}"/></Trigger>
+        <Trigger Property="IsDragging" Value="True"><Setter TargetName="Dot" Property="Fill" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Dot" Property="Stroke" Value="{DynamicResource AccentBrush}"/></Trigger>
+       </ControlTemplate.Triggers>
+      </ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+      <Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge" Focusable="False"><RepeatButton.Template><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent"/></ControlTemplate></RepeatButton.Template></RepeatButton></Track.IncreaseRepeatButton>
      </Track>
     </Grid>
+    <ControlTemplate.Triggers>
+     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+    </ControlTemplate.Triggers>
    </ControlTemplate></Setter.Value></Setter>
   </Style>
  </UserControl.Resources>
  <StackPanel>
-  <TextBlock Text="{DynamicResource Str.EqTitle}" Style="{StaticResource PageTitleStyle}"/>
+  <!-- 宿主页（常用工具）已经有一个 24px 页标题，这里再放一个同字号标题会让层级看不清。 -->
+  <TextBlock Text="{DynamicResource Str.EqTitle}" Style="{StaticResource CardTitleStyle}"/>
   <TextBlock Text="{DynamicResource Str.EqIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,20"/>
   <Border Style="{StaticResource CardStyle}"><StackPanel>
    <TextBlock x:Name="EngineStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>

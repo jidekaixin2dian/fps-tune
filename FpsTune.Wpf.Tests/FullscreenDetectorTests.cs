@@ -247,16 +247,64 @@ public sealed class FullscreenDetectorTests : IDisposable
     }
 
     [Fact]
-    public void Unknown_samples_neither_enter_nor_leave_the_window()
+    public void Unknown_samples_do_not_leave_the_window_within_the_grace()
     {
         var debouncer = new FullscreenDebouncer(cooldown: TimeSpan.Zero);
         for (var i = 0; i < 4; i++) debouncer.Update(ForegroundScreenState.FullscreenBorderless, T0.AddMilliseconds(i * 500));
         Assert.True(debouncer.Committed);
 
-        for (var i = 0; i < 8; i++)
-            Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(5 + i)));
+        // 宽限期（3 秒）之内一直读不到前台：保持生效，不被一次读失败打断。
+        foreach (var offset in new[] { 4.5, 5.0, 5.5, 6.0, 6.5, 7.0 })
+            Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(offset)));
         Assert.True(debouncer.Committed);
         Assert.Equal(4, debouncer.SampleCount);
+    }
+
+    [Fact]
+    public void Unknown_foreground_beyond_the_grace_commits_an_exit()
+    {
+        // 全屏窗口关闭后前台读不出任何东西：这里是「关掉窗口、只在程序退出时才还原」的最小复现。
+        var debouncer = new FullscreenDebouncer(cooldown: TimeSpan.Zero);
+        for (var i = 0; i < 4; i++) debouncer.Update(ForegroundScreenState.FullscreenBorderless, T0.AddMilliseconds(i * 500));
+        Assert.True(debouncer.Committed);
+
+        Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(10)));
+        Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(12.5)));
+        Assert.True(debouncer.Committed);
+
+        Assert.True(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(13.1)));
+        Assert.False(debouncer.Committed);
+    }
+
+    [Fact]
+    public void A_readable_sample_restarts_the_unknown_grace()
+    {
+        var debouncer = new FullscreenDebouncer(cooldown: TimeSpan.Zero);
+        for (var i = 0; i < 4; i++) debouncer.Update(ForegroundScreenState.FullscreenBorderless, T0.AddMilliseconds(i * 500));
+        Assert.True(debouncer.Committed);
+
+        Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(10)));
+        // 中间又能读到了：宽限期重新起算，别把交替读失败累计成退出。
+        Assert.False(debouncer.Update(ForegroundScreenState.FullscreenBorderless, T0.AddSeconds(12)));
+        Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(14)));
+        Assert.True(debouncer.Committed);
+
+        Assert.True(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(17.1)));
+        Assert.False(debouncer.Committed);
+    }
+
+    [Fact]
+    public void Unknown_before_engagement_never_counts_as_an_exit()
+    {
+        // 进入阶段读不到前台时仍然只丢弃，不能把切换瞬间的抖动判成「从没进过全屏」。
+        var debouncer = new FullscreenDebouncer(cooldown: TimeSpan.Zero);
+        for (var i = 0; i < 3; i++) debouncer.Update(ForegroundScreenState.FullscreenBorderless, T0.AddMilliseconds(i * 500));
+        Assert.False(debouncer.Committed);
+
+        for (var i = 0; i < 10; i++)
+            Assert.False(debouncer.Update(ForegroundScreenState.Unknown, T0.AddSeconds(5 + i)));
+        Assert.False(debouncer.Committed);
+        Assert.False(debouncer.HasDecision);
     }
 
     [Fact]
@@ -397,6 +445,40 @@ public sealed class FullscreenDetectorTests : IDisposable
         probe.Bounds = new PixelRect(100, 100, 900, 600);
         probe.Notification = 5;
         for (var i = 0; i < 2; i++) watcher.Poll();
+
+        Assert.Null(watcher.Status.ActivePreset);
+        Assert.Equal(userRamp, gamma.Ramp);
+        Assert.False(File.Exists(FullscreenPendingStore.FilePath));
+    }
+
+    [Theory]
+    [InlineData(true)]   // 前台句柄归零：窗口被销毁、系统没回落到任何窗口
+    [InlineData(false)]  // 前台落回本程序窗口：进程名读不出来
+    public void Closing_the_fullscreen_window_reverts_without_waiting_for_app_exit(bool foregroundGone)
+    {
+        // 用户视角的原始投诉：关掉游戏窗口后屏幕颜色一直偏着，只有退出程序才还原。
+        // 宽限期在测试里设成 0，避免真等 3 秒；产品用默认 3 秒。
+        EnableFullscreen(onlyForGames: false, preset: nameof(IccFilterPreset.Vivid), channel: "gamma");
+        DisplayTopology.Override = () => DisplayTopology.MarkIndependent([
+            new IccDisplayInfo(@"\\.\DISPLAY1", 123, 0, 0, "0001", true, DisplayId, "Screen A", true),
+        ]);
+
+        var gamma = new FakeGamma { Ramp = LinearRamp() };
+        var userRamp = (ushort[])gamma.Ramp.Clone();
+        TransientGamma.ApiOverride = gamma;
+
+        var probe = new FakeProbe();
+        var watcher = new FullscreenPresetWatcher(probe,
+            new FullscreenDebouncer(cooldown: TimeSpan.Zero, unknownGrace: TimeSpan.Zero));
+
+        for (var i = 0; i < 4; i++) watcher.Poll();
+        Assert.NotNull(watcher.Status.ActivePreset);
+        Assert.NotEqual(userRamp, gamma.Ramp);
+
+        if (foregroundGone) probe.Window = 0;
+        else probe.Process = null;
+
+        watcher.Poll();
 
         Assert.Null(watcher.Status.ActivePreset);
         Assert.Equal(userRamp, gamma.Ramp);

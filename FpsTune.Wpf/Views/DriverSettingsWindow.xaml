@@ -6,7 +6,7 @@
  Background="{DynamicResource AppBackdropBrush}">
  <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24"><Grid>
   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-  <TextBlock Text="{DynamicResource Str.OptDriverTab}" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,16"/>
+  <TextBlock Text="{DynamicResource Str.OptDriverTab}" Style="{StaticResource PageTitleStyle}" Margin="0,0,0,16" Background="Transparent" MouseLeftButtonDown="Header_Drag"/>
   <ScrollViewer x:Name="DriverScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
    <local:GameDriverSettings x:Name="DriverSettings" Margin="0,0,8,0"/>
   </ScrollViewer>

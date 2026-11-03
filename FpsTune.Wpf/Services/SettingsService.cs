@@ -140,8 +140,19 @@ public static class SettingsService
         ThemeMode = "system"
     };
 
+    /// <summary>
+    /// 启动时读不到配置文件（IO/占用/权限）时置位：本轮按默认值运行，但**拒绝回写**，
+    /// 否则用户下一次点任何开关都会用默认值覆盖掉磁盘上真正的设置。
+    /// </summary>
+    internal static bool SettingsFileUnreadable { get; private set; }
+
+    /// <summary>启动读取/解析失败时给界面用的一句话（null = 一切正常）。</summary>
+    internal static string? LoadWarning { get; private set; }
+
     public static void Load()
     {
+        SettingsFileUnreadable = false;
+        LoadWarning = null;
         try
         {
             if (!File.Exists(SettingsFile))
@@ -150,8 +161,7 @@ public static class SettingsService
                 return;
             }
 
-            var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
-            Current = JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
+            Current = ReadWithRetry();
             Current.AutoProfileBindings ??= new List<AutoProfileBinding>();
             Current.Preparation ??= new();
             Current.MemoryAutoCleanup = (Current.MemoryAutoCleanup ?? new()).Normalize();
@@ -166,11 +176,39 @@ public static class SettingsService
                 Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
             MigrateTrayMinimizeDefault(Current);
         }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // 「读不出来」不等于「没有配置」：被杀毒软件占着、被别的进程锁着、权限不足都属这一类。
+            // 这时既不要留档成损坏文件（会误导），也不能按默认值回写（会真的把用户设置覆盖掉）。
+            Current = CreateDefault();
+            SettingsFileUnreadable = true;
+            LoadWarning = ex.Message;
+        }
         catch
         {
             AtomicFile.PreserveCorrupt(SettingsFile);
             Current = CreateDefault();
         }
+    }
+
+    /// <summary>设置文件偶尔会被瞬时占用（杀软扫描/同步盘），读三次再判定失败。</summary>
+    private static AppSettings ReadWithRetry()
+    {
+        Exception? last = null;
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            try
+            {
+                var json = File.ReadAllText(SettingsFile, Encoding.UTF8);
+                return JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefault();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                last = ex;
+                Thread.Sleep(80);
+            }
+        }
+        throw last!;
     }
 
     public const string TrayMinimizeMigrationVersion = "0.4.0";
@@ -198,6 +236,9 @@ public static class SettingsService
         // 如果你有自定义个人主页/二维码页面，可以在设置里手动填写。
 
         Current = settings;
+        // 启动时原始文件读不出来：这一轮只在内存里生效，绝不把默认值覆盖回磁盘。
+        // （会话中用户仍能改，界面按新值工作；下次启动读到原文件时设置会「回退」，比丢配置好。）
+        if (SettingsFileUnreadable) return;
         Directory.CreateDirectory(BaseDir);
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         AtomicFile.WriteAllText(SettingsFile, json, new UTF8Encoding(false));

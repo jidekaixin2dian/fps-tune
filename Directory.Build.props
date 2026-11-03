@@ -39,9 +39,9 @@
     <!-- 0.3.5 = 内存整理工作区、真实阶段与结果反馈、本地中文字体 -->
     <!-- 0.3.6 = 游戏库与逐游戏工作区、开局方案、录制模板、历史检索与性能对比报告 -->
     <!-- 0.3.7 = 关闭去向与托盘、标题栏状态、新矢量标识与游戏识别扩展（开发中） -->
-    <!-- 0.4.0 = 大版本迭代：窗口化游戏优化、游戏高精度计时器 0.5ms（opt-in）、
+    <!-- 0.4.1 = 大版本迭代：窗口化游戏优化、游戏高精度计时器 0.5ms（opt-in）、
          后台资源只读采样（CPU/磁盘/网络）；用户 2026-11-01 点名大版本并要求可见变化 -->
-    <VersionPrefix>0.4.0</VersionPrefix>
+    <VersionPrefix>0.4.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

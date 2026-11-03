@@ -98,14 +98,14 @@ public partial class DetectView : UserControl
                 : $"{used / 1024.0 / 1024.0:0} MiB";
             VramNoteText.Text = sample.VramTotalBytes is { } t2 && t2 > 0
                 ? $"{used / 1024.0 / 1024.0:0} / {t2 / 1024.0 / 1024.0:0} MiB"
-                : "容量不可得，仅显示用量";
+                : Str.T("Str.DetectVramHintUnknown");
         }
         else
         {
             VramNowText.Text = Str.T("Str.Unavailable");
             VramNoteText.Text = _sampler?.UnavailableReasons.TryGetValue("vram", out var reason) == true
                 ? reason
-                : "未提供 GPU Adapter Memory 计数器";
+                : Str.T("Str.DetectVramCounterMissing");
         }
     }
 
@@ -204,7 +204,7 @@ public partial class DetectView : UserControl
             return;
         if (ci.Tag as string == "manual")
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Title = Str.T("Str.SelectGameMainExe"), Filter = "可执行文件 (*.exe)|*.exe" };
+            var dlg = new Microsoft.Win32.OpenFileDialog { Title = Str.T("Str.SelectGameMainExe"), Filter = Str.T("Str.FilterExecutable") };
             if (dlg.ShowDialog() == true)
                 ApplyGame(dlg.FileName);
             else
@@ -395,35 +395,35 @@ public partial class DetectView : UserControl
             return;
 
         var sb = new StringBuilder();
-        sb.AppendLine("== 硬件 ==");
+        sb.AppendLine(Str.T("Str.DetectDumpHardware"));
         sb.AppendLine($"CPU: {CpuText.Text}");
         sb.AppendLine($"GPU: {GpuText.Text}");
-        sb.AppendLine($"内存: {RamText.Text}");
-        sb.AppendLine($"系统: {OsText.Text}");
-        sb.AppendLine($"笔记本: {LaptopText.Text}  管理员: {AdminText.Text}");
-        sb.AppendLine($"游戏路径: {GamePathText.Text}");
+        sb.AppendLine(Str.T("Str.DetectDumpMem", RamText.Text));
+        sb.AppendLine(Str.T("Str.DetectDumpOs", OsText.Text));
+        sb.AppendLine(Str.T("Str.DetectDumpLaptop", LaptopText.Text, AdminText.Text));
+        sb.AppendLine(Str.T("Str.DetectDumpGamePath", GamePathText.Text));
         sb.AppendLine();
-        sb.AppendLine("== 体检 ==");
+        sb.AppendLine(Str.T("Str.DetectDumpChecks"));
         if (checks is not null)
         {
             foreach (var c in checks)
                 sb.AppendLine($"[{c?["status"]?.GetValue<string>()}] {c?["name"]?.GetValue<string>()}: {c?["message"]?.GetValue<string>()}");
         }
         sb.AppendLine();
-        sb.AppendLine($"== 优化项（{AppState.Items.Count} 项） ==");
+        sb.AppendLine(Str.T("Str.DetectDumpItems", AppState.Items.Count));
         foreach (var item in AppState.Items)
         {
-            var status = item.Optimized ? "[已达标]" : "[未应用]";
+            var status = item.Optimized ? Str.T("Str.DetectDumpStatusDone") : Str.T("Str.DetectDumpStatusTodo");
             sb.AppendLine($"{status} {item.Id}  {item.Name}");
             if (!string.IsNullOrWhiteSpace(item.Description))
-                sb.AppendLine($"      说明：{item.Description}");
+                sb.AppendLine("      " + Str.T("Str.DetectDumpDescription", item.Description));
             if (!string.IsNullOrWhiteSpace(item.SideEffect))
-                sb.AppendLine($"      副作用：{item.SideEffect}");
+                sb.AppendLine("      " + Str.T("Str.DetectDumpSideEffect", item.SideEffect));
             if (!string.IsNullOrWhiteSpace(item.Current))
-                sb.AppendLine($"      当前：{item.Current}");
+                sb.AppendLine("      " + Str.T("Str.DetectDumpCurrent", item.Current));
             var req = (item.RequiresAdmin ? Str.T("Str.Admin") : Str.T("Str.NormalUser")) +
-                      (item.RequiresReboot ? "，需重启" : "");
-            sb.AppendLine($"      要求：{req}");
+                      (item.RequiresReboot ? Str.T("Str.RequiresRebootSuffix") : "");
+            sb.AppendLine("      " + Str.T("Str.DetectDumpRequirement", req));
             sb.AppendLine();
         }
         sb.AppendLine(Str.T("Str.RawJsonElsewhere"));
@@ -434,14 +434,14 @@ public partial class DetectView : UserControl
     {
         if (AppState.DetectJson is null)
         {
-            DialogService.Info("提示", Str.T("Str.RunDetectFirst"));
+            DialogService.Info(Str.T("Str.Prompt"), Str.T("Str.RunDetectFirst"));
             return;
         }
 
         var window = Window.GetWindow(this);
         if (window is MainWindow main)
             main.ShowOptimizePage();
-        DialogService.Info("提示", $"已加载 {AppState.Items.Count} 个优化项到优化页。");
+        DialogService.Info(Str.T("Str.Prompt"), Str.T("Str.DetectLoadedItems", AppState.Items.Count));
     }
 
     private void CopyGamePath_Click(object sender, RoutedEventArgs e)
@@ -491,13 +491,13 @@ public partial class DetectView : UserControl
         {
             return new[]
             {
-                new CheckItemViewModel("体检", Str.T("Str.StatusNotDetected"), GetStatusBrush(string.Empty))
+                new CheckItemViewModel(Str.T("Str.DetectCheckName"), Str.T("Str.StatusNotDetected"), GetStatusBrush(string.Empty))
             };
         }
 
         return checks.Select(node =>
         {
-            var name = node?["name"]?.GetValue<string>() ?? "体检项";
+            var name = node?["name"]?.GetValue<string>() ?? Str.T("Str.DetectCheckItemName");
             var status = node?["status"]?.GetValue<string>() ?? string.Empty;
             var message = node?["message"]?.GetValue<string>() ?? string.Empty;
             var statusLabel = status switch { "ok" => Str.T("Str.StatusOk"), "attention" => Str.T("Str.StatusPending"), "danger" => Str.T("Str.StatusError"), _ => status };

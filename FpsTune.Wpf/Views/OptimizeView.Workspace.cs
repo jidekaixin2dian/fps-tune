@@ -38,11 +38,6 @@ public partial class OptimizeView
         "noAdmin" => item.Available && !item.RequiresAdmin, "noRestart" => item.Available && !item.RequiresReboot,
         "effects" => item.HasSideEffect, _ => true
     };
-    private void ShowSelected_Click(object sender, RoutedEventArgs e)
-    {
-        if (_operationBusy) return;
-        AllGroups.IsChecked = true; SearchBox.Clear(); ScopeFilter.SelectedIndex = 2;
-    }
     private void ClearSelection_Click(object sender, RoutedEventArgs e)
     {
         if (_operationBusy) return;

@@ -13,7 +13,7 @@
             <TextBlock Text="{DynamicResource Str.CommunityPromptBody}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,18,0,0"/>
             <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusCard}" Padding="16" Margin="0,20,0,18">
                 <StackPanel>
-                    <TextBlock Text="QQ 659528489" FontSize="25" FontWeight="{DynamicResource StrongEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"/>
+                    <TextBlock Text="{DynamicResource Str.CommunityQq}" FontSize="25" FontWeight="{DynamicResource StrongEmphasisWeight}" Foreground="{DynamicResource AccentBrush}"/>
                     <TextBlock Text="{DynamicResource Str.CommunityJoinHint}" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="13"/>
                 </StackPanel>
             </Border>

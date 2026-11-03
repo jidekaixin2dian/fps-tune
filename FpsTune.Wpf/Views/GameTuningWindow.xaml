@@ -5,7 +5,7 @@
     <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24"><Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <DockPanel Margin="0,0,0,16"><Button DockPanel.Dock="Right" Content="{DynamicResource Str.TuningOfficial}" Style="{StaticResource GhostButtonStyle}" Click="Official_Click"/>
-            <StackPanel><TextBlock x:Name="GameTitle" Style="{StaticResource PageTitleStyle}"/>
+            <StackPanel Background="Transparent" MouseLeftButtonDown="Header_Drag"><TextBlock x:Name="GameTitle" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock x:Name="GameGuide" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" MaxWidth="790" Margin="0,8,0,0"/></StackPanel>
         </DockPanel>
         <WrapPanel Grid.Row="1" Margin="0,0,0,16">

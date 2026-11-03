@@ -38,12 +38,15 @@
                                Foreground="{DynamicResource TextMutedBrush}"
                                Margin="0,3,0,0"/>
                 </StackPanel>
-                <Button Content="✕"
-                        Style="{StaticResource CaptionButtonStyle}"
+                <Button Style="{StaticResource CaptionButtonStyle}"
                         Width="28" Height="28"
-                        FontSize="13"
                         HorizontalAlignment="Right" VerticalAlignment="Top"
-                        Click="Close_Click"/>
+                        ToolTip="{DynamicResource Str.Close}" AutomationProperties.Name="{DynamicResource Str.Close}"
+                        Click="Close_Click">
+                    <Path Data="M0 0 L10 10 M10 0 L0 10"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="11" Height="11" StrokeThickness="1.4"/>
+                </Button>
             </Grid>
 
             <Border Background="{DynamicResource SurfaceBrush}"

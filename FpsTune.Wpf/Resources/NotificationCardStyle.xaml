@@ -17,8 +17,12 @@
                 </StackPanel>
                 <Button x:Name="FoldButton" Grid.Column="1" Content="{TemplateBinding FoldLabel}"
                         Style="{DynamicResource GhostButtonStyle}" Padding="8,5" VerticalAlignment="Top"/>
-                <Button x:Name="CloseButton" Grid.Column="2" Content="×" Style="{DynamicResource GhostButtonStyle}" Padding="8,5"
-                        VerticalAlignment="Top" ToolTip="{DynamicResource Str.Close}" AutomationProperties.Name="{DynamicResource Str.Close}"/>
+                <Button x:Name="CloseButton" Grid.Column="2" Style="{DynamicResource GhostButtonStyle}" Padding="8,5"
+                        VerticalAlignment="Top" ToolTip="{DynamicResource Str.Close}" AutomationProperties.Name="{DynamicResource Str.Close}">
+                    <Path Data="M0 0 L10 10 M10 0 L0 10"
+                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="11" Height="11" StrokeThickness="1.4"/>
+                </Button>
             </Grid>
             <ContentPresenter x:Name="BodyHost" Content="{TemplateBinding Content}" Margin="0,16,0,0"/>
         </StackPanel>

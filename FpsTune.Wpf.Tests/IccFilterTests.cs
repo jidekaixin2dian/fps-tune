@@ -307,8 +307,9 @@ public class IccFilterServiceTests : IDisposable
 
         var name = IccFilterService.ApplyFromFile(userFile);
 
-        // 自定义文件以 FpsTune-Custom- 前缀 + 内容哈希命名，且已装入色彩目录并生效
-        Assert.StartsWith(IccFilterService.CustomProfilePrefix, name);
+        // 自定义文件按来源文件名安装（FpsTune-<文件名>.icc），不再按内容哈希命名：
+        // 同一份文件反复应用只会有同一个文件名，也不会在系统色彩目录里堆一长串 FpsTune-Custom-<哈希>。
+        Assert.Equal("FpsTune-我的校色.icc", name);
         Assert.EndsWith(".icc", name);
         Assert.Contains(name, _api.InstalledProfiles);
         Assert.Equal(name, LastValid());
@@ -334,9 +335,10 @@ public class IccFilterServiceTests : IDisposable
         var first = IccFilterService.ApplyFromFile(userFile);
         var second = IccFilterService.ApplyFromFile(userFile);
 
-        // 同内容文件 → 同名安装（内容哈希命名），不会生成第二份副本
+        // 同内容文件 → 同名安装（来源文件名命名），不会生成第二份副本
         Assert.Equal(first, second);
-        Assert.Single(_api.InstalledProfiles, n => n.StartsWith(IccFilterService.CustomProfilePrefix, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("FpsTune-same.icm", first);
+        Assert.Single(_api.InstalledProfiles, n => n.StartsWith("FpsTune-", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

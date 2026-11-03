@@ -8,7 +8,7 @@
             <ComboBox x:Name="ScopeBox" DockPanel.Dock="Right" Width="160" SelectionChanged="Scope_Changed" AutomationProperties.Name="{DynamicResource Str.PreparationHistoryScope}">
                 <ComboBoxItem Content="{DynamicResource Str.PlanCurrentGame}"/><ComboBoxItem Content="{DynamicResource Str.PreparationHistoryAll}"/>
             </ComboBox>
-            <StackPanel Margin="0,0,20,0"><TextBlock Text="{DynamicResource Str.PreparationHistory}" Style="{StaticResource PageTitleStyle}"/>
+            <StackPanel Margin="0,0,20,0" Background="Transparent" MouseLeftButtonDown="Header_Drag"><TextBlock Text="{DynamicResource Str.PreparationHistory}" Style="{StaticResource PageTitleStyle}"/>
                 <TextBlock Text="{DynamicResource Str.PreparationHistoryHint}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/></StackPanel>
         </DockPanel>
         <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>

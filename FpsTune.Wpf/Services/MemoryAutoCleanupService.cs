@@ -24,7 +24,10 @@ internal sealed class MemoryAutoCleanupService(MemoryCleanupService? memory = nu
         try
         {
             var policy = _options().Normalize();
-            if (!policy.Enabled || _memory.IsBusy || GamePreparationService.IsRunning) return;
+            // 关掉自动整理后必须把上一次的结果清掉：否则维护页会一直挂着几十分钟前
+            // （甚至上次运行）的「已整理…释放 x GB」，看起来像还在跑。
+            if (!policy.Enabled) { LastStatus = null; return; }
+            if (_memory.IsBusy || GamePreparationService.IsRunning) return;
             if (!_memory.IsAdministrator) { LastStatus = Str.T("Str.MemoryAutoAdmin"); return; }
             if (now - _lastAttempt < TimeSpan.FromMinutes(policy.CooldownMinutes)) return;
             using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);

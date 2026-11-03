@@ -92,7 +92,7 @@ public partial class OptimizeView : UserControl
             AppState.SelectedIds.Add(id);
         var selected = Items.Where(i => i.IsChecked).ToList();
         if (!_operationBusy) ApplyButton.IsEnabled = selected.Count > 0;
-        ShowSelectedButton.IsEnabled = ClearSelectionButton.IsEnabled = selected.Count > 0;
+        ClearSelectionButton.IsEnabled = selected.Count > 0;
         SelectionSummary.Text = Str.T("Str.OptSelectionSummary", selected.Count, selected.Count(i => i.Optimized),
             selected.Count(i => i.RequiresAdmin), selected.Count(i => i.RequiresReboot));
         var hidden = selected.Count(i => !ItemsView.Contains(i));
@@ -254,7 +254,7 @@ public partial class OptimizeView : UserControl
 
         if (PresetCustom.IsChecked == true)
         {
-            SetPlain("自定义选择\n\n打开开关将项目加入待应用清单，不会立即修改系统。\n\n点击项目查看当前状态与副作用，确认后在底部应用。\n\n搜索和分类只影响显示，不会取消其他分类的选择。");
+            SetPlain(Str.T("Str.OptCustomPaneIntro"));
             return;
         }
 
@@ -278,7 +278,7 @@ public partial class OptimizeView : UserControl
 
         var selected = AppState.Items.Where(i => ids.Contains(i.Id)).ToList();
         var label = presetName == "full" ? Str.T("Str.PresetFull") : presetName == "safe-only" ? Str.T("Str.PresetSafe") : Str.T("Str.PresetBalanced");
-        SetPlain($"{label} · {selected.Count} 项\n\n" +
+        SetPlain(Str.T("Str.OptPresetPaneIntro", label, selected.Count) + "\n\n" +
             Str.T("Str.ToggleHint2") + "\n\n" +
             Str.T("Str.ItemDetailHint"));
     }
@@ -307,7 +307,7 @@ public partial class OptimizeView : UserControl
         if (_operationBusy) return;
         if (ConsentCheck.IsChecked != true)
         {
-            DialogService.Warning("未确认", Str.T("Str.ConsentOneClick"));
+            DialogService.Warning(Str.T("Str.Unconfirmed"), Str.T("Str.ConsentOneClick"));
             return;
         }
 
@@ -375,7 +375,7 @@ public partial class OptimizeView : UserControl
             return;
         }
         if (!DialogService.Confirm(Str.T("Str.RestoreConfirm"),
-                $"共找到 {backupCount} 个备份文件，将把它们记录的全部系统改动逐项恢复为原值。\n\n确定继续吗？",
+                Str.T("Str.OptRestoreConfirmAll", backupCount),
                 danger: true))
             return;
 
@@ -489,7 +489,7 @@ public partial class OptimizeView : UserControl
         if (!string.IsNullOrWhiteSpace(vm.Current))
             Line(Str.T("Str.Current"), vm.Current);
         Line(Str.T("Str.Status"), vm.StatusText, vm.Optimized ? "OkBrush" : "TextSecondaryBrush");
-        var req = (vm.RequiresAdmin ? Str.T("Str.Admin") : Str.T("Str.NormalUser")) + (vm.RequiresReboot ? "，需重启" : "");
+        var req = (vm.RequiresAdmin ? Str.T("Str.Admin") : Str.T("Str.NormalUser")) + (vm.RequiresReboot ? Str.T("Str.RequiresRebootSuffix") : "");
         Line(Str.T("Str.Requirement"), req);
     }
 
@@ -516,7 +516,7 @@ public partial class OptimizeView : UserControl
 
             ResetDoc();
             var head = NewPara(8);
-            head.Inlines.Add(R("应用完成", "AccentBrush", bold: true, size: 15));
+            head.Inlines.Add(R(Str.T("Str.ApplyDone"), "AccentBrush", bold: true, size: 15));
             OutputDoc.Blocks.Add(head);
 
             string? lastGroup = null;
@@ -538,7 +538,7 @@ public partial class OptimizeView : UserControl
                 }
 
                 var line = NewPara(3);
-                line.Inlines.Add(R(skipped ? "跳过 " : ok ? Str.T("Str.SucceededSp") : Str.T("Str.FailedSp"),
+                line.Inlines.Add(R(skipped ? Str.T("Str.Skipped") + " " : ok ? Str.T("Str.SucceededSp") : Str.T("Str.FailedSp"),
                     skipped ? "TextMutedBrush" : ok ? "OkBrush" : "DangerBrush", bold: true));
                 line.Inlines.Add(R(id, "AccentBrush", mono: true));
                 line.Inlines.Add(R("  " + name, "TextPrimaryBrush"));
@@ -570,7 +570,7 @@ public partial class OptimizeView : UserControl
                 var ids = reboot.Select(r2 => r2?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
                 var rp = NewPara(0);
                 rp.Inlines.Add(R(Str.T("Str.NeedsRebootSp"), "WarningBrush", bold: true));
-                rp.Inlines.Add(R(string.Join("、", ids), "WarningBrush"));
+                rp.Inlines.Add(R(string.Join(Str.T("Str.ListSeparator"), ids), "WarningBrush"));
                 OutputDoc.Blocks.Add(rp);
             }
 
@@ -626,7 +626,7 @@ public partial class OptimizeView : UserControl
             vm.IsChecked = idSet.Contains(vm.Id);
 
         var selected = AppState.Items.Where(i => idSet.Contains(i.Id)).ToList();
-        SetItemListDoc(Str.T("Str.ProfileLoaded"), $"{idSet.Count} 项", selected);
+        SetItemListDoc(Str.T("Str.ProfileLoaded"), Str.T("Str.ItemsCountFmt", idSet.Count), selected);
     }
 }
 

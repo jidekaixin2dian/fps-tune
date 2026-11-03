@@ -36,18 +36,20 @@ public partial class ConsoleView : UserControl
         var count = DeltaPreparation.PendingItems(AppState.Items, GameReady).Count;
         var firstRun = !StateStore.HasSeenOnboarding;
         GameReadyTitle.Text = GameLocated
-            ? $"{GameContextService.DisplayNameFor(AppState.GamePath!)} · 开局准备"
-            : "开局准备";
+            ? Str.T("Str.ConsoleReadyTitleFmt", GameContextService.DisplayNameFor(AppState.GamePath!))
+            : Str.T("Str.ConsoleReadyTitle");
         GameReadyText.Text = _locating ? Str.T("Str.LocatingAndDetecting") : !GameReady
             ? GameLocated ? Str.T("Str.GameSelectedRefreshDetect") : Str.T("Str.LocateGameForAdvice")
             : count > 0 ? (firstRun
                 ? Str.T("Str.FirstRunAdviceIntro", count)
-                : $"游戏已就绪 · {count} 项基础设置待审阅；可先记录一局作为对照。")
+                : Str.T("Str.ConsoleReadyCount", count))
             : Str.T("Str.BasicsOk");
         GameReadyText.ToolTip = AppState.GamePath ?? Str.T("Str.NoGameSelected");
-        LocateDeltaButton.Content = GameLocated && !GameReady ? Str.T("Str.RefreshDetect") : "定位游戏";
+        LocateDeltaButton.Content = GameLocated && !GameReady ? Str.T("Str.RefreshDetect") : Str.T("Str.ConsoleLocateGame");
         PrepareDeltaButton.IsEnabled = GameLocated && !_refreshing && !_locating && !_preparing;
-        PrepareDeltaButton.Content = count > 0 ? $"基础建议 · {count}" : "基础建议";
+        PrepareDeltaButton.Content = count > 0
+            ? Str.T("Str.ConsoleBasicAdviceCount", count)
+            : Str.T("Str.ConsoleBasicAdvice");
         PrepareDeltaButton.ToolTip = Str.T("Str.BasicAdviceGuideTip");
         StartPreparationButton.IsEnabled = ConfigurePreparationButton.IsEnabled = !_preparing && !_refreshing && !_locating;
         try { PreparationPlanText.Text = PreparationPlanStore.Describe(PreparationPlanStore.Resolve(AppState.GamePath)); }
@@ -82,7 +84,7 @@ public partial class ConsoleView : UserControl
             }
             if (!System.IO.File.Exists(path) || !string.Equals(System.IO.Path.GetExtension(path), ".exe", StringComparison.OrdinalIgnoreCase))
             {
-                DialogService.Warning("请选择游戏主程序", Str.T("Str.MustPickGameExe"));
+                DialogService.Warning(Str.T("Str.SelectGameMainExe"), Str.T("Str.MustPickGameExe"));
                 return;
             }
             var profile = StateStore.AddGame(path);   // 0.2.0 M2：定位即建档（已有档幂等返回）

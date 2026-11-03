@@ -109,7 +109,7 @@
                           Visibility="Collapsed">
                 <StackPanel x:Name="NotificationStack"/>
             </ScrollViewer>
-            <Grid x:Name="CommandOverlay" Grid.RowSpan="3" Grid.ColumnSpan="2" Panel.ZIndex="200" Background="#99000000"
+            <Grid x:Name="CommandOverlay" Grid.RowSpan="3" Grid.ColumnSpan="2" Panel.ZIndex="200" Background="{DynamicResource ScrimBrush}"
                   Visibility="Collapsed" MouseDown="CommandBackdrop_MouseDown" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                 <ContentControl x:Name="CommandHost" MaxWidth="740" Margin="28,76,28,24" VerticalAlignment="Top" HorizontalContentAlignment="Stretch"/>
             </Grid>

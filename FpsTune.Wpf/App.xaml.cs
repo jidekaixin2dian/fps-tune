@@ -99,6 +99,9 @@ public partial class App : Application
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         SettingsService.Load();
+        // 设置文件读不出来时不能装作没事：否则用户看到的是「所有开关/布局/绑定全变默认」，
+        // 而且这一轮的内存默认值会被后续任何一次保存写回磁盘。原因与「本轮不回写」都要说清楚。
+        var settingsWarning = SettingsService.LoadWarning;
         LangService.Load();
         LangService.Apply(LangService.ZhCn);
         UiPerformance.LowSpec = SettingsService.Current.LowSpecMode;
@@ -171,6 +174,14 @@ public partial class App : Application
                     try { Views.WhatsNewWindow.ShowIfPending(mainWindow); }
                     catch { /* 弹窗失败不影响主界面，下次启动还会再试。 */ }
                 }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                if (!string.IsNullOrWhiteSpace(settingsWarning))
+                {
+                    mainWindow.Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        DialogService.Warning(Str.T("Str.SettingsLoadFailedTitle"),
+                            Str.T("Str.SettingsLoadFailedBody", settingsWarning!, Path.Combine(UserDataPaths.Root, "settings.json")));
+                    }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                }
             }
             // 首帧渲染 ≠ 首页数据就绪（控制台概览首启要跑后台检测、经典概览要等 WMI）。
             // splash 等到「首帧 + 首页数据就绪信号」双条件齐备才放行，超时兜底防启动卡死。

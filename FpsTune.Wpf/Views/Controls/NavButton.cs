@@ -68,4 +68,18 @@ public class NavActionButton : Button
         get => (string)GetValue(IconProperty);
         set => SetValue(IconProperty, value);
     }
+
+    /// <summary>动作页正在显示时的激活态：外观与页签选中一致（强调色 + 指示条）。</summary>
+    public static readonly DependencyProperty IsActiveProperty =
+        DependencyProperty.Register(
+            nameof(IsActive),
+            typeof(bool),
+            typeof(NavActionButton),
+            new PropertyMetadata(false));
+
+    public bool IsActive
+    {
+        get => (bool)GetValue(IsActiveProperty);
+        set => SetValue(IsActiveProperty, value);
+    }
 }

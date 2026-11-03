@@ -283,7 +283,7 @@ public partial class SettingsView : UserControl
         var dlg = new OpenFileDialog
         {
             Title = Str.T("Str.SelectGameExe"),
-            Filter = "可执行文件 (*.exe)|*.exe|所有文件 (*.*)|*.*"
+            Filter = Str.T("Str.FilterExecutableAll")
         };
         if (dlg.ShowDialog() != true)
             return;
@@ -323,7 +323,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning("开机自启", "设置失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.StartupShort"), Str.T("Str.SettingsSaveFailed", ex.Message));
         }
     }
 
@@ -422,13 +422,13 @@ public partial class SettingsView : UserControl
                 string.Equals(x.Name, oldProfileName, StringComparison.OrdinalIgnoreCase));
 
             if (!data.ProfileOk)
-                SetAutoProfileStatus("方案读取失败：" + data.ProfileError, warning: true);
+                SetAutoProfileStatus(Str.T("Str.SettingsProfileLoadFailed", data.ProfileError), warning: true);
             else
-                SetAutoProfileStatus($"已扫描 {data.Candidates.Count} 个游戏候选、{data.Profiles.Count} 个方案");
+                SetAutoProfileStatus(Str.T("Str.SettingsScanDone", data.Candidates.Count, data.Profiles.Count));
         }
         catch (Exception ex)
         {
-            SetAutoProfileStatus("扫描失败：" + ex.Message, warning: true);
+            SetAutoProfileStatus(Str.T("Str.SettingsScanFailed", ex.Message), warning: true);
         }
     }
 
@@ -457,7 +457,7 @@ public partial class SettingsView : UserControl
                 StringComparison.OrdinalIgnoreCase)))
         {
             SetAutoProfileStatus(
-                $"进程名「{processName}」已经绑定。轮询无法区分同名国服/国际服，不能重复添加。",
+                Str.T("Str.SettingsProcessBound", processName),
                 warning: true);
             return;
         }
@@ -474,11 +474,11 @@ public partial class SettingsView : UserControl
         if (!TrySaveAutoBindings(out var error))
         {
             _autoBindings.Remove(binding);
-            SetAutoProfileStatus("绑定保存失败：" + error, warning: true);
+            SetAutoProfileStatus(Str.T("Str.SettingsBindSaveFailed", error), warning: true);
             return;
         }
 
-        SetAutoProfileStatus($"已绑定「{candidate.Name}」→「{profile.Name}」");
+        SetAutoProfileStatus(Str.T("Str.SettingsBound", candidate.Name, profile.Name));
     }
 
     private void AutoProfileBinding_Changed(object sender, RoutedEventArgs e)
@@ -496,7 +496,7 @@ public partial class SettingsView : UserControl
         }
 
         binding.Enabled = !binding.Enabled;
-        SetAutoProfileStatus("绑定开关保存失败：" + error, warning: true);
+        SetAutoProfileStatus(Str.T("Str.SettingsToggleSaveFailed", error), warning: true);
         _suppressUiEvents = true;
         (sender as CheckBox)!.IsChecked = binding.Enabled;
         _suppressUiEvents = false;
@@ -514,10 +514,10 @@ public partial class SettingsView : UserControl
         if (!TrySaveAutoBindings(out var error))
         {
             _autoBindings.Insert(index, binding);
-            SetAutoProfileStatus("绑定删除保存失败：" + error, warning: true);
+            SetAutoProfileStatus(Str.T("Str.SettingsUnbindSaveFailed", error), warning: true);
             return;
         }
-        SetAutoProfileStatus($"已删除绑定「{binding.DisplayName}」");
+        SetAutoProfileStatus(Str.T("Str.SettingsUnbound", binding.DisplayName));
     }
 
     // ---------- 自动 Profile 活动中心 ----------
@@ -551,7 +551,7 @@ public partial class SettingsView : UserControl
             ev.Time.ToString("MM-dd HH:mm:ss"),
             AutoProfileActivityStore.KindText(ev.Kind),
             (string.IsNullOrWhiteSpace(ev.Process) ? "" : "[" + ev.Process + "] ")
-            + (string.IsNullOrWhiteSpace(ev.Profile) ? "" : "方案「" + ev.Profile + "」 ")
+            + (string.IsNullOrWhiteSpace(ev.Profile) ? "" : Str.T("Str.SettingsActivityProfile", ev.Profile) + " ")
             + ev.Detail)).ToList();
         ActivityEmptyText.Visibility = events.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -559,12 +559,12 @@ public partial class SettingsView : UserControl
     private void UpdateActivityScanLine()
     {
         var lastScan = AutoProfileActivityStore.LastScanAt;
-        var trigger = "触发条件：启用绑定的进程出现启动边沿时自动应用一次；进程持续存在不重复应用，全部同名进程退出后再次启动才可再次触发。";
+        var trigger = Str.T("Str.SettingsActivityTrigger");
         ActivityScanText.Text = (lastScan is { } t
-                ? $"最后扫描 {t:HH:mm:ss}（本轮第 {AutoProfileActivityStore.ScanCount} 次轮询，间隔 3 秒）。"
-                : "本轮尚未扫描（后台服务启动且有启用绑定时开始轮询）。")
+                ? Str.T("Str.SettingsActivityScanDone", t, AutoProfileActivityStore.ScanCount)
+                : Str.T("Str.SettingsActivityNoScan"))
             + trigger
-            + " 审计记录最多保留 200 条，不含完整用户路径。";
+            + " " + Str.T("Str.SettingsActivityAuditLimit");
     }
 
     private void ActivityFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -600,7 +600,7 @@ public partial class SettingsView : UserControl
             _suppressUiEvents = true;
             AutoProfileCheck.IsChecked = oldValue;
             _suppressUiEvents = false;
-            SetAutoProfileStatus("自动应用开关保存失败：" + ex.Message, warning: true);
+            SetAutoProfileStatus(Str.T("Str.SettingsAutoApplySaveFailed", ex.Message), warning: true);
         }
     }
 
@@ -640,8 +640,9 @@ public partial class SettingsView : UserControl
         {
             SettingsService.Save(settings);
             App.SessionAutomation?.ApplySettings();
+            SetAutoSessionStatus(string.Empty);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             settings.AutoPreparationEnabled = oldPrep;
             settings.AutoRefreshBoostEnabled = oldRefresh;
@@ -651,6 +652,8 @@ public partial class SettingsView : UserControl
             AutoRefreshCheck.IsChecked = oldRefresh;
             AutoAffinityCheck.IsChecked = oldAffinity;
             _suppressUiEvents = false;
+            // 保存失败必须说一声：前面三个勾选框会被静默弹回，否则用户以为设置已经生效
+            SetAutoSessionStatus(Str.T("Str.AutoSessionSaveFailed", ex.Message), warning: true);
         }
     }
 
@@ -704,6 +707,18 @@ public partial class SettingsView : UserControl
             AutoProfileStatusText.Foreground = brush;
     }
 
+    /// <summary>「游戏时自动化」三个开关的保存结果；空串表示清除提示。</summary>
+    private void SetAutoSessionStatus(string text, bool warning = false)
+    {
+        if (AutoSessionStatus is null)
+            return;
+        AutoSessionStatus.Text = text;
+        AutoSessionStatus.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+        var key = warning ? "WarningBrush" : "TextMutedBrush";
+        if (Application.Current?.Resources[key] is System.Windows.Media.Brush brush)
+            AutoSessionStatus.Foreground = brush;
+    }
+
     // ---------- 高级与维护 ----------
 
     private void RefreshAdminStatus()
@@ -733,7 +748,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex)
         {
-            DialogService.Warning(Str.T("Str.OpenFolder"), "打开失败：" + ex.Message);
+            DialogService.Warning(Str.T("Str.OpenFolder"), Str.T("Str.SettingsOpenFailed", ex.Message));
         }
     }
 

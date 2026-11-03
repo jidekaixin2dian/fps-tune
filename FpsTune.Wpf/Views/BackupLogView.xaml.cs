@@ -122,7 +122,7 @@ public partial class BackupLogView : UserControl
         catch (Exception ex)
         {
             LogBox.Text = ex.ToString();
-            StatusText.Text = "执行异常";
+            StatusText.Text = Str.T("Str.ExecException");
         }
         finally
         {
@@ -246,7 +246,7 @@ public partial class BackupLogView : UserControl
     {
         var dialog = new SaveFileDialog
         {
-            Filter = "日志文件 (*.txt)|*.txt|所有文件 (*.*)|*.*",
+            Filter = Str.T("Str.FilterLogText"),
             FileName = "fps-tune-log.txt"
         };
         if (dialog.ShowDialog() != true)

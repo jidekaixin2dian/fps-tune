@@ -44,6 +44,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="SessionNameBox"
                              Style="{StaticResource InputTextBoxStyle}"
+                             AutomationProperties.Name="{DynamicResource Str.SessionName}"
                              VerticalContentAlignment="Center"
                              MaxLength="60"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
@@ -69,23 +70,28 @@
                             <TextBlock Text="{DynamicResource Str.ConditionResolution}" Style="{StaticResource MutedTextStyle}"/>
                             <Grid Margin="0,5,0,0">
                                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="24"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                                <TextBox x:Name="ResolutionWidthBox" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
+                                <TextBox x:Name="ResolutionWidthBox" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"
+                                         AutomationProperties.Name="{DynamicResource Str.ConditionResolutionWidth}"/>
                                 <TextBlock Grid.Column="1" Text="×" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                <TextBox x:Name="ResolutionHeightBox" Grid.Column="2" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
+                                <TextBox x:Name="ResolutionHeightBox" Grid.Column="2" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"
+                                         AutomationProperties.Name="{DynamicResource Str.ConditionResolutionHeight}"/>
                             </Grid>
                         </StackPanel>
                         <StackPanel Margin="0,0,12,0">
                             <TextBlock Text="{DynamicResource Str.ConditionQuality}" Style="{StaticResource MutedTextStyle}"/>
-                            <TextBox x:Name="QualityBox" MaxLength="120" Margin="0,5,0,0" Style="{StaticResource InputTextBoxStyle}"/>
+                            <TextBox x:Name="QualityBox" MaxLength="120" Margin="0,5,0,0" Style="{StaticResource InputTextBoxStyle}"
+                                     AutomationProperties.Name="{DynamicResource Str.ConditionQuality}"/>
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Text="{DynamicResource Str.ConditionScene}" Style="{StaticResource MutedTextStyle}"/>
-                            <TextBox x:Name="SceneBox" MaxLength="160" Margin="0,5,0,0" Style="{StaticResource InputTextBoxStyle}"/>
+                            <TextBox x:Name="SceneBox" MaxLength="160" Margin="0,5,0,0" Style="{StaticResource InputTextBoxStyle}"
+                                     AutomationProperties.Name="{DynamicResource Str.ConditionScene}"/>
                         </StackPanel>
                     </UniformGrid>
                     <WrapPanel Margin="0,10,0,0">
                         <TextBlock Text="{DynamicResource Str.ConditionTarget}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox x:Name="TargetSecondsBox" Text="60" Width="80" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"/>
+                        <TextBox x:Name="TargetSecondsBox" Text="60" Width="80" MaxLength="5" Style="{StaticResource InputTextBoxStyle}"
+                                 AutomationProperties.Name="{DynamicResource Str.ConditionTarget}"/>
                         <Button x:Name="ReuseConditionsButton" Content="{DynamicResource Str.ConditionReuse}" Style="{StaticResource SecondaryButtonStyle}" Margin="12,0,0,0" Click="ReuseConditions_Click"/>
                     </WrapPanel>
                     <TextBlock Text="{DynamicResource Str.ConditionInputHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" FontSize="13" Margin="0,8,0,0"/>
@@ -231,9 +237,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0" Margin="0,0,10,10">
-                    <TextBlock Text="{DynamicResource Str.HistorySessions}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <DockPanel Grid.Row="0" Margin="0,0,10,10">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="CompareSelectedButton" Content="{DynamicResource Str.ComparisonSelected}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" IsEnabled="False" Click="CompareSelected_Click"/>
                         <Button Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="56" Margin="0,0,8,0" Click="Refresh_Click"/>
@@ -247,7 +252,11 @@
                                 Style="{StaticResource GhostButtonStyle}"
                                 MinWidth="76" IsEnabled="False" Click="Delete_Click"/>
                     </StackPanel>
-                </Grid>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="{DynamicResource Str.HistorySessions}" Style="{StaticResource CardTitleStyle}" Margin="0"/>
+                        <TextBlock Text="{DynamicResource Str.SessionHistoryRetention}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </DockPanel>
                 <Grid Grid.Row="1" Margin="0,0,10,10">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
                     <StackPanel Margin="0,0,12,0">
