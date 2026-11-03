@@ -17,6 +17,8 @@ public partial class ScreenColorPanel : UserControl
     private int? _vibrance;
     private bool _vibranceDirty;
     private string? _iccFile;
+    /// <summary>_iccFile 对应的预设名：内置资产原名（如 1.1·柔和.icc）或用户文件名，写规则时用它而不是临时路径。</summary>
+    private string? _iccFilePreset;
     private string? _lastOutcome;
     internal bool Unified { get; set; }
     /// <summary>面板的 ICC 选择被系统状态刷新清空时通知宿主，让滤镜列表同步取消选中。</summary>
@@ -172,7 +174,7 @@ public partial class ScreenColorPanel : UserControl
     internal void SelectIccFile(string path)
     {
         _syncing = true;
-        try { _iccFile = path; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0; }
+        try { _iccFile = path; _iccFilePreset = Path.GetFileName(path); ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0; }
         finally { _syncing = false; }
         // 状态行不显示临时文件名（滤镜列表物化出来的缓存路径），文件名在 ICC 高级里单独展示。
         _dirty = true; MarkDraft(); Availability(); UpdatePreview();
@@ -182,7 +184,7 @@ public partial class ScreenColorPanel : UserControl
     internal void SelectGeneratedPreset(IccFilterPreset preset)
     {
         _syncing = true;
-        try { _iccFile = null; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(preset); }
+        try { _iccFile = null; _iccFilePreset = null; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(preset); }
         finally { _syncing = false; }
         // 选中滤镜＝把这套预设的画面参数填进面板（草稿，仍需点「应用」）。
         // 滤镜列表走的是这条路（_syncing 期间不会触发 IccPreset_Changed），必须在这里补一次。
@@ -296,7 +298,7 @@ public partial class ScreenColorPanel : UserControl
         if (_identity != identity)
         {
             _identity = identity; _syncing = true;
-            try { _iccFile = null; _lastOutcome = null; ColorModeCombo.SelectedIndex = 0; IccPresetCombo.SelectedIndex = 1; ColorPresetCombo.SelectedIndex = 0; }
+            try { _iccFile = null; _iccFilePreset = null; _lastOutcome = null; ColorModeCombo.SelectedIndex = 0; IccPresetCombo.SelectedIndex = 1; ColorPresetCombo.SelectedIndex = 0; }
             finally { _syncing = false; _dirty = false; _vibranceDirty = false; }
         }
         ColorApplyButton.IsEnabled = ColorRestoreButton.IsEnabled = false;
@@ -310,6 +312,7 @@ public partial class ScreenColorPanel : UserControl
             try
             {
                 _iccFile = states.Icc.Restorable ? states.Icc.CurrentProfilePath : null;
+                _iccFilePreset = _iccFile is null ? null : Path.GetFileName(_iccFile);
                 ColorModeCombo.SelectedIndex = _iccFile is null ? 0 : 1;
                 if (_iccFile is not null)
                 {
@@ -320,7 +323,7 @@ public partial class ScreenColorPanel : UserControl
                         || string.Equals(name, $"FpsTune-{p}-v2.icc", StringComparison.OrdinalIgnoreCase));
                     if (known is { } selected)
                     {
-                        _iccFile = null; IccPresetCombo.SelectedIndex = IndexOfPreset(selected);
+                        _iccFile = null; _iccFilePreset = null; IccPresetCombo.SelectedIndex = IndexOfPreset(selected);
                         if (!string.Equals(name, IccProfileGenerator.FileNameFor(selected), StringComparison.OrdinalIgnoreCase))
                         { _dirty = true; ColorStatus.Text = Str.T("Str.ColorLegacyFilterUpdate"); }
                     }
@@ -350,7 +353,7 @@ public partial class ScreenColorPanel : UserControl
     private void IccPreset_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || ColorPreview is null) return;
-        _iccFile = null; MarkDraft();
+        _iccFile = null; _iccFilePreset = null; MarkDraft();
         if (Preset is not null) ColorModeCombo.SelectedIndex = 1;
         // 选中滤镜＝把这套预设的画面参数填进面板（草稿，仍需点「应用」）。
         // 以前这里什么都不填：滤镜的观感全指望折进 ramp 的 ICC 曲线，结果曲线抵消成恒等，
@@ -464,7 +467,10 @@ public partial class ScreenColorPanel : UserControl
             }
             else
             {
-                _iccFile = UserPresetPath(rule.PresetFileName); ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0;
+                // 规则里的滤镜可能是内置资产（如 1.1·柔和.icc）或用户目录里的 .icc：两种都要能在面板里显示出来。
+                _iccFile = UserPresetPath(rule.PresetFileName) ?? MaterializePreset(rule.PresetFileName);
+                _iccFilePreset = rule.PresetFileName;
+                ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0;
             }
         }
         finally { _syncing = false; }
@@ -490,10 +496,24 @@ public partial class ScreenColorPanel : UserControl
         return File.Exists(path) ? path : null;
     }
 
-    /// <summary>当前滤镜写成规则能存的名字：生成式用 generated:枚举，外部 .icc 先拷进滤镜目录再记文件名。</summary>
+    /// <summary>内置资产 / 用户目录里的预设物化成临时 .icc，面板的预览与应用都按文件走。</summary>
+    private static string? MaterializePreset(string fileName)
+    {
+        if (fileName.Length == 0) return null;
+        try { return ScreenColorPreview.CacheIccProfile(GameFilterLibrary.ReadPreset(fileName)); }
+        catch { return null; }
+    }
+
+    /// <summary>
+    /// 当前滤镜写成规则能存的名字：生成式用 generated:枚举；内置预设/用户 .icc 直接记原名；
+    /// 只有真正的外部文件才拷进滤镜目录后记文件名。临时物化的路径绝不能写进规则（重启就没了）。
+    /// </summary>
     private string SelectedPresetName()
     {
         if (Preset is { } preset) return GameFilterLibrary.GeneratedPrefix + preset.ToString();
+        if (_iccFilePreset is { Length: > 0 } known
+            && (GameFilterLibrary.Presets.Any(p => p.FileName.Equals(known, StringComparison.OrdinalIgnoreCase))
+                || UserPresetPath(known) is not null)) return known;
         if (_iccFile is { Length: > 0 } file && File.Exists(file))
         {
             try { return GameFilterLibrary.SaveUserPreset(Path.GetFileName(file), File.ReadAllBytes(file)); }
@@ -563,6 +583,7 @@ public partial class ScreenColorPanel : UserControl
     private string SchemeDraftName()
     {
         if (Preset is { } preset) return ScreenColorSettings.TitleFor(preset);
+        if (_iccFilePreset is { Length: > 0 } known) return Path.GetFileNameWithoutExtension(known);
         if (_iccFile is { Length: > 0 } file) return Path.GetFileNameWithoutExtension(file);
         return Str.T("Str.FilterSchemeCustomName");
     }
@@ -601,7 +622,12 @@ public partial class ScreenColorPanel : UserControl
             {
                 _iccFile = null; preset = parsed; ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = IndexOfPreset(parsed);
             }
-            else { _iccFile = UserPresetPath(scheme.PresetFileName); ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0; }
+            else
+            {
+                _iccFile = UserPresetPath(scheme.PresetFileName) ?? MaterializePreset(scheme.PresetFileName);
+                _iccFilePreset = scheme.PresetFileName;
+                ColorModeCombo.SelectedIndex = 1; IccPresetCombo.SelectedIndex = 0;
+            }
         }
         finally { _syncing = false; }
         if (scheme.Screen is { IsValid: true } screen) ShowSettings(screen.ToSettings());

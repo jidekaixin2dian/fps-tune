@@ -751,6 +751,17 @@ public sealed class ModernWorkspaceUiTests
                 DlssFeedbackTests.PumpUntil(() => IccAppRuleStore.Rules.Single().PresetFileName
                     == GameFilterLibrary.GeneratedPrefix + nameof(IccFilterPreset.Vivid));
                 Assert.False(IccAppRuleStore.Rules.Single().Auto);
+
+                // 内置 .icc 名字的规则（老规则就是这么存的）：编辑调色后存方案，存进去的必须是原名，
+                // 不是物化用的临时路径（那条路径重启就没了）。
+                var builtin = GameFilterLibrary.Presets
+                    .First(p => p.Builtin && !p.FileName.StartsWith(GameFilterLibrary.GeneratedPrefix, StringComparison.Ordinal)).FileName;
+                IccAppRuleStore.Save([new FilterAppRule("cs2.exe", builtin, 55, false)]);
+                panel.RefreshApplyTargets();
+                panel.SetApplyTarget(IccAppRuleStore.Rules.Single().Key);
+                window.UpdateLayout();
+                ((Button)panel.FindName("SaveSchemeButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Contains(FilterSchemeStore.Schemes, scheme => scheme.PresetFileName == builtin);
                 Render(panel, "apply-bar-targets");
             }
             finally
