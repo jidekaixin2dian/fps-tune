@@ -150,15 +150,17 @@ public sealed class ColorAudioTests
         finally { AudioEqualizerService.EngineOverride = null; AudioEqualizerService.BackupDirOverride = null; Directory.Delete(dir, true); }
     }
     [Fact]
-    public void ICC_single_gamma_uses_two_byte_u8fixed8_value()
+    public void ICC_trc_is_a_standard_srgb_parametric_curve()
     {
-        var bytes = IccProfileGenerator.Build(new IccProfileGenerator.PresetParams("single-gamma.icc", "Single gamma fallback"));
+        var bytes = IccProfileGenerator.Build(new IccProfileGenerator.PresetParams("profile.icc", "Parametric TRC"));
         static int Be(byte[] b, int offset) => System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(b.AsSpan(offset, 4));
+        static ushort Be16(byte[] b, int offset) => System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(b.AsSpan(offset, 2));
         var count = Be(bytes, 128);
         var tag = Enumerable.Range(0, count).Select(i => 132 + i * 12).Single(o => Encoding.ASCII.GetString(bytes, o, 4) == "rTRC");
-        Assert.Equal(14, Be(bytes, tag + 8));
         var data = Be(bytes, tag + 4);
-        Assert.Equal(1, Be(bytes, data + 8));
-        Assert.Equal((ushort)Math.Round(2.2 * 256), System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(bytes.AsSpan(data + 12, 2)));
+        // 与 1U 的预设同结构：TRC 是 para（sRGB），观感写在 vcgt，不再把反函数塞进 TRC。
+        Assert.Equal("para", Encoding.ASCII.GetString(bytes, data, 4));
+        Assert.Equal(3, Be16(bytes, data + 8));                 // type 3
+        Assert.Equal((int)Math.Round(2.4 * 65536), (int)((int)System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(data + 12, 4))));
     }
 }

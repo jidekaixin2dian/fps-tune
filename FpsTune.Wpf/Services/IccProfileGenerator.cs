@@ -63,15 +63,21 @@ public static class IccProfileGenerator
         public double[] GXyz { get; init; } = { 0.3851, 0.7169, 0.0971 };
         public double[] BXyz { get; init; } = { 0.1431, 0.0606, 0.7141 };
 
-        /// <summary>设备编码(0..1) → 线性亮度的 TRC 曲线查找表。空 = 使用固定 gamma 2.2 单值曲线。</summary>
+        /// <summary>设备编码(0..1) → 线性亮度的 TRC 曲线查找表。空 = 使用标准 sRGB 参数曲线。</summary>
         public ushort[]? Curve { get; init; }
         public ushort[]? RedCurve { get; init; }
         public ushort[]? GreenCurve { get; init; }
         public ushort[]? BlueCurve { get; init; }
+
+        /// <summary>
+        /// 这条预设的 <c>vcgt</c> 校准曲线（观感本体）。1U 的每个内置预设都带一条 3×257 的 vcgt，
+        /// 我们照这个结构生成：ICC 关联给读色彩管理的程序，vcgt 给系统/驱动装进 LUT——游戏才看得见。
+        /// </summary>
+        public ScreenColorSettings? Calibration { get; init; }
     }
 
     // Bump this suffix when changing preset transforms; keep active older profiles intact.
-    internal static string FileNameFor(IccFilterPreset preset) => $"FpsTune-{preset}-v3.icc";
+    internal static string FileNameFor(IccFilterPreset preset) => $"FpsTune-{preset}-v4.icc";
 
     public static PresetParams ParamsFor(IccFilterPreset preset)
     {
@@ -85,16 +91,15 @@ public static class IccProfileGenerator
                 or IccFilterPreset.VipCoolSuppress => 1.5,
             _ => 1d
         };
-        // A destination profile is inverted by the CMM: store the inverse desired
-        // saturation matrix and inverse desired display curves, preserving D50 white.
+        // 目标剖面（display class）会被 CMM 反向使用：存反向的饱和度矩阵、白点保持 D50。
+        // 曲线部分按 1U 的结构写——TRC 用标准 sRGB（校准后的屏幕就是这个响应），
+        // 观感写在 vcgt 校准表里；把「反函数」塞进 TRC 再当 ramp 折回去会互相抵消（已踩过）。
         double[] Column(double[] primary, double luminance) => Enumerable.Range(0, 3)
             .Select(i => primary[i] / saturation + (1 - 1 / saturation) * luminance * (StdRXyz[i] + StdGXyz[i] + StdBXyz[i])).ToArray();
-        return new(FileNameFor(preset), $"FPS Tune - {preset} - shadow-preserving v3")
+        return new(FileNameFor(preset), $"FPS Tune - {preset} - display calibration v4")
         {
             RXyz = Column(StdRXyz, .2126), GXyz = Column(StdGXyz, .7152), BXyz = Column(StdBXyz, .0722),
-            RedCurve = InverseDisplayCurve(settings, settings.Red),
-            GreenCurve = InverseDisplayCurve(settings, settings.Green),
-            BlueCurve = InverseDisplayCurve(settings, settings.Blue),
+            Calibration = settings,
         };
     }
 
@@ -179,28 +184,6 @@ public static class IccProfileGenerator
     private static readonly double[] StdGXyz = { 0.3851, 0.7169, 0.0971 };
     private static readonly double[] StdBXyz = { 0.1431, 0.0606, 0.7141 };
 
-    private static ushort[] InverseDisplayCurve(ScreenColorSettings settings, double gain)
-    {
-        const int count = 1024;
-        var curve = new ushort[count];
-        for (var i = 1; i < count - 1; i++)
-        {
-            var output = i / (count - 1d);
-            double low = 0, high = 1;
-            for (var step = 0; step < 28; step++)
-            {
-                var mid = (low + high) / 2;
-                if (ScreenColorService.MapTone(mid, settings, gain) < output) low = mid; else high = mid;
-            }
-            var input = (low + high) / 2;
-            // Exact sRGB EOTF, including the linear toe, avoids a second shadow shift.
-            var linear = input <= .04045 ? input / 12.92 : Math.Pow((input + .055) / 1.055, 2.4);
-            curve[i] = ToU16Fixed(linear);
-        }
-        curve[^1] = ushort.MaxValue;
-        return curve;
-    }
-
     private static ushort ToU16Fixed(double v) => (ushort)Math.Clamp(Math.Round(v * 65535.0), 0, 65535);
 
     /// <summary>生成完整 ICC v2 字节流。纯函数：相同参数输出逐字节相同（日期字段固定，不取当前时间）。</summary>
@@ -210,16 +193,19 @@ public static class IccProfileGenerator
     {
         var tags = new List<(string Sig, byte[] Data)>
         {
-            ("desc", DescTag(p.Description)),
+            ("desc", MlucTag(p.Description)),
             ("wtpt", XyzTag(p.WXyz)),
             ("rXYZ", XyzTag(p.RXyz)),
             ("gXYZ", XyzTag(p.GXyz)),
             ("bXYZ", XyzTag(p.BXyz)),
-            ("rTRC", CurveTag(p.RedCurve ?? p.Curve, 2.2)),
-            ("gTRC", CurveTag(p.GreenCurve ?? p.Curve, 2.2)),
-            ("bTRC", CurveTag(p.BlueCurve ?? p.Curve, 2.2)),
-            ("cprt", Encoding.ASCII.GetBytes("text\0\0\0\0" + "FpsTune\0")),
+            // 与 1U 的预设同结构：TRC = 标准 sRGB（屏幕校准后的响应），观感写在 vcgt。
+            ("rTRC", p.RedCurve is null ? SrgbTrcTag() : CurveTag(p.RedCurve, 2.2)),
+            ("gTRC", p.GreenCurve is null ? SrgbTrcTag() : CurveTag(p.GreenCurve, 2.2)),
+            ("bTRC", p.BlueCurve is null ? SrgbTrcTag() : CurveTag(p.BlueCurve, 2.2)),
+            ("cprt", MlucTag("FpsTune")),
         };
+        // vcgt 放在最后（1U 的文件里也是最后一个 tag）：3×257 u16 = 1554 字节。
+        if (p.Calibration is { } calibration) tags.Add(("vcgt", VcgtTag(calibration)));
 
         int tagTableSize = 4 + tags.Count * 12;
         int cursor = 128 + tagTableSize;
@@ -237,7 +223,7 @@ public static class IccProfileGenerator
         // 头部 128 字节，大端
         bw.Write(Be32((uint)total));           // 0 尺寸
         bw.Write(Be32(0));                     // 4 首选 CMM
-        bw.Write(Be32(0x02100000));            // 8 版本 2.1
+        bw.Write(Be32(0x04400000));            // 8 版本 4.4：vcgt 是 v4 才认的 tag（1U 的预设也是 4.4）
         bw.Write(FourCC("mntr"));              // 12 设备类
         bw.Write(FourCC("RGB "));              // 16 数据色彩空间
         bw.Write(FourCC("XYZ "));              // 20 PCS
@@ -271,26 +257,6 @@ public static class IccProfileGenerator
         return ms.ToArray();
     }
 
-    private static byte[] DescTag(string text)
-    {
-        // v2 textDescriptionType：ASCII + unicode + scriptcode
-        var ascii = Encoding.ASCII.GetBytes(text + "\0");
-        var unicode = Encoding.BigEndianUnicode.GetBytes(text + "\0");
-        using var ms = new MemoryStream();
-        var bw = new BinaryWriter(ms);
-        bw.Write(FourCC("desc"));
-        bw.Write(Be32(0));
-        bw.Write(Be32((uint)ascii.Length));
-        bw.Write(ascii);
-        bw.Write(Be32(0x656E5553));               // unicode 语言码 "enUS"
-        bw.Write(Be32((uint)(text.Length + 1)));  // unicode 字符数（含 \0）
-        bw.Write(unicode);
-        bw.Write(Be16(0));                        // scriptcode code
-        bw.Write((byte)0);                        // scriptcode count
-        bw.Write(new byte[67]);                   // scriptcode 描述区
-        return ms.ToArray();
-    }
-
     private static byte[] XyzTag(double[] xyz)
     {
         using var ms = new MemoryStream();
@@ -317,6 +283,75 @@ public static class IccProfileGenerator
             bw.Write(Be32((uint)lut.Length));
             foreach (var v in lut) bw.Write(Be16(v));
         }
+        return ms.ToArray();
+    }
+
+    /// <summary>
+    /// 标准 sRGB 传递函数（<c>para</c> type 3）。1U 的预设就是这么写的：
+    /// TRC 只描述「这块屏校准之后是 sRGB」，真正的观感写在 vcgt 里。
+    /// 以前我们把「MapTone 的反函数」塞进 TRC，再把它当屏幕 ramp 折回去，
+    /// 结果与画面参数互相抵消——每个预设都退化成同一条 sRGB 解码曲线。
+    /// </summary>
+    private static byte[] SrgbTrcTag()
+    {
+        using var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(FourCC("para"));
+        bw.Write(Be32(0));
+        bw.Write(Be16(3));      // type 3: Y = (aX+b)^g for X >= d, else cX
+        bw.Write(Be16(0));
+        bw.Write(BeS15Fixed16(2.4));
+        bw.Write(BeS15Fixed16(1 / 1.055));
+        bw.Write(BeS15Fixed16(0.055 / 1.055));
+        bw.Write(BeS15Fixed16(1 / 12.92));
+        bw.Write(BeS15Fixed16(0.04045));
+        return ms.ToArray();
+    }
+
+    /// <summary>
+    /// <c>vcgt</c> 校准表：3×(256+1) 个 u16，正好 1554 字节——与 1U 内置预设的 vcgt tag 同尺寸同结构。
+    /// 这就是「滤镜看得见」的那条曲线：系统/驱动把 vcgt 装进显卡 LUT，游戏和全屏程序都能看到，
+    /// 而 ICC 关联只服务主动读色彩管理的程序。
+    /// </summary>
+    private static byte[] VcgtTag(ScreenColorSettings settings)
+    {
+        const int entries = 257;
+        var gains = new[] { settings.Red, settings.Green, settings.Blue };
+        using var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        // 表头 12 字节（sig + reserved + type），紧跟 3×257 个 u16 = 1542 → 整条 tag 1554 字节，
+        // 与 1U 内置预设的 vcgt 尺寸完全一致（读取端就是这么解析的）。
+        bw.Write(FourCC("vcgt"));
+        bw.Write(Be32(0));
+        bw.Write(Be32(0));              // type 0 = 表格型
+        for (var c = 0; c < 3; c++)
+        for (var i = 0; i < entries; i++)
+        {
+            var x = i / (entries - 1d);
+            var y = Math.Clamp(ScreenColorService.MapTone(x, settings, gains[c]), 0, 1);
+            bw.Write(Be16(ToU16Fixed(y)));
+        }
+        return ms.ToArray();
+    }
+
+    private static byte[] BeS15Fixed16(double v)
+        => BitConverter.GetBytes(System.Buffers.Binary.BinaryPrimitives.ReverseEndianness((int)Math.Round(v * 65536.0)));
+
+    /// <summary>v4 的文本 tag：<c>mluc</c>（UTF-16BE 字符串 + 单条语言记录）。v4 剖面里 <c>textDescription</c> 已废弃。</summary>
+    private static byte[] MlucTag(string text)
+    {
+        var bytes = Encoding.BigEndianUnicode.GetBytes(text);
+        using var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(FourCC("mluc"));
+        bw.Write(Be32(0));
+        bw.Write(Be32(1));      // 记录数
+        bw.Write(Be32(12));     // 单条记录长度
+        bw.Write(Be16(0x656E)); // 'en'
+        bw.Write(Be16(0x5553)); // 'US'
+        bw.Write(Be32((uint)bytes.Length));
+        bw.Write(Be32(28));     // 字符串起始（8 头 + 8 计数 + 12 记录）
+        bw.Write(bytes);
         return ms.ToArray();
     }
 

@@ -47,9 +47,11 @@ internal static class ColorWorkspaceService
                 ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift, preserveIcc: iccMode, filter: filter);
                 outcomes.Add(Str.T("Str.ColorApplied"));
                 // 只有真的折了校准 ramp（vcgt）才敢说「曲线已并入屏幕」；
-                // TRC 型预设不再折（见 IccCurves 注释），它的观感由画面参数承担，别谎报。
+                // 外部 ICC 若没有 vcgt，就只能关联——那类文件对游戏没有可见效果，如实说出来。
                 if (filter is { EncodedRamp: true } && !filter.IsIdentity)
                     outcomes.Add(Str.T("Str.ColorFilterCurveApplied"));
+                else if (iccMode && file is not null)
+                    outcomes.Add(Str.T("Str.ColorIccNoCalibration"));
             }
             if (vibrance is { } percent)
             {
@@ -63,14 +65,14 @@ internal static class ColorWorkspaceService
             throw new InvalidOperationException(string.Join("\n", outcomes.Append(Str.T("Str.ColorWorkspaceFailed", ex.Message))), ex);
         }
     }
-    /// <summary>读取当前选择的滤镜曲线（.icc 文件或生成式预设）；读不到按「没有滤镜」处理，不阻断写入。</summary>
+    /// <summary>读取要折进屏幕曲线的校准表（vcgt）；读不到或不是校准表就按「没有」处理，不阻断写入。</summary>
     private static IccCurves? ReadFilterCurves(IccFilterPreset? preset, string? file)
     {
         try
         {
-            if (file is not null) return IccCurveReader.TryRead(System.IO.File.ReadAllBytes(file));
-            if (preset is { } p) return IccCurveReader.TryRead(IccProfileGenerator.Build(p));
-            return null;
+            // 内置预设不折：它的 vcgt 与 ForPreset 的画面参数是同一条曲线，折两遍就套了两次。
+            // 外部 .icc 才有必要折——那里没有参数可用，vcgt 是唯一能让游戏看见的东西。
+            return file is null ? null : IccCurveReader.TryRead(System.IO.File.ReadAllBytes(file));
         }
         catch { return null; }
     }

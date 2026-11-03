@@ -210,15 +210,16 @@ public partial class ScreenColorPanel : UserControl
     private ScreenColorSettings Values() => new(_sliders[0].Value, _sliders[1].Value, _sliders[2].Value, _sliders[3].Value,
         _sliders[4].Value, _sliders[5].Value, _sliders[6].Value, _sliders[8].Value, _sliders[7].Value,
         DarkBalanceToggle.IsChecked == true);
-    /// <summary>当前滤镜的 vcgt/TRC 曲线（.icc 文件优先，其次生成式预设）；读不到就当没有滤镜。</summary>
+    /// <summary>当前滤镜要折进屏幕曲线的校准表（vcgt）。</summary>
     private IccCurves? CurrentFilterCurves()
     {
-        // 只有真的选中了滤镜（ICC 模式）才把曲线算进预览：面板初始就会选中一条预设，不能拿它当"用户选了滤镜"。
         if (!IccMode) return null;
         try
         {
+            // 只有**外部导入的 .icc** 才折：内置预设的 vcgt 与 ForPreset 的画面参数是同一条曲线，
+            // 两边都折就等于套两遍（画面过重）。预设的观感由 settings=ForPreset 承担，
+            // ICC 文件照样关联给读色彩管理的程序，vcgt 也会被系统当成校准表使用。
             if (_iccFile is not null && File.Exists(_iccFile)) return IccCurveReader.TryRead(File.ReadAllBytes(_iccFile));
-            if (Preset is { } preset) return IccCurveReader.TryRead(IccProfileGenerator.Build(preset));
             return null;
         }
         catch { return null; }

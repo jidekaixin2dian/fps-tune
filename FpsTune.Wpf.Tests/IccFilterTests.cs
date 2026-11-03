@@ -21,8 +21,8 @@ public class IccProfileGeneratorTests
         // 0..3 尺寸字段与实际长度一致
         Assert.Equal((uint)bytes.Length, ReadBe32(bytes, 0));
         Assert.True(bytes.Length > 128);
-        // 8..11 版本 2.1
-        Assert.Equal(0x02100000u, ReadBe32(bytes, 8));
+        // 8..11 版本 4.4：与 1U 的预设一致，vcgt 只有在 v4 剖面里才会被系统接受
+        Assert.Equal(0x04400000u, ReadBe32(bytes, 8));
         // 12 设备类 mntr；16 色彩空间 RGB ；20 PCS XYZ
         Assert.Equal("mntr", Ascii(bytes, 12, 4));
         Assert.Equal("RGB ", Ascii(bytes, 16, 4));
@@ -79,38 +79,32 @@ public class IccProfileGeneratorTests
     }
 
     [Fact]
-    public void All_presets_preserve_black_white_and_visible_shadow_steps_in_real_color_conversion()
+    public void Every_preset_ships_its_own_vcgt_calibration_curve()
     {
-        var directory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../work/icc-shadow-check-" + Guid.NewGuid().ToString("N")));
-        Directory.CreateDirectory(directory);
-        var ramp = Enumerable.Range(0, 256).SelectMany(i => new byte[] { (byte)i, (byte)i, (byte)i, 255 }).ToArray();
-        var source = System.Windows.Media.Imaging.BitmapSource.Create(256, 1, 96, 96,
-            System.Windows.Media.PixelFormats.Bgra32, null, ramp, 256 * 4);
+        // 对齐 1U 后的契约：观感写在 vcgt 校准表里（这张表会被装进显卡 LUT，游戏才看得见），
+        // rTRC 只是标准 sRGB。以前把「MapTone 反函数」塞进 TRC 再折回 ramp，会互相抵消。
         var hashes = new HashSet<string>();
         foreach (var preset in Enum.GetValues<IccFilterPreset>())
         {
-            var path = Path.Combine(directory, IccProfileGenerator.ParamsFor(preset).FileName);
-            File.WriteAllBytes(path, IccProfileGenerator.Build(preset));
-            var converted = new System.Windows.Media.Imaging.ColorConvertedBitmap(source,
-                new System.Windows.Media.ColorContext(System.Windows.Media.PixelFormats.Bgra32),
-                new System.Windows.Media.ColorContext(new Uri(path)), System.Windows.Media.PixelFormats.Rgba64);
-            var image = new System.Windows.Media.Imaging.FormatConvertedBitmap(converted, System.Windows.Media.PixelFormats.Bgra32, null, 0);
-            var pixels = new byte[256 * 4]; image.CopyPixels(pixels, pixels.Length, 0);
-            hashes.Add(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(pixels)));
-            for (var c = 0; c < 3; c++)
-            {
-                Assert.InRange(pixels[c], 0, 1); Assert.InRange(pixels[255 * 4 + c], 253, 255);
-                for (var i = 8; i <= 64; i++)
-                {
-                    // 8 位输出按整数取整，误差 ±1 码属于量化；再低就是真的压暗了（沉艳这类预设本来就压黑，但不许压穿）。
-                    Assert.True(pixels[i * 4 + c] + 1 >= i / 2, $"{preset} crushed gray {i}, channel {c} — curve 4..16 = " + string.Join(",", Enumerable.Range(4, 13).Select(k => pixels[k * 4 + c])));
-                    Assert.True(pixels[i * 4 + c] >= pixels[(i - 1) * 4 + c], $"{preset} reversed shadows");
-                }
-            }
+            var icc = IccProfileGenerator.Build(preset);
+            var curves = IccCurveReader.TryRead(icc);
+            Assert.NotNull(curves);
+            Assert.True(curves!.EncodedRamp, $"{preset} 的 vcgt 没有生效");
+            var channel = curves.Channels[1];
+            // 黑白端点保持、单调不降
+            Assert.InRange(channel[0], 0, 0.01);
+            Assert.InRange(channel[255], 0.99, 1.0);
+            for (var i = 1; i < 256; i++)
+                Assert.True(channel[i] >= channel[i - 1] - 1e-6, $"{preset} 的 vcgt 在 {i} 处回折");
+            // 暗部不许压穿：8..64 至少保留一半亮度
+            for (var i = 8; i <= 64; i++)
+                Assert.True(channel[i] + 0.01 >= i / 255d / 2, $"{preset} 把灰阶 {i} 压没了");
             if (preset is IccFilterPreset.ShadowBoost or IccFilterPreset.ShadowGentle)
-                Assert.True(pixels[32 * 4 + 1] > 32, $"{preset} must lift shadows");
+                Assert.True(channel[32] > 32 / 255d, $"{preset} 应当提亮暗部");
             if (preset == IccFilterPreset.Neutral)
-                for (var i = 0; i < 256; i++) Assert.InRange((int)pixels[i * 4 + 1] - i, -2, 2);
+                for (var i = 0; i < 256; i++) Assert.InRange(channel[i] - i / 255d, -0.01, 0.01);
+            hashes.Add(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                curves.Channels.SelectMany(c => c.Select(v => (byte)Math.Round(v * 255))).ToArray())));
         }
         Assert.Equal(Enum.GetValues<IccFilterPreset>().Length, hashes.Count); // 每条预设都必须产出各自的曲线
     }
@@ -159,12 +153,12 @@ public class IccFilterServiceTests : IDisposable
         IccFilterService.Apply(IccFilterPreset.Vivid);
 
         // 预设被安装进色彩目录并成为列表末位（默认）
-        Assert.Contains("FpsTune-Vivid-v3.icc", _api.InstalledProfiles);
-        Assert.Equal("FpsTune-Vivid-v3.icc", LastValid());
+        Assert.Contains("FpsTune-Vivid-v4.icc", _api.InstalledProfiles);
+        Assert.Equal("FpsTune-Vivid-v4.icc", LastValid());
 
         var state = IccFilterService.GetState();
         Assert.True(state.Supported);
-        Assert.Equal("FpsTune-Vivid-v3.icc", state.CurrentProfileName);
+        Assert.Equal("FpsTune-Vivid-v4.icc", state.CurrentProfileName);
         Assert.True(state.Restorable);
     }
 
@@ -177,7 +171,7 @@ public class IccFilterServiceTests : IDisposable
         IccFilterService.Apply(IccFilterPreset.Vivid);
         IccFilterService.Apply(IccFilterPreset.ShadowBoost);
 
-        Assert.Equal("FpsTune-ShadowBoost-v3.icc", LastValid());
+        Assert.Equal("FpsTune-ShadowBoost-v4.icc", LastValid());
 
         // 还原必须回到"从未覆盖过"的原点（sRGB），而不是上一次的 Vivid
         Assert.True(IccFilterService.Restore());
@@ -212,7 +206,7 @@ public class IccFilterServiceTests : IDisposable
         _api.AssociationList.AddRange(new[] { "sRGB.icm", "已删除.icm", "校色.icm" });
 
         IccFilterService.Apply(IccFilterPreset.Vivid);
-        Assert.Equal("FpsTune-Vivid-v3.icc", LastValid());
+        Assert.Equal("FpsTune-Vivid-v4.icc", LastValid());
 
         Assert.True(IccFilterService.Restore());
 
@@ -354,7 +348,7 @@ public class IccFilterServiceTests : IDisposable
         var second = IccFilterService.ApplyFromFile(fileB);
         Assert.Equal(second, LastValid());
         IccFilterService.Apply(IccFilterPreset.Dehaze);
-        Assert.Equal("FpsTune-Dehaze-v3.icc", LastValid());
+        Assert.Equal("FpsTune-Dehaze-v4.icc", LastValid());
     }
 
     [Fact]

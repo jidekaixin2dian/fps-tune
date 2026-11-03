@@ -35,13 +35,17 @@ public sealed class FilterCurveRampTests
         var plain = ScreenColorService.BuildRamp(settings, Identity());
         Assert.Equal(plain, ScreenColorService.BuildRamp(settings, Identity(), IccCurves.Identity));
 
-        // 生成式预设：TRC 不折入，ramp 与「没有滤镜」完全一致。
-        var curves = IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Vivid));
-        Assert.NotNull(curves);
-        Assert.False(curves!.EncodedRamp);
-        Assert.Equal(plain, ScreenColorService.BuildRamp(settings, Identity(), curves));
+        // 内置预设现在自带 vcgt（对齐 1U）。它折进 ramp 会改变画面——但应用路径**不折**它，
+        // 因为预设的观感已经由画面参数（ForPreset）表达，两边都折 = 套两遍。
+        var presetCurves = IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Vivid));
+        Assert.NotNull(presetCurves);
+        Assert.True(presetCurves!.EncodedRamp);
+        var presetTone = ScreenColorSettings.ForPreset(IccFilterPreset.Vivid);
+        var once = ScreenColorService.BuildRamp(presetTone, Identity());
+        var twice = ScreenColorService.BuildRamp(presetTone, Identity(), presetCurves);
+        Assert.NotEqual(once, twice);
 
-        // 真正的校准表才折入，而且要单调不降。
+        // 外部 .icc 的校准表才折入，而且要单调不降。
         var encoded = CalibrationRamp(0.8);
         Assert.True(encoded.EncodedRamp);
         var filtered = ScreenColorService.BuildRamp(settings, Identity(), encoded);
@@ -98,7 +102,7 @@ public sealed class FilterCurveRampTests
                 System.Threading.Thread.Sleep(150);
                 var before = Hash(preview);
 
-                // 校准表（vcgt 型）要能改变预览；TRC 型曲线不再改变（观感由画面参数承担）。
+                // 校准表（vcgt 型）必须能改变预览；没有曲线时不许变。
                 var rev = preview.RenderedRevision;
                 preview.SetFilterCurves(CalibrationRamp(1.6));
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > rev);
@@ -106,7 +110,7 @@ public sealed class FilterCurveRampTests
                 Assert.NotEqual(before, after);
 
                 rev = preview.RenderedRevision;
-                preview.SetFilterCurves(IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Vivid)));
+                preview.SetFilterCurves(IccCurves.Identity);
                 DlssFeedbackTests.PumpUntil(() => preview.RenderedRevision > rev);
                 Assert.Equal(before, Hash(preview));
             }

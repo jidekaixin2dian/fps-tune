@@ -57,12 +57,12 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(75, Levels["A"]); Assert.NotEqual(LinearRamp(), Ramps["A"]);
         var settings = new ScreenColorSettings(Brightness: 5, Contrast: 112);
         ColorWorkspaceService.Apply("A", settings, true, IccFilterPreset.Cool, null, null);
-        // 新契约：ICC 模式写屏时会把滤镜曲线折进 ramp，游戏才看得到。
-        Assert.Equal(ScreenColorService.BuildRamp(settings, LinearRamp(), IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Cool))), Ramps["A"]);
-        Assert.Contains("FpsTune-Cool-v3.icc", Profiles["A"]);
+        // 新契约（2026-11-03，对齐 1U）：内置预设的观感来自画面参数（ForPreset），不再把预设的 vcgt 折进 ramp（会套两遍）；外部 .icc 的 vcgt 才折。
+        Assert.Equal(ScreenColorService.BuildRamp(settings, LinearRamp()), Ramps["A"]);
+        Assert.Contains("FpsTune-Cool-v4.icc", Profiles["A"]);
         ColorWorkspaceService.Apply("A", settings with { Gamma = 1.1 }, true, IccFilterPreset.Warm, null, 80);
-        Assert.Equal(ScreenColorService.BuildRamp(settings with { Gamma = 1.1 }, LinearRamp(), IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Warm))), Ramps["A"]);
-        Assert.Contains("FpsTune-Warm-v3.icc", Profiles["A"]); Assert.Equal(80, Levels["A"]);
+        Assert.Equal(ScreenColorService.BuildRamp(settings with { Gamma = 1.1 }, LinearRamp()), Ramps["A"]);
+        Assert.Contains("FpsTune-Warm-v4.icc", Profiles["A"]); Assert.Equal(80, Levels["A"]);
         ColorWorkspaceService.Restore("A");
         Assert.Equal(LinearRamp(), Ramps["A"]); Assert.Equal(new[] { "a.icm" }, Profiles["A"]); Assert.Equal(30, Levels["A"]);
         ColorWorkspaceService.Apply("A", new(Brightness: 5), false, null, null, null);
@@ -113,7 +113,7 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(30, Levels["A"]);
         Assert.Equal(["a.icm"], Profiles["A"]);
         Assert.Equal(85, Levels["B"]);
-        Assert.Equal("FpsTune-Dehaze-v3.icc", Profiles["B"].Last());
+        Assert.Equal("FpsTune-Dehaze-v4.icc", Profiles["B"].Last());
         Assert.Single(DigitalVibranceService.BackupTargets());
         Assert.Single(IccFilterService.BackupTargets());
         Assert.True(DigitalVibranceService.Restore("B"));
@@ -250,7 +250,7 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Throws<InvalidOperationException>(() => IccFilterService.Restore("A"));
         Assert.Equal(before, Writes.Count);
         Assert.Single(IccFilterService.BackupTargets());
-        Assert.Equal("FpsTune-Warm-v3.icc", Profiles["A"].Last());
+        Assert.Equal("FpsTune-Warm-v4.icc", Profiles["A"].Last());
     }
     [Fact]
     public void Existing_preset_in_original_association_list_is_kept_as_part_of_the_exact_restore_baseline()

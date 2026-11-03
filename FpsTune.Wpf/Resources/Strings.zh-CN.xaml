@@ -1531,7 +1531,7 @@
     <s:String x:Key="Str.ColorPreviewSplit">原图与滤镜对比分隔位置</s:String>
     <s:String x:Key="Str.ColorPreviewChannelGame">游戏内效果</s:String>
     <s:String x:Key="Str.ColorPreviewChannelManaged">色彩管理应用</s:String>
-    <s:String x:Key="Str.ColorPreviewGameHint">预览的是游戏里实际看到的效果：滤镜曲线 + 画面参数 + 数字振动。</s:String>
+    <s:String x:Key="Str.ColorPreviewGameHint">游戏内效果</s:String>
     <s:String x:Key="Str.ColorPreviewLoadFailed">无法载入图片，请选择有效的 PNG / JPG（不超过 20 MB、6400 万像素）。</s:String>
     <s:String x:Key="Str.ColorSelectIcc">请选择 ICC 预设或载入配置文件。</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">数字振动已应用：{0}%。</s:String>
@@ -1541,10 +1541,11 @@
     <s:String x:Key="Str.ColorIccMode">ICC + 画面参数</s:String>
     <s:String x:Key="Str.ColorRestoreAll">还原本屏色彩改动</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”和已调整的数字振动一起应用到选定显示器，并保存原值。</s:String>
+    <s:String x:Key="Str.ColorIccNoCalibration">这个 ICC 里没有校准表（vcgt），只能关联给读色彩管理的程序，游戏里看不到变化。</s:String>
     <s:String x:Key="Str.ColorFilterCurveApplied">滤镜曲线已并入屏幕（游戏可见）</s:String>
-    <s:String x:Key="Str.ColorPreviewManagedHint">预览的是读取 ICC 的程序看到的颜色：ICC 配置文件 + gamma。</s:String>
+    <s:String x:Key="Str.ColorPreviewManagedHint">色彩管理效果</s:String>
     <s:String x:Key="Str.ColorPreviewManagedEmpty">这个视图要有一条 ICC 滤镜，先在右侧滤镜列表里选一条。</s:String>
-    <s:String x:Key="Str.ColorPreviewVibranceHint">截图饱和度为近似预览，实际档位由显卡驱动处理。</s:String>
+    <s:String x:Key="Str.ColorPreviewVibranceHint">饱和度为近似预览</s:String>
     <s:String x:Key="Str.ColorPreviewIccFailed">ICC 无法预览：{0}</s:String>
     <s:String x:Key="Str.ColorPreviewEmpty">载入一张游戏截图，查看调整前后的变化</s:String>
     <s:String x:Key="Str.MemoryProcessProtected">此进程受保护，不能整理。</s:String>
@@ -1606,7 +1607,7 @@
     <s:String x:Key="Str.ColorChooseFilter">1 · 选择滤镜</s:String>
     <s:String x:Key="Str.ColorIccEnabled">启用 ICC 滤镜</s:String>
     <s:String x:Key="Str.ColorParameterPresets">更多画面参数预设</s:String>
-    <s:String x:Key="Str.ColorPreviewPending">预览已更新 · 点“应用整套”才会写入屏幕</s:String>
+    <s:String x:Key="Str.ColorPreviewPending">预览已更新</s:String>
     <s:String x:Key="Str.ColorExactValue">数值输入</s:String>
     <s:String x:Key="Str.ColorLegacyFilterUpdate">已载入新版保暗部滤镜预览；点击“应用色彩设置”更新旧版滤镜，原值仍可还原。</s:String>
     <s:String x:Key="Str.ColorIccOffMode">关闭 ICC 滤镜 + 画面参数</s:String>

@@ -56,20 +56,42 @@ public sealed class IccCurveReaderTests
     }
 
     [Fact]
-    public void Generated_presets_parse_and_differ_from_identity()
+    public void Generated_presets_carry_a_vcgt_calibration_table_like_1u()
     {
         var parsed = 0;
         foreach (var preset in Enum.GetValues<IccFilterPreset>())
         {
-            var curves = IccCurveReader.TryRead(IccProfileGenerator.Build(preset));
+            var icc = IccProfileGenerator.Build(preset);
+            var curves = IccCurveReader.TryRead(icc);
             Assert.NotNull(curves);
             Assert.All(curves!.Channels, channel => Assert.Equal(256, channel.Length));
-            // 生成式预设只有 TRC（编码→线性），不能当成屏幕校准表折进 ramp——见 IccCurves 的注释。
-            Assert.False(curves.EncodedRamp, $"{preset} 的曲线不该被当作 vcgt 校准表");
+            // 结构对齐 1U：预设自带 vcgt 校准表（3×257 u16 = 1554 字节），观感就在这条表里。
+            Assert.True(ContainsTag(icc, "vcgt"), $"{preset} 的剖面里没有 vcgt");
+            Assert.Equal(1554, VcgtSize(icc));
+            Assert.True(curves.EncodedRamp, $"{preset} 的曲线应当来自 vcgt（编码值→编码值）");
             if (!curves.IsIdentity) parsed++;
         }
         Assert.True(parsed >= 8, $"生成式预设里只有 {parsed} 条改变了曲线");
     }
+
+    private static bool ContainsTag(byte[] icc, string signature) => TagSize(icc, signature) > 0;
+
+    private static int VcgtSize(byte[] icc) => TagSize(icc, "vcgt");
+
+    private static int TagSize(byte[] icc, string signature)
+    {
+        var count = ReadBe32(icc, 128);
+        for (var t = 0; t < count; t++)
+        {
+            var record = 132 + t * 12;
+            if (System.Text.Encoding.ASCII.GetString(icc, record, 4) != signature) continue;
+            return ReadBe32(icc, record + 8);
+        }
+        return 0;
+    }
+
+    private static int ReadBe32(byte[] data, int offset)
+        => (data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3];
 
     [Fact]
     public void Broken_or_foreign_bytes_are_rejected_instead_of_throwing()
