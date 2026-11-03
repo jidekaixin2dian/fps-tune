@@ -152,9 +152,9 @@
        <Button x:Name="SaveSchemeButton" Grid.Column="2" Content="{DynamicResource Str.FilterSchemeSave}" Style="{StaticResource GhostButtonStyle}"
                Margin="12,0,0,0" Click="SaveScheme_Click"/>
       </Grid>
-      <!-- 存下来的滤镜方案：载入回来继续调，或直接删掉 -->
+      <!-- 存下来的滤镜方案：载入回来继续调，或直接删掉；可整体导出/导入备份 -->
       <Grid Margin="0,8,0,0">
-       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="applyBarLabel"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+       <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="applyBarLabel"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
        <TextBlock Text="{DynamicResource Str.FilterSchemeTitle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
        <ComboBox x:Name="SchemeCombo" Grid.Column="1" MinWidth="240" MaxWidth="340"
                  Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.FilterSchemeTitle}"/>
@@ -162,6 +162,10 @@
                Margin="12,0,0,0" Click="LoadScheme_Click"/>
        <Button x:Name="DeleteSchemeButton" Grid.Column="3" Content="{DynamicResource Str.FilterSchemeDelete}" Style="{StaticResource GhostButtonStyle}"
                Margin="8,0,0,0" Click="DeleteScheme_Click"/>
+       <Button x:Name="ExportSchemesButton" Grid.Column="4" Content="{DynamicResource Str.FilterSchemeExport}" Style="{StaticResource GhostButtonStyle}"
+               Margin="8,0,0,0" Click="ExportSchemes_Click"/>
+       <Button x:Name="ImportSchemesButton" Grid.Column="5" Content="{DynamicResource Str.FilterSchemeImport}" Style="{StaticResource GhostButtonStyle}"
+               Margin="8,0,0,0" Click="ImportSchemes_Click"/>
       </Grid>
       <TextBlock x:Name="ColorStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
      </StackPanel>

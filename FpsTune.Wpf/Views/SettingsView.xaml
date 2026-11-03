@@ -162,6 +162,10 @@
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.NotifyShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.NotifyHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="NotifyCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.NotifyShort}" />
+    </Grid><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.FilterSchemeHotkeyTitle}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
+            <TextBlock Text="{DynamicResource Str.FilterSchemeHotkeyHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
+        <CheckBox x:Name="SchemeHotkeyCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.FilterSchemeHotkeyTitle}" Checked="SchemeHotkey_Changed" Unchecked="SchemeHotkey_Changed"/>
     </Grid></StackPanel></Border><Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsPerformance}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.LowSpecShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.LowSpecHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>

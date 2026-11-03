@@ -590,6 +590,8 @@ public partial class ScreenColorPanel : UserControl
         SchemeCombo.IsEnabled = !_busy && has;
         LoadSchemeButton.IsEnabled = !_busy && has;
         DeleteSchemeButton.IsEnabled = !_busy && has && SchemeCombo.SelectedItem is not null;
+        if (ExportSchemesButton is not null) ExportSchemesButton.IsEnabled = !_busy;
+        if (ImportSchemesButton is not null) ImportSchemesButton.IsEnabled = !_busy;
     }
 
     private string SchemeDraftName()
@@ -616,6 +618,33 @@ public partial class ScreenColorPanel : UserControl
             ColorStatus.Text = Str.T("Str.FilterSchemeSaved", scheme.Name);
         }
         catch (Exception ex) { ColorStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    private void ExportSchemes_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        try
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "JSON|*.json", DefaultExt = ".json", FileName = "FpsTune-filter-schemes.json" };
+            if (dialog.ShowDialog() != true) return;
+            FilterSchemeStore.Export(dialog.FileName);
+            ColorStatus.Text = Str.T("Str.FilterSchemeTransferDone", FilterSchemeStore.Schemes.Count);
+        }
+        catch (Exception ex) { ColorStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    private void ImportSchemes_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy) return;
+        try
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "JSON|*.json", CheckFileExists = true };
+            if (dialog.ShowDialog() != true) return;
+            var schemes = FilterSchemeStore.Import(dialog.FileName);
+            RefreshSchemes();
+            ColorStatus.Text = Str.T("Str.FilterSchemeTransferDone", schemes.Count);
+        }
+        catch (Exception ex) { ColorStatus.Text = Str.T("Str.FilterRuleTransferFailed", PrivacyScrub.Sanitize(ex.Message)); }
     }
 
     private void LoadScheme_Click(object sender, RoutedEventArgs e)

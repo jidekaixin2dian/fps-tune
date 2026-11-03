@@ -94,6 +94,9 @@ public sealed class AppSettings
     // 安装信息被外部工具清掉时开机问过一次「要不要补回来」；用户说以后再说就不再打扰。
     public bool InstallRepairDeclined { get; set; }
 
+    // 方案热键（Ctrl+Alt+1/2/3）：按下把方案库第 1/2/3 条套到桌面。写屏动作，默认关。
+    public bool FilterSchemeHotkeysEnabled { get; set; }
+
     public bool HasContact =>
         !string.IsNullOrWhiteSpace(WeChat) ||
         !string.IsNullOrWhiteSpace(QQ) ||

@@ -98,6 +98,56 @@ public static class FilterSchemeStore
     public static FilterScheme? Find(string id)
         => Schemes.FirstOrDefault(s => s.Id.Equals(id, StringComparison.Ordinal));
 
+    private const long MaxImportBytes = 256 * 1024;
+    private sealed record ImportFile(int SchemaVersion, List<FilterScheme> Schemes);
+
+    /// <summary>整库导出（含全自动模板的备份文件由规则导出负责，这里只管方案列表）。</summary>
+    public static void Export(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("path");
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
+        AtomicFile.WriteAllTextDurable(path,
+            JsonSerializer.Serialize(new ImportFile(SchemaVersion, Load().Schemes), new JsonSerializerOptions { WriteIndented = true }),
+            new System.Text.UTF8Encoding(false));
+    }
+
+    /// <summary>先完整验证再合并导入：同名覆盖、超上限整批拒绝，无效导入不动现有方案。</summary>
+    public static IReadOnlyList<FilterScheme> Import(string path)
+    {
+        var info = new FileInfo(path);
+        if (!info.Exists || info.Length > MaxImportBytes) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
+        ImportFile? file;
+        try
+        {
+            file = JsonSerializer.Deserialize<ImportFile>(File.ReadAllText(path, System.Text.Encoding.UTF8));
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"), ex);
+        }
+        if (file is null || file.Schemes is null) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
+
+        lock (Gate)
+        {
+            var current = Load();
+            var incoming = Normalize(new SchemeFile(SchemaVersion, file.Schemes, current.AutoTemplate)).Schemes;
+            // 只统计「新名字」：同名是覆盖不占新槽；新名字超过剩余槽位就整批拒绝。
+            var newCount = incoming.Count(s => !current.Schemes.Any(c => c.Name.Equals(s.Name, StringComparison.OrdinalIgnoreCase)));
+            if (current.Schemes.Count + newCount > MaxSchemes)
+                throw new InvalidOperationException(Str.T("Str.FilterSchemeLimit", MaxSchemes));
+            var merged = current.Schemes.ToList();
+            foreach (var scheme in incoming)
+            {
+                var existing = merged.FirstOrDefault(s => s.Name.Equals(scheme.Name, StringComparison.OrdinalIgnoreCase));
+                var index = existing is null ? merged.Count : merged.IndexOf(existing);
+                merged.RemoveAll(s => s.Name.Equals(scheme.Name, StringComparison.OrdinalIgnoreCase));
+                merged.Insert(Math.Clamp(index, 0, merged.Count), scheme);
+            }
+            Save(new SchemeFile(SchemaVersion, merged, current.AutoTemplate));
+            return merged;
+        }
+    }
+
     internal static void Invalidate() { lock (Gate) _cache = null; }
 
     private static string CleanName(string name)

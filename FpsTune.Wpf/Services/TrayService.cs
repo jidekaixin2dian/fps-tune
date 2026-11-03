@@ -180,6 +180,13 @@ public static class TrayService
         NotifyRaw(title, message);
     }
 
+    /// <summary>用户动作（方案热键、托盘切换）的直接反馈：不受「完成通知」开关影响。</summary>
+    public static void NotifyImportant(string title, string message)
+    {
+        if (NotifyOverride is { } hook) { hook(title, message); return; }
+        NotifyRaw(title, message);
+    }
+
     /// <summary>测试注入；null 时走真实托盘气泡。</summary>
     internal static Action<string, string>? NotifyOverride { get; set; }
 
@@ -369,6 +376,43 @@ public static class TrayService
             menu.Items.Add(hud);
             menu.Items.Add(unlockHud);
             menu.Items.Add(closeHud);
+
+            // 滤镜方案（1U 同款）：托盘直接把方案库前 3 条套到桌面；开关联动独立程序滤镜主开关。
+            var schemes = FilterSchemeStore.Schemes;
+            if (schemes.Count > 0)
+            {
+                var schemeMenu = new MenuItem { Header = Str.T("Str.FilterSchemeTrayTitle") };
+                for (var i = 0; i < Math.Min(3, schemes.Count); i++)
+                {
+                    var slot = i + 1;
+                    var item = new MenuItem { Header = Str.T("Str.FilterSchemeTraySlot", slot, schemes[i].Name) };
+                    item.Click += (_, _) => FilterSchemeApplier.ApplySlot(slot);
+                    schemeMenu.Items.Add(item);
+                }
+                menu.Items.Add(schemeMenu);
+            }
+            if (App.FilterWatcher is not null)
+            {
+                var daemonOn = SettingsService.Current.FilterWatcherEnabled;
+                var daemon = new MenuItem { Header = Str.T(daemonOn ? "Str.FilterDaemonTrayOff" : "Str.FilterDaemonTrayOn") };
+                daemon.Click += (_, _) =>
+                {
+                    var settings = SettingsService.Current;
+                    settings.FilterWatcherEnabled = !settings.FilterWatcherEnabled;
+                    try { SettingsService.Save(settings); }
+                    catch (Exception ex)
+                    {
+                        settings.FilterWatcherEnabled = daemonOn;
+                        TrayService.NotifyImportant(Str.T("Str.FilterSchemeTrayTitle"), Str.T("Str.SettingsSaveFailed", PrivacyScrub.Sanitize(ex.Message)));
+                        return;
+                    }
+                    App.FilterWatcher.ApplySettings();
+                    TrayService.NotifyImportant(Str.T("Str.FilterSchemeTrayTitle"),
+                        Str.T(settings.FilterWatcherEnabled ? "Str.FilterDaemonTrayNowOn" : "Str.FilterDaemonTrayNowOff"));
+                };
+                menu.Items.Add(daemon);
+            }
+
             menu.Items.Add(new Separator());
             menu.Items.Add(exit);
             menu.IsOpen = true;

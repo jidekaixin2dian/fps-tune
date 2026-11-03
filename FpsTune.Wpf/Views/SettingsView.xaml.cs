@@ -194,6 +194,7 @@ public partial class SettingsView : UserControl
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
         LowSpecCheck.IsChecked = s.LowSpecMode;
+        SchemeHotkeyCheck.IsChecked = s.FilterSchemeHotkeysEnabled;
         AutoProfileCheck.IsChecked = s.AutoProfileEnabled;
         AutostartCheck.IsChecked = ReadAutostart();
         _suppressUiEvents = true;
@@ -403,6 +404,27 @@ public partial class SettingsView : UserControl
             s.HotkeyEnabled = previous;
             RollbackToggle(HotkeyCheck);
             WarnToggleFailed(Str.T("Str.HotkeyShort"), ex);
+            return;
+        }
+        (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
+    }
+
+    /// <summary>方案热键（Ctrl+Alt+1/2/3）开关：保存后让主窗口重新注册全部热键。</summary>
+    private void SchemeHotkey_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressUiEvents) return;
+        var s = SettingsService.Current;
+        var previous = s.FilterSchemeHotkeysEnabled;
+        try
+        {
+            s.FilterSchemeHotkeysEnabled = SchemeHotkeyCheck.IsChecked == true;
+            SettingsService.Save(s);
+        }
+        catch (Exception ex)
+        {
+            s.FilterSchemeHotkeysEnabled = previous;
+            RollbackToggle(SchemeHotkeyCheck);
+            WarnToggleFailed(Str.T("Str.FilterSchemeHotkeyTitle"), ex);
             return;
         }
         (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();

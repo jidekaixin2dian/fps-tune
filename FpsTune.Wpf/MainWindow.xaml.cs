@@ -124,8 +124,13 @@ public partial class MainWindow : Window
     // 全局热键 Ctrl+Alt+F
     private const int WM_HOTKEY = 0x0312;
     private const int HOTKEY_ID = 0x1F01;
+    // 方案热键槽 1–3（Ctrl+Alt+1/2/3），与 1U 的「三组方案快捷键」对齐。
+    private const int HOTKEY_ID_SCHEME1 = 0x1F11;
+    private const int HOTKEY_ID_SCHEME2 = 0x1F12;
+    private const int HOTKEY_ID_SCHEME3 = 0x1F13;
     private const uint MOD_ALT = 0x1, MOD_CONTROL = 0x2;
     private const uint VK_F = 0x46;
+    private const uint VK_1 = 0x31, VK_2 = 0x32, VK_3 = 0x33;
 
     // 使用非分层窗口和 WindowChrome，保留 DWM 原生窗口动画与圆角。
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
@@ -202,7 +207,12 @@ public partial class MainWindow : Window
             _updateCard?.Cancel();
             TrayService.Dispose();
             if (_hwndSource is not null)
+            {
                 UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
+                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID_SCHEME1);
+                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID_SCHEME2);
+                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID_SCHEME3);
+            }
         };
         Loaded += (_, _) => { if (UserDataPaths.RootOverride is null) _ = CheckStartupUpdateAsync(); };
         // 全局滚轮穿透：滑块/下拉框不再吞掉滚轮，页面能一路滚到底（各页面都受益）。
@@ -239,6 +249,17 @@ public partial class MainWindow : Window
             RestoreFromTray();
             handled = true;
         }
+        else if (msg == WM_HOTKEY && wParam is HOTKEY_ID_SCHEME1 or HOTKEY_ID_SCHEME2 or HOTKEY_ID_SCHEME3)
+        {
+            // 方案热键：写屏在后台线程做（见 FilterSchemeApplier），这里只负责分发。
+            FilterSchemeApplier.ApplySlot(wParam switch
+            {
+                HOTKEY_ID_SCHEME1 => 1,
+                HOTKEY_ID_SCHEME2 => 2,
+                _ => 3,
+            });
+            handled = true;
+        }
         return nint.Zero;
     }
 
@@ -247,9 +268,20 @@ public partial class MainWindow : Window
     {
         if (_hwndSource is null)
             return;
-        UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
+        var handle = _hwndSource.Handle;
+        UnregisterHotKey(handle, HOTKEY_ID);
         if (SettingsService.Current.HotkeyEnabled)
-            RegisterHotKey(_hwndSource.Handle, HOTKEY_ID, MOD_CONTROL | MOD_ALT, VK_F);
+            RegisterHotKey(handle, HOTKEY_ID, MOD_CONTROL | MOD_ALT, VK_F);
+
+        // 方案热键固定 Ctrl+Alt+1/2/3，指向方案库的第 1/2/3 条（与托盘菜单同一口径）。
+        // 注册失败通常是组合键被占用：不弹窗打断启动，托盘气泡在按下时也只会没反应——
+        // 所以开关旁的说明里写清「无效多半是被占用」。设置页切换开关时经 ApplySettings 走到这里。
+        var schemeHotkeys = SettingsService.Current.FilterSchemeHotkeysEnabled;
+        foreach (var (id, vk) in new[] { (HOTKEY_ID_SCHEME1, VK_1), (HOTKEY_ID_SCHEME2, VK_2), (HOTKEY_ID_SCHEME3, VK_3) })
+        {
+            UnregisterHotKey(handle, id);
+            if (schemeHotkeys) RegisterHotKey(handle, id, MOD_CONTROL | MOD_ALT, vk);
+        }
     }
 
     // ---------- 托盘常驻 ----------
