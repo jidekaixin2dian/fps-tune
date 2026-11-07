@@ -116,13 +116,13 @@ public partial class FilterView : UserControl
     }
 
     /// <summary>
-    /// 预设自带数字振动档（1U 同款数据）：只把滑块与百分比预填成草稿，不写系统，
+    /// 预设自带数字振动档（参考实现同款数据）：只把滑块与百分比预填成草稿，不写系统，
     /// 仍要点「应用」；该屏没有 DVC 通道时什么都不动。
     /// </summary>
     private void SuggestVibrance(IccFilterPreset preset) => SuggestVibrance(IccProfileGenerator.VibranceFor(preset));
 
     /// <summary>
-    /// 预设自带数字振动档（1U 同款数据）：只把滑块与百分比预填成草稿，不写系统，
+    /// 预设自带数字振动档（参考实现同款数据）：只把滑块与百分比预填成草稿，不写系统，
     /// 仍要点「应用」；该屏没有 DVC 通道时什么都不动。
     /// </summary>
     private void SuggestVibrance(int? suggestion)
@@ -530,7 +530,7 @@ public partial class FilterView : UserControl
 
     /// <summary>
     /// 把 Windows 当前关联的那个 ICC 的校准表（vcgt）立刻写进屏幕。
-    /// Windows 设置里的「颜色配置文件」只做关联，校准表要等系统加载（登录/切换时）；这里直接写，等同于 1U 的 icc.gamma.apply。
+    /// Windows 设置里的「颜色配置文件」只做关联，校准表要等系统加载（登录/切换时）；这里直接写，等同于 参考实现的 icc.gamma.apply。
     /// </summary>
     private void SystemIccApply_Click(object sender, RoutedEventArgs e)
     {

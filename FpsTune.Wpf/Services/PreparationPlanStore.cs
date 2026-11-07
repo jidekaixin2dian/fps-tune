@@ -55,7 +55,16 @@ internal static class PreparationPlanStore
             return;
         }
         var file = FileFor(path);
-        _ = Load(path);
+        try
+        {
+            _ = Load(path);
+        }
+        catch (InvalidDataException)
+        {
+            // 旧文件损坏（Load 抛 Str.PlanUnreadable）：留档后覆盖写入。
+            // 原样抛出会让该游戏的方案保存和自动准备永久卡死，且没有任何修复入口。
+            try { AtomicFile.PreserveCorrupt(file); } catch { }
+        }
         var saved = new SavedPlan(1, SessionConditionRules.CaptureGame(path, null).GameKey!, options);
         AtomicFile.WriteAllTextDurable(file, JsonSerializer.Serialize(saved), new UTF8Encoding(false));
     }

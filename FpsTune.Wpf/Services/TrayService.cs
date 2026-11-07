@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -377,7 +377,7 @@ public static class TrayService
             menu.Items.Add(unlockHud);
             menu.Items.Add(closeHud);
 
-            // 滤镜方案（1U 同款）：托盘直接把方案库前 3 条套到桌面；开关联动独立程序滤镜主开关。
+            // 滤镜方案（参考实现同款）：托盘直接把方案库前 3 条套到桌面；开关联动独立程序滤镜主开关。
             var schemes = FilterSchemeStore.Schemes;
             if (schemes.Count > 0)
             {

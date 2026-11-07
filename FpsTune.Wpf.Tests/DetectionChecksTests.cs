@@ -70,4 +70,22 @@ public class DetectionChecksTests
         Assert.Contains("MaxWidth=\"{TemplateBinding ActualWidth}\"", appXaml, StringComparison.Ordinal);
         Assert.Contains("TextTrimming=\"CharacterEllipsis\"", sessionXaml, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// 服务体检项：预读与索引（SysMain/WSearch）和数据使用量（DusmSvc）各一行，
+    /// 每行都要给出「运行状态 + 启动类型」两列事实。
+    /// </summary>
+    [Fact]
+    public void Service_checks_cover_prefetch_indexing_and_data_usage()
+    {
+        var source = File.ReadAllText(
+            Path.Combine(RepoRoot(), "FpsTune.Wpf", "Core", "DetectionService.cs"), Encoding.UTF8);
+        var buildChecks = source[source.IndexOf("BuildChecks", StringComparison.Ordinal)..];
+
+        Assert.Contains("ServiceCheck(Str.T(\"Str.ServiceCheckPrefetch\"), \"SysMain\", \"WSearch\")", buildChecks, StringComparison.Ordinal);
+        Assert.Contains("ServiceCheck(Str.T(\"Str.ServiceCheckDataUsage\"), \"DusmSvc\")", buildChecks, StringComparison.Ordinal);
+        Assert.Contains("Str.T(\"Str.ServiceRunningState\")", source, StringComparison.Ordinal);
+        Assert.Contains("Str.T(\"Str.ServiceStartType\")", source, StringComparison.Ordinal);
+        Assert.Contains("NativeServiceStatus.ReadStartType", source, StringComparison.Ordinal);
+    }
 }

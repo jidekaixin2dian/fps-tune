@@ -5,7 +5,7 @@ namespace FpsTune.Wpf.Services;
 /// 主判据吃「无边框全屏」，副判据吃「独占全屏」。
 ///
 /// 依据：竞品 game 加加 GPPMagicGlassRT.dll 同时导入了 SHQueryUserNotificationState
-/// 与 DwmGetWindowAttribute，正是这套组合；1U 的 HikariGameObserver 只看前台进程、不判全屏。
+/// 与 DwmGetWindowAttribute，正是这套组合；参考实现的前台观察器只看前台进程、不判全屏。
 ///
 /// 设计红线：读不到可靠信息时返回 <see cref="ForegroundScreenState.Unknown"/>，
 /// 绝不返回 NotFullscreen——Unknown 不改变已有状态，否则全屏切换瞬间会被误还原。

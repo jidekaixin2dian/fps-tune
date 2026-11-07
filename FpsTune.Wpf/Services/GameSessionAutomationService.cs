@@ -13,15 +13,18 @@ namespace FpsTune.Wpf.Services;
 internal sealed class GameSessionAutomationService : IDisposable
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
+    /// <summary>刷新率还原部分失败后的重试退避（测试可缩短）。</summary>
+    internal static TimeSpan RefreshRetryBackoff = TimeSpan.FromSeconds(10);
 
     private readonly System.Threading.Timer _timer;
     private readonly object _gate = new();
     private readonly Dictionary<string, GameProcessRun?> _observed = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DisplayMode> _refreshBackup = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<int, (nuint Affinity, uint Priority, bool AffinityWritten, bool PriorityWritten)> _affinityTouched = new();
+    private readonly Dictionary<int, (nuint Affinity, uint Priority, bool AffinityWritten, bool PriorityWritten, DateTime StartedAt)> _affinityTouched = new();
     private string _signature = "";
     private bool _refreshEngaged;
     private bool _affinityEngaged;
+    private DateTime _nextRefreshRetryAt;
     private int _polling;
     private int _disposed;
 
@@ -34,6 +37,8 @@ internal sealed class GameSessionAutomationService : IDisposable
     internal Func<GamePreparationOptions, string, Task<IReadOnlyList<PreparationStep>>>? PreparationRunner { get; set; }
     internal Func<ushort[]>? EfficiencyClassesProvider { get; set; }
     internal Func<string, IReadOnlyList<int>>? PidsByPathOverride { get; set; }
+    /// <summary>进程启动时间读取（PID 复用身份核对）；测试注入。返回 null = 进程已不在。</summary>
+    internal Func<int, DateTime?>? ProcessStartedAtOverride { get; set; }
 
     public GameSessionAutomationService()
         => _timer = new Timer(TimerTick, null, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
@@ -123,9 +128,10 @@ internal sealed class GameSessionAutomationService : IDisposable
             else if (_affinityEngaged)
                 DisengageAffinity(Str.T("Str.AutoSessionRefreshReasonAllGames"));
 
-            // 全部游戏退出后还原刷新率（含开关关闭或游戏库清空的场景）。
+            // 全部游戏退出后还原刷新率（含开关关闭或游戏库清空的场景）；部分失败按退避重试。
             var anyRunning = observations.Any(o => o.Value.Run is not null);
-            if (!anyRunning) DisengageRefresh(Str.T("Str.AutoSessionRefreshReasonAllGames"));
+            if (!anyRunning && DateTime.UtcNow >= _nextRefreshRetryAt)
+                DisengageRefresh(Str.T("Str.AutoSessionRefreshReasonAllGames"));
         }
         catch (Exception ex)
         {
@@ -213,6 +219,10 @@ internal sealed class GameSessionAutomationService : IDisposable
             if (!_refreshEngaged || _refreshBackup.Count == 0) return;
             backups = _refreshBackup.ToList();
         }
+        // 只清成功恢复的设备：显示器暂时不在拓扑 / Apply 失败的条目保留在备份里按退避重试。
+        // 原实现无条件清空并把 _refreshEngaged 置假——失败设备停在提升后的刷新率，
+        // 内部状态与审计却声称「已还原」，且原模式数据已丢、没有重试路径。
+        var restoredDevices = new List<string>();
         foreach (var (device, mode) in backups)
         {
             var display = displays.FirstOrDefault(d => string.Equals(d.GdiDeviceName, device, StringComparison.OrdinalIgnoreCase));
@@ -225,9 +235,13 @@ internal sealed class GameSessionAutomationService : IDisposable
             {
                 api.Apply(display, mode);
                 var after = api.Read(display);
-                Audit(after.Hz == mode.Hz
-                    ? Str.T("Str.AutoSessionRefreshOff", display.FriendlyName, mode.Hz)
-                    : Str.T("Str.AutoSessionRefreshFailed", display.FriendlyName));
+                if (after.Hz != mode.Hz)
+                {
+                    Audit(Str.T("Str.AutoSessionRefreshFailed", display.FriendlyName));
+                    continue;
+                }
+                restoredDevices.Add(device);
+                Audit(Str.T("Str.AutoSessionRefreshOff", display.FriendlyName, mode.Hz));
             }
             catch (Exception ex)
             {
@@ -236,8 +250,17 @@ internal sealed class GameSessionAutomationService : IDisposable
         }
         lock (_gate)
         {
-            _refreshBackup.Clear();
-            _refreshEngaged = false;
+            foreach (var device in restoredDevices)
+                _refreshBackup.Remove(device);
+            if (_refreshBackup.Count == 0)
+            {
+                _refreshEngaged = false;
+                _nextRefreshRetryAt = DateTime.MinValue;
+            }
+            else
+            {
+                _nextRefreshRetryAt = DateTime.UtcNow.Add(RefreshRetryBackoff);
+            }
         }
         Audit(Str.T("Str.AutoSessionRefreshReason", reason));
     }
@@ -271,9 +294,11 @@ internal sealed class GameSessionAutomationService : IDisposable
                 if (before.Priority is 0x20 or 0x8000 or 0x80)
                     priorityWritten = NativeProcessScheduling.WritePriority(pid, NativeProcessScheduling.PriorityBelowNormal);
                 if (!affinityWritten && !priorityWritten) continue;
+                // 记录启动时间作为进程身份：还原前核对，PID 被复用就不写。
+                var startedAt = ProcessStartedAtOverride?.Invoke(pid) ?? TryReadProcessStart(pid) ?? DateTime.MinValue;
                 lock (_gate)
                 {
-                    _affinityTouched[pid] = (before.Affinity, before.Priority, affinityWritten, priorityWritten);
+                    _affinityTouched[pid] = (before.Affinity, before.Priority, affinityWritten, priorityWritten, startedAt);
                     _affinityEngaged = true;
                 }
                 touchedNew++;
@@ -285,7 +310,7 @@ internal sealed class GameSessionAutomationService : IDisposable
 
     private void DisengageAffinity(string reason)
     {
-        List<KeyValuePair<int, (nuint Affinity, uint Priority, bool AffinityWritten, bool PriorityWritten)>> touched;
+        List<KeyValuePair<int, (nuint Affinity, uint Priority, bool AffinityWritten, bool PriorityWritten, DateTime StartedAt)>> touched;
         lock (_gate)
         {
             if (!_affinityEngaged || _affinityTouched.Count == 0)
@@ -302,13 +327,25 @@ internal sealed class GameSessionAutomationService : IDisposable
         {
             try
             {
-                if (original.AffinityWritten) NativeProcessScheduling.WriteAffinity(pid, original.Affinity);
-                if (original.PriorityWritten) NativeProcessScheduling.WritePriority(pid, original.Priority);
-                restored++;
+                // PID 可能已被新进程复用：启动时间对不上就绝不写——把旧掩码/低优先级写到
+                // 无关新进程（甚至用户刚启动的游戏）上正是本功能要避免的现象。
+                var currentStart = ProcessStartedAtOverride?.Invoke(pid) ?? TryReadProcessStart(pid);
+                if (currentStart is null || original.StartedAt == DateTime.MinValue || currentStart != original.StartedAt)
+                    continue;
+                var ok = true;
+                if (original.AffinityWritten) ok &= NativeProcessScheduling.WriteAffinity(pid, original.Affinity);
+                if (original.PriorityWritten) ok &= NativeProcessScheduling.WritePriority(pid, original.Priority);
+                if (ok) restored++; // 写失败如实计入审计：不把失败说成已还原
             }
             catch { /* 进程已退出：无需还原 */ }
         }
         Audit(Str.T("Str.AutoSessionAffinityOff", restored, reason));
+    }
+
+    private static DateTime? TryReadProcessStart(int pid)
+    {
+        try { using var process = System.Diagnostics.Process.GetProcessById(pid); return process.StartTime; }
+        catch { return null; }
     }
 
     private IReadOnlyList<int> PidsByPath(string path)

@@ -46,7 +46,15 @@ public static class VerdictStore
         string? RecoveryError = null,
         string? EnvironmentHash = null,
         string? RecipeHash = null,
-        string? Scene = null);
+        string? Scene = null,
+        // 0.4.3 起补充的可信性证据（AbAnalysis）。旧记录缺省 → null，读取兼容。
+        int? RoundsBase = null,
+        int? RoundsTest = null,
+        double? AvgDiffLowerPct = null,
+        double? AvgDiffUpperPct = null,
+        double? HedgesG = null,
+        string? AnalysisVerdict = null,
+        bool? AnalysisSufficient = null);
 
     public static bool IsQualified(VerdictEntry v) => v.RuleVersion == "v2-p99-3"
         && Guid.TryParse(v.ExperimentId, out _) && v.Mode == "auto" && v.Stable
@@ -54,7 +62,10 @@ public static class VerdictStore
         && double.IsFinite(v.AvgFpsTest) && v.AvgFpsTest > 0
         && v.P99Base is > 0 && v.P99Test is > 0
         && double.IsFinite(v.P99Base.Value) && double.IsFinite(v.P99Test.Value)
-        && string.IsNullOrEmpty(v.RecoveryError);
+        && string.IsNullOrEmpty(v.RecoveryError)
+        // 数据本身不可信（重复 / 离群 / 条件不一致）的实测不再算「可信结论」；
+        // 旧记录没有该字段（null）按原口径保留资格。
+        && v.AnalysisSufficient is not false;
 
     /// <summary>规范化键：按 id 排序后 "|" 连接，保证同集合幂等。</summary>
     public static string MakeKey(IEnumerable<string> itemIds)
@@ -91,6 +102,8 @@ public static class VerdictStore
         }
         catch
         {
+            // 与其他凭证存储同口径：损坏先留档，避免下一次 Upsert 把全部历史结论无声覆盖掉。
+            try { AtomicFile.PreserveCorrupt(FilePath); } catch { }
             return [];
         }
     }

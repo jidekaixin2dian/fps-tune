@@ -234,7 +234,9 @@
                                 <DataTemplate>
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="{Binding ExePath}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"/>
+                                        <!-- 弹层宽度锁定为下拉框宽度：长路径省略号 + ToolTip，否则无法区分同目录候选 -->
+                                        <TextBlock Text="{Binding ExePath}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding ExePath}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>

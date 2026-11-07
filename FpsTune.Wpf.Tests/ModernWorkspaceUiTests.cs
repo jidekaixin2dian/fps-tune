@@ -415,7 +415,7 @@ public sealed class ModernWorkspaceUiTests
                 // Viewbox 会把内部坐标一并缩放，TranslatePoint 不再适合算屏幕像素位置；
                 // 改用稳定的 24px 手柄宽度 + 上方 BeforeLayer clip 断言，视觉位置由真机截图复核。
                 Assert.Equal(24, track.Thumb.ActualWidth, 2);
-                // 1U 版式下窄窗口把预设列收起（宽度 0），调色区固定在第 3 行；宽屏恢复左列。
+                // 参考实现版式下窄窗口把预设列收起（宽度 0），调色区固定在第 3 行；宽屏恢复左列。
                 window.Width = 760; window.UpdateLayout();
                 Assert.Equal(0d, ((ColumnDefinition)panel.FindName("PresetColumn")).Width.Value, 1);
                 window.Width = 2000; window.UpdateLayout();
@@ -536,7 +536,7 @@ public sealed class ModernWorkspaceUiTests
                 var perApp = (PerAppFilterPanel)page.FindName("PerAppCenter");
                 var rules = (ListBox)perApp.FindName("RuleList");
                 DlssFeedbackTests.PumpUntil(() => rules.Items.Count == 1);
-                // 规则行按 1U 收成「exe 名 + 徽章 + 四个动作」，不再有内嵌编辑表单。
+                // 规则行按 参考实现收成「exe 名 + 徽章 + 四个动作」，不再有内嵌编辑表单。
                 var row = rules.Items[0]!;
                 Assert.Equal("fixture.exe", (string)row.GetType().GetProperty("ExeName")!.GetValue(row)!);
                 Assert.NotNull(perApp.FindName("DaemonToggleButton"));
@@ -629,7 +629,7 @@ public sealed class ModernWorkspaceUiTests
             {
                 var color = (ScreenColorPanel)page.FindName("ColorPanel");
                 var filter = (FilterCenterPanel)page.FindName("FilterCenter");
-                // 滤镜列表按 1U 一条一行，整行可点（不再是两列 chips）。
+                // 滤镜列表按 参考实现一条一行，整行可点（不再是两列 chips）。
                 var chips = (StackPanel)filter.FindName("PresetList");
                 DlssFeedbackTests.PumpUntil(() => chips.Children.OfType<RadioButton>().Any());
                 var first = chips.Children.OfType<RadioButton>().First();
@@ -667,7 +667,7 @@ public sealed class ModernWorkspaceUiTests
                 var list = (ListBox)panel.FindName("RuleList");
                 DlssFeedbackTests.PumpUntil(() => list.Items.Count == 1);
                 window.UpdateLayout(); panel.UpdateLayout();
-                // 1U 三块都在：顶部扫描/添加/开关、运行状态行（三复选框 + 停止）、底部全自动收录与范围
+                // 参考实现三块都在：顶部扫描/添加/开关、运行状态行（三复选框 + 停止）、底部全自动收录与范围
                 Assert.NotNull(((Button)panel.FindName("ScanButton")).Content);
                 Assert.NotNull(((Button)panel.FindName("AddExeButton")).Content);
                 Assert.Equal(3, new[] { "KeepAfterExitCheck", "NotifyCheck", "RestoreOnLeaveCheck" }
@@ -726,7 +726,7 @@ public sealed class ModernWorkspaceUiTests
             {
                 window.UpdateLayout(); panel.UpdateLayout();
                 var targets = (ComboBox)panel.FindName("ApplyTargetCombo");
-                // 桌面 + 全部游戏 + 每条规则一条，与 1U 的「应用到」一致。
+                // 桌面 + 全部游戏 + 每条规则一条，与参考实现的「应用到」一致。
                 Assert.Equal(3, targets.Items.Count);
                 Assert.Equal("desktop", panel.ApplyTargetKey);
                 Assert.Contains(targets.Items.Cast<object>(),

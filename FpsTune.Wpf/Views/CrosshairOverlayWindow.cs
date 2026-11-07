@@ -10,14 +10,20 @@ using FpsTune.Wpf.Core;
 namespace FpsTune.Wpf.Views;
 
 /// <summary>
-/// 外置准星覆盖窗：全屏透明、置顶、点击穿透、不激活不进任务栏；
-/// 跟随前台窗口所在显示器居中；AW 战术据枪=按住右键自动隐藏。
+/// 外置准星覆盖窗：全屏透明、置顶、点击穿透、不激活不进任务栏；跟随前台窗口所在显示器居中。
+/// 显示时机交给 <see cref="CrosshairBehavior"/>：按按键推定开镜状态，不读游戏、不装驱动、不拦截输入。
+/// 轮询取 16–33 ms 档，延迟判定用时间戳——轮询只是喂样本，不决定精度。
 /// </summary>
 public sealed class CrosshairOverlayWindow : Window
 {
+    private const int PollIntervalMs = 20;
+
     private readonly DispatcherTimer _timer;
     private readonly Grid _root = new();
+    private readonly CrosshairBehavior _behavior;
     private CrosshairConfig _config = new(false, "cross", "#00FF66", 12, 4, 2, 90, true);
+    private nint _lastMonitor;
+    private int _positionTicks;
 
     public CrosshairOverlayWindow()
     {
@@ -28,15 +34,26 @@ public sealed class CrosshairOverlayWindow : Window
         AllowsTransparency = true;
         Background = Brushes.Transparent;
         Content = _root;
-        _timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(120) };
+        _behavior = new CrosshairBehavior(_config);
+        _timer = new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(PollIntervalMs) };
         _timer.Tick += (_, _) => RefreshFrame();
         SourceInitialized += (_, _) => MakeClickThrough();
+        // 关闭即停表：禁用外置准星走 Close()，不停表的话旧窗口对象被 Dispatcher 队列持有，
+        // 每次开关循环泄漏一个窗口 + 常驻空转。
+        Closed += (_, _) => _timer.Stop();
         ApplyConfig(CrosshairConfig.FromSettings());
     }
+
+    /// <summary>最近一帧的判定结果（设置页运行状态栏读它）。</summary>
+    public CrosshairFrame LastFrame => _behavior.LastFrame;
+
+    /// <summary>测试注入：强制「本程序是否在前台」。为空时用真实 GetForegroundWindow 判定。</summary>
+    internal static Func<bool>? SelfForegroundOverride { get; set; }
 
     public void ApplyConfig(CrosshairConfig config)
     {
         _config = config;
+        _behavior.Configure(config);
         Opacity = config.Opacity / 100.0;
         _root.Children.Clear();
         // 图形与设置页预览共用同一份构建逻辑，颜色/样式/尺寸不会出现两套。
@@ -48,13 +65,17 @@ public sealed class CrosshairOverlayWindow : Window
 
     public void StopPolling() => _timer.Stop();
 
-    /// <summary>每帧：AW 隐藏判定 + 跟随前台显示器居中。</summary>
+    /// <summary>每帧：读三个触发键 → 状态机判显示 → 跟随前台显示器居中。</summary>
     private void RefreshFrame()
     {
         if (!IsLoaded) return;
-        var adsHeld = NativeInputState.RightButtonHeld();
-        var selfForeground = ForegroundBelongsToSelf();
-        Visibility = _config.ShouldHide(adsHeld, selfForeground) ? Visibility.Hidden : Visibility.Visible;
+        var frame = _behavior.Tick(
+            CrosshairTriggers.IsHeld(_config.FireTrigger),
+            CrosshairTriggers.IsHeld(_config.AdsTrigger),
+            CrosshairTriggers.IsHeld(_config.SyncTrigger),
+            SelfForegroundOverride?.Invoke() ?? ForegroundBelongsToSelf());
+        var target = frame.Visible ? Visibility.Visible : Visibility.Hidden;
+        if (Visibility != target) Visibility = target;
         PositionOnForegroundMonitor();
     }
 
@@ -65,13 +86,20 @@ public sealed class CrosshairOverlayWindow : Window
         return pid == (uint)Environment.ProcessId;
     }
 
-    /// <summary>把窗口铺满前台窗口所在显示器（物理像素 SetWindowPos，绕开 DPI 换算），准星由布局居中。</summary>
+    /// <summary>
+    /// 把窗口铺满前台窗口所在显示器（物理像素 SetWindowPos，绕开 DPI 换算），准星由布局居中。
+    /// 显示器没换就不重复摆——20 ms 一次 SetWindowPos 是纯浪费。
+    /// </summary>
     private void PositionOnForegroundMonitor()
     {
         var hwnd = GetForegroundWindow();
         var monitor = hwnd != nint.Zero
             ? MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
             : MonitorFromWindow(new nint(0), MONITOR_DEFAULTTONEAREST);
+        // 同一台显示器也每半秒重摆一次：改分辨率/缩放后矩形会变，只认句柄会摆错。
+        if (monitor == _lastMonitor && ++_positionTicks < 25) return;
+        _lastMonitor = monitor;
+        _positionTicks = 0;
         var info = new MONITORINFO { cbSize = (uint)Marshal.SizeOf<MONITORINFO>() };
         if (!GetMonitorInfo(monitor, ref info)) return;
         SetWindowPos(Handle, nint.Zero,

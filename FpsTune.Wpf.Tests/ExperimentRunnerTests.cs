@@ -42,8 +42,29 @@ public class ExperimentRunnerTests
     }
 
     [Fact]
-    public async Task Invalid_csv_is_rejected_before_experiment_mutation_and_preserves_existing_state()
+    public async Task Corrupt_in_flight_marker_is_archived_and_does_not_block_real_experiments()
     {
+        // 回归：in-flight 写入本身原子化，解析失败只可能是文件损坏——此时按「无未决」处理
+        // 并留档；原实现把它当成未决操作，所有真实实验被一句与事实不符的错误永久挡住。
+        using var scope = TempStateDir.Create();
+        File.WriteAllText(Path.Combine(scope.Dir, "in-flight-v2.json"), "{broken");
+        var large = Path.Combine(scope.Dir, "large.csv");
+        using (var file = File.Create(large)) file.SetLength(ExperimentRunner.MaxCsvInputBytes + 1);
+        var writes = 0; FpsTune.Wpf.Core.RegistryHelper.SetOverride = (_, _, _, _, _) => { writes++; throw new Exception("Unexpected mutation"); };
+        try
+        {
+            // 流程应走到下一步（CSV 校验）而不是报「已有被中断的实验」。
+            var result = await ExperimentRunner.RunAsync("custom", new(CsvPath: large, Items: ["transparency-off"]), CancellationToken.None);
+            Assert.Equal(Str.T("Str.CsvInputTooLarge"), ParseJson(result.Json).GetProperty("error").GetString());
+            Assert.Equal(0, writes);
+            Assert.NotEmpty(Directory.GetFiles(scope.Dir, "*.corrupt"));
+            Assert.False(File.Exists(Path.Combine(scope.Dir, "in-flight-v2.json")));
+        }
+        finally { FpsTune.Wpf.Core.RegistryHelper.SetOverride = null; }
+    }
+
+    [Fact]
+    public async Task Invalid_csv_is_rejected_before_experiment_mutation_and_preserves_existing_state() {
         using var scope = TempStateDir.Create(); var state = Path.Combine(scope.Dir, "state-v2.json");
         var history = Path.Combine(scope.Dir, "history-v2.jsonl"); File.WriteAllText(state, "{\"original\":true}"); File.WriteAllText(history, "original history");
         var large = Path.Combine(scope.Dir, "large.csv"); using (var file = File.Create(large)) file.SetLength(ExperimentRunner.MaxCsvInputBytes + 1);
@@ -176,6 +197,74 @@ public class ExperimentRunnerTests
         foreach (var id in new[] { "group-1", "group-2", "group-3" })
             Assert.Contains(groups.EnumerateArray(), g => g.GetProperty("id").GetString() == id);
         Assert.True(File.Exists(json.GetProperty("csvExport").GetString()));
+    }
+
+    [Fact]
+    public async Task Simulated_group_result_carries_statistical_analysis_and_evidence()
+    {
+        using var scope = TempStateDir.Create();
+        Assert.Equal(0, (await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None)).ExitCode);
+        var result = await ExperimentRunner.RunAsync("group-1", Simulate, CancellationToken.None);
+        var json = ParseJson(result.Json);
+
+        Assert.Equal(0, result.ExitCode);
+        var analysis = json.GetProperty("analysis");
+        Assert.False(string.IsNullOrWhiteSpace(analysis.GetProperty("verdict").GetString()));
+        Assert.True(analysis.GetProperty("sufficient").GetBoolean(),
+            "模拟数据被判为证据不足：" + analysis.ToString());
+        Assert.Equal(3, analysis.GetProperty("rounds").GetProperty("baseline").GetInt32());
+        Assert.Equal(3, analysis.GetProperty("rounds").GetProperty("test").GetInt32());
+        Assert.Equal("welch-t-95ci-rounds", analysis.GetProperty("method").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(json.GetProperty("evidence").GetString()));
+
+        // 同样的结论必须落进 state 与 history（报告与 UI 都从这里取）。
+        using var state = JsonDocument.Parse(File.ReadAllText(Path.Combine(scope.Dir, "state-simulated-v2.json")));
+        var group = state.RootElement.GetProperty("groups").EnumerateArray().First();
+        Assert.Equal(analysis.GetProperty("verdict").GetString(), group.GetProperty("analysis").GetProperty("verdict").GetString());
+        Assert.Equal(json.GetProperty("evidence").GetString(), group.GetProperty("evidence").GetString());
+        var history = File.ReadAllLines(Path.Combine(scope.Dir, "history-simulated-v2.jsonl"));
+        Assert.Contains("\"evidence\"", history.Last());
+    }
+
+    [Fact]
+    public async Task Report_csv_includes_rounds_and_interval_columns_for_new_groups()
+    {
+        using var scope = TempStateDir.Create();
+        Assert.Equal(0, (await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None)).ExitCode);
+        Assert.Equal(0, (await ExperimentRunner.RunAsync("group-1", Simulate, CancellationToken.None)).ExitCode);
+        var report = ParseJson((await ExperimentRunner.RunAsync("report", Simulate, CancellationToken.None)).Json);
+
+        var lines = File.ReadAllLines(report.GetProperty("csvExport").GetString()!);
+        Assert.StartsWith("group,keep,avgFps,p1Low,p99Ms,stutters,rounds,avgDiffPct,ciLowerPct,ciUpperPct,verdict,reason", lines[0]);
+        var groupRow = lines.First(l => l.StartsWith("group-1,", StringComparison.Ordinal));
+        Assert.Contains("/3,", groupRow); // rounds 列：基线/候选
+        string[] possibleVerdicts = ["confirmed", "uncertain", "negligible", "tradeoff", "harmful", "insufficient"];
+        Assert.Contains(possibleVerdicts, v => groupRow.Contains("," + v + ",", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Legacy_state_without_analysis_still_exports_report()
+    {
+        // 旧版 state.json 没有 analysis/evidence 字段：报告照常导出，新增列留空不编数。
+        using var scope = TempStateDir.Create();
+        var legacy = """
+            {
+              "schema": "v2",
+              "updatedAt": "2026-01-01T00:00:00",
+              "baseline": { "samples": [], "summary": {"avgFps": 100, "p1Low": 60, "p99Ms": 20, "stutters": 0, "cv": 0.01, "stable": true, "sampleCount": 3} },
+              "groups": [ { "id": "group-1", "name": "调度组", "items": [], "summary": {"avgFps": 104, "p1Low": 61, "p99Ms": 19.5, "stutters": 0, "cv": 0.01, "stable": true, "sampleCount": 3}, "keep": true, "reverted": false, "revertError": "", "reason": "平均帧率提升 4.0%" } ]
+            }
+            """;
+        File.WriteAllText(Path.Combine(scope.Dir, "state-simulated-v2.json"), legacy);
+
+        var result = await ExperimentRunner.RunAsync("report", Simulate, CancellationToken.None);
+        var json = ParseJson(result.Json);
+        Assert.Equal(0, result.ExitCode);
+        var lines = File.ReadAllLines(json.GetProperty("csvExport").GetString()!);
+        var groupRow = lines.First(l => l.StartsWith("group-1,", StringComparison.Ordinal));
+        var fields = groupRow.Split(',');
+        Assert.Equal("", fields[6]); // rounds 列留空
+        Assert.Equal("", fields[10]); // verdict 列留空
     }
 
     [Fact]

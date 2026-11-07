@@ -77,7 +77,10 @@ public sealed class CompetitiveTuningTests
             Assert.Throws<ArgumentOutOfRangeException>(() => DisplayQualityService.ApplyCompetitiveSettings("cs2.exe", new(false, false, false, 19, 30)));
             Assert.Equal(before, api.SaveCount);
             api.SimulateSaveIgnored = true;
-            Assert.Throws<InvalidOperationException>(() => DisplayQualityService.ApplyCompetitiveSettings("cs2.exe", new(false, false, true, 240, 30)));
+            // 保存成功但没落地：逐项回执标记为驱动不支持，不再整批抛异常（垂直同步+电源+前后台限帧共 4 项）。
+            var ignored = DisplayQualityService.ApplyCompetitiveSettings("cs2.exe", new(false, false, true, 240, 30));
+            Assert.False(ignored.Ok);
+            Assert.Equal(4, ignored.FailedCount);
             api.SimulateSaveIgnored = false;
             DisplayQualityService.ApplyCompetitiveSettings("cs2.exe", new(true, true, false, 240, 30));
             var cs = api.GetProfile("cs2.exe")!;

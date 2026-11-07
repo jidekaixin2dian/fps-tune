@@ -110,6 +110,8 @@ public static partial class DisplayQualityService
     public const uint TransparencyMultisampleOn = 0x00000004;
 
     internal const string ProfilePrefix = "FpsTune · ";
+    /// <summary>NVAPI 拿不到时的统一说明（同一句不要散落成多条字面量）。
+    private const string NvapiUnavailable = "NVAPI 不可用";
     private static readonly uint[] ManagedSettingIds =
     {
         DlssSrEnableId, DlssSrPresetId,
@@ -119,6 +121,9 @@ public static partial class DisplayQualityService
         AnisoSelectorId, AnisoLevelId, VSyncModeId, ShaderDiskCacheId,
         FrameRateLimitId, BackgroundFrameRateLimitId,
     };
+
+    /// <summary>这条设置项是否在本工具的备份/还原范围内。</summary>
+    internal static bool IsManaged(uint settingId) => ManagedSettingIds.Contains(settingId);
 
     /// <summary>
     /// DLSS 覆盖功能开关。曾经因 profile 句柄被二次解引用（ReadIntPtr）导致 GetSetting AV 而停用；
@@ -156,7 +161,7 @@ public static partial class DisplayQualityService
     {
         using var api = CreateApi();
         if (!api.TryInitialize())
-            throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+            throw new NvdrsException(-5, api.LastError ?? NvapiUnavailable);
         using var session = api.OpenSession();
         var restorable = ReadBackup(gameExe) is not null;
         var owner = session.FindApplicationOwner(gameExe);
@@ -183,7 +188,7 @@ public static partial class DisplayQualityService
         bool FrameLimitsRestorable = false);
 
     /// <summary>各向异性过滤。AppControlled=删除设置；16x 为社区/文档推荐（现代卡开销极低）。</summary>
-    public static void ApplyAnisoLevel(string gameExe, AnisoLevel level)
+    public static DrsApplyReceipt ApplyAnisoLevel(string gameExe, AnisoLevel level)
         => ApplyManaged(gameExe, (session, owner) => WriteAnisoLevel(session, owner, level));
 
     private static void WriteAnisoLevel(INvdrsSession session, INvdrsProfile owner, AnisoLevel level)
@@ -199,7 +204,7 @@ public static partial class DisplayQualityService
     }
 
     /// <summary>垂直同步。竞技推荐 ForceOff；三重缓冲仅 OGL 有独立项，D3D 下与 VSync 一并关闭即可。</summary>
-    public static void ApplyVSyncMode(string gameExe, VSyncMode mode)
+    public static DrsApplyReceipt ApplyVSyncMode(string gameExe, VSyncMode mode)
         => ApplyManaged(gameExe, (session, owner) => WriteVSyncMode(session, owner, mode));
 
     private static void WriteVSyncMode(INvdrsSession session, INvdrsProfile owner, VSyncMode mode)
@@ -213,7 +218,7 @@ public static partial class DisplayQualityService
     }
 
     /// <summary>着色器磁盘缓存。null=删除；true=开（推荐，减少运行时编译卡顿）。</summary>
-    public static void ApplyShaderDiskCache(string gameExe, bool? enabled)
+    public static DrsApplyReceipt ApplyShaderDiskCache(string gameExe, bool? enabled)
         => ApplyManaged(gameExe, (session, owner) => WriteShaderDiskCache(session, owner, enabled));
 
     private static void WriteShaderDiskCache(INvdrsSession session, INvdrsProfile owner, bool? enabled)
@@ -244,7 +249,7 @@ public static partial class DisplayQualityService
         new(ShaderDiskCacheId, ShaderCacheOn, Str.T("Str.RecipeCache"), Str.T("Str.RecipeOn")),
     };
 
-    public static void ApplyCompetitivePreset(string gameExe, bool desktopHighEndGpu)
+    public static DrsApplyReceipt ApplyCompetitivePreset(string gameExe, bool desktopHighEndGpu)
         => ApplyManaged(gameExe, (session, owner) =>
         {
             foreach (var choice in CompetitiveRecipe(desktopHighEndGpu))
@@ -256,7 +261,7 @@ public static partial class DisplayQualityService
     {
         using var api = CreateApi();
         if (!api.TryInitialize())
-            throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+            throw new NvdrsException(-5, api.LastError ?? NvapiUnavailable);
         using var session = api.OpenSession();
         var backup = ReadBackup(gameExe);
         var restorable = backup is not null;
@@ -306,20 +311,66 @@ public static partial class DisplayQualityService
     /// <summary>存在本工具写入前的原值备份（任意受管设置的可还原快照）。</summary>
     public static bool HasRestorableBackup(string gameExe) => ReadBackup(gameExe) is not null;
 
+    /// <summary>高级参数表的一项：三态 + 当前值 + 驱动默认值。</summary>
+    public sealed record DrsAdvancedSetting(uint SettingId, NvdrsSettingState State, uint Value, uint? DriverDefault);
+
+    /// <summary>
+    /// 整张高级参数表的读取结果。<paramref name="ProfileFound"/> 为 false 表示这个 exe
+    /// 还没登记在任何驱动配置文件里（此时每一项都按「驱动无此项」显示，不假装读到 0）。
+    /// </summary>
+    public sealed record DrsAdvancedSnapshot(bool ProfileFound, IReadOnlyList<DrsAdvancedSetting> Items);
+
+    /// <summary>只读：按目录把每个参数读成三态（不存在 / 继承 / 本 profile 覆盖）。</summary>
+    public static DrsAdvancedSnapshot ReadAdvancedSettings(string gameExe)
+    {
+        ValidateGameExe(gameExe);
+        using var api = CreateApi();
+        if (!api.TryInitialize()) throw new NvdrsException(-5, api.LastError ?? NvapiUnavailable);
+        using var session = api.OpenSession();
+        var owner = session.FindApplicationOwner(gameExe);
+        var items = new List<DrsAdvancedSetting>();
+        foreach (var definition in NvdrsSettingCatalog.All)
+        {
+            var read = owner is null
+                ? new NvdrsSettingRead(NvdrsSettingState.Missing, 0, null)
+                : session.ReadSettingState(owner, definition.SettingId);
+            items.Add(new(definition.SettingId, read.State, read.Value,
+                read.PredefinedValue ?? definition.DriverDefault));
+        }
+        return new(owner is not null, items);
+    }
+
+    /// <summary>
+    /// 改写或恢复一个高级参数：<paramref name="value"/> 为 null 表示删掉本 profile 的覆盖、
+    /// 回到继承值。写前备份、写后读回，结论走回执。
+    /// </summary>
+    public static DrsApplyReceipt SetAdvancedSetting(string gameExe, uint settingId, uint? value)
+    {
+        var definition = NvdrsSettingCatalog.Find(settingId)
+            ?? throw new ArgumentException(Str.T("Str.AdvancedUnknownSetting", settingId.ToString("X8")), nameof(settingId));
+        if (value is { } target && !NvdrsSettingCatalog.IsValid(definition, target))
+            throw new ArgumentOutOfRangeException(nameof(value), Str.T("Str.AdvancedInvalidValue", definition.Name));
+        return ApplyManaged(gameExe, (session, owner) =>
+        {
+            if (value is { } write) session.SetSettingDword(owner, settingId, write);
+            else session.DeleteSetting(owner, settingId);
+        });
+    }
+
     /// <summary>纹理过滤 - 质量。</summary>
-    public static void ApplyTextureQuality(string gameExe, TextureFilterQuality quality)
+    public static DrsApplyReceipt ApplyTextureQuality(string gameExe, TextureFilterQuality quality)
         => ApplyManaged(gameExe, (session, owner) =>
             session.SetSettingDword(owner, TextureQualityId, (uint)quality));
 
     /// <summary>电源管理模式。PreferMax = 最高性能优先。</summary>
-    public static void ApplyPowerMode(string gameExe, PowerMode mode)
+    public static DrsApplyReceipt ApplyPowerMode(string gameExe, PowerMode mode)
         => ApplyManaged(gameExe, (session, owner) =>
             session.SetSettingDword(owner, PowerModeId, (uint)mode));
 
     /// <summary>
     /// 平滑处理 - 透明度（关闭 / 多重采样 / 超级采样 2x 推荐 / 超级采样 4x 桌面高端卡）。
     /// </summary>
-    public static void ApplyTransparencyAa(string gameExe, TransparencyAa mode)
+    public static DrsApplyReceipt ApplyTransparencyAa(string gameExe, TransparencyAa mode)
         => ApplyManaged(gameExe, (session, owner) => WriteTransparencyAa(session, owner, mode));
 
     private static void WriteTransparencyAa(INvdrsSession session, INvdrsProfile owner, TransparencyAa mode)
@@ -348,7 +399,7 @@ public static partial class DisplayQualityService
     /// CPU 偏弱可 2；若游戏内置 NVIDIA Reflex，优先游戏内 Reflex + 应用程序控制。
     /// null = 应用程序控制（还原/跟随语义）。
     /// </summary>
-    public static void ApplyPreRenderLimit(string gameExe, uint? frames)
+    public static DrsApplyReceipt ApplyPreRenderLimit(string gameExe, uint? frames)
         => ApplyManaged(gameExe, (session, owner) => WritePreRenderLimit(session, owner, frames));
 
     private static void WritePreRenderLimit(INvdrsSession session, INvdrsProfile owner, uint? frames)
@@ -363,7 +414,7 @@ public static partial class DisplayQualityService
     public sealed record DriverSettingsSelection(TextureFilterQuality? TextureQuality, PowerMode? PowerMode,
         TransparencyAa? TransparencyAa, uint? PreRenderLimit, AnisoLevel Aniso, VSyncMode VSync, bool? ShaderCache);
 
-    public static void ApplyDriverSettings(string gameExe, DriverSettingsSelection selection)
+    public static DrsApplyReceipt ApplyDriverSettings(string gameExe, DriverSettingsSelection selection)
         => ApplyManaged(gameExe, (session, owner) =>
         {
             if (selection.TextureQuality is { } texture)
@@ -378,8 +429,64 @@ public static partial class DisplayQualityService
             WriteShaderDiskCache(session, owner, selection.ShaderCache);
         });
 
+    /// <summary>单项写入的结论。三种状态互斥：写进去了 / 驱动不接受 / 写进去了但读回不是目标值。</summary>
+    public enum DrsSettingOutcome
+    {
+        /// <summary>读回与目标一致。</summary>
+        Applied,
+        /// <summary>目标要求存在，驱动保存后读不到：驱动不支持这一项。</summary>
+        Unsupported,
+        /// <summary>读回与目标不一致（值被改写，或该删的还在）。</summary>
+        Mismatch,
+    }
+
+    /// <summary>逐项回执的一行：目标是什么、读回来是什么、结论是什么。</summary>
+    public sealed record DrsSettingResult(uint SettingId, DrsSettingOutcome Outcome,
+        bool ExpectedExists, uint ExpectedValue, bool ActualExists, uint ActualValue)
+    {
+        public string Name => NvdrsSettingCatalog.DisplayName(SettingId);
+    }
+
+    /// <summary>
+    /// 一次批量写入的逐项回执。**不再因为一条读回不符就整批失败**：
+    /// 8 项写进去、1 项驱动不支持时，用户看到的是「已应用 8 项 / 驱动不支持 1 项（名称）」。
+    /// </summary>
+    public sealed record DrsApplyReceipt(IReadOnlyList<DrsSettingResult> Items)
+    {
+        public static DrsApplyReceipt Empty { get; } = new(Array.Empty<DrsSettingResult>());
+        public int AppliedCount => Items.Count(i => i.Outcome == DrsSettingOutcome.Applied);
+        public IReadOnlyList<DrsSettingResult> Unsupported
+            => Items.Where(i => i.Outcome == DrsSettingOutcome.Unsupported).ToList();
+        public IReadOnlyList<DrsSettingResult> Mismatched
+            => Items.Where(i => i.Outcome == DrsSettingOutcome.Mismatch).ToList();
+        public int FailedCount => Unsupported.Count + Mismatched.Count;
+        public bool Ok => FailedCount == 0;
+        /// <summary>只重试失败项用的期望值：SettingId → 目标（null 表示应删除）。</summary>
+        public IReadOnlyDictionary<uint, uint?> Expected => Items
+            .Where(i => i.Outcome != DrsSettingOutcome.Applied)
+            .ToDictionary(i => i.SettingId, i => i.ExpectedExists ? i.ExpectedValue : (uint?)null);
+    }
+
+    /// <summary>只重试上次没落地的项：按回执里的目标值重写，其余不动。</summary>
+    public static DrsApplyReceipt RetryFailedSettings(string gameExe, DrsApplyReceipt previous)
+    {
+        if (previous.FailedCount == 0) return DrsApplyReceipt.Empty;
+        var expected = previous.Expected;
+        foreach (var id in expected.Keys)
+            if (!ManagedSettingIds.Contains(id))
+                throw new InvalidDataException(Str.T("Str.NvBackupInvalid"));
+        return ApplyManaged(gameExe, (session, owner) =>
+        {
+            foreach (var (id, value) in expected)
+            {
+                if (value is { } target) session.SetSettingDword(owner, id, target);
+                else session.DeleteSetting(owner, id);
+            }
+        });
+    }
+
     /// <summary>首次写入先持久化原始设置，再保存驱动；失败仍保留可恢复记录。</summary>
-    private static void ApplyManaged(string gameExe, Action<INvdrsSession, INvdrsProfile> write)
+    private static DrsApplyReceipt ApplyManaged(string gameExe, Action<INvdrsSession, INvdrsProfile> write)
         => OperationDiagnostics.Run("driver-apply", gameExe, BackupDirOverride, trace =>
     {
         trace.Stage("validate-target");
@@ -388,7 +495,7 @@ public static partial class DisplayQualityService
         using var gate = SystemMutationGate.Acquire();
         trace.Stage("initialize-driver");
         using var api = CreateApi();
-        if (!api.TryInitialize()) throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+        if (!api.TryInitialize()) throw new NvdrsException(-5, api.LastError ?? NvapiUnavailable);
         trace.Stage("load-driver");
         using var session = api.OpenSession();
         var found = session.FindApplicationOwner(gameExe);
@@ -430,10 +537,14 @@ public static partial class DisplayQualityService
         trace.Stage("save-driver");
         session.Save();
         trace.Stage("readback-driver");
-        VerifyPersistedSettings(api, gameExe, backup.PostSettings!.Where(s => touched.Contains(s.SettingId)), trace);
+        // 逐项读回，不抛：把「写进去几项 / 哪几项驱动不支持 / 哪几项读回不符」交给回执与界面。
+        var results = VerifyPersistedSettings(api, gameExe,
+            backup.PostSettings!.Where(s => touched.Contains(s.SettingId)), trace);
         trace.Stage("finalize-backup");
         WriteBackup(backup with { PreviousSettings = null });
-        return true;
+        // 诊断记录里留下「这次有项没落地」，避免日志只写一句 succeeded 让人以为全成了。
+        if (results.Any(r => r.Outcome != DrsSettingOutcome.Applied)) trace.Stage("readback-partial");
+        return new DrsApplyReceipt(results);
     });
 
     private sealed record SettingBackup(uint SettingId, bool Existed, uint Value);
@@ -486,24 +597,27 @@ public static partial class DisplayQualityService
     }
 
     // Load a new driver session: the write session can still contain unpersisted changes after Save.
-    private static void VerifyPersistedSettings(INvdrsApi api, string gameExe, IEnumerable<SettingBackup> expected,
-        OperationDiagnostics.Trace? trace = null)
+    // 逐项收集，不抛：只报第一条会让 8 项写成功 7 项的预设显示成「应用失败」，
+    // 用户也不知道该重试还是还原哪些。
+    private static IReadOnlyList<DrsSettingResult> VerifyPersistedSettings(INvdrsApi api, string gameExe,
+        IEnumerable<SettingBackup> expected, OperationDiagnostics.Trace? trace = null)
     {
         using var verify = api.OpenSession();
         var profile = verify.FindApplicationOwner(gameExe);
-        // 全部读回一遍再报：只报第一条会让 8 项写成功 7 项的预设显示成「应用失败」，
-        // 用户也不知道该重试还是还原哪些。失败项全部列出来。
-        var failed = new List<string>();
+        var results = new List<DrsSettingResult>();
         foreach (var setting in expected)
         {
             uint value = 0;
             var exists = profile is not null && verify.TryGetOverrideDword(profile, setting.SettingId, out value);
             trace?.Readback(setting.SettingId, exists, value);
-            if (exists != setting.Existed || exists && value != setting.Value)
-                failed.Add(setting.SettingId.ToString("X8"));
+            var outcome = exists == setting.Existed && (!exists || value == setting.Value)
+                ? DrsSettingOutcome.Applied
+                : setting.Existed && !exists
+                    ? DrsSettingOutcome.Unsupported   // 想让驱动存下来，驱动保存后读不到 = 不支持这项
+                    : DrsSettingOutcome.Mismatch;     // 存下来了但不是目标值，或该删的还在
+            results.Add(new(setting.SettingId, outcome, setting.Existed, setting.Value, exists, value));
         }
-        if (failed.Count > 0)
-            throw new InvalidOperationException(Str.T("Str.NvDrsReadbackFailedMany", failed.Count, string.Join(", ", failed)));
+        return results;
     }
 
     private static void ValidateGameExe(string gameExe)
@@ -517,6 +631,7 @@ public static partial class DisplayQualityService
         OperationDiagnostics.Trace? trace = null)
     {
         if (backup.SchemaVersion != 2 || backup.PostSettings is null) throw new InvalidDataException(Str.T("Str.NvLegacyBackupReview"));
+        var drifted = new List<string>();
         foreach (var post in backup.PostSettings)
         {
             var original = backup.Settings.Single(s => s.SettingId == post.SettingId);
@@ -526,8 +641,11 @@ public static partial class DisplayQualityService
             var previous = backup.PreviousSettings?.SingleOrDefault(s => s.SettingId == post.SettingId);
             if (!Matches(exists, current, post) && !Matches(exists, current, original)
                 && (previous is null || !Matches(exists, current, previous)))
-                throw new InvalidOperationException(Str.T("Str.BackupTargetChanged"));
+                drifted.Add(NvdrsSettingCatalog.DisplayName(post.SettingId));
         }
+        // 「外部改过」和「我们写了驱动没保存」是两回事：前者不动这些设置，后者要重试。
+        if (drifted.Count > 0)
+            throw new InvalidOperationException(Str.T("Str.DrsExternalChanged", string.Join(" · ", drifted)));
     }
 
     private sealed class TrackedSession(INvdrsSession inner, Action<uint, bool, uint> beforeWrite) : INvdrsSession
@@ -536,6 +654,7 @@ public static partial class DisplayQualityService
         public INvdrsProfile CreateProfile(string name, string exe) => inner.CreateProfile(name, exe);
         public bool TryGetSettingDword(INvdrsProfile profile, uint id, out uint value) => inner.TryGetSettingDword(profile, id, out value);
         public bool TryGetOverrideDword(INvdrsProfile profile, uint id, out uint value) => inner.TryGetOverrideDword(profile, id, out value);
+        public NvdrsSettingRead ReadSettingState(INvdrsProfile profile, uint id) => inner.ReadSettingState(profile, id);
         public void SetSettingDword(INvdrsProfile profile, uint id, uint value) { beforeWrite(id, true, value); inner.SetSettingDword(profile, id, value); }
         public bool DeleteSetting(INvdrsProfile profile, uint id) { beforeWrite(id, false, 0); return inner.DeleteSetting(profile, id); }
         public void DeleteProfile(INvdrsProfile profile) => throw new NotSupportedException();
@@ -611,17 +730,17 @@ public static partial class DisplayQualityService
     }
 
     /// <summary>应用 DLSS 预设覆盖；FollowGame 等价于移除覆盖。</summary>
-    public static void ApplyDlssPreset(string gameExe, DlssPreset preset)
+    public static DrsApplyReceipt ApplyDlssPreset(string gameExe, DlssPreset preset)
     {
         if (preset == DlssPreset.FollowGame)
         {
             RemoveDlssOverride(gameExe);
-            return;
+            return DrsApplyReceipt.Empty;
         }
 
         // Model selection is independent of NVIDIA App's legacy override switch.
         // Keep that ID in ManagedSettingIds only to restore backups made by older versions.
-        ApplyManaged(gameExe, (session, owner) =>
+        return ApplyManaged(gameExe, (session, owner) =>
             session.SetSettingDword(owner, DlssSrPresetId, (uint)preset));
     }
 
@@ -651,7 +770,7 @@ public static partial class DisplayQualityService
         trace.Stage("initialize-driver");
         using var api = CreateApi();
         if (!api.TryInitialize())
-            throw new NvdrsException(-5, api.LastError ?? "NVAPI 不可用");
+            throw new NvdrsException(-5, api.LastError ?? NvapiUnavailable);
         trace.Stage("load-driver");
         using var session = api.OpenSession();
 
@@ -678,7 +797,13 @@ public static partial class DisplayQualityService
         trace.Stage("save-driver");
         session.Save();
         trace.Stage("readback-driver");
-        VerifyPersistedSettings(api, gameExe, backup.Settings, trace);
+        var results = VerifyPersistedSettings(api, gameExe, backup.Settings, trace);
+        // 还原比应用更严格：没回到原值就必须说出来，且备份保留。
+        // 这里的失败含义是「我们写了但驱动没保存」，与「值被外部改过」是两个不同的问题。
+        var notPersisted = results.Where(r => r.Outcome != DrsSettingOutcome.Applied).ToList();
+        if (notPersisted.Count > 0)
+            throw new InvalidOperationException(
+                Str.T("Str.DrsWriteNotPersisted", string.Join(" · ", notPersisted.Select(r => r.Name))));
         trace.Stage("finalize-backup");
         var remaining = complete.Settings.Where(s => !backup.Settings.Any(restored => restored.SettingId == s.SettingId)).ToList();
         if (remaining.Count == 0) DeleteBackup(gameExe);

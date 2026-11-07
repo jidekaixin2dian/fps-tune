@@ -229,6 +229,126 @@ public sealed class GameAutomationTests : IDisposable
     }
 
     [Fact]
+    public void Automation_refresh_restore_retries_failed_displays_instead_of_claiming_restored()
+    {
+        // 回归：还原阶段一台显示器临时失败（驱动重置/拓扑抖动），原实现无条件清空备份并把
+        // 状态置为「已还原」——失败设备停在提升后的刷新率，原模式数据已丢且无法重试。
+        var settings = SettingsService.Current;
+        var oldPrep = settings.AutoPreparationEnabled;
+        var oldRefresh = settings.AutoRefreshBoostEnabled;
+        var oldBackoff = GameSessionAutomationService.RefreshRetryBackoff;
+        settings.AutoPreparationEnabled = false;
+        settings.AutoRefreshBoostEnabled = true;
+        GameSessionAutomationService.RefreshRetryBackoff = TimeSpan.FromMilliseconds(200);
+        var good = Display(@"\\.\DISPLAY1");
+        var flaky = Display(@"\\.\DISPLAY2");
+        var fake = new FlakyModeApi();
+        try
+        {
+            var game = Game();
+            var running = false;
+            using var service = new GameSessionAutomationService
+            {
+                GamesProvider = () => [game],
+                ModeApi = fake,
+                DisplaysProvider = () => [good, flaky],
+                Probe = _ => new GameProcessObservation(running ? new GameProcessRun(100, 1) : null),
+            };
+            service.Poll(); // 基线（游戏已在跑不算启动边沿）
+            running = true; service.Poll(); // 启动 → 两台都提到 165
+            Assert.Equal(165, fake.Hz(good.GdiDeviceName));
+            Assert.Equal(165, fake.Hz(flaky.GdiDeviceName));
+
+            fake.FailDevice = flaky.GdiDeviceName;
+            running = false; service.Poll(); // 退出还原：第一台成功，第二台失败
+            Assert.Equal(60, fake.Hz(good.GdiDeviceName));
+            Assert.Equal(165, fake.Hz(flaky.GdiDeviceName));
+
+            service.Poll(); // 退避期内不重试
+            Assert.Equal(165, fake.Hz(flaky.GdiDeviceName));
+
+            fake.FailDevice = null;
+            Thread.Sleep(250);
+            service.Poll(); // 退避到期 → 只剩失败设备的备份，重试成功
+            Assert.Equal(60, fake.Hz(flaky.GdiDeviceName));
+        }
+        finally
+        {
+            GameSessionAutomationService.RefreshRetryBackoff = oldBackoff;
+            settings.AutoPreparationEnabled = oldPrep;
+            settings.AutoRefreshBoostEnabled = oldRefresh;
+            SettingsService.Save(settings);
+        }
+    }
+
+    [Fact]
+    public void Automation_affinity_restore_skips_reused_pids()
+    {
+        // 回归：还原按裸 PID 写回，PID 被新进程复用时会把旧掩码/低优先级写到无关进程上；
+        // 现在以启动时间为身份，对不上就跳过。
+        var settings = SettingsService.Current;
+        var oldAffinity = settings.AutoAffinityIsolateEnabled;
+        var oldApps = settings.MemoryBackgroundApps;
+        settings.AutoAffinityIsolateEnabled = true;
+        settings.AutoPreparationEnabled = false;
+        settings.AutoRefreshBoostEnabled = false;
+        settings.MemoryBackgroundApps = [@"C:\Apps\Fan.exe"];
+        var state = new Dictionary<int, (nuint Affinity, uint Priority)> { [501] = (0b111111u, 0x20) };
+        NativeProcessScheduling.ReadOverride = pid => state.TryGetValue(pid, out var v) ? v : null;
+        NativeProcessScheduling.WriteAffinityOverride = (pid, mask) => { if (state.ContainsKey(pid)) { state[pid] = (mask, state[pid].Priority); return true; } return false; };
+        NativeProcessScheduling.WritePriorityOverride = (pid, prio) => { if (state.ContainsKey(pid)) { state[pid] = (state[pid].Affinity, prio); return true; } return false; };
+        var running = true;
+        var engaged = false;
+        try
+        {
+            var game = Game();
+            using var service = new GameSessionAutomationService
+            {
+                GamesProvider = () => [game],
+                Probe = _ => new GameProcessObservation(running ? new GameProcessRun(100, 1) : null),
+                EfficiencyClassesProvider = () => [0, 0, 0, 0, 1, 1],
+                PidsByPathOverride = _ => [501],
+                // 隔离时启动时间 = T；还原时 PID 501 已是"另一个进程"（启动时间不同）
+                ProcessStartedAtOverride = _ => engaged ? DateTime.UnixEpoch : DateTime.UnixEpoch + TimeSpan.FromMinutes(1),
+            };
+            service.Poll(); // 基线
+            service.Poll(); // 启动边沿 → 隔离
+            engaged = true;
+            Assert.Equal(0b110000u, state[501].Affinity);
+
+            running = false; service.Poll(); // 全部退出 → 身份不符，一个字节都不写
+            Assert.Equal(0b110000u, state[501].Affinity); // 复用进程保持原样（测试里即隔离值），没有被还原写覆盖
+            Assert.Equal(NativeProcessScheduling.PriorityBelowNormal, state[501].Priority);
+        }
+        finally
+        {
+            settings.AutoAffinityIsolateEnabled = oldAffinity;
+            settings.MemoryBackgroundApps = oldApps;
+            SettingsService.Save(settings);
+        }
+    }
+
+    private sealed class FlakyModeApi : IDisplayModeApi
+    {
+        private readonly Dictionary<string, int> _hz = new(StringComparer.OrdinalIgnoreCase);
+        public string? FailDevice { get; set; }
+        public int Hz(string device) => _hz.TryGetValue(device, out var hz) ? hz : 60;
+
+        public DisplayMode Read(IccDisplayInfo display) => new(2560, 1440, Hz(display.GdiDeviceName));
+        public IReadOnlyList<DisplayMode> Modes(IccDisplayInfo display) =>
+        [
+            new(2560, 1440, 60), new(2560, 1440, 120), new(2560, 1440, 165),
+        ];
+        public void Test(IccDisplayInfo display, DisplayMode mode) => Apply(display, mode);
+        public void Apply(IccDisplayInfo display, DisplayMode mode)
+        {
+            if (display.GdiDeviceName.Equals(FailDevice, StringComparison.OrdinalIgnoreCase))
+                throw new IOException("flaky display");
+            _hz[display.GdiDeviceName] = mode.Hz;
+        }
+    }
+
+    [Fact]
     public async Task Affinity_isolation_throttles_selected_apps_and_restores_on_exit()
     {
         var settings = SettingsService.Current;
@@ -256,6 +376,7 @@ public sealed class GameAutomationTests : IDisposable
                 Probe = _ => new GameProcessObservation(running ? new GameProcessRun(100, 1) : null),
                 EfficiencyClassesProvider = () => [0, 0, 0, 0, 1, 1],
                 PidsByPathOverride = _ => pids,
+                ProcessStartedAtOverride = pid => DateTime.UnixEpoch + TimeSpan.FromMinutes(pid), // 身份稳定：PID 复用核对放行
             };
             service.Poll(); // 基线
             running = true; service.Poll(); // 启动 → 隔离到 E 核（bits 4-5）+ BelowNormal
@@ -303,6 +424,7 @@ public sealed class GameAutomationTests : IDisposable
                 Probe = _ => new GameProcessObservation(running ? new GameProcessRun(100, 1) : null),
                 EfficiencyClassesProvider = () => [0, 0, 0, 0, 1, 1],
                 PidsByPathOverride = _ => [501],
+                ProcessStartedAtOverride = pid => DateTime.UnixEpoch + TimeSpan.FromMinutes(pid),
             };
             service.Poll(); // 基线
             service.Poll(); // 启动边沿

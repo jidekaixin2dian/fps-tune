@@ -24,10 +24,51 @@
                 <RadioButton x:Name="AudioNav" Content="{DynamicResource Str.EqTitle}" GroupName="maintenanceSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
                 <RadioButton x:Name="NetworkNav" Content="{DynamicResource Str.NetworkToolsTitle}" GroupName="maintenanceSection" Tag="4" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
                 <RadioButton x:Name="SensitivityNav" Content="{DynamicResource Str.SensNav}" GroupName="maintenanceSection" Tag="5" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+                <RadioButton x:Name="InputNav" Content="{DynamicResource Str.InputQueueTitle}" GroupName="maintenanceSection" Tag="6" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
             </StackPanel>
             <Grid Grid.Column="1">
                 <ContentControl x:Name="NetworkSection" Visibility="Collapsed"/>
                 <ScrollViewer x:Name="SensitivitySection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><views:SensitivityPanel Margin="0,0,14,0"/></ScrollViewer>
+                <ScrollViewer x:Name="InputSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">
+                    <Border Style="{StaticResource CardStyle}"><StackPanel>
+                        <TextBlock Text="{DynamicResource Str.InputQueueTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.InputQueueHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <WrapPanel Margin="0,16,0,0">
+                            <StackPanel Margin="0,0,18,10">
+                                <TextBlock Text="{DynamicResource Str.InputQueuePollingRate}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,6"/>
+                                <ComboBox x:Name="PollingRateBox" MinWidth="140" HorizontalAlignment="Left" AutomationProperties.Name="{DynamicResource Str.InputQueuePollingRate}" SelectionChanged="PollingRate_Changed">
+                                    <ComboBoxItem Content="125 Hz" Tag="125"/>
+                                    <ComboBoxItem Content="250 Hz" Tag="250"/>
+                                    <ComboBoxItem Content="500 Hz" Tag="500"/>
+                                    <ComboBoxItem Content="1000 Hz" Tag="1000"/>
+                                    <ComboBoxItem Content="2000 Hz" Tag="2000"/>
+                                    <ComboBoxItem Content="4000 Hz" Tag="4000"/>
+                                    <ComboBoxItem Content="8000 Hz" Tag="8000"/>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,18,10">
+                                <TextBlock Text="{DynamicResource Str.InputQueueKeyboard}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,6"/>
+                                <TextBox x:Name="KeyboardDepthBox" Width="110" HorizontalAlignment="Left" AutomationProperties.Name="{DynamicResource Str.InputQueueKeyboard}" TextChanged="Depth_Changed"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,10">
+                                <TextBlock Text="{DynamicResource Str.InputQueueMouse}" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,6"/>
+                                <TextBox x:Name="MouseDepthBox" Width="110" HorizontalAlignment="Left" AutomationProperties.Name="{DynamicResource Str.InputQueueMouse}" TextChanged="Depth_Changed"/>
+                            </StackPanel>
+                        </WrapPanel>
+                        <TextBlock x:Name="KeyboardReadout" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="MouseReadout" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="InputQueueWarning" Text="{DynamicResource Str.InputQueueLowWarning}" Foreground="{DynamicResource WarningBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" Visibility="Collapsed"/>
+                        <Button x:Name="InputQueueApplyButton" Content="{DynamicResource Str.InputQueueApply}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,16,0,0" Click="InputQueueApply_Click"/>
+                        <TextBlock x:Name="InputQueueStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite"/>
+                        <TextBlock x:Name="InputQueueDefaultNote" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    </StackPanel></Border>
+                    <Border Style="{StaticResource CardStyle}" Margin="0,18,0,0"><StackPanel>
+                        <TextBlock Text="{DynamicResource Str.InputFeedbackTitle}" Style="{StaticResource CardTitleStyle}"/>
+                        <TextBlock Text="{DynamicResource Str.InputFeedbackHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        <Button x:Name="InputFeedbackButton" Content="{DynamicResource Str.InputFeedbackAction}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,14,0,0" Click="InputFeedback_Click"/>
+                        <TextBlock x:Name="InputFeedbackStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite"/>
+                    </StackPanel></Border>
+                </StackPanel></ScrollViewer>
                 <ScrollViewer x:Name="AudioSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Visibility="Collapsed"><views:AudioEqualizerPanel Margin="0,0,14,0"/></ScrollViewer>
                 <ScrollViewer x:Name="StorageSection" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,14,0">
                     <Border Style="{StaticResource CardStyle}"><StackPanel>

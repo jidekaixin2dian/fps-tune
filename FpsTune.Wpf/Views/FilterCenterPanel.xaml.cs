@@ -116,7 +116,7 @@ public partial class FilterCenterPanel : UserControl
         DarkBalanceGammaText.Text = e.NewValue.ToString("0", CultureInfo.InvariantCulture);
     }
 
-    /// <summary>1U 的滤镜行内容：左边名字（超长省略），右边灰色分类标签。</summary>
+    /// <summary>参考实现的滤镜行内容：左边名字（超长省略），右边灰色分类标签。</summary>
     private static FrameworkElement BuildRowContent(FilterChoice choice)
     {
         var row = new DockPanel { LastChildFill = true, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -294,7 +294,7 @@ public partial class FilterCenterPanel : UserControl
 
     /// <summary>期望显示曲线（伽马/亮度/高光/暗部平衡），并按 CMM 反演约定存逆曲线。
     /// 高光与 MapTone 同构（smoothstep 0.5→1 窗，端点保持）：负值压高光（去曝光），正值提亮白点。
-    /// 暗部平衡沿用游戏加加的 12 档幂律（黑位抬 1/256），45 为原样。</summary>
+    /// 暗部平衡沿用参考实现的 12 档幂律（黑位抬 1/256），45 为原样。</summary>
     private static ushort[] BuildCurves(double gamma, double brightness, double highlight, double darkBalance)
     {
         var curve = new ushort[256];

@@ -27,8 +27,8 @@ public static class VerdictReport
         sb.AppendLine();
         sb.AppendLine($"## {Str.T("Str.ReportConclusionSection")}");
         sb.AppendLine();
-        sb.AppendLine($"| # | {Str.T("Str.ReportColSet")} | {Str.T("Str.ReportColDelta")} | {Str.T("Str.ReportColP1Low")} | {Str.T("Str.ReportColVerdict")} | {Str.T("Str.ReportColDate")} |");
-        sb.AppendLine("|---|---|---|---|---|---|");
+        sb.AppendLine($"| # | {Str.T("Str.ReportColSet")} | {Str.T("Str.ReportColDelta")} | {Str.T("Str.ReportColCi")} | {Str.T("Str.ReportColEvidence")} | {Str.T("Str.ReportColRounds")} | {Str.T("Str.ReportColP1Low")} | {Str.T("Str.ReportColVerdict")} | {Str.T("Str.ReportColDate")} |");
+        sb.AppendLine("|---|---|---|---|---|---|---|---|---|");
         for (var i = 0; i < verdicts.Count; i++)
         {
             var v = verdicts[i];
@@ -36,8 +36,14 @@ public static class VerdictReport
                 ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id));
             var outcome = !VerdictStore.IsQualified(v) ? Str.T("Str.VerdictLegacyBadge")
                 : Str.T(v.Keep ? "Str.ReportKeep" : v.Reverted ? "Str.ReportRevert" : "Str.VerdictLegacyBadge");
+            // 旧记录没有区间 / 判定字段：留空，不编数。
+            var ci = v.AvgDiffLowerPct is { } lo && v.AvgDiffUpperPct is { } hi
+                ? string.Create(System.Globalization.CultureInfo.CurrentCulture, $"{lo:+0.0;-0.0;0} ~ {hi:+0.0;-0.0;0}%")
+                : "";
+            var evidence = v.AnalysisVerdict is { } verdict ? AbEvidenceText.VerdictLabel(verdict) : "";
+            var rounds = v.RoundsBase is { } rb && v.RoundsTest is { } rt ? $"{rb}/{rt}" : "";
             sb.AppendLine(
-                $"| {i + 1} | {items} | {v.DeltaPct:+0.0;-0.0;0}% | {v.P1LowBase:0.#} → {v.P1LowTest:0.#} | {outcome} | {v.At:yyyy-MM-dd HH:mm} |");
+                $"| {i + 1} | {items} | {v.DeltaPct:+0.0;-0.0;0}% | {ci} | {evidence} | {rounds} | {v.P1LowBase:0.#} → {v.P1LowTest:0.#} | {outcome} | {v.At:yyyy-MM-dd HH:mm} |");
         }
         sb.AppendLine();
         sb.AppendLine(Str.T("Str.ReportDisclaimer"));

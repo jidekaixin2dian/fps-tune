@@ -106,12 +106,21 @@ public partial class AbExperimentView : UserControl
     {
         var verdicts = VerdictStore.Load();
         VerdictEmptyText.Visibility = verdicts.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        VerdictList.ItemsSource = verdicts.Select(v => new VerdictVm(
-            string.Join(", ", v.Items.Select(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id)),
-            Str.T(v.Keep ? "Str.ReportKeep" : "Str.ReportRevert") + " · " +
-            Str.T("Str.VerdictMeta", v.AvgFpsBase, v.AvgFpsTest, v.At.ToString("MM-dd HH:mm"), v.DurationSec, v.Game ?? "-"),
-            Str.T("Str.VerdictDelta", v.DeltaPct),
-            v.DeltaPct < 0)).ToList();
+        VerdictList.ItemsSource = verdicts.Select(v =>
+        {
+            var deltaText = Str.T("Str.VerdictDelta", v.DeltaPct);
+            if (v.AnalysisVerdict is { } analysisVerdict)
+                deltaText += " · " + AbEvidenceText.VerdictLabel(analysisVerdict);
+            // 三分支与向导步骤卡、导出报告同口径：还原失败（未还原）不能显示成「已还原」。
+            var outcome = v.Keep == true ? Str.T("Str.ReportKeep")
+                : v.Reverted ? Str.T("Str.ReportRevert") : Str.T("Str.NotRestored");
+            return new VerdictVm(
+                string.Join(", ", v.Items.Select(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id)),
+                outcome + " · " +
+                Str.T("Str.VerdictMeta", v.AvgFpsBase, v.AvgFpsTest, v.At.ToString("MM-dd HH:mm"), v.DurationSec, v.Game ?? "-"),
+                deltaText,
+                v.DeltaPct < 0);
+        }).ToList();
     }
 
     private sealed record VerdictVm(string ItemsText, string MetaText, string DeltaText, bool IsNegative);
@@ -280,7 +289,8 @@ public partial class AbExperimentView : UserControl
                     : result is null
                     ? (blocked is not null ? blocked : Str.T("Str.AbCandidateHint"))
                     : Str.T("Str.AbGroupDetail", result.Reason, result.AvgFps, result.P1Low, result.CompletedAt,
-                        result.Simulated ? " · " + Str.T("Str.AbSimulated") : ""),
+                        result.Simulated ? " · " + Str.T("Str.AbSimulated") : "")
+                      + (string.IsNullOrEmpty(result.Evidence) ? "" : "\n" + result.Evidence),
                 isRunning ? Str.T("Str.Running") : Str.T("Str.Run"),
                 !_running && !_wizard.IsFutureSchema && blocked is null,
                 options,
@@ -537,9 +547,10 @@ public partial class AbExperimentView : UserControl
             var keep = obj["keep"]?.GetValue<bool>() == true;
             var reverted = obj["reverted"]?.GetValue<bool>() ?? false;
             var reason = obj["reason"]?.GetValue<string>() ?? "";
+            var evidence = obj["evidence"]?.GetValue<string>() ?? "";
             _wizard = ExperimentWizard.WithGroupResult(_wizard,
                 new WizardGroupResult(step, keep, reverted, reason, avg, p1, sessionId,
-                    obj["samplerMode"]?.GetValue<string>() == "simulated", DateTime.Now),
+                    obj["samplerMode"]?.GetValue<string>() == "simulated", DateTime.Now, evidence),
                 sessionId);
             SetMetrics(summary);
             DecisionText.Text = keep
@@ -634,6 +645,9 @@ public partial class AbExperimentView : UserControl
                     : g["reverted"]?.GetValue<bool>() == true ? Str.T("Str.Restored") : Str.T("Str.NotRestored");
                 sb.AppendLine(Str.T("Str.AbReportGroupLine", g["name"]?.GetValue<string>() ?? id, id, verdict)
                               + " — " + Str.T("Str.AbReportGroupMetrics", g["summary"]?["avgFps"], g["summary"]?["p1Low"], g["reason"]?.GetValue<string>() ?? ""));
+                var evidence = AbEvidenceText.FromJson(g);
+                if (evidence.Length > 0)
+                    sb.AppendLine("  - " + Str.T("Str.AbReportEvidence", evidence));
                 if (_wizard.GroupResult(id)?.SessionId is { } sid
                     && PerformanceSessionStore.LoadAll().FirstOrDefault(s => s.Id == sid) is { } session)
                 {
@@ -646,6 +660,12 @@ public partial class AbExperimentView : UserControl
         {
             sb.AppendLine(Str.T("Str.AbReportNoGroups"));
         }
+
+        sb.AppendLine();
+        sb.AppendLine(Str.T("Str.AbReportStatsSection"));
+        sb.AppendLine();
+        sb.AppendLine(Str.T("Str.AbReportStatsMethod"));
+        sb.AppendLine(Str.T("Str.AbReportStatsLimits", AbThresholds.MinUsefulGainPct, AbThresholds.MaxP99WorsenPct));
 
         sb.AppendLine();
         sb.AppendLine(Str.T("Str.AbReportRawSection"));

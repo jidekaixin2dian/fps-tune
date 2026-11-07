@@ -91,6 +91,33 @@ public sealed class AppSettings
     public double CrosshairOpacity { get; set; } = 90;
     public bool CrosshairAdaptiveHide { get; set; } = true;
 
+    // 显示方式（参考实现）：always = 常显（叠加开镜隐藏，即原行为）；fire = 按住开火键才显示；
+    // ads = 战术据枪（平时隐藏，按住/点击开镜键显示）。同一时间只有一种语义生效。
+    public string CrosshairDisplayMode { get; set; } = "always";
+    // 开镜方式：hold = 按住右键；toggle = 点击右键切换。只记录右键推定状态，不读取游戏。
+    public string CrosshairAdsMode { get; set; } = "hold";
+    // 开镜期间隐藏准星（fire 模式默认开；always 模式复用它替代旧的 CrosshairAdaptiveHide）。
+    public bool CrosshairHideOnAds { get; set; } = true;
+    // 触发键：MouseLeft / MouseRight / MouseMiddle / XButton1 / XButton2，或 System.Windows.Forms.Keys 名（如 F1）。
+    public string CrosshairFireTrigger { get; set; } = "MouseLeft";
+    public string CrosshairAdsTrigger { get; set; } = "MouseRight";
+    // 同步快捷键：空 = 未设置。按一次把推定开镜状态拉回「未开镜」。
+    public string CrosshairSyncTrigger { get; set; } = "";
+    // 触发/还原延迟（毫秒，0 = 立即）。
+    public int CrosshairShowDelayMs { get; set; }
+    public int CrosshairHideDelayMs { get; set; }
+
+    // 键鼠缓冲区深度（参考实现）：写入 kbdclass/mouclass 的 DataQueueSize，重启后生效。
+    // 推荐值由鼠标报告率推出（见 Core/InputQueuePolicy），低于推荐值时界面提示并二次确认。
+    // 默认就落在输入区间的 8 的步长网格上（100 会被规范化成 104，界面首屏数字会自己跳一格）。
+    public int KeyboardQueueDepth { get; set; } = 104;
+    public int MouseQueueDepth { get; set; } = 104;
+    // 鼠标报告率（Hz），用于算覆盖时长与推荐深度；默认 1000。
+    public int MousePollingRate { get; set; } = 1000;
+
+    // 音频：跟随系统默认输出设备（换耳机/音箱后把均衡器写到新的默认端点）。
+    public bool AudioFollowDefaultOutput { get; set; } = true;
+
     // 安装信息被外部工具清掉时开机问过一次「要不要补回来」；用户说以后再说就不再打扰。
     public bool InstallRepairDeclined { get; set; }
 

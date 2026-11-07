@@ -111,20 +111,29 @@ internal static class TransientGamma
 
         // 先落盘再改屏：这两步之间崩溃也不能丢掉还原依据。
         FullscreenPendingStore.Save(pending);
+        // 只有「屏幕已确认回到快照」才删凭证；回滚本身失败时凭证必须留着，
+        // 否则屏上那套没被接受的 LUT 再也没有还原依据（启动还原会以「没有待还原记录」跳过）。
+        var rollbackFailed = false;
         try
         {
             Api.Write(display, expected);
             if (!ScreenColorService.Matches(Api.Read(display), expected))
             {
                 // 读回不一致说明这版 LUT 没被接受：立即把快照写回去，别把失败留在屏上。
-                try { Api.Write(display, snapshot); } catch { }
-                throw new InvalidOperationException(Str.T("Str.ColorRefused"));
+                try { Api.Write(display, snapshot); }
+                catch (Exception rollbackError)
+                {
+                    rollbackFailed = true;
+                    ErrorLog.Write("FullscreenGammaRollback", rollbackError);
+                    throw new InvalidOperationException(Str.T("Str.ColorRollbackFailed"), rollbackError);
+                }
+                // 回滚成功：屏幕已经回到原曲线，跟「备份保留、可手动还原」不是一回事，文案要分开。
+                throw new InvalidOperationException(Str.T("Str.ColorRollbackRestored"));
             }
         }
         catch
         {
-            // 屏上要么仍是快照、要么已回滚，凭证没有意义，删掉避免下次启动误还原。
-            FullscreenPendingStore.Delete();
+            if (!rollbackFailed) FullscreenPendingStore.Delete();
             throw;
         }
 

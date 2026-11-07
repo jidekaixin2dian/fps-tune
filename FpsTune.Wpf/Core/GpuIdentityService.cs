@@ -23,6 +23,27 @@ public sealed record GpuNamePreset(string Name, string Family)
 }
 public sealed record GpuIdentityResult(bool Ok, bool Changed, string Message, string? BackupFile);
 
+/// <summary>
+/// 一次设备枚举的结果：能读到的设备 + 没读到的原因。
+/// 以前单台设备抛异常被整体吞掉，界面上只剩一句「没有可用设备」，
+/// 用户分不清是没装 N 卡、WMI 坏了，还是设备真的不完整。
+/// </summary>
+public sealed record GpuDeviceScan(IReadOnlyList<GpuIdentityTarget> Devices, IReadOnlyList<string> Failures,
+    string? EnumerationError)
+{
+    /// <summary>设备枚举本身失败（例如查询在线设备列表时出错）。</summary>
+    public bool EnumerationFailed => EnumerationError is not null;
+}
+
+/// <summary>
+/// 伪装状态的只读推导：真实型号 = 驱动写入的 <c>DriverDesc</c>，
+/// 当前上报 = 设备键 <c>DeviceDesc</c> 的最后一段。两者不同即视为已被改名。
+/// </summary>
+public sealed record GpuIdentitySnapshot(string? RealName, string? ReportedName, bool IsDisguised, string? Failure)
+{
+    public bool Available => RealName is not null && ReportedName is not null;
+}
+
 /// <summary>社区兼容实验：只修改显示设备的 DeviceDesc，不更改硬件 ID 或驱动文件。</summary>
 public static class GpuIdentityService
 {
@@ -39,17 +60,94 @@ public static class GpuIdentityService
     internal static Func<IEnumerable<string>>? DeviceIdsOverride { get; set; }
     internal static Func<bool>? AdminCheckOverride { get; set; }
 
-    public static IReadOnlyList<GpuIdentityTarget> GetDevices()
+    public static IReadOnlyList<GpuIdentityTarget> GetDevices() => ScanDevices().Devices;
+
+    /// <summary>枚举显示设备，同时收集读不到的原因（不静默丢弃）。</summary>
+    public static GpuDeviceScan ScanDevices()
     {
-        var devices = new List<GpuIdentityTarget>();
-        foreach (var id in DeviceIdsOverride?.Invoke() ?? ReadDeviceIds())
+        List<string> ids;
+        try
         {
-            if (!IsDevicePath(@"SYSTEM\CurrentControlSet\Enum\" + id)) continue;
-            try { devices.Add(ReadTarget(id)); }
-            catch { /* 不显示未能完整确认身份的设备。 */ }
+            ids = (DeviceIdsOverride?.Invoke() ?? ReadDeviceIds())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
-        return devices;
+        catch (Exception ex)
+        {
+            var reason = string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().Name : ex.Message;
+            return new(Array.Empty<GpuIdentityTarget>(), Array.Empty<string>(), reason);
+        }
+
+        var devices = new List<GpuIdentityTarget>();
+        var failures = new List<string>();
+        foreach (var id in ids)
+        {
+            if (!IsDevicePath(@"SYSTEM\CurrentControlSet\Enum\" + id))
+            {
+                // 核显/虚拟显示器本来就不是本功能的候选，不该算成「读不到」；
+                // 只有看着像 NVIDIA 设备、路径却不完整时才记下原因。
+                if (id.Contains("VEN_10DE", StringComparison.OrdinalIgnoreCase))
+                    failures.Add(Str.T("Str.GpuIdentityUnavailable"));
+                continue;
+            }
+            try { devices.Add(ReadTarget(id)); }
+            catch (Exception ex)
+            {
+                // 记下这台设备为什么没被列出：可能就是用户找的那台。
+                // 同一张 N 卡上的音频功能（媒体类设备）不是候选，不报。
+                if (!IsDisplayClassDevice(id)) continue;
+                failures.Add(string.IsNullOrWhiteSpace(ex.Message) ? Str.T("Str.GpuIdentityUnavailable") : ex.Message);
+            }
+        }
+        return new(devices, failures, null);
     }
+
+    /// <summary>这个设备项的 ClassGUID 是不是显示类；读不到 ClassGUID 时按「可能是」处理。</summary>
+    private static bool IsDisplayClassDevice(string instanceId)
+    {
+        try
+        {
+            var classGuid = RegistryHelper.ReadValue(RegistryHive.LocalMachine,
+                @"SYSTEM\CurrentControlSet\Enum\" + instanceId, "ClassGUID") as string;
+            return classGuid is null || string.Equals(classGuid, DisplayClass, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// 只读推导当前伪装状态。<paramref name="preferredName"/> 传概览页显示的型号时，
+    /// 优先取名字对得上的那台设备，避免多显卡机器选错。
+    /// </summary>
+    public static GpuIdentitySnapshot ReadIdentity(string? preferredName = null)
+    {
+        var scan = ScanDevices();
+        if (scan.EnumerationFailed)
+            return new(null, null, false, Str.T("Str.GpuIdentityScanFailed", scan.EnumerationError));
+        if (scan.Devices.Count == 0)
+            return new(null, null, false, scan.Failures.FirstOrDefault() ?? Str.T("Str.GpuIdentityNoneListed"));
+        var device = PickDevice(scan.Devices, preferredName);
+        return new(device.DriverName, device.CurrentName,
+            IsDisguisedName(device.DriverName, device.CurrentName), null);
+    }
+
+    internal static GpuIdentityTarget PickDevice(IReadOnlyList<GpuIdentityTarget> devices, string? preferredName)
+    {
+        if (!string.IsNullOrWhiteSpace(preferredName))
+            foreach (var device in devices)
+                if (!string.IsNullOrWhiteSpace(device.DriverName)
+                    && preferredName.Contains(device.DriverName, StringComparison.OrdinalIgnoreCase))
+                    return device;
+        return devices[0];
+    }
+
+    /// <summary>两个名字是否算「被改过」：都不为空且不完全相同。</summary>
+    public static bool IsDisguisedName(string? realName, string? reportedName)
+        => !string.IsNullOrWhiteSpace(realName) && !string.IsNullOrWhiteSpace(reportedName)
+           && !string.Equals(realName.Trim(), reportedName.Trim(), StringComparison.OrdinalIgnoreCase);
 
     private static IEnumerable<string> ReadDeviceIds()
     {

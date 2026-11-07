@@ -21,7 +21,7 @@ public sealed record DeltaFrameScan(
 public sealed record DeltaFixStep(string Name, bool Succeeded, string Detail);
 
 /// <summary>
-/// 三角洲掉帧修复（对标 1U DeltaFrameFix，行为以其为基准、实现为本项目原版）：
+/// 三角洲掉帧修复（行为以参考实现为基准，实现为本项目原版）：
 /// 9.4 修复 = 把游戏目录 Saved\PSOCache 整目录改名备份（不动画质与按键设置）；
 /// 7.31 一键修复 = Saved 改名备份 + 清 NVIDIA DXCache；再附运行库检测与 -dx12/-dx11 指引。
 /// 全部操作改名备份、可逆；绝不删除或改动游戏本体文件。

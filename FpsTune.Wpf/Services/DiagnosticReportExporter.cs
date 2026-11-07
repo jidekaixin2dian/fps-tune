@@ -597,6 +597,175 @@ public static class DiagnosticReportExporter
         }
     }
 
+    // ---------- 键鼠异常反馈 ----------
+
+    /// <summary>测试可注入的设备名探测结果（真实实现读 HID 枚举，不依赖 WMI）。</summary>
+    internal static Func<(string Keyboard, string Mouse)>? DeviceProbeOverride { get; set; }
+
+    /// <summary>说明文本里的全部事实字段（纯数据，便于用例逐项断言）。</summary>
+    internal sealed record InputFeedbackFields(
+        int KeyboardDepth,
+        int MouseDepth,
+        int PollingRate,
+        int KeyboardRecommended,
+        int MouseRecommended,
+        int MouseCoverageMs,
+        int? KeyboardRegistryDepth,
+        int? MouseRegistryDepth,
+        bool? MouseAccelerationOff,
+        string? KeyboardRepeatDelay,
+        string? KeyboardRepeatSpeed,
+        string KeyboardDevices,
+        string MouseDevices);
+
+    /// <summary>
+    /// 生成「键鼠异常反馈」说明文本并存到用户数据目录，返回文件路径。
+    /// 内容只有当前深度、推荐值、报告率、鼠标加速、键盘重复和设备名，不含用户名与任何本地路径。
+    /// </summary>
+    public static string ExportInputFeedback()
+    {
+        var dir = Path.Combine(BaseDir, "feedback");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, $"input-feedback-{DateTime.Now:yyyyMMdd-HHmmss}.txt");
+        File.WriteAllText(path, BuildInputFeedbackText(), new UTF8Encoding(false));
+        return path;
+    }
+
+    /// <summary>采集字段：设置值、注册表实际值、鼠标加速、键盘重复、设备名。</summary>
+    internal static InputFeedbackFields CollectInputFeedback()
+    {
+        var settings = SettingsService.Current;
+        var rate = settings.MousePollingRate;
+        var (keyboardDevices, mouseDevices) = DeviceProbeOverride?.Invoke()
+            ?? (ReadInputDevices("kbdclass"), ReadInputDevices("mouclass"));
+
+        return new InputFeedbackFields(
+            InputQueuePolicy.Normalize(settings.KeyboardQueueDepth),
+            InputQueuePolicy.Normalize(settings.MouseQueueDepth),
+            rate,
+            InputQueuePolicy.KeyboardRecommendedDepth,
+            InputQueuePolicy.RecommendedDepth(rate),
+            InputQueuePolicy.CoverageMs(InputQueuePolicy.Normalize(settings.MouseQueueDepth), rate),
+            ReadRegistryDepth(@"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize"),
+            ReadRegistryDepth(@"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize"),
+            MouseAccelerationOff(),
+            ReadRegistryText(@"Control Panel\Keyboard", "KeyboardDelay"),
+            ReadRegistryText(@"Control Panel\Keyboard", "KeyboardSpeed"),
+            keyboardDevices,
+            mouseDevices);
+    }
+
+    /// <summary>把字段拼成说明文本；缺读数的地方写「不可用」，不猜。</summary>
+    internal static string BuildInputFeedbackText()
+    {
+        var f = CollectInputFeedback();
+        var unavailable = Str.T("Str.Unavailable");
+        var sb = new StringBuilder();
+        sb.AppendLine(Str.T("Str.InputFeedbackReportHeader", AppVersion, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+        sb.AppendLine();
+        sb.AppendLine(Str.T("Str.InputFeedbackReportDepth", f.KeyboardDepth, f.MouseDepth));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportRegistered",
+            f.KeyboardRegistryDepth?.ToString() ?? Str.T("Str.InputQueueNotSet", InputQueuePolicy.WindowsDefaultDepth),
+            f.MouseRegistryDepth?.ToString() ?? Str.T("Str.InputQueueNotSet", InputQueuePolicy.WindowsDefaultDepth)));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportRecommended", f.KeyboardRecommended, f.MouseRecommended));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportPolling", f.PollingRate, f.MouseDepth, f.MouseCoverageMs));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportAccel",
+            f.MouseAccelerationOff is { } off
+                ? Str.T(off ? "Str.InputFeedbackAccelOff" : "Str.InputFeedbackAccelOn")
+                : unavailable));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportRepeat",
+            f.KeyboardRepeatDelay ?? unavailable, f.KeyboardRepeatSpeed ?? unavailable));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportKeyboardDevice", f.KeyboardDevices));
+        sb.AppendLine(Str.T("Str.InputFeedbackReportMouseDevice", f.MouseDevices));
+        return PrivacyScrub.Sanitize(sb.ToString());
+    }
+
+    /// <summary>注册表里的实际深度；没有这个值返回 null（说明里按「未设置」写）。</summary>
+    private static int? ReadRegistryDepth(string path, string name)
+    {
+        try
+        {
+            return RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, name) switch
+            {
+                int dword => dword,
+                null => null,
+                var other => int.TryParse(other.ToString(), out var parsed) ? parsed : null
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>鼠标加速是否关闭；读不到返回 null（说明里写不可用，不猜）。</summary>
+    private static bool? MouseAccelerationOff()
+    {
+        try
+        {
+            return RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Control Panel\Mouse", "MouseSpeed")?.ToString() == "0";
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadRegistryText(string path, string name)
+    {
+        try
+        {
+            return RegistryHelper.ReadValue(RegistryHive.CurrentUser, path, name)?.ToString();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// 读某类输入设备的友好名：Services\{kbdclass|mouclass}\Enum 列出设备实例，
+    /// 再到 Enum\{实例} 取 FriendlyName / DeviceDesc。只读，最多取前 4 个。
+    /// </summary>
+    private static string ReadInputDevices(string serviceClass)
+    {
+        try
+        {
+            using var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+            using var instances = root.OpenSubKey($@"SYSTEM\CurrentControlSet\Services\{serviceClass}\Enum");
+            if (instances is null) return Str.T("Str.InputFeedbackNoDevice");
+
+            var names = new List<string>();
+            foreach (var valueName in instances.GetValueNames())
+            {
+                if (names.Count >= 4) break;
+                if (instances.GetValue(valueName)?.ToString() is not { Length: > 0 } id) continue;
+                using var device = root.OpenSubKey(@"SYSTEM\CurrentControlSet\Enum\" + id);
+                var name = device?.GetValue("FriendlyName")?.ToString() ?? device?.GetValue("DeviceDesc")?.ToString();
+                if (string.IsNullOrWhiteSpace(name)) continue;
+                var trimmed = FriendlyDeviceName(name);
+                if (!names.Contains(trimmed, StringComparer.OrdinalIgnoreCase)) names.Add(trimmed);
+            }
+
+            return names.Count == 0 ? Str.T("Str.InputFeedbackNoDevice") : string.Join(" / ", names);
+        }
+        catch (Exception)
+        {
+            return Str.T("Str.InputFeedbackNoDevice");
+        }
+    }
+
+    /// <summary>
+    /// 设备描述常见形态是「@keyboard.inf,%hid.keyboarddevice%;HID Keyboard Device」这类间接字符串，
+    /// 取最后一段给用户看的名字；没有间接前缀就原样返回。
+    /// </summary>
+    private static string FriendlyDeviceName(string raw)
+    {
+        var text = raw.Trim();
+        var separator = text.LastIndexOf(';');
+        return separator >= 0 && separator < text.Length - 1 ? text[(separator + 1)..].Trim() : text;
+    }
+
     // ---------- 工具 ----------
 
     private static string AppVersion

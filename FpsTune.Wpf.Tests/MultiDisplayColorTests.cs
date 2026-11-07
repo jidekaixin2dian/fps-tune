@@ -57,7 +57,7 @@ public sealed class MultiDisplayColorTests : IDisposable
         Assert.Equal(75, Levels["A"]); Assert.NotEqual(LinearRamp(), Ramps["A"]);
         var settings = new ScreenColorSettings(Brightness: 5, Contrast: 112);
         ColorWorkspaceService.Apply("A", settings, true, IccFilterPreset.Cool, null, null);
-        // 新契约（2026-11-03，对齐 1U）：内置预设的观感来自画面参数（ForPreset），不再把预设的 vcgt 折进 ramp（会套两遍）；外部 .icc 的 vcgt 才折。
+        // 新契约（2026-11-03，对齐参考实现）：内置预设的观感来自画面参数（ForPreset），不再把预设的 vcgt 折进 ramp（会套两遍）；外部 .icc 的 vcgt 才折。
         Assert.Equal(ScreenColorService.BuildRamp(settings, LinearRamp()), Ramps["A"]);
         Assert.Contains("FpsTune-Cool-v4.icc", Profiles["A"]);
         ColorWorkspaceService.Apply("A", settings with { Gamma = 1.1 }, true, IccFilterPreset.Warm, null, 80);

@@ -341,7 +341,9 @@ public sealed class PerformanceSessionService : IDisposable
         }
     }
 
-    public static string DefaultSessionName() => "会话 " + DateTime.Now.ToString("MM-dd HH:mm");
+    // 默认名会直接过 IsValidSessionName（文件名字符集），不能用带冒号的 "HH:mm"
+    //（自动录制路径 AutoRecordingService 同款口径用 "HH-mm"）。
+    public static string DefaultSessionName() => "会话 " + DateTime.Now.ToString("MM-dd HH-mm");
 
     public static bool IsValidSessionName(string? name)
     {

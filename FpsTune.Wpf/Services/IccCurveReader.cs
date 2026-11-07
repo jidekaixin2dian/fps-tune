@@ -80,7 +80,7 @@ public static class IccCurveReader
     }
 
     /// <summary>
-    /// vcgt 校准 tag（type 0）。真实文件的布局（Windows 自带的、1U 的预设、显示器厂商的都一样）：
+    /// vcgt 校准 tag（type 0）。真实文件的布局（Windows 自带的、参考实现的预设、显示器厂商的都一样）：
     /// <c>sig(4) + reserved(4) + type(4) + channels(u16) + entries(u16)</c> 共 16 字节头，
     /// 后面是 <c>entries</c> 个「R,G,B 交织」的 u16 三元组（256 条 → 1536 字节，整条 tag 1552–1554 字节）。
     /// 之前按「12 字节头 + 257 条按通道平铺」解析，于是所有真实校准表都被判成异常而丢弃——
@@ -188,26 +188,34 @@ public static class IccCurveReader
         {
             if (size < 16) return null;
             var type = ReadUInt16(data, offset + 8);
-            // 各型参数个数：0 型 1 个、1 型 3 个、2 型 4 个、3 型 5 个、4 型 7 个（不是 type+1）。
-            var count = type switch { 0 => 1, 1 => 3, 2 => 4, 3 => 5, 4 => 7, _ => 0 };
-            if (count == 0) return null;
-            var p = new double[count];
-            if (offset + 12 + p.Length * 4L > data.Length) return null;
-            for (var i = 0; i < p.Length; i++) p[i] = ReadS15Fixed16(data, offset + 12 + i * 4);
+            // 各型参数个数按 ICC.1 规范：0 型 1 个、1 型 3 个、2 型 4 个、3 型 4 个（g,a,b,d；
+            // X<d 时 Y=0）、4 型 7 个（g,a,b,c,d,e,f）。参数边界对 tag 尺寸校验而不是整个文件——
+            // 标准sRGB 的 3 型 TRC 恰好 12+16 字节，按文件边界会把下一个 tag 的字节当阈值读进来。
+            var specCount = type switch { 0 => 1, 1 => 3, 2 => 4, 3 => 4, 4 => 7, _ => 0 };
+            if (specCount == 0) return null;
+            var available = (int)Math.Min((size - 12) / 4, 16);
+            // 兼容本应用旧版生成的「3 型 + 5 参数」编码（语义即 4 型的 cX 分支）：按 4 型求值。
+            var legacyFiveParam = type == 3 && available >= 5;
+            var count = legacyFiveParam ? 5 : specCount;
+            if (12 + (long)count * 4 > size) return null;
+            var p = new double[7];
+            for (var i = 0; i < count; i++) p[i] = ReadS15Fixed16(data, offset + 12 + i * 4);
             var curve = new double[256];
-            for (var i = 0; i < 256; i++) curve[i] = Math.Clamp(Parametric(type, p, i / 255d), 0, 1);
+            var evaluateType = legacyFiveParam ? 4 : type;
+            for (var i = 0; i < 256; i++) curve[i] = Math.Clamp(Parametric(evaluateType, p, i / 255d), 0, 1);
             return (curve, false, true);
         }
         return null;
     }
 
-    /// <summary>ICC para 曲线 0–4 型（typed curve）；参数越界时按端点夹紧。</summary>
+    /// <summary>ICC para 曲线 0–4 型（typed curve，参数个数按规范）；参数越界时按端点夹紧。
+    /// 3 型（g,a,b,d）：X&lt;d 时 Y=0（cX 分支属于 4 型；旧版 5 参数编码在读取处已折算成 4 型）。</summary>
     private static double Parametric(int type, double[] p, double x) => type switch
     {
         0 => Math.Pow(x, p[0]),
         1 => Math.Pow(Math.Max(0, p[1] * x + p[2]), p[0]),
         2 => Math.Pow(Math.Max(0, p[1] * x + p[2]), p[0]) + p[3],
-        3 => x >= p[4] ? Math.Pow(Math.Max(0, p[1] * x + p[2]), p[0]) : p[3] * x,
+        3 => x >= p[3] ? Math.Pow(Math.Max(0, p[1] * x + p[2]), p[0]) : 0,
         4 => x >= p[4] ? Math.Pow(Math.Max(0, p[1] * x + p[2]), p[0]) + p[5] : p[3] * x + p[6],
         _ => x
     };

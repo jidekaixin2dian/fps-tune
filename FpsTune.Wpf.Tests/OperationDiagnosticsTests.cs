@@ -47,9 +47,12 @@ public sealed class OperationDiagnosticsTests : IDisposable
     {
         _api.AddProfile("existing", Exe);
         _api.SimulateSaveIgnored = true;
-        Assert.Throws<InvalidOperationException>(() => DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
+        // 逐项回执：读回不符不再抛异常，但诊断记录仍要写下驱动里真实是「没有这项」。
+        var receipt = DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.False(receipt.Ok);
         var record = Assert.Single(OperationDiagnostics.Read(_root).Operations);
-        Assert.Equal("readback-driver", record.Stage);
+        // 读回有项没落地时，诊断记录留 readback-partial，不写成一句 succeeded 让人以为全成了。
+        Assert.Equal("readback-partial", record.Stage);
         Assert.Equal(new DriverValue(false, null), Assert.Single(record.Settings).After);
     }
     [Fact]

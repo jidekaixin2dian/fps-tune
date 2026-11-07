@@ -104,10 +104,14 @@ public sealed class ProductWorkflowUiTests
                 Assert.False(SettingsService.Current.Preparation.ApplyVibrance);
                 File.WriteAllText(file, "{\"SchemaVersion\":99}");
                 Assert.Throws<InvalidDataException>(() => PreparationPlanStore.Resolve(first));
-                Assert.Throws<InvalidDataException>(() => PreparationPlanStore.Save(first, common));
+                // 损坏的旧方案留档后允许覆盖保存（原来 Save 永远抛错，保存与自动准备都被卡死且无修复入口）。
+                PreparationPlanStore.Save(first, common);
+                Assert.True(PreparationPlanStore.Resolve(first).IsGameSpecific);
+                var corruptArchive = Directory.GetFiles(Path.GetDirectoryName(file)!).Single(p => p.Contains(".corrupt"));
+                Assert.Contains("99", File.ReadAllText(corruptArchive));
                 PreparationPlanStore.UseDefault(first);
                 Assert.False(PreparationPlanStore.Resolve(first).IsGameSpecific);
-                Assert.Contains(Directory.GetFiles(Path.GetDirectoryName(file)!), p => p.Contains(".disabled-") && File.ReadAllText(p).Contains("99"));
+                Assert.Contains(Directory.GetFiles(Path.GetDirectoryName(file)!), p => p.Contains(".disabled-"));
             }
             finally { owner.Close(); }
         });

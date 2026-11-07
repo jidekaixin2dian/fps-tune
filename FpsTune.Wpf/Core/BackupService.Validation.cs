@@ -188,7 +188,7 @@ public static partial class BackupService
            string.Equals(actual.SecondaryHive, expected.SecondaryHive, StringComparison.OrdinalIgnoreCase) &&
            string.Equals(actual.SecondaryPath, expected.SecondaryPath, StringComparison.OrdinalIgnoreCase) &&
            string.Equals(actual.SecondaryName, expected.SecondaryName, StringComparison.OrdinalIgnoreCase) &&
-           (actual.SecondaryValue is null || actual.SecondaryExisted == true);
+           (actual.SecondaryValue is null || (actual.SecondaryExisted == true && actual.SecondaryValue is not null));
 
     private static void EnsureKind(BackupRecord record, string expected)
         => Reject(!string.Equals(record.Kind, expected, StringComparison.Ordinal),
@@ -210,7 +210,7 @@ public static partial class BackupService
             (!allowService && (!string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
                                !string.IsNullOrEmpty(record.OldStartMode))) ||
             (!allowGuid && !string.IsNullOrEmpty(record.OldActiveGuid)) ||
-            (!allowOverlay && (record.OldAcOverlayGuid is not null || record.OldDcOverlayGuid is not null)) ||
+            (!allowOverlay && (record.OldAcOverlayGuid is not null || record.OldDcOverlayGuid is not null || record.PostAcOverlayGuid is not null)) ||
             (!allowState && !string.IsNullOrEmpty(record.OldState)) ||
             (allowState && (record.OldState is null || !allowedStates.Contains(record.OldState, StringComparer.Ordinal))),
             "非注册表备份包含不匹配的目标字段");
@@ -219,7 +219,7 @@ public static partial class BackupService
     private static void EnsureRegistryFields(BackupRecord record)
         => Reject(record.OldPowerValue.HasValue || record.PostPowerValue.HasValue || record.OldUsbValue.HasValue || record.OldBoostValue.HasValue || record.OldIdleValue.HasValue ||
             record.OldAspmValue.HasValue ||
-            record.OldAcOverlayGuid is not null || record.OldDcOverlayGuid is not null ||
+            record.OldAcOverlayGuid is not null || record.OldDcOverlayGuid is not null || record.PostAcOverlayGuid is not null ||
             !string.IsNullOrEmpty(record.ServiceName) || record.OldStartValue.HasValue ||
             !string.IsNullOrEmpty(record.OldStartMode) || !string.IsNullOrEmpty(record.OldActiveGuid) ||
             !string.IsNullOrEmpty(record.OldState), "注册表备份包含其他类型字段");
@@ -235,6 +235,9 @@ public static partial class BackupService
             !string.Equals(record.SecondaryPath, path, StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(record.SecondaryName, name, StringComparison.OrdinalIgnoreCase) ||
             !record.SecondaryExisted.HasValue ||
+            // 「存在却无值」同样非法：还原端会把 null 兜底成 0 写进注册表（如 TCPNoDelay/AllowGameDVR），
+            // 这不是「恢复原值」而是改写。本机 Capture 产生不了该形态，只可能来自导入的构造备份。
+            (record.SecondaryExisted.Value && record.SecondaryValue is null) ||
             (!record.SecondaryExisted.Value && record.SecondaryValue is not null), "关联注册表目标字段不匹配");
 
     private static void EnsureNoSecondary(BackupRecord record)

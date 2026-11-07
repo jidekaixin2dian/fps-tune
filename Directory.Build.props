@@ -43,7 +43,7 @@
          后台资源只读采样（CPU/磁盘/网络）；用户 2026-11-01 点名大版本并要求可见变化 -->
     <!-- 0.4.2 = 全面审查修复轮：计时器探测失效、守护失败后不重试、坏备份锁死、
          安装信息自检修复（InstallIntegrity + deploy-local）、方案热键 Ctrl+Alt+1/2/3、
-         托盘切方案、方案导出导入、开机还原计划任务、DRS 读回逐项报错（1U 对标轮） -->
+         托盘切方案、方案导出导入、开机还原计划任务、DRS 读回逐项报错（参考实现对齐轮） -->
     <VersionPrefix>0.4.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>

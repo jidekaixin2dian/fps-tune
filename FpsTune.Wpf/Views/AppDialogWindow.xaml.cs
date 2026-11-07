@@ -16,11 +16,13 @@ public partial class AppDialogWindow : Window
             // 标准对话框键盘习惯：Esc=取消，Enter=主按钮（确认/知道了）
             if (e.Key == Key.Escape)
             {
+                Choice = DialogChoice.Cancel;
                 DialogResult = false;
                 e.Handled = true;
             }
             else if (e.Key == Key.Enter)
             {
+                Choice = DialogChoice.Primary;
                 DialogResult = true;
                 e.Handled = true;
             }
@@ -56,6 +58,25 @@ public partial class AppDialogWindow : Window
 
     internal Action<string> CopyDetails { get; set; } = Clipboard.SetText;
 
+    /// <summary>用户最终点了哪个按钮（三选一对话框用）；两按钮对话框里恒为 Primary / Cancel。</summary>
+    public DialogChoice Choice { get; private set; } = DialogChoice.Primary;
+
+    /// <summary>
+    /// 三选一对话框：主按钮 / 次按钮 / 取消。次按钮默认隐藏，只有这个重载会把它显示出来。
+    /// </summary>
+    public AppDialogWindow(string title, string message, string primaryText, string secondaryText, string cancelText)
+        : this(title, message, isConfirm: true, isDanger: false, confirmText: primaryText, cancelText: cancelText)
+    {
+        SecondaryButton.Content = secondaryText;
+        SecondaryButton.Visibility = Visibility.Visible;
+    }
+
+    private void SecondaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        Choice = DialogChoice.Secondary;
+        DialogResult = true;
+    }
+
     private void CopyDetails_Click(object sender, RoutedEventArgs e)
     {
         try { CopyDetails(TitleTextBlock.Text + "\n\n" + MessageTextBlock.Text); CopyDetailsButton.Content = Str.T("Str.ErrorCopied"); }
@@ -64,11 +85,13 @@ public partial class AppDialogWindow : Window
 
     private void ConfirmButton_Click(object sender, RoutedEventArgs e)
     {
+        Choice = DialogChoice.Primary;
         DialogResult = true;
     }
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
+        Choice = DialogChoice.Cancel;
         DialogResult = false;
     }
 

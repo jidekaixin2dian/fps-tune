@@ -158,6 +158,8 @@ public static class IccAppRuleStore
         }
         catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException or UnauthorizedAccessException)
         {
+            // 损坏先留档：按空处理会让下一次 Save 把用户全部规则无声覆盖掉。
+            try { AtomicFile.PreserveCorrupt(path); } catch { }
             return [];
         }
     }

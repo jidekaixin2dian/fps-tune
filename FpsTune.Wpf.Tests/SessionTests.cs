@@ -703,6 +703,15 @@ public sealed class SessionTests : IDisposable
         Assert.False(PerformanceSessionService.IsValidSessionName(new string('x', 61)));
     }
 
+    [Fact]
+    public void Default_session_name_passes_own_validation()
+    {
+        // 回归：默认名含 "HH:mm" 的冒号被 IsValidSessionName 拒绝，空名开始会话永远失败。
+        for (var i = 0; i < 3; i++)
+            Assert.True(PerformanceSessionService.IsValidSessionName(PerformanceSessionService.DefaultSessionName()),
+                PerformanceSessionService.DefaultSessionName());
+    }
+
     // ---------- P1：无法解释的活动快照必须"留档解锁"，不能把会话功能永久锁死 ----------
 
     [Fact]

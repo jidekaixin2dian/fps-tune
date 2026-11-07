@@ -3,7 +3,7 @@ using Xunit;
 
 namespace FpsTune.Wpf.Tests;
 
-/// <summary>灵敏度换算（对标 1U 的灵敏度调校助手）：用公开的 yaw 常量核对已知档位。</summary>
+/// <summary>灵敏度换算（参考实现的灵敏度调校助手）：用公开的 yaw 常量核对已知档位。</summary>
 public class SensitivityMathTests
 {
     [Theory]

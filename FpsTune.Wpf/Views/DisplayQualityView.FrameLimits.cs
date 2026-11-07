@@ -80,13 +80,17 @@ public partial class DisplayQualityView
         FrameStateText.Text = Str.T(restore ? "Str.Restoring2" : "Str.Writing");
         try
         {
-            var changed = await Task.Run(() =>
-            {
-                if (restore) return DisplayQualityService.RestoreFrameLimits(exe);
-                DisplayQualityService.ApplyFrameLimits(exe, limits); return true;
-            });
-            _frameDirty = false;
-            _frameStatus = changed ? Str.T(restore ? "Str.FrameRestored" : "Str.FrameApplied") : Str.T("Str.NothingToRestore");
+            var (changed, receipt) = await Task.Run(() => restore
+                ? (DisplayQualityService.RestoreFrameLimits(exe), (DisplayQualityService.DrsApplyReceipt?)null)
+                : (true, DisplayQualityService.ApplyFrameLimits(exe, limits)));
+            // 失败时保留用户刚填的值（_frameDirty 不清），否则刷新会把输入冲掉。
+            if (restore || receipt!.Ok) _frameDirty = false;
+            _frameStatus = restore
+                ? changed ? Str.T("Str.FrameRestored") : Str.T("Str.NothingToRestore")
+                // 逐项回执：驱动没保存就说没保存，不报「已应用」。
+                : receipt!.Ok
+                    ? Str.T("Str.FrameApplied")
+                    : Str.T("Str.FrameNotPersisted");
         }
         catch (NvdrsException ex) when (ex.Status == -175) { _frameStatus = HandleDrsAccessDenied(ex, restoring: restore); }
         catch (Exception ex) { _frameStatus = Str.T("Str.FrameFailed", OperationDiagnostics.Scrub(ex.Message)); DialogService.Warning(Str.T("Str.OperationFailed"), _frameStatus); }

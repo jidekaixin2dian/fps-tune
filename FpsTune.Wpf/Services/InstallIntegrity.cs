@@ -101,6 +101,13 @@ internal static class InstallIntegrity
     internal static string DesktopShortcut => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory), AppName + ".lnk");
 
+    /// <summary>用户桌面（无需管理员）。公共桌面写不进去时的回退位置。</summary>
+    internal static string UserDesktopShortcut => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), AppName + ".lnk");
+
+    /// <summary>桌面快捷方式的候选位置，优先全体用户（与安装器一致），回退当前用户。</summary>
+    internal static string[] DesktopShortcutPaths => [DesktopShortcut, UserDesktopShortcut];
+
     internal static string UninstallKeyName => "{" + AppId + "}_is1";
 
     /// <summary>
@@ -127,8 +134,8 @@ internal static class InstallIntegrity
         if (!StartMenuShortcutPaths.Any(ShortcutPointsHere))
             details.Add(new InstallGapState(InstallGap.StartMenuShortcut, Scrub(UserStartMenuShortcut)));
 
-        if (!ShortcutPointsHere(DesktopShortcut))
-            details.Add(new InstallGapState(InstallGap.DesktopShortcut, Scrub(DesktopShortcut)));
+        if (!DesktopShortcutPaths.Any(ShortcutPointsHere))
+            details.Add(new InstallGapState(InstallGap.DesktopShortcut, Scrub(UserDesktopShortcut)));
 
         var strays = CountStrayFiles(dir);
         if (strays > 0) details.Add(new InstallGapState(InstallGap.StrayFiles, "", strays));
@@ -185,15 +192,27 @@ internal static class InstallIntegrity
 
         if (state.Gaps.Contains(InstallGap.DesktopShortcut))
         {
-            try
+            // 公共桌面同样要管理员；写不进去就落到用户桌面，桌面上照样看得见。
+            var lastFailure = "";
+            var created = false;
+            foreach (var path in DesktopShortcutPaths)
             {
-                CreateShortcut(DesktopShortcut, state.ExecutablePath);
-                steps.Add(Str.T("Str.InstallRepairStepShortcut", Str.T("Str.InstallLocationDesktop")));
+                try
+                {
+                    CreateShortcut(path, state.ExecutablePath);
+                    steps.Add(path == DesktopShortcut
+                        ? Str.T("Str.InstallRepairStepShortcut", Str.T("Str.InstallLocationDesktop"))
+                        : Str.T("Str.InstallRepairUserDesktop"));
+                    created = true;
+                    break;
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException or COMException)
+                {
+                    lastFailure = ex.Message;
+                }
             }
-            catch (Exception ex) when (ex is UnauthorizedAccessException or IOException or InvalidOperationException or COMException)
-            {
-                failures.Add(Str.T("Str.InstallRepairFailShortcut", Str.T("Str.InstallLocationDesktop"), ex.Message));
-            }
+            if (!created)
+                failures.Add(Str.T("Str.InstallRepairFailShortcut", Str.T("Str.InstallLocationDesktop"), lastFailure));
         }
 
         if (state.Gaps.Contains(InstallGap.StrayFiles))

@@ -49,10 +49,13 @@ public partial class GameDriverSettings : UserControl
         var path = _gamePath;
         var generation = ++_generation;
         _driverReady = false; ApplyDriverButton.IsEnabled = RestoreDriverButton.IsEnabled = false;
+        _advancedRows.Clear(); AdvancedList.ItemsSource = null; AdvancedStateText.Text = "";
         if (path is null) return;
         try
         {
-            var state = await Task.Run(() => DisplayQualityService.GetDrsGameSettings(Path.GetFileName(path)));
+            var exe = Path.GetFileName(path);
+            var (state, advanced) = await Task.Run(() =>
+                (DisplayQualityService.GetDrsGameSettings(exe), DisplayQualityService.ReadAdvancedSettings(exe)));
             if (_closed || generation != _generation) return;
             _driverReady = true;
             var sync = state.VSync switch { VSyncMode.ForceOff => Str.T("Str.Off"), VSyncMode.ForceOn => Str.T("Str.TuningEnabled"), _ => Str.T("Str.FollowDriverGame") };
@@ -61,14 +64,80 @@ public partial class GameDriverSettings : UserControl
                 PowerMode.PreferMin => Str.T("Str.PowerLowestConsumption"), PowerMode.OptimalPower => Str.T("Str.PowerOptimal"), _ => Str.T("Str.FollowDriverGame") };
             DriverCurrent.Text = Str.T("Str.TuningDriverCurrent", sync, power, Cap(state.FrameRateLimit), Cap(state.BackgroundFrameRateLimit));
             RestoreDriverButton.IsEnabled = DisplayQualityService.HasCompetitiveBackup(Path.GetFileName(path));
+            ApplyAdvanced(advanced);
         }
         catch (Exception ex)
         {
             if (_closed || generation != _generation) return;
             _driverReady = false; DriverCurrent.Text = Str.T("Str.TuningDriverUnavailable", PrivacyScrub.Sanitize(ex.Message));
+            AdvancedStateText.Text = Str.T("Str.TuningDriverUnavailable", PrivacyScrub.Sanitize(ex.Message));
         }
         if (generation == _generation) ApplyDriverButton.IsEnabled = _driverReady && !_busy;
     }
+
+    // ---------- 高级参数：三态 + 逐项写入 ----------
+
+    private readonly List<AdvancedSettingRow> _advancedRows = new();
+
+    private void ApplyAdvanced(DisplayQualityService.DrsAdvancedSnapshot snapshot)
+    {
+        _advancedRows.Clear();
+        foreach (var item in snapshot.Items)
+        {
+            var definition = NvdrsSettingCatalog.Find(item.SettingId);
+            if (definition is not null) _advancedRows.Add(new AdvancedSettingRow(definition, item));
+        }
+        AdvancedList.ItemsSource = _advancedRows;
+        AdvancedStateText.Text = snapshot.ProfileFound ? Str.T("Str.AdvancedReady") : Str.T("Str.AdvancedNoProfile");
+        AdvancedWriteButton.IsEnabled = snapshot.ProfileFound && !_busy;
+    }
+
+    internal IReadOnlyList<AdvancedSettingRow> AdvancedRows => _advancedRows;
+
+    internal async Task ChangeAdvancedAsync()
+    {
+        if (_busy || !_driverReady || _gamePath is null || _advancedRows.Count == 0) return;
+        var changes = new List<(uint SettingId, uint? Value, string Name)>();
+        foreach (var row in _advancedRows)
+        {
+            if (!row.TryReadWriteValue(out var value, out var error)) { AdvancedStatus.Text = error ?? ""; return; }
+            if (row.IsChanged(value)) changes.Add((row.SettingId, value, row.Name));
+        }
+        if (changes.Count == 0) { AdvancedStatus.Text = Str.T("Str.AdvancedNoChange"); return; }
+        if (!DialogService.Confirm(Str.T("Str.AdvancedTitle"),
+                Str.T("Str.AdvancedConfirm", string.Join(" · ", changes.Select(c => c.Name))), confirmText: Str.T("Str.Apply")))
+            return;
+
+        _busy = true; AdvancedWriteButton.IsEnabled = ApplyDriverButton.IsEnabled = false;
+        AdvancedStatus.Text = Str.T("Str.Writing");
+        var exe = Path.GetFileName(_gamePath);
+        var applied = 0; var failures = new List<string>();
+        try
+        {
+            foreach (var (settingId, value, _) in changes)
+            {
+                var receipt = await Task.Run(() => DisplayQualityService.SetAdvancedSetting(exe, settingId, value));
+                applied += receipt.AppliedCount;
+                failures.AddRange(receipt.Items
+                    .Where(i => i.Outcome != DisplayQualityService.DrsSettingOutcome.Applied).Select(i => i.Name));
+            }
+            AdvancedStatus.Text = failures.Count == 0
+                ? Str.T("Str.AdvancedWritten", applied)
+                : Str.T("Str.AdvancedWrittenPartial", applied, failures.Count, string.Join(" · ", failures));
+        }
+        catch (Exception ex)
+        {
+            failures.Add(PrivacyScrub.Sanitize(ex.Message));
+            AdvancedStatus.Text = Str.T("Str.AdvancedWrittenPartial", applied, failures.Count, string.Join(" · ", failures));
+        }
+        finally
+        {
+            _busy = false;
+            await RefreshDriverAsync();
+        }
+    }
+
+    private async void AdvancedWrite_Click(object sender, RoutedEventArgs e) => await ChangeAdvancedAsync();
     private static string Cap(uint? value) => value is null ? Str.T("Str.FollowDriverGame") : value == 0 ? Str.T("Str.FrameOff") : value + " FPS";
     private static uint? ReadCap(CheckBox selected, TextBox input, bool background)
     {

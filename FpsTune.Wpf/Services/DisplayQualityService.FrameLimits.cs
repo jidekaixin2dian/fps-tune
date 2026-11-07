@@ -12,14 +12,14 @@ public static partial class DisplayQualityService
     public static bool IsValidFrameLimit(uint value, bool background = false)
         => value == 0 || value >= 20 && value <= (background ? 200 : 1000);
 
-    public static void ApplyFrameLimits(string gameExe, FrameLimits limits)
+    public static DrsApplyReceipt ApplyFrameLimits(string gameExe, FrameLimits limits)
     {
         if (limits.Foreground is null && limits.Background is null)
             throw new ArgumentException(Str.T("Str.FrameSelectOne"));
         if (limits.Foreground is { } f && !IsValidFrameLimit(f)
             || limits.Background is { } b && !IsValidFrameLimit(b, background: true))
             throw new ArgumentOutOfRangeException(nameof(limits), Str.T("Str.FrameRange"));
-        ApplyManaged(gameExe, (session, owner) =>
+        return ApplyManaged(gameExe, (session, owner) =>
         {
             if (limits.Foreground is { } foreground) session.SetSettingDword(owner, FrameRateLimitId, foreground);
             if (limits.Background is { } background) session.SetSettingDword(owner, BackgroundFrameRateLimitId, background);

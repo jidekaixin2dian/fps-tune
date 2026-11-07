@@ -88,6 +88,9 @@
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                         <RadioButton Content="{DynamicResource Str.GroupPower}" GroupName="grpfilter" Tag="电源"
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
+                        <Button x:Name="PowerDetailsButton" Content="{DynamicResource Str.PowerDetailsOpen}"
+                                Style="{StaticResource GhostButtonStyle}" Height="36" MinWidth="104"
+                                Margin="0,0,6,6" VerticalAlignment="Top" Click="PowerDetails_Click"/>
                         <RadioButton Content="{DynamicResource Str.GroupSystem}" GroupName="grpfilter" Tag="系统与调度"
                                      Style="{StaticResource CategoryChoiceStyle}" Checked="GroupChip_Checked"/>
                     </WrapPanel>
@@ -189,7 +192,7 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-    <TextBlock x:Name="EmptyHint" Grid.Row="2" Text="{DynamicResource Str.NoMatchingItems}" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource MutedTextStyle}"/>
+    <TextBlock x:Name="EmptyHint" Grid.Row="3" Text="{DynamicResource Str.NoMatchingItems}" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource MutedTextStyle}"/>
     </Grid>
    </Border>
    <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="14,14,14,12">

@@ -1,0 +1,330 @@
+<Window x:Class="FpsTune.Wpf.Views.PowerDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:FpsTune.Wpf.Views"
+        Title="{DynamicResource Str.PowerDetailsTitle}"
+        Style="{StaticResource WindowTypographyStyle}"
+        Width="1040" Height="720" MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" WindowStyle="None"
+        ResizeMode="CanResizeWithGrip" Background="{DynamicResource AppBackdropBrush}">
+    <Border Background="{DynamicResource AppBackdropBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏 -->
+            <Grid Background="Transparent" MouseLeftButtonDown="Header_Drag">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Width="36" Height="36" CornerRadius="{DynamicResource RadiusControl}"
+                        Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1" VerticalAlignment="Center">
+                    <!-- 电源细项图标：矢量闪电，不用字符/emoji -->
+                    <Viewbox Width="21" Height="21">
+                        <Canvas Width="24" Height="24">
+                            <Path Data="M 13.6,3.2 L 6.2,13.4 H 11.2 L 10.4,20.8 L 17.8,10.6 H 12.8 Z"
+                                  Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.7"
+                                  StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        </Canvas>
+                    </Viewbox>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{DynamicResource Str.PowerDetailsTitle}" FontSize="18"
+                               FontWeight="{DynamicResource SmallEmphasisWeight}"
+                               Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock x:Name="PlanLabel" Style="{StaticResource MutedTextStyle}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <TextBlock x:Name="CountText" Grid.Column="2" Style="{StaticResource MutedTextStyle}"
+                           VerticalAlignment="Center" Margin="12,0,14,0"/>
+                <Button Grid.Column="3" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}"
+                        MinWidth="72" Click="Close_Click"/>
+            </Grid>
+
+            <!-- 搜索 + 筛选 + 批量动作（这些只过滤内存里的表，不重新枚举）。
+                 分两行：900 宽时搜索 + 三个筛选 + 三个批量动作挤在一行会被裁掉右边缘。 -->
+            <Grid Grid.Row="1" Margin="0,16,0,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Width="268" Height="36" VerticalAlignment="Center">
+                    <TextBox x:Name="SearchBox" Style="{StaticResource InputTextBoxStyle}"
+                             VerticalContentAlignment="Center" FontSize="13"
+                             AutomationProperties.Name="{DynamicResource Str.PowerDetailsSearch}"
+                             TextChanged="SearchBox_TextChanged"/>
+                    <TextBlock Text="{DynamicResource Str.PowerDetailsSearch}" IsHitTestVisible="False"
+                               HorizontalAlignment="Left" VerticalAlignment="Center" Margin="11,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+                <WrapPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                    <RadioButton x:Name="FilterAll" Content="{DynamicResource Str.PowerDetailsFilterAll}"
+                                 GroupName="powerfilter" IsChecked="True" Style="{StaticResource ChoiceTabStyle}"
+                                 Checked="Filter_Changed"/>
+                    <RadioButton x:Name="FilterChanged" Content="{DynamicResource Str.PowerDetailsFilterChanged}"
+                                 GroupName="powerfilter" Style="{StaticResource ChoiceTabStyle}"
+                                 Checked="Filter_Changed"/>
+                    <RadioButton x:Name="FilterHidden" Content="{DynamicResource Str.PowerDetailsFilterHidden}"
+                                 GroupName="powerfilter" Style="{StaticResource ChoiceTabStyle}"
+                                 Checked="Filter_Changed"/>
+                </WrapPanel>
+                <WrapPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10,0,0">
+                    <Button x:Name="RescanButton" Content="{DynamicResource Str.PowerDetailsRescan}"
+                            Style="{StaticResource GhostButtonStyle}" MinWidth="88" Click="Rescan_Click"/>
+                    <Button x:Name="RevealButton" Content="{DynamicResource Str.PowerDetailsRevealAll}"
+                            Style="{StaticResource GhostButtonStyle}" MinWidth="128" Margin="8,0,0,0"
+                            Click="RevealAll_Click"/>
+                    <Button x:Name="RestoreButton" Content="{DynamicResource Str.PowerDetailsRestoreAll}"
+                            Style="{StaticResource GhostButtonStyle}" MinWidth="112" Margin="8,0,0,0"
+                            Click="RestoreAll_Click"/>
+                </WrapPanel>
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340"/>
+                    <ColumnDefinition Width="14"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 左：分组列表（常用设置优先） -->
+                <Border Style="{StaticResource CardStyle}" Padding="6">
+                    <Grid>
+                        <ListBox x:Name="SettingList" Background="Transparent" BorderThickness="0"
+                                 ItemContainerStyle="{StaticResource CardListItemStyle}"
+                                 IsSynchronizedWithCurrentItem="False"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionChanged="SettingList_SelectionChanged">
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource MutedTextStyle}"
+                                                       Margin="8,12,0,4"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                            Padding="4,9,8,10">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding DisplayName}"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Style="{StaticResource ItemTitleStyle}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding DisplayName}"/>
+                                            <TextBlock Text="{Binding SubgroupName}"
+                                                       Style="{StaticResource MutedTextStyle}"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                            <WrapPanel Margin="0,6,0,0">
+                                                <Border Style="{StaticResource ChipStyle}" Margin="0,0,6,0"
+                                                        Visibility="{Binding HiddenBadgeVisibility}">
+                                                    <TextBlock Text="{Binding HiddenBadgeText}"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource WarningBrush}"/>
+                                                </Border>
+                                                <Border Style="{StaticResource ChipStyle}" Margin="0,0,6,0"
+                                                        Visibility="{Binding ChangedBadgeVisibility}">
+                                                    <TextBlock Text="{DynamicResource Str.PowerDetailsModifiedBadge}"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource AccentBrush}"/>
+                                                </Border>
+                                                <Border Style="{StaticResource ChipStyle}" Margin="0,0,6,0"
+                                                        Visibility="{Binding UnreadableBadgeVisibility}">
+                                                    <TextBlock Text="{DynamicResource Str.PowerDetailsUnreadable}"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource TextMutedBrush}"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding Summary}" Style="{StaticResource MutedTextStyle}"
+                                                           VerticalAlignment="Center"/>
+                                            </WrapPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock x:Name="ListHint" Style="{StaticResource MutedTextStyle}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="260" TextAlignment="Center"
+                                   Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
+
+                <!-- 右：选中项详情 -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="18,16">
+                    <Grid>
+                        <ScrollViewer x:Name="DetailsScroll" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="DetailsPanel" Visibility="Collapsed">
+                                <TextBlock x:Name="DetailTitle" FontSize="17"
+                                           FontWeight="{DynamicResource SmallEmphasisWeight}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                <WrapPanel Margin="0,8,0,0">
+                                    <Border x:Name="DetailHiddenBadge" Style="{StaticResource ChipStyle}"
+                                            Margin="0,0,6,0" Visibility="Collapsed">
+                                        <TextBlock x:Name="DetailHiddenBadgeText" FontSize="13"
+                                                   Foreground="{DynamicResource WarningBrush}"/>
+                                    </Border>
+                                    <Border x:Name="DetailChangedBadge" Style="{StaticResource ChipStyle}"
+                                            Visibility="Collapsed">
+                                        <TextBlock Text="{DynamicResource Str.PowerDetailsModifiedBadge}"
+                                                   FontSize="13" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                </WrapPanel>
+                                <TextBlock x:Name="DetailDescription" Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                <TextBlock x:Name="DetailSubgroup" Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+                                <!-- 读不到的项：只留重读入口，不给可编辑控件 -->
+                                <Border x:Name="ReadFailedPanel" Style="{StaticResource CardStyle}"
+                                        Padding="12" Margin="0,14,0,0" Visibility="Collapsed">
+                                    <StackPanel>
+                                        <TextBlock Text="{DynamicResource Str.PowerDetailsReadFailed}"
+                                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                        <Button Content="{DynamicResource Str.PowerDetailsRetry}"
+                                                Style="{StaticResource GhostButtonStyle}" MinWidth="96"
+                                                HorizontalAlignment="Left" Margin="0,8,0,0" Click="Retry_Click"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <StackPanel x:Name="ValueSection">
+                                    <Grid Margin="0,16,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="88"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{DynamicResource Str.PowerDetailsAc}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center"/>
+                                        <Grid Grid.Column="1">
+                                            <ComboBox x:Name="AcCombo" Style="{StaticResource SelectComboBoxStyle}"
+                                                      DisplayMemberPath="Display"
+                                                      SelectionChanged="AcCombo_SelectionChanged"/>
+                                            <TextBox x:Name="AcBox" Style="{StaticResource InputTextBoxStyle}"
+                                                     VerticalContentAlignment="Center" FontSize="13"
+                                                     TextChanged="AcBox_TextChanged"/>
+                                        </Grid>                                    </Grid>
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="88"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{DynamicResource Str.PowerDetailsDc}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center"/>
+                                        <Grid Grid.Column="1">
+                                            <ComboBox x:Name="DcCombo" Style="{StaticResource SelectComboBoxStyle}"
+                                                      DisplayMemberPath="Display" IsHitTestVisible="True"/>
+                                            <TextBox x:Name="DcBox" Style="{StaticResource InputTextBoxStyle}"
+                                                     VerticalContentAlignment="Center" FontSize="13"/>
+                                        </Grid>
+                                    </Grid>
+                                    <CheckBox x:Name="SameBothCheck"
+                                              Content="{DynamicResource Str.PowerDetailsSameBoth}"
+                                              Margin="0,12,0,0" Checked="SameBoth_Changed" Unchecked="SameBoth_Changed"/>
+                                    <TextBlock x:Name="DomainHint" Style="{StaticResource MutedTextStyle}"
+                                               TextWrapping="Wrap" Margin="0,12,0,0"/>
+                                    <TextBlock x:Name="DefaultHint" Style="{StaticResource MutedTextStyle}"
+                                               TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    <TextBlock x:Name="UnitsHint" Style="{StaticResource MutedTextStyle}"
+                                               TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                        <Button x:Name="ApplyButton" Content="{DynamicResource Str.PowerDetailsApply}"
+                                                Style="{StaticResource PrimaryButtonStyle}" MinWidth="88"
+                                                Click="Apply_Click"/>
+                                        <Button x:Name="ResetDefaultButton"
+                                                Content="{DynamicResource Str.PowerDetailsResetDefault}"
+                                                Style="{StaticResource GhostButtonStyle}" MinWidth="100"
+                                                Margin="8,0,0,0" Click="ResetDefault_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Border Style="{StaticResource CardStyle}" Padding="12,10" Margin="0,16,0,0">
+                                    <StackPanel>
+                                        <CheckBox x:Name="VisibleCheck"
+                                                  Content="{DynamicResource Str.PowerDetailsVisibleToggle}"
+                                                  Checked="Visible_Changed" Unchecked="Visible_Changed"/>
+                                        <TextBlock Text="{DynamicResource Str.PowerDetailsVisibleToggleHint}"
+                                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                                                   Margin="0,6,0,0"/>
+                                        <TextBlock x:Name="GroupHiddenHint"
+                                                   Text="{DynamicResource Str.PowerDetailsGroupHiddenHint}"
+                                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                                                   Margin="0,6,0,0" Visibility="Collapsed"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="{DynamicResource Str.PowerDetailsTechInfo}"
+                                           Style="{StaticResource CardTitleStyle}" Margin="0,18,0,4"/>
+                                <Grid Margin="0,0,0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="96"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{DynamicResource Str.PowerDetailsSettingGuid}"
+                                               Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="SettingGuidText" Grid.Column="1" Style="{StaticResource MutedTextStyle}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               FontFamily="{StaticResource FontCode}"/>
+                                    <Button Grid.Column="2" Content="{DynamicResource Str.PowerDetailsCopy}"
+                                            Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="28"
+                                            Tag="setting" Click="CopyGuid_Click"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="96"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{DynamicResource Str.PowerDetailsSubgroupGuid}"
+                                               Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="SubgroupGuidText" Grid.Column="1" Style="{StaticResource MutedTextStyle}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               FontFamily="{StaticResource FontCode}"/>
+                                    <Button Grid.Column="2" Content="{DynamicResource Str.PowerDetailsCopy}"
+                                            Style="{StaticResource GhostButtonStyle}" MinWidth="56" Height="28"
+                                            Tag="subgroup" Click="CopyGuid_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <TextBlock x:Name="SelectPrompt" Text="{DynamicResource Str.PowerDetailsSelectPrompt}"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ReadingText" Text="{DynamicResource Str.PowerDetailsReading}"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <TextBlock x:Name="StatusText" Grid.Row="3" Style="{StaticResource MutedTextStyle}"
+                       TextWrapping="Wrap" Margin="2,12,0,0"/>
+        </Grid>
+    </Border>
+</Window>

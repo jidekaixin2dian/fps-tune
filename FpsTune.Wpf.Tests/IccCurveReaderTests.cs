@@ -66,9 +66,9 @@ public sealed class IccCurveReaderTests
             var curves = IccCurveReader.TryRead(icc);
             Assert.NotNull(curves);
             Assert.All(curves!.Channels, channel => Assert.Equal(256, channel.Length));
-            // 结构对齐 1U：预设自带 vcgt 校准表（3×257 u16 = 1554 字节），观感就在这条表里。
+            // 结构对齐参考实现：预设自带 vcgt 校准表（3×257 u16 = 1554 字节），观感就在这条表里。
             Assert.True(ContainsTag(icc, "vcgt"), $"{preset} 的剖面里没有 vcgt");
-            // 16 字节头 + 3×257 条按通道平铺 = 1558 字节（真实 Windows/1U 文件的实测布局）
+            // 16 字节头 + 3×257 条按通道平铺 = 1558 字节（真实 Windows/参考实现文件的实测布局）
             Assert.Equal(1558, VcgtSize(icc));
             Assert.True(curves.EncodedRamp, $"{preset} 的曲线应当来自 vcgt（编码值→编码值）");
             if (!curves.IsIdentity) parsed++;
@@ -79,7 +79,7 @@ public sealed class IccCurveReaderTests
     [Fact]
     public void Reads_the_real_world_vcgt_layout()
     {
-        // 真实文件的实测布局（Windows 自带、1U 预设、厂商 profile 都一样）：
+        // 真实文件的实测布局（Windows 自带、参考实现预设、厂商 profile 都一样）：
         // 16 字节头（sig + reserved + type + channels + entries），后面按通道平铺、每通道 257 条；
         // 而且真实测量会有极小回折。以前按「12 字节头 + 按通道平铺 257」硬算，边界错位 → 全部被判成异常丢弃。
         static double Curve(double x) => Math.Pow(x, 1.1);
@@ -152,5 +152,108 @@ public sealed class IccCurveReaderTests
         foreach (var channel in strong!.Channels)
             for (var i = 1; i < 256; i++)
                 Assert.True(channel[i] >= channel[i - 1] - 1e-6, $"第 {i} 点出现回折");
+    }
+
+    [Fact]
+    public void Standard_four_param_type3_trc_parses_within_tag_bounds()
+    {
+        // 回归：旧读端把 3 型 para 按 5 参数读，参数边界又只对整个文件校验——标准 sRGB 的
+        // 3 型 TRC 恰好 12+16 字节，第 5 个「参数」读到了 tag 外的字节，整条曲线落进线性分支。
+        // 规范 3 型 = (g,a,b,d)，X<d 时 Y=0。
+        var tag = ParaTag(3, 2.4, 1 / 1.055, 0.055 / 1.055, 0.04045);
+        var curves = IccCurveReader.TryRead(ProfileWithParaTag(tag));
+        Assert.NotNull(curves);
+        Assert.False(curves!.Unsupported);
+        var channel = curves.Channels[0];
+        Assert.Equal(0.0, channel[10], 6);  // 0.0392 < d=0.04045 → 线性分支按规范为 0
+        Assert.True(channel[13] > 0, "X≥d 后应进入幂函数分支");
+        Assert.Equal(Srgb(128 / 255d), channel[128], 6);
+    }
+
+    [Fact]
+    public void Legacy_five_param_type3_still_evaluates_linear_branch()
+    {
+        // 本应用旧版生成的「3 型 + 5 参数」编码（语义即 4 型的 cX 分支）：旧文件必须照常可读。
+        var tag = ParaTag(3, 2.4, 1 / 1.055, 0.055 / 1.055, 1 / 12.92, 0.04045);
+        var curves = IccCurveReader.TryRead(ProfileWithParaTag(tag));
+        Assert.NotNull(curves);
+        Assert.False(curves!.Unsupported);
+        var channel = curves.Channels[0];
+        Assert.Equal(5 / 255d / 12.92, channel[5], 6); // 暗部线性：cX 而不是 0
+        Assert.Equal(Srgb(128 / 255d), channel[128], 6);
+    }
+
+    [Fact]
+    public void Generated_presets_use_spec_conformant_type4_trc_and_roundtrip()
+    {
+        var (tag, _) = ExtractTag(IccProfileGenerator.Build(IccFilterPreset.Vivid), "rTRC");
+        // 4 型（7 参数）规范编码；旧版是 3 型 + 5 参数，第三方解析器会读错暗部。
+        Assert.Equal(12 + 7 * 4, tag.Length);
+        Assert.Equal(4, (tag[8] << 8) | tag[9]);
+        // 从生成预设里抽出 TRC tag 单独解析：往返出同一条 sRGB 折线（亮部幂、暗部线性）。
+        var curves = IccCurveReader.TryRead(ProfileWithParaTag(tag));
+        Assert.NotNull(curves);
+        Assert.False(curves!.Unsupported);
+        Assert.Equal(Srgb(128 / 255d), curves.Channels[0][128], 6);
+        Assert.Equal(10 / 255d / 12.92, curves.Channels[0][10], 6);
+    }
+
+    private static double Srgb(double x)
+    {
+        // 期望值用 s15Fixed16 量化后的参数计算——读回的参数是 1/65536 步长的定点数，
+        // 与无限精度的 sRGB 公式差在 1e-6 量级，断言精度 1e-6 时必须对齐口径。
+        double Q(double v) => Math.Round(v * 65536) / 65536;
+        return x >= Q(0.04045)
+            ? Math.Pow(Q(1 / 1.055) * x + Q(0.055 / 1.055), Q(2.4))
+            : x * Q(1 / 12.92);
+    }
+
+    private static (byte[] Tag, int Size) ExtractTag(byte[] profile, string signature)
+    {
+        var count = (int)ReadUInt32(profile, 128);
+        for (var t = 0; t < count; t++)
+        {
+            var record = 132 + t * 12;
+            if (System.Text.Encoding.ASCII.GetString(profile, record, 4) != signature) continue;
+            var offset = (int)ReadUInt32(profile, record + 4);
+            var size = (int)ReadUInt32(profile, record + 8);
+            return (profile[offset..(offset + size)], size);
+        }
+        throw new InvalidOperationException("profile 里没有 " + signature + " tag");
+    }
+
+    private static uint ReadUInt32(byte[] data, int offset) =>
+        (uint)((data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3]);
+
+    private static byte[] ProfileWithParaTag(byte[] tagData)
+    {
+        using var ms = new MemoryStream();
+        using var bw = new BinaryWriter(ms);
+        bw.Write(new byte[128]);            // 头部：TryRead 只关心 128 偏移开始的 tag 表
+        bw.Write(Be32(1));                  // tag 数
+        bw.Write("rTRC"u8);
+        bw.Write(Be32(144));                // tag 数据偏移 = 128 + 4 + 12
+        bw.Write(Be32(tagData.Length));
+        bw.Write(tagData);
+        return ms.ToArray();
+    }
+
+    private static byte[] Be32(int value) =>
+        [(byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)value];
+
+    private static byte[] ParaTag(int type, params double[] parameters)
+    {
+        using var ms = new MemoryStream();
+        using var bw = new BinaryWriter(ms);
+        bw.Write("para"u8);
+        bw.Write(new byte[4]);              // reserved
+        bw.Write(new byte[] { (byte)(type >> 8), (byte)type });
+        bw.Write(new byte[2]);              // reserved
+        foreach (var parameter in parameters)
+        {
+            var raw = (int)Math.Round(parameter * 65536.0);
+            bw.Write(new byte[] { (byte)(raw >> 24), (byte)(raw >> 16), (byte)(raw >> 8), (byte)raw });
+        }
+        return ms.ToArray();
     }
 }

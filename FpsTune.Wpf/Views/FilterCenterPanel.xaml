@@ -6,7 +6,7 @@
         <Style x:Key="PresetCardStyle" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
             <Setter Property="Margin" Value="0,0,10,10"/>
         </Style>
-        <!-- 滤镜行：1U 的 .icc-filter-item —— 一条一行、整行吃满、无边框，悬停浅底、选中强调底 + 强调文字。 -->
+        <!-- 滤镜行：参考实现的 .icc-filter-item —— 一条一行、整行吃满、无边框，悬停浅底、选中强调底 + 强调文字。 -->
         <Style x:Key="FilterRowStyle" TargetType="RadioButton">
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -69,7 +69,7 @@
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,6">
                 <StackPanel x:Name="CategoryList" Orientation="Horizontal"/>
             </ScrollViewer>
-            <!-- 滤镜列表：1U 的一条一行，整行可点，右对齐分类标签 -->
+            <!-- 滤镜列表：参考实现的一条一行，整行可点，右对齐分类标签 -->
             <StackPanel x:Name="PresetList" Margin="0,0,0,8"/>
             <Button x:Name="ShowAllButton" Style="{StaticResource GhostButtonStyle}" HorizontalAlignment="Left"
                     Click="ShowAll_Click" Margin="0,0,0,8" Visibility="Collapsed"/>

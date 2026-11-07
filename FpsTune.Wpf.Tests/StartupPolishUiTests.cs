@@ -244,7 +244,7 @@ public sealed class StartupPolishUiTests
                 var window = new MainWindowStub(panel) { Width = 1100, Height = 820 };
                 app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
                 panel.UpdateLayout();
-                // 1U 版式：左列预设，右列「预览 + 实时调色」。预设列按 26% 夹在 340–420。
+                // 参考实现版式：左列预设，右列「预览 + 实时调色」。预设列按 26% 夹在 340–420。
                 var presets = (ColumnDefinition)panel.FindName("PresetColumn");
                 var previewColumn = (ColumnDefinition)panel.FindName("PreviewColumn");
                 var workspace = (Grid)panel.FindName("WorkspaceGrid");

@@ -182,6 +182,8 @@ public static class FilterSchemeStore
             }
             catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
             {
+                // 损坏先留档：直接按空处理会让下一次 Save 把用户全部方案无声覆盖掉。
+                try { AtomicFile.PreserveCorrupt(PathName); } catch { }
                 file = null;
             }
             _cache = Normalize(file);

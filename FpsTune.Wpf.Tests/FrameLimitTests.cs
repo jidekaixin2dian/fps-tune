@@ -81,7 +81,10 @@ public sealed class FrameLimitTests : IDisposable
         var profile = _api.AddProfile("existing", Exe);
         profile.Settings[DisplayQualityService.FrameRateLimitId] = 60;
         _api.SimulateSaveIgnored = true;
-        Assert.Throws<InvalidOperationException>(() => DisplayQualityService.ApplyFrameLimits(Exe, new(144, null)));
+        // 驱动忽略保存不再整批抛异常：回执里如实标出「读回不符」，其余项照常。
+        var ignored = DisplayQualityService.ApplyFrameLimits(Exe, new(144, null));
+        Assert.False(ignored.Ok);
+        Assert.Contains(DisplayQualityService.FrameRateLimitId, ignored.Mismatched.Select(item => item.SettingId));
         Assert.Equal(60u, profile.Settings[DisplayQualityService.FrameRateLimitId]);
         _api.SimulateSaveIgnored = false;
         DisplayQualityService.ApplyFrameLimits(Exe, new(144, null));

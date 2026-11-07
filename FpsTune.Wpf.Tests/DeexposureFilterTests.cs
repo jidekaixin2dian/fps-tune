@@ -7,6 +7,7 @@ namespace FpsTune.Wpf.Tests;
 /// 去曝光与滤镜分类专项：Highlight 色调映射的端点保持与方向、去曝光预设生成、
 /// 生成式滤镜预设流、43 个内置预设的分类覆盖。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class DeexposureFilterTests : IDisposable
 {
     private readonly string _dir;

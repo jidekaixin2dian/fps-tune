@@ -184,24 +184,17 @@ public sealed class Evolution040Tests : IDisposable
     public void Default_probe_matches_process_name_without_extension()
     {
         // 回归：探测名曾把 "xxx.exe" 传给 Process.GetProcessesByName（匹配不带扩展名的
-        // ProcessName），导致「游戏运行时 0.5ms」开关 100% 静默失效。用真实进程钉住行为。
-        using var process = System.Diagnostics.Process.Start(
-            new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c ping -n 5 127.0.0.1 > nul")
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-            });
-        try
-        {
-            var exePath = process!.MainModule?.FileName;
-            Assert.False(string.IsNullOrWhiteSpace(exePath));
-            Assert.True(GameTimerResolutionService.DefaultProbe("cmd", exePath));
-            Assert.False(GameTimerResolutionService.DefaultProbe("fpstune-nonexistent-probe", null));
-        }
-        finally
-        {
-            try { process!.Kill(); } catch { }
-        }
+        // ProcessName），导致「游戏运行时 0.5ms」开关 100% 静默失效。
+        // 用测试宿主自己的进程钉行为：不再起外部进程，避免全量负载下 cmd 抢先退出
+        // 导致 MainModule 读不到（这条以前靠拉长存活窗口硬扛，仍会偶发）。
+        var exePath = Environment.ProcessPath;
+        Assert.False(string.IsNullOrWhiteSpace(exePath));
+        var processName = Path.GetFileNameWithoutExtension(exePath);
+
+        Assert.True(GameTimerResolutionService.DefaultProbe(processName, exePath));
+        // 带扩展名的名字必须查不到——这正是当初静默失效的形态，保留反证。
+        Assert.False(GameTimerResolutionService.DefaultProbe(processName + ".exe", exePath));
+        Assert.False(GameTimerResolutionService.DefaultProbe("fpstune-nonexistent-probe", null));
     }
 
     // ---------- 后台资源只读采样 ----------

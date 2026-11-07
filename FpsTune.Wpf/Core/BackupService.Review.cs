@@ -101,6 +101,7 @@ public static partial class BackupService
         "power-setting" => r.TargetPlanGuid + " / " + (original ? r.OldPowerValue : r.PostPowerValue),
         "power-tuning" => r.TargetPlanGuid + " / USB=" + (original ? r.OldUsbValue : r.PostUsbValue) + " / Boost=" + (original ? r.OldBoostValue : r.PostBoostValue),
         "power-aspm" => r.TargetPlanGuid + " / " + (original ? r.OldAspmValue : r.PostAspmValue),
+        "power-overlay" => "AC overlay = " + (original ? r.OldAcOverlayGuid : r.PostAcOverlayGuid ?? "?"),
         _ => (original ? r.OldState : r.PostState) ?? "?"
     };
 

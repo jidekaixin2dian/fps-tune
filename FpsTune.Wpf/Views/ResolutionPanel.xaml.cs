@@ -39,6 +39,9 @@ public partial class ResolutionPanel : UserControl
         Unloaded += (_, _) =>
         {
             SystemEvents.DisplaySettingsChanged -= DisplaysChanged; _draft.Stop();
+            // 试用确认期的 400ms 轮询也一并停掉：页面被缓存不销毁，不停的话离开页面后
+            // 仍在后台轮询并刷新隐藏控件（回到页面会经 IsVisibleChanged/RefreshAsync 重新拉起）。
+            _countdown.Stop();
             if (_owner is not null) _owner.PreviewKeyDown -= TrialKeyDown;
             _owner = null;
         };

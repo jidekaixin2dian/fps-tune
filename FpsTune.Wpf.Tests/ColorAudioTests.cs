@@ -158,9 +158,9 @@ public sealed class ColorAudioTests
         var count = Be(bytes, 128);
         var tag = Enumerable.Range(0, count).Select(i => 132 + i * 12).Single(o => Encoding.ASCII.GetString(bytes, o, 4) == "rTRC");
         var data = Be(bytes, tag + 4);
-        // 与 1U 的预设同结构：TRC 是 para（sRGB），观感写在 vcgt，不再把反函数塞进 TRC。
+        // 与参考实现的预设同结构：TRC 是 para（sRGB），观感写在 vcgt，不再把反函数塞进 TRC。
         Assert.Equal("para", Encoding.ASCII.GetString(bytes, data, 4));
-        Assert.Equal(3, Be16(bytes, data + 8));                 // type 3
+        Assert.Equal(4, Be16(bytes, data + 8));                 // type 4（7 参数，e=f=0；旧的 3 型 + 5 参数是非规范编码，第三方解析器会把暗部裁黑）
         Assert.Equal((int)Math.Round(2.4 * 65536), (int)((int)System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(bytes.AsSpan(data + 12, 4))));
     }
 }

@@ -73,7 +73,11 @@ public static class GameFilterLibrary
             stream.CopyTo(memory);
             return memory.ToArray();
         }
-        var userPath = Path.Combine(UserDir, fileName);
+        // PresetFileName 可能来自导入的外部 schemes/app-rules.json：绝对路径或 ..\ 会经
+        // Path.Combine 越出用户滤镜目录（再被复制进系统色彩目录）。 confinement 到 UserDir 内。
+        var userPath = Path.GetFullPath(Path.Combine(UserDir, fileName));
+        if (!userPath.StartsWith(Path.GetFullPath(UserDir), StringComparison.OrdinalIgnoreCase))
+            throw new FileNotFoundException(Str.T("Str.FilterPresetMissing", fileName));
         return File.ReadAllBytes(userPath);
     }
 

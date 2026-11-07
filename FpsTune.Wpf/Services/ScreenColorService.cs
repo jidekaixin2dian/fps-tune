@@ -8,7 +8,7 @@ namespace FpsTune.Wpf.Services;
 public sealed record ScreenColorSettings(double Brightness = 0, double Contrast = 100, double Gamma = 1,
     double Shadows = 0, double Red = 100, double Green = 100, double Blue = 100, double Highlight = 0,
     double DarkBalance = ScreenColorService.DefaultDarkBalance,
-    // 游戏加加是「开关 + 滑杆」：关着时这条曲线完全不参与，滑杆值只记住不用。
+    // 参考实现是「开关 + 滑杆」：关着时这条曲线完全不参与，滑杆值只记住不用。
     bool DarkBalanceEnabled = false)
 {
     public void Validate()
@@ -34,7 +34,7 @@ public sealed record ScreenColorSettings(double Brightness = 0, double Contrast 
         IccFilterPreset.Deexposure => new(Highlight: -14),
         IccFilterPreset.DeexposureStrong => new(Highlight: -22, Shadows: 3),
         IccFilterPreset.Neutral => new(),
-        // 以下 21 条按 1U 2.9.6 的明文调色参数换算（详见 work/research/1u-filter-gap/），
+        // 以下 21 条按 参考实现的明文调色参数换算（详见本地研究资料），
         // Brightness/Contrast/Shadows/Red/Blue 已按 mappingRules 折算到本产品的取值范围。
         IccFilterPreset.Daylight => new(Brightness: -6, Contrast: 101.6, Gamma: 1.351, Shadows: 14.5),
         IccFilterPreset.Bright => new(Brightness: -2.8, Contrast: 96, Gamma: 1.25, Shadows: 3.5, Red: 100.5, Blue: 99.5),
@@ -57,7 +57,7 @@ public sealed record ScreenColorSettings(double Brightness = 0, double Contrast 
         IccFilterPreset.GameValorant => new(Brightness: -5.2, Contrast: 110, Gamma: 1.5, Shadows: 8.8),
         IccFilterPreset.GameNaraka2 => new(Brightness: -9.2, Contrast: 96.4, Gamma: 1.316, Shadows: .8),
         IccFilterPreset.GameCod16 => new(Brightness: -2.8, Contrast: 101.6, Gamma: 1.5, Shadows: 2),
-        // 会员调色（1U PRO_PRESET_TUNES 原值折算）：brightness/contrast 按 (v-50)*0.4、gamma 按 50/v、
+        // 会员调色（参考实现的会员调色参数 原值折算）：brightness/contrast 按 (v-50)*0.4、gamma 按 50/v、
         // shadow 按 v*0.25、highlights 按 (v-50)*0.5（0 视为不调）、色温按 (kelvin-6500)/4000 折 R/B。
         IccFilterPreset.VipSaturated => new(Brightness: 0.8, Contrast: 104.4, Gamma: 1.5, Highlight: -6, Red: 98.6, Blue: 101.4),
         IccFilterPreset.VipDeepVivid => new(Contrast: 98.4, Gamma: 0.806, Red: 99.25, Blue: 100.75),
@@ -153,14 +153,14 @@ public static class ScreenColorService
         }
         catch (Exception ex) { return new(false, ex.Message, new(), File.Exists(ReceiptPath(id))); }
     }
-    /// <summary>暗部平衡的中性值：45 对应 γ=1.0（不改变画面）；游戏加加自己的默认档 50 是 γ=0.9。</summary>
-    /// <summary>游戏加加 `DefinitionEnhancedDarkValue` 默认 50（对应 γ≈0.9）；关掉开关时这条曲线不参与。</summary>
+    /// <summary>暗部平衡的中性值：45 对应 γ=1.0（不改变画面）；参考实现自己的默认档 50 是 γ=0.9。</summary>
+    /// <summary>参考实现 `参考实现默认档` 默认 50（对应 γ≈0.9）；关掉开关时这条曲线不参与。</summary>
     internal const double DefaultDarkBalance = 50;
-    /// <summary>曲线不改变画面时的滑杆位置（γ=1.0 落在 36–37 之间，游戏加加中点也不是中性）。</summary>
+    /// <summary>曲线不改变画面时的滑杆位置（γ=1.0 落在 36–37 之间，参考实现中点也不是中性）。</summary>
     internal const double NeutralDarkBalance = 37;
 
     /// <summary>
-    /// 游戏加加「暗部平衡」的原始映射（逆向自 DisplayColorControl.dll / HardwareAddon.node，两处常量一致）：
+    /// 参考实现「暗部平衡」的原始映射（逆向自参考实现的调色组件，两处常量一致）：
     /// v = trunc(p/100*11 + 26) ∈ [26,37]，γ = (40-v)/10 ∈ [1.4, 0.3]，只有 12 档。
     /// </summary>
     internal static double DarkBalanceGamma(double darkBalance)
@@ -207,7 +207,7 @@ public static class ScreenColorService
     // shadow values to black. The ICC inverse and preview shader use the same mapping.
     internal static double MapTone(double x, ScreenColorSettings settings, double gain)
     {
-        // 暗部平衡=游戏加加「DefinitionEnhancedDark」的等比幂律曲线：输入先上抬 1/256（黑位不落到 0，
+        // 暗部平衡=参考实现「参考实现暗部平衡」的等比幂律曲线：输入先上抬 1/256（黑位不落到 0，
         // 这就是"暗部平衡"的观感来源），再按 12 档 γ 做幂运算；γ=1 时与改造前完全等价。
         // 开关关着时按中性值参与——BuildRamp 曾经在调用前替换过 settings，但 MapTone 也被
         // IccProfileGenerator 等直接调用，那些路径会按滑杆值算出一条「黑位被抬起」的曲线，

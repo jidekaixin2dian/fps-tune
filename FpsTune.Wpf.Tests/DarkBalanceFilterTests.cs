@@ -4,7 +4,7 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>
-/// 暗部平衡（游戏加加 DefinitionEnhancedDark 的反汇编还原）与新接入的 1U 调色预设。
+/// 暗部平衡（反汇编还原的暗部映射）与新接入的调色预设。
 /// 曲线必须能逐点复算：p→12 档 γ→(i+1)/256 幂律，黑位抬起、白点锁 65535。
 /// </summary>
 public class DarkBalanceFilterTests
@@ -71,7 +71,7 @@ public class DarkBalanceFilterTests
     public void Reference_default_lifts_black_and_keeps_white()
     {
         var ramp = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 50, DarkBalanceEnabled: true), Identity());
-        // 游戏加加默认档（p=50, γ=0.9）实测 ramp[0] ≈ 446，白点保持 65535。
+        // 参考实现默认档（p=50, γ=0.9）实测 ramp[0] ≈ 446，白点保持 65535。
         Assert.InRange(ramp[0], 420, 470);
         Assert.Equal(65535, ramp[255]);
         Assert.Equal(ramp[0], ramp[256]);
@@ -97,7 +97,7 @@ public class DarkBalanceFilterTests
     [Fact]
     public void Toggle_off_ignores_the_slider_value_entirely()
     {
-        // 游戏加加是「开关 + 滑杆」：开关关着时这条曲线完全不参与，滑杆只是记着。
+        // 参考实现是「开关 + 滑杆」：开关关着时这条曲线完全不参与，滑杆只是记着。
         var off = ScreenColorService.BuildRamp(new ScreenColorSettings(DarkBalance: 100), Identity());
         var neutral = ScreenColorService.BuildRamp(
             new ScreenColorSettings(DarkBalance: ScreenColorService.NeutralDarkBalance), Identity());

@@ -97,7 +97,15 @@ public sealed class MscmsIccApi : IIccSystemApi
     {
         ValidateConnection(display);
         using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(AssociationBasePath + "\\" + display.AssociationSubKey);
-        return key?.GetValue("ICMProfile") as string[] ?? [];
+        var value = key?.GetValue("ICMProfile");
+        // 兼容 REG_SZ 形态（单字符串关联，老式工具会这么写）：按空表处理会把用户原有
+        // 关联当成「没有」，备份还原后原关联被静默清掉。
+        return value switch
+        {
+            string[] list => list,
+            string single => [single],
+            _ => [],
+        };
     }
     public void WriteAssociationList(IccDisplayInfo display, string[] list)
     {

@@ -1,5 +1,6 @@
 using System.Runtime.ExceptionServices;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -223,8 +224,12 @@ public sealed class ReadabilityAndFramesUiTests
                 Descendants(display).OfType<RadioButton>().Single(b => b.Tag as string == "identity").IsChecked = true;
                 var presets = (ListBox)display.FindName("GpuIdentityPresets"); presets.SelectedIndex = 0; window.UpdateLayout();
                 Assert.Equal(8, presets.Items.Count); Assert.Equal("NVIDIA GeForce GTX 750 Ti", ((TextBlock)display.FindName("GpuIdentityPreviewName")).Text);
-                Assert.Equal(new[] { "GTX 750 Ti", "GTX 1050 Ti" }, presets.Items.Cast<GpuNamePreset>().Where(p => p.IsRecommended).Select(p => p.Name));
-                Assert.All(presets.Items.Cast<GpuNamePreset>().Take(2), p => Assert.True(p.IsRecommended));
+                // 预设列表改成带「是否当前型号」的包装项后，推荐标记与禁用规则都从包装项读取。
+                Assert.Equal(new[] { "GTX 750 Ti", "GTX 1050 Ti" }, presets.Items.Cast<GpuPresetItem>().Where(p => p.IsRecommended).Select(p => p.Name));
+                Assert.All(presets.Items.Cast<GpuPresetItem>().Take(2), p => Assert.True(p.IsRecommended));
+                // 设备真实型号是 RTX 4060，没有预设与它相同：不该有任何一项被标成当前型号。
+                Assert.All(presets.Items.Cast<GpuPresetItem>(), p => Assert.False(p.IsCurrent));
+                Assert.True(((Button)display.FindName("GpuIdentityApplyButton")).IsEnabled);
                 Assert.True(devices.ActualWidth <= 600);
                 Assert.Contains(Descendants(devices).OfType<TextBlock>(), t => t.Text == "NVIDIA GeForce RTX 4060");
                 Assert.DoesNotContain(Descendants(devices).OfType<TextBlock>(), t => t.Text.Contains("InstanceId"));
@@ -301,6 +306,133 @@ public sealed class ReadabilityAndFramesUiTests
     }
 
     [Fact]
+    public void Ab_step_card_shows_statistical_evidence_for_completed_simulated_group()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            // RootOverride 已把 UserDataPaths.Root 隔离到临时目录，不碰用户真实实验数据。
+            // 按视图 ApplyStepResult 的真实链路造状态：runner 产 evidence → WizardGroupResult 持久化。
+            Assert.Equal(0, ExperimentRunner.RunAsync("baseline",
+                new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult().ExitCode);
+            var run = ExperimentRunner.RunAsync("group-1",
+                new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult();
+            Assert.Equal(0, run.ExitCode);
+            var json = JsonNode.Parse(run.Json)!;
+            var summary = json["groupSummary"]!;
+            var evidence = json["evidence"]!.GetValue<string>();
+            ExperimentWizardStore.Save(ExperimentWizard.WithGroupResult(
+                ExperimentWizard.WithBaseline(new ExperimentWizardState(), 100, 60, 0.01, true, null),
+                new WizardGroupResult("group-1", json["keep"]!.GetValue<bool>(), json["reverted"]!.GetValue<bool>(),
+                    json["reason"]!.GetValue<string>(), summary["avgFps"]!.GetValue<double>(),
+                    summary["p1Low"]!.GetValue<double>(), null, true, DateTime.Now, evidence),
+                null));
+
+            var window = new MainWindow { Width = 1180, Height = 800 };
+            window.NavigateTo("ab"); app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
+                DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
+                window.UpdateLayout();
+                Assert.True(Descendants(page).OfType<TextBlock>().Any(t => t.Text.Contains(evidence, StringComparison.Ordinal)),
+                    "候选组步骤卡没有显示统计证据行：" + evidence);
+                Capture(window, "ab-evidence-dark", []);
+                ThemeManager.SetMode("light");
+                window.UpdateLayout();
+                Capture(window, "ab-evidence-light", []);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Ab_report_export_includes_evidence_lines_and_stats_section()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            SettingsService.Current.NotifyOnComplete = false;
+            var expDir = Path.Combine(root, "experiment");
+            Directory.CreateDirectory(expDir);
+
+            // 模拟链路产出带 analysis/evidence 的 state；复制为真实名 state-v2.json，
+            // 正好同时走通「打开页面从旧 state 迁移向导」与「报告步骤读取真实 state」两条路径。
+            Assert.Equal(0, ExperimentRunner.RunAsync("baseline",
+                new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult().ExitCode);
+            foreach (var group in new[] { "group-1", "group-2", "group-3" })
+                Assert.Equal(0, ExperimentRunner.RunAsync(group,
+                    new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult().ExitCode);
+            File.Copy(Path.Combine(expDir, "state-simulated-v2.json"), Path.Combine(expDir, "state-v2.json"), overwrite: true);
+
+            var window = new MainWindow { Width = 1180, Height = 800 };
+            window.NavigateTo("ab"); app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
+                DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
+                window.UpdateLayout();
+
+                // 迁移自 state 的三个候选组必须带证据行（迁移丢字段的回归在这里一并拦住）。
+                var stateEvidence = JsonNode.Parse(File.ReadAllText(Path.Combine(expDir, "state-v2.json")))!
+                    ["groups"]![0]!["evidence"]!.GetValue<string>();
+                Assert.False(string.IsNullOrWhiteSpace(stateEvidence));
+                Assert.True(Descendants(page).OfType<TextBlock>().Any(t => t.Text.Contains(stateEvidence, StringComparison.Ordinal)),
+                    "迁移后的候选组步骤卡丢失统计证据行：" + stateEvidence);
+
+                var reportButton = Descendants(page).OfType<Button>()
+                    .Single(b => ReferenceEquals(b.Content, Str.T("Str.GenerateReport")));
+                Assert.True(reportButton.IsEnabled, "三个候选组完成后报告步骤应可运行");
+                reportButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+
+                var reportPath = Path.Combine(expDir, "report-latest.md");
+                DlssFeedbackTests.PumpUntil(() => File.Exists(reportPath));
+                var markdown = File.ReadAllText(reportPath);
+                Assert.Contains(Str.T("Str.AbReportStatsSection"), markdown);
+                Assert.Contains(Str.T("Str.AbReportStatsMethod"), markdown);
+                Assert.Contains(stateEvidence, markdown);
+
+                var csvPath = Path.Combine(expDir, "experiment-summary.csv");
+                Assert.True(File.Exists(csvPath));
+                Assert.StartsWith("group,keep,avgFps,p1Low,p99Ms,stutters,rounds,avgDiffPct,ciLowerPct,ciUpperPct,verdict,reason",
+                    File.ReadLines(csvPath).First());
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
+    public void Quick_optimize_applies_pending_preset_on_repeat_navigation()
+    {
+        // 回归：PendingPreset 的消费原来写在一次性初始化守卫之后，页面缓存后
+        // 第二次从首页方案 chips 跳入会被 _loaded 早退拦下，点击被静默忽略。
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
+        RunUi((app, _) =>
+        {
+            var window = new MainWindow { Width = 1180, Height = 800 };
+            window.NavigateTo("quick"); app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            try
+            {
+                var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
+                DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
+                var planBox = (ComboBox)page.FindName("PlanBox");
+                DlssFeedbackTests.PumpUntil(() => planBox.Items.Count > 0);
+                Assert.True(planBox.Items.Count > 1, "方案下拉应至少有两档");
+                Assert.Equal(0, planBox.SelectedIndex);
+
+                // 模拟首页点「安全档」chip：设置预选后离开再回到 quick 页。
+                // Loaded 事件经 Dispatcher 异步排队，等不到 IsLoaded 变化，直接等结果。
+                QuickOptimizeView.PendingPreset = "safe-only";
+                window.NavigateTo("home");
+                window.NavigateTo("quick");
+                DlssFeedbackTests.PumpUntil(() => planBox.SelectedIndex == 1);
+                Assert.Null(QuickOptimizeView.PendingPreset); // 消费一次，不残留
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Actual_frame_buttons_validate_commit_restore_only_caps_and_keep_failed_edits_visible()
     {
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
@@ -354,7 +486,8 @@ public sealed class ReadabilityAndFramesUiTests
                 api.SimulateSaveIgnored = true;
                 mainCheck.IsChecked = true; mainBox.Text = "165";
                 apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                DlssFeedbackTests.PumpUntil(() => controls.IsEnabled && state.Text.StartsWith(Str.T("Str.FrameFailed", ""), StringComparison.Ordinal));
+                // 逐项回执取代整批抛异常：保存没落地时状态行直说「驱动没有保存这次限帧」。
+                DlssFeedbackTests.PumpUntil(() => controls.IsEnabled && state.Text == Str.T("Str.FrameNotPersisted"));
                 Assert.Equal("165", mainBox.Text); Assert.True(mainCheck.IsChecked);
                 Assert.Equal(90u, profile.Settings[DisplayQualityService.FrameRateLimitId]);
             }

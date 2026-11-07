@@ -45,6 +45,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
     private int _polling;
     private int _disposed;
     private bool _paused;
+    private bool _restoreFailed;
     private DateTime _fullscreenCheckedAt;
     private bool _fullscreen;
 
@@ -155,6 +156,13 @@ internal sealed class ForegroundFilterWatcher : IDisposable
                 Disengage(Str.T("Str.FilterWatcherReasonExit"), false);
                 return;
             }
+            // 还原失败的退避到期：主动重试还原。此前还原失败后只有「进程退出边沿」
+            // 一条路能再进还原，切焦点路径的失败（原进程还活着）退避到期后永远不会再试。
+            if (_applied && _restoreFailed && DateTime.UtcNow >= _nextRetryAt)
+            {
+                Disengage(Str.T("Str.FilterWatcherReasonRetry"), false);
+                return;
+            }
             var app = ReadForeground();
             var matched = IccAppRuleStore.Match(app);
             // 命中但什么都没设的规则＝「跟随桌面」：不套模板、也不写屏，就当它不存在但也不让全自动兜底接管。
@@ -218,15 +226,22 @@ internal sealed class ForegroundFilterWatcher : IDisposable
             outcome = rule.PresetFileName;
         }
         else outcome = PerAppFilterExecution.Apply(display, rule);
-        lock (_gate)
-        {
-            _applied = true; _appliedRule = rule; _appliedDisplay = display; _appliedPid = app.ProcessId;
-            _lastError = null;
-            _detail = Str.T("Str.FilterWatcherActive", app.ProcessName, rule.PresetFileName);
-        }
+            lock (_gate)
+            {
+                _applied = true; _appliedRule = rule; _appliedDisplay = display; _appliedPid = app.ProcessId;
+                _lastError = null; _restoreFailed = false;
+                _detail = Str.T("Str.FilterWatcherActive", app.ProcessName, rule.PresetFileName);
+            }
         AutoProfileActivityStore.Append(new AutoProfileEvent(DateTime.Now, AutoProfileActivityStore.KindApplied,
             app.ProcessName, rule.PresetFileName,
             Str.T("Str.FilterWatcherApplied", app.ProcessName, outcome)));
+        // 在飞兜底：进入 Engage 前的 _paused/_disposed 检查早已过去、写屏刚刚完成——
+        // 立刻还原，别把刚写上的滤镜留在「已停止/已退出」的状态下（下次还原要等几小时后的启动恢复）。
+        if (_paused || Volatile.Read(ref _disposed) != 0)
+        {
+            Disengage(_paused ? Str.T("Str.FilterWatcherReasonStopped") : Str.T("Str.FilterWatcherReasonExit"), false);
+            return;
+        }
         // 「进游戏时提示」：只弹托盘气泡，不抢焦点、不打断游戏。
         if (SettingsService.Current.FilterApplyNotify)
         {
@@ -248,10 +263,10 @@ internal sealed class ForegroundFilterWatcher : IDisposable
 
     private void Disengage(string reason, bool suppressed)
     {
-        FilterAppRule? previous; string? identity;
+        FilterAppRule? previous; string? identity; int previousPid;
         lock (_gate)
         {
-            previous = _appliedRule; identity = _appliedDisplay;
+            previous = _appliedRule; identity = _appliedDisplay; previousPid = _appliedPid;
             if (!_applied) { _detail = ""; return; }
             _applied = false; _appliedRule = null; _appliedDisplay = null; _appliedPid = 0;
         }
@@ -260,7 +275,7 @@ internal sealed class ForegroundFilterWatcher : IDisposable
             bool restored;
             if (RestoreOverride is { } hook) restored = hook();
             else { restored = PerAppFilterExecution.Restore(identity!).Length > 0; PerAppFilterExecution.MarkRestored(); }
-            lock (_gate) { _lastError = null; _detail = Str.T("Str.FilterWatcherRestored", reason); }
+            lock (_gate) { _lastError = null; _restoreFailed = false; _detail = Str.T("Str.FilterWatcherRestored", reason); }
             AutoProfileActivityStore.Append(new AutoProfileEvent(DateTime.Now, AutoProfileActivityStore.KindInfo,
                 "", previous?.PresetFileName, Str.T("Str.FilterWatcherRestored", reason) + (restored ? "" : " · " + Str.T("Str.ColorNoBackup"))));
         }
@@ -268,7 +283,13 @@ internal sealed class ForegroundFilterWatcher : IDisposable
         {
             // 恢复失败时重新标为已接管，后续轮询会继续尝试；绝不能丢掉 pending 后遗忘。
             // 退避 10 秒再试，别在显示器拔出这类持续性故障上每 500ms 刷一次还原和失败记录。
-            lock (_gate) { _applied = true; _appliedRule = previous; _appliedDisplay = identity; _lastError = ex.Message; _detail = ex.Message; }
+            // _appliedPid 也要一并恢复：退出边沿重试（Poll 里的 _appliedPid > 0 闸）靠它认出
+            // 原进程已退出；清零会让那次还原失败成为最后一次尝试。
+            lock (_gate)
+            {
+                _applied = true; _appliedRule = previous; _appliedDisplay = identity; _appliedPid = previousPid;
+                _lastError = ex.Message; _restoreFailed = true; _detail = ex.Message;
+            }
             _nextRetryAt = DateTime.UtcNow.Add(RetryBackoff);
             Record(AutoProfileActivityStore.KindFailed, Str.T("Str.FilterWatcherRestoreFailed", PrivacyScrub.Sanitize(ex.Message)));
         }

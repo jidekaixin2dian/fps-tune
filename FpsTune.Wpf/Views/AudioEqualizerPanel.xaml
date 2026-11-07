@@ -34,7 +34,17 @@
     <Button x:Name="DeviceSetupButton" Content="{DynamicResource Str.EqDeviceSetup}" Style="{StaticResource SecondaryButtonStyle}" Click="DeviceSetup_Click" Margin="0,0,8,8"/>
     <Button Content="{DynamicResource Str.EqRefresh}" Style="{StaticResource SecondaryButtonStyle}" Click="Refresh_Click" Margin="0,0,0,8"/>
    </WrapPanel>
-   <ComboBox x:Name="OutputCombo" Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.EqOutput}" Margin="0,8,0,0"/>
+   <!-- 「输出到」：跟随系统默认时切耳机/音箱会自动写到新的默认设备，也可以固定选一台。 -->
+   <TextBlock Text="{DynamicResource Str.EqOutputTo}" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,0"/>
+   <TextBlock x:Name="DefaultOutputText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,6"/>
+   <ComboBox x:Name="OutputCombo" Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.EqOutput}"/>
+   <TextBlock x:Name="WrittenToText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+   <TextBlock x:Name="MismatchText" Style="{StaticResource MutedTextStyle}" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+   <WrapPanel Margin="0,10,0,0">
+    <Button x:Name="FollowNowButton" Style="{StaticResource SecondaryButtonStyle}" Click="FollowNow_Click" Visibility="Collapsed" Margin="0,0,8,0"/>
+    <CheckBox x:Name="PauseTakeoverCheck" Content="{DynamicResource Str.EqTakeoverPause}" VerticalAlignment="Center" Click="PauseTakeover_Click"/>
+   </WrapPanel>
+   <TextBlock Text="{DynamicResource Str.EqFollowHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
   </StackPanel></Border>
   <Border Style="{StaticResource CardStyle}" Margin="0,16,0,0"><StackPanel>
    <TextBlock Text="{DynamicResource Str.EqBands}" Style="{StaticResource CardTitleStyle}"/>

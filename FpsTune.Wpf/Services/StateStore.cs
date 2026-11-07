@@ -111,6 +111,8 @@ public static class StateStore
         }
         catch
         {
+            // 损坏先留档：内存清理的「游戏豁免」靠这份档案，无声清空会让登记的自定义游戏失去保护。
+            try { AtomicFile.PreserveCorrupt(GamesFile); } catch { }
             return [];
         }
     }

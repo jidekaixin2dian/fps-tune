@@ -155,6 +155,30 @@ public sealed class InstallIntegrityTests : IDisposable
     }
 
     [Fact]
+    public void Desktop_shortcut_falls_back_to_the_user_desktop_without_admin_rights()
+    {
+        // 公共桌面（C:\Users\Public\Desktop）和公共开始菜单一样要管理员；
+        // 写不进去就落到用户桌面，桌面上照样看得见，不该整体报修复失败。
+        MarkInstalled();
+        InstallIntegrity.ShortcutCreateOverride = (path, target) =>
+        {
+            if (path == InstallIntegrity.DesktopShortcut)
+                throw new UnauthorizedAccessException("模拟无管理员权限");
+            _created.Add(path);
+            _shortcuts[path] = (path, target);
+        };
+        var before = InstallIntegrity.Inspect()!;
+        Assert.Contains(InstallGap.DesktopShortcut, before.Gaps);
+
+        var result = InstallIntegrity.Repair(before);
+
+        Assert.True(result.Ok);
+        Assert.True(_shortcuts.ContainsKey(InstallIntegrity.UserDesktopShortcut));
+        Assert.False(_shortcuts.ContainsKey(InstallIntegrity.DesktopShortcut));
+        Assert.True(InstallIntegrity.Inspect()!.IsComplete);
+    }
+
+    [Fact]
     public void Repair_does_not_touch_shortcuts_that_already_exist()
     {
         MarkInstalled();

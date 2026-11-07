@@ -21,13 +21,29 @@ public sealed record EqualizerSettings(string DeviceId, double[] Gains, double P
     public double EffectivePreamp => Math.Min(Preamp, -Math.Max(0, Gains.Max()));
 }
 public sealed record EqualizerEngine(string InstallPath, string ConfigPath, string DeviceTool);
+/// <summary>默认输出设备发生变化：<see cref="Previous"/> 为空表示启动后第一次读到设备。</summary>
+public sealed record AudioOutputChange(AudioOutput? Previous, AudioOutput? Current);
+/// <summary>跟随结果：<see cref="Written"/> 表示真的写了配置文件，<see cref="Key"/> 是展示文案的字符串键。</summary>
+public sealed record AudioFollowResult(bool Written, string Key, string Message);
 
 /// <summary>Use Equalizer APO's documented config language. Own one include, never replace another equalizer's settings.</summary>
 public static class AudioEqualizerService
 {
     internal static EqualizerEngine? EngineOverride;
     internal static string? BackupDirOverride;
-    private static string ReceiptPath => Path.Combine(BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "audio-equalizer"), "receipt.json");
+    /// <summary>测试注入：显式回答「引擎是否存在」，null 表示走真实探测。</summary>
+    internal static Func<EqualizerEngine?>? EngineProbeOverride;
+    /// <summary>测试注入：假的可用端点列表。</summary>
+    internal static Func<IReadOnlyList<AudioOutput>>? OutputsOverride;
+    /// <summary>测试注入：假的默认端点。</summary>
+    internal static Func<AudioOutput?>? DefaultOutputOverride;
+    /// <summary>测试注入：时钟（默认输出轮询按 2 秒节流）。</summary>
+    internal static Func<DateTimeOffset>? ClockOverride;
+    /// <summary>默认输出轮询间隔，参考实现按固定节流读默认端点。</summary>
+    public const int PollIntervalMs = 2000;
+    private static string BackupDir => BackupDirOverride ?? Path.Combine(UserDataPaths.Root, "audio-equalizer");
+    private static string ReceiptPath => Path.Combine(BackupDir, "receipt.json");
+    private static string PauseFlagPath => Path.Combine(BackupDir, "takeover-paused");
     private const string IncludeName = "FpsTune-Equalizer.txt";
     private const string IncludeBlock = "# BEGIN FpsTune Equalizer\r\nInclude: FpsTune-Equalizer.txt\r\n# END FpsTune Equalizer\r\n";
     private sealed record Receipt(string ConfigPath, byte[] OriginalMain, byte[] Prefix, string? ContentHash, EqualizerSettings Settings, string? PreviousContentHash = null);
@@ -55,6 +71,7 @@ public static class AudioEqualizerService
     }
     public static EqualizerEngine? FindEngine()
     {
+        if (EngineProbeOverride is not null) return EngineProbeOverride();
         if (EngineOverride is not null) return EngineOverride;
         using var reg = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\EqualizerAPO");
         var root = Environment.ExpandEnvironmentVariables(reg?.GetValue("InstallPath") as string ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "EqualizerAPO"));
@@ -62,7 +79,9 @@ public static class AudioEqualizerService
         var tool = new[] { "DeviceSelector.exe", "Configurator.exe" }.Select(n => Path.Combine(root, n)).FirstOrDefault(File.Exists);
         return tool is null || !File.Exists(Path.Combine(config, "config.txt")) ? null : new(root, config, tool);
     }
-    public static IReadOnlyList<AudioOutput> Outputs()
+    public static IReadOnlyList<AudioOutput> Outputs() => OutputsOverride?.Invoke() ?? ReadOutputs();
+
+    private static IReadOnlyList<AudioOutput> ReadOutputs()
     {
         using var root = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Render");
         var result = new List<AudioOutput>();
@@ -81,6 +100,116 @@ public static class AudioEqualizerService
             result.Add(new(id, string.IsNullOrWhiteSpace(name) ? id : name));
         }
         return result;
+    }
+    /// <summary>两个端点是否同一台设备：ID 可能是裸 GUID、也可能是带大括号的 GUID。</summary>
+    public static bool SameDevice(string? left, string? right)
+        => Guid.TryParse(left, out var a) && Guid.TryParse(right, out var b)
+            ? a == b
+            : !string.IsNullOrEmpty(left) && string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>系统当前默认渲染端点；读不到时返回 null（不猜、不拿列表第一台顶上）。</summary>
+    public static AudioOutput? DefaultOutput()
+    {
+        var probed = DefaultOutputOverride is not null ? DefaultOutputOverride() : AudioEndpointProbe.Probe();
+        if (probed is null) return null;
+        // 探测只保证 ID 可用，友好名来自 MMDevices 的端点属性。
+        var id = AudioEndpointProbe.Normalize(probed.Id) ?? probed.Id;
+        return Outputs().FirstOrDefault(d => SameDevice(d.Id, id)) ?? probed with { Id = id };
+    }
+
+    /// <summary>本程序当前写入的目标设备（以已应用的方案为准，没写过返回 null）。</summary>
+    public static AudioOutput? AppliedTarget()
+    {
+        EqualizerSettings? saved;
+        try { saved = SavedSettings(); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException) { return null; }
+        if (saved is null) return null;
+        return Outputs().FirstOrDefault(d => SameDevice(d.Id, saved.DeviceId)) ?? new AudioOutput(saved.DeviceId, saved.DeviceId);
+    }
+
+    /// <summary>
+    /// 暂停接管：置位后不再写入自己的配置文件（应用会被挡下并如实说明）。
+    /// 已写进去的 include 与用户 config.txt 主体都不动；恢复接管后下次应用才继续写入。
+    /// </summary>
+    public static bool TakeoverPaused
+    {
+        get => File.Exists(PauseFlagPath);
+        set
+        {
+            if (value)
+            {
+                Directory.CreateDirectory(BackupDir);
+                File.WriteAllText(PauseFlagPath, "paused", new UTF8Encoding(false));
+            }
+            else if (File.Exists(PauseFlagPath)) File.Delete(PauseFlagPath);
+        }
+    }
+
+    private static AudioOutput? _lastDefaultOutput;
+    private static DateTimeOffset _lastPollAt;
+    private static bool _defaultObserved;
+
+    /// <summary>2 秒节流轮询默认端点；只有真的换了设备才返回变化，第一次读到只作初始化。</summary>
+    public static AudioOutputChange? PollDefaultOutput()
+    {
+        var now = ClockOverride?.Invoke() ?? DateTimeOffset.UtcNow;
+        if (_defaultObserved && now - _lastPollAt < TimeSpan.FromMilliseconds(PollIntervalMs)) return null;
+        _lastPollAt = now;
+        var current = DefaultOutput();
+        if (!_defaultObserved)
+        {
+            _defaultObserved = true; _lastDefaultOutput = current;
+            return null;
+        }
+        var previous = _lastDefaultOutput; _lastDefaultOutput = current;
+        if (previous is null && current is null) return null;
+        return SameDevice(previous?.Id, current?.Id) ? null : new AudioOutputChange(previous, current);
+    }
+
+    internal static void ResetDefaultOutputTracking()
+    {
+        _defaultObserved = false; _lastDefaultOutput = null; _lastPollAt = default;
+    }
+
+    /// <summary>面板定时调用：设备变了就给一句可展示的结果；follow 为真时顺手把方案写到新设备。</summary>
+    public static AudioFollowResult? MonitorDefaultOutput(bool follow)
+    {
+        var change = PollDefaultOutput();
+        if (change is null) return null;
+        if (change.Current is null) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
+        return follow
+            ? FollowDefaultOutput()
+            : new(false, "Str.EqOutputSwitched", Str.T("Str.EqOutputSwitched", change.Current.Name));
+    }
+
+    /// <summary>
+    /// 把已应用的方案写到当前默认输出设备。
+    /// 未安装引擎、暂停接管、没有可跟随的方案时只返回原因，不写任何文件。
+    /// </summary>
+    public static AudioFollowResult FollowDefaultOutput()
+    {
+        if (TakeoverPaused) return new(false, "Str.EqTakeoverPaused", Str.T("Str.EqTakeoverPaused"));
+        var target = DefaultOutput();
+        if (target is null) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
+        if (FindEngine() is null) return new(false, "Str.EqFollowNoEngine", Str.T("Str.EqFollowNoEngine"));
+        EqualizerSettings? saved;
+        try { saved = SavedSettings(); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException)
+        {
+            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed", target.Name, ex.Message));
+        }
+        if (saved is null) return new(false, "Str.EqFollowNoSettings", Str.T("Str.EqFollowNoSettings"));
+        if (SameDevice(saved.DeviceId, target.Id)) return new(false, "Str.EqFollowAlready", Str.T("Str.EqFollowAlready", target.Name));
+        if (!Guid.TryParse(target.Id, out var deviceId)) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
+        try
+        {
+            Apply(saved with { DeviceId = deviceId.ToString("B") });
+            return new(true, "Str.EqFollowed", Str.T("Str.EqFollowed", target.Name));
+        }
+        catch (Exception ex) when (ex is IOException or InvalidOperationException or InvalidDataException or UnauthorizedAccessException)
+        {
+            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed", target.Name, ex.Message));
+        }
     }
     internal static string BuildConfiguration(EqualizerSettings settings)
     {
@@ -133,9 +262,10 @@ public static class AudioEqualizerService
     public static void Apply(EqualizerSettings settings)
     {
         settings.Validate();
+        if (TakeoverPaused) throw new InvalidOperationException(Str.T("Str.EqTakeoverPaused"));
         using var gate = SystemMutationGate.Acquire();
         var engine = FindEngine() ?? throw new InvalidOperationException(Str.T("Str.EqInstallFirst"));
-        if (EngineOverride is null && !Outputs().Any(d => Guid.Parse(d.Id) == Guid.Parse(settings.DeviceId)))
+        if (EngineOverride is null && EngineProbeOverride is null && !Outputs().Any(d => SameDevice(d.Id, settings.DeviceId)))
             throw new InvalidOperationException(Str.T("Str.EqDisconnected"));
         var mainPath = Path.Combine(engine.ConfigPath, "config.txt");
         var ownPath = Path.Combine(engine.ConfigPath, IncludeName);

@@ -18,7 +18,7 @@
    </Style>
   </UserControl.Resources>
 
-  <!-- 版式对齐 1U：左列预设；右列「滚动区（上预览 + 下实时调色）」+ 底部常驻应用栏。
+  <!-- 版式对齐参考实现：左列预设；右列「滚动区（上预览 + 下实时调色）」+ 底部常驻应用栏。
        窄窗口（< 980）收起预设列，改成一列滚动，避免把实拍图压扁。 -->
   <Grid x:Name="WorkspaceGrid" MaxWidth="2400" HorizontalAlignment="Stretch" SizeChanged="Workspace_SizeChanged">
    <Grid.ColumnDefinitions>
@@ -73,7 +73,7 @@
       </Border>
 
       <StackPanel x:Name="CurrentModePanel">
-       <!-- 实时调色：3 列参数网格（标签 + 数值在上，滑杆在下），与 1U 的排布一致。 -->
+       <!-- 实时调色：3 列参数网格（标签 + 数值在上，滑杆在下），与参考实现的排布一致。 -->
        <Border Style="{StaticResource CardStyle}" Padding="20,16" Margin="0,12,0,0">
         <StackPanel>
          <DockPanel Margin="0,0,0,4">
@@ -131,7 +131,7 @@
      </StackPanel>
     </ScrollViewer>
 
-    <!-- 底部常驻应用栏（1U：先调参数，再决定怎么应用） -->
+    <!-- 底部常驻应用栏（参考实现：先调参数，再决定怎么应用） -->
     <Border x:Name="ActionBar" Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12" Margin="0,12,0,0">
      <StackPanel Grid.IsSharedSizeScope="True">
       <DockPanel>

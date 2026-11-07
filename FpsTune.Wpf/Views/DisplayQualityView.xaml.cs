@@ -25,8 +25,7 @@ public partial class DisplayQualityView : UserControl
     public DisplayQualityView()
     {
         InitializeComponent();
-        GpuIdentityPresets.ItemsSource = GpuIdentityService.Presets;
-        GpuIdentityPresets.SelectedItem = GpuIdentityService.Presets.First(p => p.Description == GpuIdentityService.TargetDescription);
+        RebuildPresetItems(null);
         Loaded += (_, _) => { SystemEvents.DisplaySettingsChanged += DisplaysChanged; Refresh(); _ = RefreshGpuIdentityAsync(); };
         Unloaded += (_, _) => SystemEvents.DisplaySettingsChanged -= DisplaysChanged;
     }
@@ -458,6 +457,9 @@ public partial class DisplayQualityView : UserControl
     private void ApplyDrsState(StateSnapshot s)
     {
         FrameControls.IsEnabled = FrameApplyButton.IsEnabled = FrameRestoreButton.IsEnabled = false;
+        // 回执只对写它的那个游戏成立；读不到状态或换了游戏就收起来，不留上一次的结果。
+        if (!s.FeatureEnabled || !s.NvidiaSupported || !s.HasGame || s.DrsError is not null)
+            HideReceipt();
         if (!s.FeatureEnabled)
         {
             DrsSupportedPanel.Visibility = Visibility.Collapsed;
@@ -497,6 +499,8 @@ public partial class DisplayQualityView : UserControl
         }
 
         var state = s.Drs!;
+        if (_receiptGame is not null && !string.Equals(_receiptGame, state.GameExe, StringComparison.OrdinalIgnoreCase))
+            HideReceipt();
         ApplyFrameLimitState(state);
         SetDrsInputsEnabled(true);
         _drsSyncing = true;
@@ -599,6 +603,92 @@ public partial class DisplayQualityView : UserControl
             _drsStatus = null;
     }
 
+    // ---------- 逐项回执：写进去几项、哪几项驱动不支持、哪几项读回不符 ----------
+
+    private DisplayQualityService.DrsApplyReceipt? _lastReceipt;
+    private string? _receiptGame;
+
+    private void ShowReceipt(string gameExe, DisplayQualityService.DrsApplyReceipt receipt)
+    {
+        _receiptGame = gameExe;
+        _lastReceipt = receipt.Items.Count > 0 ? receipt : null;
+        if (_lastReceipt is null)
+        {
+            DrsReceiptPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+        DrsReceiptPanel.Visibility = Visibility.Visible;
+        DrsReceiptSummary.Text = Str.T("Str.DrsReceiptApplied", receipt.AppliedCount);
+        ShowReceiptLine(DrsReceiptUnsupported, receipt.Unsupported, "Str.DrsReceiptUnsupported");
+        ShowReceiptLine(DrsReceiptMismatch, receipt.Mismatched, "Str.DrsReceiptMismatch");
+        DrsRetryFailedButton.IsEnabled = receipt.FailedCount > 0;
+    }
+
+    private static void ShowReceiptLine(TextBlock target, IReadOnlyList<DisplayQualityService.DrsSettingResult> items,
+        string key)
+    {
+        target.Visibility = items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        target.Text = items.Count == 0 ? "" : Str.T(key, items.Count, string.Join(" · ", items.Select(i => i.Name)));
+    }
+
+    private void HideReceipt()
+    {
+        _lastReceipt = null;
+        _receiptGame = null;
+        if (DrsReceiptPanel is not null)
+            DrsReceiptPanel.Visibility = Visibility.Collapsed;
+    }
+
+    /// <summary>部分成功时的状态行：不夸大成功，也不假装整体失败。</summary>
+    private static string ReceiptStatus(DisplayQualityService.DrsApplyReceipt receipt, string okStatus)
+        => receipt.Items.Count == 0 || receipt.Ok
+            ? okStatus
+            : Str.T("Str.DrsPartialStatus", receipt.AppliedCount, receipt.FailedCount);
+
+    private async void DrsRetryFailed_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || _lastReceipt is not { } previous || previous.FailedCount == 0) return;
+        var path = AppState.GamePath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return;
+        var exeName = Path.GetFileName(path);
+        if (!string.Equals(exeName, _receiptGame, StringComparison.OrdinalIgnoreCase))
+        {
+            HideReceipt();
+            return;
+        }
+        var names = string.Join(" · ", previous.Items
+            .Where(i => i.Outcome != DisplayQualityService.DrsSettingOutcome.Applied).Select(i => i.Name));
+        if (!DialogService.Confirm(Str.T("Str.DrsCard"), Str.T("Str.DrsRetryConfirm", names), confirmText: Str.T("Str.Apply")))
+            return;
+
+        _busy = true;
+        ++_refreshGen;
+        SetDrsInputsEnabled(false);
+        DrsApplyButton.IsEnabled = DrsRestoreButton.IsEnabled = DrsRetryFailedButton.IsEnabled = false;
+        DrsStateText.Text = Str.T("Str.Writing");
+        try
+        {
+            var receipt = await Task.Run(() => DisplayQualityService.RetryFailedSettings(exeName, previous));
+            ShowReceipt(exeName, receipt);
+            _drsStatus = receipt.Ok ? Str.T("Str.DrsRetrySucceeded") : ReceiptStatus(receipt, Str.T("Str.DrsRetrySucceeded"));
+        }
+        catch (NvdrsException ex) when (ex.Status == -175)
+        {
+            _drsStatus = HandleDrsAccessDenied(ex, restoring: false);
+        }
+        catch (Exception ex)
+        {
+            _drsStatus = Str.T("Str.ApplyFailed", ex.Message);
+            DialogService.Warning(Str.T("Str.OperationFailed"), _drsStatus);
+        }
+        finally
+        {
+            _busy = false;
+            DrsRetryFailedButton.IsEnabled = _lastReceipt?.FailedCount > 0;
+            Refresh();
+        }
+    }
+
     private async void DrsPreset_Click(object sender, RoutedEventArgs e)
     {
         if (_busy) return;
@@ -626,8 +716,9 @@ public partial class DisplayQualityView : UserControl
         try
         {
             var exeName = Path.GetFileName(path);
-            await Task.Run(() => DisplayQualityService.ApplyCompetitivePreset(exeName, desktopHighEnd));
-            _drsStatus = Str.T("Str.DrsEsportsApplied", traaLabel);
+            var receipt = await Task.Run(() => DisplayQualityService.ApplyCompetitivePreset(exeName, desktopHighEnd));
+            ShowReceipt(exeName, receipt);
+            _drsStatus = ReceiptStatus(receipt, Str.T("Str.DrsEsportsApplied", traaLabel));
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
@@ -670,8 +761,9 @@ public partial class DisplayQualityView : UserControl
         try
         {
             var exeName = Path.GetFileName(path);
-            await Task.Run(() => DisplayQualityService.ApplyDriverSettings(exeName, selection));
-            _drsStatus = Str.T("Str.DrsApplied");
+            var receipt = await Task.Run(() => DisplayQualityService.ApplyDriverSettings(exeName, selection));
+            ShowReceipt(exeName, receipt);
+            _drsStatus = ReceiptStatus(receipt, Str.T("Str.DrsApplied"));
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
@@ -699,6 +791,7 @@ public partial class DisplayQualityView : UserControl
         ++_refreshGen;
         SetDrsInputsEnabled(false);
         _drsStatus = null;
+        HideReceipt();
         DrsApplyButton.IsEnabled = false;
         DrsRestoreButton.IsEnabled = false;
         DrsStateText.Text = Str.T("Str.Restoring2");
@@ -726,6 +819,35 @@ public partial class DisplayQualityView : UserControl
         }
     }
     private int _gpuRefreshGeneration;
+
+    /// <summary>把预设列表按「是否当前型号」重建；选中项按型号名保持，不因刷新跳走。</summary>
+    private void RebuildPresetItems(string? currentName)
+    {
+        var selected = (GpuIdentityPresets.SelectedItem as GpuPresetItem)?.Description
+                       ?? GpuIdentityService.TargetDescription;
+        var items = GpuIdentityService.Presets
+            .Select(p => new GpuPresetItem(p, string.Equals(p.Description, currentName?.Trim(), StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+        GpuIdentityPresets.ItemsSource = items;
+        GpuIdentityPresets.SelectedItem = items.FirstOrDefault(i => i.Description == selected)
+                                          ?? items.FirstOrDefault(i => i.Description == GpuIdentityService.TargetDescription)
+                                          ?? items.FirstOrDefault();
+    }
+
+    /// <summary>设备读不到时如实说原因，不要一律「没有可用设备」。</summary>
+    private static string GpuIdentityStatusFor(GpuDeviceScan scan)
+    {
+        if (scan.EnumerationFailed)
+            return Str.T("Str.GpuIdentityScanFailed", scan.EnumerationError);
+        if (scan.Devices.Count == 0)
+            return scan.Failures.Count > 0
+                ? Str.T("Str.GpuIdentityNoneListedWithReason", scan.Failures[0])
+                : Str.T("Str.GpuIdentityNoneListed");
+        return scan.Failures.Count > 0
+            ? Str.T("Str.GpuIdentitySkipped", scan.Failures.Count, scan.Failures[0])
+            : Str.T("Str.GpuIdentityReady");
+    }
+
     private async Task RefreshGpuIdentityAsync(bool keepStatus = false)
     {
         if (_busy) return;
@@ -733,12 +855,13 @@ public partial class DisplayQualityView : UserControl
         {
             var request = ++_gpuRefreshGeneration;
             var selected = (GpuIdentityDevices.SelectedItem as GpuIdentityTarget)?.InstanceId;
-            var devices = await Task.Run(GpuIdentityService.GetDevices);
+            var scan = await Task.Run(GpuIdentityService.ScanDevices);
             if (_busy || request != _gpuRefreshGeneration) return;
-            GpuIdentityDevices.ItemsSource = devices;
-            GpuIdentityDevices.SelectedItem = devices.FirstOrDefault(d => d.InstanceId == selected) ?? devices.FirstOrDefault();
-            GpuIdentityApplyButton.IsEnabled = devices.Count > 0;
-            if (!keepStatus) GpuIdentityStatus.Text = devices.Count == 0 ? Str.T("Str.GpuIdentityUnavailable") : Str.T("Str.GpuIdentityReady");
+            GpuIdentityDevices.ItemsSource = scan.Devices;
+            GpuIdentityDevices.SelectedItem = scan.Devices.FirstOrDefault(d => d.InstanceId == selected) ?? scan.Devices.FirstOrDefault();
+            GpuIdentityApplyButton.IsEnabled = scan.Devices.Count > 0;
+            if (!keepStatus) GpuIdentityStatus.Text = GpuIdentityStatusFor(scan);
+            RebuildPresetItems((GpuIdentityDevices.SelectedItem as GpuIdentityTarget)?.CurrentName);
             UpdateGpuIdentityPreview();
         }
         catch (Exception ex) { GpuIdentityStatus.Text = ex.Message; GpuIdentityApplyButton.IsEnabled = false; }
@@ -746,13 +869,22 @@ public partial class DisplayQualityView : UserControl
 
     private void GpuIdentityRefresh_Click(object sender, RoutedEventArgs e) => _ = RefreshGpuIdentityAsync();
 
-    private void GpuIdentitySelection_Changed(object sender, SelectionChangedEventArgs e) => UpdateGpuIdentityPreview();
+    private void GpuIdentitySelection_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        // 换设备后「当前型号」也跟着变，预设列表上的标记要重算。
+        if (ReferenceEquals(sender, GpuIdentityDevices))
+            RebuildPresetItems((sender as ComboBox)?.SelectedItem is GpuIdentityTarget device ? device.CurrentName : null);
+        UpdateGpuIdentityPreview();
+    }
     private void UpdateGpuIdentityPreview()
     {
         if (GpuIdentityCurrentName is null) return;
-        GpuIdentityCurrentName.Text = Str.T("Str.GpuIdentityCurrent", (GpuIdentityDevices.SelectedItem as GpuIdentityTarget)?.CurrentName ?? "—");
-        GpuIdentityPreviewName.Text = (GpuIdentityPresets.SelectedItem as GpuNamePreset)?.Description ?? "—";
-        GpuIdentityApplyButton.IsEnabled = !_busy && GpuIdentityDevices.SelectedItem is GpuIdentityTarget && GpuIdentityPresets.SelectedItem is GpuNamePreset;
+        var device = GpuIdentityDevices.SelectedItem as GpuIdentityTarget;
+        var preset = GpuIdentityPresets.SelectedItem as GpuPresetItem;
+        GpuIdentityCurrentName.Text = Str.T("Str.GpuIdentityCurrent", device?.CurrentName ?? "—");
+        GpuIdentityPreviewName.Text = preset?.Description ?? "—";
+        // 预设就是当前型号时不禁用会让用户以为按钮坏了：点下去只会回「已是该名称」。
+        GpuIdentityApplyButton.IsEnabled = !_busy && device is not null && preset is not null && !preset.IsCurrent;
     }
     private void SetGpuIdentityControls(bool enabled)
     {
@@ -786,7 +918,8 @@ public partial class DisplayQualityView : UserControl
     private async void GpuIdentityApply_Click(object sender, RoutedEventArgs e)
     {
         if (!CheckGpuIdentityPrerequisites() || GpuIdentityDevices.SelectedItem is not GpuIdentityTarget target
-            || GpuIdentityPresets.SelectedItem is not GpuNamePreset preset) return;
+            || GpuIdentityPresets.SelectedItem is not GpuPresetItem preset) return;
+        if (preset.IsCurrent) return;
         if (!DialogService.Confirm(Str.T("Str.GpuIdentityTitle"), Str.T("Str.GpuIdentityConfirm", target.DriverName, preset.Description))) return;
         _busy = true; SetGpuIdentityControls(false);
         try { var result = await GpuIdentityService.ApplyAsync(target, preset.Description); GpuIdentityStatus.Text = result.Message; }

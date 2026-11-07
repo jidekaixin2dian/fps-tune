@@ -149,6 +149,15 @@ public static partial class BackupService
             record.PostBoostValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7");
         }
         else if (record.Kind == "power-aspm") record.PostAspmValue = NativePowerSettings.ReadAc(record.TargetPlanGuid!, "501a4d13-42af-4429-9fd1-a8218c268e20", "ee12f906-d277-404b-b6da-e5fa1a576df5");
+        else if (record.Kind == "power-overlay")
+        {
+            // 与 Capture 同源读取：实际生效优先，读不到再退注册表持久值；都读不到留空，
+            // 还原端对空 Post 只接受「当前 == Old」。
+            var persisted = RegistryHelper.ReadValue(Microsoft.Win32.RegistryHive.LocalMachine,
+                NativePowerOverlay.UserPowerSchemesKey, NativePowerOverlay.AcOverlayValueName)?.ToString();
+            record.PostAcOverlayGuid = (NativePowerOverlay.ReadActual()
+                ?? (Guid.TryParse(persisted, out var postGuid) ? postGuid : null))?.ToString("D");
+        }
         else if (record.Kind == "service")
         {
             record.PostStartValue = NativeSystem.GetServiceStartValue(record.ServiceName!);
@@ -238,6 +247,15 @@ public static partial class BackupService
                 Check("2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226", record.PostUsbValue, record.OldUsbValue);
                 Check("54533251-82be-4824-96c1-47b60b740d00", "be337238-0d82-4146-a960-4f3749d470c7", record.PostBoostValue, record.OldBoostValue);
             }
+        }
+        else if (record.Kind == "power-overlay")
+        {
+            // 唯一此前没有漂移闸的类别：应用后用户/系统改了电源滑条时，还原会无提示覆盖新值。
+            var current = NativePowerOverlay.ReadActual() ?? NativePowerOverlay.ReadPersistedAc();
+            var matchesPost = current is { } c && Guid.TryParse(record.PostAcOverlayGuid, out var post) && c == post;
+            var matchesOld = current is { } c2 && Guid.TryParse(record.OldAcOverlayGuid, out var old) && c2 == old;
+            if (current is null || (!matchesPost && !matchesOld))
+                throw new BackupCompatibilityException(Str.T("Str.BackupTargetChanged"));
         }
     }
 }

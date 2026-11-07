@@ -27,4 +27,55 @@
                         <Button x:Name="RestoreDriverButton" Content="{DynamicResource Str.TuningRestoreDriver}" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="RestoreDriver_Click"/></WrapPanel>
                     <TextBlock x:Name="DriverStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,16,0,0"/>
                 </StackPanel></Border>
+
+                <!-- 高级参数：逐项显示驱动里的当前值与三态，可改成固定值或恢复继承 -->
+                <Border Style="{StaticResource CardStyle}" Margin="0,20,0,0"><StackPanel>
+                    <Expander x:Name="AdvancedExpander" IsExpanded="False">
+                        <Expander.Header><TextBlock Text="{DynamicResource Str.AdvancedTitle}" Style="{StaticResource CardTitleStyle}"/></Expander.Header>
+                        <StackPanel Margin="0,14,0,0">
+                            <TextBlock Text="{DynamicResource Str.AdvancedIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="AdvancedStateText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                            <ItemsControl x:Name="AdvancedList" Margin="0,14,0,0">
+                                <ItemsControl.ItemTemplate><DataTemplate><Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding Name}" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Note}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                            <TextBlock Text="{Binding DefaultHint}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                                            <TextBlock Text="{Binding CurrentLabel}" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                            <Border Style="{StaticResource ChipStyle}" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding StateLabel}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <Grid Grid.Column="2" VerticalAlignment="Center">
+                                            <ComboBox x:Name="AdvancedChoiceBox" Style="{StaticResource SelectComboBoxStyle}"
+                                                      Visibility="{Binding ChoiceVisibility}" DisplayMemberPath="Label"
+                                                      ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice, Mode=TwoWay}"
+                                                      AutomationProperties.Name="{Binding Name}"/>
+                                            <StackPanel Visibility="{Binding RangeVisibility}">
+                                                <TextBox x:Name="AdvancedRangeBox" MaxLength="4"
+                                                         Text="{Binding RangeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         AutomationProperties.Name="{Binding Name}">
+                                                    <TextBox.Style><Style TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}">
+                                                        <Style.Triggers><DataTrigger Binding="{Binding UseInherited}" Value="True"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers>
+                                                    </Style></TextBox.Style>
+                                                </TextBox>
+                                                <CheckBox x:Name="AdvancedInheritCheck" Content="{DynamicResource Str.AdvancedUseInherited}" FontSize="13"
+                                                          IsChecked="{Binding UseInherited, Mode=TwoWay}" Margin="0,6,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                </Border></DataTemplate></ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <WrapPanel Margin="0,14,0,0">
+                                <Button x:Name="AdvancedWriteButton" Content="{DynamicResource Str.AdvancedWrite}" Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="AdvancedWrite_Click" Margin="0,0,10,0"/>
+                            </WrapPanel>
+                            <TextBlock x:Name="AdvancedStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel></Border>
 </StackPanel></UserControl>

@@ -124,7 +124,7 @@ public partial class MainWindow : Window
     // 全局热键 Ctrl+Alt+F
     private const int WM_HOTKEY = 0x0312;
     private const int HOTKEY_ID = 0x1F01;
-    // 方案热键槽 1–3（Ctrl+Alt+1/2/3），与 1U 的「三组方案快捷键」对齐。
+    // 方案热键槽 1–3（Ctrl+Alt+1/2/3），与参考实现的「三组方案快捷键」对齐。
     private const int HOTKEY_ID_SCHEME1 = 0x1F11;
     private const int HOTKEY_ID_SCHEME2 = 0x1F12;
     private const int HOTKEY_ID_SCHEME3 = 0x1F13;

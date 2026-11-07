@@ -118,8 +118,65 @@ public static class DetectionService
         var audio = GetAudioExclusiveCheck();
         checks.Add(new { name = "音频独占模式", status = audio.Status, message = audio.Message });
 
+        // 服务检查：只报「运行状态 + 启动类型」两项事实，不判好坏——
+        // SysMain / WSearch 被关可能是用户自己用优化项干的，报成异常会自相矛盾。
+        checks.Add(ServiceCheck(Str.T("Str.ServiceCheckPrefetch"), "SysMain", "WSearch"));
+        checks.Add(ServiceCheck(Str.T("Str.ServiceCheckDataUsage"), "DusmSvc"));
+
         return checks;
     }
+
+    /// <summary>一条服务体检项：逐个服务给出「运行状态 · 启动类型」，读不到就说不可用。</summary>
+    private static object ServiceCheck(string name, params string[] serviceNames)
+    {
+        var (status, message) = BuildServiceCheck(serviceNames);
+        return new { name, status, message };
+    }
+
+    /// <summary>组装服务检查行（internal：用例直接断言两列事实都在）。</summary>
+    internal static (string Status, string Message) BuildServiceCheck(params string[] serviceNames)
+    {
+        var rows = new List<string>();
+        var unreadable = false;
+        foreach (var service in serviceNames)
+        {
+            var state = ReadServiceRunState(service);
+            var startType = ReadServiceStartType(service);
+            if (state is null) unreadable = true;
+            rows.Add(service + " " + Str.T("Str.ServiceCheckValue", Str.T("Str.ServiceRunningState"), state ?? Str.T("Str.Unavailable"))
+                + " · " + Str.T("Str.ServiceCheckValue", Str.T("Str.ServiceStartType"), startType));
+        }
+
+        return (unreadable ? "attention" : "ok", string.Join(", ", rows));
+    }
+
+    private static string? ReadServiceRunState(string serviceName)
+    {
+        try
+        {
+            var state = NativeSystem.GetServiceState(serviceName);
+            if (string.IsNullOrWhiteSpace(state)) return null;
+            return string.Equals(state, "RUNNING", StringComparison.OrdinalIgnoreCase)
+                ? Str.T("Str.Running")
+                : Str.T("Str.LibraryNotRunning");
+        }
+        catch (Exception)
+        {
+            // 服务不存在/权限不足：这一行如实写「不可用」，不编一个状态出来。
+            return null;
+        }
+    }
+
+    private static string ReadServiceStartType(string serviceName)
+        => NativeServiceStatus.ReadStartType(serviceName) switch
+        {
+            ServiceStartType.Boot => Str.T("Str.ServiceStartBoot"),
+            ServiceStartType.System => Str.T("Str.ServiceStartSystem"),
+            ServiceStartType.Auto => Str.T("Str.ServiceStartAuto"),
+            ServiceStartType.Demand => Str.T("Str.ServiceStartDemand"),
+            ServiceStartType.Disabled => Str.T("Str.ServiceStartDisabled"),
+            _ => Str.T("Str.Unavailable")
+        };
 
     private static (string Status, string Message) GetDisplayRefreshRateCheck()
     {
@@ -363,8 +420,6 @@ public static class DetectionService
             "sys-responsiveness" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", "10"),
             "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", "1"),
             "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", "0"),
-            "keyboard-latency" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", "50"),
-            "mouse-latency" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", "50"),
             "menu-delay-off" => (RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", "0"),
             "usb-power-save-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", "1"),
             "visual-fx-perf" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", "2"),
@@ -401,6 +456,11 @@ public static class DetectionService
             "gpu-pstate-lock" => GetGpuPstateLockState(),
             "mouse-accel-off" => GetMouseAccelState(),
             "keyboard-repeat" => GetKeyboardRepeatState(),
+            // 键鼠缓冲深度：三态判定（未设置 / 低于推荐 / 已达标），读数与推荐值都来自设置 + 策略。
+            "keyboard-latency" => GetInputQueueState(
+                @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", keyboard: true),
+            "mouse-latency" => GetInputQueueState(
+                @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", keyboard: false),
             "sticky-keys-off" => GetStickyKeysState(),
             "windowed-games-opt" => GetWindowedGamesState(),
             "power-overlay-perf" => GetPowerOverlayState(),
@@ -602,6 +662,41 @@ public static class DetectionService
 
         return null;
     }
+
+    /// <summary>
+    /// 键鼠缓冲深度的三态判定：未设置 / 已设置但低于推荐 / 已达标。
+    /// 「未设置」不等于「未达标」——注册表没有值时驱动用的是默认深度，
+    /// 和用户主动压到更低是两回事，文案必须分开说。
+    /// </summary>
+    private static (bool Optimized, string Current) GetInputQueueState(string path, string name, bool keyboard)
+    {
+        var rate = SettingsService.Current.MousePollingRate;
+        var recommended = keyboard
+            ? InputQueuePolicy.KeyboardRecommendedDepth
+            : InputQueuePolicy.RecommendedDepth(rate);
+        var stored = ReadQueueDepth(path, name);
+        var state = InputQueuePolicy.Evaluate(stored, rate, keyboard);
+
+        if (state == InputQueueState.NotSet)
+            return (false, Str.T("Str.InputQueueNotSet", InputQueuePolicy.WindowsDefaultDepth) + " · " +
+                           Str.T("Str.InputQueueRecommended", recommended));
+
+        var depth = stored!.Value;
+        var readout = keyboard
+            ? Str.T("Str.InputQueueKeyboardCurrent", depth)
+            : Str.T("Str.InputQueueCurrent", depth, InputQueuePolicy.CoverageMs(depth, rate));
+        return state == InputQueueState.Ok
+            ? (true, readout)
+            : (false, readout + " · " + Str.T("Str.InputQueueRecommended", recommended));
+    }
+
+    private static int? ReadQueueDepth(string path, string name)
+        => RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, name) switch
+        {
+            int dword => dword,
+            null => null,
+            var other => int.TryParse(other.ToString(), out var parsed) ? parsed : null
+        };
 
     private static (bool Optimized, string Current) GetServiceState(string serviceName)
     {

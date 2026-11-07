@@ -194,6 +194,22 @@
                     </Grid>
                     <TextBlock x:Name="DrsStateText" Text="{DynamicResource Str.Reading}" Style="{StaticResource MutedTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap"/>
 
+                    <!-- 逐项回执：8 项写进去、1 项驱动不支持时也要说清是哪一项，并给「只重试失败项」 -->
+                    <Border x:Name="DrsReceiptPanel" Visibility="Collapsed" Background="{DynamicResource SurfaceAltBrush}"
+                            CornerRadius="{DynamicResource RadiusCard}" Padding="16" Margin="0,14,0,0">
+                        <StackPanel>
+                            <TextBlock x:Name="DrsReceiptSummary" FontSize="14" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock x:Name="DrsReceiptUnsupported" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                                       Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <TextBlock x:Name="DrsReceiptMismatch" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                                       Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <Button x:Name="DrsRetryFailedButton" Content="{DynamicResource Str.DrsRetryFailed}"
+                                    Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" Click="DrsRetryFailed_Click"/>
+                        </StackPanel>
+                    </Border>
+
                     <StackPanel x:Name="DrsSupportedPanel" Visibility="Collapsed" Margin="0,18,0,0">
                         <TextBlock Text="{DynamicResource Str.DrsNote}"
                                    Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
@@ -443,11 +459,11 @@
                                     <ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="PresetSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger></ControlTemplate.Triggers>
                                 </ControlTemplate></Setter.Value></Setter>
                             </Style></ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/><TextBlock Text="{DynamicResource Str.GpuIdentityRecommended}" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="10,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsRecommended}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ListBox.ItemTemplate>
+                            <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontSize="15" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal" Margin="0,6,0,0"><TextBlock Text="{Binding Series}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/><TextBlock Text="{DynamicResource Str.GpuIdentityRecommended}" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="10,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsRecommended}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock><TextBlock Text="{DynamicResource Str.GpuIdentitySameAsCurrent}" Foreground="{DynamicResource AccentBrush}" FontSize="13" Margin="10,0,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsCurrent}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock></StackPanel></StackPanel></DataTemplate></ListBox.ItemTemplate>
                         </ListBox>
                         <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusCard}" Padding="16" Margin="0,10,0,18"><StackPanel>
                             <TextBlock Text="{DynamicResource Str.GpuIdentityPreview}" Style="{StaticResource SectionLabelStyle}"/>
-                            <TextBlock x:Name="GpuIdentityCurrentName" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,4"/>
+                            <TextBlock x:Name="GpuIdentityCurrentName" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,8,0,4"/>
                             <TextBlock x:Name="GpuIdentityPreviewName" Foreground="{DynamicResource AccentBrush}" FontSize="18" TextWrapping="Wrap"/>
                         </StackPanel></Border>
                         <WrapPanel>

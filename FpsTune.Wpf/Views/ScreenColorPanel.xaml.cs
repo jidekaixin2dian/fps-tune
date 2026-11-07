@@ -42,7 +42,7 @@ public partial class ScreenColorPanel : UserControl
         CurrentModePanel.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
         ActionBar.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
         PerAppCard.Visibility = perApp ? Visibility.Visible : Visibility.Collapsed;
-        // 独立程序滤镜页是「管程序」的页面：1U 在这一页不放截图对比与滤镜列表，我们也不让大图把规则挤到屏幕外。
+        // 独立程序滤镜页是「管程序」的页面：参考实现在这一页不放截图对比与滤镜列表，我们也不让大图把规则挤到屏幕外。
         PreviewPane.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
         PresetPane.Visibility = perApp ? Visibility.Collapsed : Visibility.Visible;
         ApplyColumns(ActualWidth, perApp);
@@ -120,7 +120,7 @@ public partial class ScreenColorPanel : UserControl
             // 暗部平衡单独占一张卡片（滤镜列表正下方），卡片标题已写名字，行内标签就不重复了。
             if (i == DarkBalanceIndex)
             {
-                // 游戏加加那套：数值在上方居中、滑杆吃满、暗/亮在两端，没有多余的标签和读数。
+                // 参考实现那套：数值在上方居中、滑杆吃满、暗/亮在两端，没有多余的标签和读数。
                 text.Visibility = Visibility.Collapsed;
                 entry.Visibility = Visibility.Collapsed;
                 row.Margin = new Thickness(0);
@@ -284,7 +284,7 @@ public partial class ScreenColorPanel : UserControl
         MarkDraft(); ColorPresetCombo.SelectedIndex = 0; Availability(); UpdatePreview();
     }
 
-    /// <summary>还原初始值：游戏加加默认 50。</summary>
+    /// <summary>还原初始值：参考实现默认 50。</summary>
     private void DarkBalance_Reset_Click(object sender, RoutedEventArgs e)
     {
         _sliders[DarkBalanceIndex].Value = ScreenColorService.DefaultDarkBalance;
@@ -389,7 +389,7 @@ public partial class ScreenColorPanel : UserControl
     private void Workspace_SizeChanged(object sender, SizeChangedEventArgs e) => ApplyColumns(e.NewSize.Width, _perAppMode);
 
     /// <summary>
-    /// 1U 版式：常规窗口左列预设（340–420）、右列「上预览 + 下实时调色 + 底部应用栏」；
+    /// 参考实现版式：常规窗口左列预设（340–420）、右列「上预览 + 下实时调色 + 底部应用栏」；
     /// 窄窗口（< 980）收起预设列；独立程序滤镜页不用左列，整页给规则。
     /// </summary>
     private void ApplyColumns(double width, bool perApp)

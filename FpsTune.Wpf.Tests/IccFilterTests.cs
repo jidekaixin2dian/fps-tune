@@ -21,7 +21,7 @@ public class IccProfileGeneratorTests
         // 0..3 尺寸字段与实际长度一致
         Assert.Equal((uint)bytes.Length, ReadBe32(bytes, 0));
         Assert.True(bytes.Length > 128);
-        // 8..11 版本 4.4：与 1U 的预设一致，vcgt 只有在 v4 剖面里才会被系统接受
+        // 8..11 版本 4.4：与参考实现的预设一致，vcgt 只有在 v4 剖面里才会被系统接受
         Assert.Equal(0x04400000u, ReadBe32(bytes, 8));
         // 12 设备类 mntr；16 色彩空间 RGB ；20 PCS XYZ
         Assert.Equal("mntr", Ascii(bytes, 12, 4));
@@ -81,7 +81,7 @@ public class IccProfileGeneratorTests
     [Fact]
     public void Every_preset_ships_its_own_vcgt_calibration_curve()
     {
-        // 对齐 1U 后的契约：观感写在 vcgt 校准表里（这张表会被装进显卡 LUT，游戏才看得见），
+        // 对齐参考实现后的契约：观感写在 vcgt 校准表里（这张表会被装进显卡 LUT，游戏才看得见），
         // rTRC 只是标准 sRGB。以前把「MapTone 反函数」塞进 TRC 再折回 ramp，会互相抵消。
         var hashes = new HashSet<string>();
         foreach (var preset in Enum.GetValues<IccFilterPreset>())

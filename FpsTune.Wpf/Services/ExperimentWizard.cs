@@ -24,7 +24,7 @@ public static class WizardSteps
     public static bool IsGroup(string step) => step.StartsWith("group-", StringComparison.Ordinal);
 }
 
-/// <summary>一个候选组步骤的持久化结果。</summary>
+/// <summary>一个候选组步骤的持久化结果。Evidence 为统计证据说明（0.4.3 起，旧记录缺省 null）。</summary>
 public sealed record WizardGroupResult(
     string GroupId,
     bool? Keep,
@@ -34,7 +34,8 @@ public sealed record WizardGroupResult(
     double? P1Low,
     string? SessionId,
     bool Simulated,
-    DateTime CompletedAt);
+    DateTime CompletedAt,
+    string? Evidence = null);
 
 /// <summary>
 /// A/B 实验向导的持久化状态机（schemaVersion=1，experiment/wizard.json）。
@@ -456,6 +457,7 @@ public static class ExperimentWizardStore
                     var keep = group["keep"] is JsonNode k ? (bool?)k.GetValue<bool>() : null;
                     var reverted = group["reverted"]?.GetValue<bool>() ?? false;
                     var reason = group["reason"]?.GetValue<string>() ?? "";
+                    var evidence = group["evidence"]?.GetValue<string>() ?? "";
                     var simulated = group["samplerMode"]?.GetValue<string>() == "simulated";
                     var avg = sum["avgFps"] is JsonNode a ? a.GetValue<double>() : (double?)null;
                     var p1 = sum["p1Low"] is JsonNode p ? p.GetValue<double>() : (double?)null;
@@ -464,7 +466,7 @@ public static class ExperimentWizardStore
                         completed = t2;
                     state = ExperimentWizard.WithGroupResult(
                         state,
-                        new WizardGroupResult(id, keep, reverted, reason, avg, p1, null, simulated, completed),
+                        new WizardGroupResult(id, keep, reverted, reason, avg, p1, null, simulated, completed, evidence),
                         null);
                 }
             }
@@ -531,11 +533,12 @@ public static class ExperimentWizardStore
                     continue;
                 var keep = entry["keep"] is JsonNode k ? k.GetValue<bool>() : (bool?)null;
                 var reason = entry["reason"]?.GetValue<string>() ?? "";
+                var evidence = entry["evidence"]?.GetValue<string>() ?? "";
                 var at = DateTime.TryParse(entry["time"]?.GetValue<string>(), out var t) ? t : DateTime.MinValue;
                 var simulated = entry["samplerMode"]?.GetValue<string>() == "simulated";
                 state = ExperimentWizard.WithGroupResult(
                     state,
-                    new WizardGroupResult(id, keep, keep == false, reason, groupAvg, groupP1, null, simulated, at),
+                    new WizardGroupResult(id, keep, keep == false, reason, groupAvg, groupP1, null, simulated, at, evidence),
                     null);
             }
             return state.BaselineDone || state.Groups.Count > 0 ? state : null;

@@ -12,6 +12,9 @@ public static class NativeOptimizationEngine
 {
     private const string UltimatePowerGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
 
+    /// <summary>目标值与现值已经一致时的统一回执（键鼠缓冲与通用注册表写入共用）。</summary>
+    private const string AlreadyDoneMessage = "本就达标，未改动";
+
     public static IReadOnlyList<OptimizationApplyResult> ApplyAll(IEnumerable<string> ids, string? gamePath,
         Func<string, IReadOnlyList<BackupRecord>>? beforeApply = null,
         Action<OptimizationApplyResult>? afterApply = null)
@@ -167,10 +170,13 @@ public static class NativeOptimizationEngine
                 return ApplyDvrOff();
             case "mouse-accel-off":
                 return ApplyMouseAccelOff();
+            // 深度不再写死：值来自设置（维护页「键鼠缓冲区深度」），这里只负责夹区间、写、读回。
             case "keyboard-latency":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters", "KeyboardDataQueueSize", 50, RegistryValueKind.DWord, "键盘缓冲区已扩容到 50");
+                return ApplyInputQueueDepth(@"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters",
+                    "KeyboardDataQueueSize", SettingsService.Current.KeyboardQueueDepth);
             case "mouse-latency":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\mouclass\Parameters", "MouseDataQueueSize", 50, RegistryValueKind.DWord, Str.T("Str.MouseBufferEnlarged"));
+                return ApplyInputQueueDepth(@"SYSTEM\CurrentControlSet\Services\mouclass\Parameters",
+                    "MouseDataQueueSize", SettingsService.Current.MouseQueueDepth);
             case "keyboard-repeat":
                 return ApplyHkcuStringTweaks(@"Control Panel\Keyboard",
                     new[] { ("KeyboardDelay", "0"), ("KeyboardSpeed", "31") },
@@ -602,10 +608,29 @@ public static class NativeOptimizationEngine
     {
         var current = RegistryHelper.ReadValue(hive, path, name);
         if (current is not null && string.Equals(current.ToString(), value.ToString(), StringComparison.OrdinalIgnoreCase))
-            return (true, false, false, "本就达标，未改动");
+            return (true, false, false, AlreadyDoneMessage);
 
         RegistryHelper.SetValue(hive, path, name, value, kind);
         return (true, true, false, successMessage);
+    }
+
+    /// <summary>
+    /// 写键鼠缓冲深度：先按 InputQueuePolicy 夹区间并对齐步长，写后读回复核。
+    /// 注册表被组策略或驱动安装程序改写时，读回不一致必须报出来，不能当成功。
+    /// </summary>
+    private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyInputQueueDepth(
+        string path, string name, int depth)
+    {
+        var value = InputQueuePolicy.Normalize(depth);
+        var current = RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, name);
+        if (current is not null && string.Equals(current.ToString(), value.ToString(), StringComparison.Ordinal))
+            return (true, false, false, AlreadyDoneMessage);
+
+        RegistryHelper.SetValue(RegistryHive.LocalMachine, path, name, value, RegistryValueKind.DWord);
+        var readback = RegistryHelper.ReadValue(RegistryHive.LocalMachine, path, name)?.ToString();
+        if (readback != value.ToString())
+            throw new IOException(Str.T("Str.InputQueueReadbackMismatch", value, readback ?? ""));
+        return (true, true, false, Str.T("Str.InputQueueDepthApplied", value));
     }
 
     private static bool TryExtractGuid(string text, out string guid)

@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
              Background="{DynamicResource AppBackgroundBrush}"
              FontFamily="{StaticResource FontBody}">
-    <!-- 0.4.0：首页化（对标 1U 首页）——一键优化大卡置顶 + 开局准备 / 指标 / 继续使用与常用入口；
+    <!-- 0.4.0：首页化（对齐参考实现首页）——一键优化大卡置顶 + 开局准备 / 指标 / 继续使用与常用入口；
          优化项精细列表在「优化」页，首页不再平铺（用户 2026-11-01 反馈） -->
     <UserControl.Resources>
         <Style x:Key="MetricNumber" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">

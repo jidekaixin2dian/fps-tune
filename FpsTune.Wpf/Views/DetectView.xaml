@@ -60,6 +60,10 @@
                                    FontSize="13" FontWeight="{DynamicResource SmallEmphasisWeight}"
                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                    TextWrapping="Wrap" Margin="0,6,0,0"/>
+                        <!-- 改过显卡名称时补一行「当前上报」：否则概览只显示真实型号，用户看不出名字已经变了 -->
+                        <TextBlock x:Name="GpuReportedText" Text=""
+                                   FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed"/>
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="2" Padding="14,12" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">

@@ -114,4 +114,28 @@ public sealed class VerdictStoreTests : IDisposable
         Assert.Equal(Str.T("Str.VerdictBadge", 9.0),
             VerdictStore.BadgeFor("a", gameName: "game", gamePath: @"C:\one\game.exe"));
     }
+
+    [Fact]
+    public void Report_shows_rounds_interval_and_verdict_and_marks_untrusted_data_not_qualified()
+    {
+        var analyzed = Make("a", "item", ["a"]) with
+        {
+            RoundsBase = 3, RoundsTest = 3,
+            AvgDiffLowerPct = 1.2, AvgDiffUpperPct = 4.8, HedgesG = 1.9,
+            AnalysisVerdict = AbAnalysisCodes.VerdictConfirmed, AnalysisSufficient = true,
+        };
+        // 数据不可信（重复 / 离群 / 条件不一致）的实测不再算可信结论。
+        var untrusted = Make("b", "item", ["b"]) with { AnalysisSufficient = false };
+        // 旧记录没有分析字段（null）：保留原有资格口径，报告列留空不报错。
+        var legacy = Make("c", "item", ["c"]);
+
+        Assert.True(VerdictStore.IsQualified(analyzed));
+        Assert.False(VerdictStore.IsQualified(untrusted));
+        Assert.True(VerdictStore.IsQualified(legacy));
+
+        var markdown = VerdictReport.Build([analyzed, untrusted, legacy]);
+        Assert.Contains("3/3", markdown);
+        Assert.Contains("+1.2 ~ +4.8%", markdown);
+        Assert.Contains(AbEvidenceText.VerdictLabel(AbAnalysisCodes.VerdictConfirmed), markdown);
+    }
 }

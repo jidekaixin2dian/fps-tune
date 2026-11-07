@@ -420,6 +420,72 @@ public sealed class FullscreenDetectorTests : IDisposable
 
     private static ushort[] LinearRamp() => Enumerable.Range(0, 768).Select(i => (ushort)((i % 256) * 257)).ToArray();
 
+    /// <summary>驱动读回永远不一致（拒收曲线）：用来验证「拒收后回滚」的两条分支。</summary>
+    private sealed class RejectingGamma : IScreenGammaApi
+    {
+        private static readonly ushort[] Linear = LinearRamp();
+        internal bool FailRollback { get; init; }
+        internal int Writes;
+
+        public bool IsHdr(IccDisplayInfo display) => false;
+
+        // 永远返回线性曲线：写进去的请求曲线读回来必然不一致。
+        public ushort[] Read(IccDisplayInfo display) => (ushort[])Linear.Clone();
+
+        public void Write(IccDisplayInfo display, ushort[] ramp)
+        {
+            Writes++;
+            // 第 1 次是请求曲线（读回会被拒），第 2 次是回滚写原曲线。
+            if (Writes >= 2 && FailRollback) throw new InvalidOperationException("模拟回滚写屏失败");
+        }
+    }
+
+    [Fact]
+    public void Rejected_curve_rolls_back_to_the_original_and_drops_the_credential()
+    {
+        // 回滚成功 = 屏幕已回到原曲线，凭证没有存在的必要（以前的文案说「备份已保留」，到这里是错的）。
+        DisplayTopology.Override = () => DisplayTopology.MarkIndependent([
+            new IccDisplayInfo(@"\\.\DISPLAY1", 123, 0, 0, "0001", true, DisplayId, "Screen A", true),
+        ]);
+        var gamma = new RejectingGamma();
+        TransientGamma.ApiOverride = gamma;
+        var logged = new List<string>();
+        ErrorLog.WriteOverride = logged.Add;
+        try
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() => { _ = TransientGamma.Apply(DisplayId, IccFilterPreset.Vivid); });
+
+            Assert.Equal(Str.T("Str.ColorRollbackRestored"), ex.Message);
+            Assert.Equal(2, gamma.Writes);
+            Assert.False(File.Exists(FullscreenPendingStore.FilePath));
+            Assert.Empty(logged);
+        }
+        finally { ErrorLog.WriteOverride = null; }
+    }
+
+    [Fact]
+    public void Failed_rollback_keeps_the_restore_credential_and_lands_in_the_error_log()
+    {
+        // 回滚也失败：屏上可能停着一套没被接受的 LUT。凭证必须留着，否则下次启动「没有待还原记录」，
+        // 用户就只能靠手动还原；错误也不能再被 catch {} 吞掉。
+        DisplayTopology.Override = () => DisplayTopology.MarkIndependent([
+            new IccDisplayInfo(@"\\.\DISPLAY1", 123, 0, 0, "0001", true, DisplayId, "Screen A", true),
+        ]);
+        TransientGamma.ApiOverride = new RejectingGamma { FailRollback = true };
+        var logged = new List<string>();
+        ErrorLog.WriteOverride = logged.Add;
+        try
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() => { _ = TransientGamma.Apply(DisplayId, IccFilterPreset.Vivid); });
+
+            Assert.Equal(Str.T("Str.ColorRollbackFailed"), ex.Message);
+            Assert.True(File.Exists(FullscreenPendingStore.FilePath));
+            Assert.Single(logged);
+            Assert.Contains("FullscreenGammaRollback", logged[0]);
+        }
+        finally { ErrorLog.WriteOverride = null; }
+    }
+
     [Fact]
     public void Fullscreen_engage_applies_on_top_of_the_current_ramp_and_restores_the_snapshot()
     {

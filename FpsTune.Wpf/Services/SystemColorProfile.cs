@@ -8,7 +8,7 @@ namespace FpsTune.Wpf.Services;
 /// 为什么需要这个：Windows 设置里那个「颜色配置文件」磁贴只做**关联**——告诉读色彩管理的程序
 /// 「这块屏是哪个配置」。屏幕本身会不会变，取决于该配置文件里有没有 <c>vcgt</c> 校准表，
 /// 以及系统里的「使用 Windows 显示器校准」是否开启。选 <c>sRGB IEC61966-2.1</c> 这类色彩空间
-/// 配置文件是不会有任何变化的（它没有校准表）；选 1U 那种带 vcgt 的预设才会真的改画面。
+/// 配置文件是不会有任何变化的（它没有校准表）；选 参考实现那种带 vcgt 的预设才会真的改画面。
 /// </summary>
 internal static class SystemColorProfile
 {

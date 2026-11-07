@@ -35,7 +35,7 @@ public sealed class FilterCurveRampTests
         var plain = ScreenColorService.BuildRamp(settings, Identity());
         Assert.Equal(plain, ScreenColorService.BuildRamp(settings, Identity(), IccCurves.Identity));
 
-        // 内置预设现在自带 vcgt（对齐 1U）。它折进 ramp 会改变画面——但应用路径**不折**它，
+        // 内置预设现在自带 vcgt（对齐参考实现）。它折进 ramp 会改变画面——但应用路径**不折**它，
         // 因为预设的观感已经由画面参数（ForPreset）表达，两边都折 = 套两遍。
         var presetCurves = IccCurveReader.TryRead(IccProfileGenerator.Build(IccFilterPreset.Vivid));
         Assert.NotNull(presetCurves);

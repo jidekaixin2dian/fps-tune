@@ -18,6 +18,13 @@ public partial class OptimizeView
         DialogService.PrepareWindowForTest?.Invoke(dialog);
         dialog.ShowDialog();
     }
+    private void PowerDetails_Click(object sender, RoutedEventArgs e)
+    {
+        if (_operationBusy) return;
+        var dialog = new PowerDetailsWindow { Owner = Window.GetWindow(this) };
+        DialogService.PrepareWindowForTest?.Invoke(dialog);
+        dialog.ShowDialog();
+    }
     private void RefreshWorkspaceLabels()
     {
         foreach (var item in Items) item.RefreshLanguage();

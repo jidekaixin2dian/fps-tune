@@ -290,24 +290,5 @@ public partial class App : Application
             LogException(ex);
     }
 
-    private static void LogException(Exception ex)
-    {
-        try
-        {
-            var dir = Path.Combine(UserDataPaths.Root, "logs");
-            Directory.CreateDirectory(dir);
-            var path = Path.Combine(dir, "error.log");
-            // 异常文本常含绝对路径与账号名；落盘即脱敏，用户直接外发原文件也不泄露。
-            var content = new StringBuilder()
-                .AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]")
-                .AppendLine(Services.PrivacyScrub.Sanitize(ex.ToString()))
-                .AppendLine()
-                .ToString();
-            File.AppendAllText(path, content, Encoding.UTF8);
-        }
-        catch
-        {
-            // ignore logging errors
-        }
-    }
+    private static void LogException(Exception ex) => Services.ErrorLog.Write("UnhandledException", ex);
 }

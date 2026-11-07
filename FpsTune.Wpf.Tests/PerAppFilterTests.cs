@@ -258,6 +258,57 @@ public sealed class PerAppFilterTests : IDisposable
     }
 
     [Fact]
+    public void Watcher_retries_the_restore_after_a_failed_restore_once_backoff_expires()
+    {
+        // 回归：还原失败后 catch 恢复了 _applied/_appliedRule/_appliedDisplay 却清掉 _appliedPid，
+        // 且退避到期后没有任何重试入口（只有暂停/关闭分支消费 _nextRetryAt）——
+        // 切焦点路径的还原一旦失败就再也不会试，滤镜一直留在桌面上。
+        var old = SettingsService.Current.FilterWatcherEnabled;
+        var oldFullscreen = SettingsService.Current.FullscreenPresetEnabled;
+        var oldBackoff = ForegroundFilterWatcher.RetryBackoff;
+        IccAppRuleStore.Save([Rule("game.exe", "generated:Vivid", 60, false)]);
+        SettingsService.Current.FilterWatcherEnabled = true;
+        SettingsService.Current.FullscreenPresetEnabled = false;
+        ForegroundFilterWatcher.RetryBackoff = TimeSpan.FromMilliseconds(300);
+        var restores = 0;
+        ForegroundFilterWatcher.ForegroundProcessOverride = () => new("game.exe", @"C:\Games\game.exe", "Game", 4321);
+        ForegroundFilterWatcher.DisplayOverride = () => "D1";
+        ForegroundFilterWatcher.ApplyOverride = _ => true;
+        ForegroundFilterWatcher.ProcessAliveOverride = _ => true; // 原进程存活：退出边沿重试不参与，只测退避重试
+        ForegroundFilterWatcher.RestoreOverride = () =>
+        {
+            restores++;
+            return restores == 1 ? throw new InvalidOperationException("restore flaky") : true;
+        };
+        try
+        {
+            using var watcher = new ForegroundFilterWatcher();
+            watcher.Poll(); watcher.Poll();
+            Assert.NotNull(watcher.Status.ActivePreset);
+
+            ForegroundFilterWatcher.ForegroundProcessOverride = () => new("explorer.exe");
+            watcher.Poll(); watcher.Poll(); // 去抖 → 还原第一次失败
+            Assert.Equal(1, restores);
+            Assert.NotNull(watcher.Status.ActivePreset); // 还原失败仍视为已接管
+
+            watcher.Poll(); // 退避期内不重试
+            Assert.Equal(1, restores);
+
+            Thread.Sleep(350);
+            watcher.Poll(); // 退避到期 → 自动重试还原成功
+            Assert.Equal(2, restores);
+            Assert.Null(watcher.Status.ActivePreset);
+        }
+        finally
+        {
+            ForegroundFilterWatcher.RetryBackoff = oldBackoff;
+            SettingsService.Current.FilterWatcherEnabled = old;
+            SettingsService.Current.FullscreenPresetEnabled = oldFullscreen;
+            SettingsService.Save(SettingsService.Current);
+        }
+    }
+
+    [Fact]
     public void Preference_store_toggles_favorites_and_ranks_favorites_before_recent()
     {
         Assert.True(FilterPreferenceStore.ToggleFavorite("a.icc"));

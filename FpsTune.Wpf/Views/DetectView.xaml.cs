@@ -345,8 +345,42 @@ public partial class DetectView : UserControl
         CheckList.ItemsSource = new List<object>();
         CpuText.Text = "--"; GpuText.Text = "--"; RamText.Text = "--"; OsText.Text = "--";
         LaptopText.Text = "--"; AdminText.Text = "--";
+        GpuReportedText.Text = ""; GpuReportedText.Visibility = Visibility.Collapsed;
         GamePathText.Text = AppState.GamePath ?? "--";
         OutputBox.Text = Str.T("Str.GameSwitchNeedDetect");
+    }
+
+    // ---------- GPU 名字：改过名称时同时显示「真实型号」与「当前上报」 ----------
+
+    private int _gpuIdentityGeneration;
+
+    /// <summary>
+    /// 只读推导一次伪装状态（后台线程读注册表，不阻塞页面）。
+    /// 未伪装时保持原来的单行显示，不给普通用户多加信息。
+    /// </summary>
+    private async Task RefreshGpuIdentityLineAsync(string hardwareGpu)
+    {
+        var generation = ++_gpuIdentityGeneration;
+        GpuIdentitySnapshot snapshot;
+        try { snapshot = await Task.Run(() => GpuIdentityService.ReadIdentity(hardwareGpu)); }
+        catch (Exception ex) { snapshot = new GpuIdentitySnapshot(null, null, false, ex.Message); }
+        if (generation != _gpuIdentityGeneration || GpuReportedText is null) return;
+        ApplyGpuIdentityLine(hardwareGpu, snapshot);
+    }
+
+    internal void ApplyGpuIdentityLine(string hardwareGpu, GpuIdentitySnapshot snapshot)
+    {
+        if (GpuText is null || GpuReportedText is null) return;
+        if (!snapshot.Available || !snapshot.IsDisguised)
+        {
+            GpuText.Text = hardwareGpu;
+            GpuReportedText.Text = "";
+            GpuReportedText.Visibility = Visibility.Collapsed;
+            return;
+        }
+        GpuText.Text = Str.T("Str.DetectGpuReal", hardwareGpu);
+        GpuReportedText.Text = Str.T("Str.DetectGpuReported", snapshot.ReportedName);
+        GpuReportedText.Visibility = Visibility.Visible;
     }
 
     /// <summary>P3-4：页头状态行——上次检测的完成时间与耗时（未检测过时给出动作指引）。</summary>
@@ -380,6 +414,10 @@ public partial class DetectView : UserControl
 
         AppState.GamePath = root["gamePath"]?.GetValue<string>();
         GamePathText.Text = AppState.GamePath ?? "--";
+
+        // 伪装状态是只读推导：概览页读到哪个型号就按那个型号对齐设备。
+        if (hardware is not null)
+            _ = RefreshGpuIdentityLineAsync(hardware["gpu"]?.GetValue<string>() ?? GpuText.Text);
 
         var checks = root["checks"]?.AsArray();
         CheckList.ItemsSource = BuildCheckItems(checks);

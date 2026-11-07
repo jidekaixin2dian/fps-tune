@@ -329,7 +329,7 @@
                 </Setter>
             </Style>
 
-            <!-- ============ 侧栏分组导航（1U 式：组头可折叠 + 子项缩进） ============ -->
+            <!-- ============ 侧栏分组导航（参考实现式：组头可折叠 + 子项缩进） ============ -->
             <Style x:Key="NavGroupHeaderStyle" TargetType="ToggleButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                 <Setter Property="FontFamily" Value="{StaticResource FontBody}"/>
@@ -403,6 +403,10 @@
                                     <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                 </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
                                     <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
@@ -435,6 +439,10 @@
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                 </Trigger>
@@ -477,6 +485,10 @@
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
                                     <Setter TargetName="HoverBg" Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                 </Trigger>

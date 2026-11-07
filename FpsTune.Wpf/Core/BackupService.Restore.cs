@@ -421,8 +421,10 @@ public static partial class BackupService
         {
             var secHive = Enum.Parse<RegistryHive>(r.SecondaryHive);
             if (r.SecondaryExisted.Value)
+                // EnsureSecondary 已拒绝「存在却无值」（那只可能来自导入的构造备份）；
+                // 这里不再兜底 0——那会把「恢复原值」变成改写注册表。
                 RegistryHelper.SetValue(secHive, r.SecondaryPath!, r.SecondaryName!,
-                    ConvertValue(r.SecondaryValue ?? 0, RegistryValueKind.DWord), RegistryValueKind.DWord);
+                    ConvertValue(r.SecondaryValue!, RegistryValueKind.DWord), RegistryValueKind.DWord);
             else
                 RegistryHelper.DeleteValue(secHive, r.SecondaryPath!, r.SecondaryName!);
         }

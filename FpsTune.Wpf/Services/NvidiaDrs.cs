@@ -24,6 +24,24 @@ internal interface INvdrsApi : IDisposable
     INvdrsSession OpenSession();
 }
 
+/// <summary>
+/// 一条设置在**本 profile** 上的三态：驱动里没有这项、值来自继承（全局/基础/驱动默认）、
+/// 或本 profile 自己写了覆盖。只回 bool 的读法区分不出「继承」与「显式覆盖」，
+/// 界面就会反复提示「先扫描一次」。
+/// </summary>
+public enum NvdrsSettingState
+{
+    /// <summary>驱动里查不到这一项（该驱动/该卡没有这个设置，或读不到）。</summary>
+    Missing,
+    /// <summary>值来自全局/基础/驱动默认，本 profile 没有覆盖。</summary>
+    Inherited,
+    /// <summary>本 profile 显式覆盖。</summary>
+    Overridden,
+}
+
+/// <summary>三态读取结果：值本身、状态，以及驱动给的默认值（读不到为 null）。</summary>
+internal readonly record struct NvdrsSettingRead(NvdrsSettingState State, uint Value, uint? PredefinedValue);
+
 /// <summary>一次 DRS 会话：Dispose 时销毁会话（未显式 Save 的修改一并丢弃）。</summary>
 internal interface INvdrsSession : IDisposable
 {
@@ -39,6 +57,12 @@ internal interface INvdrsSession : IDisposable
     /// <summary>仅本 profile 的用户覆盖，不把继承值或驱动预置值当作显式覆盖。</summary>
     bool TryGetOverrideDword(INvdrsProfile profile, uint settingId, out uint value)
         => TryGetSettingDword(profile, settingId, out value);
+
+    /// <summary>三态读取：区分「没有这项」「继承值」「本 profile 覆盖」。默认按两态实现兜底。</summary>
+    NvdrsSettingRead ReadSettingState(INvdrsProfile profile, uint settingId)
+        => TryGetSettingDword(profile, settingId, out var value)
+            ? new NvdrsSettingRead(NvdrsSettingState.Overridden, value, null)
+            : new NvdrsSettingRead(NvdrsSettingState.Missing, 0, null);
 
     /// <summary>写入 DWORD 设置；失败抛 NvdrsException。</summary>
     void SetSettingDword(INvdrsProfile profile, uint settingId, uint value);
@@ -313,7 +337,37 @@ internal sealed class NvdrsApi : INvdrsApi
 
         private bool ReadSetting(INvdrsProfile profile, uint settingId, bool overrideOnly, out uint value)
         {
-            var setting = new NvdrsSetting
+            var setting = new NvdrsSetting();
+            if (!TryRead(profile, settingId, out setting))
+            {
+                value = 0;
+                return false;
+            }
+            if (setting.settingType != 0) throw new NvdrsException(-1, "Expected a DWORD driver setting.");
+            if (overrideOnly && (setting.settingLocation != 0 || setting.isCurrentPredefined != 0))
+            { value = 0; return false; }
+            value = setting.currentValue.u32Value;
+            return true;
+        }
+
+        public NvdrsSettingRead ReadSettingState(INvdrsProfile profile, uint settingId)
+        {
+            var setting = new NvdrsSetting();
+            // 非数字项不参与高级参数表：按「驱动里没有这一项」处理，不抛，避免一条坏项拖垮整张表。
+            if (!TryRead(profile, settingId, out setting) || setting.settingType != 0)
+                return new(NvdrsSettingState.Missing, 0, null);
+            var predefined = setting.isPredefinedValid != 0 ? setting.predefinedValue.u32Value : (uint?)null;
+            // settingLocation：0 = 本 profile；1/2/3 = 全局/基础/驱动默认。isCurrentPredefined 非 0
+            // 表示当前值就是驱动预置值，同样不算本 profile 的覆盖。
+            var overridden = setting.settingLocation == 0 && setting.isCurrentPredefined == 0;
+            return new(overridden ? NvdrsSettingState.Overridden : NvdrsSettingState.Inherited,
+                setting.currentValue.u32Value, predefined);
+        }
+
+        /// <summary>读一条设置原始结构；驱动说没有这一项时返回 false。</summary>
+        private bool TryRead(INvdrsProfile profile, uint settingId, out NvdrsSetting setting)
+        {
+            setting = new NvdrsSetting
             {
                 version = MakeVersion<NvdrsSetting>(1),
                 settingName = "",
@@ -324,15 +378,8 @@ internal sealed class NvdrsApi : INvdrsApi
             uint extra = 0;
             var status = api._getSetting!(session, ProfilePtr(profile), settingId, ref setting, ref extra);
             if (status == StatusSettingNotFound)
-            {
-                value = 0;
                 return false;
-            }
             api.Check(status, $"读取设置 {settingId:X8}");
-            if (setting.settingType != 0) throw new NvdrsException(-1, "Expected a DWORD driver setting.");
-            if (overrideOnly && (setting.settingLocation != 0 || setting.isCurrentPredefined != 0))
-            { value = 0; return false; }
-            value = setting.currentValue.u32Value;
             return true;
         }
 

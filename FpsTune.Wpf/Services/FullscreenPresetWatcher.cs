@@ -204,6 +204,10 @@ internal sealed class FullscreenPresetWatcher : IDisposable
         }
         Record(AutoProfileActivityStore.KindApplied,
             Str.T("Str.FullscreenApplied", PresetLabel(preset), DisplayLabel(target)));
+        // 在飞兜底：Poll 入口的 _disposed 检查早已过去、写屏刚刚完成——立刻还原，
+        // 别把全屏方案留在已退出的状态下（只能等下次启动的 RestoreOnStartup）。
+        if (Volatile.Read(ref _disposed) != 0)
+            Disengage(Str.T("Str.FullscreenReasonExit"));
     }
 
     private void Disengage(string reason)

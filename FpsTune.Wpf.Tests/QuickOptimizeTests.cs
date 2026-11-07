@@ -8,6 +8,7 @@ namespace FpsTune.Wpf.Tests;
 /// 一键优化统一页专项：方案档位到执行清单的纯映射（catalog 预设 + 可选电源计划项）。
 /// 不触碰真实系统，只验证解析与合并契约。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class QuickOptimizeTests : IDisposable
 {
     private readonly string _dir;

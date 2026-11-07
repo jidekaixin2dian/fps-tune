@@ -299,9 +299,21 @@ public static class ExperimentRunner
         }
         var summary = Summarize(samples.Samples!);
 
+        // 可信性分析：以独立录制轮次为单位量化收益与不确定性（Welch 区间 + Hedges g）。
+        // 阈值与 P99 安全线沿用既有口径；数据本身不可信（重复 / 离群 / 条件不一致）时
+        // 并入「不稳定」安全口径，不保留本组。
+        var analysis = BuildAnalysis(state, baselineContext, options, samples);
+        var evidence = AbEvidenceText.Describe(analysis);
+
         // 3) 决策
         var decision = DecideKeep(baselineSummary, summary);
         var kept = decision.Keep;
+        var reason = decision.Reason;
+        if (kept && !analysis.Sufficient)
+        {
+            kept = false;
+            reason = Str.T("Str.ExperimentNotStable");
+        }
 
         // 4) 无效 → 自动还原（只还原本步骤真正改过、且记录在本次快照里的项）
         //    若本组在测试前就已达标，本次没有任何"原值"可还原，绝不能谎报"已还原"。
@@ -367,7 +379,14 @@ public static class ExperimentRunner
                 RecoveryError: revertError,
                 EnvironmentHash: baselineContext.EnvironmentHash,
                 RecipeHash: baselineContext.RecipeHash,
-                Scene: baselineContext.Scene));
+                Scene: baselineContext.Scene,
+                RoundsBase: analysis.RoundsBase,
+                RoundsTest: analysis.RoundsTest,
+                AvgDiffLowerPct: analysis.AvgDiffLowerPct,
+                AvgDiffUpperPct: analysis.AvgDiffUpperPct,
+                HedgesG: analysis.HedgesG,
+                AnalysisVerdict: analysis.Verdict,
+                AnalysisSufficient: analysis.Sufficient));
         }
 
         // 5) 更新状态
@@ -375,7 +394,6 @@ public static class ExperimentRunner
         var existing = groups.OfType<JsonObject>().FirstOrDefault(g => g["id"]?.GetValue<string>() == groupId);
         if (existing is not null)
             groups.Remove(existing);
-        var reason = decision.Reason;
         if (!kept && !reverted && revertError.Length > 0)
             reason += " ⚠ " + revertError;
         groups.Add(new JsonObject
@@ -391,6 +409,8 @@ public static class ExperimentRunner
             ["reverted"] = reverted,
             ["revertError"] = revertError,
             ["reason"] = reason,
+            ["evidence"] = evidence,
+            ["analysis"] = analysis.ToJson(),
             ["samplerMode"] = samples.Mode,
         });
         WriteState(new JsonObject
@@ -412,10 +432,14 @@ public static class ExperimentRunner
             ["keep"] = kept,
             ["reverted"] = reverted,
             ["reason"] = reason,
+            ["evidence"] = evidence,
         }, options);
 
         if (!options.Simulate && (revertError.Length == 0 || changedIds.Count == 0)) ClearInFlight();
         var verdict = kept ? "保留" : reverted ? "已还原" : "未还原";
+        var message = $"{groupName}（{groupId}）测试完成：{verdict}。{reason}";
+        if (evidence.Length > 0)
+            message += " " + evidence;
         return new JsonObject
         {
             ["tool"] = ToolName,
@@ -431,8 +455,10 @@ public static class ExperimentRunner
             ["reverted"] = reverted,
             ["revertError"] = revertError,
             ["reason"] = reason,
+            ["evidence"] = evidence,
+            ["analysis"] = analysis.ToJson(),
             ["samplerMode"] = samples.Mode,
-            ["message"] = $"{groupName}（{groupId}）测试完成：{verdict}。{reason}",
+            ["message"] = message,
         };
         }
         catch
@@ -458,14 +484,20 @@ public static class ExperimentRunner
             return Fail("report", "还没有实验数据。");
 
         var csvPath = Path.Combine(StateDir(), options.Simulate ? "experiment-summary-simulated.csv" : "experiment-summary.csv");
-        var lines = new List<string> { "group,keep,avgFps,p1Low,p99Ms,stutters,reason" };
+        var lines = new List<string>
+        {
+            "group,keep,avgFps,p1Low,p99Ms,stutters,rounds,avgDiffPct,ciLowerPct,ciUpperPct,verdict,reason",
+        };
         if (state["groups"] is JsonArray groups)
         {
             foreach (var g in groups.OfType<JsonObject>())
             {
                 var s = g["summary"]!.AsObject();
+                var a = g["analysis"] as JsonObject;
                 lines.Add(string.Create(CultureInfo.InvariantCulture,
-                    $"{g["id"]},{g["keep"]!.GetValue<bool>()},{s["avgFps"]},{s["p1Low"]},{s["p99Ms"]},{s["stutters"]},\"{g["reason"]}\""));
+                    $"{g["id"]},{g["keep"]!.GetValue<bool>()},{s["avgFps"]},{s["p1Low"]},{s["p99Ms"]},{s["stutters"]}," +
+                    $"{RoundsCell(a)},{AnalysisNum(a, "avgFps", "diffPct")},{AnalysisNum(a, "avgFps", "ciLowerPct")}," +
+                    $"{AnalysisNum(a, "avgFps", "ciUpperPct")},{a?["verdict"]?.GetValue<string>() ?? ""},\"{g["reason"]}\""));
             }
         }
         Directory.CreateDirectory(StateDir());
@@ -856,6 +888,37 @@ public static class ExperimentRunner
         };
     }
 
+    /// <summary>
+    /// 基线 vs 本组轮次的可信性分析。基线轮次取自 state 里持久化的原始采样；
+    /// 条件字段来自两侧各自的 ExperimentContext（上下文闸门本就强校验一致，这里独立复核并进报告）。
+    /// </summary>
+    private static AbAnalysisResult BuildAnalysis(
+        JsonObject? state, ExperimentContext baselineContext, Options options, SamplesResult samples)
+    {
+        static AbRound RoundFrom(JsonObject? s) => AbRound.FromJson(s) ?? new AbRound(double.NaN, double.NaN, double.NaN, -1, 0);
+        var baselineRounds = (state?["baseline"]?["samples"] as JsonArray ?? [])
+            .OfType<JsonObject>()
+            .Select(RoundFrom)
+            .ToList();
+        var testRounds = samples.Samples!.Select(RoundFrom).ToList();
+        var baselineInput = new AbGroupInput("baseline", baselineRounds,
+            baselineContext.Mode, baselineContext.DurationSec, baselineContext.Game, baselineContext.Scene);
+        var testInput = new AbGroupInput("test", testRounds,
+            samples.Mode ?? "auto", options.DurationSec, options.GameName ?? "", options.Scene ?? "");
+        return AbAnalysis.Compare(baselineInput, testInput);
+    }
+
+    /// <summary>CSV 导出：分析节点缺失（旧 state）时留空，不编数。</summary>
+    private static string RoundsCell(JsonObject? analysis) =>
+        analysis?["rounds"] is JsonObject r
+            ? $"{r["baseline"]?.GetValue<int>() ?? 0}/{r["test"]?.GetValue<int>() ?? 0}"
+            : "";
+
+    private static string AnalysisNum(JsonObject? analysis, string section, string field)
+        => analysis?[section] is JsonObject node && node[field] is { } v && v.GetValueKind() == JsonValueKind.Number
+            ? v.GetValue<double>().ToString("0.0#", CultureInfo.InvariantCulture)
+            : "";
+
     internal static (bool Keep, string Reason) DecideKeep(JsonObject baseline, JsonObject group)
     {
         if (baseline["stable"]?.GetValue<bool>() != true || group["stable"]?.GetValue<bool>() != true)
@@ -925,7 +988,14 @@ public static class ExperimentRunner
             if (backup is not null && BackupService.IsOperationResolved(backup))
             { ClearInFlight(); return false; }
         }
-        catch { }
+        catch
+        {
+            // in-flight 写入本身经 AtomicFile 原子化，解析失败说明文件已损坏而非「有未决操作」：
+            // 留档后按无未决处理，否则所有真实实验被一句与事实不符的「已有被中断的实验」永久挡住。
+            try { AtomicFile.PreserveCorrupt(InFlightFile); } catch { }
+            ClearInFlight();
+            return false;
+        }
         return true;
     }
     private static void WriteInFlight(string group, IEnumerable<string> items, string? backup) =>

@@ -66,6 +66,8 @@ public sealed class BackupRecord
     // power-overlay-perf 的原始接电/电池 overlay GUID（零 GUID = 平衡态）。
     public string? OldAcOverlayGuid { get; set; }
     public string? OldDcOverlayGuid { get; set; }
+    // 应用完成后的接电 overlay 快照：还原前与其他类别同款漂移闸比对。
+    public string? PostAcOverlayGuid { get; set; }
 
     // 定向还原后保留原始快照供审计，同时防止同一记录被后续 RestoreAll 重复覆盖。
     public bool Restored { get; set; }

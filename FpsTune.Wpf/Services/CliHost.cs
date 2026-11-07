@@ -387,7 +387,10 @@ public static class CliHost
             Simulate: options.Simulate,
             DurationSec: options.Duration ?? 90,
             CsvPath: options.CsvPath);
-        var (exitCode, json) = ExperimentRunner.RunAsync(step, runnerOptions, CancellationToken.None)
+        // CLI 由 App.OnStartup 在 UI 线程同步执行：RunAsync 的 await 链没有 ConfigureAwait，
+        // 直接 GetResult() 会死锁在 DispatcherSynchronizationContext（真实挂起点：Task.Run 解析、
+        // PresentMon 等待、应用组）。整条链挪到线程池再阻塞等待。
+        var (exitCode, json) = Task.Run(() => ExperimentRunner.RunAsync(step, runnerOptions, CancellationToken.None))
             .GetAwaiter().GetResult();
 
         if (options.Json)

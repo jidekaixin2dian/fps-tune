@@ -72,7 +72,10 @@ public static class FrameTimeStats
         frameTimes.Sort();
         token.ThrowIfCancellationRequested();
         var sorted = frameTimes;
-        var p99Ms = sorted[Math.Min((int)Math.Floor(sorted.Count * 0.99), sorted.Count - 1)];
+        // 最近秩（nearest-rank）p99：第 ceil(0.99·N) 个值。旧式 floor(N·0.99) 在 N 恰为
+        // 100 的整倍数时多取一位（把第 99.99 位的值当 p99）；N<100 时 nearest-rank 本身
+        // 就是最差帧，这是秩百分位的小样本固有语义，不是实现问题。
+        var p99Ms = sorted[Math.Clamp((int)Math.Ceiling(sorted.Count * 0.99) - 1, 0, sorted.Count - 1)];
         var avgMs = frameTimes.Average();
         var avgFps = 1000.0 / avgMs;
         var p1Fps = 1000.0 / p99Ms;

@@ -19,7 +19,7 @@ public enum IccFilterPreset
     Neutral = 10,
     Deexposure = 11,       // 去曝光：高光窗压亮部（画面过曝/雪地/强光）
     DeexposureStrong = 12, // 去曝光强化：更深的高光压缩，夜间与暗场适用性更差
-    // 以下按 1U 2.9.6 明文调色参数补齐（原来只接了它的 43 个 .icc，这批"调色参数"型预设没接）。
+    // 以下按 参考实现明文调色参数补齐（原来只接了它的 43 个 .icc，这批"调色参数"型预设没接）。
     Daylight = 13,         // 白天：暗部全开，找人优先
     Bright = 14,           // 高亮：整体提亮
     VividLively = 15,      // 鲜艳：浓郁鲜明
@@ -41,7 +41,7 @@ public enum IccFilterPreset
     GameValorant = 31,
     GameNaraka2 = 32,
     GameCod16 = 33,
-    // 会员专属调色（1U PRO_PRESET_TUNES，用户解锁的加密模块里取到的原始参数，按 mappingRules 折算）
+    // 会员专属调色（参考实现的会员调色参数，用户解锁的加密模块里取到的原始参数，按 mappingRules 折算）
     VipSaturated = 34,     // 高饱和：饱和度拉满，暗部不动
     VipDeepVivid = 35,     // 沉艳：浓郁压沉
     VipWarmClear = 36,     // 暖透：暖调通透
@@ -70,7 +70,7 @@ public static class IccProfileGenerator
         public ushort[]? BlueCurve { get; init; }
 
         /// <summary>
-        /// 这条预设的 <c>vcgt</c> 校准曲线（观感本体）。1U 的每个内置预设都带一条 3×257 的 vcgt，
+        /// 这条预设的 <c>vcgt</c> 校准曲线（观感本体）。参考实现的每个内置预设都带一条 3×257 的 vcgt，
         /// 我们照这个结构生成：ICC 关联给读色彩管理的程序，vcgt 给系统/驱动装进 LUT——游戏才看得见。
         /// </summary>
         public ScreenColorSettings? Calibration { get; init; }
@@ -86,13 +86,13 @@ public static class IccProfileGenerator
         {
             IccFilterPreset.Vivid => 1.06, IccFilterPreset.Soft => .94, IccFilterPreset.Muted => .96,
             IccFilterPreset.ClearBright2 => 1.36,
-            // 会员调色的 saturation 原值 77–100 → 折算比 1.5 档（与 1U 的 clamp(0.5,1.5) 一致）
+            // 会员调色的 saturation 原值 77–100 → 折算比 1.5 档（与参考实现的 clamp(0.5,1.5) 一致）
             IccFilterPreset.VipSaturated or IccFilterPreset.VipDeepVivid or IccFilterPreset.VipWarmClear
                 or IccFilterPreset.VipCoolSuppress => 1.5,
             _ => 1d
         };
         // 目标剖面（display class）会被 CMM 反向使用：存反向的饱和度矩阵、白点保持 D50。
-        // 曲线部分按 1U 的结构写——TRC 用标准 sRGB（校准后的屏幕就是这个响应），
+        // 曲线部分按 参考实现的结构写——TRC 用标准 sRGB（校准后的屏幕就是这个响应），
         // 观感写在 vcgt 校准表里；把「反函数」塞进 TRC 再当 ramp 折回去会互相抵消（已踩过）。
         double[] Column(double[] primary, double luminance) => Enumerable.Range(0, 3)
             .Select(i => primary[i] / saturation + (1 - 1 / saturation) * luminance * (StdRXyz[i] + StdGXyz[i] + StdBXyz[i])).ToArray();
@@ -104,7 +104,7 @@ public static class IccProfileGenerator
     }
 
     /// <summary>
-    /// 1U 每条调色预设都捆绑一个数字振动档（NVAPI DVC 百分比），曲线之外还差这一档饱和度。
+    /// 参考实现每条调色预设都捆绑一个数字振动档（NVAPI DVC 百分比），曲线之外还差这一档饱和度。
     /// 选中预设时只是把滑块预填成草稿，仍要点「应用」才写入系统；没有对应值返回 null。
     /// </summary>
     internal static int? VibranceFor(IccFilterPreset preset) => preset switch
@@ -198,13 +198,13 @@ public static class IccProfileGenerator
             ("rXYZ", XyzTag(p.RXyz)),
             ("gXYZ", XyzTag(p.GXyz)),
             ("bXYZ", XyzTag(p.BXyz)),
-            // 与 1U 的预设同结构：TRC = 标准 sRGB（屏幕校准后的响应），观感写在 vcgt。
+            // 与参考实现的预设同结构：TRC = 标准 sRGB（屏幕校准后的响应），观感写在 vcgt。
             ("rTRC", p.RedCurve is null ? SrgbTrcTag() : CurveTag(p.RedCurve, 2.2)),
             ("gTRC", p.GreenCurve is null ? SrgbTrcTag() : CurveTag(p.GreenCurve, 2.2)),
             ("bTRC", p.BlueCurve is null ? SrgbTrcTag() : CurveTag(p.BlueCurve, 2.2)),
             ("cprt", MlucTag("FpsTune")),
         };
-        // vcgt 放在最后（1U 的文件里也是最后一个 tag）：3×257 u16 = 1554 字节。
+        // vcgt 放在最后（参考实现的文件里也是最后一个 tag）：3×257 u16 = 1554 字节。
         if (p.Calibration is { } calibration) tags.Add(("vcgt", VcgtTag(calibration)));
 
         int tagTableSize = 4 + tags.Count * 12;
@@ -223,7 +223,7 @@ public static class IccProfileGenerator
         // 头部 128 字节，大端
         bw.Write(Be32((uint)total));           // 0 尺寸
         bw.Write(Be32(0));                     // 4 首选 CMM
-        bw.Write(Be32(0x04400000));            // 8 版本 4.4：vcgt 是 v4 才认的 tag（1U 的预设也是 4.4）
+        bw.Write(Be32(0x04400000));            // 8 版本 4.4：vcgt 是 v4 才认的 tag（参考实现的预设也是 4.4）
         bw.Write(FourCC("mntr"));              // 12 设备类
         bw.Write(FourCC("RGB "));              // 16 数据色彩空间
         bw.Write(FourCC("XYZ "));              // 20 PCS
@@ -287,7 +287,7 @@ public static class IccProfileGenerator
     }
 
     /// <summary>
-    /// 标准 sRGB 传递函数（<c>para</c> type 3）。1U 的预设就是这么写的：
+    /// 标准 sRGB 传递函数（<c>para</c> type 3）。参考实现的预设就是这么写的：
     /// TRC 只描述「这块屏校准之后是 sRGB」，真正的观感写在 vcgt 里。
     /// 以前我们把「MapTone 的反函数」塞进 TRC，再把它当屏幕 ramp 折回去，
     /// 结果与画面参数互相抵消——每个预设都退化成同一条 sRGB 解码曲线。
@@ -298,24 +298,29 @@ public static class IccProfileGenerator
         var bw = new BinaryWriter(ms);
         bw.Write(FourCC("para"));
         bw.Write(Be32(0));
-        bw.Write(Be16(3));      // type 3: Y = (aX+b)^g for X >= d, else cX
+        // type 4（7 参数，e=f=0）：Y = (aX+b)^g for X >= d, else cX——标准 sRGB 折线的规范编码。
+        // 旧版写成 type 3 + 5 参数：cX 分支属于 4 型，第三方解析器（Photoshop/littleCMS）会把
+        // 3 型按 4 参数读，暗部整段被裁黑；读端（IccCurveReader）对旧文件保持兼容。
+        bw.Write(Be16(4));
         bw.Write(Be16(0));
         bw.Write(BeS15Fixed16(2.4));
         bw.Write(BeS15Fixed16(1 / 1.055));
         bw.Write(BeS15Fixed16(0.055 / 1.055));
         bw.Write(BeS15Fixed16(1 / 12.92));
         bw.Write(BeS15Fixed16(0.04045));
+        bw.Write(BeS15Fixed16(0));
+        bw.Write(BeS15Fixed16(0));
         return ms.ToArray();
     }
 
     /// <summary>
-    /// <c>vcgt</c> 校准表：3×(256+1) 个 u16，正好 1554 字节——与 1U 内置预设的 vcgt tag 同尺寸同结构。
+    /// <c>vcgt</c> 校准表：3×(256+1) 个 u16，正好 1554 字节——与 参考实现内置预设的 vcgt tag 同尺寸同结构。
     /// 这就是「滤镜看得见」的那条曲线：系统/驱动把 vcgt 装进显卡 LUT，游戏和全屏程序都能看到，
     /// 而 ICC 关联只服务主动读色彩管理的程序。
     /// </summary>
     private static byte[] VcgtTag(ScreenColorSettings settings)
     {
-        // 与 Windows / 1U 的真实文件同布局：16 字节头（sig + reserved + type + channels + entries），
+        // 与 Windows / 参考实现的真实文件同布局：16 字节头（sig + reserved + type + channels + entries），
         // 后面按通道平铺（实测真实文件每通道 257 条）→ 16 + 3×257×2 = 1558 字节。
         const int entries = 257;
         var gains = new[] { settings.Red, settings.Green, settings.Blue };

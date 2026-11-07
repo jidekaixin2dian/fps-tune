@@ -96,7 +96,7 @@
                         </StackPanel>
                     </Border>
                     <!-- 覆盖准星在本程序前台时会自动隐藏，光看屏幕看不出改没改；这里给一份同款图形的预览。 -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <Border Width="150" Height="150" Background="#0E1218" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RadiusControl}">
                             <ContentControl x:Name="CrosshairPreviewHost" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" AutomationProperties.AutomationId="CrosshairPreviewHost" AutomationProperties.Name="{DynamicResource Str.CrosshairPreviewTitle}"/>
                         </Border>
@@ -105,10 +105,110 @@
                             <TextBlock Text="{DynamicResource Str.CrosshairPreviewHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                         </StackPanel>
                     </StackPanel>
-                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,14,0,0" Margin="0,4,0,0"><StackPanel>
-                        <CheckBox x:Name="CrosshairAdaptiveCheck" Content="{DynamicResource Str.CrosshairAdaptiveToggle}" Style="{StaticResource ToggleSwitchStyle}" Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
-                        <TextBlock Text="{DynamicResource Str.CrosshairAdaptiveHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                    </StackPanel></Border>
+
+                    <!-- ── 显示方式：同一时间只用一种 ─────────────────────────────── -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.CrosshairDisplayModeTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock Text="{DynamicResource Str.CrosshairDisplayModeHint}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                            <StackPanel Orientation="Horizontal" AutomationProperties.AutomationId="CrosshairDisplayModePicker">
+                                <RadioButton x:Name="CrosshairModeAlways" Content="{DynamicResource Str.CrosshairModeAlways}" Tag="always"
+                                             Style="{StaticResource PillRadioStyle}" Margin="0,0,6,0" Padding="14,4"
+                                             AutomationProperties.Name="{DynamicResource Str.CrosshairModeAlways}" Checked="DisplayMode_Changed"/>
+                                <RadioButton x:Name="CrosshairModeFire" Content="{DynamicResource Str.CrosshairModeFire}" Tag="fire"
+                                             Style="{StaticResource PillRadioStyle}" Margin="0,0,6,0" Padding="14,4"
+                                             AutomationProperties.Name="{DynamicResource Str.CrosshairModeFire}" Checked="DisplayMode_Changed"/>
+                                <RadioButton x:Name="CrosshairModeAds" Content="{DynamicResource Str.CrosshairModeAds}" Tag="ads"
+                                             Style="{StaticResource PillRadioStyle}" Padding="14,4"
+                                             AutomationProperties.Name="{DynamicResource Str.CrosshairModeAds}" Checked="DisplayMode_Changed"/>
+                            </StackPanel>
+                            <TextBlock x:Name="CrosshairModeDescText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,18"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── 开镜判定：按住还是点击切换，开镜期间要不要藏 ───────────── -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.CrosshairAdsModeTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" AutomationProperties.AutomationId="CrosshairAdsModePicker">
+                                <RadioButton x:Name="CrosshairAdsHold" Content="{DynamicResource Str.CrosshairAdsHold}" Tag="hold"
+                                             Style="{StaticResource PillRadioStyle}" Margin="0,0,6,0" Padding="14,4"
+                                             AutomationProperties.Name="{DynamicResource Str.CrosshairAdsHold}" Checked="AdsMode_Changed"/>
+                                <RadioButton x:Name="CrosshairAdsToggle" Content="{DynamicResource Str.CrosshairAdsToggle}" Tag="toggle"
+                                             Style="{StaticResource PillRadioStyle}" Padding="14,4"
+                                             AutomationProperties.Name="{DynamicResource Str.CrosshairAdsToggle}" Checked="AdsMode_Changed"/>
+                            </StackPanel>
+                            <TextBlock x:Name="CrosshairAdsModeDescText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,14"/>
+                            <CheckBox x:Name="CrosshairHideOnAdsCheck" Content="{DynamicResource Str.CrosshairHideOnAds}" Style="{StaticResource ToggleSwitchStyle}"
+                                      Checked="Crosshair_Changed" Unchecked="Crosshair_Changed"/>
+                            <TextBlock Text="{DynamicResource Str.CrosshairHideOnAdsDesc}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── 按键：点一下再按要用的键（鼠标键与侧键都行） ─────────────── -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0" Margin="0,16,0,0">
+                        <Grid Width="520" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <TextBlock Text="{DynamicResource Str.CrosshairFireTriggerTitle}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,16,10"/>
+                            <Button x:Name="CrosshairFireTriggerButton" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="170" Margin="0,0,0,10"
+                                    Content="{DynamicResource Str.CrosshairTriggerCapture}" AutomationProperties.AutomationId="CrosshairFireTriggerButton"
+                                    AutomationProperties.Name="{DynamicResource Str.CrosshairFireTriggerTitle}" Click="CaptureFireTrigger_Click"/>
+                            <TextBlock Grid.Row="1" Text="{DynamicResource Str.CrosshairAdsTriggerTitle}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,16,10"/>
+                            <Button x:Name="CrosshairAdsTriggerButton" Grid.Row="1" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="170" Margin="0,0,0,10"
+                                    Content="{DynamicResource Str.CrosshairTriggerCapture}" AutomationProperties.AutomationId="CrosshairAdsTriggerButton"
+                                    AutomationProperties.Name="{DynamicResource Str.CrosshairAdsTriggerTitle}" Click="CaptureAdsTrigger_Click"/>
+                            <TextBlock Grid.Row="2" Text="{DynamicResource Str.CrosshairSyncKeyTitle}" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <Button x:Name="CrosshairSyncTriggerButton" Grid.Row="2" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="170"
+                                    Content="{DynamicResource Str.CrosshairSyncKeyUnset}" AutomationProperties.AutomationId="CrosshairSyncTriggerButton"
+                                    AutomationProperties.Name="{DynamicResource Str.CrosshairSyncKeyTitle}" Click="CaptureSyncTrigger_Click"/>
+                        </Grid>
+                    </Border>
+                    <TextBlock Text="{DynamicResource Str.CrosshairSyncKeyDesc}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+
+                    <!-- ── 时间：触发延迟过滤轻点，还原延迟压住点射闪烁 ─────────────── -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0" Margin="0,16,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.CrosshairDelayTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                            <Grid Margin="0,10,0,0" Width="520" HorizontalAlignment="Left">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{DynamicResource Str.CrosshairShowDelay}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,10"/>
+                                <Slider x:Name="CrosshairShowDelaySlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="1000" Value="0" TickFrequency="50" IsSnapToTickEnabled="True"
+                                        Margin="0,0,12,10" AutomationProperties.Name="{DynamicResource Str.CrosshairShowDelay}"
+                                        AutomationProperties.AutomationId="CrosshairShowDelaySlider" ValueChanged="Delay_Changed"/>
+                                <TextBlock x:Name="CrosshairShowDelayValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center" Margin="0,0,0,10"
+                                           Typography.NumeralAlignment="Tabular" AutomationProperties.AutomationId="CrosshairShowDelayValue"/>
+                            </Grid>
+                            <Grid Width="520" HorizontalAlignment="Left">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{DynamicResource Str.CrosshairHideDelay}" FontSize="13" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <Slider x:Name="CrosshairHideDelaySlider" Grid.Column="1" Style="{StaticResource FillSliderStyle}" Minimum="0" Maximum="1000" Value="0" TickFrequency="50" IsSnapToTickEnabled="True"
+                                        Margin="0,0,12,0" AutomationProperties.Name="{DynamicResource Str.CrosshairHideDelay}"
+                                        AutomationProperties.AutomationId="CrosshairHideDelaySlider" ValueChanged="Delay_Changed"/>
+                                <TextBlock x:Name="CrosshairHideDelayValue" Grid.Column="2" FontSize="13" VerticalAlignment="Center"
+                                           Typography.NumeralAlignment="Tabular" AutomationProperties.AutomationId="CrosshairHideDelayValue"/>
+                            </Grid>
+                            <TextBlock Text="{DynamicResource Str.CrosshairShowDelayDesc}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                            <TextBlock Text="{DynamicResource Str.CrosshairHideDelayDesc}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── 运行状态：只看按键推定，不读游戏 ───────────────────────── -->
+                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,16,0,0" Margin="0,16,0,16"
+                            AutomationProperties.AutomationId="CrosshairStatusPanel">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.CrosshairStatusTitle}" Style="{StaticResource SectionLabelStyle}"/>
+                            <Grid Margin="0,10,0,0" Width="520" HorizontalAlignment="Left">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <TextBlock Text="{DynamicResource Str.CrosshairStatusFireKey}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,20,6"/>
+                                <TextBlock x:Name="CrosshairFireStateText" Grid.Column="1" FontSize="13" Margin="0,0,0,6" AutomationProperties.AutomationId="CrosshairFireStateText"/>
+                                <TextBlock Grid.Row="1" Text="{DynamicResource Str.CrosshairStatusAdsKey}" FontSize="13" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,20,0"/>
+                                <TextBlock x:Name="CrosshairAdsStateText" Grid.Row="1" Grid.Column="1" FontSize="13" AutomationProperties.AutomationId="CrosshairAdsStateText"/>
+                            </Grid>
+                            <TextBlock x:Name="CrosshairStatusHintText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel></Border>
             </StackPanel>
         </ScrollViewer>

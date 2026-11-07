@@ -390,11 +390,16 @@ public class DisplayQualityTests : IDisposable
         var profile = _api.AddProfile("existing", Exe);
         profile.InheritedSettings[DisplayQualityService.DlssSrPresetId] = 11;
         _api.SimulateSaveIgnored = true;
-        Assert.Throws<InvalidOperationException>(() => DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK));
+        // 逐项回执取代整批抛异常：保存"成功"但没落地，就不许报成功，并且要指出是哪一项。
+        var receipt = DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.False(receipt.Ok);
+        var item = Assert.Single(receipt.Items);
+        Assert.Equal(DisplayQualityService.DlssSrPresetId, item.SettingId);
+        Assert.Equal(DisplayQualityService.DrsSettingOutcome.Unsupported, item.Outcome);
         Assert.Empty(profile.Settings);
         Assert.True(DisplayQualityService.HasRestorableBackup(Exe));
         _api.SimulateSaveIgnored = false;
-        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        Assert.True(DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK).Ok);
         Assert.Equal(11u, profile.Settings[DisplayQualityService.DlssSrPresetId]);
     }
 
@@ -446,6 +451,8 @@ public class DisplayQualityTests : IDisposable
         public bool SimulateSaveDenied { get; set; }
         public bool SimulateSaveIgnored { get; set; }
         public bool DenyLegacySwitchWrites { get; set; }
+        /// <summary>保存时被驱动丢掉的设置项（模拟「驱动不支持这一项」）。</summary>
+        public HashSet<uint> DropOnSave { get; } = new();
         public NvdrsException SaveDeniedError { get; } = new(-175,
             "保存驱动设置失败：NVAPI_ACCESS_DENIED（NVAPI -175）");
         public string? LastError { get; private set; }
@@ -509,6 +516,16 @@ public class DisplayQualityTests : IDisposable
             public bool TryGetOverrideDword(INvdrsProfile profile, uint settingId, out uint value)
                 => ((FakeProfileRef)profile).Profile.Settings.TryGetValue(settingId, out value);
 
+            public NvdrsSettingRead ReadSettingState(INvdrsProfile profile, uint settingId)
+            {
+                var p = ((FakeProfileRef)profile).Profile;
+                if (p.Settings.TryGetValue(settingId, out var explicitValue))
+                    return new(NvdrsSettingState.Overridden, explicitValue, null);
+                if (p.InheritedSettings.TryGetValue(settingId, out var inherited))
+                    return new(NvdrsSettingState.Inherited, inherited, null);
+                return new(NvdrsSettingState.Missing, 0, null);
+            }
+
             public void SetSettingDword(INvdrsProfile profile, uint settingId, uint value)
             {
                 if (api.FailSettingId == settingId) throw new NvdrsException(-1, "Controlled setting write failure.");
@@ -540,7 +557,12 @@ public class DisplayQualityTests : IDisposable
                 {
                     var persisted = api.AddProfile(name);
                     persisted.Settings.Clear();
-                    foreach (var (id, value) in staged.Settings) persisted.Settings[id] = value;
+                    foreach (var (id, value) in staged.Settings)
+                    {
+                        // 驱动拒绝保存的项：写进去了但读不回来。
+                        if (api.DropOnSave.Contains(id)) continue;
+                        persisted.Settings[id] = value;
+                    }
                     persisted.InheritedSettings.Clear();
                     foreach (var (id, value) in staged.InheritedSettings) persisted.InheritedSettings[id] = value;
                 }

@@ -9,6 +9,7 @@ namespace FpsTune.Wpf.Tests;
 /// （<see cref="IccProfileFile.IsDisplayProfile"/> → mscms `OpenColorProfile` + `IsColorProfileValid`），
 /// 并且带配套的数字振动档；会员专属那 8 条来自解锁后的加密模块，与免费 43 条同等待遇。
 /// </summary>
+[Collection("BackupService serial")]
 public class BuiltInFilterLibraryTests
 {
     private static readonly (string File, int Vibrance)[] MemberPresets =

@@ -37,51 +37,56 @@ public partial class QuickOptimizeView : UserControl
 
     private async Task InitializeAsync()
     {
-        if (_loaded) return;
-        _loaded = true;
-
-        // DLSS 超分下拉（可选覆盖）：跟随游戏内设置 + 各官方预设
-        foreach (var (key, preset) in new[] {
-            ("Str.QuickOptDlssFollow", DlssPreset.FollowGame),
-            ("Str.QuickOptDlssLatest", DlssPreset.Latest),
-            ("Str.QuickOptDlssM", DlssPreset.PresetM),
-            ("Str.QuickOptDlssK", DlssPreset.PresetK),
-            ("Str.QuickOptDlssJ", DlssPreset.PresetJ),
-            ("Str.QuickOptDlssE", DlssPreset.PresetE) })
-            DlssBox.Items.Add(new ComboPreset<DlssPreset>(Str.T(key), preset));
-        DlssBox.SelectedIndex = 0;
-
-        // 方案 chips（来自 catalog 预设）+ 预览：改任何一项都立刻刷新"这个方案会做什么"
-        BuildPlanChoices();
-        DlssBox.SelectionChanged += (_, _) => UpdatePlanPreview();
-        PowerCheck.Checked += (_, _) => UpdatePlanPreview();
-        PowerCheck.Unchecked += (_, _) => UpdatePlanPreview();
-
-        // 分辨率下拉（可选）：跟随当前 + 该屏可用模式（按宽×高归组取最高刷新率）
-        await LoadResolutionsAsync();
-
-        // 滤镜场景下拉（可选）：不套滤镜 + 内置 .icc 预设 + 生成式预设（白天/鲜艳等，与滤镜页同一套枚举）
-        FilterBox.Items.Add(Str.T("Str.QuickOptFilterNone"));
-        try
+        // 首页方案 chips 每次跳入都要生效：先消费预选档位再走一次性初始化守卫，
+        // 否则页面缓存后第二次起 PendingPreset 被 _loaded 早退拦下、点击被静默忽略。
+        var pendingPreset = PendingPreset;
+        PendingPreset = null;
+        if (!_loaded)
         {
-            var presets = await Task.Run(() => GameFilterLibrary.Presets);
-            if (!_loaded) return;
-            foreach (var preset in presets)
-                FilterBox.Items.Add(preset);
-            foreach (var generated in Enum.GetValues<IccFilterPreset>())
-                FilterBox.Items.Add(new GeneratedFilterChoice(ScreenColorSettings.TitleFor(generated), generated));
+            _loaded = true;
+
+            // DLSS 超分下拉（可选覆盖）：跟随游戏内设置 + 各官方预设
+            foreach (var (key, preset) in new[] {
+                ("Str.QuickOptDlssFollow", DlssPreset.FollowGame),
+                ("Str.QuickOptDlssLatest", DlssPreset.Latest),
+                ("Str.QuickOptDlssM", DlssPreset.PresetM),
+                ("Str.QuickOptDlssK", DlssPreset.PresetK),
+                ("Str.QuickOptDlssJ", DlssPreset.PresetJ),
+                ("Str.QuickOptDlssE", DlssPreset.PresetE) })
+                DlssBox.Items.Add(new ComboPreset<DlssPreset>(Str.T(key), preset));
+            DlssBox.SelectedIndex = 0;
+
+            // 方案 chips（来自 catalog 预设）+ 预览：改任何一项都立刻刷新"这个方案会做什么"
+            BuildPlanChoices();
+            DlssBox.SelectionChanged += (_, _) => UpdatePlanPreview();
+            PowerCheck.Checked += (_, _) => UpdatePlanPreview();
+            PowerCheck.Unchecked += (_, _) => UpdatePlanPreview();
+
+            // 分辨率下拉（可选）：跟随当前 + 该屏可用模式（按宽×高归组取最高刷新率）
+            await LoadResolutionsAsync();
+
+            // 滤镜场景下拉（可选）：不套滤镜 + 内置 .icc 预设 + 生成式预设（白天/鲜艳等，与滤镜页同一套枚举）
+            FilterBox.Items.Add(Str.T("Str.QuickOptFilterNone"));
+            try
+            {
+                var presets = await Task.Run(() => GameFilterLibrary.Presets);
+                if (!_loaded) return;
+                foreach (var preset in presets)
+                    FilterBox.Items.Add(preset);
+                foreach (var generated in Enum.GetValues<IccFilterPreset>())
+                    FilterBox.Items.Add(new GeneratedFilterChoice(ScreenColorSettings.TitleFor(generated), generated));
+            }
+            catch (Exception ex) { RunStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+            FilterBox.SelectedIndex = 0;
+            FilterBox.SelectionChanged += (_, _) => UpdatePlanPreview();
+            UpdatePlanPreview();
+
+            await ReloadGamesAsync();
         }
-        catch (Exception ex) { RunStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-        FilterBox.SelectedIndex = 0;
-        FilterBox.SelectionChanged += (_, _) => UpdatePlanPreview();
-        UpdatePlanPreview();
 
-        await ReloadGamesAsync();
-
-        if (PendingPreset is { } pending)
+        if (pendingPreset is { } presetKey)
         {
-            PendingPreset = null;
-            var index = _plans.FindIndex(p => p.Key == pending);
+            var index = _plans.FindIndex(p => p.Key == presetKey);
             if (index >= 0) PlanBox.SelectedIndex = index;
         }
     }

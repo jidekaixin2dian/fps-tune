@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using FpsTune.Wpf.Services;
 
 namespace FpsTune.Wpf.Core;
@@ -12,9 +11,23 @@ public sealed record CrosshairConfig(
     double Gap,
     double Thickness,
     double Opacity,
-    bool AdaptiveHide)
+    bool AdaptiveHide,
+    string DisplayMode = "always",
+    string AdsMode = "hold",
+    bool HideOnAds = true,
+    string FireTrigger = CrosshairTriggers.DefaultFire,
+    string AdsTrigger = CrosshairTriggers.DefaultAds,
+    string SyncTrigger = "",
+    int ShowDelayMs = 0,
+    int HideDelayMs = 0)
 {
     public static readonly string[] Styles = ["cross", "dot", "crossdot", "circle"];
+
+    /// <summary>显示方式白名单：一直显示 / 开火时显示 / 战术据枪。</summary>
+    public static readonly string[] DisplayModes = ["always", "fire", "ads"];
+
+    /// <summary>开镜方式白名单：按住 / 点击切换。</summary>
+    public static readonly string[] AdsModes = ["hold", "toggle"];
 
     public static CrosshairConfig FromSettings()
     {
@@ -22,12 +35,27 @@ public sealed record CrosshairConfig(
         return new(s.CrosshairEnabled, NormalizeStyle(s.CrosshairStyle), NormalizeColor(s.CrosshairColor),
             Math.Clamp(s.CrosshairSize, 2, 64), Math.Clamp(s.CrosshairGap, 0, 40),
             Math.Clamp(s.CrosshairThickness, 1, 16), Math.Clamp(s.CrosshairOpacity, 10, 100),
-            s.CrosshairAdaptiveHide);
+            s.CrosshairAdaptiveHide,
+            NormalizeDisplayMode(s.CrosshairDisplayMode), NormalizeAdsMode(s.CrosshairAdsMode), s.CrosshairHideOnAds,
+            CrosshairTriggers.Normalize(s.CrosshairFireTrigger, CrosshairTriggers.DefaultFire),
+            CrosshairTriggers.Normalize(s.CrosshairAdsTrigger, CrosshairTriggers.DefaultAds),
+            CrosshairTriggers.NormalizeOrEmpty(s.CrosshairSyncTrigger),
+            Math.Clamp(s.CrosshairShowDelayMs, 0, 1000), Math.Clamp(s.CrosshairHideDelayMs, 0, 1000));
     }
 
     /// <summary>样式白名单归一；非法回 cross。</summary>
     public static string NormalizeStyle(string style)
         => Styles.Contains(style, StringComparer.OrdinalIgnoreCase) ? style.ToLowerInvariant() : "cross";
+
+    /// <summary>显示方式白名单归一；非法回 always（与老配置一致）。</summary>
+    public static string NormalizeDisplayMode(string? mode)
+        => DisplayModes.Contains((mode ?? "").Trim(), StringComparer.OrdinalIgnoreCase)
+            ? mode!.Trim().ToLowerInvariant() : "always";
+
+    /// <summary>开镜方式白名单归一；非法回 hold。</summary>
+    public static string NormalizeAdsMode(string? mode)
+        => AdsModes.Contains((mode ?? "").Trim(), StringComparer.OrdinalIgnoreCase)
+            ? mode!.Trim().ToLowerInvariant() : "hold";
 
     /// <summary>#RRGGBB 归一；非法回 #00FF66。</summary>
     public static string NormalizeColor(string color)
@@ -40,26 +68,37 @@ public sealed record CrosshairConfig(
             && Uri.IsHexDigit(trimmed[6]) ? trimmed.ToUpperInvariant() : "#00FF66";
     }
 
+    public CrosshairDisplayMode DisplayModeKind => DisplayMode switch
+    {
+        "fire" => CrosshairDisplayMode.Fire,
+        "ads" => CrosshairDisplayMode.Ads,
+        _ => CrosshairDisplayMode.Always,
+    };
+
+    public CrosshairAdsMode AdsModeKind
+        => string.Equals(AdsMode, "toggle", StringComparison.OrdinalIgnoreCase)
+            ? CrosshairAdsMode.Toggle : CrosshairAdsMode.Hold;
+
     /// <summary>
-    /// AW 战术据枪：按住右键（机瞄/倍镜）时隐藏准星；本应用窗口在前台时也隐藏（避免挡设置）。
+    /// 开镜时是否隐藏。一直显示模式沿用老字段 <see cref="AdaptiveHide"/>（老用户升级后行为不变），
+    /// 其余模式读新字段。
+    /// </summary>
+    public bool EffectiveHideOnAds
+        => DisplayModeKind == CrosshairDisplayMode.Always ? AdaptiveHide : HideOnAds;
+
+    /// <summary>
+    /// 按住模式下的隐藏判定（老接口，供既有回归用例锁语义）：
+    /// <c>always</c> + <see cref="AdaptiveHide"/> 等价于原来的「按住右键隐藏」。
     /// </summary>
     public bool ShouldHide(bool rightButtonHeld, bool selfForeground)
-        => selfForeground || (AdaptiveHide && rightButtonHeld);
+        => selfForeground || (EffectiveHideOnAds && rightButtonHeld);
 }
 
-/// <summary>右键按住状态（GetAsyncKeyState，输入监听，零驱动零内存读取）。</summary>
+/// <summary>右键按住状态（兼容入口；实际读取在 <see cref="CrosshairTriggers"/>）。</summary>
 internal static class NativeInputState
 {
     internal static Func<bool>? RightButtonOverride { get; set; }
 
     /// <summary>右键当前是否按住。</summary>
-    internal static bool RightButtonHeld()
-    {
-        if (RightButtonOverride is not null) return RightButtonOverride();
-        return (GetAsyncKeyState(0x02) & 0x8000) != 0;
-    }
-
-    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    [DllImport("user32.dll", ExactSpelling = true)]
-    private static extern short GetAsyncKeyState(int virtualKey);
+    internal static bool RightButtonHeld() => CrosshairTriggers.IsHeld("MouseRight");
 }

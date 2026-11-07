@@ -24,6 +24,7 @@ internal sealed class FullscreenDebouncer
     internal static readonly TimeSpan DefaultUnknownGrace = TimeSpan.FromSeconds(3);
 
     private readonly Queue<bool> _samples = new();
+    private readonly object _lock = new();
     private readonly int _window;
     private readonly int _enterSamples;
     private readonly int _exitSamples;
@@ -58,8 +59,14 @@ internal sealed class FullscreenDebouncer
     internal int SampleCount => _samples.Count;
 
     /// <summary>喂一个样本；返回 true 表示状态应**翻转**（调用方据此应用或还原）。</summary>
+    /// <remarks>
+    /// Update 跑在守护 Timer 线程，Reset 跑在 UI 线程（改设置/暂停时立刻重起算）；
+    /// 两者无别的互斥，队列与判定字段必须在本锁内读写，否则并发 Clear/Enqueue 会炸或错判。
+    /// </remarks>
     internal bool Update(ForegroundScreenState state, DateTime now)
     {
+        lock (_lock)
+        {
         if (state == ForegroundScreenState.Unknown)
         {
             // 还没生效时读不到就是读不到，不计数（进入阶段的抖动仍被丢弃）。
@@ -94,6 +101,7 @@ internal sealed class FullscreenDebouncer
         if (!_committed && full >= _enterSamples) return Commit(true, now);
         if (_committed && empty >= _exitSamples) return Commit(false, now);
         return false;
+        }
     }
 
     private bool Commit(bool fullscreen, DateTime now)
@@ -108,10 +116,13 @@ internal sealed class FullscreenDebouncer
     /// <summary>开关、方案或通道变化后重新起算，避免旧样本把新配置直接判成已生效。</summary>
     internal void Reset()
     {
-        _samples.Clear();
-        _decided = false;
-        _committed = false;
-        _lastChange = DateTime.MinValue;
-        _unknownSince = DateTime.MinValue;
+        lock (_lock)
+        {
+            _samples.Clear();
+            _decided = false;
+            _committed = false;
+            _lastChange = DateTime.MinValue;
+            _unknownSince = DateTime.MinValue;
+        }
     }
 }
