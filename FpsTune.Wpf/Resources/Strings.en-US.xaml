@@ -372,7 +372,7 @@
     <s:String x:Key="Str.PresetJDesc">New-generation model · earlier version</s:String>
     <s:String x:Key="Str.PresetE">E preset</s:String>
     <s:String x:Key="Str.PresetEDesc">Previous-generation CNN model · retro image quality</s:String>
-    <s:String x:Key="Str.DlssNote">选择预设后点击“应用覆盖”。“跟随游戏内”会还原本游戏的全部工具改动。</s:String>
+    <s:String x:Key="Str.DlssNote">Choose a preset and apply it. Follow in-game restores the DLSS settings saved before FpsTune changed them.</s:String>
     <s:String x:Key="Str.VibNote">Saturation / digital vibrance (NVIDIA)</s:String>
     <s:String x:Key="Str.VibNote2">Digital vibrance is applied together with the selected color mode.</s:String>
     <s:String x:Key="Str.VibStateReadFailed">Could not read digital vibrance state: {0}</s:String>

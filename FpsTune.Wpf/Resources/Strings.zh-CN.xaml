@@ -372,7 +372,7 @@
     <s:String x:Key="Str.PresetJDesc">新一代模型 · 较早版本</s:String>
     <s:String x:Key="Str.PresetE">E 预设</s:String>
     <s:String x:Key="Str.PresetEDesc">旧一代 CNN 模型 · 复古画质</s:String>
-    <s:String x:Key="Str.DlssNote">选择预设后点击“应用覆盖”。“跟随游戏内”会还原本游戏的全部工具改动。</s:String>
+    <s:String x:Key="Str.DlssNote">选择预设后点击「应用覆盖」。选择「跟随游戏内」可恢复帧律改动前的 DLSS 设置。</s:String>
     <s:String x:Key="Str.VibNote">饱和度 / 数字振动（NVIDIA）</s:String>
     <s:String x:Key="Str.VibNote2">数字振动与所选色彩模式一起应用。</s:String>
     <s:String x:Key="Str.VibStateReadFailed">读取数字振动状态失败：{0}</s:String>

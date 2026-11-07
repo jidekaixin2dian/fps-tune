@@ -190,13 +190,14 @@ public static class AudioEqualizerService
     /// </summary>
     public static AudioFollowResult FollowDefaultOutput()
     {
-        var target = DefaultOutput();
-        if (target is null) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
-        if (!Guid.TryParse(target.Id, out var deviceId)) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
+        AudioOutput? target = null;
         try
         {
             using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
             if (TakeoverPaused) return new(false, "Str.EqTakeoverPaused", Str.T("Str.EqTakeoverPaused"));
+            target = DefaultOutput();
+            if (target is null || !Guid.TryParse(target.Id, out var deviceId))
+                return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
             if (FindEngine() is null) return new(false, "Str.EqFollowNoEngine", Str.T("Str.EqFollowNoEngine"));
             var saved = VerifiedAppliedSettings();
             if (saved is null) return new(false, "Str.EqFollowNoSettings", Str.T("Str.EqFollowNoSettings"));
@@ -210,7 +211,8 @@ public static class AudioEqualizerService
         }
         catch (Exception ex) when (ex is JsonException or IOException or InvalidOperationException or InvalidDataException or UnauthorizedAccessException)
         {
-            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed", target.Name, PrivacyScrub.Sanitize(ex.Message)));
+            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed",
+                target?.Name ?? Str.T("Str.EqFollowSystemDefault"), PrivacyScrub.Sanitize(ex.Message)));
         }
     }
     internal static string BuildConfiguration(EqualizerSettings settings)

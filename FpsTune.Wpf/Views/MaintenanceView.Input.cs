@@ -15,6 +15,7 @@ namespace FpsTune.Wpf.Views;
 public partial class MaintenanceView
 {
     private bool _inputQueueBusy;
+    private bool _inputQueueInvalidDepth;
 
     private void InitializeInputQueue()
     {
@@ -51,9 +52,17 @@ public partial class MaintenanceView
 
     private void PollingRate_Changed(object sender, SelectionChangedEventArgs e) => RefreshInputQueueReadout();
 
-    private void Depth_Changed(object sender, TextChangedEventArgs e) => RefreshInputQueueReadout();
+    private void Depth_Changed(object sender, TextChangedEventArgs e)
+    {
+        if (_inputQueueInvalidDepth && ParseDepth(KeyboardDepthBox.Text) is not null && ParseDepth(MouseDepthBox.Text) is not null)
+        {
+            _inputQueueInvalidDepth = false;
+            InputQueueStatus.Text = string.Empty;
+        }
+        RefreshInputQueueReadout();
+    }
 
-    /// <summary>刷新覆盖时长、推荐值与低值警告（输入框里不是合法数字时按已保存的值显示）。</summary>
+    /// <summary>按当前有效输入显示覆盖时长与低值提示。</summary>
     private void RefreshInputQueueReadout()
     {
         if (KeyboardDepthBox is null || MouseDepthBox is null || KeyboardReadout is null ||
@@ -61,15 +70,20 @@ public partial class MaintenanceView
             return;
 
         var rate = SelectedPollingRate;
-        var keyboard = ParseDepth(KeyboardDepthBox.Text) ?? InputQueuePolicy.Normalize(SettingsService.Current.KeyboardQueueDepth);
-        var mouse = ParseDepth(MouseDepthBox.Text) ?? InputQueuePolicy.Normalize(SettingsService.Current.MouseQueueDepth);
+        var keyboard = ParseDepth(KeyboardDepthBox.Text);
+        var mouse = ParseDepth(MouseDepthBox.Text);
 
-        KeyboardReadout.Text = Str.T("Str.InputQueueKeyboardCurrent", keyboard) + " · " +
-                               Str.T("Str.InputQueueRecommended", InputQueuePolicy.KeyboardRecommendedDepth);
-        MouseReadout.Text = Str.T("Str.InputQueueCoverage", InputQueuePolicy.CoverageMs(mouse, rate)) + " · " +
-                            Str.T("Str.InputQueueRecommended", InputQueuePolicy.RecommendedDepth(rate));
+        var keyboardRecommendation = Str.T("Str.InputQueueRecommended", InputQueuePolicy.KeyboardRecommendedDepth);
+        var mouseRecommendation = Str.T("Str.InputQueueRecommended", InputQueuePolicy.RecommendedDepth(rate));
+        KeyboardReadout.Text = keyboard is int k
+            ? Str.T("Str.InputQueueKeyboardCurrent", k) + " · " + keyboardRecommendation
+            : keyboardRecommendation;
+        MouseReadout.Text = mouse is int m
+            ? Str.T("Str.InputQueueCoverage", InputQueuePolicy.CoverageMs(m, rate)) + " · " + mouseRecommendation
+            : mouseRecommendation;
         InputQueueWarning.Visibility =
-            InputQueuePolicy.IsKeyboardBelowRecommended(keyboard) || InputQueuePolicy.IsBelowRecommended(mouse, rate)
+            (keyboard.HasValue && InputQueuePolicy.IsKeyboardBelowRecommended(keyboard.Value)) ||
+            (mouse.HasValue && InputQueuePolicy.IsBelowRecommended(mouse.Value, rate))
                 ? Visibility.Visible
                 : Visibility.Collapsed;
     }
@@ -93,6 +107,7 @@ public partial class MaintenanceView
         }
         if (ParseDepth(KeyboardDepthBox.Text) is not { } keyboardDepth || ParseDepth(MouseDepthBox.Text) is not { } mouseDepth)
         {
+            _inputQueueInvalidDepth = true;
             InputQueueStatus.Text = Str.T("Str.InputQueueDepthInvalid",
                 InputQueuePolicy.MinDepth, InputQueuePolicy.MaxDepth, InputQueuePolicy.Step);
             return;

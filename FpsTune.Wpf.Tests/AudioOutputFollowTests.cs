@@ -158,6 +158,7 @@ public sealed class AudioOutputFollowTests : IDisposable
         Assert.True(AudioEqualizerService.TakeoverPaused);
         var apply = Assert.Throws<InvalidOperationException>(() => AudioEqualizerService.Apply(settings with { DeviceId = Speakers.Id }));
         Assert.Contains("Str.EqTakeoverPaused", apply.Message);
+        AudioEqualizerService.DefaultOutputOverride = () => null;
         var follow = AudioEqualizerService.FollowDefaultOutput();
         Assert.False(follow.Written);
         Assert.Equal("Str.EqTakeoverPaused", follow.Key);

@@ -55,6 +55,13 @@ public sealed class InputQueueUiTests
                 Assert.Equal(Visibility.Visible, view.InputQueueWarning.Visibility);
                 Assert.Equal(Visibility.Visible, view.InputQueueApplyButton.Visibility);
 
+                view.KeyboardDepthBox.Text = "0";
+                Run(view.ApplyInputQueueAsync());
+                Assert.Empty(writes);
+                Assert.Equal(Str.T("Str.InputQueueDepthInvalid", 16, 1024, 8), view.InputQueueStatus.Text);
+                view.KeyboardDepthBox.Text = "104";
+                Assert.Empty(view.InputQueueStatus.Text);
+
                 // ① 取消：一条都不写，设置也不动。
                 ClickDialog("CancelButton");
                 Run(view.ApplyInputQueueAsync());
