@@ -1,11 +1,11 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.4.2](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2)**。
+当前版本为 **[v0.4.3](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.4.2.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.2/FpsTune-Setup-0.4.2.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.4.3.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.3/FpsTune-Setup-0.4.3.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -26,7 +26,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.4.2.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.2/SHA256SUMS-v0.4.2.txt)。
+本版校验清单：[SHA256SUMS-v0.4.3.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.3/SHA256SUMS-v0.4.3.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -75,7 +75,9 @@
 - **游戏库**：独立页面扫描、添加、搜索和重命名游戏，支持移除与撤销，直达所选游戏的检测、准备方案、显示与性能会话。识别三角洲行动、CS2、VALORANT、APEX、PUBG、使命召唤、Fortnite、Warframe 等客户端，支持共享游戏库与手动选择 EXE。识别路径不等于已完成每款游戏的性能或反作弊兼容性验证。
 - **显示与画质**：按游戏调整 NVIDIA DRS / DLSS 配置和 N 卡数字振动；整屏 SDR 支持 11 种画面预设、亮度、对比度、Gamma、暗部提亮及 RGB 调节，逐屏保存原值并可还原。通用屏幕曲线路径适用于支持该接口的 AMD、NVIDIA、Intel 输出；ICC、画面参数与数字振动集中在同一工作区，可叠加调整；用内置已打码实机截图或自己的图片即时对比，直接拖动图中分界查看效果。高级 ICC 支持自选 `.icc` / `.icm` 和关联还原。
 - **分辨率**：在“显示与画质 → 分辨率”选择屏幕，点选 4:3 预设或编辑宽高、锁定比例，默认沿用当前刷新率。支持试用驱动已有模式与创建 NVIDIA 自定义模式；限时确认、小型确认窗口、独立守护回退和一键还原。缩放由驱动验证，未采用请求时说明原因并回退。
-- **声音均衡器**：在“维护工具 → 声音均衡器”调整 10 段频率、前级增益和音效预设，支持旁路与移除帧律改动。复用 Equalizer APO 引擎，首次需安装引擎、配置输出设备，并按提示重启。
+- **电源细项**：在“优化 → 打开电源细项”搜索当前方案，分别调整插电和电池取值，查看隐藏项。改动前会备份原值。
+- **外置准星与输入**：准星支持一直显示、开火时显示和战术据枪模式。在“常用工具 → 键鼠缓冲区深度”可按鼠标报告率计算推荐值。
+- **声音均衡器**：在“常用工具 → 声音均衡器”调整 10 段频率、前级增益和音效预设，可固定设备或在页面打开时跟随默认输出。首次需安装 Equalizer APO、配置输出设备，并按提示重启。
 - **驱动版本建议**：按具体 NVIDIA 型号、系统和笔记本/台式机查询官方最新 WHQL 正式驱动，显示日期和来源；AMD、Intel 提供对应官方入口。
 - **更改显卡名称**：提供 GTX 750 Ti、GTX 1050 Ti 等 8 个预设，应用前预览，可还原原名称。修改 Windows 设备描述，显卡能力保持原样。
 - **设置分类**：外观、壁纸、启动与通知、游戏与方案、数据与权限、关于；设置自动保存。圆角提供上版经典、当前大圆角两个预设及四组自定义调节，壁纸提供圆角预览与短滑条。

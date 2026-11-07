@@ -13,8 +13,6 @@ using FpsTune.Wpf.Services;
 /// </summary>
 public static class OptimizationEngine
 {
-    private static readonly object OperationLock = new();
-
     public static Task<RunResult> DetectAsync()
     {
         var gamePath = AppState.GamePath;
@@ -52,33 +50,28 @@ public static class OptimizationEngine
     public static Task<RunResult> RestoreAsync()
         => Task.Run(() =>
         {
-            lock (OperationLock)
-            {
-                var result = RecoveryCoordinator.RestoreAll();
-                if (result.Restored.Count == 0 && result.Failures.Count == 0)
-                    return new RunResult(0, "没有找到可还原的备份。", "");
+            var result = RecoveryCoordinator.RestoreAll();
+            if (result.Restored.Count == 0 && result.Failures.Count == 0)
+                return new RunResult(0, "没有找到可还原的备份。", "");
 
-                var sb = new StringBuilder();
-                sb.AppendLine("== 还原结果 ==");
-                foreach (var (file, id) in result.Restored)
-                    sb.AppendLine($"[已还原] {Path.GetFileName(file)}  {id}");
-                foreach (var stale in result.ArchivedStale)
-                    sb.AppendLine($"[已归档] {stale} → .stale");
-                foreach (var failure in result.Failures)
-                    sb.AppendLine("[失败] " + failure);
-                sb.AppendLine();
-                sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档。");
-                if (result.Restored.Count > 0 && result.Failures.Count == 0)
-                    sb.Append("恢复已完成；系统快照保留为 .restored，其他模块在验证后消费备份。");
-                return new RunResult(result.Failures.Count == 0 ? 0 : 1, sb.ToString(), "");
-            }
+            var sb = new StringBuilder();
+            sb.AppendLine("== 还原结果 ==");
+            foreach (var (file, id) in result.Restored)
+                sb.AppendLine($"[已还原] {Path.GetFileName(file)}  {id}");
+            foreach (var stale in result.ArchivedStale)
+                sb.AppendLine($"[已归档] {stale} → .stale");
+            foreach (var failure in result.Failures)
+                sb.AppendLine("[失败] " + failure);
+            sb.AppendLine();
+            sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档。");
+            if (result.Restored.Count > 0 && result.Failures.Count == 0)
+                sb.Append("恢复已完成；系统快照保留为 .restored，其他模块在验证后消费备份。");
+            return new RunResult(result.Failures.Count == 0 ? 0 : 1, sb.ToString(), "");
         });
 
     public static Task<RunResult> ListRestoreAsync()
     {
-        IReadOnlyList<string> files;
-        lock (OperationLock)
-            files = BackupService.ListBackups();
+        var files = BackupService.ListBackups();
         var scopes = RecoveryCoordinator.Inventory();
         var payload = new { backups = files, count = files.Count, scopes };
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
@@ -92,29 +85,26 @@ public static class OptimizationEngine
 
     /// <summary>
     /// 同步版 receipt 应用：仅供开局准备等已在同一同步工作线程持有 SystemMutationGate 的调用方使用。
-    /// 命名互斥与 OperationLock 在同一线程上重入；跨线程并发调用会死锁，禁止。
+    /// 命名互斥在同一线程上重入。
     /// </summary>
     internal static ApplyReceipt ApplyItemsWithReceipt(IEnumerable<string> ids, string? gamePath)
         => ExecuteNative(ids.Distinct().ToArray(), gamePath);
 
     private static ApplyReceipt ExecuteNative(IReadOnlyList<string> ids, string? gamePath, Action<string>? beforeWrite = null)
     {
-        lock (OperationLock)
-        {
-            using var mutation = SystemMutationGate.Acquire();
-            if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
-                throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
-            if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id) is { Admin: true, Available: true }))
-                throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
-            BackupService.EnsureNoPendingWrites(ids);
-            var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
-            // Persist the caller's operation anchor before the first system write.
-            beforeWrite?.Invoke(backupFile);
-            var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
-                id => BackupService.AppendCapture(backupFile, id, gamePath),
-                result => BackupService.CompleteCapture(backupFile, result));
-            return new ApplyReceipt(BackupService.OperationId(backupFile), backupFile, results);
-        }
+        using var mutation = SystemMutationGate.Acquire();
+        if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
+            throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
+        if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id) is { Admin: true, Available: true }))
+            throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
+        BackupService.EnsureNoPendingWrites(ids);
+        var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
+        // Persist the caller's operation anchor before the first system write.
+        beforeWrite?.Invoke(backupFile);
+        var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
+            id => BackupService.AppendCapture(backupFile, id, gamePath),
+            result => BackupService.CompleteCapture(backupFile, result));
+        return new ApplyReceipt(BackupService.OperationId(backupFile), backupFile, results);
     }
 
     private static RunResult ApplyNative(IReadOnlyList<string> ids, string? gamePath)

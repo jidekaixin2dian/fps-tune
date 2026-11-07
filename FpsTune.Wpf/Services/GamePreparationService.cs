@@ -116,7 +116,7 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                     if (options.ApplyFrameLimit) Run(Str.T("Str.PrepareFrameLimitStep"), () =>
                     {
                         var exe = Path.GetFileName(gamePath!);
-                        DisplayQualityService.ApplyFrameLimits(exe, new(options.FrameLimitFps!.Value, null));
+                        DisplayQualityService.ApplyFrameLimits(exe, new(options.FrameLimitFps!.Value, null)).RequireApplied();
                         return new(Str.T("Str.PrepareFrameLimitStep"), true, Str.T("Str.PlanFrameLimit", options.FrameLimitFps!.Value));
                     });
                     void Run(string name, Func<PreparationStep> action)

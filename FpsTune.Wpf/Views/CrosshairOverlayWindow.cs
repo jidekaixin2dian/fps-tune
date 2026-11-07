@@ -31,6 +31,7 @@ public sealed class CrosshairOverlayWindow : Window
         ResizeMode = ResizeMode.NoResize;
         ShowInTaskbar = false;
         ShowActivated = false;
+        Topmost = true;
         AllowsTransparency = true;
         Background = Brushes.Transparent;
         Content = _root;
@@ -38,6 +39,7 @@ public sealed class CrosshairOverlayWindow : Window
         _timer = new DispatcherTimer(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(PollIntervalMs) };
         _timer.Tick += (_, _) => RefreshFrame();
         SourceInitialized += (_, _) => MakeClickThrough();
+        Loaded += (_, _) => RefreshFrame();
         // 关闭即停表：禁用外置准星走 Close()，不停表的话旧窗口对象被 Dispatcher 队列持有，
         // 每次开关循环泄漏一个窗口 + 常驻空转。
         Closed += (_, _) => _timer.Stop();

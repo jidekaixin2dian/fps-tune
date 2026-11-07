@@ -42,44 +42,26 @@ public partial class PowerDetailsWindow : Window
     // ---------------------------------------------------------------- 读取
 
     /// <summary>整表重新枚举（唯一会真正读系统的入口之一）。</summary>
-    internal async Task ScanAsync(string? status = null)
-    {
-        if (_busy) return;
-        _busy = true;
-        SetBusy(true);
-        try
-        {
-            var scheme = PowerSettingWriter.ActiveScheme();
-            if (scheme is null)
-            {
-                _entries.Clear();
-                _scheme = Guid.Empty;
-                PlanLabel.Text = "";
-                ApplyFilter();
-                StatusText.Text = Str.T("Str.PowerDetailsEmpty");
-                return;
-            }
+    internal Task ScanAsync() => RunAsync(() => ScanCoreAsync(), "Str.PowerDetailsReading");
 
-            _scheme = scheme.Value;
-            PlanLabel.Text = Str.T("Str.PowerDetailsPlanLabel", ReadSchemeName(_scheme));
-            var scan = await Task.Run(() => PowerSettingCatalog.Load(_scheme));
-            _entries.Clear();
-            _entries.AddRange(scan.Entries);
-            _selected = null;
-            ApplyFilter();
-            StatusText.Text = scan.Failed
-                ? Str.T("Str.PowerDetailsEmpty") + " " + (scan.Error ?? "")
-                : status ?? "";
-        }
-        catch (Exception ex)
+    private async Task ScanCoreAsync(string? status = null)
+    {
+        var (scheme, name, scan) = await Task.Run(() =>
         {
-            StatusText.Text = ex.Message;
-        }
-        finally
-        {
-            _busy = false;
-            SetBusy(false);
-        }
+            var current = PowerSettingWriter.ActiveScheme();
+            return current is Guid id
+                ? (id, ReadSchemeName(id), PowerSettingCatalog.Load(id))
+                : (Guid.Empty, "", (PowerSettingScan?)null);
+        });
+        if (scheme != _scheme) _selected = null;
+        _scheme = scheme;
+        PlanLabel.Text = scan is null ? "" : Str.T("Str.PowerDetailsPlanLabel", name);
+        _entries.Clear();
+        if (scan is not null) _entries.AddRange(scan.Entries);
+        ApplyFilter();
+        StatusText.Text = scan is null or { Failed: true }
+            ? Str.T("Str.PowerDetailsEmpty") + " " + (scan?.Error ?? "")
+            : status ?? "";
     }
 
     private static string ReadSchemeName(Guid scheme)
@@ -210,8 +192,7 @@ public partial class PowerDetailsWindow : Window
 
         ReadFailedPanel.Visibility = entry.ReadFailed ? Visibility.Visible : Visibility.Collapsed;
         ValueSection.Visibility = entry.ReadFailed ? Visibility.Collapsed : Visibility.Visible;
-        ApplyButton.IsEnabled = !_busy && _scheme != Guid.Empty;
-        ResetDefaultButton.IsEnabled = !_busy && _scheme != Guid.Empty && (entry.AcDefault.HasValue || entry.DcDefault.HasValue);
+        UpdateValueButtons();
 
         PopulateEditors(entry);
     }
@@ -233,18 +214,17 @@ public partial class PowerDetailsWindow : Window
                 DcCombo.ItemsSource = entry.PossibleValues;
                 AcCombo.SelectedItem = entry.PossibleValues.FirstOrDefault(value => value.Value == entry.Ac);
                 DcCombo.SelectedItem = entry.PossibleValues.FirstOrDefault(value => value.Value == entry.Dc);
-                AcCombo.IsEnabled = true;
-                DcCombo.IsEnabled = true;
             }
             else
             {
                 AcBox.Text = entry.Ac?.ToString(CultureInfo.InvariantCulture) ?? "";
                 DcBox.Text = entry.Dc?.ToString(CultureInfo.InvariantCulture) ?? "";
-                AcBox.IsEnabled = true;
-                DcBox.IsEnabled = true;
             }
 
             SameBothCheck.IsChecked = false;
+            SameBothCheck.IsEnabled = entry.Ac.HasValue && entry.Dc.HasValue;
+            AcCombo.IsEnabled = AcBox.IsEnabled = entry.Ac.HasValue;
+            DcCombo.IsEnabled = DcBox.IsEnabled = entry.Dc.HasValue;
             VisibleCheck.IsChecked = !entry.Hidden;
         }
         finally
@@ -266,8 +246,7 @@ public partial class PowerDetailsWindow : Window
         _syncing = true;
         try
         {
-            DcCombo.IsEnabled = !same;
-            DcBox.IsEnabled = !same;
+            DcCombo.IsEnabled = DcBox.IsEnabled = !same && _selected?.Dc is not null;
             if (!same) return;
             DcCombo.SelectedItem = AcCombo.SelectedItem;
             DcBox.Text = AcBox.Text;
@@ -292,7 +271,7 @@ public partial class PowerDetailsWindow : Window
 
     // ---------------------------------------------------------------- 写入
 
-    private void Apply_Click(object sender, RoutedEventArgs e)
+    private async void Apply_Click(object sender, RoutedEventArgs e)
     {
         if (_selected is not { } entry || _busy) return;
 
@@ -319,44 +298,41 @@ public partial class PowerDetailsWindow : Window
             dc = value;
         }
 
-        StatusText.Text = Str.T("Str.PowerDetailsApplying");
-        try
+        if (!ac.HasValue && !dc.HasValue)
         {
-            var result = PowerSettingWriter.Apply(_scheme, entry, ac, dc);
-            StatusText.Text = ApplyStatus(entry, result);
-            RefreshEntry(entry);
+            StatusText.Text = Str.T("Str.PowerDetailsReadFailed");
+            return;
         }
-        catch (Exception ex)
-        {
-            StatusText.Text = ex.Message;
-        }
+        await WriteValuesAsync(entry, ac, dc);
     }
 
-    private void ResetDefault_Click(object sender, RoutedEventArgs e)
+    private async void ResetDefault_Click(object sender, RoutedEventArgs e)
     {
         if (_selected is not { } entry || _busy) return;
-        if (entry.AcDefault is null && entry.DcDefault is null)
+        var ac = entry.Ac.HasValue ? entry.AcDefault : null;
+        var dc = entry.Dc.HasValue ? entry.DcDefault : null;
+        if (!ac.HasValue && !dc.HasValue)
         {
             StatusText.Text = Str.T("Str.PowerDetailsNoDefault");
             return;
         }
 
-        try
+        await WriteValuesAsync(entry, ac, dc, reset: true);
+    }
+
+    private Task WriteValuesAsync(PowerSettingEntry entry, uint? ac, uint? dc, bool reset = false)
+        => RunAsync(async () =>
         {
-            var result = PowerSettingWriter.Apply(_scheme, entry, entry.AcDefault, entry.DcDefault);
-            StatusText.Text = result.Ok
+            var result = await Task.Run(() => PowerSettingWriter.Apply(_scheme, entry, ac, dc));
+            await RefreshEntryAsync(entry);
+            StatusText.Text = reset && result.Ok && result.Applied
                 ? Str.T("Str.PowerDetailsResetDone", DisplayName(entry))
                 : ApplyStatus(entry, result);
-            RefreshEntry(entry);
-        }
-        catch (Exception ex)
-        {
-            StatusText.Text = ex.Message;
-        }
-    }
+        });
 
     private (uint? Value, string? Error) ReadEditorValue(PowerSettingEntry entry, bool ac)
     {
+        if ((ac ? entry.Ac : entry.Dc) is null) return (null, null);
         if (entry.PossibleValues.Count > 0)
         {
             var combo = ac ? AcCombo : DcCombo;
@@ -375,16 +351,20 @@ public partial class PowerDetailsWindow : Window
             return result.Applied
                 ? Str.T("Str.PowerDetailsApplied", DisplayName(entry))
                 : Str.T("Str.PowerDetailsNotApplied");
-        if (result.Partial && result.AcPersisted && !result.DcPersisted)
-            return Str.T("Str.PowerDetailsAppliedPartial");
-        return result.AcError ?? result.DcError ?? Str.T("Str.PowerDetailsNotPersisted", DisplayName(entry));
+        var parts = new List<string>();
+        if (result.Partial)
+            parts.Add(Str.T(result.AcPersisted ? "Str.PowerDetailsAppliedPartial" : "Str.PowerDetailsAppliedPartialDc"));
+        if (result.AcError is not null) parts.Add(result.AcError);
+        if (result.DcError is not null && result.DcError != result.AcError) parts.Add(result.DcError);
+        if (!result.Applied) parts.Add(Str.T("Str.PowerDetailsNotApplied"));
+        return string.Join(" ", parts);
     }
 
     /// <summary>只重读这一条，不整表重扫。</summary>
-    private void RefreshEntry(PowerSettingEntry entry)
+    private async Task RefreshEntryAsync(PowerSettingEntry entry)
     {
         if (_scheme == Guid.Empty) return;
-        var refreshed = PowerSettingCatalog.ReRead(entry, _scheme);
+        var refreshed = await Task.Run(() => PowerSettingCatalog.ReRead(entry, _scheme));
         var index = _entries.FindIndex(item => item.Subgroup == entry.Subgroup && item.Setting == entry.Setting);
         if (index >= 0) _entries[index] = refreshed;
         _selected = refreshed;
@@ -392,43 +372,39 @@ public partial class PowerDetailsWindow : Window
         RenderDetails();
     }
 
-    private void Retry_Click(object sender, RoutedEventArgs e)
+    private async void Retry_Click(object sender, RoutedEventArgs e)
     {
-        if (_selected is { } entry) RefreshEntry(entry);
+        if (_selected is { } entry) await RunAsync(() => RefreshEntryAsync(entry), "Str.PowerDetailsReading");
     }
 
     // ---------------------------------------------------------------- 显隐
 
-    private void Visible_Changed(object sender, RoutedEventArgs e)
+    private async void Visible_Changed(object sender, RoutedEventArgs e)
     {
-        if (_syncing || _selected is not { } entry) return;
+        if (_busy || _syncing || _selected is not { } entry) return;
         var visible = VisibleCheck.IsChecked == true;
-        var result = PowerSettingWriter.SetVisibility(entry, visible);
-        StatusText.Text = result.Status switch
-        {
-            PowerVisibilityStatus.Denied => Str.T("Str.PowerDetailsRevealDenied", 1),
-            PowerVisibilityStatus.Missing => Str.T("Str.PowerDetailsRevealMissing", 1),
-            PowerVisibilityStatus.Failed => Str.T("Str.PowerApplyFail", result.Error ?? ""),
-            _ => Str.T("Str.PowerDetailsApplied", DisplayName(entry))
-        };
-
-        if (result.Ok)
-        {
-            RefreshEntry(entry);
-            return;
-        }
-
+        // Keep the checkbox at the last read value until the write and reread finish.
         _syncing = true;
         try { VisibleCheck.IsChecked = !entry.Hidden; }
         finally { _syncing = false; }
+        await RunAsync(async () =>
+        {
+            var result = await Task.Run(() => PowerSettingWriter.SetVisibility(entry, visible));
+            await RefreshEntryAsync(entry);
+            StatusText.Text = result.Status switch
+            {
+                PowerVisibilityStatus.Denied => Str.T("Str.PowerDetailsRevealDenied", 1),
+                PowerVisibilityStatus.Missing => Str.T("Str.PowerDetailsRevealMissing", 1),
+                PowerVisibilityStatus.Failed => Str.T("Str.PowerApplyFail", result.Error ?? ""),
+                _ => Str.T("Str.PowerDetailsApplied", DisplayName(entry))
+            };
+        });
     }
 
     private async void RevealAll_Click(object sender, RoutedEventArgs e)
-    {
-        if (_busy) return;
-        try
+        => await RunAsync(async () =>
         {
-            var result = PowerSettingWriter.RevealAllHidden(_entries);
+            var result = await Task.Run(() => PowerSettingWriter.RevealAllHidden(_entries));
             if (result.Total == 0)
             {
                 StatusText.Text = Str.T("Str.PowerDetailsRevealNone");
@@ -444,41 +420,29 @@ public partial class PowerDetailsWindow : Window
             var message = string.Join(" ", parts);
 
             // 重新扫描会把状态行清空，所以把这次的结果带过去。
-            if (result.Revealed > 0) await ScanAsync(message);
-            else StatusText.Text = message;
-        }
-        catch (Exception ex)
-        {
-            StatusText.Text = ex.Message;
-        }
-    }
+            await ScanCoreAsync(message);
+        });
 
     // ---------------------------------------------------------------- 恢复
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
-    {
-        if (_busy) return;
-        try
+        => await RunAsync(async () =>
         {
-            var snapshot = PowerDetailsJournal.Load();
-            if (snapshot.Count == 0)
-            {
-                StatusText.Text = Str.T("Str.PowerDetailsRestoreNone");
+            var scheme = _scheme;
+            var allowLegacy = await Task.Run(() => PowerDetailsJournal.Load()
+                .Any(entry => entry.HasLegacyValues && Guid.TryParse(entry.Scheme, out var saved) && saved == scheme));
+            if (allowLegacy && !DialogService.Confirm(Str.T("Str.PowerDetailsRestoreAll"),
+                    Str.T("Str.PowerDetailsLegacyConfirm"), confirmText: Str.T("Str.PowerDetailsRestoreAll"), danger: true))
                 return;
-            }
-
-            var result = PowerSettingWriter.Restore(snapshot);
-            var message = result.Ok
-                ? Str.T("Str.PowerDetailsRestoreDone", result.Restored)
-                : Str.T("Str.PowerDetailsRestoreFailed", result.Failed + result.Skipped);
-            if (result.Restored > 0) await ScanAsync(message);
-            else StatusText.Text = message;
-        }
-        catch (Exception ex)
-        {
-            StatusText.Text = ex.Message;
-        }
-    }
+            var result = await Task.Run(() => PowerSettingWriter.Restore(scheme, allowLegacy));
+            var parts = new List<string>();
+            if (result.Restored > 0) parts.Add(Str.T("Str.PowerDetailsRestoreDone", result.Restored));
+            if (result.Failed > 0) parts.Add(Str.T("Str.PowerDetailsRestoreFailed", result.Failed));
+            if (result.Skipped > 0) parts.Add(Str.T("Str.PowerDetailsRestoreSkipped", result.Skipped));
+            if (!result.Applied) parts.Add(Str.T("Str.PowerDetailsNotApplied"));
+            if (parts.Count == 0) parts.Add(Str.T("Str.PowerDetailsRestoreNone"));
+            await ScanCoreAsync(string.Join(" ", parts));
+        });
 
     // ---------------------------------------------------------------- 杂项
 
@@ -505,14 +469,34 @@ public partial class PowerDetailsWindow : Window
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
+    private async Task RunAsync(Func<Task> operation, string progressKey = "Str.PowerDetailsApplying")
+    {
+        if (_busy) return;
+        StatusText.Text = "";
+        ReadingText.Text = Str.T(progressKey);
+        SetBusy(true);
+        try { await operation(); }
+        catch (TimeoutException) { StatusText.Text = Str.T("Str.PowerDetailsBusy"); }
+        catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
+        finally { SetBusy(false); }
+    }
+
     private void SetBusy(bool busy)
     {
+        _busy = busy;
         ReadingText.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
-        RescanButton.IsEnabled = !busy;
-        RevealButton.IsEnabled = !busy;
-        RestoreButton.IsEnabled = !busy;
-        ApplyButton.IsEnabled = !busy && _selected is not null && _scheme != Guid.Empty;
-        ResetDefaultButton.IsEnabled = !busy && _selected is not null && _scheme != Guid.Empty;
+        SettingList.IsEnabled = SearchBox.IsEnabled = FilterAll.IsEnabled = FilterChanged.IsEnabled = FilterHidden.IsEnabled = !busy;
+        RescanButton.IsEnabled = RevealButton.IsEnabled = RestoreButton.IsEnabled = DetailsPanel.IsEnabled = !busy;
+        UpdateValueButtons();
+    }
+
+    private void UpdateValueButtons()
+    {
+        var entry = _selected;
+        var canWrite = !_busy && _scheme != Guid.Empty && entry is { ReadFailed: false };
+        ApplyButton.IsEnabled = canWrite;
+        ResetDefaultButton.IsEnabled = canWrite &&
+            (entry is { Ac: not null, AcDefault: not null } || entry is { Dc: not null, DcDefault: not null });
     }
 
     // ---------------------------------------------------------------- 文案 / 展示

@@ -364,7 +364,7 @@
     <s:String x:Key="Str.DlssOverrideNote">覆盖预设（作用于当前定位的游戏；与游戏内超分设置冲突时以本覆盖为准）</s:String>
     <s:String x:Key="Str.PresetK">K 预设（推荐）</s:String>
     <s:String x:Key="Str.PresetKDesc">新一代模型 · 社区常用，稳定</s:String>
-    <s:String x:Key="Str.FollowGameDesc">不覆盖，由游戏内设置决定</s:String>
+    <s:String x:Key="Str.FollowGameDesc">撤销帧律设置，使用游戏或驱动原有预设</s:String>
     <s:String x:Key="Str.PresetLatestDesc">跟随驱动更新自动演进</s:String>
     <s:String x:Key="Str.PresetM">M 预设</s:String>
     <s:String x:Key="Str.PresetMDesc">新一代模型 · 高端画质首选</s:String>
@@ -633,7 +633,8 @@
     <s:String x:Key="Str.OverrideRestored">已还原：覆盖前的原值已恢复（或自建配置文件已删除）。进游戏生效。</s:String>
     <s:String x:Key="Str.IccRestored">已还原：显示器的色彩配置已恢复为应用滤镜前的原样。</s:String>
     <s:String x:Key="Str.DrsApplied">已应用 3D 设置。进游戏生效；不满意点「还原默认」。</s:String>
-    <s:String x:Key="Str.OverrideRemoved">已移除覆盖：DLSS 预设回到游戏内/驱动默认。进游戏生效。</s:String>
+    <s:String x:Key="Str.DlssFollowDriverValue">该游戏仍使用驱动配置中的预设 {0}。</s:String>
+    <s:String x:Key="Str.DlssInheritedValue">当前继承驱动预设 {0}。</s:String>
     <s:String x:Key="Str.OptimizeDone">系统优化执行完成，改动已自动备份，可随时还原。</s:String>
     <s:String x:Key="Str.ConfirmAllBackedUp">全部写入前自动备份，可「还原全部」。确定开始？</s:String>
     <s:String x:Key="Str.NothingToRestoreOverride">没有找到本工具的覆盖或还原备份，无需还原。</s:String>
@@ -958,6 +959,7 @@
     <s:String x:Key="Str.ExperimentP99Rejected">P99 帧时间增加超过 3%，不保留本组。</s:String>
     <s:String x:Key="Str.VerdictLegacyBadge">历史记录·待复测</s:String>
     <s:String x:Key="Str.ExperimentInterrupted">上次实验尚未结束，请先在还原页处理实验备份。</s:String>
+    <s:String x:Key="Str.ExperimentOtherInstance">另一个帧律窗口或命令正在处理 A/B 实验，请稍后再试。</s:String>
     <s:String x:Key="Str.GpuIdentityUnavailable">未找到可用的 NVIDIA 显卡设备。</s:String>
     <s:String x:Key="Str.GpuIdentityChanged">显卡或驱动已变化，请刷新设备列表。</s:String>
     <s:String x:Key="Str.GpuIdentityAlready">当前设备已使用所选名称。</s:String>
@@ -2443,7 +2445,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptPowerToggle">同时把 Windows 电源计划切到最高性能优先</s:String>
     <s:String x:Key="Str.QuickOptFilterLabel">滤镜场景（可选）</s:String>
     <s:String x:Key="Str.QuickOptDlssLabel">DLSS 超分（可选）</s:String>
-    <s:String x:Key="Str.QuickOptDlssFollow">跟随游戏内设置</s:String>
+    <s:String x:Key="Str.QuickOptDlssFollow">保持现有 DLSS 设置</s:String>
     <s:String x:Key="Str.QuickOptDlssLatest">官方「最新」预设</s:String>
     <s:String x:Key="Str.QuickOptDlssM">预设 M（新一代 · 高端首选）</s:String>
     <s:String x:Key="Str.QuickOptDlssK">预设 K（新一代 · 社区常用）</s:String>
@@ -2791,7 +2793,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.OptCustomPaneIntro">自定义选择&#x0a;&#x0a;打开开关将项目加入待应用清单，确认后在底部应用。&#x0a;&#x0a;点击项目查看当前状态与副作用。&#x0a;&#x0a;搜索和分类只影响列表显示，不会取消其他分类的选择。</s:String>
     <s:String x:Key="Str.OptPresetPaneIntro">{0} · {1} 项</s:String>
     <s:String x:Key="Str.Unconfirmed">未确认</s:String>
-    <s:String x:Key="Str.OptRestoreConfirmAll">共找到 {0} 个备份文件，将把它们记录的全部系统改动逐项恢复为原值。&#x0a;&#x0a;确定继续吗？</s:String>
+    <s:String x:Key="Str.OptRestoreConfirmAll">共找到 {0} 组备份。确定逐项检查并恢复原值吗？</s:String>
     <s:String x:Key="Str.Skipped">跳过</s:String>
     <s:String x:Key="Str.ApplyDone">应用完成</s:String>
     <s:String x:Key="Str.ItemsCountFmt">{0} 项</s:String>
@@ -2873,7 +2875,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <!-- ── 参考实现对齐：电源细项 ─────────────────────────────────────── -->
     <s:String x:Key="Str.PowerDetailsTitle">电源细项</s:String>
     <s:String x:Key="Str.PowerDetailsOpen">打开电源细项</s:String>
-    <s:String x:Key="Str.PowerDetailsHint">列出当前电源方案里的全部设置，包括系统默认隐藏的；改动立即生效，每一项都能恢复默认。</s:String>
+    <s:String x:Key="Str.PowerDetailsHint">查看当前电源方案的设置，可分别调整接通电源和使用电池时的取值。</s:String>
     <s:String x:Key="Str.PowerDetailsSearch">搜索名称、说明或 GUID</s:String>
     <s:String x:Key="Str.PowerDetailsFilterAll">全部</s:String>
     <s:String x:Key="Str.PowerDetailsFilterChanged">与默认值不同</s:String>
@@ -2909,12 +2911,18 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsOutOfRange">超出范围，{0}</s:String>
     <s:String x:Key="Str.PowerDetailsApplied">已更新「{0}」。</s:String>
     <s:String x:Key="Str.PowerDetailsAppliedPartial">接通电源的取值写进去了，使用电池的没有。</s:String>
+    <s:String x:Key="Str.PowerDetailsAppliedPartialDc">使用电池的取值写进去了，接通电源的没有。</s:String>
+    <s:String x:Key="Str.PowerDetailsOriginalUnreadable">读不到「{0}」的原值，无法备份，已跳过写入。</s:String>
+    <s:String x:Key="Str.PowerDetailsActiveChanged">当前电源方案已变更或无法读取，请重新扫描。</s:String>
+    <s:String x:Key="Str.PowerDetailsBusy">另一项系统操作正在执行，稍后再试。</s:String>
     <s:String x:Key="Str.PowerDetailsNotPersisted">写入后读回的取值不对，「{0}」可能没有生效。</s:String>
     <s:String x:Key="Str.PowerDetailsResetDone">已把「{0}」恢复为默认值。</s:String>
     <s:String x:Key="Str.PowerDetailsRestoreAll">恢复本次改动</s:String>
     <s:String x:Key="Str.PowerDetailsRestoreDone">已恢复 {0} 项。</s:String>
-    <s:String x:Key="Str.PowerDetailsRestoreNone">本次打开后还没有改过设置。</s:String>
-    <s:String x:Key="Str.PowerDetailsRestoreFailed">有 {0} 项没能恢复，详情见活动记录。</s:String>
+    <s:String x:Key="Str.PowerDetailsRestoreNone">没有待恢复的电源细项。</s:String>
+    <s:String x:Key="Str.PowerDetailsRestoreFailed">有 {0} 项未恢复，已保留原值备份。</s:String>
+    <s:String x:Key="Str.PowerDetailsRestoreSkipped">另有 {0} 项属于其他方案，切换到对应方案后可恢复。</s:String>
+    <s:String x:Key="Str.PowerDetailsLegacyConfirm">旧版备份没有保存改动后的取值。继续会用备份里的原值覆盖这些设置，确定要恢复吗？</s:String>
     <s:String x:Key="Str.PowerDetailsHiddenBadge">隐藏</s:String>
     <s:String x:Key="Str.PowerDetailsGroupHiddenBadge">整组隐藏</s:String>
     <s:String x:Key="Str.PowerDetailsUnreadable">没有读到</s:String>
@@ -2933,7 +2941,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.InputQueuePollingRate">鼠标报告率</s:String>
     <s:String x:Key="Str.InputQueueKeyboard">键盘缓冲深度</s:String>
     <s:String x:Key="Str.InputQueueMouse">鼠标缓冲深度</s:String>
-    <s:String x:Key="Str.InputQueueCoverage">现在能兜住 {0} 毫秒</s:String>
+    <s:String x:Key="Str.InputQueueCoverage">预计覆盖 {0} 毫秒</s:String>
     <s:String x:Key="Str.InputQueueRecommended">推荐 {0}</s:String>
     <s:String x:Key="Str.InputQueueLowWarning">深度低于推荐值：玩游戏卡顿时可能丢「松开」信号，表现为一直开枪、准星乱飞，或松开还在走。</s:String>
     <s:String x:Key="Str.InputQueueApply">写入缓冲区</s:String>
@@ -2941,7 +2949,10 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.InputQueueConfirmTitle">深度低于推荐值</s:String>
     <s:String x:Key="Str.InputQueueConfirmBody">当前 {0} 只能兜住 {1} 毫秒，低于按报告率算出的推荐值 {2}。</s:String>
     <s:String x:Key="Str.InputQueueConfirmUseRecommended">改用推荐值</s:String>
-    <s:String x:Key="Str.InputQueueConfirmKeep">仍然用 {0}</s:String>
+    <s:String x:Key="Str.InputQueueKeepBoth">保留输入值</s:String>
+    <s:String x:Key="Str.InputQueueIncomplete">键鼠缓冲区未全部写入。</s:String>
+    <s:String x:Key="Str.InputQueueNeedsAdmin">请以管理员身份重启帧律，再写入键鼠缓冲区。</s:String>
+    <s:String x:Key="Str.InputQueueSettingsUnreadable">读不到已保存的键鼠缓冲区设置，请在「常用工具」里检查后再试。</s:String>
     <s:String x:Key="Str.InputQueueApplied">已写入注册表，重启后生效。</s:String>
     <s:String x:Key="Str.InputQueueSystemDefault">系统默认 {0}</s:String>
     <s:String x:Key="Str.InputQueueNotSet">未设置（系统默认 {0}）</s:String>
@@ -2958,7 +2969,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsVisibleToggleHint">只决定 Windows「电源选项」里能不能看到这一项，不改数值。</s:String>
     <s:String x:Key="Str.PowerDetailsGroupHiddenHint">这一组在系统里整组隐藏；打开后会连同整组一起显示。</s:String>
     <s:String x:Key="Str.PowerDetailsModifiedBadge">已修改</s:String>
-    <s:String x:Key="Str.PowerDetailsNotApplied">设置已写入，但没能让当前方案立即生效；切换一次电源方案或重启后生效。</s:String>
+    <s:String x:Key="Str.PowerDetailsNotApplied">已保存取值，电源方案未能刷新。请检查当前方案后重试。</s:String>
     <s:String x:Key="Str.PowerDetailsUnnamedGroup">未命名分组</s:String>
     <s:String x:Key="Str.PowerDetailsUnnamedSetting">未命名设置</s:String>
     <s:String x:Key="Str.ColorRollbackRestored">驱动没有采用请求的屏幕曲线，已把原来的曲线写回去，屏幕保持原样。</s:String>
@@ -3007,7 +3018,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.EqTakeoverResumed">已恢复接管，下次应用会写入音频配置。</s:String>
     <s:String x:Key="Str.EqTakeoverPause">暂停接管（不写入音频配置）</s:String>
     <s:String x:Key="Str.EqEngineMissing">未检测到 Equalizer APO，均衡器不会写入音频配置；已保存的方案仍保留。</s:String>
-    <s:String x:Key="Str.EqFollowHint">跟随系统默认时，切换耳机或音箱后均衡器会写到新的默认输出；也可以在下面固定选一台设备。</s:String>
+    <s:String x:Key="Str.EqFollowHint">应用后，此页打开时会跟随系统默认输出。也可固定到一台设备。</s:String>
     <s:String x:Key="Str.DetectGpuReported">当前上报：{0}</s:String>
     <s:String x:Key="Str.DetectGpuReal">真实型号：{0}</s:String>
     <s:String x:Key="Str.GpuIdentitySameAsCurrent">当前型号</s:String>

@@ -86,10 +86,22 @@ public partial class MaintenanceView
     internal async Task ApplyInputQueueAsync()
     {
         if (_inputQueueBusy) return;
+        if (GamePreparationService.IsRunning || ExperimentRunner.IsRunning || App.SessionService.IsRunning)
+        {
+            InputQueueStatus.Text = Str.T("Str.TuningBusy");
+            return;
+        }
         if (ParseDepth(KeyboardDepthBox.Text) is not { } keyboardDepth || ParseDepth(MouseDepthBox.Text) is not { } mouseDepth)
         {
             InputQueueStatus.Text = Str.T("Str.InputQueueDepthInvalid",
                 InputQueuePolicy.MinDepth, InputQueuePolicy.MaxDepth, InputQueuePolicy.Step);
+            return;
+        }
+        if (InputQueueWriter.NeedsAdministrator)
+        {
+            InputQueueStatus.Text = Str.T("Str.InputQueueNeedsAdmin");
+            if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), InputQueueStatus.Text, confirmText: Str.T("Str.RestartAsAdminShort")))
+                AdminHelper.RestartAsAdministrator();
             return;
         }
 
@@ -101,13 +113,12 @@ public partial class MaintenanceView
 
         if (lowKeyboard || lowMouse)
         {
-            var body = lowMouse
-                ? Str.T("Str.InputQueueConfirmBody", mouse, InputQueuePolicy.CoverageMs(mouse, rate),
-                    InputQueuePolicy.RecommendedDepth(rate))
-                : Str.T("Str.InputQueueKeyboardConfirmBody", keyboard, InputQueuePolicy.KeyboardRecommendedDepth);
-            var keep = lowMouse ? mouse : keyboard;
-            var choice = DialogService.Choose(Str.T("Str.InputQueueConfirmTitle"), body,
-                Str.T("Str.InputQueueConfirmUseRecommended"), Str.T("Str.InputQueueConfirmKeep", keep),
+            var warnings = new List<string>();
+            if (lowKeyboard) warnings.Add(Str.T("Str.InputQueueKeyboardConfirmBody", keyboard, InputQueuePolicy.KeyboardRecommendedDepth));
+            if (lowMouse) warnings.Add(Str.T("Str.InputQueueConfirmBody", mouse, InputQueuePolicy.CoverageMs(mouse, rate),
+                InputQueuePolicy.RecommendedDepth(rate)));
+            var choice = DialogService.Choose(Str.T("Str.InputQueueConfirmTitle"), string.Join(Environment.NewLine, warnings),
+                Str.T("Str.InputQueueConfirmUseRecommended"), Str.T("Str.InputQueueKeepBoth"),
                 Str.T("Str.Cancel"));
 
             // 取消 = 一条都不写：连设置里的值也不动。
@@ -119,8 +130,8 @@ public partial class MaintenanceView
 
             if (choice == DialogChoice.Primary)
             {
-                keyboard = InputQueuePolicy.Normalize(InputQueuePolicy.KeyboardRecommendedDepth);
-                mouse = InputQueuePolicy.Normalize(InputQueuePolicy.RecommendedDepth(rate));
+                if (lowKeyboard) keyboard = InputQueuePolicy.KeyboardRecommendedDepth;
+                if (lowMouse) mouse = InputQueuePolicy.RecommendedDepth(rate);
             }
         }
 
@@ -134,10 +145,10 @@ public partial class MaintenanceView
         try
         {
             var results = await InputQueueWriter.WriteAsync(keyboard, mouse, rate);
-            var failures = results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Message).ToArray();
-            InputQueueStatus.Text = failures.Length == 0
+            InputQueueStatus.Text = results.Count == InputQueueWriter.ItemIds.Length && results.All(r => r.Ok && !r.Skipped)
                 ? Str.T("Str.InputQueueApplied")
-                : string.Join(Environment.NewLine, failures);
+                : Str.T("Str.InputQueueIncomplete") + Environment.NewLine +
+                  string.Join(Environment.NewLine, results.Select(r => $"{r.Name} · {PrivacyScrub.Sanitize(r.Message)}"));
         }
         catch (Exception ex)
         {

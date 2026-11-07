@@ -79,6 +79,53 @@ public sealed class DisplayReceiptTests : IDisposable
     }
 
     [Fact]
+    public void Failed_driver_readback_keeps_the_previous_success_restorable()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        profile.Settings[DisplayQualityService.DlssSrPresetId] = (uint)DlssPreset.PresetE;
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK).RequireApplied();
+        _api.SimulateSaveIgnored = true;
+
+        var failed = DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetJ);
+        Assert.Throws<InvalidOperationException>(failed.RequireApplied);
+        Assert.Equal((uint)DlssPreset.PresetK, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+
+        _api.SimulateSaveIgnored = false;
+        Assert.True(DisplayQualityService.RestoreDlssSettings(Exe));
+        Assert.Equal((uint)DlssPreset.PresetE, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+    }
+
+    [Fact]
+    public void Following_game_dlss_keeps_other_driver_overrides_and_their_backups()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        DisplayQualityService.ApplyFrameLimits(Exe, new(120, null)).RequireApplied();
+        Assert.False(DisplayQualityService.GetDlssState(Exe).Restorable);
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK).RequireApplied();
+
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.FollowGame).RequireApplied();
+
+        Assert.DoesNotContain(DisplayQualityService.DlssSrPresetId, profile.Settings.Keys);
+        Assert.Equal(120u, profile.Settings[DisplayQualityService.FrameRateLimitId]);
+        Assert.True(DisplayQualityService.GetDrsGameSettings(Exe).FrameLimitsRestorable);
+    }
+
+    [Fact]
+    public void Following_game_dlss_preserves_external_values_and_distinguishes_inheritance()
+    {
+        var profile = _api.AddProfile("existing", Exe);
+        profile.Settings[DisplayQualityService.DlssSrPresetId] = (uint)DlssPreset.PresetE;
+
+        Assert.Empty(DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.FollowGame).Items);
+        Assert.Equal((uint)DlssPreset.PresetE, profile.Settings[DisplayQualityService.DlssSrPresetId]);
+
+        profile.Settings.Remove(DisplayQualityService.DlssSrPresetId);
+        profile.InheritedSettings[DisplayQualityService.DlssSrPresetId] = (uint)DlssPreset.PresetJ;
+        Assert.False(DisplayQualityService.GetDlssState(Exe).Covered);
+        Assert.Equal((uint)DlssPreset.PresetJ, DisplayQualityService.GetDlssState(Exe).PresetValue);
+    }
+
+    [Fact]
     public void Advanced_read_distinguishes_missing_inherited_and_overridden()
     {
         var profile = _api.AddProfile("existing", Exe);

@@ -102,6 +102,22 @@ public sealed class AudioOutputFollowTests : IDisposable
     }
 
     [Fact]
+    public void Reopening_the_panel_catches_up_and_ignores_a_receipt_without_a_live_include()
+    {
+        AudioEqualizerService.Apply(new EqualizerSettings(Headset.Id, new double[10]));
+        AudioEqualizerService.DefaultOutputOverride = () => Speakers;
+
+        Assert.True(AudioEqualizerService.MonitorDefaultOutput(follow: true, reconcile: true)!.Written);
+        Assert.True(AudioEqualizerService.SameDevice(Speakers.Id, AudioEqualizerService.AppliedTarget()!.Id));
+
+        File.WriteAllText(_main, "# user removed the include\n");
+        AudioEqualizerService.DefaultOutputOverride = () => Headset;
+        Assert.Null(AudioEqualizerService.AppliedTarget());
+        Assert.False(AudioEqualizerService.FollowDefaultOutput().Written);
+        Assert.Equal("# user removed the include\n", File.ReadAllText(_main));
+    }
+
+    [Fact]
     public void Polling_reads_the_default_endpoint_at_most_once_per_throttle_window()
     {
         AudioEqualizerService.DefaultOutputOverride = () => Headset;

@@ -33,8 +33,11 @@ public static partial class BackupService
         var roots = new Dictionary<string, string>(StringComparer.Ordinal) { ["backup"] = BackupDir };
         // Legacy tests that redirect only the core backup directory must never touch real module data.
         if (BackupDirOverride is null || UserDataPaths.RootOverride is not null)
+        {
             foreach (var module in new[] { "display-quality", "display-icc", "screen-color", "audio-equalizer", "display-resolution" })
                 roots.Add(module, Path.Combine(UserDataPaths.Root, module));
+            roots.Add("power-details", UserDataPaths.Root);
+        }
         return roots;
     }
 
@@ -60,6 +63,7 @@ public static partial class BackupService
     private static bool IsBundleCandidate(string module, string relative)
     {
         if (!SafeParts(relative)) return false;
+        if (module == "power-details") return relative == PowerDetailsJournal.FileName;
         var parts = relative.Split('/'); var name = parts[^1];
         if (parts[0] == "history") return parts.Length is 2 or 3 && name.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
         if (module == "display-icc" && parts.Length == 2 && parts[0] is "custom" or "presets")
@@ -110,6 +114,7 @@ public static partial class BackupService
             case "screen-color": ScreenColorService.ValidateTransferredBackup(name, bytes); break;
             case "display-resolution": ResolutionService.ValidateTransferredBackup(name, bytes); break;
             case "audio-equalizer": AudioEqualizerService.ValidateTransferredBackup(bytes, importing); break;
+            case "power-details": PowerDetailsJournal.ValidateTransferredBackup(bytes); break;
         }
     }
 
@@ -126,7 +131,10 @@ public static partial class BackupService
             while (pending.TryPop(out var dir))
             {
                 RequireOrdinaryPath(dir.Path);
-                foreach (var entry in Directory.EnumerateFileSystemEntries(dir.Path))
+                var entries = module == "power-details"
+                    ? Directory.EnumerateFiles(dir.Path, PowerDetailsJournal.FileName)
+                    : Directory.EnumerateFileSystemEntries(dir.Path);
+                foreach (var entry in entries)
                 {
                     RequireOrdinaryPath(entry);
                     if (Directory.Exists(entry)) { if (dir.Depth < 2) pending.Push((entry, dir.Depth + 1)); continue; }
@@ -137,6 +145,7 @@ public static partial class BackupService
                     var bytes = File.ReadAllBytes(entry); total += bytes.Length;
                     if (total > BundleLimit) throw new InvalidDataException(Str.T("Str.BackupImportLimit"));
                     ValidateBundleFile(module, relative, bytes, false);
+                    if (module == "power-details" && PowerDetailsJournal.IsEmptyBackup(bytes)) continue;
                     if (module == "backup" && Path.GetFileName(relative).StartsWith(V2BackupPrefix, StringComparison.Ordinal) && !relative.Contains('/'))
                         _ = ReadRecords(entry, requireLocalOrigin: true);
                     var name = module == "backup" && !relative.Contains('/') && IsBackupTransferName(relative) ? relative : module + "/" + relative;
@@ -182,7 +191,9 @@ public static partial class BackupService
             || manifest.Files.Select(f => f.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != manifest.Files.Count
             || zip.Entries.Count != manifest.Files.Count + 1 || zip.Entries.Select(e => e.FullName).Distinct(StringComparer.OrdinalIgnoreCase).Count() != zip.Entries.Count)
             throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
-        var roots = BundleRoots(); var staged = new List<(string Target, byte[] Bytes, byte[]? Original)>(); long total = 0; var duplicates = 0;
+        var roots = BundleRoots();
+        var staged = new List<(string Target, byte[] Bytes, byte[]? Original, bool ReplaceEmptyPowerBackup)>();
+        long total = 0; var duplicates = 0;
         foreach (var file in manifest.Files)
         {
             var (module, relative) = BundleName(file.Name);
@@ -212,12 +223,17 @@ public static partial class BackupService
             var target = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
             if (!target.StartsWith(Path.GetFullPath(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException(Str.T("Str.BackupFormatInvalid"));
             RequireOrdinaryPath(target);
+            if (module == "power-details" && PowerDetailsJournal.IsEmptyBackup(bytes)) { duplicates++; continue; }
+            var replaceEmptyPowerBackup = false;
             if (File.Exists(target))
             {
-                if (new FileInfo(target).Length != bytes.Length || !File.ReadAllBytes(target).SequenceEqual(bytes)) throw new IOException(Str.T("Str.BundleConflict", file.Name));
-                duplicates++; continue;
+                var length = new FileInfo(target).Length;
+                if (length == bytes.Length && File.ReadAllBytes(target).SequenceEqual(bytes)) { duplicates++; continue; }
+                replaceEmptyPowerBackup = module == "power-details" && length <= 65536 &&
+                    PowerDetailsJournal.IsEmptyBackup(File.ReadAllBytes(target));
+                if (!replaceEmptyPowerBackup) throw new IOException(Str.T("Str.BundleConflict", file.Name));
             }
-            staged.Add((target, bytes, original));
+            staged.Add((target, bytes, original, replaceEmptyPowerBackup));
         }
         // Publish complete validated files only; a retry can safely skip files from an interrupted import.
         foreach (var file in staged.OrderBy(f => Path.GetFileName(f.Target) == RestoreJournalFileName))
@@ -231,12 +247,12 @@ public static partial class BackupService
                 RequireOrdinaryPath(saved);
                 if (!File.Exists(saved)) PublishImportedFile(saved, file.Original);
             }
-            PublishImportedFile(file.Target, file.Bytes);
+            PublishImportedFile(file.Target, file.Bytes, file.ReplaceEmptyPowerBackup);
         }
         return (staged.Count, duplicates, 0);
     }
 
-    private static void PublishImportedFile(string target, byte[] bytes)
+    private static void PublishImportedFile(string target, byte[] bytes, bool replaceEmptyPowerBackup = false)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         RequireOrdinaryPath(target);
@@ -245,7 +261,10 @@ public static partial class BackupService
         {
             using (var output = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             { output.Write(bytes); output.Flush(true); }
-            File.Move(temporary, target); // Never overwrite a local receipt, even if another writer raced the preflight.
+            if (replaceEmptyPowerBackup && (!File.Exists(target) || new FileInfo(target).Length > 65536
+                || !PowerDetailsJournal.IsEmptyBackup(File.ReadAllBytes(target))))
+                throw new IOException(Str.T("Str.BundleConflict", Path.GetFileName(target)));
+            File.Move(temporary, target, overwrite: replaceEmptyPowerBackup);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }

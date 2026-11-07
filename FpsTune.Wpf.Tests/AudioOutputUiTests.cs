@@ -39,7 +39,7 @@ public sealed class AudioOutputUiTests
             Window? window = null, missingWindow = null;
             try
             {
-                settings.AudioFollowDefaultOutput = true;
+                settings.AudioFollowDefaultOutput = false;
                 settings.EqualizerDraft = null;
                 // 方案写在耳机，系统默认输出已经换成音箱：这就是要提示的不匹配状态。
                 AudioEqualizerService.Apply(new EqualizerSettings(headset.Id, new double[10]));
@@ -52,7 +52,7 @@ public sealed class AudioOutputUiTests
                 DlssFeedbackTests.PumpUntil(() => panel.DefaultOutputText.Text.Length > 0);
 
                 Assert.Equal(Str.T("Str.EqDefaultOutput", speakers.Name), panel.DefaultOutputText.Text);
-                Assert.Equal(Str.T("Str.EqFollowSystemDefault"), ((AudioOutput)panel.OutputCombo.SelectedItem).Name);
+                Assert.Equal(headset.Name, ((AudioOutput)panel.OutputCombo.SelectedItem).Name);
                 Assert.Equal(Visibility.Visible, panel.MismatchText.Visibility);
                 Assert.Equal(Str.T("Str.EqOutputMismatch", headset.Name, speakers.Name), panel.MismatchText.Text);
                 Assert.Equal(Visibility.Collapsed, panel.WrittenToText.Visibility);

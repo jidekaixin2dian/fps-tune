@@ -22,6 +22,8 @@ public static class RecoveryCoordinator
         Read("vibrance", () => DigitalVibranceService.BackupTargets().Select(t => new RecoveryScope("vibrance", t.Name, false, t.Error)));
         Read("screen-color", () => ScreenColorService.BackupTargets().Select(t => new RecoveryScope("screen-color", t.Name, false, t.Error)));
         Read("display-resolution", () => ResolutionService.BackupTargets().Select(t => new RecoveryScope("display-resolution", t.Name, false, t.Error)));
+        Read("power-details", () => PowerDetailsJournal.Load().GroupBy(entry => entry.Scheme)
+            .Select(group => new RecoveryScope("power-details", Str.T("Str.PowerDetailsCount", group.Count()) + " · " + group.Key, false)));
         Read("audio-equalizer", () => AudioEqualizerService.HasBackup
             ? [new RecoveryScope("audio-equalizer", "Equalizer APO", AudioEqualizerService.RestoreNeedsAdmin())] : []);
         return scopes;
@@ -32,7 +34,21 @@ public static class RecoveryCoordinator
     internal static BackupService.RestoreAllResult RestoreAll()
     {
         using var gate = SystemMutationGate.Acquire();
+        // Restore the current plan's details before a system backup can switch to another plan.
+        PowerRestoreResult? power = null;
+        string? powerError = null;
+        try { power = PowerSettingWriter.Restore(); }
+        catch (Exception ex) { powerError = PrivacyScrub.Sanitize(ex.Message); }
         var result = BackupService.RestoreAll();
+        var powerTitle = Str.T("Str.PowerDetailsTitle");
+        if (powerError is not null) result.Failures.Add(powerTitle + " · " + powerError);
+        if (power is not null)
+        {
+            if (power.Restored > 0) result.Restored.Add((powerTitle, Str.T("Str.PowerDetailsRestoreDone", power.Restored)));
+            if (power.Failed > 0) result.Failures.Add(powerTitle + " · " + Str.T("Str.PowerDetailsRestoreFailed", power.Failed));
+            if (power.Skipped > 0) result.Failures.Add(powerTitle + " · " + Str.T("Str.PowerDetailsRestoreSkipped", power.Skipped));
+            if (!power.Applied) result.Failures.Add(powerTitle + " · " + Str.T("Str.PowerDetailsNotApplied"));
+        }
         void Recover(string module, Func<bool> restore)
         {
             try { if (restore()) result.Restored.Add((module, module)); }

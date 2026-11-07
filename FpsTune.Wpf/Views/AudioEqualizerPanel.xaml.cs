@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -16,6 +15,7 @@ public partial class AudioEqualizerPanel : UserControl
     private readonly DispatcherTimer _deviceWatch = new() { Interval = TimeSpan.FromMilliseconds(AudioEqualizerService.PollIntervalMs) };
     private EqualizerEngine? _engine;
     private bool _busy, _syncing, _bandsLoaded, _watching;
+    private bool _reconcileOutput;
     private static readonly (string Name, double[] Gains)[] Presets = [
         (Str.T("Str.EqFlat"), new double[10]), (Str.T("Str.EqFootsteps"), [-4,-3,-2,0,1,2,3,3,1,0]),
         (Str.T("Str.EqVoice"), [-2,-2,-1,0,2,3,3,1,0,-1]), (Str.T("Str.EqBass"), [5,4,3,1,0,0,0,0,0,0]),
@@ -48,8 +48,12 @@ public partial class AudioEqualizerPanel : UserControl
         _deviceWatch.Tick += async (_, _) => await WatchDefaultOutputAsync();
         // 只有这一页真的在屏幕上时才轮询默认输出，切走就停，避免后台一直问系统。
         Unloaded += (_, _) => _deviceWatch.Stop();
-        IsVisibleChanged += (_, e) => { if (e.NewValue is true) _deviceWatch.Start(); else _deviceWatch.Stop(); };
-        Loaded += async (_, _) => { await RefreshAsync(); if (IsVisible) _deviceWatch.Start(); };
+        IsVisibleChanged += (_, e) =>
+        {
+            if (e.NewValue is true) { _reconcileOutput = true; _deviceWatch.Start(); }
+            else _deviceWatch.Stop();
+        };
+        Loaded += async (_, _) => { await RefreshAsync(); if (IsVisible) { _reconcileOutput = true; _deviceWatch.Start(); } };
     }
     private void Preset_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -69,7 +73,9 @@ public partial class AudioEqualizerPanel : UserControl
     }
     private async Task RefreshAsync()
     {
-        if (_busy) return;
+        if (_busy || _watching) return;
+        _busy = true;
+        IsEnabled = false;
         try
         {
             var picked = (OutputCombo.SelectedItem as AudioOutput)?.Id;
@@ -80,7 +86,7 @@ public partial class AudioEqualizerPanel : UserControl
             choices.AddRange(snapshot.Outputs);
             OutputCombo.ItemsSource = choices;
             var wanted = SettingsService.Current.AudioFollowDefaultOutput ? FollowDeviceId : (picked ?? saved?.DeviceId);
-            OutputCombo.SelectedItem = choices.FirstOrDefault(d => string.Equals(d.Id, wanted, StringComparison.OrdinalIgnoreCase));
+            OutputCombo.SelectedItem = choices.FirstOrDefault(d => AudioEqualizerService.SameDevice(d.Id, wanted));
             if (saved is not null && !_bandsLoaded)
             {
                 saved.Validate(); _syncing = true;
@@ -88,22 +94,21 @@ public partial class AudioEqualizerPanel : UserControl
                 finally { _syncing = false; }
                 _bandsLoaded = true;
             }
+            await UpdateOutputStateAsync();
             // 没有引擎就说没有，不拿「首次使用」含糊过去，更不假装写成功。
             EngineStatus.Text = _engine is null
                 ? Str.T("Str.EqEngineMissing")
                 : Str.T("Str.EqFound");
             PauseTakeoverCheck.IsChecked = AudioEqualizerService.TakeoverPaused;
-            UpdateButtons();
-            UpdateOutputState();
             UpdateHeadroom();
         }
         catch (Exception ex) { EqStatus.Text = ex.Message; }
+        finally { _busy = false; IsEnabled = true; UpdateButtons(); }
     }
     /// <summary>「均衡器写在 X / 当前输出是 Y」与「跟到 Y」按钮的显示状态。</summary>
-    private void UpdateOutputState()
+    private async Task UpdateOutputStateAsync()
     {
-        var current = AudioEqualizerService.DefaultOutput();
-        var target = AudioEqualizerService.AppliedTarget();
+        var (current, target) = await Task.Run(() => (AudioEqualizerService.DefaultOutput(), AudioEqualizerService.AppliedTarget()));
         DefaultOutputText.Text = current is null ? Str.T("Str.EqNoDefaultOutput") : Str.T("Str.EqDefaultOutput", current.Name);
         var mismatch = target is not null && current is not null && !AudioEqualizerService.SameDevice(target.Id, current.Id);
         MismatchText.Text = mismatch ? Str.T("Str.EqOutputMismatch", target!.Name, current!.Name) : "";
@@ -112,52 +117,44 @@ public partial class AudioEqualizerPanel : UserControl
         WrittenToText.Visibility = target is not null && !mismatch ? Visibility.Visible : Visibility.Collapsed;
         FollowNowButton.Content = mismatch ? Str.T("Str.EqFollowButton", current!.Name) : "";
         FollowNowButton.Visibility = mismatch ? Visibility.Visible : Visibility.Collapsed;
-        if (mismatch) FollowNowButton.IsEnabled = _engine is not null && !AudioEqualizerService.TakeoverPaused;
     }
     private void UpdateButtons()
     {
-        var writable = _engine is not null && !AudioEqualizerService.TakeoverPaused;
+        var writable = _engine is not null && !_watching && !AudioEqualizerService.TakeoverPaused;
         DeviceSetupButton.IsEnabled = _engine is not null;
         EqApplyButton.IsEnabled = writable;
-        EqRestoreButton.IsEnabled = AudioEqualizerService.HasBackup;
+        EqRestoreButton.IsEnabled = !_watching && AudioEqualizerService.HasBackup;
+        PauseTakeoverCheck.IsEnabled = !_watching;
         if (FollowNowButton.Visibility == Visibility.Visible) FollowNowButton.IsEnabled = writable;
     }
     private async Task WatchDefaultOutputAsync()
     {
-        if (_busy || _watching) return;
+        if (!IsVisible || _busy || _watching) return;
         _watching = true;
+        UpdateButtons();
         try
         {
             var follow = SettingsService.Current.AudioFollowDefaultOutput;
-            var result = await Task.Run(() => AudioEqualizerService.MonitorDefaultOutput(follow));
-            if (result is not null)
-            {
-                EqStatus.Text = result.Message;
-                if (result.Written) SyncDraftFromApplied();
-            }
-            UpdateOutputState();
-            UpdateButtons();
+            var reconcile = _reconcileOutput;
+            _reconcileOutput = false;
+            var result = await Task.Run(() => AudioEqualizerService.MonitorDefaultOutput(follow, reconcile));
+            if (result?.Key == "Str.EqFollowBusy") _reconcileOutput = true;
+            if (result is { Key: not "Str.EqFollowAlready" }) EqStatus.Text = result.Message;
+            await UpdateOutputStateAsync();
         }
         catch (Exception ex) { EqStatus.Text = ex.Message; }
-        finally { _watching = false; }
+        finally { _watching = false; UpdateButtons(); }
     }
     private async void FollowNow_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var result = await Task.Run(AudioEqualizerService.FollowDefaultOutput);
-            EqStatus.Text = result.Message;
-            if (result.Written) SyncDraftFromApplied();
-            UpdateOutputState();
-            UpdateButtons();
-        }
-        catch (Exception ex) { EqStatus.Text = ex.Message; }
+        await Run(() => AudioEqualizerService.FollowDefaultOutput().Message);
     }
     private void PauseTakeover_Click(object sender, RoutedEventArgs e)
     {
         try
         {
             AudioEqualizerService.TakeoverPaused = PauseTakeoverCheck.IsChecked == true;
+            if (!AudioEqualizerService.TakeoverPaused) _reconcileOutput = true;
             EqStatus.Text = AudioEqualizerService.TakeoverPaused ? Str.T("Str.EqTakeoverPaused") : Str.T("Str.EqTakeoverResumed");
         }
         catch (Exception ex)
@@ -165,20 +162,7 @@ public partial class AudioEqualizerPanel : UserControl
             EqStatus.Text = ex.Message;
             PauseTakeoverCheck.IsChecked = AudioEqualizerService.TakeoverPaused;
         }
-        UpdateOutputState();
         UpdateButtons();
-    }
-    /// <summary>跟随写入后把草稿同步成「已应用」，下次打开面板仍显示真实目标设备。</summary>
-    private static void SyncDraftFromApplied()
-    {
-        try
-        {
-            var saved = AudioEqualizerService.SavedSettings();
-            if (saved is null) return;
-            SettingsService.Current.EqualizerDraft = saved;
-            SettingsService.Save(SettingsService.Current);
-        }
-        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException) { }
     }
     private EqualizerSettings ReadSettings()
     {
@@ -196,26 +180,36 @@ public partial class AudioEqualizerPanel : UserControl
     }
     private async void Apply_Click(object sender, RoutedEventArgs e)
     {
+        if (_busy || _watching) return;
         try
         {
             var settings = ReadSettings();
-            SettingsService.Current.AudioFollowDefaultOutput = (OutputCombo.SelectedItem as AudioOutput)?.Id == FollowDeviceId;
-            SettingsService.Current.EqualizerDraft = settings; SettingsService.Save(SettingsService.Current);
+            var follow = (OutputCombo.SelectedItem as AudioOutput)?.Id == FollowDeviceId;
             await Run(() => { AudioEqualizerService.Apply(settings); return settings.Enabled
                 ? Str.T("Str.EqApplied")
-                : Str.T("Str.EqBypassed"); });
+                : Str.T("Str.EqBypassed"); }, () =>
+            {
+                SettingsService.Current.AudioFollowDefaultOutput = follow;
+                SettingsService.Current.EqualizerDraft = settings;
+                SettingsService.Save(SettingsService.Current);
+            });
         }
         catch (Exception ex) { EqStatus.Text = ex.Message; }
     }
     private async void Restore_Click(object sender, RoutedEventArgs e) => await Run(() => AudioEqualizerService.Restore() ? Str.T("Str.EqRestored") : Str.T("Str.EqNoBackup"));
-    private async Task Run(Func<string> work)
+    private async Task Run(Func<string> work, Action? afterSuccess = null)
     {
-        if (_busy) return;
+        if (_busy || _watching) return;
         _busy = true; IsEnabled = false;
-        try { EqStatus.Text = await Task.Run(work); }
+        try
+        {
+            EqStatus.Text = await Task.Run(work);
+            afterSuccess?.Invoke();
+            await UpdateOutputStateAsync();
+        }
         catch (UnauthorizedAccessException) { EqStatus.Text = Str.T("Str.EqPermission"); }
         catch (Exception ex) { EqStatus.Text = ex.Message; }
-        finally { _busy = false; IsEnabled = true; UpdateOutputState(); UpdateButtons(); }
+        finally { _busy = false; IsEnabled = true; UpdateButtons(); }
     }
     private void Install_Click(object sender, RoutedEventArgs e) => ProductLinks.Open("https://sourceforge.net/projects/equalizerapo/");
     private void DeviceSetup_Click(object sender, RoutedEventArgs e)

@@ -45,6 +45,8 @@ public static class CliHost
 
     public static int Run(string[] args)
     {
+        if (args.Length > 0 && ParseVerb(args[0]) is "Detect" or "Apply")
+            SettingsService.Load(readOnly: true);
         var output = CreateStdoutWriter();
         return Run(args, output);
     }
@@ -216,6 +218,9 @@ public static class CliHost
         var ids = presetName is not null
             ? OptimizationCatalog.ResolvePreset(presetName)
             : options.Items;
+        if (ids.Any(id => InputQueueWriter.ItemIds.Contains(id, StringComparer.OrdinalIgnoreCase)) &&
+            SettingsService.LoadWarning is not null)
+            throw new InvalidDataException(Str.T("Str.InputQueueSettingsUnreadable"));
         // -Json 的 stdout 是机器协议，不能混入人为提示；非 JSON 模式才输出说明。
         if (!options.Json && !AdminHelper.IsAdministrator() && ids.Any(NeedsAdmin))
             output.WriteLine("提示: 当前非管理员会话，需要管理员的优化项会失败并如实报错。");

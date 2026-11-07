@@ -93,12 +93,17 @@ public sealed class BackupRecoveryBundleTests : IDisposable
         var engine = Path.Combine(_root, "engine"); Directory.CreateDirectory(engine); File.WriteAllText(Path.Combine(engine, "config.txt"), "# existing\n");
         AudioEqualizerService.EngineOverride = new(engine, engine, "unused");
         AudioEqualizerService.Apply(new(Guid.NewGuid().ToString("B"), new double[10]));
-        var zip = Path.Combine(_root, "all.zip"); var count = BackupService.ExportBackups(zip); Assert.Equal(7, count);
+        var power = new PowerDetailsJournalEntry(Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D"),
+            Guid.NewGuid().ToString("D"), 100, null, "Maximum", DateTimeOffset.Now);
+        Put(PowerDetailsJournal.FileName, new { Version = 1, Entries = new[] { power } });
+        var zip = Path.Combine(_root, "all.zip"); var count = BackupService.ExportBackups(zip); Assert.Equal(8, count);
         UserDataPaths.RootOverride = Path.Combine(_root, "fresh");
+        Put(PowerDetailsJournal.FileName, new { Version = 1, Entries = Array.Empty<PowerDetailsJournalEntry>() });
         Assert.Equal((count, 0, 0), BackupService.ImportBackups(zip));
         Assert.Equal((0, count, 0), BackupService.ImportBackups(zip));
         Assert.Equal(profile, File.ReadAllBytes(Path.Combine(UserDataPaths.Root, custom)));
         Assert.True(AudioEqualizerService.HasBackup); Assert.NotNull(AudioEqualizerService.SavedSettings());
+        Assert.Equal(power, Assert.Single(PowerDetailsJournal.Load()));
         var imported = BackupService.ListBackups().Single();
         Assert.NotNull(JsonNode.Parse(File.ReadAllText(imported))!["ImportedOriginId"]);
         Assert.Empty(BackupService.RestoreAll(null, imported).Failures); Assert.Equal(1, _value);

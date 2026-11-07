@@ -16,6 +16,22 @@ namespace FpsTune.Wpf.Tests;
 public class ExperimentRunnerTests
 {
     [Fact]
+    public async Task A_held_lease_rejects_a_second_experiment_before_it_writes_state()
+    {
+        using var scope = TempStateDir.Create();
+        using (var lease = ExperimentRunner.AcquireRunLease(simulate: true))
+        {
+            Assert.NotNull(lease);
+            var blocked = await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None);
+            Assert.Equal(1, blocked.ExitCode);
+            Assert.Contains(Str.T("Str.ExperimentOtherInstance"), blocked.Json);
+            Assert.False(File.Exists(ExperimentRunner.StateFile(Simulate)));
+        }
+
+        Assert.Equal(0, (await ExperimentRunner.RunAsync("baseline", Simulate, CancellationToken.None)).ExitCode);
+    }
+
+    [Fact]
     public void Bounded_frame_parser_rejects_partial_results_and_observes_cancellation_during_enumeration()
     {
         var lines = new[] { "FrameTime" }.Concat(Enumerable.Repeat("8", 31));

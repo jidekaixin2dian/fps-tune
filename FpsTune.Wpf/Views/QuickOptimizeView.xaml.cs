@@ -262,7 +262,8 @@ public partial class QuickOptimizeView : UserControl
             {
                 try
                 {
-                    await Task.Run(() => DisplayQualityService.ApplyDlssPreset(game.ExePath, dlss.Value));
+                    var exe = Path.GetFileName(game.ExePath);
+                    await Task.Run(() => DisplayQualityService.ApplyDlssPreset(exe, dlss.Value).RequireApplied());
                     rows.Add(new ResultRow(Str.T("Str.QuickOptDlssLabel") + "：" + dlss.Label, true,
                         Str.T("Str.ResultOk"), Str.T("Str.QuickOptDlssDoneFmt", dlss.Label)));
                 }

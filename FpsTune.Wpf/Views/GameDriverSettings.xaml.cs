@@ -96,7 +96,7 @@ public partial class GameDriverSettings : UserControl
 
     internal async Task ChangeAdvancedAsync()
     {
-        if (_busy || !_driverReady || _gamePath is null || _advancedRows.Count == 0) return;
+        if (!CanAct() || !_driverReady || !File.Exists(_gamePath) || _advancedRows.Count == 0) return;
         var changes = new List<(uint SettingId, uint? Value, string Name)>();
         foreach (var row in _advancedRows)
         {
@@ -104,13 +104,15 @@ public partial class GameDriverSettings : UserControl
             if (row.IsChanged(value)) changes.Add((row.SettingId, value, row.Name));
         }
         if (changes.Count == 0) { AdvancedStatus.Text = Str.T("Str.AdvancedNoChange"); return; }
+        var path = _gamePath;
         if (!DialogService.Confirm(Str.T("Str.AdvancedTitle"),
                 Str.T("Str.AdvancedConfirm", string.Join(" · ", changes.Select(c => c.Name))), confirmText: Str.T("Str.Apply")))
             return;
+        if (!CanAct() || !string.Equals(path, _gamePath, StringComparison.OrdinalIgnoreCase)) return;
 
         _busy = true; AdvancedWriteButton.IsEnabled = ApplyDriverButton.IsEnabled = false;
         AdvancedStatus.Text = Str.T("Str.Writing");
-        var exe = Path.GetFileName(_gamePath);
+        var exe = Path.GetFileName(path!);
         var applied = 0; var failures = new List<string>();
         try
         {
@@ -133,7 +135,11 @@ public partial class GameDriverSettings : UserControl
         finally
         {
             _busy = false;
-            await RefreshDriverAsync();
+            if (!_closed)
+            {
+                if (string.Equals(_gamePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) await RefreshDriverAsync();
+                else await SetGameAsync(AppState.GamePath);
+            }
         }
     }
 
@@ -149,6 +155,7 @@ public partial class GameDriverSettings : UserControl
     internal async Task ChangeDriverAsync(bool restore)
     {
         if (!CanAct() || !_driverReady || !File.Exists(_gamePath)) return;
+        var path = _gamePath;
         DisplayQualityService.CompetitiveSettings? selection = null;
         try
         {
@@ -164,11 +171,22 @@ public partial class GameDriverSettings : UserControl
                 selection!.MaximumPower ? Str.T("Str.TuningMaximumPower") : Str.T("Str.FrameKeep"),
                 selection.Foreground is null ? Str.T("Str.FrameKeep") : Cap(selection.Foreground), selection.Background is null ? Str.T("Str.FrameKeep") : Cap(selection.Background));
             if (!DialogService.Confirm(Str.T("Str.OptDriverTab"), GameTitle.Text + "\n\n" + details)) return;
-            if (!CanAct()) return;
+            if (!CanAct() || !string.Equals(path, _gamePath, StringComparison.OrdinalIgnoreCase)) return;
             _busy = true; DriverInputs.IsEnabled = ApplyDriverButton.IsEnabled = RestoreDriverButton.IsEnabled = false;
-            var exe = Path.GetFileName(_gamePath);
-            var changed = await Task.Run(() => { if (restore) return DisplayQualityService.RestoreCompetitiveSettings(exe); DisplayQualityService.ApplyCompetitiveSettings(exe, selection!); return true; });
-            DriverStatus.Text = Str.T(changed ? restore ? "Str.TuningDriverRestored" : "Str.TuningDriverApplied" : "Str.NothingToRestore");
+            var exe = Path.GetFileName(path!);
+            if (restore)
+            {
+                var restored = await Task.Run(() => DisplayQualityService.RestoreCompetitiveSettings(exe));
+                DriverStatus.Text = Str.T(restored ? "Str.TuningDriverRestored" : "Str.NothingToRestore");
+            }
+            else
+            {
+                var receipt = await Task.Run(() => DisplayQualityService.ApplyCompetitiveSettings(exe, selection!));
+                DriverStatus.Text = receipt.Ok
+                    ? Str.T("Str.TuningDriverApplied")
+                    : Str.T("Str.AdvancedWrittenPartial", receipt.AppliedCount, receipt.FailedCount,
+                        string.Join(" · ", receipt.Items.Where(i => i.Outcome != DisplayQualityService.DrsSettingOutcome.Applied).Select(i => i.Name)));
+            }
         }
         catch (Exception ex) { DriverStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
         finally

@@ -84,6 +84,9 @@ public static class ExperimentRunner
         await RunGate.WaitAsync(ct);
         try
         {
+            using var lease = AcquireRunLease(options.Simulate);
+            if (lease is null)
+                return (1, ErrorJson(mode, Str.T("Str.ExperimentOtherInstance")));
             if (!options.Simulate && mode != "report" && HasInterruptedOperation())
                 return (1, ErrorJson(mode, Str.T("Str.ExperimentInterrupted")));
             JsonObject? manualSample = null;
@@ -244,7 +247,6 @@ public static class ExperimentRunner
             var applied = await ApplyGroupAsync(itemIds, ct, gamePath, backup => WriteInFlight(groupId, itemIds, backup));
             appliedBackup = applied.BackupFile;
             changedIds = applied.ChangedIds;
-            WriteInFlight(groupId, changedIds, appliedBackup);
             if (!applied.Ok)
             {
                 var rollback = changedIds.Count == 0 ? null : await RestoreGroupAsync(changedIds, appliedBackup);
@@ -957,6 +959,15 @@ public static class ExperimentRunner
 
     internal static string StateDir() =>
         StateDirOverride ?? Path.Combine(UserDataPaths.Root, "experiment");
+
+    internal static FileStream? AcquireRunLease(bool simulate)
+    {
+        var directory = StateDir();
+        Directory.CreateDirectory(directory);
+        var file = Path.Combine(directory, simulate ? ".experiment-simulated.lock" : ".experiment.lock");
+        try { return new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
+        catch (IOException ex) when ((ex.HResult & 0xffff) is 32 or 33) { return null; }
+    }
 
     private static JsonObject? ReadState(Options options)
     {

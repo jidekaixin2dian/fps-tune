@@ -355,7 +355,9 @@ public partial class OptimizeView : UserControl
     private async void RestoreButton_Click(object sender, RoutedEventArgs e)
     {
         if (_operationBusy) return;
-        var backupCount = BackupService.ListBackups().Count;
+        var scopes = await Task.Run(RecoveryCoordinator.Inventory);
+        if (_operationBusy) return;
+        var backupCount = scopes.Count;
         if (backupCount == 0)
         {
             DialogService.Info(Str.T("Str.RestoreConfirm"), Str.T("Str.NoRestorableBackups"));
@@ -363,7 +365,7 @@ public partial class OptimizeView : UserControl
         }
         // 与「应用」同款预检：待还原记录含电源/服务/HKLM 时需要管理员，
         // 否则非管理员用户会拿到逐项失败的结果。
-        if (!AdminHelper.IsAdministrator() && RecoveryCoordinator.NeedsAdmin())
+        if (!AdminHelper.IsAdministrator() && scopes.Any(scope => scope.NeedsAdmin))
         {
             var elevate = DialogService.Confirm(
                 Str.T("Str.NeedsAdmin"),

@@ -6,7 +6,8 @@ namespace FpsTune.Wpf.Services;
 internal static class UserDataPaths
 {
     internal static string? RootOverride { get; set; }
+    internal static string? TestFallbackRoot { private get; set; }
     internal static string Root => RootOverride is null
-        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune")
+        ? TestFallbackRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FpsTune")
         : Path.GetFullPath(RootOverride);
 }

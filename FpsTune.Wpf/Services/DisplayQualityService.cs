@@ -163,13 +163,13 @@ public static partial class DisplayQualityService
         if (!api.TryInitialize())
             throw new NvdrsException(-5, api.LastError ?? NvapiUnavailable);
         using var session = api.OpenSession();
-        var restorable = ReadBackup(gameExe) is not null;
+        var restorable = ReadBackup(gameExe)?.Settings.Any(s => IsDlssSetting(s.SettingId)) == true;
         var owner = session.FindApplicationOwner(gameExe);
         if (owner is null)
             return new DlssState(gameExe, false, null, restorable);
-        return session.TryGetSettingDword(owner, DlssSrPresetId, out var preset)
-            ? new DlssState(gameExe, preset != 0, preset, restorable)
-            : new DlssState(gameExe, false, null, restorable);
+        var setting = session.ReadSettingState(owner, DlssSrPresetId);
+        return new DlssState(gameExe, setting.State == NvdrsSettingState.Overridden && setting.Value != 0,
+            setting.State == NvdrsSettingState.Missing ? null : setting.Value, restorable);
     }
 
     /// <summary>M3 二期：按游戏的驱动 3D 设置快照。null 表示该项未覆盖（跟随驱动/游戏默认）。</summary>
@@ -461,6 +461,13 @@ public static partial class DisplayQualityService
             => Items.Where(i => i.Outcome == DrsSettingOutcome.Mismatch).ToList();
         public int FailedCount => Unsupported.Count + Mismatched.Count;
         public bool Ok => FailedCount == 0;
+        internal void RequireApplied()
+        {
+            if (!Ok)
+                throw new InvalidOperationException(Str.T("Str.DrsWriteNotPersisted",
+                    string.Join(" · ", Items.Where(i => i.Outcome != DrsSettingOutcome.Applied).Select(i => i.Name))));
+        }
+
         /// <summary>只重试失败项用的期望值：SettingId → 目标（null 表示应删除）。</summary>
         public IReadOnlyDictionary<uint, uint?> Expected => Items
             .Where(i => i.Outcome != DrsSettingOutcome.Applied)
@@ -541,7 +548,12 @@ public static partial class DisplayQualityService
         var results = VerifyPersistedSettings(api, gameExe,
             backup.PostSettings!.Where(s => touched.Contains(s.SettingId)), trace);
         trace.Stage("finalize-backup");
-        WriteBackup(backup with { PreviousSettings = null });
+        // Keep the pre-attempt value for failed writes; the driver may still hold a prior FpsTune value.
+        var failed = results.Where(r => r.Outcome != DrsSettingOutcome.Applied).Select(r => r.SettingId).ToHashSet();
+        WriteBackup(backup with
+        {
+            PreviousSettings = failed.Count == 0 ? null : backup.PreviousSettings!.Where(s => failed.Contains(s.SettingId)).ToList()
+        });
         // 诊断记录里留下「这次有项没落地」，避免日志只写一句 succeeded 让人以为全成了。
         if (results.Any(r => r.Outcome != DrsSettingOutcome.Applied)) trace.Stage("readback-partial");
         return new DrsApplyReceipt(results);
@@ -729,12 +741,12 @@ public static partial class DisplayQualityService
             File.Delete(path);
     }
 
-    /// <summary>应用 DLSS 预设覆盖；FollowGame 等价于移除覆盖。</summary>
+    /// <summary>应用 DLSS 预设覆盖；FollowGame 仅撤销帧律保存过的 DLSS 改动。</summary>
     public static DrsApplyReceipt ApplyDlssPreset(string gameExe, DlssPreset preset)
     {
         if (preset == DlssPreset.FollowGame)
         {
-            RemoveDlssOverride(gameExe);
+            RestoreDlssSettings(gameExe);
             return DrsApplyReceipt.Empty;
         }
 
@@ -751,6 +763,11 @@ public static partial class DisplayQualityService
     /// </summary>
     public static bool RemoveDlssOverride(string gameExe)
         => RestoreManaged(gameExe);
+
+    internal static bool RestoreDlssSettings(string gameExe)
+        => RestoreManaged(gameExe, IsDlssSetting);
+
+    private static bool IsDlssSetting(uint settingId) => settingId is DlssSrPresetId or DlssSrEnableId;
 
     private static bool RestoreManaged(string gameExe, Func<uint, bool>? filter = null)
         => OperationDiagnostics.Run("driver-restore", gameExe, BackupDirOverride, trace =>

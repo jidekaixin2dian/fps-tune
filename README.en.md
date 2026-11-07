@@ -1,11 +1,11 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@ Available through a desktop interface and command-line tools.
 
 ## Versions and downloads
 
-Current version: **[v0.4.2](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2)**. The 1.x line is unmaintained.
+Current version: **[v0.4.3](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.2).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.3).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.4.2.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.2/FpsTune-Setup-0.4.2.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.4.3.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.3/FpsTune-Setup-0.4.3.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -26,7 +26,7 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.4.2.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.2/SHA256SUMS-v0.4.2.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.4.3.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.3/SHA256SUMS-v0.4.3.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 Portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
@@ -75,7 +75,9 @@ Compact, card and strip HUDs (interface examples with demonstration values):
 - **Game library**: a dedicated page to scan, add, search, rename, remove and undo removal, with shortcuts to detection, preparation, display and performance sessions for the selected game. Recognizes Delta Force, CS2, VALORANT, APEX, PUBG, Call of Duty, Fortnite, Warframe and other listed clients; scans shared libraries and accepts a manually chosen EXE. Path detection does not establish performance or anti-cheat compatibility for every title.
 - **Display and quality**: per-game NVIDIA DRS / DLSS settings and NVIDIA digital vibrance; 11 SDR screen presets, brightness, contrast, gamma, shadow lift and RGB controls with per-display restoration. The Windows screen-curve path works with AMD, NVIDIA and Intel outputs that support the interface. ICC, screen controls and vibrance share one workspace and can be combined. Compare changes on the included redacted game screenshots or your own images by dragging the divider. Advanced ICC supports custom `.icc` / `.icm` files and association restoration.
 - **Resolution**: choose a display under Display and quality → Resolution, select a 4:3 preset or edit dimensions with aspect-ratio lock. The current refresh rate is retained by default. Try existing driver modes or create NVIDIA custom modes, with a compact timed confirmation window, an independent rollback process and one-click restore. Scaling requests are verified and rolled back with a reason if the driver does not adopt them.
-- **Audio equalizer**: adjust 10 frequency bands, preamp and presets under Maintenance → Audio equalizer, with bypass and removal of this tool's changes. Uses Equalizer APO; first install the engine, configure the output device and restart when prompted.
+- **Power settings** — Search the active power plan in Optimize and edit plugged-in and battery values separately. FpsTune backs up original values before writing.
+- **Crosshair and input** — Choose always visible, show while firing, or aim-triggered crosshair modes. Tools calculates a recommended input queue depth from the mouse polling rate.
+- **Audio equalizer** — Adjust 10 frequency bands, preamp and presets under Tools → Audio equalizer. Pin an output or follow the system default while the page is open. Set up Equalizer APO and its output device first, then restart when prompted.
 - **Driver advice**: query NVIDIA's official catalog for the latest WHQL driver matching the GPU, OS and laptop/desktop type, with date and source. AMD and Intel link to their official driver pages.
 - **GPU device names**: preview eight presets including GTX 750 Ti and GTX 1050 Ti, then restore the original description when needed. This changes the Windows device description while preserving hardware capabilities.
 - **Organized settings**: appearance, wallpaper, startup and notifications, games and profiles, data and permissions, and About. Settings save automatically. Corner controls offer Classic and Large presets plus four custom radius groups; wallpaper has a rounded preview and compact opacity slider.

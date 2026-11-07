@@ -192,9 +192,12 @@ public static class SettingsService
     /// <summary>启动读取/解析失败时给界面用的一句话（null = 一切正常）。</summary>
     internal static string? LoadWarning { get; private set; }
 
-    public static void Load()
+    public static void Load() => Load(readOnly: false);
+
+    internal static void Load(bool readOnly)
     {
         SettingsFileUnreadable = false;
+        SettingsFileCorrupt = false;
         LoadWarning = null;
         try
         {
@@ -217,7 +220,7 @@ public static class SettingsService
             if (Current.OverviewMode != "console") Current.OverviewMode = "studio";
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
                 Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
-            MigrateTrayMinimizeDefault(Current);
+            if (!readOnly) MigrateTrayMinimizeDefault(Current);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -232,7 +235,7 @@ public static class SettingsService
             // 内容损坏（JSON 读不出来）：留档 .corrupt、原文件保留，按默认值启动。
             // 与 IO 路径不同，这里允许回写——文件已经是坏的，覆盖它才能让用户重新保存设置；
             // 旧内容仍可从 settings.json.corrupt 找回。损坏这事要明说，不能静默吞掉。
-            AtomicFile.PreserveCorrupt(SettingsFile);
+            if (!readOnly) AtomicFile.PreserveCorrupt(SettingsFile);
             SettingsFileCorrupt = true;
             LoadWarning = ex.Message;
             Current = CreateDefault();

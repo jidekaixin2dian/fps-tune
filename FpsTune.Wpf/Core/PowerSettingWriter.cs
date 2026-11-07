@@ -52,54 +52,56 @@ internal static class PowerSettingWriter
     /// <summary>写入一项设置的两套取值（null 表示这一套不动）。</summary>
     internal static PowerWriteResult Apply(Guid scheme, PowerSettingEntry entry, uint? ac, uint? dc)
     {
+        using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
         RequireActiveScheme(scheme);
         if (!ac.HasValue && !dc.HasValue) throw new InvalidOperationException("No value was requested.");
         var api = PowerSettingCatalog.Api;
 
-        var beforeAc = Read(api, scheme, entry, true);
-        var beforeDc = Read(api, scheme, entry, false);
-        PowerDetailsJournal.Record(scheme, entry, beforeAc, beforeDc);
+        var beforeAc = ac.HasValue ? Read(api, scheme, entry, true) : null;
+        var beforeDc = dc.HasValue ? Read(api, scheme, entry, false) : null;
+        var changedAc = ac != beforeAc ? beforeAc : null;
+        var changedDc = dc != beforeDc ? beforeDc : null;
+        var pending = PowerDetailsJournal.Record(scheme, entry, changedAc, changedDc, ac, dc);
 
-        var acPersisted = false;
-        var dcPersisted = false;
-        string? acError = null;
-        string? dcError = null;
-
-        if (ac.HasValue)
-        {
-            var error = api.WriteValue(scheme, entry.Subgroup, entry.Setting, true, ac.Value);
-            if (error != 0) acError = DescribeFailure("AC", error);
-            else if (Read(api, scheme, entry, true) != ac.Value) acError = Str.T("Str.PowerDetailsNotPersisted", DisplayName(entry));
-            else acPersisted = true;
-        }
-
-        if (dc.HasValue)
-        {
-            var error = api.WriteValue(scheme, entry.Subgroup, entry.Setting, false, dc.Value);
-            if (error != 0) dcError = DescribeFailure("DC", error);
-            else if (Read(api, scheme, entry, false) != dc.Value) dcError = Str.T("Str.PowerDetailsNotPersisted", DisplayName(entry));
-            else dcPersisted = true;
-        }
-
-        var applied = true;
-        if (acPersisted || dcPersisted)
-            applied = api.SetActiveScheme(scheme) == 0;
+        var (acPersisted, acError) = WriteSide(ac, beforeAc, true);
+        var (dcPersisted, dcError) = WriteSide(dc, beforeDc, false);
+        var applied = (!acPersisted && !dcPersisted) || ActivateIfCurrent(api, scheme);
+        if (pending is not null)
+            PowerDetailsJournal.Confirm(pending, changedAc.HasValue && acPersisted, changedDc.HasValue && dcPersisted);
 
         return new PowerWriteResult(ac.HasValue, dc.HasValue, acPersisted, dcPersisted, acError, dcError, applied);
+
+        (bool Persisted, string? Error) WriteSide(uint? requested, uint? before, bool onAc)
+        {
+            if (requested is not uint target) return (false, null);
+            var side = Str.T(onAc ? "Str.PowerDetailsAc" : "Str.PowerDetailsDc");
+            if (before is null) return (false, Str.T("Str.PowerDetailsOriginalUnreadable", side));
+            if (target == before) return (true, null);
+            if (ActiveScheme() != scheme) return (false, Str.T("Str.PowerDetailsActiveChanged"));
+            var error = api.WriteValue(scheme, entry.Subgroup, entry.Setting, onAc, target);
+            if (error != 0) return (false, DescribeFailure(side, error));
+            return Read(api, scheme, entry, onAc) == target
+                ? (true, null)
+                : (false, Str.T("Str.PowerDetailsNotPersisted", DisplayName(entry)));
+        }
     }
 
     /// <summary>把 journal 里的快照写回去。其他方案上的快照跳过（本机只允许改活动方案）。</summary>
-    internal static PowerRestoreResult Restore(IReadOnlyList<PowerDetailsJournalEntry> entries)
+    internal static PowerRestoreResult Restore(Guid? expectedScheme = null, bool allowLegacy = false)
     {
+        using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
+        var entries = PowerDetailsJournal.Load();
         if (entries.Count == 0) return new PowerRestoreResult(0, 0, 0, [], true);
 
-        var active = ActiveScheme();
+        var active = ActiveScheme() ?? throw new InvalidOperationException(Str.T("Str.PowerDetailsActiveChanged"));
+        if (expectedScheme.HasValue && expectedScheme != active)
+            throw new InvalidOperationException(Str.T("Str.PowerDetailsActiveChanged"));
         var api = PowerSettingCatalog.Api;
-        var restored = 0;
+        var restored = new HashSet<PowerDetailsJournalEntry>();
         var failed = 0;
         var skipped = 0;
         var errors = new List<string>();
-        var applied = true;
+        var anyPersisted = false;
 
         foreach (var entry in entries)
         {
@@ -111,52 +113,48 @@ internal static class PowerSettingWriter
                 continue;
             }
 
-            if (active != scheme)
+            if (active != scheme || ActiveScheme() != active)
             {
                 skipped++;
                 errors.Add(entry.Name);
                 continue;
             }
 
-            var ok = true;
-            if (entry.Ac is uint ac)
-            {
-                var error = api.WriteValue(scheme, subgroup, setting, true, ac);
-                if (error != 0 || ReadRaw(api, scheme, subgroup, setting, true) != ac)
-                {
-                    ok = false;
-                    errors.Add(entry.Name);
-                }
-            }
-
-            if (entry.Dc is uint dc)
-            {
-                var error = api.WriteValue(scheme, subgroup, setting, false, dc);
-                if (error != 0 || ReadRaw(api, scheme, subgroup, setting, false) != dc)
-                {
-                    ok = false;
-                    errors.Add(entry.Name);
-                }
-            }
-
-            if (!ok)
+            var acRestored = entry.Ac is not uint ac || RestoreSide(true, ac, entry.AcTarget, entry.AcBeforeAttempt);
+            var dcRestored = entry.Dc is not uint dc || RestoreSide(false, dc, entry.DcTarget, entry.DcBeforeAttempt);
+            anyPersisted |= (entry.Ac.HasValue && acRestored) || (entry.Dc.HasValue && dcRestored);
+            if (acRestored && dcRestored) restored.Add(entry);
+            else
             {
                 failed++;
-                continue;
+                errors.Add(entry.Name);
             }
 
-            restored++;
-            PowerDetailsJournal.Remove(scheme, subgroup, setting);
+            bool RestoreSide(bool onAc, uint original, uint? lastTarget, uint? beforeAttempt)
+            {
+                var current = ReadRaw(api, scheme, subgroup, setting, onAc);
+                if (current == original) return true;
+                if (current is null || ActiveScheme() != active) return false;
+                if (lastTarget.HasValue ? current != lastTarget && current != beforeAttempt : !allowLegacy)
+                    return false;
+                return api.WriteValue(scheme, subgroup, setting, onAc, original) == 0
+                       && ReadRaw(api, scheme, subgroup, setting, onAc) == original;
+            }
         }
 
-        if (restored > 0) applied = api.SetActiveScheme(active!.Value) == 0;
+        var applied = !anyPersisted || ActivateIfCurrent(api, active);
+        if (!applied)
+            return new PowerRestoreResult(0, failed + restored.Count, skipped,
+                errors.Concat(restored.Select(entry => entry.Name)).ToArray(), false);
 
-        return new PowerRestoreResult(restored, failed, skipped, errors, applied && restored > 0);
+        if (restored.Count > 0) PowerDetailsJournal.Consume(entries, restored);
+        return new PowerRestoreResult(restored.Count, failed, skipped, errors, true);
     }
 
     /// <summary>单项显隐。已经在目标状态就不写注册表。</summary>
     internal static PowerVisibilityWrite SetVisibility(PowerSettingEntry entry, bool visible)
     {
+        using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
         if (visible == !entry.Hidden) return new PowerVisibilityWrite(PowerVisibilityStatus.Unchanged, null);
 
         if (!visible)
@@ -182,6 +180,7 @@ internal static class PowerSettingWriter
     /// </summary>
     internal static PowerRevealResult RevealAllHidden(IReadOnlyList<PowerSettingEntry> entries)
     {
+        using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
         var hidden = entries.Where(entry => entry.Hidden).ToList();
         if (hidden.Count == 0) return new PowerRevealResult(0, 0, 0, 0, []);
 
@@ -244,9 +243,11 @@ internal static class PowerSettingWriter
     private static void RequireActiveScheme(Guid scheme)
     {
         var active = ActiveScheme();
-        if (active is null) throw new InvalidOperationException("The active power scheme could not be read.");
-        if (active.Value != scheme) throw new InvalidOperationException("Only the active power scheme can be written.");
+        if (active != scheme) throw new InvalidOperationException(Str.T("Str.PowerDetailsActiveChanged"));
     }
+
+    private static bool ActivateIfCurrent(IPowerSettingsApi api, Guid scheme)
+        => ActiveScheme() == scheme && api.SetActiveScheme(scheme) == 0;
 
     private static uint? Read(IPowerSettingsApi api, Guid scheme, PowerSettingEntry entry, bool ac)
         => ReadRaw(api, scheme, entry.Subgroup, entry.Setting, ac);

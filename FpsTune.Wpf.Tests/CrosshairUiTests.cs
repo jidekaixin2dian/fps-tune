@@ -154,6 +154,7 @@ public sealed class CrosshairUiTests
             CrosshairOverlayWindow.SelfForegroundOverride = () => false;
             var observed = new List<object>();
             var overlay = new CrosshairOverlayWindow();
+            Assert.True(overlay.Topmost);
             try
             {
                 overlay.ApplyConfig(new CrosshairConfig(true, "cross", "#00FF66", 12, 4, 2, 90, false,

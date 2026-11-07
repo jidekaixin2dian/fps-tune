@@ -29,7 +29,8 @@ public sealed class InputQueueUiTests
             InputQueueWriter.WriteOverride = (keyboard, mouse) =>
             {
                 writes.Add((keyboard, mouse));
-                return Task.FromResult<IReadOnlyList<OptimizationApplyResult>>([]);
+                return Task.FromResult<IReadOnlyList<OptimizationApplyResult>>(
+                    InputQueueWriter.ItemIds.Select(id => new OptimizationApplyResult(id, id, true, true, false, "")).ToArray());
             };
             var settings = SettingsService.Current;
             var (keyboard0, mouse0, rate0) = (settings.KeyboardQueueDepth, settings.MouseQueueDepth, settings.MousePollingRate);
@@ -61,7 +62,7 @@ public sealed class InputQueueUiTests
                 Assert.Equal(string.Empty, view.InputQueueStatus.Text);
 
                 // ② 仍然用 56：按输入框里的值写。
-                var keepText = Str.T("Str.InputQueueConfirmKeep", 56);
+                var keepText = Str.T("Str.InputQueueKeepBoth");
                 ClickDialog("SecondaryButton", dialog =>
                 {
                     Assert.IsType<AppDialogWindow>(dialog);
@@ -72,10 +73,10 @@ public sealed class InputQueueUiTests
                 Assert.Equal(new[] { (104, 56) }, writes);
                 Assert.Equal(Str.T("Str.InputQueueApplied"), view.InputQueueStatus.Text);
 
-                // ③ 改用推荐值：键盘与鼠标都换成推荐值（各 96），输入框同步显示。
+                // ③ 改用推荐值：只提高低于推荐值的鼠标，保留已达标的键盘。
                 writes.Clear();
                 view.MouseDepthBox.Text = "48";
-                var expectedKeyboard = InputQueuePolicy.Normalize(InputQueuePolicy.KeyboardRecommendedDepth);
+                const int expectedKeyboard = 104;
                 var expectedMouse = InputQueuePolicy.Normalize(InputQueuePolicy.RecommendedDepth(1000));
                 ClickDialog("ConfirmButton");
                 Run(view.ApplyInputQueueAsync());

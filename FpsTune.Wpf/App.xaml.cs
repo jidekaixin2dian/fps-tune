@@ -34,10 +34,13 @@ public partial class App : Application
         var config = CrosshairConfig.FromSettings();
         if (config.Enabled)
         {
-            _crosshair ??= new CrosshairOverlayWindow();
-            _crosshair.ApplyConfig(config);
-            _crosshair.StartPolling();
-            if (!_crosshair.IsVisible) _crosshair.Show();
+            if (_crosshair is null)
+            {
+                _crosshair = new CrosshairOverlayWindow();
+                _crosshair.Show();
+                _crosshair.StartPolling();
+            }
+            else _crosshair.ApplyConfig(config);
         }
         else
         {

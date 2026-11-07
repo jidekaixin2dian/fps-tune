@@ -633,7 +633,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.OverrideRestored">Restored: the values from before the override are back (or the generated profile was deleted). Effective in game.</s:String>
     <s:String x:Key="Str.IccRestored">Restored: the monitor colour configuration is back to what it was before the filter was applied.</s:String>
     <s:String x:Key="Str.DrsApplied">3D settings applied. Effective in game; click Restore default if you are not happy.</s:String>
-    <s:String x:Key="Str.OverrideRemoved">Override removed: the DLSS preset is back to the in-game / driver default. Effective in game.</s:String>
+    <s:String x:Key="Str.DlssInheritedValue">The game inherits driver preset {0}.</s:String>
     <s:String x:Key="Str.OptimizeDone">System optimization finished. Changes were backed up automatically and can be restored at any time.</s:String>
     <s:String x:Key="Str.ConfirmAllBackedUp">Everything is backed up before writing, and Restore all is available. Start?</s:String>
     <s:String x:Key="Str.NothingToRestoreOverride">No override or restore backup from this tool was found, so there is nothing to restore.</s:String>
@@ -958,6 +958,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ExperimentP99Rejected">P99 frame time increased by more than 3%; discard this group.</s:String>
     <s:String x:Key="Str.VerdictLegacyBadge">Historical result · retest needed</s:String>
     <s:String x:Key="Str.ExperimentInterrupted">The previous experiment is unfinished. Restore its backup first.</s:String>
+    <s:String x:Key="Str.ExperimentOtherInstance">Another FpsTune instance is working on an A/B experiment. Try again shortly.</s:String>
     <s:String x:Key="Str.GpuIdentityUnavailable">No supported NVIDIA display device found.</s:String>
     <s:String x:Key="Str.GpuIdentityChanged">The device or driver changed. Refresh the device list.</s:String>
     <s:String x:Key="Str.GpuIdentityAlready">当前设备已使用所选名称。</s:String>
@@ -2442,7 +2443,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptPowerToggle">Also switch the Windows power plan to Best performance</s:String>
     <s:String x:Key="Str.QuickOptFilterLabel">Filter scene (optional)</s:String>
     <s:String x:Key="Str.QuickOptDlssLabel">DLSS upscaling (optional)</s:String>
-    <s:String x:Key="Str.QuickOptDlssFollow">Follow in-game setting</s:String>
+    <s:String x:Key="Str.QuickOptDlssFollow">Keep current DLSS setting</s:String>
     <s:String x:Key="Str.QuickOptDlssLatest">Official "Latest" preset</s:String>
     <s:String x:Key="Str.QuickOptDlssM">Preset M (new model, premium)</s:String>
     <s:String x:Key="Str.QuickOptDlssK">Preset K (new model, community pick)</s:String>
@@ -2788,7 +2789,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.OptCustomPaneIntro">Custom selection&#x0a;&#x0a;Turning an item on adds it to the pending list; apply at the bottom when you have confirmed.&#x0a;&#x0a;Click an item to see its current state and side effects.&#x0a;&#x0a;Search and category filters only change what the list shows; they never clear selections in other categories.</s:String>
     <s:String x:Key="Str.OptPresetPaneIntro">{0} · {1} items</s:String>
     <s:String x:Key="Str.Unconfirmed">Not confirmed</s:String>
-    <s:String x:Key="Str.OptRestoreConfirmAll">Found {0} backup files. Every system change they record will be restored item by item.&#x0a;&#x0a;Continue?</s:String>
+    <s:String x:Key="Str.OptRestoreConfirmAll">Found {0} backup groups. Check each setting and restore the original values?</s:String>
     <s:String x:Key="Str.Skipped">Skipped</s:String>
     <s:String x:Key="Str.ApplyDone">Apply finished</s:String>
     <s:String x:Key="Str.ItemsCountFmt">{0} items</s:String>
@@ -2870,7 +2871,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <!-- reference alignment: power details -->
     <s:String x:Key="Str.PowerDetailsTitle">Power settings</s:String>
     <s:String x:Key="Str.PowerDetailsOpen">Open power settings</s:String>
-    <s:String x:Key="Str.PowerDetailsHint">Lists every setting in the active power plan, including the ones Windows hides. Changes take effect immediately and each setting can be reset to its default.</s:String>
+    <s:String x:Key="Str.PowerDetailsHint">View the active power plan and edit its plugged-in and battery values separately.</s:String>
     <s:String x:Key="Str.PowerDetailsSearch">Search name, description or GUID</s:String>
     <s:String x:Key="Str.PowerDetailsFilterAll">All</s:String>
     <s:String x:Key="Str.PowerDetailsFilterChanged">Different from default</s:String>
@@ -2910,8 +2911,15 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsResetDone">Reset "{0}" to its default.</s:String>
     <s:String x:Key="Str.PowerDetailsRestoreAll">Undo this session</s:String>
     <s:String x:Key="Str.PowerDetailsRestoreDone">Restored {0} settings.</s:String>
-    <s:String x:Key="Str.PowerDetailsRestoreNone">Nothing has been changed since this page was opened.</s:String>
-    <s:String x:Key="Str.PowerDetailsRestoreFailed">{0} could not be restored; see the activity log.</s:String>
+    <s:String x:Key="Str.PowerDetailsRestoreNone">There are no power settings to restore.</s:String>
+    <s:String x:Key="Str.PowerDetailsRestoreFailed">{0} could not be restored. Their backups are still available.</s:String>
+    <s:String x:Key="Str.PowerDetailsRestoreSkipped">{0} belong to other plans. Switch to the matching plan to restore them.</s:String>
+    <s:String x:Key="Str.PowerDetailsLegacyConfirm">The old backup has no applied values to compare with. Restore the original values over the current settings?</s:String>
+    <s:String x:Key="Str.PowerDetailsAppliedPartialDc">The battery value was saved. The plugged-in value could not be saved.</s:String>
+    <s:String x:Key="Str.PowerDetailsOriginalUnreadable">Skipped {0} because its original value could not be backed up.</s:String>
+    <s:String x:Key="Str.PowerDetailsActiveChanged">The active power plan changed or could not be read. Scan again.</s:String>
+    <s:String x:Key="Str.PowerDetailsBusy">Another system operation is running. Try again shortly.</s:String>
+    <s:String x:Key="Str.DlssFollowDriverValue">The game still uses preset {0} from its driver profile.</s:String>
     <s:String x:Key="Str.PowerDetailsHiddenBadge">Hidden</s:String>
     <s:String x:Key="Str.PowerDetailsGroupHiddenBadge">Group hidden</s:String>
     <s:String x:Key="Str.PowerDetailsUnreadable">Not read</s:String>
@@ -2930,7 +2938,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.InputQueuePollingRate">Mouse polling rate</s:String>
     <s:String x:Key="Str.InputQueueKeyboard">Keyboard buffer depth</s:String>
     <s:String x:Key="Str.InputQueueMouse">Mouse buffer depth</s:String>
-    <s:String x:Key="Str.InputQueueCoverage">Covers {0} ms</s:String>
+    <s:String x:Key="Str.InputQueueCoverage">Estimated coverage: {0} ms</s:String>
     <s:String x:Key="Str.InputQueueRecommended">Recommended {0}</s:String>
     <s:String x:Key="Str.InputQueueLowWarning">Below the recommended depth: a stutter can drop a release signal, which looks like holding fire, a crosshair flying around, or a character that keeps walking.</s:String>
     <s:String x:Key="Str.InputQueueApply">Write buffer depth</s:String>
@@ -2938,7 +2946,10 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.InputQueueConfirmTitle">Below the recommended depth</s:String>
     <s:String x:Key="Str.InputQueueConfirmBody">{0} only covers {1} ms, below the recommended {2} for this polling rate.</s:String>
     <s:String x:Key="Str.InputQueueConfirmUseRecommended">Use the recommended value</s:String>
-    <s:String x:Key="Str.InputQueueConfirmKeep">Keep {0}</s:String>
+    <s:String x:Key="Str.InputQueueKeepBoth">Keep entered values</s:String>
+    <s:String x:Key="Str.InputQueueIncomplete">Some input queue settings were not written.</s:String>
+    <s:String x:Key="Str.InputQueueNeedsAdmin">Restart FpsTune as administrator to write the input queue settings.</s:String>
+    <s:String x:Key="Str.InputQueueSettingsUnreadable">The saved input queue settings could not be read. Check them in Tools and try again.</s:String>
     <s:String x:Key="Str.InputQueueApplied">Written to the registry; takes effect after a restart.</s:String>
     <s:String x:Key="Str.InputQueueSystemDefault">Windows default {0}</s:String>
     <s:String x:Key="Str.InputQueueNotSet">Not set (Windows default {0})</s:String>
@@ -2955,7 +2966,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsVisibleToggleHint">Only controls whether Windows Power Options lists this setting; values are not changed.</s:String>
     <s:String x:Key="Str.PowerDetailsGroupHiddenHint">This whole group is hidden in Windows; turning it on reveals the group in Power Options too.</s:String>
     <s:String x:Key="Str.PowerDetailsModifiedBadge">Changed</s:String>
-    <s:String x:Key="Str.PowerDetailsNotApplied">The value was written but the current plan did not refresh; switch plans once or restart to apply.</s:String>
+    <s:String x:Key="Str.PowerDetailsNotApplied">The value was saved. Check the active power plan and retry to apply it.</s:String>
     <s:String x:Key="Str.PowerDetailsUnnamedGroup">Unnamed group</s:String>
     <s:String x:Key="Str.PowerDetailsUnnamedSetting">Unnamed setting</s:String>
     <s:String x:Key="Str.ColorRollbackRestored">The driver did not accept the requested screen curve, so the original curve was written back and the screen is unchanged.</s:String>
@@ -3004,7 +3015,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.EqTakeoverResumed">Takeover resumed; the next apply writes the audio configuration.</s:String>
     <s:String x:Key="Str.EqTakeoverPause">Pause takeover (write no audio configuration)</s:String>
     <s:String x:Key="Str.EqEngineMissing">Equalizer APO was not detected, so the equalizer writes no audio configuration. Saved profiles are kept.</s:String>
-    <s:String x:Key="Str.EqFollowHint">With system default selected, switching headphones or speakers writes the equalizer to the new default output. You can also pin one device below.</s:String>
+    <s:String x:Key="Str.EqFollowHint">After applying, follow the system default while this page is open. You can also pin one device.</s:String>
     <s:String x:Key="Str.DetectGpuReported">Reported as: {0}</s:String>
     <s:String x:Key="Str.DetectGpuReal">Actual model: {0}</s:String>
     <s:String x:Key="Str.GpuIdentitySameAsCurrent">Current model</s:String>

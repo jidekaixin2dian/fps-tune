@@ -301,6 +301,50 @@ public sealed class PowerDetailsTests : IDisposable
         Assert.Empty(_api.Writes);
     }
 
+    [Fact]
+    public void Write_never_touches_a_side_without_a_readable_original()
+    {
+        Seed();
+        _api.Group(ProcessorGroup, "Processor");
+        _api.Setting(ProcessorGroup, MaxState, "Maximum", setting => { setting.Ac = 100; setting.Dc = 90; });
+        var entry = PowerSettingCatalog.Load(Scheme).Entries.Single();
+        _api.Settings[(ProcessorGroup, MaxState)].FailValues = true;
+
+        var result = PowerSettingWriter.Apply(Scheme, entry, 20, 30);
+
+        Assert.False(result.Ok);
+        Assert.NotNull(result.AcError);
+        Assert.NotNull(result.DcError);
+        Assert.Empty(_api.Writes);
+        Assert.Empty(PowerDetailsJournal.Load());
+    }
+
+    [Fact]
+    public void Restore_preserves_untouched_side_and_retries_activation_after_failure()
+    {
+        Seed();
+        _api.Group(ProcessorGroup, "Processor");
+        _api.Setting(ProcessorGroup, MaxState, "Maximum", setting => { setting.Ac = 100; setting.Dc = 90; });
+        var entry = PowerSettingCatalog.Load(Scheme).Entries.Single();
+        Assert.True(PowerSettingWriter.Apply(Scheme, entry, 20, 90).Ok);
+        Assert.Null(Assert.Single(PowerDetailsJournal.Load()).Dc);
+        _api.Settings[(ProcessorGroup, MaxState)].Dc = 70;
+        _api.ActiveSetError = 5;
+
+        var failed = PowerSettingWriter.Restore();
+
+        Assert.False(failed.Applied);
+        Assert.Equal(1, failed.Failed);
+        Assert.Single(PowerDetailsJournal.Load());
+        Assert.Equal(70u, _api.Settings[(ProcessorGroup, MaxState)].Dc);
+
+        _api.ActiveSetError = 0;
+        Assert.Equal(1, PowerSettingWriter.Restore().Restored);
+        Assert.Empty(PowerDetailsJournal.Load());
+        Assert.Equal(100u, _api.Settings[(ProcessorGroup, MaxState)].Ac);
+        Assert.Equal(70u, _api.Settings[(ProcessorGroup, MaxState)].Dc);
+    }
+
     // ---------------------------------------------------------------- journal
 
     [Fact]
@@ -356,7 +400,7 @@ public sealed class PowerDetailsTests : IDisposable
             JsonSerializer.Serialize(new { Version = 1, Entries = list }), new UTF8Encoding(false));
 
         _api.Writes.Clear();
-        var result = PowerSettingWriter.Restore(PowerDetailsJournal.Load());
+        var result = PowerSettingWriter.Restore();
 
         Assert.Equal(2, result.Restored);
         Assert.Equal(1, result.Skipped);
@@ -374,7 +418,7 @@ public sealed class PowerDetailsTests : IDisposable
         Seed();
         Assert.False(File.Exists(PowerDetailsJournal.JournalPath));
 
-        var result = PowerSettingWriter.Restore(PowerDetailsJournal.Load());
+        var result = PowerSettingWriter.Restore();
 
         Assert.Equal(0, result.Restored);
         Assert.Equal(0, result.Failed);
@@ -382,6 +426,47 @@ public sealed class PowerDetailsTests : IDisposable
         Assert.Empty(_api.Writes);
         Assert.Equal(0, _api.ActiveSetCalls);
         Assert.False(File.Exists(PowerDetailsJournal.JournalPath));
+    }
+
+    [Fact]
+    public void Shared_recovery_lists_and_restores_power_details()
+    {
+        var root = UserDataPaths.RootOverride;
+        UserDataPaths.RootOverride = _directory;
+        try
+        {
+            Seed();
+            _api.Group(ProcessorGroup, "Processor");
+            _api.Setting(ProcessorGroup, MaxState, "Maximum", setting => { setting.Ac = 100; setting.Dc = 90; });
+            var entry = PowerSettingCatalog.Load(Scheme).Entries.Single();
+            Assert.True(PowerSettingWriter.Apply(Scheme, entry, 20, null).Ok);
+
+            Assert.Contains(RecoveryCoordinator.Inventory(), scope => scope.Module == "power-details");
+            var result = RecoveryCoordinator.RestoreAll();
+
+            Assert.Empty(result.Failures);
+            Assert.Contains(result.Restored, item => item.File == Str.T("Str.PowerDetailsTitle"));
+            Assert.Equal(100u, _api.Settings[(ProcessorGroup, MaxState)].Ac);
+            Assert.Empty(PowerDetailsJournal.Load());
+        }
+        finally { UserDataPaths.RootOverride = root; }
+    }
+
+    [Fact]
+    public void Restore_preserves_a_value_changed_outside_the_app()
+    {
+        Seed();
+        _api.Group(ProcessorGroup, "Processor");
+        _api.Setting(ProcessorGroup, MaxState, "Maximum", setting => { setting.Ac = 100; setting.Dc = 90; });
+        var entry = PowerSettingCatalog.Load(Scheme).Entries.Single();
+        Assert.True(PowerSettingWriter.Apply(Scheme, entry, 70, null).Ok);
+        _api.Settings[(ProcessorGroup, MaxState)].Ac = 80;
+        _api.Writes.Clear();
+
+        Assert.Equal(1, PowerSettingWriter.Restore().Failed);
+        Assert.Equal(80u, _api.Settings[(ProcessorGroup, MaxState)].Ac);
+        Assert.Single(PowerDetailsJournal.Load());
+        Assert.Empty(_api.Writes);
     }
 
     // ---------------------------------------------------------------- 显隐
@@ -503,7 +588,7 @@ public sealed class PowerDetailsTests : IDisposable
                 // 读不到名称的那一条仍然列出并显示「没有读到」；搜索/筛选只过滤内存表，不重新枚举。
                 ((TextBox)window.FindName("SearchBox")).Text = "OEM";
                 window.UpdateLayout();
-                Assert.Equal(1, list.Items.Count);
+                Assert.Single(list.Items);
                 Assert.Equal(Str.T("Str.PowerDetailsUnreadable"), ((PowerSettingRow)list.Items[0]).DisplayName);
                 Assert.Equal(scans, _api.GroupEnumerationCalls);
                 DlssFeedbackTests.PumpUntil(() => VisibleText(window).Any(text => text.Text == Str.T("Str.PowerDetailsUnreadable")));
@@ -630,6 +715,7 @@ public sealed class PowerDetailsTests : IDisposable
         internal readonly List<(string Side, uint Value)> Writes = [];
         internal string SchemeName = "平衡";
         internal int ActiveSetCalls;
+        internal uint ActiveSetError;
         internal int GroupEnumerationCalls;
 
         internal void Reset()
@@ -759,7 +845,7 @@ public sealed class PowerDetailsTests : IDisposable
         public uint SetActiveScheme(Guid scheme)
         {
             ActiveSetCalls++;
-            return 0;
+            return ActiveSetError;
         }
     }
 

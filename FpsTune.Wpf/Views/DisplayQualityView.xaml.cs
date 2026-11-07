@@ -271,9 +271,11 @@ public partial class DisplayQualityView : UserControl
         StateText.Text = _dlssStatus ?? (state.Covered
             ? Str.T("Str.DlssCovered", PresetLabel(state.PresetValue ?? 0))
                 + (state.Restorable ? Str.T("Str.DlssCoveredSelf") : Str.T("Str.DlssCoveredOther"))
-            : Str.T("Str.NotOverriddenInGame"));
+            : state.PresetValue is > 0
+                ? Str.T("Str.DlssInheritedValue", PresetLabel(state.PresetValue.Value))
+                : Str.T("Str.NotOverriddenInGame"));
         ApplyButton.IsEnabled = true;
-        RestoreButton.IsEnabled = state.Covered || state.Restorable;
+        RestoreButton.IsEnabled = state.Restorable;
         SetPresetCardsEnabled(true);
         SetBadge(TabStatusDlss, TabBadgeDlss,
             state.Covered ? DlssPresetBadge(state.PresetValue) : Str.T("Str.FollowGame"));
@@ -376,11 +378,19 @@ public partial class DisplayQualityView : UserControl
         try
         {
             var exeName = Path.GetFileName(path);
-            await Task.Run(() => DisplayQualityService.ApplyDlssPreset(exeName, preset.Value));
+            var followed = await Task.Run(() =>
+            {
+                DisplayQualityService.ApplyDlssPreset(exeName, preset.Value).RequireApplied();
+                return preset.Value == DlssPreset.FollowGame ? DisplayQualityService.GetDlssState(exeName) : null;
+            });
             _presetSelectionDirty = false;
-            _dlssStatus = preset.Value == DlssPreset.FollowGame
-                ? Str.T("Str.OverrideRemoved")
-                : Str.T("Str.DlssPresetVerified", DlssPresetBadge((uint)preset.Value));
+            _dlssStatus = followed switch
+            {
+                { Covered: true } => Str.T("Str.DlssFollowDriverValue", PresetLabel(followed.PresetValue ?? 0)),
+                { PresetValue: > 0 } => Str.T("Str.DlssInheritedValue", PresetLabel(followed.PresetValue.Value)),
+                not null => Str.T("Str.NotOverriddenInGame"),
+                _ => Str.T("Str.DlssPresetVerified", DlssPresetBadge((uint)preset.Value))
+            };
         }
         catch (NvdrsException ex) when (ex.Status == -175)
         {
@@ -415,7 +425,7 @@ public partial class DisplayQualityView : UserControl
         try
         {
             var exeName = Path.GetFileName(path);
-            var removed = await Task.Run(() => DisplayQualityService.RemoveDlssOverride(exeName));
+            var removed = await Task.Run(() => DisplayQualityService.RestoreDlssSettings(exeName));
             _presetSelectionDirty = false;
             _dlssStatus = removed
                 ? Str.T("Str.OverrideRestored")

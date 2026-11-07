@@ -121,8 +121,8 @@ public static class AudioEqualizerService
     public static AudioOutput? AppliedTarget()
     {
         EqualizerSettings? saved;
-        try { saved = SavedSettings(); }
-        catch (Exception ex) when (ex is InvalidDataException or IOException) { return null; }
+        try { saved = VerifiedAppliedSettings(); }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException or InvalidDataException or IOException or UnauthorizedAccessException) { return null; }
         if (saved is null) return null;
         return Outputs().FirstOrDefault(d => SameDevice(d.Id, saved.DeviceId)) ?? new AudioOutput(saved.DeviceId, saved.DeviceId);
     }
@@ -136,6 +136,7 @@ public static class AudioEqualizerService
         get => File.Exists(PauseFlagPath);
         set
         {
+            using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
             if (value)
             {
                 Directory.CreateDirectory(BackupDir);
@@ -172,9 +173,10 @@ public static class AudioEqualizerService
     }
 
     /// <summary>面板定时调用：设备变了就给一句可展示的结果；follow 为真时顺手把方案写到新设备。</summary>
-    public static AudioFollowResult? MonitorDefaultOutput(bool follow)
+    public static AudioFollowResult? MonitorDefaultOutput(bool follow, bool reconcile = false)
     {
         var change = PollDefaultOutput();
+        if (follow && reconcile) return FollowDefaultOutput();
         if (change is null) return null;
         if (change.Current is null) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
         return follow
@@ -188,27 +190,27 @@ public static class AudioEqualizerService
     /// </summary>
     public static AudioFollowResult FollowDefaultOutput()
     {
-        if (TakeoverPaused) return new(false, "Str.EqTakeoverPaused", Str.T("Str.EqTakeoverPaused"));
         var target = DefaultOutput();
         if (target is null) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
-        if (FindEngine() is null) return new(false, "Str.EqFollowNoEngine", Str.T("Str.EqFollowNoEngine"));
-        EqualizerSettings? saved;
-        try { saved = SavedSettings(); }
-        catch (Exception ex) when (ex is InvalidDataException or IOException)
-        {
-            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed", target.Name, ex.Message));
-        }
-        if (saved is null) return new(false, "Str.EqFollowNoSettings", Str.T("Str.EqFollowNoSettings"));
-        if (SameDevice(saved.DeviceId, target.Id)) return new(false, "Str.EqFollowAlready", Str.T("Str.EqFollowAlready", target.Name));
         if (!Guid.TryParse(target.Id, out var deviceId)) return new(false, "Str.EqNoDefaultOutput", Str.T("Str.EqNoDefaultOutput"));
         try
         {
+            using var gate = SystemMutationGate.Acquire(TimeSpan.Zero);
+            if (TakeoverPaused) return new(false, "Str.EqTakeoverPaused", Str.T("Str.EqTakeoverPaused"));
+            if (FindEngine() is null) return new(false, "Str.EqFollowNoEngine", Str.T("Str.EqFollowNoEngine"));
+            var saved = VerifiedAppliedSettings();
+            if (saved is null) return new(false, "Str.EqFollowNoSettings", Str.T("Str.EqFollowNoSettings"));
+            if (SameDevice(saved.DeviceId, target.Id)) return new(false, "Str.EqFollowAlready", Str.T("Str.EqFollowAlready", target.Name));
             Apply(saved with { DeviceId = deviceId.ToString("B") });
             return new(true, "Str.EqFollowed", Str.T("Str.EqFollowed", target.Name));
         }
-        catch (Exception ex) when (ex is IOException or InvalidOperationException or InvalidDataException or UnauthorizedAccessException)
+        catch (TimeoutException)
         {
-            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed", target.Name, ex.Message));
+            return new(false, "Str.EqFollowBusy", Str.T("Str.PowerDetailsBusy"));
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or InvalidOperationException or InvalidDataException or UnauthorizedAccessException)
+        {
+            return new(false, "Str.EqFollowFailed", Str.T("Str.EqFollowFailed", target.Name, PrivacyScrub.Sanitize(ex.Message)));
         }
     }
     internal static string BuildConfiguration(EqualizerSettings settings)
@@ -230,6 +232,23 @@ public static class AudioEqualizerService
     }
     private static void Save(Receipt r) => AtomicFile.WriteAllTextDurable(ReceiptPath, JsonSerializer.Serialize(r), new UTF8Encoding(false));
     public static EqualizerSettings? SavedSettings() => Load()?.Settings;
+    private static EqualizerSettings? VerifiedAppliedSettings()
+    {
+        var r = Load();
+        if (r?.ContentHash is null) return null;
+        var engine = FindEngine();
+        if (engine is null || !Path.GetFullPath(r.ConfigPath).Equals(Path.GetFullPath(engine.ConfigPath), StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var own = new FileInfo(Path.Combine(engine.ConfigPath, IncludeName));
+        var main = new FileInfo(Path.Combine(engine.ConfigPath, "config.txt"));
+        if (!own.Exists || own.Length > 65536 || !main.Exists || main.Length > 1000000)
+            return null;
+        return Hash(File.ReadAllBytes(own.FullName)) == r.ContentHash && FindEntry(File.ReadAllBytes(main.FullName), r) >= 0
+            ? r.Settings
+            : null;
+    }
+
     public static bool HasBackup => File.Exists(ReceiptPath);
     internal static Func<string, bool>? RestoreAccessDeniedOverride;
     public static bool RestoreNeedsAdmin()
@@ -262,8 +281,8 @@ public static class AudioEqualizerService
     public static void Apply(EqualizerSettings settings)
     {
         settings.Validate();
-        if (TakeoverPaused) throw new InvalidOperationException(Str.T("Str.EqTakeoverPaused"));
         using var gate = SystemMutationGate.Acquire();
+        if (TakeoverPaused) throw new InvalidOperationException(Str.T("Str.EqTakeoverPaused"));
         var engine = FindEngine() ?? throw new InvalidOperationException(Str.T("Str.EqInstallFirst"));
         if (EngineOverride is null && EngineProbeOverride is null && !Outputs().Any(d => SameDevice(d.Id, settings.DeviceId)))
             throw new InvalidOperationException(Str.T("Str.EqDisconnected"));
