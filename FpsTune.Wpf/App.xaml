@@ -1166,22 +1166,6 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="StudioNavStyle" TargetType="controls:NavButton">
-                <Setter Property="Height" Value="44"/><Setter Property="Margin" Value="0,0,0,6"/>
-                <Setter Property="FontFamily" Value="{StaticResource FontBody}"/><Setter Property="FontSize" Value="14"/>
-                <Setter Property="FontWeight" Value="Normal"/>
-                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/><Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="controls:NavButton">
-                    <Border x:Name="NavSurface" CornerRadius="{DynamicResource RadiusNav}" Background="Transparent" BorderThickness="1" BorderBrush="Transparent" Padding="14,0">
-                        <TextBlock Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="NavSurface" Property="Background" Value="{DynamicResource AccentSoftBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/></Trigger>
-                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="NavSurface" Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/></Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="NavSurface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate></Setter.Value></Setter>
-            </Style>
             <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}"/>
             <Style TargetType="ComboBox" BasedOn="{StaticResource SelectComboBoxStyle}"/>
             <Style TargetType="TextBox" BasedOn="{StaticResource InputTextBoxStyle}"/>

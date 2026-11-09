@@ -132,13 +132,7 @@
                         <TextBlock Text="{DynamicResource Str.LanguageNote}" Style="{StaticResource MutedTextStyle}" FontSize="13" Margin="0,6,0,0"/>
                     </StackPanel>
 
-                    <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,18,0,14"/>
-                    <TextBlock Text="{DynamicResource Str.DisplayMode}" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <TextBlock Text="{DynamicResource Str.DisplayModeDesc}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,12"/>
-                    <UniformGrid Columns="2">
-                        <RadioButton x:Name="ConsoleModeRadio" GroupName="displayMode" Tag="console" Checked="DisplayMode_Checked" Content="{DynamicResource Str.CompactConsole}" Style="{StaticResource SettingsChoice}"/>
-                        <RadioButton x:Name="StudioModeRadio" GroupName="displayMode" Tag="studio" Checked="DisplayMode_Checked" Content="{DynamicResource Str.Workspace}" Style="{StaticResource SettingsChoice}"/>
-                    </UniformGrid>
+
 </StackPanel></Border>
 </StackPanel></ScrollViewer><ScrollViewer x:Name="Section1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0"><Border Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsStartup}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.StartupShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>

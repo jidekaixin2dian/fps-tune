@@ -174,9 +174,9 @@ public sealed class ProductWorkflowUiTests
                 ((TextBox)library.FindName("NameBox")).Text = "训练游戏"; Click(library, "RenameButton");
                 DlssFeedbackTests.PumpUntil(() => ((TextBlock)library.FindName("GameNameText")).Text == "训练游戏" && ((StackPanel)library.FindName("DetailPanel")).IsEnabled);
                 Assert.Equal("训练游戏", GameContextService.DisplayNameFor(first.ExePath));
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
-                { main.SetDisplayMode(mode); ThemeManager.SetMode(theme); main.UpdateLayout(); Render((FrameworkElement)main.FindName("ChromeRoot"), "library-" + mode + "-" + theme); }
+                { ThemeManager.SetMode(theme); main.UpdateLayout(); Render((FrameworkElement)main.FindName("ChromeRoot"), "library-" + mode + "-" + theme); }
                 ((TextBox)library.FindName("SearchBox")).Text = "nothing matches";
                 Assert.Empty(games.Items); Assert.False(((StackPanel)library.FindName("DetailPanel")).IsEnabled);
                 ((TextBox)library.FindName("SearchBox")).Clear();
@@ -190,10 +190,10 @@ public sealed class ProductWorkflowUiTests
                 Assert.Equal(3, ((ItemsControl)page.FindName("CompareHighlights")).Items.Count);
                 var comparisonPath = Path.Combine(Output, "comparison-ui-demo.html"); page.ExportComparisonTo(comparisonPath);
                 Assert.Contains("+24 FPS", File.ReadAllText(comparisonPath));
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
                 {
-                    main.SetDisplayMode(mode); ThemeManager.SetMode(theme); main.UpdateLayout();
+                    ThemeManager.SetMode(theme); main.UpdateLayout();
                     page.FocusComparison();
                     var settled = false; page.Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(() => settled = true));
                     DlssFeedbackTests.PumpUntil(() => settled); main.UpdateLayout();

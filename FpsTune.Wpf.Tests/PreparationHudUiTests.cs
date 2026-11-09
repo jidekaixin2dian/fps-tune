@@ -55,9 +55,9 @@ public sealed class PreparationHudUiTests
                 }
                 finally { host.Close(); }
                 owner.NavigateTo("games"); owner.NavigateTo("home"); owner.UpdateLayout();
-                foreach (var mode in new[] { "studio", "console" }) foreach (var theme in new[] { "light", "dark" })
+                foreach (var mode in new[] { "studio" }) foreach (var theme in new[] { "light", "dark" })
                 {
-                    SettingsService.Current.ThemeMode = theme; owner.SetDisplayMode(mode); Render(owner, $"home-{mode}-{theme}");
+                    SettingsService.Current.ThemeMode = theme; ThemeManager.SetMode(theme); Render(owner, $"home-{mode}-{theme}");
                 }
                 var home = (ConsoleView)((ContentControl)owner.FindName("PageHost")).Content;
                 Click(home, "GameLibraryButton"); Assert.IsType<GameLibraryView>(((ContentControl)owner.FindName("PageHost")).Content);

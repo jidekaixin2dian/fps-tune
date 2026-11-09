@@ -161,10 +161,9 @@ public sealed class Toolbox036Tests
                 ((TextBox)panel.FindName("PortFilterBox")).Text = "bad"; Assert.False(((Button)panel.FindName("ExportPortsButton")).IsEnabled);
                 ((TextBox)panel.FindName("PortFilterBox")).Text = ""; ((CheckBox)panel.FindName("ListenersOnly")).IsChecked = false;
                 Assert.Equal(3, ((ListBox)panel.FindName("EndpointList")).Items.Count);
-                foreach (var theme in new[] { "light", "dark" }) foreach (var mode in new[] { "studio", "console" })
+                foreach (var theme in new[] { "light", "dark" }) foreach (var mode in new[] { "studio" })
                 {
-                    SettingsService.Current.ThemeMode = theme; ThemeManager.SetMode(theme); main.SetDisplayMode(mode);
-                    var expected = (Color)ColorConverter.ConvertFromString(theme == "light" ? "#F7F9FC" : "#0C1015")!;
+                    SettingsService.Current.ThemeMode = theme; ThemeManager.SetMode(theme); var expected = (Color)ColorConverter.ConvertFromString(theme == "light" ? "#F7F9FC" : "#0C1015")!;
                     DlssFeedbackTests.PumpUntil(() => ((SolidColorBrush)app.FindResource("AppBackdropBrush")).Color == expected);
                     panel.ShowPorts(false); main.UpdateLayout(); Render(main, $"network-{mode}-{theme}");
                     ((ScrollViewer)panel.FindName("ProbePane")).ScrollToEnd(); Render(main, $"network-result-{mode}-{theme}");

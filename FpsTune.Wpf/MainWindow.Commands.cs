@@ -22,7 +22,6 @@ public partial class MainWindow
     private void RefreshWorkspaceLanguage()
     {
         AdminStatusText.Text = AdminHelper.IsAdministrator() ? Str.T("Str.AdminMode") : Str.T("Str.NormalUser");
-        UpdateOverviewModeLabel();
         if (CommandOverlay.Visibility == Visibility.Visible) _commandPalette?.RefreshLanguage();
     }
     private void CommandSearch_Click(object sender, RoutedEventArgs e) => OpenCommandPalette();

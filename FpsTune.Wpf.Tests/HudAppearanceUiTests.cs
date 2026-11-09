@@ -47,10 +47,10 @@ public sealed class HudAppearanceUiTests
                     Assert.True(((Button)hud.FindName("CloseHudButton")).IsVisible);
                     RenderHud((FrameworkElement)hud.FindName("HudRoot"), $"hud-appearance-{theme}-{layout}-{transparency}", transparency == 100, root);
                 }
-                main.SetDisplayMode("studio"); ThemeManager.SetMode("light"); main.UpdateLayout();
+                ThemeManager.SetMode("light"); main.UpdateLayout();
                 ReadabilityAndFramesUiTests.Render((FrameworkElement)main.FindName("ChromeRoot"), "hud-global-studio-light");
-                main.SetDisplayMode("console"); ThemeManager.SetMode("dark"); main.UpdateLayout();
-                ReadabilityAndFramesUiTests.Render((FrameworkElement)main.FindName("ChromeRoot"), "hud-global-console-dark");
+                ThemeManager.SetMode("dark"); main.UpdateLayout();
+                ReadabilityAndFramesUiTests.Render((FrameworkElement)main.FindName("ChromeRoot"), "hud-global-studio-dark");
                 Click("HudNoBackgroundButton"); ((RadioButton)main.FindName("HudLeftOption")).IsChecked = true;
                 Click("SaveHudAppearanceButton"); SettingsService.Load();
                 Assert.Equal(new HudAppearance("strip", 100, "top-left"), SettingsService.Current.HudAppearance);

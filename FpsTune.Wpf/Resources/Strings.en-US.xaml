@@ -262,7 +262,6 @@
     <s:String x:Key="Str.WeChatPurpose">Cooperation and feedback only</s:String>
     <s:String x:Key="Str.CopyWeChatId">Copy WeChat ID</s:String>
     <s:String x:Key="Str.AppNameShort">Tune</s:String>
-    <s:String x:Key="Str.TipDisplayMode">Switches the overview page display mode; your choice is remembered</s:String>
     <s:String x:Key="Str.SettingsIntro">Pick a category to adjust. Settings are saved automatically.</s:String>
     <s:String x:Key="Str.ThemeDarkShort">Dark</s:String>
     <s:String x:Key="Str.ThemeDarkDesc">Dark surfaces · clear contrast</s:String>
@@ -271,9 +270,6 @@
     <s:String x:Key="Str.ThemeSystemShort">Follow system</s:String>
     <s:String x:Key="Str.ThemeSystemDesc">Follows the Windows appearance automatically</s:String>
     <s:String x:Key="Str.LowSpecMode">Low-spec mode (fewer animations, live sampling every 3 s)</s:String>
-    <s:String x:Key="Str.DisplayMode">Interface mode</s:String>
-    <s:String x:Key="Str.DisplayModeDesc">Workspace uses side navigation for step-by-step work; Console uses top navigation for compact review. Both layouts provide the same features.</s:String>
-    <s:String x:Key="Str.CompactConsole">Compact console</s:String>
     <s:String x:Key="Str.SectionStartup">Startup</s:String>
     <s:String x:Key="Str.AutoStart">Run FPS Tune automatically after signing in to Windows (current user)</s:String>
     <s:String x:Key="Str.SectionTray">Tray and notifications</s:String>

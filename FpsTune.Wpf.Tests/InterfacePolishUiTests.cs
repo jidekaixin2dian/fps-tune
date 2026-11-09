@@ -51,7 +51,8 @@ public sealed class InterfacePolishUiTests
                 var runs = Glyphs(VisualTreeHelper.GetDrawing(title)).Where(g => g.GlyphRun.Characters?.Any(c => c is >= '\u4e00' and <= '\u9fff') == true).ToArray();
                 Assert.NotEmpty(runs); Assert.All(runs, g => Assert.Contains("FpsTune Text", g.GlyphRun.GlyphTypeface.FamilyNames.Values));
                 var menu = ((Button)main.FindName("MoreButton")).ContextMenu;
-                Assert.Equal(5, menu.Items.Count);
+                // 「界面模式」项已随紧凑控制台布局一起移除，菜单只剩 4 项。
+                Assert.Equal(4, menu.Items.Count);
                 Assert.NotNull(main.FindName("GuideMenuItem")); Assert.NotNull(main.FindName("FeedbackMenuItem"));
                 Assert.NotEmpty(((TextBlock)main.FindName("AdminStatusText")).Text);
                 ((MenuItem)main.FindName("GuideMenuItem")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
@@ -61,17 +62,15 @@ public sealed class InterfacePolishUiTests
                 ((RadioButton)settings.FindName("SettingsNav4")).IsChecked = true; main.UpdateLayout();
                 Assert.Equal(Visibility.Visible, ((StackPanel)settings.FindName("WallpaperPreviewPlaceholder")).Visibility);
                 Assert.True(((Border)settings.FindName("WallpaperPreviewFrame")).ActualWidth > ((Border)settings.FindName("WallpaperPreviewFrame")).ActualHeight);
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
                 {
-                    main.SetDisplayMode(mode); ThemeManager.SetMode(theme); main.UpdateLayout();
+                    ThemeManager.SetMode(theme); main.UpdateLayout();
                     Render((FrameworkElement)main.FindName("TitleBar"), "titlebar-" + mode + "-" + theme);
                     Render((FrameworkElement)settings.FindName("WallpaperCard"), "wallpaper-empty-" + mode + "-" + theme);
                     menu.ApplyTemplate(); menu.Measure(new Size(220, 400)); menu.Arrange(new Rect(0, 0, 220, menu.DesiredSize.Height));
                     Render(menu, "more-menu-" + mode + "-" + theme);
                 }
-                ((MenuItem)main.FindName("OverviewModeButton")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-                Assert.Equal("studio", SettingsService.Current.OverviewMode);
                 // An actual local image still fills the preview, and opacity retains its existing behavior.
                 var visual = new DrawingVisual(); using (var dc = visual.RenderOpen()) dc.DrawRectangle(Brushes.CornflowerBlue, null, new Rect(0, 0, 320, 180));
                 var bitmap = new RenderTargetBitmap(320, 180, 96, 96, PixelFormats.Pbgra32); bitmap.Render(visual);

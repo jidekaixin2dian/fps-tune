@@ -85,10 +85,10 @@ public sealed class SessionWorkspaceUiTests
                 Assert.True(Button("DeleteButton").IsEnabled); Assert.False(Button("ExportCsvButton").IsEnabled);
                 Box("HistorySearchBox").Text = "训练场";
                 Assert.Equal(2, history.SelectedItems.Count);
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
                 {
-                    main.SetDisplayMode(mode); ThemeManager.SetMode(theme); main.UpdateLayout();
+                    ThemeManager.SetMode(theme); main.UpdateLayout();
                     foreach (var card in new[] { "SamplingCard", "HistoryCard" })
                     {
                         var element = (FrameworkElement)page.FindName(card); element.BringIntoView(); main.UpdateLayout();

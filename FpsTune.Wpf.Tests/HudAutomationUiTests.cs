@@ -110,10 +110,10 @@ public sealed class HudAutomationUiTests
                     hud.Refresh();
                 }
                 Feed(); Assert.Equal("125", ((TextBlock)hud.FindName("FpsText")).Text);
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
                 {
-                    main.SetDisplayMode(mode); ThemeManager.SetMode(theme); main.UpdateLayout(); hud.UpdateLayout();
+                    ThemeManager.SetMode(theme); main.UpdateLayout(); hud.UpdateLayout();
                     ReadabilityAndFramesUiTests.Render((FrameworkElement)hud.FindName("HudRoot"), "hud-" + mode + "-" + theme);
                     ((FrameworkElement)main.FindName("HudEntryButton")).BringIntoView(); main.UpdateLayout();
                     ReadabilityAndFramesUiTests.Render((FrameworkElement)main.FindName("ChromeRoot"), "session-hud-entry-" + mode + "-" + theme);

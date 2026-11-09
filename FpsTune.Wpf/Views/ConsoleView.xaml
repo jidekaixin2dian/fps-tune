@@ -17,20 +17,21 @@
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
             <StackPanel Grid.Row="0">
 
-            <!-- 卡 0：一键优化大卡（点进统一页，方案 chips 快捷预选） -->
-            <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
+            <!-- 卡 0：一键优化（单行紧凑版：标题 + 一行说明 + 方案 chips + 主按钮，不再占掉首页首屏三分之一） -->
+            <Border Style="{StaticResource CardStyle}" Padding="20,14" Margin="0,0,0,14">
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{DynamicResource Str.HomeQuickCardTitle}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Str.HomeQuickCardBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap" MaxWidth="640" HorizontalAlignment="Left"/>
-                        <WrapPanel Margin="0,18,0,0">
-                            <Button Content="{DynamicResource Str.PlanBalanced}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="balanced"/>
-                            <Button Content="{DynamicResource Str.PlanSafe}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="safe-only"/>
-                            <Button Content="{DynamicResource Str.PlanFull}" Style="{StaticResource GhostButtonStyle}" Height="32" Margin="0,0,8,6" Click="HomeQuickPreset_Click" Tag="full"/>
-                        </WrapPanel>
+                        <TextBlock Text="{DynamicResource Str.HomeQuickCardBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,4,0,0"
+                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left"/>
                     </StackPanel>
-                    <Button Grid.Column="1" x:Name="HomeQuickCardButton" Content="{DynamicResource Str.HomeQuickCardCta}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="150" Height="44" VerticalAlignment="Center" Click="HomeQuickCard_Click"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,14,0">
+                        <Button Content="{DynamicResource Str.PlanBalanced}" Style="{StaticResource GhostButtonStyle}" Height="30" Padding="12,0" FontSize="13" Margin="0,0,8,0" Click="HomeQuickPreset_Click" Tag="balanced"/>
+                        <Button Content="{DynamicResource Str.PlanSafe}" Style="{StaticResource GhostButtonStyle}" Height="30" Padding="12,0" FontSize="13" Margin="0,0,8,0" Click="HomeQuickPreset_Click" Tag="safe-only"/>
+                        <Button Content="{DynamicResource Str.PlanFull}" Style="{StaticResource GhostButtonStyle}" Height="30" Padding="12,0" FontSize="13" Click="HomeQuickPreset_Click" Tag="full"/>
+                    </StackPanel>
+                    <Button Grid.Column="2" x:Name="HomeQuickCardButton" Content="{DynamicResource Str.HomeQuickCardCta}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="132" Height="36" VerticalAlignment="Center" Click="HomeQuickCard_Click"/>
                 </Grid>
             </Border>
 

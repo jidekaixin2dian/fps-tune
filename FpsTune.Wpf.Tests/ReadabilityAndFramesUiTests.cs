@@ -49,9 +49,8 @@ public sealed class ReadabilityAndFramesUiTests
             DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
             try
             {
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 {
-                    window.SetDisplayMode(mode);
                     Assert.Equal(new CornerRadius(18), app.FindResource("RadiusCard"));
                     Assert.Equal(new CornerRadius(12), app.FindResource("RadiusControl"));
                     Assert.Equal(new CornerRadius(12), app.FindResource("RadiusNav"));
@@ -696,12 +695,12 @@ public sealed class ReadabilityAndFramesUiTests
             var report = new List<object>(); var oldBusy = GameContextService.IsBusyProvider;
             try
             {
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
                 foreach (var size in new[] { new Size(1180, 720), new Size(1360, 860) })
                 {
                     window.Width = size.Width; window.Height = size.Height;
-                    SettingsService.Current.ThemeMode = theme; window.SetDisplayMode(mode); window.UpdateLayout();
+                    SettingsService.Current.ThemeMode = theme; ThemeManager.SetMode(theme); window.UpdateLayout();
                     var primary = ((WrapPanel)page.FindName("PreparationActions")).Children.OfType<Button>().Where(b => b.IsVisible).ToArray();
                     Assert.Equal(2, primary.Length); Assert.All(primary, b => Assert.Equal(36, b.ActualHeight));
                     var actions = new[] { "StartPreparationButton", "ConfigurePreparationButton", "LocateDeltaButton", "PrepareDeltaButton", "RecordMatchButton", "PreparationRestoreButton", "GameLibraryButton" }
@@ -839,10 +838,10 @@ public sealed class ReadabilityAndFramesUiTests
                 background.Trims = api.Purges = 0;
                 status.Text = "";
                 ((Button)page.FindName("MemorySelectAll")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "light", "dark" })
                 {
-                    window.SetDisplayMode(mode); ThemeManager.SetMode(theme);
+                    ThemeManager.SetMode(theme);
                     ((FrameworkElement)page.FindName("MemoryRefresh")).BringIntoView(); window.UpdateLayout();
                     Assert.True(full.ActualWidth > 100); Assert.True(full.IsVisible);
                     Render((FrameworkElement)window.FindName("ChromeRoot"), "memory-workspace-" + mode + "-" + theme);

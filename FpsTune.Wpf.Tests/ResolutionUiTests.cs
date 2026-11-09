@@ -36,10 +36,10 @@ public sealed class ResolutionUiTests
                 var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
                 DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
                 var report = new List<object>();
-                foreach (var mode in new[] { "studio", "console" })
+                foreach (var mode in new[] { "studio" })
                 foreach (var theme in new[] { "dark", "light" })
                 {
-                    window.SetDisplayMode(mode); ThemeManager.SetMode(theme); window.NavigateTo("display"); window.UpdateLayout();
+                    ThemeManager.SetMode(theme); window.NavigateTo("display"); window.UpdateLayout();
                     var page = (DisplayQualityView)((ContentControl)window.FindName("PageHost")).Content;
                     ((RadioButton)page.FindName("SubTabResolution")).IsChecked = true;
                     var panel = (ResolutionPanel)page.FindName("ResolutionContent");

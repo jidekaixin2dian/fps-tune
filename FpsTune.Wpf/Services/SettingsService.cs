@@ -14,7 +14,6 @@ public sealed class AppSettings
     public string QQLink { get; set; } = "";
     public string DouyinLink { get; set; } = "";
     public string ThemeMode { get; set; } = "dark";
-    public string OverviewMode { get; set; } = "studio";
     // 首页"继续使用"：最近访问页面键（不含 home），最多 6 个。
     public List<string> RecentPages { get; set; } = [];
     // 滤镜列表上次选的分类键（all/soft/deexpose/bright/color/game/face），下次打开沿用。
@@ -217,7 +216,6 @@ public static class SettingsService
             Current.Corners = (Current.Corners ?? new()).Normalize();
             Current.CloseAction = CloseBehavior.Normalize(Current.CloseAction);
             Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
-            if (Current.OverviewMode != "console") Current.OverviewMode = "studio";
             if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
                 Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
             if (!readOnly) MigrateTrayMinimizeDefault(Current);

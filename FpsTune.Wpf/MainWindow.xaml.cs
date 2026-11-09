@@ -187,7 +187,6 @@ public partial class MainWindow : Window
         var ver = "v" + UpdateService.DisplayVersion;
         TitleVersionText.Text = ver;
         AdminStatusText.Text = AdminHelper.IsAdministrator() ? Str.T("Str.AdminMode") : Str.T("Str.NormalUser");
-        UpdateOverviewModeLabel();
 
         var theme = SettingsService.Current.ThemeMode;
         if (string.IsNullOrWhiteSpace(theme))
@@ -356,41 +355,6 @@ public partial class MainWindow : Window
     /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
     private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavCrosshair, NavTools, NavSession, NavAb, NavSettings };
 
-    private void UpdateOverviewModeLabel()
-    {
-        var studio = SettingsService.Current.OverviewMode != "console";
-        OverviewModeButton.Header = Str.T(studio ? "Str.CompactConsole" : "Str.Workspace");
-        NavigationColumn.Width = new GridLength(studio ? 180 : 0);
-        NavigationRow.Height = new GridLength(studio ? 0 : 50);
-        Grid.SetRowSpan(TabBar, studio ? 2 : 1);
-        Grid.SetColumnSpan(TabBar, studio ? 1 : 2);
-        Grid.SetRow(PageHost, studio ? 1 : 2);
-        Grid.SetRowSpan(PageHost, studio ? 2 : 1);
-        NavigationStack.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
-        NavigationStack.Margin = new Thickness(12, studio ? 0 : 6, 12, 0);
-        NavigationHeading.Visibility = NavigationFooter.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
-        // studio=侧栏：分组组头可见（可折叠）、子项竖排、缩进样式；
-        // console=顶部横排：隐藏组头、子项横向连排、回到横排页签样式。
-        foreach (var (header, items) in new[] {
-            (NavGroupGamesHeader, NavGroupGamesItems),
-            (NavGroupDisplayHeader, NavGroupDisplayItems),
-            (NavGroupSystemHeader, NavGroupSystemItems) })
-        {
-            header.Visibility = studio ? Visibility.Visible : Visibility.Collapsed;
-            items.Orientation = studio ? Orientation.Vertical : Orientation.Horizontal;
-        }
-        foreach (var nav in AllNavButtons)
-        {
-            var style = studio
-                ? (TopNavButtons.Contains(nav) ? "SideNavItemStyle" : "SideNavSubItemStyle")
-                : "StudioNavStyle";
-            nav.SetResourceReference(StyleProperty, style);
-        }
-    }
-
-    private void OverviewMode_Click(object sender, RoutedEventArgs e)
-    => SetDisplayMode(SettingsService.Current.OverviewMode == "console" ? "studio" : "console");
-
     private void More_Click(object sender, RoutedEventArgs e)
     {
         MoreMenu.PlacementTarget = MoreButton;
@@ -410,17 +374,6 @@ public partial class MainWindow : Window
             if (WallpaperBackdrop.Source is not null) WallpaperBackdrop.Visibility = Visibility.Visible;
         }
         catch (Exception) { /* An unavailable personal backdrop does not block opening the application. */ }
-    }
-
-    internal void SetDisplayMode(string mode)
-    {
-        SettingsService.Current.OverviewMode = mode == "console" ? "console" : "studio";
-        try { SettingsService.Save(SettingsService.Current); }
-        catch (Exception ex) { DialogService.Warning("界面模式", "本次切换已生效，但无法保存偏好：" + ex.Message); }
-        UpdateOverviewModeLabel();
-        ThemeManager.SetMode(SettingsService.Current.ThemeMode);
-        if (NavHome.IsChecked == true) SwitchPage(GetPage("home"));
-        if (_pageCache.TryGetValue("settings", out var settings) && settings is SettingsView settingsView) settingsView.RefreshDisplayMode();
     }
 
     internal Task<bool> RefreshDetectionAsync() => ((DetectView)GetPage("detect")).RunDetectionAsync();

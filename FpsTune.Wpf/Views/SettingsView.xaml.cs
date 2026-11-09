@@ -147,24 +147,8 @@ public partial class SettingsView : UserControl
         }
     }
 
-    internal void RefreshDisplayMode()
-    {
-        _suppressUiEvents = true;
-        ConsoleModeRadio.IsChecked = SettingsService.Current.OverviewMode == "console";
-        StudioModeRadio.IsChecked = SettingsService.Current.OverviewMode != "console";
-        _suppressUiEvents = false;
-    }
-
-    private void DisplayMode_Checked(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents || ConsoleModeRadio is null) return;
-        if (sender is RadioButton { Tag: string mode } && Application.Current.MainWindow is MainWindow main)
-            main.SetDisplayMode(mode);
-    }
-
     private void LoadSettings()
     {
-        RefreshDisplayMode();
         var s = SettingsService.Current;
         _suppressUiEvents = true;
         WallpaperEnabledCheck.IsChecked = s.WallpaperEnabled;

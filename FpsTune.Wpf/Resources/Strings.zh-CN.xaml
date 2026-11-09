@@ -262,7 +262,6 @@
     <s:String x:Key="Str.WeChatPurpose">仅接受合作/反馈</s:String>
     <s:String x:Key="Str.CopyWeChatId">复制微信号</s:String>
     <s:String x:Key="Str.AppNameShort">帧律</s:String>
-    <s:String x:Key="Str.TipDisplayMode">切换概览页的显示模式，自动记住选择</s:String>
     <s:String x:Key="Str.SettingsIntro">选择一个分类即可调整，设置自动保存。</s:String>
     <s:String x:Key="Str.ThemeDarkShort">深色</s:String>
     <s:String x:Key="Str.ThemeDarkDesc">深色界面 · 清晰对比</s:String>
@@ -271,9 +270,6 @@
     <s:String x:Key="Str.ThemeSystemShort">跟随系统</s:String>
     <s:String x:Key="Str.ThemeSystemDesc">随 Windows 外观自动变化</s:String>
     <s:String x:Key="Str.LowSpecMode">低配模式（减少动画，实时采样改为每 3 秒一次）</s:String>
-    <s:String x:Key="Str.DisplayMode">界面模式</s:String>
-    <s:String x:Key="Str.DisplayModeDesc">工作台使用侧边导航，适合逐步操作；控制台使用顶部导航，适合快速审阅。两种布局共用相同功能。</s:String>
-    <s:String x:Key="Str.CompactConsole">紧凑控制台</s:String>
     <s:String x:Key="Str.SectionStartup">启动</s:String>
     <s:String x:Key="Str.AutoStart">登录 Windows 后自动运行 FPS 帧律（当前用户）</s:String>
     <s:String x:Key="Str.SectionTray">托盘与通知</s:String>

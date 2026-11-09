@@ -97,9 +97,9 @@ public sealed class ShellExperienceUiTests
                 foreach(var theme in new[]{"light","dark"})
                 {
                     SettingsService.Current.ThemeMode = theme; ThemeManager.SetMode(theme);
-                    foreach(var mode in new[]{"studio","console"})
+                    foreach(var mode in new[] { "studio" })
                     {
-                        main.SetDisplayMode(mode); main.NavigateTo("home"); main.UpdateLayout();
+                        main.NavigateTo("home"); main.UpdateLayout();
                         Assert.Equal(Str.T("Str.AppName"),((TextBlock)main.FindName("FooterBrandText")).Text);
                         Assert.Equal(mode=="studio",((FrameworkElement)main.FindName("NavigationFooter")).IsVisible);
                         Assert.Equal("v"+UpdateService.DisplayVersion,((TextBlock)main.FindName("TitleVersionText")).Text);

@@ -62,9 +62,8 @@ public sealed class DesignSystemUiTests
                 foreach (var theme in new[] { "light", "dark" })
                 {
                     SettingsService.Current.ThemeMode = theme; ThemeManager.SetMode(theme);
-                    foreach (var layout in new[] { "studio", "console" })
+                    foreach (var layout in new[] { "studio" })
                     {
-                        main.SetDisplayMode(layout);
                         foreach (var route in new[] { "home", "games", "settings", "session" })
                         {
                             main.NavigateTo(route); main.UpdateLayout();
