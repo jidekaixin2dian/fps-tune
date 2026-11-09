@@ -25,8 +25,7 @@
             <!-- ============ 设计令牌：字体 ============ -->
             <FontFamily x:Key="FontDisplay">Segoe UI, /FpsTune;component/Assets/Fonts/#FpsTune Text, Microsoft YaHei UI</FontFamily>
             <FontFamily x:Key="FontBody">Segoe UI, /FpsTune;component/Assets/Fonts/#FpsTune Text, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontMono">Segoe UI, /FpsTune;component/Assets/Fonts/#FpsTune Text, Microsoft YaHei UI</FontFamily>
-            <FontFamily x:Key="FontCode">Consolas, Microsoft YaHei UI</FontFamily>
+                    <FontFamily x:Key="FontCode">Consolas, Microsoft YaHei UI</FontFamily>
             <FontFamily x:Key="FontStat">Segoe UI, /FpsTune;component/Assets/Fonts/#FpsTune Text, Microsoft YaHei UI</FontFamily>
             <!-- Static Noto Sans SC subsets provide actual 400/500/600 CJK faces.
                  Uncovered user text falls back to the installed system font. -->
@@ -267,16 +266,6 @@
             </Style>
 
             <!-- 首页功能模块：平面行块，悬停仅提亮，无位移无动画 -->
-            <Style x:Key="FeatureCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
-                <Setter Property="Cursor" Value="Hand"/>
-                <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="BorderBrush" Value="{DynamicResource BorderHoverBrush}"/>
-                        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/>
-                    </Trigger>
-                </Style.Triggers>
-            </Style>
-
             <!-- ============ 徽章（mono 文本 + 发丝框） ============ -->
             <Style x:Key="ChipStyle" TargetType="Border">
                 <Setter Property="CornerRadius" Value="{DynamicResource RadiusChip}"/>

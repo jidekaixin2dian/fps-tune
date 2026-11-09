@@ -3,19 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls" xmlns:views="clr-namespace:FpsTune.Wpf.Views"
              Background="{DynamicResource AppBackgroundBrush}">
     <UserControl.Resources>
-        <!-- 预设卡片：与优化页 PresetChoice 同语言，两行内容（名称 + 说明） -->
-        <Style x:Key="PresetCard" TargetType="RadioButton" BasedOn="{StaticResource ChoiceTabStyle}">
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="16,12"/><Setter Property="Margin" Value="0,0,10,10"/>
-        </Style>
-        <Style x:Key="PresetCardText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="FontWeight" Value="{DynamicResource SmallEmphasisWeight}"/>
-        </Style>
-        <Style x:Key="PresetCardNote" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="0,3,0,0"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-        </Style>
+        <!-- 预设卡片三件套（PresetCard / PresetCardText / PresetCardNote）直接用 App.xaml 的全局定义：
+             这里曾逐字复制一份，改外观要改两处，属于只增维护成本的重复。 -->
         <!-- 手动清单条目：继承全局 MutedTextStyle，统一行距与换行 -->
         <Style x:Key="ManualItem" TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
             <Setter Property="Margin" Value="0,6,0,0"/>

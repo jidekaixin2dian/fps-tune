@@ -251,7 +251,8 @@ public partial class SettingsView : UserControl
             finally { _suppressUiEvents = false; }
             return;
         }
-        ThemeManager.SetMode(mode);
+        // 深浅切换走圆形揭示：从鼠标位置扩散，旧界面被"挖开"露出新主题。
+        ThemeReveal.SwitchTheme(mode);
     }
 
     /// <summary>开关保存失败：弹窗说明，并把勾选态翻回去（界面显示的必须和真实保存的一致）。</summary>
