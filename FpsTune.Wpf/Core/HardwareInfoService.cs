@@ -158,7 +158,7 @@ public static class HardwareInfoService
                 "--format=csv,noheader");
 
             if (!r.Success)
-                return "未知";
+                return Str.T("Str.Unknown");
 
             var line = r.Output.Trim();
             var parts = line.Split(',');
@@ -169,11 +169,11 @@ public static class HardwareInfoService
                 return $"PCIe {gen}.0 x{width}";
             }
 
-            return "未知";
+            return Str.T("Str.Unknown");
         }
         catch
         {
-            return "未知";
+            return Str.T("Str.Unknown");
         }
     }
 
@@ -183,17 +183,30 @@ public static class HardwareInfoService
         {
             using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
                 .OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0");
-            return key?.GetValue("ProcessorNameString")?.ToString()?.Trim() ?? "未知 CPU";
+            return key?.GetValue("ProcessorNameString")?.ToString()?.Trim() ?? Str.T("Str.CpuUnknown");
         }
         catch
         {
-            return "未知 CPU";
+            return Str.T("Str.CpuUnknown");
         }
     }
 
-    private static bool IsVirtualOrBasicGpu(string name)
+    /// <summary>
+    /// 不能当成"用户实际在用的显卡"的适配器关键词。
+    /// "Basic Display"/"基本显示适配器" 必须在这里：装不上显卡驱动、远程会话或虚拟机里，
+    /// Win32_VideoController 会多出一条 Microsoft 基本显示适配器，它的 PNPDeviceID 同样以 PCI 开头，
+    /// 旧实现按 PCI 优先排序就会把这条假适配器当成主卡上报（诊断报告里出现过
+    /// "GPU：Microsoft 基本显示适配器 (+1)"，真实型号反而被折叠进 (+1)）。
+    /// </summary>
+    internal static readonly string[] VirtualOrBasicGpuKeywords =
+    [
+        "Basic Render", "Basic Display", "基本显示适配器", "标准 VGA", "Standard VGA",
+        "Hyper-V", "Virtual", "RemoteFX", "Indirect"
+    ];
+
+    internal static bool IsVirtualOrBasicGpu(string name)
     {
-        foreach (var kw in new[] { "Basic Render", "Hyper-V", "Virtual", "RemoteFX", "Indirect" })
+        foreach (var kw in VirtualOrBasicGpuKeywords)
             if (name.Contains(kw, StringComparison.OrdinalIgnoreCase))
                 return true;
         return false;
@@ -276,16 +289,20 @@ public static class HardwareInfoService
         // 注册表兜底
         try
         {
+            string? basicOnly = null;
             foreach (var hit in regMap.Values)
             {
-                if (!IsVirtualOrBasicGpu(hit.Desc))
-                    return hit.Mem > 0 ? $"{hit.Desc} · {Math.Round(hit.Mem / 1024.0 / 1024.0 / 1024.0)} GB" : hit.Desc;
+                if (IsVirtualOrBasicGpu(hit.Desc)) { basicOnly ??= hit.Desc; continue; }
+                return hit.Mem > 0 ? $"{hit.Desc} · {Math.Round(hit.Mem / 1024.0 / 1024.0 / 1024.0)} GB" : hit.Desc;
             }
+            // 只剩基础显示适配器：如实说明没有显卡驱动，不把系统兜底名当型号。
+            if (basicOnly is not null)
+                return Str.T("Str.GpuBasicOnly", basicOnly);
         }
         catch
         {
         }
-        return "未知 GPU";
+        return Str.T("Str.GpuUnknown");
     }
 
     /// <summary>

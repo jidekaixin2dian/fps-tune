@@ -113,14 +113,20 @@ public partial class OptimizeView
         SetOperationBusy(true);
         try
         {
+            // 管理员预检放在审阅窗之前：审阅完点「应用」才被拦下，用户白走一轮。
+            var adminItems = plan.Items.Where(i => i.RequiresAdmin).Select(i => i.Name).ToArray();
+            if (adminItems.Length > 0 && !AdminHelper.IsAdministrator())
+            {
+                var elevate = DialogService.Confirm(Str.T("Str.NeedsAdmin"),
+                    Str.T("Str.ReviewElevationItems", adminItems.Length,
+                        string.Join(Str.T("Str.ListSeparator"), adminItems)),
+                    confirmText: Str.T("Str.RestartAsAdminShort"), danger: false);
+                if (elevate) AdminHelper.RestartAsAdministrator();
+                return;
+            }
             var review = new OptimizationReviewWindow(plan) { Owner = Window.GetWindow(this) ?? Application.Current?.MainWindow };
             DialogService.PrepareWindowForTest?.Invoke(review);
             if (review.ShowDialog() != true) return;
-            if (plan.Items.Any(i => i.RequiresAdmin) && !AdminHelper.IsAdministrator())
-            {
-                if (DialogService.Confirm(Str.T("Str.NeedsAdmin"), Str.T("Str.ReviewElevation"))) AdminHelper.RestartAsAdministrator();
-                return;
-            }
             SetPlain(Str.T("Str.Applying"), "AccentBrush");
             var result = await (ApplyItemsOverride?.Invoke(plan.Ids, plan.GamePath)
                 ?? OptimizationEngine.ApplyItemsAsync(plan.Ids, plan.GamePath));

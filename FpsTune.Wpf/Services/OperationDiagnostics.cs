@@ -12,9 +12,12 @@ internal sealed record DriverValue(bool Exists, uint? Value)
 }
 internal sealed record DriverSettingDiagnostic(string SettingId, DriverValue Before, DriverValue Requested,
     DriverValue? After = null, DriverValue? Original = null, DriverValue? LastApplied = null);
+/// <summary>优化项目级回执：成功/失败/跳过以及原因。驱动设置用 <see cref="DriverSettingDiagnostic"/>，两者互不复用。</summary>
+internal sealed record OperationItemDiagnostic(string Id, string Outcome, string? Message = null);
 internal sealed record OperationDiagnostic(string Id, DateTimeOffset At, string Operation, string Target,
     string Stage, string Outcome, bool IsAdministrator, string DriverVersion, string AppVersion,
-    string? ErrorType, int? NativeStatus, string? Error, IReadOnlyList<DriverSettingDiagnostic> Settings);
+    string? ErrorType, int? NativeStatus, string? Error, IReadOnlyList<DriverSettingDiagnostic> Settings,
+    IReadOnlyList<OperationItemDiagnostic>? Items = null);
 internal sealed record OperationDiagnosticReport(string Status, IReadOnlyList<OperationDiagnostic> Operations);
 
 /// <summary>Bounded, local operation receipts. Diagnostic failure never changes the operation's result.</summary>
@@ -22,6 +25,8 @@ internal static partial class OperationDiagnostics
 {
     private static readonly object Gate = new();
     internal const int Retention = 50;
+    /// <summary>单次回执最多记多少优化项：全量方案 43 项，留一点余量即可，避免回执文件失控。</summary>
+    internal const int MaxItems = 64;
     private sealed record Store(int SchemaVersion, List<OperationDiagnostic> Operations);
     private static string FilePath(string? root) => Path.Combine(root ?? UserDataPaths.Root, "logs", "operations.json");
 
@@ -56,7 +61,9 @@ internal static partial class OperationDiagnostics
         Outcome = Scrub(row.Outcome), DriverVersion = Scrub(row.DriverVersion), AppVersion = Scrub(row.AppVersion),
         ErrorType = Scrub(row.ErrorType), Error = Scrub(row.Error),
         Settings = (row.Settings ?? []).Take(32).Where(s => s is not null && s.Before is not null && s.Requested is not null)
-            .Select(s => s with { SettingId = Scrub(s.SettingId) }).ToArray()
+            .Select(s => s with { SettingId = Scrub(s.SettingId) }).ToArray(),
+        Items = (row.Items ?? []).Where(i => i is not null).Take(MaxItems)
+            .Select(i => i with { Id = Scrub(i.Id), Outcome = Scrub(i.Outcome), Message = Scrub(i.Message) }).ToArray()
     };
 
     private static void Save(OperationDiagnostic record, string? root)
@@ -98,6 +105,7 @@ internal static partial class OperationDiagnostics
     internal sealed class Trace(string operation, string target, string? root) : IDisposable
     {
         private readonly List<DriverSettingDiagnostic> _settings = [];
+        private readonly List<OperationItemDiagnostic> _items = [];
         private readonly DateTimeOffset _at = DateTimeOffset.UtcNow;
         private string _stage = "prepare", _outcome = "interrupted";
         private Exception? _error;
@@ -105,6 +113,20 @@ internal static partial class OperationDiagnostics
         internal void Stage(string stage) => _stage = stage;
         internal void Complete() => _outcome = "succeeded";
         internal void Fail(Exception error) { _outcome = error is OperationCanceledException ? "cancelled" : "failed"; _error = error; }
+
+        /// <summary>
+        /// 直接定结束态：优化应用这类「部分成功」不是异常，也不能写成 succeeded。
+        /// 取值沿用回执口径 succeeded / partial / failed；调用方负责在 Fail 之后再改的语义自洽。
+        /// </summary>
+        internal void Settle(string outcome) => _outcome = outcome;
+
+        /// <summary>记一项优化项的回执；失败项带原因，跳过项带跳过理由。</summary>
+        internal void Item(string id, string outcome, string? message = null)
+        {
+            if (_items.Count >= MaxItems) return;
+            _items.RemoveAll(i => i.Id == id);
+            _items.Add(new(id, outcome, string.IsNullOrWhiteSpace(message) ? null : message));
+        }
         internal void Setting(uint id, bool before, uint beforeValue, bool requested, uint requestedValue,
             bool original, uint originalValue, DriverValue? lastApplied = null)
         {
@@ -128,7 +150,8 @@ internal static partial class OperationDiagnostics
                 while (native is not null && native is not NvdrsException) native = native.InnerException;
                 Save(new(Guid.NewGuid().ToString("N"), _at, operation, target, _stage, _outcome,
                     AdminHelper.IsAdministrator(), DriverVersion(), UpdateService.DisplayVersion,
-                    _error?.GetType().Name, (native as NvdrsException)?.Status, _error?.Message, _settings.ToArray()), root);
+                    _error?.GetType().Name, (native as NvdrsException)?.Status, _error?.Message, _settings.ToArray(),
+                    _items.ToArray()), root);
             }
             catch { /* Diagnostic metadata may be unavailable. The operation's result remains authoritative. */ }
         }

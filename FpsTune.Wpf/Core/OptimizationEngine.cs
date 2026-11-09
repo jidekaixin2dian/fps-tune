@@ -1,4 +1,4 @@
-﻿namespace FpsTune.Wpf.Core;
+namespace FpsTune.Wpf.Core;
 
 using System.IO;
 using System.Linq;
@@ -92,19 +92,67 @@ public static class OptimizationEngine
 
     private static ApplyReceipt ExecuteNative(IReadOnlyList<string> ids, string? gamePath, Action<string>? beforeWrite = null)
     {
-        using var mutation = SystemMutationGate.Acquire();
-        if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
-            throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
-        if (!AdminHelper.IsAdministrator() && ids.Any(id => ItemCatalog.All.First(item => item.Id == id) is { Admin: true, Available: true }))
-            throw new UnauthorizedAccessException("Administrator privileges are required for the selected items.");
-        BackupService.EnsureNoPendingWrites(ids);
-        var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
-        // Persist the caller's operation anchor before the first system write.
-        beforeWrite?.Invoke(backupFile);
-        var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
-            id => BackupService.AppendCapture(backupFile, id, gamePath),
-            result => BackupService.CompleteCapture(backupFile, result));
-        return new ApplyReceipt(BackupService.OperationId(backupFile), backupFile, results);
+        // 应用优化是用户最常反馈"执行失败"的入口，过去结果只在界面上一闪而过、诊断报告里什么也没有。
+        // 这里统一落一条逐项回执：成功/失败/跳过各是什么、卡在哪个阶段、是否为管理员。
+        using var trace = OperationDiagnostics.Begin("optimize-apply", DescribeTarget(ids, gamePath), null);
+        try
+        {
+            trace.Stage("precheck");
+            using var mutation = SystemMutationGate.Acquire();
+            if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
+                throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
+            var adminItems = ids
+                .Select(id => ItemCatalog.All.First(item => item.Id == id))
+                .Where(def => def is { Admin: true, Available: true })
+                .ToArray();
+            if (!AdminHelper.IsAdministrator() && adminItems.Length > 0)
+                throw new UnauthorizedAccessException(
+                    Str.T("Str.OptApplyNeedsAdminItems", adminItems.Length,
+                        string.Join(Str.T("Str.ListSeparator"), adminItems.Select(def => def.DisplayName))));
+            BackupService.EnsureNoPendingWrites(ids);
+            trace.Stage("capture");
+            var backupFile = BackupService.Capture(Array.Empty<string>(), gamePath);
+            // Persist the caller's operation anchor before the first system write.
+            beforeWrite?.Invoke(backupFile);
+            trace.Stage("apply");
+            var results = NativeOptimizationEngine.ApplyAll(ids, gamePath,
+                id => BackupService.AppendCapture(backupFile, id, gamePath),
+                result => BackupService.CompleteCapture(backupFile, result));
+            foreach (var result in results)
+            {
+                // 回执里写"人话 + 原始异常"：支撑时看得到类型与原文，用户读到的仍是能照做的下一步。
+                var outcome = result.Skipped ? "skipped" : result.Ok ? "succeeded" : "failed";
+                var detail = outcome switch
+                {
+                    "succeeded" => null,
+                    "skipped" => result.Message,
+                    _ => result.Detail is { Length: > 0 } raw && !raw.EndsWith(result.Message, StringComparison.Ordinal)
+                        ? Str.T("Str.OptItemFailureDetail", result.Message, raw)
+                        : result.Message
+                };
+                trace.Item(result.Id, outcome, detail);
+            }
+            trace.Stage("finalize");
+            var failed = results.Count(r => !r.Ok && !r.Skipped);
+            var applied = results.Count(r => r.Ok && !r.Skipped);
+            trace.Settle(failed == 0 ? "succeeded" : applied == 0 ? "failed" : "partial");
+            return new ApplyReceipt(BackupService.OperationId(backupFile), backupFile, results);
+        }
+        catch (Exception ex)
+        {
+            // 被拦下（缺管理员、上一笔未确认、忙碌）同样是"执行失败"的一种，必须留痕才查得动。
+            trace.Fail(ex);
+            throw;
+        }
+    }
+
+    /// <summary>回执里的目标描述：只留游戏文件名，不写完整路径（诊断报告会脱敏，但没必要先写进去）。</summary>
+    private static string DescribeTarget(IReadOnlyList<string> ids, string? gamePath)
+    {
+        var game = string.IsNullOrWhiteSpace(gamePath) ? "" : Path.GetFileName(gamePath);
+        return string.IsNullOrWhiteSpace(game)
+            ? Str.T("Str.OptApplyTargetNoGame", ids.Count)
+            : Str.T("Str.OptApplyTargetGame", ids.Count, game);
     }
 
     private static RunResult ApplyNative(IReadOnlyList<string> ids, string? gamePath)

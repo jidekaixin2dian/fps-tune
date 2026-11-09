@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -181,28 +181,30 @@ internal static class NativeSystem
         if (subs.Length == 0)
             return null;
 
-        // 优先选择独立显卡（NVIDIA/AMD/Radeon），再退回 Intel/第一个驱动项；
-        // 锁定独立显卡性能状态对帧率优化更有意义。
-        foreach (var sub in subs)
-        {
-            using var subKey = key.OpenSubKey(sub);
-            var desc = subKey?.GetValue("DriverDesc")?.ToString() ?? "";
+        // 优先选择独立显卡（NVIDIA/AMD/Radeon），再退回 Intel；
+        // 基础显示适配器（没装显卡驱动 / 远程会话）不是用户实际使用的显卡，
+        // 写它的驱动项既没意义也可能被系统拒绝，直接排除。
+        var real = subs
+            .Select(sub => (Sub: sub, Desc: ReadDriverDesc(key, sub)))
+            .Where(x => x.Desc.Length > 0 && !HardwareInfoService.IsVirtualOrBasicGpu(x.Desc))
+            .ToArray();
+
+        foreach (var (sub, desc) in real)
             if (desc.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ||
                 desc.Contains("AMD", StringComparison.OrdinalIgnoreCase) ||
                 desc.Contains("Radeon", StringComparison.OrdinalIgnoreCase))
-            {
                 return $@"{basePath}\{sub}";
-            }
-        }
 
-        foreach (var sub in subs)
-        {
-            using var subKey = key.OpenSubKey(sub);
-            var desc = subKey?.GetValue("DriverDesc")?.ToString() ?? "";
+        foreach (var (sub, desc) in real)
             if (desc.Contains("Intel", StringComparison.OrdinalIgnoreCase))
                 return $@"{basePath}\{sub}";
-        }
 
-        return $@"{basePath}\{subs[0]}";
+        return real.Length > 0 ? $@"{basePath}\{real[0].Sub}" : null;
+    }
+
+    private static string ReadDriverDesc(RegistryKey key, string sub)
+    {
+        using var subKey = key.OpenSubKey(sub);
+        return subKey?.GetValue("DriverDesc")?.ToString() ?? "";
     }
 }

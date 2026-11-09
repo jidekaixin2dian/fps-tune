@@ -6,7 +6,7 @@ using Microsoft.Win32;
 
 namespace FpsTune.Wpf.Core;
 
-public sealed record OptimizationApplyResult(string Id, string Name, bool Ok, bool Changed, bool Skipped, string Message, bool StateUncertain = false);
+public sealed record OptimizationApplyResult(string Id, string Name, bool Ok, bool Changed, bool Skipped, string Message, bool StateUncertain = false, string? Detail = null);
 
 public static class NativeOptimizationEngine
 {
@@ -31,7 +31,8 @@ public static class NativeOptimizationEngine
 
             if (!def.Available)
             {
-                results.Add(new(id, def.Name, true, false, true, Str.T("Str.MemoryCompressionUnavailable")));
+                results.Add(new(id, def.Name, true, false, true,
+                    id == "mem-compress-off" ? Str.T("Str.MemoryCompressionUnavailable") : Str.T("Str.OptItemUnavailable")));
                 continue;
             }
 
@@ -47,7 +48,9 @@ public static class NativeOptimizationEngine
             }
             catch (Exception ex)
             {
-                var result = new OptimizationApplyResult(id, def.Name, false, false, false, ex.Message, started);
+                // 界面只显示翻译后的人话；原始异常文本进诊断回执，排查时仍可追溯。
+                var result = new OptimizationApplyResult(id, def.Name, false, false, false,
+                    OptimizationFailureText.Describe(ex), started, ex.GetType().Name + ": " + ex.Message);
                 if (started) { try { afterApply?.Invoke(result); } catch { /* 预写记录仍保留 pending */ } }
                 results.Add(result);
             }

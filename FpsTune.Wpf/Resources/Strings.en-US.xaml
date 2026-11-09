@@ -3063,4 +3063,39 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.AdvancedNoteForegroundLimit">Foreground frame rate cap. 0 means unlimited.</s:String>
     <s:String x:Key="Str.AdvancedNoteBackgroundLimit">Background frame rate cap. 0 means unlimited.</s:String>
     <s:String x:Key="Str.FrameNotPersisted">The driver did not keep this frame rate limit; original values are still backed up.</s:String>
+    <!-- 2026-11-10 optimization failure receipts and wording: per-item outcomes, plain-language causes, admin item list -->
+    <s:String x:Key="Str.OptApplyNeedsAdminItems">{0} selected item(s) require administrator rights: {1}. Run as administrator and apply again.</s:String>
+    <s:String x:Key="Str.OptItemUnavailable">Not usable on this system; skipped.</s:String>
+    <s:String x:Key="Str.OptFailNeedAdmin">Windows blocked the write; this item requires administrator rights.</s:String>
+    <s:String x:Key="Str.OptFailMissing">This setting does not exist on this system; skipped.</s:String>
+    <s:String x:Key="Str.OptFailUnsupported">This system does not support this setting; skipped.</s:String>
+    <s:String x:Key="Str.OptFailUnknown">The write failed for an unknown reason.</s:String>
+    <s:String x:Key="Str.OptFailWithDetail">The write failed: {0}</s:String>
+    <s:String x:Key="Str.ApplyPartialHead">Applied, some items failed</s:String>
+    <s:String x:Key="Str.ApplyAllFailedHead">No item was written</s:String>
+    <s:String x:Key="Str.OptApplyCounts">{0} succeeded, {1} failed, {2} skipped</s:String>
+    <s:String x:Key="Str.OptApplyNextAdmin">{0} item(s) above require administrator rights: {1}. Restart as administrator and apply again.</s:String>
+    <s:String x:Key="Str.OptApplyNextRetry">Fix the cause shown for each item and apply again; items that succeeded are not changed twice.</s:String>
+    <s:String x:Key="Str.ReviewElevationItems">{0} item(s) in this list require administrator rights: {1}. Restart as administrator now? Review and apply again afterwards.</s:String>
+    <s:String x:Key="Str.GpuBasicOnly">No display driver installed ({0})</s:String>
+    <!-- 2026-11-10 operation receipts in the diagnostic report plus shared unknown states -->
+    <s:String x:Key="Str.Unknown">Unknown</s:String>
+    <s:String x:Key="Str.CpuUnknown">Unknown CPU</s:String>
+    <s:String x:Key="Str.GpuUnknown">Unknown GPU</s:String>
+    <s:String x:Key="Str.OptApplyTargetGame">{0} item(s) · {1}</s:String>
+    <s:String x:Key="Str.OptApplyTargetNoGame">{0} item(s) · no game selected</s:String>
+    <s:String x:Key="Str.OptItemFailureDetail">{0} ({1})</s:String>
+    <s:String x:Key="Str.DiagOpsTitle">## Operation diagnostics</s:String>
+    <s:String x:Key="Str.DiagOpsEmpty">(No write operation has run on this computer yet)</s:String>
+    <s:String x:Key="Str.DiagOpsInvalid">(The receipt file is damaged; new receipts go to a fresh file)</s:String>
+    <s:String x:Key="Str.DiagOpsUnavailable">(Receipts are temporarily unreadable)</s:String>
+    <s:String x:Key="Str.DiagOpsAdmin">Administrator: {0}</s:String>
+    <s:String x:Key="Str.DiagOpsCounts">{0} succeeded, {1} failed, {2} skipped</s:String>
+    <s:String x:Key="Str.DiagOpsFailedItem">Failed {0}: {1}</s:String>
+    <s:String x:Key="Str.DiagOpsReadFailed">(Could not read receipts: {0})</s:String>
+    <s:String x:Key="Str.DiagOutcomeOk">succeeded</s:String>
+    <s:String x:Key="Str.DiagOutcomePartial">partial</s:String>
+    <s:String x:Key="Str.DiagOutcomeFailed">failed</s:String>
+    <s:String x:Key="Str.DiagOutcomeCancelled">cancelled</s:String>
+    <s:String x:Key="Str.DiagOutcomeInterrupted">interrupted</s:String>
 </ResourceDictionary>

@@ -108,7 +108,7 @@ public sealed class ModernWorkspaceUiTests
             DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
             try
             {
-                var ids = AppState.Items.Take(2).Select(i => i.Id).ToArray();
+                var ids = AppState.Items.Where(i => !i.RequiresAdmin).Take(2).Select(i => i.Id).ToArray();
                 page.SelectForReview(ids);
                 ((TextBox)page.FindName("SearchBox")).Text = ids[0];
                 Assert.Equal(1, page.CaptureReviewPlan().HiddenCount);
@@ -235,6 +235,114 @@ public sealed class ModernWorkspaceUiTests
                 }
                 finally { accept.Stop(); window.Close(); DialogService.PrepareWindowForTest = null; }
             }
+        });
+    }
+
+    [Fact]
+    public void Partial_apply_lists_every_item_instead_of_dumping_the_raw_result()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            // 现场问题：只要有一项失败，整块结果就变成「执行失败 + 原始 JSON」，用户只看到一屏数据。
+            AppState.Items = ItemCatalog.All.Where(d => d.Id is "game-mode" or "gpu-pref")
+                .Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription, d.DisplaySideEffect,
+                    d.Admin, d.Reboot, false, "test original", false, d.Group)).ToList();
+            var gpuName = ItemCatalog.All.Single(i => i.Id == "gpu-pref").DisplayName;
+            var gameName = ItemCatalog.All.Single(i => i.Id == "game-mode").DisplayName;
+            var page = new OptimizeView();
+            var window = new Window { Width = 1180, Height = 720, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
+            var accept = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+            accept.Tick += (_, _) =>
+            {
+                if (app.Windows.OfType<OptimizationReviewWindow>().FirstOrDefault(w => w.IsVisible) is { } review)
+                    ((Button)review.FindName("ConfirmButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            };
+            try
+            {
+                page.RefreshDetectionOverride = () => Task.FromResult(true);
+                page.ApplyItemsOverride = (_, _) => Task.FromResult(new RunResult(1, JsonSerializer.Serialize(new
+                {
+                    results = new object[]
+                    {
+                        new { id = "game-mode", name = gameName, ok = true, skipped = false, message = "已开启游戏模式" },
+                        new { id = "gpu-pref", name = gpuName, ok = false, skipped = false, message = Str.T("Str.OptFailNeedAdmin") }
+                    },
+                    summary = "1 成功、1 失败、0 跳过",
+                    backupFile = Path.Combine(root, "backup", "v2-backup-test.json"),
+                    reboot = Array.Empty<string>()
+                }), ""));
+                page.SelectForReview(["game-mode", "gpu-pref"]);
+                var consent = (CheckBox)page.FindName("ConsentCheck"); consent.IsChecked = true;
+                var apply = (Button)page.FindName("ApplyButton");
+                accept.Start();
+                apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                DlssFeedbackTests.PumpUntil(() => apply.IsEnabled);
+
+                var doc = (System.Windows.Documents.FlowDocument)page.FindName("OutputDoc");
+                var text = new System.Windows.Documents.TextRange(doc.ContentStart, doc.ContentEnd).Text;
+                Assert.Contains(Str.T("Str.ApplyPartialHead"), text);
+                Assert.Contains(Str.T("Str.OptApplyCounts", 1, 1, 0), text);
+                Assert.Contains(gameName, text);                       // 成功的项照样列出来
+                Assert.Contains(Str.T("Str.OptFailNeedAdmin"), text);   // 失败给的是能照做的原因
+                Assert.Contains(Str.T("Str.OptApplyNextAdmin", 1, gpuName), text);
+                Assert.DoesNotContain(Str.T("Str.ExecFailedSp"), text); // 不再是整体失败
+                Assert.DoesNotContain("\"results\"", text);             // 不再把原始 JSON 灌进界面
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "apply-partial-" + theme); }
+            }
+            finally { accept.Stop(); window.Close(); DialogService.PrepareWindowForTest = null; }
+        });
+    }
+
+    [Fact]
+    public void Administrator_items_are_reported_before_the_review_dialog_instead_of_after_it()
+    {
+        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
+        RunUi((app, root) =>
+        {
+            var admin = ItemCatalog.All.Where(d => d.Admin && d.Available).Take(2).ToArray();
+            AppState.Items = admin.Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription,
+                d.DisplaySideEffect, d.Admin, d.Reboot, false, "test original", false, d.Group)).ToList();
+            var page = new OptimizeView();
+            var window = new Window { Width = 1180, Height = 720, Content = page };
+            app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
+            DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
+            AdminHelper.IsAdministratorOverride = () => false;
+            var applied = 0; var reviewOpened = false; string? dialogBody = null;
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
+            timer.Tick += (_, _) =>
+            {
+                if (app.Windows.OfType<OptimizationReviewWindow>().Any(w => w.IsVisible)) reviewOpened = true;
+                if (app.Windows.OfType<AppDialogWindow>().FirstOrDefault(w => w.IsVisible) is { } dialog)
+                {
+                    var body = (TextBlock)dialog.FindName("MessageTextBlock");
+                    dialogBody ??= new System.Windows.Documents.TextRange(body.ContentStart, body.ContentEnd).Text;
+                    ((Button)dialog.FindName("CancelButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+            };
+            try
+            {
+                page.RefreshDetectionOverride = () => Task.FromResult(true);
+                page.ApplyItemsOverride = (_, _) => { applied++; return Task.FromResult(new RunResult(0, "{}", "")); };
+                page.SelectForReview(admin.Select(d => d.Id));
+                ((CheckBox)page.FindName("ConsentCheck")).IsChecked = true;
+                var apply = (Button)page.FindName("ApplyButton");
+                timer.Start();
+                apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                timer.Stop();
+
+                // 关键：审阅窗根本没打开，用户不是"审完再被拦下"。
+                Assert.False(reviewOpened);
+                Assert.Equal(0, applied);
+                Assert.True(apply.IsEnabled);
+                Assert.NotNull(dialogBody);
+                Assert.Contains(Str.T("Str.NeedsAdmin"), dialogBody);
+                Assert.Contains(admin[0].DisplayName, dialogBody);
+                foreach (var theme in new[] { "light", "dark" }) { ThemeManager.SetMode(theme); Render(page, "admin-precheck-" + theme); }
+            }
+            finally { timer.Stop(); AdminHelper.IsAdministratorOverride = null; window.Close(); DialogService.PrepareWindowForTest = null; }
         });
     }
 

@@ -466,6 +466,49 @@ public static class DiagnosticReportExporter
         }
 
         sb.AppendLine();
+        sb.AppendLine(Str.T("Str.DiagOpsTitle"));
+        sb.AppendLine();
+        // 用户反馈"优化设置执行失败"时，概览里必须能直接看到哪一步、哪一项失败——
+        // 只给一个 operations.json 等于把线索埋起来。
+        try
+        {
+            var report = OperationDiagnostics.Read(BaseDir);
+            if (report.Operations.Count == 0)
+            {
+                sb.AppendLine(report.Status switch
+                {
+                    "no-records" => Str.T("Str.DiagOpsEmpty"),
+                    "invalid-records" => Str.T("Str.DiagOpsInvalid"),
+                    _ => Str.T("Str.DiagOpsUnavailable")
+                });
+            }
+            else
+            {
+                foreach (var op in report.Operations.TakeLast(5).Reverse())
+                {
+                    var error = string.IsNullOrWhiteSpace(op.Error) ? "" : " · " + FirstLine(op.Error);
+                    sb.AppendLine($"- {op.At.ToLocalTime():MM-dd HH:mm:ss} · {op.Operation} · {op.Stage} · {OutcomeText(op.Outcome)}" +
+                                  $" · {Str.T("Str.DiagOpsAdmin", op.IsAdministrator ? Str.T("Str.Yes") : Str.T("Str.No"))}{error}");
+                    var items = op.Items ?? [];
+                    if (items.Count > 0)
+                    {
+                        var applied = items.Count(i => i.Outcome == "succeeded");
+                        var failed = items.Count(i => i.Outcome == "failed");
+                        var skipped = items.Count(i => i.Outcome == "skipped");
+                        sb.AppendLine("  - " + Str.T("Str.DiagOpsCounts", applied, failed, skipped));
+                        foreach (var item in items.Where(i => i.Outcome == "failed").Take(8))
+                            sb.AppendLine("  - " + Str.T("Str.DiagOpsFailedItem",
+                                PrivacyScrub.Sanitize(item.Id), PrivacyScrub.Sanitize(item.Message ?? "")));
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            sb.AppendLine(Str.T("Str.DiagOpsReadFailed", PrivacyScrub.Sanitize(ex.Message)));
+        }
+
+        sb.AppendLine();
         sb.AppendLine("## 设置摘要（已脱敏）");
         sb.AppendLine();
         sb.AppendLine($"- 主题：{s.ThemeMode} · 低配模式：{(s.LowSpecMode ? "开" : "关")}");
@@ -767,6 +810,24 @@ public static class DiagnosticReportExporter
     }
 
     // ---------- 工具 ----------
+
+    /// <summary>回执状态的中文口径；未列出的原样输出，方便新状态先暴露再补文案。</summary>
+    private static string OutcomeText(string outcome) => outcome switch
+    {
+        "succeeded" => Str.T("Str.DiagOutcomeOk"),
+        "partial" => Str.T("Str.DiagOutcomePartial"),
+        "failed" => Str.T("Str.DiagOutcomeFailed"),
+        "cancelled" => Str.T("Str.DiagOutcomeCancelled"),
+        "interrupted" => Str.T("Str.DiagOutcomeInterrupted"),
+        _ => outcome
+    };
+
+    /// <summary>异常消息取首行：多行堆栈在概览里没有阅读价值。</summary>
+    private static string FirstLine(string text)
+    {
+        var line = (text ?? "").Replace("\r\n", "\n").Split('\n')[0].Trim();
+        return line.Length > 160 ? line[..160] + "…" : line;
+    }
 
     private static string AppVersion
         => Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";

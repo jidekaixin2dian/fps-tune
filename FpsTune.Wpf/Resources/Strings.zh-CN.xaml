@@ -3066,4 +3066,39 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.AdvancedNoteForegroundLimit">前台帧率上限。0 表示不限帧。</s:String>
     <s:String x:Key="Str.AdvancedNoteBackgroundLimit">后台帧率上限。0 表示不限帧。</s:String>
     <s:String x:Key="Str.FrameNotPersisted">驱动没有保存这次限帧，原值备份已保留。</s:String>
+    <!-- 2026-11-10 优化应用失败的可诊断性与文案：逐项回执 + 人话原因 + 需要管理员的清单 -->
+    <s:String x:Key="Str.OptApplyNeedsAdminItems">所选项目中有 {0} 项需要管理员权限：{1}。以管理员身份重新运行后再应用。</s:String>
+    <s:String x:Key="Str.OptItemUnavailable">当前系统用不了这一项，已跳过。</s:String>
+    <s:String x:Key="Str.OptFailNeedAdmin">系统拒绝写入，这一项需要以管理员身份运行。</s:String>
+    <s:String x:Key="Str.OptFailMissing">系统里没有这项设置，已跳过。</s:String>
+    <s:String x:Key="Str.OptFailUnsupported">当前系统不支持这项设置，已跳过。</s:String>
+    <s:String x:Key="Str.OptFailUnknown">写入失败，原因未知。</s:String>
+    <s:String x:Key="Str.OptFailWithDetail">写入失败：{0}</s:String>
+    <s:String x:Key="Str.ApplyPartialHead">已应用，部分项目没成功</s:String>
+    <s:String x:Key="Str.ApplyAllFailedHead">没有项目写入成功</s:String>
+    <s:String x:Key="Str.OptApplyCounts">{0} 项成功、{1} 项失败、{2} 项跳过</s:String>
+    <s:String x:Key="Str.OptApplyNextAdmin">上面 {0} 项需要管理员权限：{1}。以管理员身份重启后重新应用。</s:String>
+    <s:String x:Key="Str.OptApplyNextRetry">按上面每项的原因处理后可以重新应用；已经成功的项目不会重复改动。</s:String>
+    <s:String x:Key="Str.ReviewElevationItems">清单里有 {0} 项需要管理员权限：{1}。是否以管理员身份重启？重启后请再次审阅并应用。</s:String>
+    <s:String x:Key="Str.GpuBasicOnly">未安装显卡驱动（{0}）</s:String>
+    <!-- 2026-11-10 诊断报告的操作回执段与通用未知态（文案进字典，代码里不再硬编码中文） -->
+    <s:String x:Key="Str.Unknown">未知</s:String>
+    <s:String x:Key="Str.CpuUnknown">未知 CPU</s:String>
+    <s:String x:Key="Str.GpuUnknown">未知 GPU</s:String>
+    <s:String x:Key="Str.OptApplyTargetGame">{0} 项 · {1}</s:String>
+    <s:String x:Key="Str.OptApplyTargetNoGame">{0} 项 · 未指定游戏</s:String>
+    <s:String x:Key="Str.OptItemFailureDetail">{0}（{1}）</s:String>
+    <s:String x:Key="Str.DiagOpsTitle">## 操作诊断</s:String>
+    <s:String x:Key="Str.DiagOpsEmpty">（本机还没有执行过写入操作）</s:String>
+    <s:String x:Key="Str.DiagOpsInvalid">（操作回执文件已损坏，新回执会另起一份）</s:String>
+    <s:String x:Key="Str.DiagOpsUnavailable">（操作回执暂不可读）</s:String>
+    <s:String x:Key="Str.DiagOpsAdmin">管理员：{0}</s:String>
+    <s:String x:Key="Str.DiagOpsCounts">{0} 项成功、{1} 项失败、{2} 项跳过</s:String>
+    <s:String x:Key="Str.DiagOpsFailedItem">失败 {0}：{1}</s:String>
+    <s:String x:Key="Str.DiagOpsReadFailed">（操作回执读取失败：{0}）</s:String>
+    <s:String x:Key="Str.DiagOutcomeOk">成功</s:String>
+    <s:String x:Key="Str.DiagOutcomePartial">部分成功</s:String>
+    <s:String x:Key="Str.DiagOutcomeFailed">失败</s:String>
+    <s:String x:Key="Str.DiagOutcomeCancelled">已取消</s:String>
+    <s:String x:Key="Str.DiagOutcomeInterrupted">未完成（进程中断）</s:String>
 </ResourceDictionary>

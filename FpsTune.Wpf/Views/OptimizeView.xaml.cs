@@ -495,97 +495,150 @@ public partial class OptimizeView : UserControl
         Line(Str.T("Str.Requirement"), req);
     }
 
+    /// <summary>一条优化项的执行结果（从引擎 JSON 里读出来的界面视图）。</summary>
+    private sealed record ApplyRow(string Id, string Name, bool Ok, bool Skipped, string Message);
+
+    /// <summary>
+    /// 解析引擎结果。退出码不再决定渲染方式：只要有结构化结果就逐项展示——
+    /// 部分项目失败是正常结果，不该让界面变成一次"整体失败"。
+    /// </summary>
+    private static bool TryReadApplyResult(RunResult result, out JsonNode? root, out List<ApplyRow> rows)
+    {
+        root = null;
+        rows = [];
+        if (string.IsNullOrWhiteSpace(result.Output))
+            return false;
+        try
+        {
+            root = System.Text.Json.Nodes.JsonNode.Parse(result.Output);
+            if (root?["results"] is not System.Text.Json.Nodes.JsonArray results)
+            {
+                root = null;
+                return false;
+            }
+            foreach (var item in results)
+                rows.Add(new ApplyRow(
+                    item?["id"]?.GetValue<string>() ?? "",
+                    item?["name"]?.GetValue<string>() ?? "",
+                    item?["ok"]?.GetValue<bool>() ?? false,
+                    item?["skipped"]?.GetValue<bool>() ?? false,
+                    item?["message"]?.GetValue<string>() ?? ""));
+            return true;
+        }
+        catch
+        {
+            root = null;
+            return false;
+        }
+    }
+
     private void SetApplyResult(RunResult result)
     {
-        if (!result.Success)
+        if (!TryReadApplyResult(result, out var root, out var rows))
         {
             ResetDoc();
-            var head = NewPara(6);
-            head.Inlines.Add(R(Str.T("Str.ExecFailedSp"), "DangerBrush", bold: true, size: 14));
-            head.Inlines.Add(R($"exit={result.ExitCode}", "TextMutedBrush", mono: true));
-            OutputDoc.Blocks.Add(head);
+            var failedHead = NewPara(6);
+            failedHead.Inlines.Add(R(Str.T("Str.ExecFailedSp"), "DangerBrush", bold: true, size: 14));
+            OutputDoc.Blocks.Add(failedHead);
+            var note = NewPara(4);
+            note.Inlines.Add(R(Str.T("Str.UnstructuredResult"), "TextMutedBrush"));
+            OutputDoc.Blocks.Add(note);
             SetRawMonospace(string.Concat(
                 string.IsNullOrWhiteSpace(result.Output) ? "" : result.Output + "\n",
                 string.IsNullOrWhiteSpace(result.Error) ? "" : result.Error));
             return;
         }
 
-        try
-        {
-            var root = System.Text.Json.Nodes.JsonNode.Parse(result.Output);
-            if (root?["results"] is not System.Text.Json.Nodes.JsonArray results)
-                throw new InvalidOperationException(Str.T("Str.UnstructuredResult"));
+        var applied = rows.Count(r => r.Ok && !r.Skipped);
+        var failed = rows.Count(r => !r.Ok && !r.Skipped);
+        var skipped = rows.Count(r => r.Skipped);
 
-            ResetDoc();
-            var head = NewPara(8);
+        ResetDoc();
+        var head = NewPara(8);
+        if (failed == 0)
+        {
             head.Inlines.Add(R(Str.T("Str.ApplyDone"), "AccentBrush", bold: true, size: 15));
-            OutputDoc.Blocks.Add(head);
-
-            string? lastGroup = null;
-            foreach (var item in results)
-            {
-                var id = item?["id"]?.GetValue<string>() ?? "";
-                var name = item?["name"]?.GetValue<string>() ?? "";
-                var ok = item?["ok"]?.GetValue<bool>() ?? false;
-                var skipped = item?["skipped"]?.GetValue<bool>() ?? false;
-                var message = item?["message"]?.GetValue<string>() ?? "";
-
-                var meta = ItemCatalog.All.FirstOrDefault(x => x.Id == id);
-                if (meta?.Group != lastGroup)
-                {
-                    lastGroup = meta?.Group;
-                    var gp = NewPara(3);
-                    gp.Inlines.Add(R("— " + CatalogGroups.Display(lastGroup ?? Str.T("Str.Other")) + " —", "TextMutedBrush", size: 13));
-                    OutputDoc.Blocks.Add(gp);
-                }
-
-                var line = NewPara(3);
-                line.Inlines.Add(R(skipped ? Str.T("Str.Skipped") + " " : ok ? Str.T("Str.SucceededSp") : Str.T("Str.FailedSp"),
-                    skipped ? "TextMutedBrush" : ok ? "OkBrush" : "DangerBrush", bold: true));
-                line.Inlines.Add(R(id, "AccentBrush", mono: true));
-                line.Inlines.Add(R("  " + name, "TextPrimaryBrush"));
-                if (!string.IsNullOrWhiteSpace(message))
-                    line.Inlines.Add(R("   " + message, "TextMutedBrush"));
-                OutputDoc.Blocks.Add(line);
-            }
-
-            var summary = root["summary"]?.GetValue<string>();
-            if (!string.IsNullOrWhiteSpace(summary))
-            {
-                var sp = NewPara(4);
-                sp.Inlines.Add(R(Str.T("Str.SummarySp"), "TextMutedBrush"));
-                sp.Inlines.Add(R(summary, "TextSecondaryBrush"));
-                OutputDoc.Blocks.Add(sp);
-            }
-
-            var backup = root["backupFile"]?.GetValue<string>();
-            if (!string.IsNullOrWhiteSpace(backup))
-            {
-                var bp = NewPara(4);
-                bp.Inlines.Add(R(Str.T("Str.BackupSp"), "TextMutedBrush"));
-                bp.Inlines.Add(R(backup, "TextSecondaryBrush", mono: true, size: 13));
-                OutputDoc.Blocks.Add(bp);
-            }
-
-            if (root["reboot"] is System.Text.Json.Nodes.JsonArray reboot && reboot.Count > 0)
-            {
-                var ids = reboot.Select(r2 => r2?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
-                var rp = NewPara(0);
-                rp.Inlines.Add(R(Str.T("Str.NeedsRebootSp"), "WarningBrush", bold: true));
-                rp.Inlines.Add(R(string.Join(Str.T("Str.ListSeparator"), ids), "WarningBrush"));
-                OutputDoc.Blocks.Add(rp);
-            }
-
-            // 最小化在托盘时也第一时间知道执行结果
-            TrayService.NotifyComplete(
-                Str.T("Str.AppNameDone"),
-                string.IsNullOrWhiteSpace(summary) ? Str.T("Str.OptimizeDone") : summary);
         }
-        catch
+        else
         {
-            ResetDoc();
-            SetRawMonospace(result.Output + "\n" + result.Error);
+            // 失败里有几项、界面先给结论，再把逐项原因摆在下面。
+            head.Inlines.Add(R(Str.T(applied > 0 ? "Str.ApplyPartialHead" : "Str.ApplyAllFailedHead"),
+                applied > 0 ? "WarningBrush" : "DangerBrush", bold: true, size: 15));
+            head.Inlines.Add(R("   " + Str.T("Str.OptApplyCounts", applied, failed, skipped), "TextSecondaryBrush"));
         }
+        OutputDoc.Blocks.Add(head);
+
+        string? lastGroup = null;
+        foreach (var row in rows)
+        {
+            var meta = ItemCatalog.All.FirstOrDefault(x => x.Id == row.Id);
+            if (meta?.Group != lastGroup)
+            {
+                lastGroup = meta?.Group;
+                var gp = NewPara(3);
+                gp.Inlines.Add(R("— " + CatalogGroups.Display(lastGroup ?? Str.T("Str.Other")) + " —", "TextMutedBrush", size: 13));
+                OutputDoc.Blocks.Add(gp);
+            }
+
+            var line = NewPara(3);
+            line.Inlines.Add(R(row.Skipped ? Str.T("Str.Skipped") + " " : row.Ok ? Str.T("Str.SucceededSp") : Str.T("Str.FailedSp"),
+                row.Skipped ? "TextMutedBrush" : row.Ok ? "OkBrush" : "DangerBrush", bold: true));
+            line.Inlines.Add(R(row.Id, "AccentBrush", mono: true));
+            line.Inlines.Add(R("  " + row.Name, "TextPrimaryBrush"));
+            if (!string.IsNullOrWhiteSpace(row.Message))
+                line.Inlines.Add(R("   " + row.Message, "TextMutedBrush"));
+            OutputDoc.Blocks.Add(line);
+        }
+
+        // 顶部已经给了成功/失败/跳过的数字时不重复一遍汇总；只有全成功时才需要这行。
+        var summary = root?["summary"]?.GetValue<string>();
+        if (!string.IsNullOrWhiteSpace(summary) && failed == 0)
+        {
+            var sp = NewPara(4);
+            sp.Inlines.Add(R(Str.T("Str.SummarySp"), "TextMutedBrush"));
+            sp.Inlines.Add(R(summary, "TextSecondaryBrush"));
+            OutputDoc.Blocks.Add(sp);
+        }
+
+        // 失败项需要给人下一步：需要管理员的项单独点名，别让用户自己从名称里猜。
+        // 判定同时看目录里的 Admin 标记与逐项原因——目录标记漏标的项（系统拒绝写入）也要被点名。
+        if (failed > 0)
+        {
+            var adminRows = rows.Where(r => !r.Ok && !r.Skipped
+                    && (ItemCatalog.All.FirstOrDefault(x => x.Id == r.Id) is { Admin: true }
+                        || r.Message == Str.T("Str.OptFailNeedAdmin")))
+                .Select(r => r.Name).ToArray();
+            var next = NewPara(4);
+            next.Inlines.Add(R(adminRows.Length > 0
+                ? Str.T("Str.OptApplyNextAdmin", adminRows.Length, string.Join(Str.T("Str.ListSeparator"), adminRows))
+                : Str.T("Str.OptApplyNextRetry"), adminRows.Length > 0 ? "WarningBrush" : "TextSecondaryBrush"));
+            OutputDoc.Blocks.Add(next);
+        }
+
+        var backup = root?["backupFile"]?.GetValue<string>();
+        if (!string.IsNullOrWhiteSpace(backup))
+        {
+            var bp = NewPara(4);
+            bp.Inlines.Add(R(Str.T("Str.BackupSp"), "TextMutedBrush"));
+            bp.Inlines.Add(R(backup, "TextSecondaryBrush", mono: true, size: 13));
+            OutputDoc.Blocks.Add(bp);
+        }
+
+        if (root?["reboot"] is System.Text.Json.Nodes.JsonArray reboot && reboot.Count > 0)
+        {
+            var ids = reboot.Select(r2 => r2?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
+            var rp = NewPara(0);
+            rp.Inlines.Add(R(Str.T("Str.NeedsRebootSp"), "WarningBrush", bold: true));
+            rp.Inlines.Add(R(string.Join(Str.T("Str.ListSeparator"), ids), "WarningBrush"));
+            OutputDoc.Blocks.Add(rp);
+        }
+
+        // 最小化在托盘时也第一时间知道执行结果（部分失败同样要通知，否则只看到"改了"却不知道没全成）。
+        TrayService.NotifyComplete(
+            Str.T("Str.AppNameDone"),
+            failed > 0
+                ? Str.T("Str.OptApplyCounts", applied, failed, skipped)
+                : string.IsNullOrWhiteSpace(summary) ? Str.T("Str.OptimizeDone") : summary);
     }
 
     private void SetRawMonospace(string text)
