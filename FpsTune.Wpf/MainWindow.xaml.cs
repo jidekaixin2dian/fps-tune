@@ -176,6 +176,7 @@ public partial class MainWindow : Window
             ["ab"] = () => new AbExperimentView(),
             ["backup"] = () => new BackupLogView(),
             ["tools"] = () => new MaintenanceView(),
+            ["startup"] = () => new StartupAuditView(),
             ["settings"] = () => new SettingsView(),
         };
 
@@ -345,11 +346,21 @@ public partial class MainWindow : Window
             opt.ReloadFromState();
     }
 
+    /// <summary>审查类页面挑好优化项后，直接带进优化页的审阅流程（写入仍由用户在审阅窗确认）。</summary>
+    internal void ReviewOptimizationItems(IEnumerable<string> ids)
+    {
+        var selected = ids.Distinct(StringComparer.Ordinal).ToArray();
+        if (selected.Length == 0) return;
+        ShowOptimizePage();
+        if (GetPage("opt") is OptimizeView opt)
+            opt.SelectForReview(selected);
+    }
+
     /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
     private Views.Controls.NavButton[] AllNavButtons => new[]
     {
         NavHome, NavGames, NavQuick, NavDetect, NavDisplay, NavFilters, NavCrosshair,
-        NavOpt, NavTools, NavBackup, NavSession, NavAb, NavSettings
+        NavOpt, NavTools, NavBackup, NavStartup, NavSession, NavAb, NavSettings
     };
 
     /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
@@ -589,6 +600,7 @@ public partial class MainWindow : Window
             case "session": NavSession.IsChecked = true; break;
             case "ab": NavAb.IsChecked = true; break;
             case "backup": NavBackup.IsChecked = true; break;
+            case "startup": NavStartup.IsChecked = true; break;
             case "tools": NavTools.IsChecked = true; break;
             case "settings": NavSettings.IsChecked = true; break;
             // 掉帧修复是从按钮进入的页面，激活态由 SwitchPage 挂在 NavDeltaFix 上。

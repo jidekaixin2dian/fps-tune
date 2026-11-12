@@ -1,0 +1,58 @@
+<UserControl x:Class="FpsTune.Wpf.Views.GpuLivePanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,20,0">
+                    <TextBlock Text="{DynamicResource Str.GpuLiveTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.GpuLiveIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox x:Name="AutoRefreshToggle" Content="{DynamicResource Str.GpuLiveAutoRefresh}"
+                              Foreground="{DynamicResource TextSecondaryBrush}" IsChecked="True" VerticalAlignment="Center"
+                              Margin="0,0,12,0" Checked="AutoRefresh_Changed" Unchecked="AutoRefresh_Changed"/>
+                    <Button x:Name="RefreshButton" Content="{DynamicResource Str.GpuLiveRefresh}" Style="{StaticResource SecondaryButtonStyle}"
+                            MinWidth="88" Click="Refresh_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <TextBlock x:Name="GpuNameText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+
+            <StackPanel x:Name="GpuResultPanel" Margin="0,12,0,0">
+                <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}" Padding="14,12">
+                    <StackPanel>
+                        <DockPanel>
+                            <Border x:Name="GpuVerdictBadge" DockPanel.Dock="Left" Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="8,2" VerticalAlignment="Center">
+                                <TextBlock x:Name="GpuVerdictText" Text="—" FontSize="13" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
+                            </Border>
+                            <TextBlock x:Name="GpuMeasuredText" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <UniformGrid Columns="4" Margin="0,12,0,0">
+                            <StackPanel Margin="0,0,12,10"><TextBlock Text="{DynamicResource Str.GpuLiveUtil}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="UtilText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel Margin="0,0,12,10"><TextBlock Text="{DynamicResource Str.GpuLiveMemory}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="MemoryText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel Margin="0,0,12,10"><TextBlock Text="{DynamicResource Str.GpuLiveTemp}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="TempText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel Margin="0,0,0,10"><TextBlock Text="{DynamicResource Str.GpuLivePower}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="PowerText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel Margin="0,0,12,0"><TextBlock Text="{DynamicResource Str.GpuLiveClockSm}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="ClockSmText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel Margin="0,0,12,0"><TextBlock Text="{DynamicResource Str.GpuLiveClockMem}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="ClockMemText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel Margin="0,0,12,0"><TextBlock Text="{DynamicResource Str.GpuLiveFan}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="FanText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                            <StackPanel><TextBlock Text="{DynamicResource Str.GpuLiveLimit}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                                <TextBlock x:Name="ThrottleText" Text="—" FontSize="15" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="AdviceText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0"/>
+            </StackPanel>
+
+            <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+    </Border>
+</UserControl>

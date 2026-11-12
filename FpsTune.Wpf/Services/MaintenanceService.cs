@@ -72,6 +72,8 @@ internal static class MaintenanceService
             "reliability" => ("perfmon.exe", "/rel"),
             "resources" => ("perfmon.exe", "/res"),
             "taskmanager" => ("Taskmgr.exe", ""),
+            // 后台与自启页需要把用户送到系统自带的服务管理；只开系统组件，不代改。
+            "services" => ("services.msc", ""),
             _ => throw new ArgumentException("Unknown maintenance tool.", nameof(id))
         };
         if (!Path.IsPathFullyQualified(systemDirectory)) throw new ArgumentException("A full system path is required.", nameof(systemDirectory));

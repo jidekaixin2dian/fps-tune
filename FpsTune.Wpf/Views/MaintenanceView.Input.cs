@@ -188,4 +188,68 @@ public partial class MaintenanceView
             InputFeedbackStatus.Text = Str.T("Str.InputFeedbackFailed", PrivacyScrub.Sanitize(ex.Message));
         }
     }
+
+    /// <summary>采集窗口：3 秒足够攒到 3000 次 1000 Hz 上报，也不会让用户等太久。</summary>
+    private static readonly TimeSpan PollingWindow = TimeSpan.FromSeconds(3);
+
+    private PollingRateReading? _lastPolling;
+    private bool _pollingBusy;
+
+    /// <summary>实测报告率：采一段移动上报，给出档位；不写任何系统设置。</summary>
+    private async void PollingMeasure_Click(object sender, RoutedEventArgs e) => await MeasurePollingAsync();
+
+    internal async Task MeasurePollingAsync()
+    {
+        if (_pollingBusy) return;
+        _pollingBusy = true;
+        PollingMeasureButton.IsEnabled = false;
+        PollingUseButton.IsEnabled = false;
+        _lastPolling = null;
+        PollingMeasureStatus.Text = Str.T("Str.InputQueueMeasuring", (int)PollingWindow.TotalSeconds);
+        try
+        {
+            var reading = await MousePollingMeter.MeasureAsync(PollingWindow);
+            _lastPolling = reading;
+            if (!reading.Sufficient)
+            {
+                PollingMeasureStatus.Text = Str.T("Str.InputQueueMeasureTooFew", PollingRateMath.MinSamples);
+                return;
+            }
+
+            PollingMeasureStatus.Text = reading.SnappedRate is { } rate
+                ? Str.T("Str.InputQueueMeasureResult", rate, reading.Samples, reading.MedianIntervalMs.ToString("0.00", CultureInfo.InvariantCulture))
+                : Str.T("Str.InputQueueMeasureUnsnapped", reading.MeasuredHz, reading.Samples);
+            PollingUseButton.IsEnabled = reading.SnappedRate is not null;
+        }
+        catch (Exception ex)
+        {
+            PollingMeasureStatus.Text = Str.T("Str.InputQueueMeasureFailed", PrivacyScrub.Sanitize(ex.Message));
+            ErrorLog.Write("input-queue-polling", ex);
+        }
+        finally
+        {
+            _pollingBusy = false;
+            PollingMeasureButton.IsEnabled = true;
+        }
+    }
+
+    /// <summary>把实测档位填回下拉并记住，写入时按这个频率算推荐深度。</summary>
+    private void PollingUse_Click(object sender, RoutedEventArgs e)
+    {
+        if (_lastPolling?.SnappedRate is not { } rate) return;
+        SelectPollingRate(rate);
+        var settings = SettingsService.Current;
+        settings.MousePollingRate = rate;
+        try
+        {
+            SettingsService.Save(settings);
+            PollingMeasureStatus.Text = Str.T("Str.InputQueueMeasureApplied", rate);
+        }
+        catch (Exception ex)
+        {
+            PollingMeasureStatus.Text = Str.T("Str.InputQueueMeasureFailed", PrivacyScrub.Sanitize(ex.Message));
+        }
+
+        RefreshInputQueueReadout();
+    }
 }

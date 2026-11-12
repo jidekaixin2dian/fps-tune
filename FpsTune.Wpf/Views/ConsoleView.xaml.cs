@@ -331,6 +331,7 @@ public partial class ConsoleView : UserControl
         "session" => Str.T("Str.NavSession"),
         "ab" => Str.T("Str.NavAb"),
         "backup" => Str.T("Str.NavBackup"),
+        "startup" => Str.T("Str.NavStartup"),
         "tools" => Str.T("Str.NavTools"),
         "settings" => Str.T("Str.NavSettings"),
         _ => "",

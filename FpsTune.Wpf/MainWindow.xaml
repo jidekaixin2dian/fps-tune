@@ -49,7 +49,8 @@
             </Grid>
             <Grid x:Name="TabBar" Grid.Row="1" Grid.RowSpan="2" Background="{DynamicResource SidebarBackgroundBrush}">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <StackPanel x:Name="NavigationStack" Grid.Row="1" Margin="4,14,10,0">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="NavigationStack" Margin="4,14,10,0">
                     <controls:NavButton x:Name="NavHome" Tag="home" Text="{DynamicResource Str.NavHome}" Icon="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8 M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" Style="{StaticResource SideNavItemStyle}" IsChecked="True" Checked="Nav_Checked"/>
                     <StackPanel x:Name="NavGroupGamesRoot">
                         <ToggleButton x:Name="NavGroupGamesHeader" Tag="Games" Style="{StaticResource NavGroupHeaderStyle}" Content="{DynamicResource Str.NavGroupGames}" IsChecked="True" Checked="GroupHeader_Toggled" Unchecked="GroupHeader_Toggled" AutomationProperties.Name="{DynamicResource Str.NavGroupGames}"/>
@@ -74,12 +75,14 @@
                         <StackPanel x:Name="NavGroupSystemItems">
                             <controls:NavButton x:Name="NavOpt" Tag="opt" Text="{DynamicResource Str.NavOpt}" Icon="M10 5H3 M12 19H3 M14 3v4 M16 17v4 M21 12h-9 M21 19h-5 M21 5h-7 M8 10v4 M8 12H3" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                             <controls:NavButton x:Name="NavBackup" Tag="backup" Text="{DynamicResource Str.NavBackup}" Icon="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
+                            <controls:NavButton x:Name="NavStartup" Tag="startup" Text="{DynamicResource Str.NavStartup}" Icon="M4.0 5.0H20.0 M4.0 12.0H20.0 M4.0 19.0H13.0 M19.0 16.0L22.0 19.0L19.0 22.0" Style="{StaticResource SideNavSubItemStyle}" Checked="Nav_Checked"/>
                         </StackPanel>
                     </StackPanel>
                     <controls:NavButton x:Name="NavSession" Tag="session" Text="{DynamicResource Str.NavSession}" Icon="M10 2L14 2 M12 14L15 11 M4.0 14.0A8.0 8.0 0 1 0 20.0 14.0A8.0 8.0 0 1 0 4.0 14.0" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavAb" Tag="ab" Text="{DynamicResource Str.NavAb}" Icon="M2.0 12.0A10.0 10.0 0 1 0 22.0 12.0A10.0 10.0 0 1 0 2.0 12.0 M6.0 12.0A6.0 6.0 0 1 0 18.0 12.0A6.0 6.0 0 1 0 6.0 12.0 M10.0 12.0A2.0 2.0 0 1 0 14.0 12.0A2.0 2.0 0 1 0 10.0 12.0" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                     <controls:NavButton x:Name="NavSettings" Tag="settings" Text="{DynamicResource Str.NavSettings}" Icon="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915 M9.0 12.0A3.0 3.0 0 1 0 15.0 12.0A3.0 3.0 0 1 0 9.0 12.0" Style="{StaticResource SideNavItemStyle}" Checked="Nav_Checked"/>
                 </StackPanel>
+                </ScrollViewer>
                 <StackPanel x:Name="NavigationFooter" Grid.Row="2" Margin="24,20,16,24">
                     <TextBlock x:Name="FooterBrandText" Text="{DynamicResource Str.AppName}" FontFamily="{StaticResource FontBody}" FontWeight="{DynamicResource SmallEmphasisWeight}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="14"/>
                 </StackPanel>
