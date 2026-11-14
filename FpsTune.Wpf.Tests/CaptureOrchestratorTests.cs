@@ -10,7 +10,9 @@ namespace FpsTune.Wpf.Tests;
 /// CaptureOrchestrator：统一采样入口的产物落盘、失败分类（采样器缺失 / 目标缺失 / 采样失败 /
 /// 列名不兼容 / 帧不足）、并发闸、遥测开关，以及 CLI -Capture 的参数校验。
 /// 采样执行与目标进程全部注入，真机三场景在部署验收环节另行覆盖。
+/// UserDataPaths.RootOverride 是全局静态：与其他设置它的测试类共享串行 collection。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class CaptureOrchestratorTests : IDisposable
 {
     private readonly string _root = Path.Combine(

@@ -92,6 +92,79 @@ public partial class GameLibraryView : UserControl
             RecordingText.Text = template is null ? Str.T("Str.SessionTemplateMissing") : Str.T("Str.LibraryRecording", SessionConditionRules.Describe(template));
         }
         catch (Exception ex) { RecordingText.Text = PrivacyScrub.Sanitize(ex.Message); }
+        RefreshGainArchive(row);
+    }
+
+    /// <summary>收益档案卡（0.5.0 M3）：这个游戏的对照次数、最佳确认收益与增益趋势。</summary>
+    private void RefreshGainArchive(GameRow? row)
+    {
+        GainHintText.Text = "";
+        GainChart.Children.Clear();
+        if (row is null) { GainSummaryText.Text = ""; return; }
+        try
+        {
+            var gameId = Path.GetFileNameWithoutExtension(row.Profile.ExePath);
+            var archive = GainArchiveService.Load();
+            var entries = archive.Entries
+                .Where(e => string.Equals(e.GameId, gameId, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(e => e.At).ToList();
+            if (entries.Count == 0)
+            {
+                GainSummaryText.Text = Str.T("Str.GainArchiveEmpty");
+                return;
+            }
+            var (best, latest, count) = GainArchiveService.Summary(archive, gameId);
+            GainSummaryText.Text = Str.T("Str.GainArchiveSummary", count,
+                best?.AvgDiffPct is { } diff ? "+" + diff.ToString("0.#") + "%" : "—",
+                latest!.At.ToLocalTime().ToString("MM-dd HH:mm"));
+            // 增益趋势：最近 20 次对照的平均帧率变化（%），正负都画。
+            MiniChart.Draw(GainChart,
+                entries.Where(e => e.AvgDiffPct is { }).TakeLast(20).Select(e => e.AvgDiffPct!.Value).ToList(),
+                "AccentBrush", 20);
+            // 指纹提示：该游戏的全部结论都来自别的机器/显卡环境时如实说明，只作参考。
+            var fingerprint = GainArchiveService.CurrentFingerprint();
+            if (entries.All(e => !string.Equals(e.MachineFingerprint, fingerprint, StringComparison.Ordinal)))
+                GainHintText.Text = Str.T("Str.GainArchiveForeign");
+        }
+        catch (Exception ex) { GainSummaryText.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    private void GainExport_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = Str.T("Str.GainArchiveExport"),
+            Filter = "JSON|*.json",
+            FileName = $"FpsTune-GainArchive-{DateTime.Now:yyyyMMdd}.json",
+        };
+        if (dialog.ShowDialog() != true) return;
+        try
+        {
+            var count = GainArchiveService.Export(dialog.FileName);
+            StatusText.Text = Str.T("Str.GainArchiveExported", count);
+        }
+        catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
+    }
+
+    private void GainImport_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Title = Str.T("Str.GainArchiveImport"), Filter = "JSON|*.json" };
+        if (dialog.ShowDialog() != true) return;
+        try
+        {
+            // 先预演：告诉用户会新增几条、跳过几条重复，确认后才写入。
+            var preview = GainArchiveService.PreviewImport(dialog.FileName);
+            if (!preview.Ok) { StatusText.Text = preview.Error; return; }
+            var confirmed = DialogService.Confirm(Str.T("Str.GainArchiveImport"),
+                Str.T("Str.GainArchivePreview", preview.NewCount, preview.DuplicateCount), danger: false);
+            if (!confirmed) return;
+            var result = GainArchiveService.Import(dialog.FileName);
+            StatusText.Text = result.Ok
+                ? Str.T("Str.GainArchiveImported", result.NewCount)
+                : result.Error;
+            RefreshGainArchive(GameList.SelectedItem as GameRow);
+        }
+        catch (Exception ex) { StatusText.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
     private bool CanEdit()
     {

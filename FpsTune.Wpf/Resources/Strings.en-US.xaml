@@ -3287,4 +3287,13 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.ComparisonFailed">Comparison did not finish: {0}</s:String>
     <s:String x:Key="Str.ComparisonReviewCancelled">The comparison was cancelled at the review step; nothing was written.</s:String>
     <s:String x:Key="Str.ComparisonBusy">A comparison is already running.</s:String>
+    <s:String x:Key="Str.GainArchiveTitle">Gain archive</s:String>
+    <s:String x:Key="Str.GainArchiveEmpty">No comparisons recorded for this game yet; pick items on the Optimize page and press Compare, and the result will show up here.</s:String>
+    <s:String x:Key="Str.GainArchiveSummary">{0} comparisons · best confirmed gain {1} · latest {2}</s:String>
+    <s:String x:Key="Str.GainArchiveForeign">These results come from another machine or a different GPU environment (hardware fingerprint differs) — treat them as reference only.</s:String>
+    <s:String x:Key="Str.GainArchiveExport">Export</s:String>
+    <s:String x:Key="Str.GainArchiveImport">Import</s:String>
+    <s:String x:Key="Str.GainArchiveExported">Exported {0} gain records.</s:String>
+    <s:String x:Key="Str.GainArchivePreview">Import preview: {0} new, {1} duplicates skipped; existing data is never overwritten.</s:String>
+    <s:String x:Key="Str.GainArchiveImported">Imported {0} gain records.</s:String>
 </ResourceDictionary>

@@ -172,6 +172,7 @@ public static class ComparisonPlanner
                         GainVerdict.BuildRounds(beforeFrames.FrameTimesMs),
                         GainVerdict.BuildRounds(afterFrames.FrameTimesMs));
                     trace.Item("verdict", "succeeded", verdict.Decision.ToString());
+                    AppendArchive(request, verdict, before, after, applied.BackupFile);
                 }
             }
             catch (Exception ex)
@@ -208,6 +209,50 @@ public static class ComparisonPlanner
         if (result is null)
             return new ComparisonRollbackResult(false, 0, "没有需要还原的改动。");
         return result;
+    }
+
+    /// <summary>测试注入：档案条目构造（默认由对照结果生成，指纹取当前机器）。</summary>
+    internal static Func<ComparisonResult, GainArchiveEntry>? ArchiveEntryOverride;
+
+    /// <summary>对照结论入册收益档案（M3）。档案是辅助记录，写入失败不阻塞对照。</summary>
+    private static void AppendArchive(
+        ComparisonRequest request, GainVerdictResult verdict, CaptureRun before, CaptureRun after, string backupFile)
+    {
+        try
+        {
+            var entry = ArchiveEntryOverride?.Invoke(new ComparisonResult(
+                true, null, null, verdict, before, after, backupFile, request.Items, false, null))
+                ?? new GainArchiveEntry(
+                    GameId: string.IsNullOrWhiteSpace(request.GamePath)
+                        ? request.GamePath ?? "unknown"
+                        : Path.GetFileNameWithoutExtension(request.GamePath),
+                    At: DateTimeOffset.Now,
+                    Items: request.Items.ToArray(),
+                    Verdict: verdict.Decision switch
+                    {
+                        GainDecision.Keep => "keep",
+                        GainDecision.Rollback => "rollback",
+                        _ => "insufficient",
+                    },
+                    AvgBase: verdict.Analysis.AvgBase,
+                    AvgTest: verdict.Analysis.AvgTest,
+                    AvgDiffPct: verdict.Analysis.AvgDiffPct,
+                    AvgDiffLowerPct: verdict.Analysis.AvgDiffLowerPct,
+                    AvgDiffUpperPct: verdict.Analysis.AvgDiffUpperPct,
+                    P1DiffPct: verdict.Analysis.P1DiffPct,
+                    P99DiffPct: verdict.Analysis.P99DiffPct,
+                    SegmentsBefore: verdict.SegmentsBefore,
+                    SegmentsAfter: verdict.SegmentsAfter,
+                    SampleSeconds: request.SampleSeconds,
+                    BackupFile: backupFile,
+                    RolledBack: false,
+                    MachineFingerprint: GainArchiveService.CurrentFingerprint());
+            GainArchiveService.Append(entry);
+        }
+        catch
+        {
+            // 档案写入失败不阻塞对照；错误由 GainArchiveService 内部记录。
+        }
     }
 
     private static ComparisonRollbackResult? RollbackInternal(

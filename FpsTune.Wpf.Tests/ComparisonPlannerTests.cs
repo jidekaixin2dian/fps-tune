@@ -12,7 +12,9 @@ file sealed class SyncProgress(Action<ComparisonStage> action) : IProgress<Compa
 /// <summary>
 /// ComparisonPlanner：状态机正常路径、各中断路径（改前失败 / 应用失败 / 无备份快照 /
 /// 改后失败自动还原 / 还原失败如实报告）与回滚接线。采样、应用、还原、冷却全部注入。
+/// UserDataPaths.RootOverride 是全局静态：与其他设置它的测试类共享串行 collection。
 /// </summary>
+[Collection("BackupService serial")]
 public sealed class ComparisonPlannerTests : IDisposable
 {
     private readonly string _root = Path.Combine(
