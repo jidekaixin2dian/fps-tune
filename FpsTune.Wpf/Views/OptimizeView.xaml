@@ -14,7 +14,7 @@
   </Style>
  </UserControl.Resources>
  <Grid Margin="32,26,32,28">
-  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
   <StackPanel Margin="0,0,0,14">
    <TextBlock Text="{DynamicResource Str.OptimizeTitle}" Style="{StaticResource PageTitleStyle}"/>
    <TextBlock Text="{DynamicResource Str.OptIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/>
@@ -217,6 +217,9 @@
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
      <Button x:Name="RestoreButton" Content="{DynamicResource Str.RestoreAll}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Margin="12,0" Click="RestoreButton_Click"/>
+     <Button x:Name="CompareButton" Content="{DynamicResource Str.ComparisonStart}"
+             Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Height="40" Margin="0,0,12,0" Click="CompareButton_Click"
+             ToolTip="{DynamicResource Str.ComparisonIntro}"/>
      <Button x:Name="OneClickButton" Content="{DynamicResource Str.OneClick}"
              Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Height="40" Margin="0,0,12,0" Click="OneClickButton_Click"
              ToolTip="{DynamicResource Str.OneClickTip}"/>
@@ -224,5 +227,6 @@
     </StackPanel>
    </Grid>
   </Border>
+  <local:ComparisonCard x:Name="ComparisonPanel" Grid.Row="4" Margin="0,16,0,0" Visibility="Collapsed"/>
  </Grid>
 </UserControl>

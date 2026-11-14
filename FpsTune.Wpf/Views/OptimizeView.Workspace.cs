@@ -11,6 +11,66 @@ public partial class OptimizeView
     private string _scopeFilter = "all";
     internal Func<IReadOnlyList<string>, string?, Task<RunResult>>? ApplyItemsOverride { get; set; }
     internal Func<Task<bool>>? RefreshDetectionOverride { get; set; }
+
+    /// <summary>对照一下（0.5.0 M2）：改前采样 → 审阅确认应用 → 冷却 → 改后采样 → 结论卡。
+    /// 写入仍走既有审阅窗确认，本入口不绕过审阅。</summary>
+    private void CompareButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_operationBusy) return;
+        if (ComparisonPanel.IsRunning) return;
+        if (ConsentCheck.IsChecked != true)
+        {
+            DialogService.Warning(Str.T("Str.ReviewTitle"), Str.T("Str.ConsentApply")); return;
+        }
+        var plan = CaptureReviewPlan();
+        if (plan.Items.Count == 0)
+        {
+            DialogService.Info(Str.T("Str.ReviewTitle"), Str.T("Str.SelectAtLeastOneItem")); return;
+        }
+        // 管理员预检与审阅应用同口径：提权类项目在开始对照前就拦下，不让用户等完一次采样才知道跑不了。
+        var adminItems = plan.Items.Where(i => i.RequiresAdmin).Select(i => i.Name).ToArray();
+        if (adminItems.Length > 0 && !AdminHelper.IsAdministrator())
+        {
+            var elevate = DialogService.Confirm(Str.T("Str.NeedsAdmin"),
+                Str.T("Str.ReviewElevationItems", adminItems.Length,
+                    string.Join(Str.T("Str.ListSeparator"), adminItems)),
+                confirmText: Str.T("Str.RestartAsAdminShort"), danger: false);
+            if (elevate) AdminHelper.RestartAsAdministrator();
+            return;
+        }
+
+        ComparisonPanel.Visibility = Visibility.Visible;
+        SetOperationBusy(true);
+        ComparisonPanel.Start(
+            new ComparisonRequest(plan.Ids, plan.GamePath),
+            MakeCompareApply(plan),
+            onFinished: () => SetOperationBusy(false));
+    }
+
+    /// <summary>对照的应用回调：弹既有审阅窗确认后走 ApplyItemsWithReceiptAsync（含备份快照与逐项回执）。</summary>
+    private Func<IReadOnlyList<string>, string?, CancellationToken, Task<ComparisonApplyOutcome>> MakeCompareApply(OptimizationApplyPlan plan) =>
+        async (ids, gamePath, ct) =>
+        {
+            var confirmed = false;
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                var review = new OptimizationReviewWindow(plan)
+                {
+                    Owner = Window.GetWindow(this) ?? Application.Current?.MainWindow
+                };
+                DialogService.PrepareWindowForTest?.Invoke(review);
+                confirmed = review.ShowDialog() == true;
+            });
+            if (!confirmed)
+                return new ComparisonApplyOutcome(false, Str.T("Str.ComparisonReviewCancelled"), null, []);
+            ct.ThrowIfCancellationRequested();
+            var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(ids, gamePath).ConfigureAwait(false);
+            var changed = receipt.Results.Where(r => r.Changed || r.StateUncertain).Select(r => r.Id).ToList();
+            var errors = receipt.Results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Id + " — " + r.Message).ToList();
+            return new ComparisonApplyOutcome(errors.Count == 0,
+                errors.Count == 0 ? null : string.Join("; ", errors), receipt.BackupFile, changed);
+        };
+
     private void DriverSettings_Click(object sender, RoutedEventArgs e)
     {
         if (_operationBusy) return;

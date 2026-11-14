@@ -24,6 +24,12 @@ public sealed record FrameParseResult(
     int FrameCount,
     IReadOnlyList<string> Header);
 
+/// <summary>逐帧帧时间序列（0.5.0：前后对照切段与延迟预算共用）。失败时 Error 说明原因、Header 携带实际表头。</summary>
+public sealed record FrameSeriesResult(
+    IReadOnlyList<double> FrameTimesMs,
+    FrameParseError? Error,
+    IReadOnlyList<string> Header);
+
 /// <summary>
 /// PresentMon CSV 的帧时间解析（0.2.0 C-E 从 ExperimentRunner 抽出共用：
 /// 实验管线与会话 FPS 走同一套口径——列名候选、&gt;0 过滤、最少 30 帧、
@@ -41,37 +47,15 @@ public static class FrameTimeStats
 
     internal static FrameParseResult Parse(IEnumerable<string> lines, CancellationToken token, int maxFrames)
     {
-        token.ThrowIfCancellationRequested();
-        using var rows = lines.GetEnumerator();
-        if (!rows.MoveNext())
-            return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
-        var header = ReadHeader(rows.Current);
-        if (!rows.MoveNext())
-            return new FrameParseResult(null, FrameParseError.TooFewLines, 0, []);
-        var col = FindColumn(header);
-        if (col < 0)
-            return new FrameParseResult(null, FrameParseError.UnknownColumns, 0, header);
-
-        var frameTimes = new List<double>();
-        var isFps = header[col].Trim().Equals("FPS", StringComparison.OrdinalIgnoreCase);
-        do
-        {
-            token.ThrowIfCancellationRequested();
-            if (TryReadFrame(rows.Current, col, isFps, out var ms))
-            {
-                if (frameTimes.Count >= maxFrames)
-                    return new(null, FrameParseError.TooManyFrames, frameTimes.Count + 1, header);
-                frameTimes.Add(ms);
-            }
-        } while (rows.MoveNext());
-        token.ThrowIfCancellationRequested();
+        var series = ReadSeries(lines, token, maxFrames);
+        if (series.Error is { } error)
+            return new FrameParseResult(null, error, series.FrameTimesMs.Count, series.Header);
+        var frameTimes = series.FrameTimesMs;
         if (frameTimes.Count < MinFrames)
-            return new FrameParseResult(null, FrameParseError.TooFewFrames, frameTimes.Count, header);
+            return new FrameParseResult(null, FrameParseError.TooFewFrames, frameTimes.Count, series.Header);
 
         token.ThrowIfCancellationRequested();
-        frameTimes.Sort();
-        token.ThrowIfCancellationRequested();
-        var sorted = frameTimes;
+        var sorted = frameTimes.OrderBy(v => v).ToList();
         // 最近秩（nearest-rank）p99：第 ceil(0.99·N) 个值。旧式 floor(N·0.99) 在 N 恰为
         // 100 的整倍数时多取一位（把第 99.99 位的值当 p99）；N<100 时 nearest-rank 本身
         // 就是最差帧，这是秩百分位的小样本固有语义，不是实现问题。
@@ -91,7 +75,41 @@ public static class FrameTimeStats
                 stutters),
             null,
             frameTimes.Count,
-            header);
+            series.Header);
+    }
+
+    /// <summary>逐帧帧时间序列：与 Parse 同一套列名候选、&gt;0 过滤与容量上限，供对照切段等消费原始帧。</summary>
+    internal static FrameSeriesResult ReadSeries(IEnumerable<string> lines, CancellationToken token, int maxFrames)
+    {
+        token.ThrowIfCancellationRequested();
+        using var rows = lines.GetEnumerator();
+        if (!rows.MoveNext())
+            return new FrameSeriesResult([], FrameParseError.TooFewLines, []);
+        var header = ReadHeader(rows.Current);
+        if (!rows.MoveNext())
+            return new FrameSeriesResult([], FrameParseError.TooFewLines, header);
+        var col = FindColumn(header);
+        if (col < 0)
+            return new FrameSeriesResult([], FrameParseError.UnknownColumns, header);
+
+        var frameTimes = new List<double>();
+        var isFps = header[col].Trim().Equals("FPS", StringComparison.OrdinalIgnoreCase);
+        do
+        {
+            token.ThrowIfCancellationRequested();
+            if (TryReadFrame(rows.Current, col, isFps, out var ms))
+            {
+                // 溢出帧计入列表（FrameCount 语义与既有 Parse 逐字一致），统计由调用方按 Error 不产出。
+                if (frameTimes.Count >= maxFrames)
+                {
+                    frameTimes.Add(ms);
+                    return new FrameSeriesResult(frameTimes, FrameParseError.TooManyFrames, header);
+                }
+                frameTimes.Add(ms);
+            }
+        } while (rows.MoveNext());
+        token.ThrowIfCancellationRequested();
+        return new FrameSeriesResult(frameTimes, null, header);
     }
 
     internal static string[] ReadHeader(string line)

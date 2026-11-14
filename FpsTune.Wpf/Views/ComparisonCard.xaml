@@ -1,0 +1,58 @@
+<UserControl x:Class="FpsTune.Wpf.Views.ComparisonCard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Style="{StaticResource CardStyle}">
+        <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Margin="0,0,20,0">
+                    <TextBlock Text="{DynamicResource Str.ComparisonTitle}" Style="{StaticResource CardTitleStyle}"/>
+                    <TextBlock Text="{DynamicResource Str.ComparisonIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+                <Button x:Name="RollbackButton" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" MinWidth="96"
+                        VerticalAlignment="Center" Click="Rollback_Click" Visibility="Collapsed"/>
+            </Grid>
+
+            <UniformGrid x:Name="StageBar" Columns="5" Margin="0,14,0,0">
+                <StackPanel Margin="0,0,4,0"><Border x:Name="StageBeforeDot" Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}"/>
+                    <TextBlock x:Name="StageBeforeText" Text="{DynamicResource Str.ComparisonStageBefore}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/></StackPanel>
+                <StackPanel Margin="0,0,4,0"><Border x:Name="StageApplyDot" Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}"/>
+                    <TextBlock x:Name="StageApplyText" Text="{DynamicResource Str.ComparisonStageApply}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/></StackPanel>
+                <StackPanel Margin="0,0,4,0"><Border x:Name="StageCooldownDot" Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}"/>
+                    <TextBlock x:Name="StageCooldownText" Text="{DynamicResource Str.ComparisonStageCooldown}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/></StackPanel>
+                <StackPanel Margin="0,0,4,0"><Border x:Name="StageAfterDot" Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}"/>
+                    <TextBlock x:Name="StageAfterText" Text="{DynamicResource Str.ComparisonStageAfter}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/></StackPanel>
+                <StackPanel><Border x:Name="StageVerdictDot" Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}"/>
+                    <TextBlock x:Name="StageVerdictText" Text="{DynamicResource Str.ComparisonStageVerdict}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/></StackPanel>
+            </UniformGrid>
+
+            <Border x:Name="ResultPanel" Background="{DynamicResource SurfaceBrush}" CornerRadius="{DynamicResource RadiusControl}"
+                    Padding="14,12" Margin="0,14,0,0" Visibility="Collapsed">
+                <StackPanel>
+                    <DockPanel>
+                        <Border x:Name="VerdictBadge" DockPanel.Dock="Left" CornerRadius="6" Padding="8,4" VerticalAlignment="Center" Background="{DynamicResource AccentSoftBrush}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path x:Name="VerdictIcon" Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.8"
+                                      Stroke="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock x:Name="VerdictText" Text="—" FontSize="13" Foreground="{DynamicResource AccentBrush}" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock x:Name="GainText" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </DockPanel>
+                    <UniformGrid Columns="3" Margin="0,12,0,0">
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="{DynamicResource Str.ComparisonCardAvgFps}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                            <TextBlock x:Name="AvgText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                        <StackPanel Margin="0,0,12,0"><TextBlock Text="{DynamicResource Str.ComparisonCardP1Low}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                            <TextBlock x:Name="P1LowText" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                        <StackPanel><TextBlock Text="{DynamicResource Str.ComparisonCardP99}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
+                            <TextBlock x:Name="P99Text" Text="—" FontFamily="{StaticResource FontStat}" FontSize="20" Typography.NumeralAlignment="Tabular" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
+                    </UniformGrid>
+                    <TextBlock x:Name="SampleNoteText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    <TextBlock x:Name="AdviceText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+    </Border>
+</UserControl>
