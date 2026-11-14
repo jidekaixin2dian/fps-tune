@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,7 +16,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "InstallCheck", "InstallRepair", "FilterRestore", "Version", "License", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "Capture", "InstallCheck", "InstallRepair", "FilterRestore", "Version", "License", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -36,6 +37,9 @@ public static class CliHost
         public string? Group { get; set; }
         public int? Duration { get; set; }
         public string? CsvPath { get; set; }
+        // -Capture 动词
+        public bool ProcessNameSpecified { get; set; }
+        public string? ProcessName { get; set; }
         public bool OutSpecified { get; set; }
         public string? OutPath { get; set; }
     }
@@ -75,6 +79,7 @@ public static class CliHost
                 "ListRestore" => RunListRestore(options, output),
                 "Experiment" => RunExperiment(options, output),
                 "DpcLatency" => RunDpcLatency(options, output),
+                "Capture" => RunCapture(options, output),
                 "InstallCheck" => RunInstallCheck(options, output),
                 "InstallRepair" => RunInstallRepair(options, output),
                 "FilterRestore" => RunFilterRestore(options, output),
@@ -431,6 +436,53 @@ public static class CliHost
         return report.Ok ? 0 : 1;
     }
 
+    /// <summary>
+    /// -Capture：定量采样一次（帧时间 + 显卡遥测 + 整机后台负载），run.json 与 frames.csv
+    /// 落盘到用户数据 captures 目录；-Out 可另存一份 JSON。失败时 JSON 带 error/reasonCode，退出码 1。
+    /// </summary>
+    private static int RunCapture(CliOptions options, TextWriter output)
+    {
+        // ValidateOptionsForVerb 已保证 -Game / -ProcessName 二选一且给出的值有效。
+        string processName;
+        string? gamePath = null;
+        if (options.GameSpecified)
+        {
+            gamePath = options.GamePath;
+            processName = Path.GetFileNameWithoutExtension(gamePath)!;
+        }
+        else
+        {
+            processName = options.ProcessName!;
+        }
+        var request = new CaptureRequest(processName, GamePath: gamePath, DurationSec: options.Duration ?? 60);
+        // CLI 由 App.OnStartup 在 UI 线程同步执行：与 -Experiment 相同，把异步链放到线程池再同步等。
+        var run = Task.Run(() => CaptureOrchestrator.CaptureAsync(request, CancellationToken.None))
+            .GetAwaiter().GetResult();
+        var json = JsonSerializer.Serialize(run, CaptureOrchestrator.JsonOpts);
+        if (!string.IsNullOrWhiteSpace(options.OutPath))
+        {
+            var full = Path.GetFullPath(options.OutPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+            File.WriteAllText(full, json, new UTF8Encoding(false));
+        }
+        else
+        {
+            output.WriteLine(json);
+        }
+        if (run.Error is not null)
+        {
+            if (!options.Json) output.WriteLine("采样失败: " + run.Error);
+            return 1;
+        }
+        if (!options.Json)
+        {
+            output.WriteLine(string.Create(CultureInfo.InvariantCulture,
+                $"采样完成: {run.Frames} 帧, 平均 {run.AvgFps:0.##} FPS, 1% low {run.P1Low:0.##}, p99 {run.P99Ms:0.##} ms, 卡顿 {run.Stutters}"));
+            output.WriteLine("数据已保存: " + run.JsonPath);
+        }
+        return 0;
+    }
+
     /// <summary>安装信息自检（只读）。部署脚本用它核对「装着的这份」有没有被弄成孤儿目录。</summary>
     private static int RunInstallCheck(CliOptions options, TextWriter output)
     {
@@ -496,6 +548,7 @@ public static class CliHost
               FpsTune.exe -ListRestore [-Json]
               FpsTune.exe -Experiment -Baseline | -Test -Group <group-1|group-2|group-3> | -Report [-Simulate] [-Duration <秒>] [-CsvPath <csv>] [-Json]
               FpsTune.exe -DpcLatency [-Duration <秒>] [-Out <json>] [-Json]
+              FpsTune.exe -Capture -Game <游戏exe路径> | -ProcessName <进程名> [-Duration <秒>] [-Out <json>] [-Json]
               FpsTune.exe -InstallCheck [-Json]
               FpsTune.exe -InstallRepair [-Json]
               FpsTune.exe -FilterRestore [-Json]
@@ -635,6 +688,20 @@ public static class CliHost
                     else
                         options.CsvPath = args[++i];
                     break;
+                case "processname" when inline is not null:
+                    options.ProcessNameSpecified = true;
+                    if (string.IsNullOrWhiteSpace(inline))
+                        error = "-ProcessName 不能为空";
+                    else
+                        options.ProcessName = inline;
+                    break;
+                case "processname":
+                    options.ProcessNameSpecified = true;
+                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
+                        error = "-ProcessName 缺少值";
+                    else
+                        options.ProcessName = args[++i];
+                    break;
                 case "out" when inline is not null:
                     options.OutSpecified = true;
                     if (string.IsNullOrWhiteSpace(inline)) error = "-Out 不能为空";
@@ -674,6 +741,9 @@ public static class CliHost
             "Restore" when options.PresetSpecified || hasGame || hasOut => "-Restore 只接受 -Items、-BackupFile 和 -Json",
             "ListRestore" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-ListRestore 只接受 -Json",
             "DpcLatency" when hasApplyOnly || hasGame || hasBackupFile => "-DpcLatency 只接受 -Duration、-Out 和 -Json",
+            "Capture" when hasApplyOnly || hasBackupFile => "-Capture 只接受 -Game、-ProcessName、-Duration、-Out 和 -Json",
+            "Capture" when options.ProcessNameSpecified && hasGame => "-Game 与 -ProcessName 只能二选一",
+            "Capture" when !options.ProcessNameSpecified && !hasGame => "-Capture 需要 -Game <游戏exe路径> 或 -ProcessName <进程名>",
             "InstallCheck" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-InstallCheck 只接受 -Json",
             "InstallRepair" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-InstallRepair 只接受 -Json",
             "FilterRestore" when hasApplyOnly || hasGame || hasBackupFile || hasOut => "-FilterRestore 只接受 -Json",

@@ -46,7 +46,10 @@
          托盘切方案、方案导出导入、开机还原计划任务、DRS 读回逐项报错（参考实现对齐轮） -->
     <!-- 0.4.5 = 后台与自启页（开机自启审查 + 服务分组建议 + 带去优化审阅）、键鼠报告率实测与档位回填、侧栏可滚动
           （0.4.4 已发布，不再覆盖同名产物；本轮为未提交的本地候选） -->
-    <VersionPrefix>0.4.5</VersionPrefix>
+    <!-- 0.5.0 = 实测闭环大版本：内置 PresentMon 采样基座（CaptureOrchestrator + 采样回执）、
+         自动前后对照（三段向导 + 增益判定 + 结论卡 + 一键回滚）、每游戏收益档案、
+         HUD 帧时间折线 + 卡顿取证、延迟预算（0.4.5 已发布，不再覆盖同名产物） -->
+    <VersionPrefix>0.5.0</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

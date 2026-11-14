@@ -44,7 +44,7 @@ public sealed class SessionFpsRecorder
         Func<Process, Task<string[]>>? readOutput = null,
         Action<Process>? kill = null)
     {
-        _findPresentMon = findPresentMon ?? ExperimentRunner.ProbePresentMon;
+        _findPresentMon = findPresentMon ?? PresentMonLocator.Probe;
         _findGameProcess = findGameProcess ?? (path =>
         {
             if (string.IsNullOrWhiteSpace(path))

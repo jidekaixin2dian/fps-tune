@@ -602,23 +602,7 @@ public static class ExperimentRunner
     }
 
     private static string? FindPresentMon(Options options)
-        => FindPresentMon(options.PresentMonPath);
-
-    private static string? FindPresentMon(string? explicitPath)
-    {
-        if (explicitPath is { Length: > 0 })
-            return Path.IsPathFullyQualified(explicitPath) && TrustedCaptureTool.IsTrusted(explicitPath) ? explicitPath : null;
-        var candidates = new[]
-        {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                @"NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                @"NVIDIA Corporation\FrameViewSDK\bin\PresentMon_x64.exe"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                @"Microsoft\WinGet\Links\presentmon.exe"),
-        };
-        return candidates.FirstOrDefault(p => File.Exists(p) && TrustedCaptureTool.IsTrusted(p));
-    }
+        => PresentMonLocator.Find(options.PresentMonPath);
 
     /// <summary>
     /// P2-12：A/B 页前置探测 PresentMon 是否可用（只读查找，不安装、不启动）。
@@ -678,9 +662,7 @@ public static class ExperimentRunner
         if (pm is null)
             return false;
 
-        // PresentMon 必须拿到进程名或 PID。GameName 可空（未定位游戏时为 null），
-        // 这里取成非空局部变量再往下用：既挡掉空值，也让下面的参数数组推断为 string[]
-        // 而不是 string?[]（否则 RunProcessAsync 处会报 CS8620）。
+        // PresentMon 必须拿到进程名或 PID。GameName 可空（未定位游戏时为 null）。
         var gameName = options.GameName;
         if (string.IsNullOrWhiteSpace(gameName))
             return false;
@@ -688,86 +670,10 @@ public static class ExperimentRunner
         if (game is null)
             return false;
 
-        // 先试官方 v2 参数（--timed / --terminate_after_timed），优先 --output_stdout（由本进程落盘，
-        // 避免部分版本 --output_file 不落盘），再回退 --output_file 与 v1 参数（--duration）。
-        // game 是通过完整路径身份校验的具体进程，--process_id 优先于按名捕获，同名改名进程不再进入采样。
-        // 使用独立 session 名，避免与 NVIDIA FrameView 服务已启动的默认 "PresentMon" 会话冲突。
-        var attempts = new[]
+        // 0.5.0：参数回退链与超时语义抽到 PresentMonSampler（实验管线与 CaptureOrchestrator 共用）。
+        using (game)
         {
-            new[] { "--session_name", "FpsTune", "--process_id", game.Id.ToString(), "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
-            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_stdout" },
-            new[] { "--session_name", "FpsTune", "--process_id", game.Id.ToString(), "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
-            new[] { "--session_name", "FpsTune", "--process_name", gameName, "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats", "--output_file", csvOut },
-            new[] { "--process", game.Id.ToString(), "--duration", seconds.ToString(), "--output-file", csvOut },
-            new[] { "--process-name", gameName, "--duration", seconds.ToString(), "--output-file", csvOut },
-        };
-
-        foreach (var args in attempts)
-        {
-            ct.ThrowIfCancellationRequested();
-            if (File.Exists(csvOut))
-                File.Delete(csvOut);
-
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeout.CancelAfter(TimeSpan.FromSeconds(seconds + 30));
-            var (code, output) = await RunProcessAsync(pm, args, timeout.Token).ConfigureAwait(false);
-            if (code != 0)
-                continue;
-            if (args.Contains("--output_stdout"))
-            {
-                if (output.Length == 0)
-                    continue;
-                Directory.CreateDirectory(StateDir());
-                await File.WriteAllLinesAsync(csvOut, output.Where(l => l.Length > 0), ct).ConfigureAwait(false);
-                var fi = new FileInfo(csvOut);
-                if (fi.Exists && fi.Length > 0)
-                    return true;
-            }
-            else if (File.Exists(csvOut))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static async Task<(int Code, string[] Output)> RunProcessAsync(string exe, string[] args, CancellationToken ct)
-    {
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = exe,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            };
-            foreach (var a in args)
-                psi.ArgumentList.Add(a);
-            using var verified = TrustedCaptureTool.OpenVerified(exe);
-            using var proc = Process.Start(psi);
-            if (proc is null)
-                return (-1, []);
-            var outTask = proc.StandardOutput.ReadToEndAsync(ct);
-            var errTask = proc.StandardError.ReadToEndAsync(ct);
-            try { await proc.WaitForExitAsync(ct).ConfigureAwait(false); }
-            catch (OperationCanceledException)
-            {
-                try { if (!proc.HasExited) proc.Kill(entireProcessTree: true); } catch { }
-                throw;
-            }
-            var stdout = await outTask.ConfigureAwait(false);
-            await errTask.ConfigureAwait(false);
-            return (proc.ExitCode, stdout.Split('\n'));
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch
-        {
-            return (-1, []);
+            return (await PresentMonSampler.CaptureAsync(pm, game.Id, gameName, seconds, csvOut, ct).ConfigureAwait(false)).Sampled;
         }
     }
 

@@ -37,6 +37,8 @@
     <EmbeddedResource Include="..\LICENSE" LogicalName="FpsTune.Legal.LICENSE" />
     <EmbeddedResource Include="..\THIRD-PARTY-NOTICES.txt" LogicalName="FpsTune.Legal.THIRD-PARTY-NOTICES" />
     <EmbeddedResource Include="Services\UpdateWorker.ps1" LogicalName="FpsTune.UpdateWorker.ps1" />
+    <!-- 内置采样器（Intel 官方签名版，来源与哈希见 Tools\PresentMon\PresentMon-Source.txt） -->
+    <EmbeddedResource Include="Tools\PresentMon\PresentMon-x64.exe" LogicalName="FpsTune.Tools.PresentMon-x64.exe" />
     <EmbeddedResource Include="Assets\GameFilters\*.icc" LogicalName="FpsTune.GameFilter.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets\GameFilters\presets.json" LogicalName="FpsTune.GameFilter.presets.json" />
     <Resource Include="Assets\app.ico" />

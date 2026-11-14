@@ -1,0 +1,7 @@
+Intel PresentMon Console Application
+版本: 2.5.1 (官方未修改二进制)
+来源: https://github.com/GameTechDev/PresentMon/releases/download/v2.5.1/PresentMon-2.5.1-x64.exe
+SHA256: 9bec3083069f58f911e6a512f4806db51a27bd096103087bc1d05ef54c80a191
+签名: Intel Corporation (Authenticode, Valid)
+许可: MIT (见 licenses/presentmon/LICENSE.txt；上游第三方通告见 licenses/presentmon/THIRD-PARTY.txt)
+入仓方式: EmbeddedResource (LogicalName=FpsTune.Tools.PresentMon-x64.exe)，运行时解压到 %LOCALAPPDATA%\FpsTune	ools\presentmon.5.1\ 并校验 SHA256
