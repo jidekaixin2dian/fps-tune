@@ -29,6 +29,11 @@ public sealed class PerformanceSessionService : IDisposable
     private bool _liveFpsRequested;
     internal Guid RunId { get; private set; }
     public LiveFpsSnapshot? CurrentLiveFps => _fpsRecorder?.ReadLive();
+
+    /// <summary>会话采集期间的逐帧钩子（0.5.0 M4：HUD 帧时间折线）。采集未运行时无事件。</summary>
+    public event Action<double>? FrameObserved;
+
+    private void ForwardFrame(double ms) => FrameObserved?.Invoke(ms);
     internal void RequestLiveFps(bool enabled) { _liveFpsRequested = enabled; _fpsRecorder?.SetLiveMonitoring(enabled); }
     public double SampleIntervalSeconds { get; private set; }
     public SessionConditions? Conditions { get; private set; }
@@ -110,6 +115,7 @@ public sealed class PerformanceSessionService : IDisposable
             _sampler.Sampled += OnSample;
             // 0.2.0 C-E：会话期间同步跑 PresentMon（可选能力，失败降级并记录原因键）。
             _fpsRecorder = _createFpsRecorder();
+            _fpsRecorder.FrameObserved += ForwardFrame;
             _fpsRecorder.SetLiveMonitoring(_liveFpsRequested);
             _fpsRecorder.Start(gamePath, run);
             IsRunning = true;
@@ -164,6 +170,7 @@ public sealed class PerformanceSessionService : IDisposable
         if (sampler is not null) sampler.Sampled -= OnSample;
         var session = ToSession(DateTime.Now);
         var recorder = _fpsRecorder;
+        if (recorder is not null) recorder.FrameObserved -= ForwardFrame;
         IsStopping = true;
         _clock.Stop();
         // Dispose only touches the timer on this thread; counter disposal is already deferred.

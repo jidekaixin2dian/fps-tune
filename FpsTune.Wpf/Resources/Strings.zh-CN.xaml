@@ -3299,4 +3299,8 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.GainArchiveExported">已导出 {0} 条收益记录。</s:String>
     <s:String x:Key="Str.GainArchivePreview">导入预演：将新增 {0} 条、跳过 {1} 条重复；已有数据不会被覆盖。</s:String>
     <s:String x:Key="Str.GainArchiveImported">已导入 {0} 条收益记录。</s:String>
+    <s:String x:Key="Str.HudEvidence">拍下现场</s:String>
+    <s:String x:Key="Str.HudEvidenceTaken">已拍下现场，取证文件：{0}</s:String>
+    <s:String x:Key="Str.HudEvidenceFailed">取证没有完成：{0}</s:String>
+    <s:String x:Key="Str.HudStutter">卡顿 {0} 帧</s:String>
 </ResourceDictionary>

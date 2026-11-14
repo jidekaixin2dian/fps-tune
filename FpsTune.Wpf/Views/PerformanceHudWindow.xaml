@@ -12,6 +12,7 @@
                 <TextBlock x:Name="HudCaption" Text="{DynamicResource Str.AppNameShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="{DynamicResource SmallEmphasisWeight}" VerticalAlignment="Center" Cursor="SizeAll"/>
                 <StackPanel x:Name="HudActions" Grid.Column="1" Orientation="Horizontal">
                     <CheckBox x:Name="Pin" Content="{DynamicResource Str.HudPin}" IsChecked="True" Checked="Pin_Changed" Unchecked="Pin_Changed" Margin="0,0,8,0"/>
+                    <Button x:Name="EvidenceButton" Content="{DynamicResource Str.HudEvidence}" Style="{StaticResource GhostButtonStyle}" Padding="8,0" Height="26" MinHeight="26" Click="Evidence_Click" Focusable="False" Visibility="Collapsed"/>
                     <Button x:Name="ThroughButton" Content="{DynamicResource Str.HudThrough}" Style="{StaticResource GhostButtonStyle}" Padding="8,0" Height="26" MinHeight="26" Click="Through_Click" Focusable="False"/>
                     <Button x:Name="CloseHudButton" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" Background="{DynamicResource NotificationBackgroundBrush}" Padding="8,0" Height="26" MinHeight="26" Click="Close_Click" Focusable="False"/>
                 </StackPanel>
@@ -26,6 +27,11 @@
                 <TextBlock x:Name="MemoryText" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center" Margin="0,6"/>
                 <TextBlock x:Name="VramText" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="13" VerticalAlignment="Center" Margin="0,6"/>
             </UniformGrid>
+            <Grid x:Name="TimelineArea" Margin="4,6,4,0" Visibility="Collapsed">
+                <Canvas x:Name="TimelineCanvas" Height="36" ClipToBounds="True"/>
+                <TextBlock x:Name="StutterText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"
+                           HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,2,0"/>
+            </Grid>
             <TextBlock x:Name="ScopeText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,16,0,0"/>
             <TextBlock x:Name="CaptureStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/>
         </StackPanel>

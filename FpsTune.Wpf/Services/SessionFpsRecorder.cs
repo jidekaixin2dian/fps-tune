@@ -35,7 +35,14 @@ public sealed class SessionFpsRecorder
     private readonly LiveFrameWindow _live = new();
     internal void SetLiveMonitoring(bool enabled) => _live.SetEnabled(enabled);
     internal LiveFpsSnapshot? ReadLive() => UnavailableReasonKey is null ? _live.Read() : null;
-    internal void ObserveFrame(double ms) => _live.Add(ms);
+
+    /// <summary>每收到一帧触发的钩子（0.5.0 M4：HUD 帧时间折线的数据源）。仅在采集进行中有事件。</summary>
+    internal event Action<double>? FrameObserved;
+    internal void ObserveFrame(double ms)
+    {
+        _live.Add(ms);
+        FrameObserved?.Invoke(ms);
+    }
 
     public SessionFpsRecorder(
         Func<string?>? findPresentMon = null,

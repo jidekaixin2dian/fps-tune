@@ -17,6 +17,10 @@ public partial class PerformanceHudWindow : Window
     private readonly PerformanceSessionService _session;
     private readonly MetricsSampler _metrics;
     private readonly DispatcherTimer _ticker;
+    private readonly HudFrameTimeline _timeline = new();
+
+    /// <summary>帧时间缓冲（测试注入逐帧用；生产路径走 FrameObserved 钩子）。</summary>
+    internal HudFrameTimeline Timeline => _timeline;
     private MetricSample? _sample;
     private long _sampleReceived;
     private nint _handle;
@@ -63,10 +67,22 @@ public partial class PerformanceHudWindow : Window
     {
         var visible = IsLoaded && IsVisible && WindowState != WindowState.Minimized;
         Observe(visible);
+        ObserveFrames(visible);
         _session.RequestLiveFps(visible);
         if (visible) _ticker.Start(); else _ticker.Stop();
         App.UpdateLiveMetrics();
     }
+
+    /// <summary>折线数据流：HUD 可见时才订阅逐帧钩子（关闭即零采样），并清空缓冲。</summary>
+    private void ObserveFrames(bool visible)
+    {
+        if (visible) _session.FrameObserved += OnFrame;
+        else _session.FrameObserved -= OnFrame;
+        _timeline.Clear();
+        RenderTimeline(null);
+    }
+
+    private void OnFrame(double ms) => _timeline.Append(ms);
     private void Observe(bool visible)
     {
         if (_observing == visible) return;
@@ -99,6 +115,7 @@ public partial class PerformanceHudWindow : Window
         var fps = _session.CurrentLiveFps;
         FpsText.Text = fps is null ? "—" : fps.Fps.ToString("F0");
         LowText.Text = fps is null ? "—" : fps.P1Low.ToString("F0");
+        RenderTimeline(_timeline.Analyze());
         ScopeText.Text = _interactionError ?? (_through ? Str.T("Str.HudLocked") : _session.IsRunning
             ? Str.T("Str.HudRecording", _session.Conditions?.GameName ?? _session.SessionName) : Str.T("Str.HudIdle"));
         ScopeText.Visibility = _appearance.Layout != "card" && _interactionError is null ? Visibility.Collapsed : Visibility.Visible;
@@ -108,6 +125,83 @@ public partial class PerformanceHudWindow : Window
         HudRoot.ToolTip = CaptureStatus.Text + "\n" + ScopeText.Text;
     }
     private static string Percent(double? value) => value is { } number && double.IsFinite(number) ? $"{number:F0}%" : "—";
+
+    /// <summary>帧时间折线：最近 60 帧，超过 2× 中位数的点标红；低配降采样到 30 点。</summary>
+    internal void RenderTimeline(HudTimelineSnapshot? snapshot)
+    {
+        if (snapshot is null || TimelineArea.Visibility != Visibility.Visible)
+        {
+            TimelineCanvas.Children.Clear();
+            StutterText.Text = "";
+            return;
+        }
+        var frames = snapshot.Frames;
+        var step = UiPerformance.LowSpec && frames.Count > 30 ? 2 : 1;
+        var width = TimelineCanvas.ActualWidth;
+        var height = TimelineCanvas.ActualHeight;
+        if (width < 20 || height < 10) return;
+        var maxMs = Math.Max(frames.Max(), 1);
+        var points = new List<Point>();
+        for (var i = 0; i < frames.Count; i += step)
+            points.Add(new Point(width * i / (frames.Count - 1d), height - 3 - (height - 6) * Math.Min(frames[i] / maxMs, 1)));
+        TimelineCanvas.Children.Clear();
+        var line = new System.Windows.Shapes.Polyline
+        {
+            Points = new PointCollection(points),
+            Stroke = (Brush)FindResource("AccentBrush"),
+            StrokeThickness = 1.6,
+            StrokeLineJoin = PenLineJoin.Round,
+        };
+        TimelineCanvas.Children.Add(line);
+        var danger = (Brush)FindResource("DangerBrush");
+        // 卡顿点独立于降采样循环：降采样只为省绘制量，卡顿取证一个都不能丢；
+        // 位置取该帧附近的采样点（钳到已画的最后一个点）。
+        foreach (var index in snapshot.StutterIndices)
+        {
+            var point = points[Math.Min(index / step, points.Count - 1)];
+            var dot = new System.Windows.Shapes.Ellipse
+            {
+                Width = 4, Height = 4,
+                Fill = danger,
+                Margin = new Thickness(point.X - 2, point.Y - 2, 0, 0),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            TimelineCanvas.Children.Add(dot);
+        }
+        StutterText.Text = snapshot.StutterIndices.Count == 0
+            ? "" : Str.T("Str.HudStutter", snapshot.StutterIndices.Count);
+    }
+
+    /// <summary>拍下现场：把当前帧时间窗口与显卡/后台/HAGS/MPO 实况写成取证快照。</summary>
+    private async void Evidence_Click(object sender, RoutedEventArgs e)
+    {
+        EvidenceButton.IsEnabled = false;
+        try
+        {
+            var snapshot = _timeline.Analyze();
+            var stutters = snapshot is null
+                ? Array.Empty<double>()
+                : snapshot.StutterIndices.Select(i => snapshot.Frames[i]).ToArray();
+            var path = await StutterEvidence.CaptureAsync(new StutterEvidenceContext(
+                _session.Conditions?.GameName ?? _session.SessionName,
+                stutters,
+                snapshot?.MedianMs ?? 0,
+                _session.CurrentLiveFps?.Fps ?? 0,
+                _session.CurrentLiveFps?.P1Low ?? 0)).ConfigureAwait(true);
+            CaptureStatus.Text = path is null
+                ? Str.T("Str.HudEvidenceFailed", "")
+                : Str.T("Str.HudEvidenceTaken", path);
+        }
+        catch (Exception ex)
+        {
+            CaptureStatus.Text = Str.T("Str.HudEvidenceFailed", PrivacyScrub.Sanitize(ex.Message));
+        }
+        finally
+        {
+            EvidenceButton.IsEnabled = true;
+        }
+    }
     internal void ApplyAppearance(HudAppearance appearance)
     {
         _appearance = appearance.Normalize();
@@ -119,6 +213,9 @@ public partial class PerformanceHudWindow : Window
         MemoryText.Visibility = VramText.Visibility = layout.Compact ? Visibility.Collapsed : Visibility.Visible;
         CpuText.Margin = GpuText.Margin = layout.Compact ? default : new Thickness(0, 4, 0, 4);
         CaptureStatus.Visibility = layout.Compact ? Visibility.Collapsed : Visibility.Visible;
+        // 帧时间折线与「拍下现场」只在卡片布局露出：紧凑/条形布局以读数为主。
+        TimelineArea.Visibility = layout.Compact ? Visibility.Collapsed : Visibility.Visible;
+        EvidenceButton.Visibility = layout.Compact ? Visibility.Collapsed : Visibility.Visible;
         HudBody.Margin = new Thickness(layout.Compact ? 6 : 8);
         HudBackdrop.Opacity = 1 - _appearance.Transparency / 100;
         ScopeText.Visibility = _appearance.Layout == "card" ? Visibility.Visible : Visibility.Collapsed;

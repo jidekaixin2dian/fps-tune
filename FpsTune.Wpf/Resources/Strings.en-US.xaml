@@ -3296,4 +3296,8 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.GainArchiveExported">Exported {0} gain records.</s:String>
     <s:String x:Key="Str.GainArchivePreview">Import preview: {0} new, {1} duplicates skipped; existing data is never overwritten.</s:String>
     <s:String x:Key="Str.GainArchiveImported">Imported {0} gain records.</s:String>
+    <s:String x:Key="Str.HudEvidence">Capture</s:String>
+    <s:String x:Key="Str.HudEvidenceTaken">Captured. Evidence file: {0}</s:String>
+    <s:String x:Key="Str.HudEvidenceFailed">Capture failed: {0}</s:String>
+    <s:String x:Key="Str.HudStutter">{0} stutter frames</s:String>
 </ResourceDictionary>
