@@ -12,6 +12,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 页头 -->
@@ -410,6 +411,15 @@
                 </StackPanel></Expander>
             </StackPanel>
         </Border>
+        <Border x:Name="LatencyBudgetCard" Grid.Row="6" Style="{StaticResource CardStyle}" Margin="0,20,0,0"><StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="{DynamicResource Str.BudgetTitle}" Style="{StaticResource CardTitleStyle}"/>
+                <Button x:Name="BudgetRefreshButton" Content="{DynamicResource Str.Refresh}" Style="{StaticResource GhostButtonStyle}" Click="BudgetRefresh_Click"/>
+            </Grid>
+            <TextBlock x:Name="BudgetSummaryText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,8,0,0" AutomationProperties.LiveSetting="Polite"/>
+            <TextBlock x:Name="BudgetAdviceText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" Margin="0,6,0,0"/>
+        </StackPanel></Border>
     </Grid>
     </ScrollViewer>
 </UserControl>

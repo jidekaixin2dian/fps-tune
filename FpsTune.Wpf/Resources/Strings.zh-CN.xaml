@@ -3303,4 +3303,14 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.HudEvidenceTaken">已拍下现场，取证文件：{0}</s:String>
     <s:String x:Key="Str.HudEvidenceFailed">取证没有完成：{0}</s:String>
     <s:String x:Key="Str.HudStutter">卡顿 {0} 帧</s:String>
+    <s:String x:Key="Str.BudgetTitle">延迟预算</s:String>
+    <s:String x:Key="Str.BudgetNoData">还没有可用的采样数据。开始一次定量采样后，这里会给出输入、帧生成与显示三段的延迟预算。</s:String>
+    <s:String x:Key="Str.BudgetInput">输入段：上报间隔 {0} ms（报告率 {1} Hz · 缓冲深度 {2}，队列约 {3} ms）</s:String>
+    <s:String x:Key="Str.BudgetFrame">帧生成段：帧时间 p50 {0} ms / p99 {1} ms · GPU 忙 p50 {2} ms</s:String>
+    <s:String x:Key="Str.BudgetDisplay">显示段：显示等待 p50 {0} ms / p99 {1} ms · 刷新率 {2} Hz</s:String>
+    <s:String x:Key="Str.BudgetUnmeasured">不可测</s:String>
+    <s:String x:Key="Str.BudgetAdviceQueueDepth">键鼠缓冲深度低于当前报告率的推荐值；去「常用工具 → 键鼠缓冲区」调到推荐深度。</s:String>
+    <s:String x:Key="Str.BudgetAdvicePollingRate">报告率偏低；先用「用实测值」回填真实报告率，再核对缓冲深度。</s:String>
+    <s:String x:Key="Str.BudgetAdviceGpuBound">GPU 忙占帧时间的比例很高，瓶颈在显卡；降画质或开 DLSS 才有提升空间。</s:String>
+    <s:String x:Key="Str.BudgetAdviceDisplayQueue">显示等待抖动明显（p99 超过 p50 两倍）；检查游戏是否独占全屏、帧率上限与 VRR 状态。</s:String>
 </ResourceDictionary>

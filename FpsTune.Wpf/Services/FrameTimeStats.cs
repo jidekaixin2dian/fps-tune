@@ -145,7 +145,7 @@ public static class FrameTimeStats
     }
 
     // PresentMon records are single-line. Commas inside quoted application/extra fields must not shift the frame column.
-    private static bool NextField(ReadOnlySpan<char> line, ref int position, out ReadOnlySpan<char> field)
+    internal static bool NextField(ReadOnlySpan<char> line, ref int position, out ReadOnlySpan<char> field)
     {
         field = default;
         if (position > line.Length) return false;

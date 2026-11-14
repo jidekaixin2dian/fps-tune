@@ -458,7 +458,22 @@ public static class CliHost
         // CLI 由 App.OnStartup 在 UI 线程同步执行：与 -Experiment 相同，把异步链放到线程池再同步等。
         var run = Task.Run(() => CaptureOrchestrator.CaptureAsync(request, CancellationToken.None))
             .GetAwaiter().GetResult();
-        var json = JsonSerializer.Serialize(run, CaptureOrchestrator.JsonOpts);
+        // 采样成功时补一份延迟预算（0.5.0 M5）：输入/帧生成/显示三段，随 -Out JSON 一起输出。
+        LatencyBudgetResult? budget = null;
+        if (run.Error is null && File.Exists(run.CsvPath))
+        {
+            try
+            {
+                SettingsService.Load();
+                var polling = SettingsService.Current.MousePollingRate;
+                var series = FrameTimeColumns.Read(File.ReadLines(run.CsvPath));
+                budget = LatencyBudget.Evaluate(series, polling,
+                    InputQueuePolicy.RecommendedDepth(polling), LatencyBudget.ReadRefreshHz());
+            }
+            catch { budget = null; }
+        }
+        var json = JsonSerializer.Serialize(
+            new { run, latencyBudget = budget }, CaptureOrchestrator.JsonOpts);
         if (!string.IsNullOrWhiteSpace(options.OutPath))
         {
             var full = Path.GetFullPath(options.OutPath);
@@ -478,6 +493,9 @@ public static class CliHost
         {
             output.WriteLine(string.Create(CultureInfo.InvariantCulture,
                 $"采样完成: {run.Frames} 帧, 平均 {run.AvgFps:0.##} FPS, 1% low {run.P1Low:0.##}, p99 {run.P99Ms:0.##} ms, 卡顿 {run.Stutters}"));
+            if (budget is not null)
+                output.WriteLine(string.Create(CultureInfo.InvariantCulture,
+                    $"延迟预算: 输入 {budget.InputInterval.ValueMs:0.###} ms + 队列 {budget.InputQueue.ValueMs:0.#} ms → 帧时间 p50 {budget.FrameP50.ValueMs:0.##} ms / p99 {budget.FrameP99.ValueMs:0.##} ms → 显示等待 p50 {budget.DisplayLatencyP50.ValueMs:0.##} ms ({(budget.RefreshMeasured ? $"{budget.RefreshHz:0} Hz" : "刷新率不可测")})"));
             output.WriteLine("数据已保存: " + run.JsonPath);
         }
         return 0;

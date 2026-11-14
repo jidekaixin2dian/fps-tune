@@ -3300,4 +3300,14 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.HudEvidenceTaken">Captured. Evidence file: {0}</s:String>
     <s:String x:Key="Str.HudEvidenceFailed">Capture failed: {0}</s:String>
     <s:String x:Key="Str.HudStutter">{0} stutter frames</s:String>
+    <s:String x:Key="Str.BudgetTitle">Latency budget</s:String>
+    <s:String x:Key="Str.BudgetNoData">No usable capture yet. After one quantitative capture, the input, frame-generation and display segments of your latency budget show up here.</s:String>
+    <s:String x:Key="Str.BudgetInput">Input: report interval {0} ms ({1} Hz × depth {2}, queue ≈ {3} ms)</s:String>
+    <s:String x:Key="Str.BudgetFrame">Frame generation: frame time p50 {0} ms / p99 {1} ms · GPU busy p50 {2} ms</s:String>
+    <s:String x:Key="Str.BudgetDisplay">Display: display latency p50 {0} ms / p99 {1} ms · refresh rate {2} Hz</s:String>
+    <s:String x:Key="Str.BudgetUnmeasured">not measurable</s:String>
+    <s:String x:Key="Str.BudgetAdviceQueueDepth">Mouse buffer depth is below the recommended value for your polling rate; set it on Tools → Mouse buffer.</s:String>
+    <s:String x:Key="Str.BudgetAdvicePollingRate">Polling rate is low; fill in a measured value first, then recheck the buffer depth.</s:String>
+    <s:String x:Key="Str.BudgetAdviceGpuBound">GPU busy takes most of the frame time — the GPU is the bottleneck; lower quality settings or enable DLSS.</s:String>
+    <s:String x:Key="Str.BudgetAdviceDisplayQueue">Display latency jitters a lot (p99 ≥ 2× p50); check exclusive fullscreen, the frame rate limit and VRR state.</s:String>
 </ResourceDictionary>

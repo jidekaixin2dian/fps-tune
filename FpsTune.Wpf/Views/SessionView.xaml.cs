@@ -25,6 +25,61 @@ public partial class SessionView : UserControl
     private readonly PerformanceSessionService _service;
     private readonly AutoRecordingService? _automation;
     public SessionView() : this(App.SessionService, App.AutomaticRecording) { }
+
+    /// <summary>延迟预算卡（0.5.0 M5）：用最近一次定量采样的多列数据算输入/帧生成/显示三段。</summary>
+    private void BudgetRefresh_Click(object sender, RoutedEventArgs e) => LoadLatencyBudget();
+
+    private void LoadLatencyBudget()
+    {
+        try
+        {
+            var series = LoadLatestCaptureSeries();
+            if (series is null)
+            {
+                BudgetSummaryText.Text = Str.T("Str.BudgetNoData");
+                BudgetAdviceText.Text = "";
+                return;
+            }
+            SettingsService.Load();
+            var polling = SettingsService.Current.MousePollingRate;
+            var budget = LatencyBudget.Evaluate(series, polling,
+                InputQueuePolicy.RecommendedDepth(polling), LatencyBudget.ReadRefreshHz());
+            BudgetSummaryText.Text = Str.T("Str.BudgetInput",
+                budget.InputInterval.ValueMs?.ToString("0.###") ?? "—", polling,
+                InputQueuePolicy.RecommendedDepth(polling),
+                budget.InputQueue.ValueMs?.ToString("0.#") ?? "—")
+                + "\n" + Str.T("Str.BudgetFrame",
+                    budget.FrameP50.ValueMs?.ToString("0.##") ?? Str.T("Str.BudgetUnmeasured"),
+                    budget.FrameP99.ValueMs?.ToString("0.##") ?? Str.T("Str.BudgetUnmeasured"),
+                    budget.GpuBusyP50.ValueMs?.ToString("0.##") ?? Str.T("Str.BudgetUnmeasured"))
+                + "\n" + Str.T("Str.BudgetDisplay",
+                    budget.DisplayLatencyP50.ValueMs?.ToString("0.##") ?? Str.T("Str.BudgetUnmeasured"),
+                    budget.DisplayLatencyP99.ValueMs?.ToString("0.##") ?? Str.T("Str.BudgetUnmeasured"),
+                    budget.RefreshMeasured ? $"{budget.RefreshHz:0}" : Str.T("Str.BudgetUnmeasured"));
+            BudgetAdviceText.Text = budget.AdviceKeys.Count == 0
+                ? ""
+                : string.Join("\n", budget.AdviceKeys.Select(Str.T));
+        }
+        catch (Exception ex)
+        {
+            BudgetSummaryText.Text = PrivacyScrub.Sanitize(ex.Message);
+            BudgetAdviceText.Text = "";
+        }
+    }
+
+    /// <summary>最近一次定量采样的多列序列（captures 目录按时间取最新的 frames.csv）。</summary>
+    private static FpsTune.Wpf.Core.FrameColumnSeries? LoadLatestCaptureSeries()
+    {
+        var root = Path.Combine(UserDataPaths.Root, "captures");
+        if (!Directory.Exists(root)) return null;
+        var latest = Directory.GetDirectories(root)
+            .Select(d => Path.Combine(d, "frames.csv"))
+            .Where(File.Exists)
+            .Select(f => new FileInfo(f))
+            .OrderByDescending(f => f.LastWriteTime)
+            .FirstOrDefault();
+        return latest is null ? null : FrameTimeColumns.Read(File.ReadLines(latest.FullName));
+    }
     internal SessionView(PerformanceSessionService service, AutoRecordingService? automation = null)
     {
         _service = service; _automation = automation;
