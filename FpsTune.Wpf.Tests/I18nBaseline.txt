@@ -22,7 +22,7 @@ MainWindow.xaml.cs	2
 Services/AdminHelper.cs	2
 Services/AutoProfileActivityStore.cs	5
 Services/AutoProfileService.cs	33
-Services/CliHost.cs	66
+Services/CliHost.cs	75
 Services/DiagnosticReportExporter.cs	81
 Services/DialogService.cs	4
 Services/DigitalVibranceService.cs	8
@@ -51,3 +51,7 @@ Services/InstallIntegrity.cs	1
 Services/UpdateMirrors.cs	1
 Views/QuickOptimizeView.xaml.cs	7
 Views/MaintenanceView.MemoryApps.cs	1
+Services/BundledToolExtract.cs	2
+Services/CaptureOrchestrator.cs	19
+Services/ComparisonPlanner.cs	21
+Services/GainArchiveService.cs	3

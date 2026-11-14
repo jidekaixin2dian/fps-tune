@@ -3313,4 +3313,5 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.BudgetAdvicePollingRate">报告率偏低；先用「用实测值」回填真实报告率，再核对缓冲深度。</s:String>
     <s:String x:Key="Str.BudgetAdviceGpuBound">GPU 忙占帧时间的比例很高，瓶颈在显卡；降画质或开 DLSS 才有提升空间。</s:String>
     <s:String x:Key="Str.BudgetAdviceDisplayQueue">显示等待抖动明显（p99 超过 p50 两倍）；检查游戏是否独占全屏、帧率上限与 VRR 状态。</s:String>
+    <s:String x:Key="Str.GainCi">{0}（95% 置信区间 {1:+0.#;-0.#}% ~ {2:+0.#;-0.#}%）</s:String>
 </ResourceDictionary>

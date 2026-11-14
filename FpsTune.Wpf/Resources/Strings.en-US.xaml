@@ -3310,4 +3310,5 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.BudgetAdvicePollingRate">Polling rate is low; fill in a measured value first, then recheck the buffer depth.</s:String>
     <s:String x:Key="Str.BudgetAdviceGpuBound">GPU busy takes most of the frame time — the GPU is the bottleneck; lower quality settings or enable DLSS.</s:String>
     <s:String x:Key="Str.BudgetAdviceDisplayQueue">Display latency jitters a lot (p99 ≥ 2× p50); check exclusive fullscreen, the frame rate limit and VRR state.</s:String>
+    <s:String x:Key="Str.GainCi">{0} (95% confidence interval {1:+0.#;-0.#}% ~ {2:+0.#;-0.#}%)</s:String>
 </ResourceDictionary>

@@ -149,13 +149,13 @@ public sealed class GainVerdictTests
     }
 
     [Fact]
-    public void FormatGain_shows_percent_with_ci()
+    public void FormatGain_shows_signed_percent_only()
     {
         var verdict = GainVerdict.Evaluate(MakeRounds(100), MakeRounds(105.5));
         var text = GainVerdict.FormatGain(verdict.Analysis);
 
         Assert.StartsWith("+", text);
-        Assert.Contains("%", text);
-        Assert.Contains("置信区间", text);
+        Assert.EndsWith("%", text);
+        Assert.False(text.Contains("置信区间") || text.Contains("95%"), "置信区间文案由展示层（Str.GainCi）组装，纯逻辑层只给数字");
     }
 }

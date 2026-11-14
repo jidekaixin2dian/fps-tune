@@ -191,7 +191,10 @@ public partial class ComparisonCard : UserControl
         ResultPanel.Visibility = Visibility.Visible;
         SetVerdictBadge(verdict.Decision, verdict.ReasonKey);
 
-        GainText.Text = GainVerdict.FormatGain(verdict.Analysis);
+        var gain = GainVerdict.FormatGain(verdict.Analysis);
+        GainText.Text = verdict.Analysis.AvgDiffLowerPct is { } lo && verdict.Analysis.AvgDiffUpperPct is { } hi
+            ? Str.T("Str.GainCi", gain, lo, hi)
+            : gain;
         AvgText.Text = verdict.Analysis.AvgBase is { } b && verdict.Analysis.AvgTest is { } a
             ? string.Create(CultureInfo.InvariantCulture, $"{b:0.#} → {a:0.#}")
             : "—";

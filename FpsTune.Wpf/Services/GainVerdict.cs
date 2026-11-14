@@ -108,15 +108,12 @@ public static class GainVerdict
     /// <summary>增益百分点（保留两位；基线均值非正返回 null）。</summary>
     public static double? DiffPercent(AbAnalysisResult analysis) => analysis.AvgDiffPct;
 
-    /// <summary>区间端点文案格式（结论卡）：+12.3%（95% 置信区间 +8.1% ~ +16.5%）。</summary>
+    /// <summary>增益文案（结论卡）：+12.3%；无区间数据时为 —。置信区间文案由展示层组装（Str.GainCi）。</summary>
     public static string FormatGain(AbAnalysisResult analysis)
     {
         if (analysis.AvgDiffPct is not { } diff)
             return "—";
-        var ci = analysis.AvgDiffLowerPct is { } lo && analysis.AvgDiffUpperPct is { } hi
-            ? string.Create(CultureInfo.InvariantCulture, $"（95% 置信区间 {Format(lo)} ~ {Format(hi)}）")
-            : "";
-        return Format(diff) + ci;
+        return Format(diff);
 
         static string Format(double value)
             => (value >= 0 ? "+" : "") + value.ToString("0.#", CultureInfo.InvariantCulture) + "%";
