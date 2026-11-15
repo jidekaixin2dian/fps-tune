@@ -1,11 +1,11 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.5)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.5)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.4.5](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.5)**。
+当前版本为 **[v0.5.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.4.5) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.4.5.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.5/FpsTune-Setup-0.4.5.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.5.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.5.0/FpsTune-Setup-0.5.0.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -26,7 +26,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.4.5.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.4.5/SHA256SUMS-v0.4.5.txt)。
+本版校验清单：[SHA256SUMS-v0.5.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.5.0/SHA256SUMS-v0.5.0.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -85,12 +85,14 @@
 - **网络与端口**：在维护工具查看网卡、DNS 与网关，对指定主机进行 ICMP / TCP 测试，查看延迟、未响应与波动；支持停止和导出。按进程、地址或端口筛选 TCP/UDP、IPv4/IPv6 占用快照，也可通过 Ctrl+K 搜索入口。
 - **内存整理**：一键完整整理可收缩可整理后台的工作集并整理全部待机缓存；也可仅整理待机、仅处理所选后台或组合执行。显示阶段、数量、耗时与前后读数，可停止后续步骤。保留游戏、系统与反作弊保护；低内存自动整理仍默认关闭。
 - **缓存维护**：先预览当前用户的 DirectX / NVIDIA 着色器缓存，再确认清理；跳过占用或预览后变化的文件。删除的缓存不能还原，下次运行会重建，可能短暂卡顿。
-- **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，按游戏保存录制条件模板，搜索和筛选历史，双选两次记录直接比较平均 FPS、1% LOW 与 P99，并导出独立 HTML 报告。真实 FPS 采样需要官方 PresentMon。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。A/B 手动 CSV 后台校验，可取消，失败保留已有结果。
-- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持精简/卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；“游戏精简”使用 420×44 DIP 无底色穿透条，保留找回。录制时显示近期 FPS 与 1% LOW，未采到时显示缺失状态。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
+- **性能会话与 A/B**：本机记录 CPU、内存、GPU、显存和帧时间，按游戏保存录制条件模板，搜索和筛选历史，双选两次记录直接比较平均 FPS、1% LOW 与 P99，并导出独立 HTML 报告。帧时间采样内置官方签名版 PresentMon（2.5.1），装好即可测，机器上已安装的版本也会被识别；采样走系统 ETW，需要管理员权限。性能会话页的「延迟预算」按最近一次采样给出输入、帧生成、显示三段数值，缺字段如实标「不可测」并给下一步。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。A/B 手动 CSV 后台校验，可取消，失败保留已有结果。
+- **前后对照**：在“优化”页点「对照一下」，改前自动采 60 秒 → 在审阅窗确认要应用的项 → 冷却 → 改后采 60 秒，结论卡给出平均帧增益与 95% 置信区间，按「值得保留 / 建议回滚 / 证据不足」三档判定；不值时「立即回滚」按本次对照自己的备份还原，应用失败或改后采样失败会自动还原并说明原因。
+- **收益档案**：在“游戏库 → 收益档案”查看每个游戏或每台机器的对照次数、最佳确认收益、最近时间与增益趋势，可导出与导入（导入先预演新增与重复条数，不覆盖已有数据）；换机器或换显卡后旧结论如实标注“只作参考”。
+- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持精简/卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；“游戏精简”使用 420×44 DIP 无底色穿透条，保留找回。卡片布局显示最近 60 帧的帧时间折线，超过 2 倍中位数的帧标红并给卡顿计数；「拍下现场」把卡顿帧、当时显卡利用率 / 显存 / 温度 / 功耗、后台占用前 3 名与 HAGS / MPO 状态写成取证文件；关掉悬浮窗立即停止采集，不占开销。录制时显示近期 FPS 与 1% LOW，未采到时显示缺失状态。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
 - **引导与反馈**：性能记录和 A/B 实验提供入门步骤；QQ 加群反馈与更新提醒独立显示，加群提示可选择不再提醒。
 - **备份与恢复**：统一列出系统、游戏驱动配置、ICC、数字振动、画面参数、分辨率及均衡器的备份；可核验中断操作，导出完整恢复资料，并在同机同 Windows 用户下导入。
 
-这些功能调整系统或驱动配置，不修改游戏文件、不注入游戏进程。效果取决于硬件、驱动、游戏和场景，以同机对照测量为准。
+这些功能调整系统或驱动配置，不修改游戏文件、不注入游戏进程。效果取决于硬件、驱动、游戏和场景，以同机对照测量为准。帧时间采样依赖系统 ETW：Windows 预览版系统、远程或虚拟显示会话（串流、远控桌面）、带反作弊内核驱动的机器上可能读不到帧，此时界面会直接说明“没有产生有效数据”并给出原因，不会用估算值充数。
 
 ## 快速开始
 
@@ -110,6 +112,8 @@
 .\FpsTune.exe -Apply -Items game-mode,gpu-pref -Game "C:\Games\Game.exe" -Json
 .\FpsTune.exe -ListRestore -Json                  # 查看备份范围
 .\FpsTune.exe -Restore -Json                      # 还原支持的备份
+.\FpsTune.exe -Capture -ProcessName game -Duration 60 -Out capture.json   # 采一次帧时间（需管理员）
+.\FpsTune.exe -Capture -Game "C:\Games\Game.exe" -Duration 60 -Json
 .\FpsTune.exe -Version                           # 版本与构建提交
 .\FpsTune.exe -License                           # 完整许可证与第三方声明
 ```
@@ -134,7 +138,7 @@ AI 助手操作流程见 [SKILL.md](SKILL.md)。
 # 演练：以上每条命令都加 -Simulate，使用独立的模拟记录。
 ```
 
-真实测量需自行安装官方 PresentMon（如 `winget install Intel.PresentMon.Console`）。工具检查其签名与发布者，再调用采样。
+帧时间采样使用内置的官方签名版 PresentMon；机器上已装过其他版本时会识别并复用，调用前检查签名与发布者。ETW 会话需要以管理员身份运行。
 A/B 使用固定硬件、游戏、画质与路线，要求至少 3 次有效样本且 CV ≤ 0.05；P99 恶化超过 3% 时不保留。其余收益阈值见程序判定记录。
 这些是规则判定，不是统计显著性证明。模拟结果独立存储，不作为真实 FPS 收益；回滚失败会报告并保留恢复记录。
 
