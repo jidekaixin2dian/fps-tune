@@ -44,7 +44,7 @@ public sealed class OperationReceiptTests : IDisposable
         RegistryHelper.SnapshotOverride = (_, _, name) => new(values.ContainsKey(name), values.GetValueOrDefault(name), RegistryValueKind.String);
         var writes = 0;
         RegistryHelper.SetOverride = (_, _, name, value, _) => { if (++writes == 2) throw new IOException("injected write failure"); values[name] = value; };
-        var run = await OptimizationEngine.ApplyItemsAsync(new[] { "mouse-accel-off" }, null);
+        var run = await NativeOptimizationEngine.ApplyItemsAsync(new[] { "mouse-accel-off" }, null);
         Assert.Equal(1, run.ExitCode);
         var json = JsonNode.Parse(run.Output)!;
         Assert.True(json["results"]![0]!["stateUncertain"]!.GetValue<bool>());
@@ -64,7 +64,7 @@ public sealed class OperationReceiptTests : IDisposable
         RegistryHelper.SnapshotOverride = (_, _, _) => throw new IOException("injected read failure");
         var writes = 0;
         RegistryHelper.SetOverride = (_, _, _, _, _) => writes++;
-        var run = await OptimizationEngine.ApplyItemsAsync(new[] { "transparency-off" }, null);
+        var run = await NativeOptimizationEngine.ApplyItemsAsync(new[] { "transparency-off" }, null);
         Assert.Equal(1, run.ExitCode); Assert.Equal(0, writes);
         Assert.False(JsonNode.Parse(run.Output)!["results"]![0]!["stateUncertain"]!.GetValue<bool>());
     }
@@ -178,7 +178,7 @@ public sealed class OperationReceiptTests : IDisposable
         var value = 1;
         RegistryHelper.SnapshotOverride = (_, _, _) => new(true, value, RegistryValueKind.DWord);
         RegistryHelper.SetOverride = (_, _, _, v, _) => value = Convert.ToInt32(v);
-        var run = await OptimizationEngine.ApplyItemsAsync(new[] { "transparency-off" }, null);
+        var run = await NativeOptimizationEngine.ApplyItemsAsync(new[] { "transparency-off" }, null);
         Assert.Equal(0, run.ExitCode);
         value = 2;
         var file = JsonNode.Parse(run.Output)!["backupFile"]!.GetValue<string>();

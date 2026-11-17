@@ -14,7 +14,7 @@ public sealed class WorkspaceCommandTests
         var commands = WorkspaceCommands.Build();
         Assert.Equal(commands.Count, commands.Select(c => c.Id).Distinct().Count());
         Assert.All(commands, c => Assert.Contains(c.Route, new[] { "home", "games", "detect", "quick", "opt", "display", "filters", "crosshair", "session", "ab", "backup", "tools", "settings" }));
-        Assert.Equal(ItemCatalog.All.Count, commands.Count(c => c.Id.StartsWith("item:")));
+        Assert.Equal(OptimizationCatalog.Items.Count, commands.Count(c => c.Id.StartsWith("item:")));
         Assert.Contains(commands, c => c.Id == "filters:color" && c.Target == "color" && c.Route == "filters");
         Assert.Contains(commands, c => c.Id == "page:crosshair" && c.Route == "crosshair");
     }
@@ -22,7 +22,7 @@ public sealed class WorkspaceCommandTests
     public void Search_matches_all_terms_and_ranks_exact_catalog_id_first()
     {
         var search = new WorkspaceCommands();
-        var item = ItemCatalog.All.First();
+        var item = OptimizationCatalog.Items.First();
         Assert.Equal("item:" + item.Id, search.Search(item.Id.ToUpperInvariant()).First().Id);
         Assert.Contains(search.Search("dlss NVIDIA"), c => c.Id == "display:dlss");
         Assert.Empty(search.Search("term-that-does-not-exist-47291"));
@@ -41,14 +41,14 @@ public sealed class WorkspaceCommandTests
     }
     internal static OptimizationItemViewModel Model(string id, bool admin = false, bool restart = false, bool optimized = false)
     {
-        var definition = ItemCatalog.All.Single(i => i.Id == id);
+        var definition = OptimizationCatalog.Items.Single(i => i.Id == id);
         return new(new OptimizationItem(id, definition.DisplayName, definition.DisplayDescription, definition.DisplaySideEffect,
             admin, restart, optimized, "detected original", false, definition.Group));
     }
     [Fact]
     public void Review_captures_hidden_selection_game_and_values_without_sharing_mutable_selection()
     {
-        var definitions = ItemCatalog.All.Where(i => i.Available).Take(2).ToArray();
+        var definitions = OptimizationCatalog.Items.Where(i => i.Available).Take(2).ToArray();
         var a = Model(definitions[0].Id); var b = Model(definitions[1].Id, true, true);
         a.IsChecked = b.IsChecked = true;
         var source = new List<OptimizationItemViewModel> { a, b, b };
@@ -63,7 +63,7 @@ public sealed class WorkspaceCommandTests
     [Fact]
     public void Filters_respect_actual_requirements_and_unavailable_items_cannot_enter_plan()
     {
-        var id = ItemCatalog.All.First(i => i.Available).Id;
+        var id = OptimizationCatalog.Items.First(i => i.Available).Id;
         var ordinary = Model(id); var admin = Model(id, true, true, true);
         Assert.True(OptimizeView.MatchesScope(ordinary, "pending"));
         Assert.False(OptimizeView.MatchesScope(admin, "pending"));

@@ -327,7 +327,7 @@ public partial class OptimizeView : UserControl
         var confirmed = DialogService.Confirm(
             Str.T("Str.OneClick"),
             Str.T("Str.OneClickSystemConfirm", string.Join("\n", OptimizationCatalog.ResolvePreset("balanced")
-                .Select(id => ItemCatalog.All.First(i => i.Id == id).DisplayName)), Str.T("Str.ConfirmAllBackedUp")),
+                .Select(id => OptimizationCatalog.Items.First(i => i.Id == id).DisplayName)), Str.T("Str.ConfirmAllBackedUp")),
             confirmText: Str.T("Str.Start"));
         if (!confirmed)
             return;
@@ -386,7 +386,7 @@ public partial class OptimizeView : UserControl
 
         try
         {
-            var result = await OptimizationEngine.RestoreAsync();
+            var result = await NativeOptimizationEngine.RestoreAsync();
             await CompleteOperationAsync(result);
         }
         catch (Exception ex)
@@ -569,7 +569,7 @@ public partial class OptimizeView : UserControl
         string? lastGroup = null;
         foreach (var row in rows)
         {
-            var meta = ItemCatalog.All.FirstOrDefault(x => x.Id == row.Id);
+            var meta = OptimizationCatalog.Items.FirstOrDefault(x => x.Id == row.Id);
             if (meta?.Group != lastGroup)
             {
                 lastGroup = meta?.Group;
@@ -603,7 +603,7 @@ public partial class OptimizeView : UserControl
         if (failed > 0)
         {
             var adminRows = rows.Where(r => !r.Ok && !r.Skipped
-                    && (ItemCatalog.All.FirstOrDefault(x => x.Id == r.Id) is { Admin: true }
+                    && (OptimizationCatalog.Items.FirstOrDefault(x => x.Id == r.Id) is { Admin: true }
                         || r.Message == Str.T("Str.OptFailNeedAdmin")))
                 .Select(r => r.Name).ToArray();
             var next = NewPara(4);

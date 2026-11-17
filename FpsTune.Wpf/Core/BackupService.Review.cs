@@ -77,7 +77,7 @@ public static partial class BackupService
                     record.MutationState = "uncertain";
                     VerifyRestorableState(record);
                 }
-                text.AppendLine(Path.GetFileName(file) + " / " + (ItemCatalog.All.FirstOrDefault(i => i.Id == record.Id)?.Name ?? record.Id));
+                text.AppendLine(Path.GetFileName(file) + " / " + (OptimizationCatalog.Items.FirstOrDefault(i => i.Id == record.Id)?.Name ?? record.Id));
                 if (record.Kind == "registry") text.AppendLine(record.Hive + "\\" + record.Path);
                 text.AppendLine(Str.T("Str.RecoveryReviewOriginal") + before);
                 text.AppendLine(record.Restored ? Str.T("Str.RecoveryReviewAlreadyRestored") : Str.T("Str.RecoveryReviewCurrent") + DescribeReviewValue(record, false));

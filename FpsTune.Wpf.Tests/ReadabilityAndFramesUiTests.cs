@@ -185,7 +185,7 @@ public sealed class ReadabilityAndFramesUiTests
                 gamePath = AppState.GamePath,
                 hardware = new { cpu = "Fixture CPU", gpu = "NVIDIA GeForce RTX 4060", ramGB = 16, os = "Windows 11", isLaptop = false, isAdmin = false },
                 checks = new[] { new { name = "内存频率", status = "ok", message = "5600 MHz" }, new { name = "VC++ 运行库", status = "attention", message = "缺少 x86" } },
-                items = ItemCatalog.All.Where(d => d.Available).Select(d => new { id = d.Id, name = d.Name, desc = d.Description, sideEffect = d.SideEffect,
+                items = OptimizationCatalog.Items.Where(d => d.Available).Select(d => new { id = d.Id, name = d.Name, desc = d.Description, sideEffect = d.SideEffect,
                     admin = d.Admin, reboot = d.Reboot, optimized = false, current = "测试原值", group = d.Group })
             }))!.AsObject();
             StateStore.SaveDetect(data);
@@ -678,7 +678,7 @@ public sealed class ReadabilityAndFramesUiTests
         {
             var original = AppState.GamePath!;
             // 不可用项的数量取决于本机能力（例如没有 Win11 电源滑块时多一项），取第一项即可。
-            var unavailable = ItemCatalog.All.FirstOrDefault(d => !d.Available) ?? ItemCatalog.All[0] with { Available = false };
+            var unavailable = OptimizationCatalog.Items.FirstOrDefault(d => !d.Available) ?? OptimizationCatalog.Items[0] with { Available = false };
             var unavailableItem = new OptimizationItem(unavailable.Id, unavailable.DisplayName, unavailable.DisplayDescription, unavailable.DisplaySideEffect,
                 unavailable.Admin, unavailable.Reboot, false, "not available", false, unavailable.Group);
             AppState.Items.Add(unavailableItem);
@@ -690,7 +690,7 @@ public sealed class ReadabilityAndFramesUiTests
             DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
             var page = (ConsoleView)((ContentControl)window.FindName("PageHost")).Content;
             var combo = (ComboBox)page.FindName("GameSwitcher");
-            var availableCount = ItemCatalog.All.Count(d => d.Available);
+            var availableCount = OptimizationCatalog.Items.Count(d => d.Available);
             Assert.Equal("0/" + availableCount, ((TextBlock)page.FindName("TunedText")).Text);
             Assert.Equal(Str.T("Str.Unavailable"), new OptimizationItemViewModel(unavailableItem).StatusText);
             var report = new List<object>(); var oldBusy = GameContextService.IsBusyProvider;
@@ -946,7 +946,7 @@ public sealed class ReadabilityAndFramesUiTests
                 PerformanceSessionStore.Save(SessionConditionTests.Example("Comparison"));
                 DisplayQualityService.ApiOverride = () => Api;
                 DisplayQualityService.BackupDirOverride = Path.Combine(root, "display-quality"); DisplayTopology.Override = () => [];
-                AppState.Items = ItemCatalog.All.Where(d => d.Available).Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription,
+                AppState.Items = OptimizationCatalog.Items.Where(d => d.Available).Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription,
                     d.DisplaySideEffect, d.Admin, d.Reboot, false, "test original", false, d.Group)).ToList();
                 var compiledApp = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
                 compiledApp.InitializeComponent(); app = compiledApp;

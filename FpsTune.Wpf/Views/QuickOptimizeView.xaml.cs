@@ -249,7 +249,7 @@ public partial class QuickOptimizeView : UserControl
         try
         {
             var ids = await Task.Run(() => QuickOptimizePlan.Resolve(preset, applyPower));
-            var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(ids, game.ExePath);
+            var receipt = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(ids, game.ExePath);
             var rows = receipt.Results
                 .Select(r => new ResultRow(
                     r.Name, r.Ok && !r.Skipped,

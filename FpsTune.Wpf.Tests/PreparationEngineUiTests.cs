@@ -61,7 +61,7 @@ public sealed class PreparationEngineUiTests
                     // 显示枚举完成后保存/准备按钮才可用；此时新区块已就绪。
                     DlssFeedbackTests.PumpUntil(() => prep.SaveButton.IsEnabled);
                     Assert.True(prep.OptimizationsCheck.Content is string s && s.Length > 0);
-                    Assert.Equal(ItemCatalog.All.First(i => i.Id == "power-ultimate").DisplayName, prep.PowerPlanCheck.Content);
+                    Assert.Equal(OptimizationCatalog.Items.First(i => i.Id == "power-ultimate").DisplayName, prep.PowerPlanCheck.Content);
                     Assert.True(prep.FrameLimitCheck.IsEnabled, "有游戏上下文时限帧应可选");
                     ThemeManager.SetMode(mode); prep.UpdateLayout();
                     // 离屏窗口的 HWND 表面不随主题重合成；改截窗口内容元素并铺窗口底色。

@@ -35,7 +35,7 @@ public sealed class InterfacePolishUiTests
                 Assert.Empty(ReadabilityAndFramesUiTests.Descendants(focus).OfType<System.Windows.Shapes.Rectangle>());
                 Render(focus, "keyboard-solid-focus");
                 var font = new FontFamily(new Uri("pack://application:,,,/"), "./FpsTune;component/Assets/Fonts/#FpsTune Text");
-                var catalog = string.Join("", FpsTune.Wpf.Core.ItemCatalog.All.Select(i => i.DisplayName + i.DisplayDescription + i.DisplaySideEffect));
+                var catalog = string.Join("", FpsTune.Wpf.Core.OptimizationCatalog.Items.Select(i => i.DisplayName + i.DisplayDescription + i.DisplaySideEffect));
                 foreach (var weight in new[] { FontWeights.Normal, FontWeights.Medium, FontWeights.SemiBold })
                 {
                     Assert.True(new Typeface(font, FontStyles.Normal, weight, FontStretches.Normal).TryGetGlyphTypeface(out var glyph));

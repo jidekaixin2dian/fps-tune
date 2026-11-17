@@ -21,7 +21,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public bool Optimized { get; }
     public string Current { get; }
     public string Group { get; }
-    public bool Available => Core.ItemCatalog.All.FirstOrDefault(item => item.Id == Id)?.Available != false;
+    public bool Available => Core.OptimizationCatalog.Items.FirstOrDefault(item => item.Id == Id)?.Available != false;
     public string StatusText => Str.T(!Available ? "Str.Unavailable" : Optimized ? "Str.OptStateAtTarget" : "Str.OptStatePending");
     public bool Common => _definition?.Common == true;
     public bool Recommended => _definition?.Default == true;
@@ -43,7 +43,7 @@ public sealed class OptimizationItemViewModel : INotifyPropertyChanged
     public OptimizationItemViewModel(OptimizationItem item)
     {
         Id = item.Id;
-        _definition = Core.ItemCatalog.All.FirstOrDefault(d => d.Id == item.Id);
+        _definition = Core.OptimizationCatalog.Items.FirstOrDefault(d => d.Id == item.Id);
         _name = item.Name; _description = item.Description; _sideEffect = item.SideEffect;
         _searchIndex = string.Join(" ", item.Id, item.Name, item.Description, _definition?.Name, _definition?.NameEn,
             _definition?.Description, _definition?.DescriptionEn);

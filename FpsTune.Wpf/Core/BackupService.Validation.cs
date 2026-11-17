@@ -54,7 +54,7 @@ public static partial class BackupService
             return;
         }
 
-        Reject(!ItemCatalog.All.Any(item => string.Equals(item.Id, record.Id, StringComparison.Ordinal)),
+        Reject(!OptimizationCatalog.Items.Any(item => string.Equals(item.Id, record.Id, StringComparison.Ordinal)),
             $"未知优化项: {record.Id}");
 
         switch (record.Id)

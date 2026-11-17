@@ -7,12 +7,11 @@ using System.Text.Json;
 using FpsTune.Wpf.Services;
 
 /// <summary>
-/// C# 核心引擎入口。
-/// Apply / Detect / Restore 全部走 C# 原生实现。
-/// 0.1.x 时代的 PowerShell 引擎（fps-tune.ps1）已于 2026-09 移除，不再随包发布；
-/// 现在包里唯一的脚本是服务更新器自替换用的 <c>UpdateWorker.ps1</c>。
+/// 优化引擎的"操作层"：Detect / Apply（含预检、备份、回执、诊断）/ Restore / ListRestore 的编排。
+/// 逐项写入实现在 <c>NativeOptimizationEngine.cs</c>（同类的另一个 partial），两者边界：
+/// 这里负责"这一次操作怎么跑、留什么痕"，那里负责"单个优化项怎么写系统"。
 /// </summary>
-public static class OptimizationEngine
+public static partial class NativeOptimizationEngine
 {
     public static Task<RunResult> DetectAsync()
     {
@@ -100,10 +99,10 @@ public static class OptimizationEngine
         {
             trace.Stage("precheck");
             using var mutation = SystemMutationGate.Acquire();
-            if (ids.Count == 0 || ids.Any(id => !ItemCatalog.All.Any(item => item.Id == id)))
+            if (ids.Count == 0 || ids.Any(id => !OptimizationCatalog.Items.Any(item => item.Id == id)))
                 throw new ArgumentException("Unknown or empty optimization selection.", nameof(ids));
             var adminItems = ids
-                .Select(id => ItemCatalog.All.First(item => item.Id == id))
+                .Select(id => OptimizationCatalog.Items.First(item => item.Id == id))
                 .Where(def => def is { Admin: true, Available: true })
                 .ToArray();
             if (!AdminHelper.IsAdministrator() && adminItems.Length > 0)
@@ -161,35 +160,35 @@ public static class OptimizationEngine
         var receipt = ExecuteNative(ids, gamePath);
         var backupFile = receipt.BackupFile;
         var results = receipt.Results;
-            var rebootIds = results
-                .Where(r => r.Ok && r.Changed)
-                .Select(r => ItemCatalog.All.FirstOrDefault(x => x.Id == r.Id))
-                .Where(def => def?.Reboot == true)
-                .Select(def => def!.Id)
-                .ToArray();
+        var rebootIds = results
+            .Where(r => r.Ok && r.Changed)
+            .Select(r => OptimizationCatalog.Items.FirstOrDefault(x => x.Id == r.Id))
+            .Where(def => def?.Reboot == true)
+            .Select(def => def!.Id)
+            .ToArray();
 
-            var payload = new
+        var payload = new
+        {
+            operationId = receipt.OperationId,
+            tool = "fps-tune",
+            version = UpdateService.CurrentVersion,
+            mode = "apply",
+            results = results.Select(r => new
             {
-                operationId = receipt.OperationId,
-                tool = "fps-tune",
-                version = UpdateService.CurrentVersion,
-                mode = "apply",
-                results = results.Select(r => new
-                {
-                    id = r.Id,
-                    name = r.Name,
-                    ok = r.Ok,
-                    changed = r.Changed,
-                    skipped = r.Skipped,
-                    message = r.Message,
-                    stateUncertain = r.StateUncertain
-                }),
-                summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过",
-                backupFile = backupFile,
-                reboot = rebootIds
-            };
+                id = r.Id,
+                name = r.Name,
+                ok = r.Ok,
+                changed = r.Changed,
+                skipped = r.Skipped,
+                message = r.Message,
+                stateUncertain = r.StateUncertain
+            }),
+            summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过",
+            backupFile = backupFile,
+            reboot = rebootIds
+        };
 
-            var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-            return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json);
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+        return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json);
     }
 }

@@ -25,7 +25,7 @@ internal sealed record ExperimentContext(string BatchId, string Game, string? Ga
             {
                 Build = typeof(ExperimentRunner).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
                     .Cast<System.Reflection.AssemblyInformationalVersionAttribute>().SingleOrDefault()?.InformationalVersion,
-                Items = ItemCatalog.All.Select(i => new { i.Id, i.Admin, i.Reboot, i.Kind, i.Default })
+                Items = OptimizationCatalog.Items.Select(i => new { i.Id, i.Admin, i.Reboot, i.Kind, i.Default })
             })), Hash(environment), options.Scene ?? "");
     }
 }

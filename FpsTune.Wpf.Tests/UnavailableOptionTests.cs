@@ -9,7 +9,7 @@ public sealed class UnavailableOptionTests
     [Fact]
     public void Unverified_memory_compression_write_is_skipped_before_capture_and_remains_restoreable()
     {
-        var definition = ItemCatalog.All.Single(item => item.Id == "mem-compress-off");
+        var definition = OptimizationCatalog.Items.Single(item => item.Id == "mem-compress-off");
         Assert.False(definition.Available);
         var results = NativeOptimizationEngine.ApplyAll([definition.Id], null,
             _ => throw new Exception("Must not capture or write an unavailable item."));

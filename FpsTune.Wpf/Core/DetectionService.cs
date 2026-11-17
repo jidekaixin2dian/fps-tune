@@ -22,7 +22,7 @@ public static class DetectionService
             gamePath = StateStore.LoadGamePath() ?? GamePathService.Find();
         AppState.GamePath = gamePath;
 
-        var items = ItemCatalog.All.Select(def =>
+        var items = OptimizationCatalog.Items.Select(def =>
         {
             var state = GetItemState(def, gamePath);
             // 键名与顺序是 CLI -Json 的机器协议，不得增删或改名；

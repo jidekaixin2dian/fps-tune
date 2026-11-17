@@ -231,8 +231,8 @@ public static class CliHost
             output.WriteLine("提示: 当前非管理员会话，需要管理员的优化项会失败并如实报错。");
 
         var result = presetName is not null
-            ? OptimizationEngine.ApplyPresetAsync(presetName, gamePath).GetAwaiter().GetResult()
-            : OptimizationEngine.ApplyItemsAsync(ids, gamePath).GetAwaiter().GetResult();
+            ? NativeOptimizationEngine.ApplyPresetAsync(presetName, gamePath).GetAwaiter().GetResult()
+            : NativeOptimizationEngine.ApplyItemsAsync(ids, gamePath).GetAwaiter().GetResult();
 
         using var doc = JsonDocument.Parse(result.Output);
         var results = doc.RootElement.GetProperty("results");
@@ -351,7 +351,7 @@ public static class CliHost
         => OptimizationCatalog.ItemOrder.Contains(id, StringComparer.Ordinal);
 
     private static bool NeedsAdmin(string id)
-        => ItemCatalog.All.FirstOrDefault(d => d.Id == id)?.Admin == true;
+        => OptimizationCatalog.Items.FirstOrDefault(d => d.Id == id)?.Admin == true;
 
     private static string? ParseDuration(string token, CliOptions options)
     {

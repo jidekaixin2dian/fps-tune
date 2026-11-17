@@ -58,7 +58,6 @@ public partial class FilterView : UserControl
         ColorPanel.AutomationContent = SectionAutomation;
         ColorPanel.FilterContent = FilterCenter;
         ColorPanel.PerAppContent = PerAppCenter;
-        ColorPanel.Unified = true;
         ColorPanel.SetMode(false);
         ColorPanel.ShowPreviewForProcess(AppState.GamePath);
         PerAppCenter.PreviewRequested += process => ColorPanel.ShowPreviewForProcess(process);

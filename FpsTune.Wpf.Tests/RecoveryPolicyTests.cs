@@ -21,8 +21,8 @@ public class RecoveryPolicyTests
     [Fact]
     public void Default_presets_exclude_manual_only_and_admin_items_from_safe_only()
     {
-        Assert.All(OptimizationCatalog.ResolvePreset("balanced"), id => Assert.True(ItemCatalog.All.Single(i => i.Id == id).Default));
-        Assert.All(OptimizationCatalog.ResolvePreset("safe-only"), id => Assert.False(ItemCatalog.All.Single(i => i.Id == id).Admin));
-        Assert.True(ItemCatalog.All.Single(i => i.Id == "dvr-off").Admin);
+        Assert.All(OptimizationCatalog.ResolvePreset("balanced"), id => Assert.True(OptimizationCatalog.Items.Single(i => i.Id == id).Default));
+        Assert.All(OptimizationCatalog.ResolvePreset("safe-only"), id => Assert.False(OptimizationCatalog.Items.Single(i => i.Id == id).Admin));
+        Assert.True(OptimizationCatalog.Items.Single(i => i.Id == "dvr-off").Admin);
     }
 }

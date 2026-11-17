@@ -37,7 +37,7 @@ public sealed class WorkspaceCommands
             ("3", "Str.SettingsData", "Str.CommandAliasData"), ("4", "Str.Wallpaper", "Str.CommandAliasWallpaper"), ("5", "Str.SectionAbout", "Str.CommandAliasUpdate") })
             Add("settings:" + target, title, "Str.NavSettings", "settings", target,
                 Str.T(alias));
-        foreach (var item in ItemCatalog.All)
+        foreach (var item in OptimizationCatalog.Items)
             entries.Add(new("item:" + item.Id, item.DisplayName, item.DisplayDescription, Str.T("Str.ItemsTitle"),
                 "opt", item.Id, string.Join(" ", item.Id, item.Name, item.NameEn, item.Description, item.DescriptionEn, item.Group)));
         entries.Add(new("tools:network", Str.T("Str.NetworkProbeTitle"), Str.T("Str.NetworkProbeDescription"), Str.T("Str.NavTools"), "tools", "network", Str.T("Str.NetworkProbeKeywords")));

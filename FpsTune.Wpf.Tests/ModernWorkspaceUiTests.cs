@@ -181,7 +181,7 @@ public sealed class ModernWorkspaceUiTests
         {
             foreach (var scenario in new[] { "success", "partial", "refresh-failed" })
             {
-                AppState.Items = ItemCatalog.All.Where(d => d.Id is "gpu-pref" or "dvr-off" or "game-mode").Select(d =>
+                AppState.Items = OptimizationCatalog.Items.Where(d => d.Id is "gpu-pref" or "dvr-off" or "game-mode").Select(d =>
                     new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription, d.DisplaySideEffect, false, false, false, "before", false, d.Group)).ToList();
                 var before = AppState.Items;
                 var page = new OptimizeView();
@@ -245,11 +245,11 @@ public sealed class ModernWorkspaceUiTests
         RunUi((app, root) =>
         {
             // 现场问题：只要有一项失败，整块结果就变成「执行失败 + 原始 JSON」，用户只看到一屏数据。
-            AppState.Items = ItemCatalog.All.Where(d => d.Id is "game-mode" or "gpu-pref")
+            AppState.Items = OptimizationCatalog.Items.Where(d => d.Id is "game-mode" or "gpu-pref")
                 .Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription, d.DisplaySideEffect,
                     d.Admin, d.Reboot, false, "test original", false, d.Group)).ToList();
-            var gpuName = ItemCatalog.All.Single(i => i.Id == "gpu-pref").DisplayName;
-            var gameName = ItemCatalog.All.Single(i => i.Id == "game-mode").DisplayName;
+            var gpuName = OptimizationCatalog.Items.Single(i => i.Id == "gpu-pref").DisplayName;
+            var gameName = OptimizationCatalog.Items.Single(i => i.Id == "game-mode").DisplayName;
             var page = new OptimizeView();
             var window = new Window { Width = 1180, Height = 720, Content = page };
             app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
@@ -302,7 +302,7 @@ public sealed class ModernWorkspaceUiTests
         if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ModernWorkspaceUiTests)); return; }
         RunUi((app, root) =>
         {
-            var admin = ItemCatalog.All.Where(d => d.Admin && d.Available).Take(2).ToArray();
+            var admin = OptimizationCatalog.Items.Where(d => d.Admin && d.Available).Take(2).ToArray();
             AppState.Items = admin.Select(d => new OptimizationItem(d.Id, d.DisplayName, d.DisplayDescription,
                 d.DisplaySideEffect, d.Admin, d.Reboot, false, "test original", false, d.Group)).ToList();
             var page = new OptimizeView();
@@ -919,7 +919,7 @@ public sealed class ModernWorkspaceUiTests
                 app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown, Resources = DlssFeedbackTests.LoadResources() };
                 SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(app.Dispatcher));
                 LangService.Apply(LangService.ZhCn);
-                AppState.Items = ItemCatalog.All.Where(d => d.Available).Take(4).Select(d => new OptimizationItem(
+                AppState.Items = OptimizationCatalog.Items.Where(d => d.Available).Take(4).Select(d => new OptimizationItem(
                     d.Id, d.DisplayName, d.DisplayDescription, d.DisplaySideEffect, false, false, false, "test original", false, d.Group)).ToList();
                 AppState.GamePath = @"C:\WorkspaceTest\game.exe";
                 test(app, root);

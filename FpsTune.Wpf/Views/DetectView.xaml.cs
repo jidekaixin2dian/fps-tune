@@ -255,7 +255,7 @@ public partial class DetectView : UserControl
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var result = await OptimizationEngine.DetectAsync();
+            var result = await NativeOptimizationEngine.DetectAsync();
             sw.Stop();
             if (!result.Success)
             {

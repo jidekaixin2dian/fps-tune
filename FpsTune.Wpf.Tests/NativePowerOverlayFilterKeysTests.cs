@@ -58,7 +58,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     {
         FakeRegistry(); FakeOverlay();
         var capture = BackupService.Capture(new[] { "power-overlay-perf" }, null);
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);
         Assert.True(result.Ok); Assert.True(result.Changed);
         Assert.Equal(NativePowerOverlay.BestPerformance, _overlay);
         var record = Assert.Single(BackupService.ReadRecords(capture));
@@ -72,7 +72,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     {
         FakeRegistry(); FakeOverlay();
         _overlay = NativePowerOverlay.BestPerformance;
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);
         Assert.True(result.Ok); Assert.False(result.Changed);
     }
 
@@ -84,7 +84,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
         OptimizationCatalog.Invalidate();
         NativePowerOverlay.ReadOverride = () => _overlay;
         NativePowerOverlay.WriteOverride = _ => 5;
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null)).Results);
         Assert.False(result.Ok); Assert.False(result.Skipped);
         Assert.Equal(Guid.Empty, _overlay);
     }
@@ -94,7 +94,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     {
         FakeRegistry(); FakeOverlay();
         var capture = BackupService.Capture(new[] { "power-overlay-perf" }, null);
-        await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null);
+        await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null);
         Assert.Equal(NativePowerOverlay.BestPerformance, _overlay);
         var restored = BackupService.RestoreAll(new[] { "power-overlay-perf" }, capture);
         Assert.Empty(restored.Failures);
@@ -125,7 +125,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
             : new RegistryHelper.Snapshot(false, null, RegistryValueKind.None);
         RegistryHelper.SetOverride = (_, _, name, value, _) => { if (name == "Flags") current = (string)value; };
         var capture = BackupService.Capture(new[] { "filter-keys-off" }, null);
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
         Assert.True(result.Ok, result.Message); Assert.True(result.Changed);
         // 只清热键位（0x4|0x8）：126 & ~0xC = 114，其余位原样保留
         Assert.Equal("114", current);
@@ -143,7 +143,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     {
         RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(true, "114", RegistryValueKind.String);
         RegistryHelper.SetOverride = (_, _, _, _, _) => throw new UnexpectedWriteException();
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
         Assert.True(result.Ok); Assert.False(result.Changed);
     }
 
@@ -152,7 +152,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
     {
         RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(false, null, RegistryValueKind.None);
         RegistryHelper.SetOverride = (_, _, _, _, _) => throw new UnexpectedWriteException();
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "filter-keys-off" }, null)).Results);
         Assert.True(result.Ok); Assert.True(result.Skipped);
     }
 

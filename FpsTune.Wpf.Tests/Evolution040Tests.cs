@@ -73,7 +73,7 @@ public sealed class Evolution040Tests : IDisposable
         string? written = null;
         RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(true, written ?? "AutoHDREnable=2;", RegistryValueKind.String);
         RegistryHelper.SetOverride = (_, _, _, value, _) => written = (string)value;
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null)).Results);
         Assert.True(result.Ok, result.Message);
         Assert.True(result.Changed);
         Assert.Equal("AutoHDREnable=2;SwapEffectUpgradeEnable=1;", written);
@@ -84,7 +84,7 @@ public sealed class Evolution040Tests : IDisposable
     {
         RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(true, "SwapEffectUpgradeEnable=1;", RegistryValueKind.String);
         RegistryHelper.SetOverride = (_, _, _, _, _) => throw new UnexpectedWriteException();
-        var result = Assert.Single((await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null)).Results);
+        var result = Assert.Single((await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null)).Results);
         Assert.True(result.Ok);
         Assert.False(result.Changed);
     }
@@ -97,7 +97,7 @@ public sealed class Evolution040Tests : IDisposable
         RegistryHelper.SnapshotOverride = (_, _, _) => new RegistryHelper.Snapshot(true, current, RegistryValueKind.String);
         RegistryHelper.SetOverride = (_, _, _, value, _) => current = (string)value;
         var capture = BackupService.Capture(new[] { "windowed-games-opt" }, null);
-        await OptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null);
+        await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null);
         Assert.Contains("SwapEffectUpgradeEnable=1", current);
         var restored = BackupService.RestoreAll(new[] { "windowed-games-opt" }, capture);
         Assert.Empty(restored.Failures);

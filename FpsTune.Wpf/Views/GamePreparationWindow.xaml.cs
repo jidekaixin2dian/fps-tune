@@ -45,7 +45,7 @@ public partial class GamePreparationWindow : Window
         catch (Exception ex) { optimizationPresets = []; SourcePlanText.Text = PrivacyScrub.Sanitize(ex.Message); }
         OptimizationPresetBox.ItemsSource = optimizationPresets;
         OptimizationPresetBox.SelectedItem = optimizationPresets.FirstOrDefault(p => p.Preset == _original.OptimizationPreset) ?? optimizationPresets.FirstOrDefault();
-        PowerPlanCheck.Content = ItemCatalog.All.FirstOrDefault(i => i.Id == "power-ultimate")?.DisplayName ?? "power-ultimate";
+        PowerPlanCheck.Content = OptimizationCatalog.Items.FirstOrDefault(i => i.Id == "power-ultimate")?.DisplayName ?? "power-ultimate";
         GameScope.Checked += Scope_Changed; DefaultScope.Checked += Scope_Changed;
         LoadOptions(_original);
         var sources = new List<PlanSource> { new(null, Str.T("Str.PlanSharedDefault")) };

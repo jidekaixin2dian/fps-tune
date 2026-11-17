@@ -47,7 +47,7 @@ public sealed class ProcessorPowerTests : IDisposable
         var restored = BackupService.RestoreAll(null, file);
         if (externalChange) { Assert.Single(restored.Failures); Assert.Single(writes); Assert.Equal(external, value); }
         else { Assert.Empty(restored.Failures); Assert.Equal(original, value); Assert.Equal(2, writes.Count); }
-        Assert.False(ItemCatalog.All.Single(i => i.Id == id).Default);
+        Assert.False(OptimizationCatalog.Items.Single(i => i.Id == id).Default);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public sealed class ProcessorPowerTests : IDisposable
         NativeSystem.RunOverride = (_, args) => args[0] == "-getactivescheme" ? new(0, Plan, "") : new(++writes, "", "");
         NativePowerSettings.ReadOverride = (_, _, _) => throw new InvalidOperationException("Unsupported");
         Assert.Throws<InvalidOperationException>(() => BackupService.Capture(["cpu-epp-ac"], null));
-        Assert.False(DetectionService.GetItemState(ItemCatalog.All.Single(item => item.Id == "cpu-epp-ac"), null).Optimized);
+        Assert.False(DetectionService.GetItemState(OptimizationCatalog.Items.Single(item => item.Id == "cpu-epp-ac"), null).Optimized);
         Assert.Throws<InvalidOperationException>(() => BackupService.ValidateRecord(new() { Id="cpu-max-ac", Kind="power-setting", TargetPlanGuid=Plan }));
         Assert.Throws<InvalidOperationException>(() => PowerOption.For("unknown"));
         Assert.Equal(0, writes);

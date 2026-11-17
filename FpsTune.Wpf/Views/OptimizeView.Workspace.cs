@@ -70,7 +70,7 @@ public partial class OptimizeView
             if (!confirmed)
                 return new ComparisonApplyOutcome(false, Str.T("Str.ComparisonReviewCancelled"), null, []);
             ct.ThrowIfCancellationRequested();
-            var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(ids, gamePath).ConfigureAwait(false);
+            var receipt = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(ids, gamePath).ConfigureAwait(false);
             var changed = receipt.Results.Where(r => r.Changed || r.StateUncertain).Select(r => r.Id).ToList();
             var errors = receipt.Results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Id + " — " + r.Message).ToList();
             return new ComparisonApplyOutcome(errors.Count == 0,
@@ -125,7 +125,7 @@ public partial class OptimizeView
         {
             ItemList.SelectedItem = item; ItemList.ScrollIntoView(item); SetItemDetail(item);
         }
-        else if (ItemCatalog.All.FirstOrDefault(i => i.Id == id) is { } definition)
+        else if (OptimizationCatalog.Items.FirstOrDefault(i => i.Id == id) is { } definition)
             SetPlain(definition.DisplayName + "\n\n" + definition.DisplayDescription + "\n\n" +
                 definition.DisplaySideEffect + "\n\n" + Str.T("Str.CommandDetectionFirst"));
         SearchBox.Focus();
@@ -195,7 +195,7 @@ public partial class OptimizeView
             if (review.ShowDialog() != true) return;
             SetPlain(Str.T("Str.Applying"), "AccentBrush");
             var result = await (ApplyItemsOverride?.Invoke(plan.Ids, plan.GamePath)
-                ?? OptimizationEngine.ApplyItemsAsync(plan.Ids, plan.GamePath));
+                ?? NativeOptimizationEngine.ApplyItemsAsync(plan.Ids, plan.GamePath));
             await CompleteOperationAsync(result);
         }
         catch (Exception ex) { SetRawMonospace(ex.ToString()); }

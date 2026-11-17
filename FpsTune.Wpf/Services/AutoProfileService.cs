@@ -341,7 +341,7 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
                 return;
             }
 
-            var catalog = ItemCatalog.All.ToDictionary(x => x.Id, StringComparer.Ordinal);
+            var catalog = OptimizationCatalog.Items.ToDictionary(x => x.Id, StringComparer.Ordinal);
             var rawIds = (profile.Ids ?? Array.Empty<string>()).ToArray();
             var invalidIds = rawIds
                 .Where(id => string.IsNullOrWhiteSpace(id) || !catalog.ContainsKey(id))
@@ -372,7 +372,7 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            var result = await OptimizationEngine.ApplyItemsAsync(ids, binding.ExePath)
+            var result = await NativeOptimizationEngine.ApplyItemsAsync(ids, binding.ExePath)
                 .ConfigureAwait(false);
             if (!result.Success)
             {

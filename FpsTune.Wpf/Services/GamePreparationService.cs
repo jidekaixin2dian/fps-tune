@@ -44,7 +44,7 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
         catch (Exception) { return true; } // 预设无法解析按需管理员处理；RunAsync 会给出真实错误
     }
     private static bool NeedsAdmin(string id) =>
-        ItemCatalog.All.FirstOrDefault(i => i.Id == id) is { Admin: true, Available: true };
+        OptimizationCatalog.Items.FirstOrDefault(i => i.Id == id) is { Admin: true, Available: true };
 
     /// <summary>开局应用的优化项：基础预设 + 电源计划；去重保持顺序。</summary>
     internal static IReadOnlyList<string> OptimizationIdsFor(GamePreparationOptions options)
@@ -101,7 +101,7 @@ internal sealed class GamePreparationService(MemoryCleanupService? memory = null
                     var optimizationIds = OptimizationIdsFor(options);
                     if (optimizationIds.Count > 0) Run(Str.T("Str.PrepareSystemStep"), () =>
                     {
-                        var receipt = OptimizationEngine.ApplyItemsWithReceipt(optimizationIds, gamePath);
+                        var receipt = NativeOptimizationEngine.ApplyItemsWithReceipt(optimizationIds, gamePath);
                         var results = receipt.Results;
                         // 与引擎 CLI 汇总口径一致：跳过不算失败（如共用方案下缺少游戏路径的逐游戏项）。
                         var ok = results.All(r => r.Ok || r.Skipped);

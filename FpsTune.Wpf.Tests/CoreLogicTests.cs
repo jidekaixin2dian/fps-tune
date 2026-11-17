@@ -115,29 +115,29 @@ public class CoreLogicTests
         Assert.Single(tracker.Update(running));
     }
 
-    // ---------- ItemCatalog 完整性 ----------
+    // ---------- catalog 完整性 ----------
 
     [Fact]
     public void ItemCatalog_has_43_unique_items()
     {
-        var ids = ItemCatalog.All.Select(x => x.Id).ToList();
+        var ids = OptimizationCatalog.Items.Select(x => x.Id).ToList();
         Assert.Equal(43, ids.Count);
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 
-    // ---------- 预设展开（OptimizationEngine.GetPresetIds）----------
+    // ---------- 预设展开（NativeOptimizationEngine.GetPresetIds）----------
 
     [Fact]
     public void Full_preset_contains_every_item()
-        => Assert.Equal(ItemCatalog.All.Count, OptimizationEngine.GetPresetIds("full").Count);
+        => Assert.Equal(OptimizationCatalog.Items.Count, NativeOptimizationEngine.GetPresetIds("full").Count);
 
     [Fact]
     public void Balanced_preset_is_an_explicit_default_allowlist()
     {
         // 2026-10-31 用户确认的修订：均衡预设只含推荐 4 项（此前断言还停在旧 16 项）。
-        var ids = OptimizationEngine.GetPresetIds("balanced");
+        var ids = NativeOptimizationEngine.GetPresetIds("balanced");
         Assert.Equal(new[] { "game-mode", "dvr-off", "gpu-pref", "transparency-off" }.OrderBy(x => x).ToArray(), ids.OrderBy(x => x).ToArray());
-        Assert.All(ids, id => Assert.True(ItemCatalog.All.Single(x => x.Id == id).Default));
+        Assert.All(ids, id => Assert.True(OptimizationCatalog.Items.Single(x => x.Id == id).Default));
         Assert.DoesNotContain("mouse-accel-off", ids);
         Assert.DoesNotContain("sticky-keys-off", ids);
         Assert.DoesNotContain("usb-power-save-off", ids);
@@ -148,9 +148,9 @@ public class CoreLogicTests
     public void SafeOnly_preset_contains_only_non_admin_items()
     {
         // 保守预设 3 项，全部无需管理员（此前断言还停在含 fso-off 的旧清单）。
-        var ids = OptimizationEngine.GetPresetIds("safe-only");
+        var ids = NativeOptimizationEngine.GetPresetIds("safe-only");
         Assert.Equal(new[] { "game-mode", "gpu-pref", "transparency-off" }, ids.OrderBy(x => x).ToArray());
-        Assert.All(ids, id => Assert.False(ItemCatalog.All.Single(x => x.Id == id).Admin));
+        Assert.All(ids, id => Assert.False(OptimizationCatalog.Items.Single(x => x.Id == id).Admin));
     }
 
     [Fact]
@@ -169,15 +169,15 @@ public class CoreLogicTests
 
     [Fact]
     public void Unknown_preset_is_rejected_before_apply()
-        => Assert.Throws<InvalidOperationException>(() => OptimizationEngine.GetPresetIds("not-a-preset"));
+        => Assert.Throws<InvalidOperationException>(() => NativeOptimizationEngine.GetPresetIds("not-a-preset"));
 
     /// <summary>预设里的每个 id 都必须真实存在于目录，避免出现“永远失败的选择项”。</summary>
     [Fact]
     public void Every_preset_id_exists_in_catalog()
     {
         foreach (var preset in new[] { "full", "balanced", "safe-only" })
-            foreach (var id in OptimizationEngine.GetPresetIds(preset))
-                Assert.NotNull(ItemCatalog.All.FirstOrDefault(x => x.Id == id));
+            foreach (var id in NativeOptimizationEngine.GetPresetIds(preset))
+                Assert.NotNull(OptimizationCatalog.Items.FirstOrDefault(x => x.Id == id));
     }
 
     // ---------- BackupService.ConvertValue（JSON -> 注册表值转换）----------
@@ -248,7 +248,7 @@ public class CoreLogicTests
         {
             File.WriteAllText(file, "[{\"Id\":\"bad\",\"Kind\":\"unknown\"}]");
 
-            var result = await OptimizationEngine.RestoreAsync();
+            var result = await NativeOptimizationEngine.RestoreAsync();
 
             Assert.Equal(1, result.ExitCode);
             Assert.Contains("[失败]", result.Output);
@@ -726,7 +726,7 @@ public class CoreLogicTests
 
     [Fact]
     public void Catalog_default_flag_is_exposed_by_item_definition()
-        => Assert.False(ItemCatalog.All.Single(x => x.Id == "mouse-accel-off").Default);
+        => Assert.False(OptimizationCatalog.Items.Single(x => x.Id == "mouse-accel-off").Default);
 
     // ---------- CLI 参数边界 ----------
 

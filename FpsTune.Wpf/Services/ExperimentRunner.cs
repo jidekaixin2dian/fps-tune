@@ -11,7 +11,7 @@ namespace FpsTune.Wpf.Services;
 
 /// <summary>
 /// A/B 实验编排器：取代 tuning-experiment.ps1（已随本类删除）。
-/// 编排全部在进程内完成——应用/还原直接调 OptimizationEngine/BackupService，
+/// 编排全部在进程内完成——应用/还原直接调 NativeOptimizationEngine/BackupService，
 /// 采样直接调 PresentMon，不再经过 PowerShell；
 /// 旧脚本存在的理由（提权执行可写脚本、租约、子进程哈希复校验）随之整类删除。
 /// v2 状态绑定采样条件与实验批次；模拟与真实数据分开保存，旧记录只读兼容。
@@ -192,11 +192,11 @@ public static class ExperimentRunner
         {
             if (itemIds.Length == 0)
                 return Fail("test", Str.T("Str.CustomItemsRequired"));
-            var unknown = itemIds.Where(id => ItemCatalog.All.All(x => x.Id != id)).ToList();
+            var unknown = itemIds.Where(id => OptimizationCatalog.Items.All(x => x.Id != id)).ToList();
             if (unknown.Count > 0)
                 return Fail("test", Str.T("Str.CustomUnknownItems", string.Join(", ", unknown)));
             var rebootIds = itemIds
-                .Where(id => ItemCatalog.All.First(x => x.Id == id).Reboot)
+                .Where(id => OptimizationCatalog.Items.First(x => x.Id == id).Reboot)
                 .ToList();
             if (rebootIds.Count > 0)
                 return Fail("test", Str.T("Str.CustomRebootItems", string.Join(", ", rebootIds)));
@@ -527,7 +527,7 @@ public static class ExperimentRunner
     private static async Task<ApplyOutcome> ApplyGroupAsync(string[] itemIds, CancellationToken ct, string? gamePath, Action<string> beforeWrite)
     {
         ct.ThrowIfCancellationRequested();
-        var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(itemIds, gamePath, beforeWrite);
+        var receipt = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(itemIds, gamePath, beforeWrite);
         var changed = receipt.Results.Where(r => r.Changed || r.StateUncertain).Select(r => r.Id).ToList();
         var errors = receipt.Results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Id + " — " + r.Message).ToList();
         return new ApplyOutcome(errors.Count == 0, errors.Count == 0 ? null : string.Join("; ", errors), receipt.BackupFile, changed);

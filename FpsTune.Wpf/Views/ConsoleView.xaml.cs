@@ -26,7 +26,7 @@ public partial class ConsoleView : UserControl
         // 指标卡"已优化"格：随检测状态刷新（原 RebuildRows 职责，优化项列表移除后并入此处）。
         if (TunedText is not null)
         {
-            var tuned = AppState.Items.Where(i => ItemCatalog.All.FirstOrDefault(d => d.Id == i.Id)?.Available != false).ToArray();
+            var tuned = AppState.Items.Where(i => OptimizationCatalog.Items.FirstOrDefault(d => d.Id == i.Id)?.Available != false).ToArray();
             var tunedCount = tuned.Count(i => i.Optimized);
             TunedText.Text = tuned.Length > 0 ? $"{tunedCount}/{tuned.Length}" : "—";
             TunedMeter.Value = tuned.Length > 0 ? 100.0 * tunedCount / tuned.Length : 0;

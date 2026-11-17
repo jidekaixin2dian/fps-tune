@@ -29,7 +29,7 @@ public static class ChangeAudit
         {
             var best = group.OrderByDescending(g => g.LastWrite).First();
             var record = best.Record;
-            var def = ItemCatalog.All.FirstOrDefault(x => x.Id == record.Id);
+            var def = OptimizationCatalog.Items.FirstOrDefault(x => x.Id == record.Id);
             if (def is null)
                 continue;
 

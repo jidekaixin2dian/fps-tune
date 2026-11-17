@@ -8,7 +8,7 @@ namespace FpsTune.Wpf.Core;
 
 public sealed record OptimizationApplyResult(string Id, string Name, bool Ok, bool Changed, bool Skipped, string Message, bool StateUncertain = false, string? Detail = null);
 
-public static class NativeOptimizationEngine
+public static partial class NativeOptimizationEngine
 {
     private const string UltimatePowerGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
 
@@ -22,7 +22,7 @@ public static class NativeOptimizationEngine
         var results = new List<OptimizationApplyResult>();
         foreach (var id in ids)
         {
-            var def = ItemCatalog.All.FirstOrDefault(x => x.Id == id);
+            var def = OptimizationCatalog.Items.FirstOrDefault(x => x.Id == id);
             if (def is null)
             {
                 results.Add(new OptimizationApplyResult(id, id, false, false, false, "未知优化项"));

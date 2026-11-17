@@ -20,8 +20,8 @@ public sealed class SimplifiedWorkspaceTests
     {
         Assert.Equal(new[] { "dvr-off", "game-mode", "gpu-pref", "transparency-off" }, OptimizationCatalog.ResolvePreset("balanced").Order());
         foreach (var preset in new[] { "balanced", "safe-only" })
-            Assert.All(OptimizationCatalog.ResolvePreset(preset), id => Assert.True(ItemCatalog.All.Single(i => i.Id == id).Common));
-        Assert.All(ItemCatalog.All.Where(i => i.Default), i => Assert.Contains(i.Id, OptimizationCatalog.ResolvePreset("balanced")));
+            Assert.All(OptimizationCatalog.ResolvePreset(preset), id => Assert.True(OptimizationCatalog.Items.Single(i => i.Id == id).Common));
+        Assert.All(OptimizationCatalog.Items.Where(i => i.Default), i => Assert.Contains(i.Id, OptimizationCatalog.ResolvePreset("balanced")));
         Assert.All(new[] { "fso-off", "mpo-off", "mmcss-games" }, id => Assert.Contains(id, OptimizationCatalog.ResolvePreset("full")));
     }
 

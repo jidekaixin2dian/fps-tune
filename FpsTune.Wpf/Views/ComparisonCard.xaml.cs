@@ -24,7 +24,7 @@ public partial class ComparisonCard : UserControl
     /// <summary>对照流程是否在跑（宿主页面据此拒绝重复启动）。</summary>
     internal bool IsRunning => _running;
 
-    /// <summary>应用回调：宿主弹审阅窗确认后调 OptimizationEngine，返回逐项回执与备份快照。</summary>
+    /// <summary>应用回调：宿主弹审阅窗确认后调 NativeOptimizationEngine，返回逐项回执与备份快照。</summary>
     internal delegate Task<ComparisonApplyOutcome> ApplyDelegate(
         IReadOnlyList<string> items, string? gamePath, CancellationToken ct);
 

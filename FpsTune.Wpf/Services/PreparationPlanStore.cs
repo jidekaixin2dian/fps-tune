@@ -93,5 +93,5 @@ internal static class PreparationPlanStore
     internal static string PresetLabel(string? preset)
         => Str.T(preset == "safe-only" ? "Str.PresetSafe" : "Str.PresetBalanced");
     private static string PowerPlanLabel()
-        => ItemCatalog.All.FirstOrDefault(i => i.Id == "power-ultimate")?.DisplayName ?? "power-ultimate";
+        => OptimizationCatalog.Items.FirstOrDefault(i => i.Id == "power-ultimate")?.DisplayName ?? "power-ultimate";
 }

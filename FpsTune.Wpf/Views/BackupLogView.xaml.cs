@@ -81,7 +81,7 @@ public partial class BackupLogView : UserControl
     private async void ListBackup_Click(object sender, RoutedEventArgs e)
     {
         StatusText.Text = Str.T("Str.LoadingRestorables");
-        await Run(OptimizationEngine.ListRestoreAsync);
+        await Run(NativeOptimizationEngine.ListRestoreAsync);
     }
 
     private async void RestoreAll_Click(object sender, RoutedEventArgs e)
@@ -102,7 +102,7 @@ public partial class BackupLogView : UserControl
             return;
 
         StatusText.Text = Str.T("Str.Restoring");
-        await Run(OptimizationEngine.RestoreAsync);
+        await Run(NativeOptimizationEngine.RestoreAsync);
     }
 
     private async Task Run(Func<Task<RunResult>> action)

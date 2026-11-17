@@ -18,7 +18,7 @@ public sealed class ExperimentAnchorTests
         RegistryHelper.SetOverride = (_, _, _, _, _) => { Assert.True(anchorExists); writes++; };
         try
         {
-            var task = OptimizationEngine.ApplyItemsWithReceiptAsync(["transparency-off"], null, file =>
+            var task = NativeOptimizationEngine.ApplyItemsWithReceiptAsync(["transparency-off"], null, file =>
             {
                 Assert.True(File.Exists(file));
                 Assert.Empty(BackupService.ReadRecords(file));

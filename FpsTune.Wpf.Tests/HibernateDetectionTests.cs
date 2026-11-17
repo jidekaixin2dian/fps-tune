@@ -9,7 +9,7 @@ public sealed class HibernateDetectionTests : IDisposable
 {
     public void Dispose() => RegistryHelper.SnapshotOverride = null;
     private static (bool Optimized, string Current) Read()
-        => DetectionService.GetItemState(ItemCatalog.All.Single(item => item.Id == "hibernate-off"), null);
+        => DetectionService.GetItemState(OptimizationCatalog.Items.Single(item => item.Id == "hibernate-off"), null);
 
     [Theory]
     [InlineData(0, true)]

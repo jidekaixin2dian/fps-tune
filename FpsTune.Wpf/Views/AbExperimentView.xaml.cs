@@ -56,8 +56,8 @@ public partial class AbExperimentView : UserControl
             CustomRunButton.IsEnabled = false;
             return;
         }
-        var names = ids.Select(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id).ToList();
-        var reboot = ids.Where(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.Reboot == true).ToList();
+        var names = ids.Select(id => OptimizationCatalog.Items.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id).ToList();
+        var reboot = ids.Where(id => OptimizationCatalog.Items.FirstOrDefault(x => x.Id == id)?.Reboot == true).ToList();
         CustomSelectionText.Text = Str.T("Str.CustomRunSelection", ids.Count, string.Join(", ", names));
         if (reboot.Count > 0)
             CustomSelectionText.Text += "\n" + Str.T("Str.CustomRunRebootHint", string.Join(", ", reboot));
@@ -115,7 +115,7 @@ public partial class AbExperimentView : UserControl
             var outcome = v.Keep == true ? Str.T("Str.ReportKeep")
                 : v.Reverted ? Str.T("Str.ReportRevert") : Str.T("Str.NotRestored");
             return new VerdictVm(
-                string.Join(", ", v.Items.Select(id => ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id)),
+                string.Join(", ", v.Items.Select(id => OptimizationCatalog.Items.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id)),
                 outcome + " · " +
                 Str.T("Str.VerdictMeta", v.AvgFpsBase, v.AvgFpsTest, v.At.ToString("MM-dd HH:mm"), v.DurationSec, v.Game ?? "-"),
                 deltaText,

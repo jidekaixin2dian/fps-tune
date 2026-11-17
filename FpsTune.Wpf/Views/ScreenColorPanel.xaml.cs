@@ -24,8 +24,7 @@ public partial class ScreenColorPanel : UserControl
     private string? _curvesCachePath;
     private DateTime _curvesCacheWriteTime;
     private string? _lastOutcome;
-    internal bool Unified { get; set; }
-    /// <summary>面板的 ICC 选择被系统状态刷新清空时通知宿主，让滤镜列表同步取消选中。</summary>
+   /// <summary>面板的 ICC 选择被系统状态刷新清空时通知宿主，让滤镜列表同步取消选中。</summary>
     internal event Action? IccSelectionCleared;
     /// <summary>应用目标切到某个程序／方案载入时，把这档数字振动交给宿主页去同步滑块。</summary>
     internal event Action<int?>? VibranceSuggested;
@@ -703,18 +702,13 @@ public partial class ScreenColorPanel : UserControl
         if (!DialogService.Confirm(Str.T("Str.ColorApplyTitle"), Str.T("Str.ColorWorkspaceConfirm", IccMode ? Str.T("Str.ColorIccMode") : Str.T(restoreIcc ? "Str.ColorIccOffMode" : "Str.ColorScreenMode")), confirmText: Str.T("Str.ColorApply"))) return;
         var iccMode = IccMode; var preset = Preset; var file = _iccFile; var vibrance = _vibranceDirty ? _vibrance : null;
         var applyScreen = _screenSupported;
-        await Run(() => {
-            if (Unified) return ColorWorkspaceService.Apply(identity, settings, iccMode, preset, file, vibrance, applyScreen, restoreIcc);
-            var rebased = ScreenColorService.Apply(settings, identity, startNewBaselineOnDrift: true);
-            return Str.T("Str.ColorApplied") + (rebased ? " " + Str.T("Str.ColorNewBaselineSaved") : "");
-        });
+        await Run(() => ColorWorkspaceService.Apply(identity, settings, iccMode, preset, file, vibrance, applyScreen, restoreIcc));
     }
     private async void Restore_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _identity is null) return;
         var identity = _identity;
-        await Run(() => Unified ? ColorWorkspaceService.Restore(identity)
-            : ScreenColorService.Restore(identity) ? Str.T("Str.ColorRestored") : Str.T("Str.ColorNoBackup"));
+        await Run(() => ColorWorkspaceService.Restore(identity));
     }
     private async Task Run(Func<string> action)
     {

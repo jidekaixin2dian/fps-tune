@@ -52,7 +52,7 @@ public sealed record ComparisonResult(
 /// 自动前后对照的状态机（0.5.0 M2）：改前采样 → 应用 → 冷却 → 改后采样 → 判定。
 ///
 /// 安全规则（与 A/B 实验管线同源）：
-/// - 应用必须先取得本流程自己的备份快照（<see cref="OptimizationEngine.ApplyItemsWithReceiptAsync"/> 内含），
+/// - 应用必须先取得本流程自己的备份快照（<see cref="NativeOptimizationEngine.ApplyItemsWithReceiptAsync"/> 内含），
 ///   没有快照就中止且不采样；
 /// - 应用失败或改后采样失败，按快照自动还原已改动项并如实报告还原结果；
 /// - 写入由调用方提供的应用回调执行——GUI 侧弹既有审阅窗确认后才写系统，本流程绝不绕过审阅；
@@ -298,7 +298,7 @@ public static class ComparisonPlanner
         IReadOnlyList<string> ids, string? gamePath, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(ids, gamePath).ConfigureAwait(false);
+        var receipt = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(ids, gamePath).ConfigureAwait(false);
         var changed = receipt.Results.Where(r => r.Changed || r.StateUncertain).Select(r => r.Id).ToList();
         var errors = receipt.Results.Where(r => !r.Ok && !r.Skipped).Select(r => r.Id + " — " + r.Message).ToList();
         return new ComparisonApplyOutcome(errors.Count == 0,

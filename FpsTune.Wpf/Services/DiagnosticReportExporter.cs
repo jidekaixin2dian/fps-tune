@@ -515,7 +515,7 @@ public static class DiagnosticReportExporter
         sb.AppendLine($"- 托盘：{(s.MinimizeToTray ? "开" : "关")} · 热键：{(s.HotkeyEnabled ? "开" : "关")} · 通知：{(s.NotifyOnComplete ? "开" : "关")}");
         var gamePathText = StateStore.LoadGamePath() is { } gp ? PrivacyScrub.Sanitize(gp) : "（自动检测）";
         sb.AppendLine($"- 游戏路径：{gamePathText}");
-        sb.AppendLine($"- 优化项总数：{ItemCatalog.All.Count}");
+        sb.AppendLine($"- 优化项总数：{OptimizationCatalog.Items.Count}");
 
         sb.AppendLine();
         sb.AppendLine("> 本报告仅保存在本地，默认不上传任何数据；不包含联系方式等个人信息。");

@@ -33,7 +33,7 @@ public static class VerdictReport
         {
             var v = verdicts[i];
             var items = string.Join(", ", v.Items.Select(id =>
-                ItemCatalog.All.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id));
+                OptimizationCatalog.Items.FirstOrDefault(x => x.Id == id)?.DisplayName ?? id));
             var outcome = !VerdictStore.IsQualified(v) ? Str.T("Str.VerdictLegacyBadge")
                 : Str.T(v.Keep ? "Str.ReportKeep" : v.Reverted ? "Str.ReportRevert" : "Str.VerdictLegacyBadge");
             // 旧记录没有区间 / 判定字段：留空，不编数。

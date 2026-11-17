@@ -27,7 +27,7 @@ public sealed class OptimizationApplyPlan
     public static OptimizationApplyPlan Capture(IEnumerable<OptimizationItemViewModel> source,
         Func<OptimizationItemViewModel, bool> isVisible, string? gamePath)
     {
-        var known = ItemCatalog.All.Where(i => i.Available).ToDictionary(i => i.Id, StringComparer.Ordinal);
+        var known = OptimizationCatalog.Items.Where(i => i.Available).ToDictionary(i => i.Id, StringComparer.Ordinal);
         var selected = source.Where(i => i.IsChecked && i.Available && known.ContainsKey(i.Id)).DistinctBy(i => i.Id).ToArray();
         return new(selected.Select(i => new OptimizationReviewItem(i.Id, known[i.Id].DisplayName, i.Current, known[i.Id].DisplayDescription,
             known[i.Id].DisplaySideEffect, i.RequiresAdmin, i.RequiresReboot)).ToArray(), gamePath, selected.Count(i => !isVisible(i)));

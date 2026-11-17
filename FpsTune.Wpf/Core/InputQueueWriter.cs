@@ -40,7 +40,7 @@ internal static class InputQueueWriter
             return await custom(settings.KeyboardQueueDepth, settings.MouseQueueDepth);
 
         // 引擎按设置里的深度写注册表，并在写后读回；这里不做第二套写入。
-        var receipt = await OptimizationEngine.ApplyItemsWithReceiptAsync(ItemIds, null);
+        var receipt = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(ItemIds, null);
         return receipt.Results;
     }
 }

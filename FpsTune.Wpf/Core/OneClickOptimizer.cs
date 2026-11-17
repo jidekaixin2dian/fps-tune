@@ -8,5 +8,5 @@ public static class OneClickOptimizer
     public static Task<RunResult> ApplyAsync() => ApplyAsync(AppState.GamePath);
 
     public static Task<RunResult> ApplyAsync(string? gamePath)
-        => OptimizationEngine.ApplyPresetAsync("balanced", gamePath);
+        => NativeOptimizationEngine.ApplyPresetAsync("balanced", gamePath);
 }
