@@ -8,6 +8,13 @@ using FpsTune.Wpf.Views;
 
 namespace FpsTune.Wpf;
 
+/// <summary>
+/// 主窗口的生命周期宿主：关闭流程（用户关窗 vs 程序内关闭）、关窗去向、托盘常驻与恢复。
+/// <para>
+/// 边界：这里决定「窗口什么时候消失、消失后从哪里回来」，不改设置项的内容语义，
+/// 也不碰页面导航与通知卡。托盘图标本身的创建/气泡/菜单在 <see cref="TrayService"/>。
+/// </para>
+/// </summary>
 public partial class MainWindow
 {
     private bool _closeChoiceOpen;
@@ -92,6 +99,38 @@ public partial class MainWindow
     private void RestoreForExitFeedback()
     {
         if (!IsVisible || WindowState == WindowState.Minimized) RestoreFromTray();
+    }
+
+    // ---------- 托盘常驻 ----------
+
+    private async void OnStateChanged(object? sender, EventArgs e)
+    {
+        UpdateRootClip();
+        UpdateCaptionState();
+        if (WindowState == WindowState.Minimized && SettingsService.Current.MinimizeToTray)
+        {
+            // 先让最小化动画落定再决定去向: 托盘图标挂载成功才隐藏窗口,
+            // 否则保持任务栏最小化(避免窗口隐藏后托盘也没有、失去入口)。
+            // ApplicationIdle 不等于 DWM 过渡完成，给系统最小化动画留出时间。
+            await Task.Delay(250);
+            if (!IsLoaded || WindowState != WindowState.Minimized)
+                return;
+            if (TrayService.EnsureCreated())
+            {
+                Hide();
+                TrayService.ShowMinimizedHint();
+            }
+        }
+    }
+
+    /// <summary>从托盘/热键恢复主窗口。</summary>
+    public void RestoreFromTray()
+    {
+        Show();
+        if (WindowState == WindowState.Minimized)
+            WindowState = _restoreState;
+        Activate();
+        Focus();
     }
 
     internal void UpdateCaptionState()

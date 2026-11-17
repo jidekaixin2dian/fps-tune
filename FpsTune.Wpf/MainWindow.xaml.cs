@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Shell;
@@ -10,128 +9,23 @@ using FpsTune.Wpf.Views;
 
 namespace FpsTune.Wpf;
 
+/// <summary>
+/// 主窗口的外壳：窗口构造、DWM 圆角、标题栏按钮、整体缩放、以及窗口消息入口。
+/// <para>
+/// 这个类按职责分成六个 partial 文件，各自的边界写在文件头：
+/// <list type="bullet">
+/// <item>本文件：外壳——构造顺序、窗口装饰、<c>WndProc</c> 分发、缩放快捷键。</item>
+/// <item><c>MainWindow.Navigation</c>：页面创建与缓存、侧栏选中、路由、各页面入口。</item>
+/// <item><c>MainWindow.Notifications</c>：更新 / 社区 / 新手引导通知卡与启动检查。</item>
+/// <item><c>MainWindow.Hotkeys</c>：全局热键的注册、注销与 WM_HOTKEY 分发。</item>
+/// <item><c>MainWindow.Lifetime</c>：关闭流程、托盘常驻与最小化去向。</item>
+/// <item><c>MainWindow.Commands</c> / <c>MainWindow.Hud</c> / <c>MainWindow.GameTuning</c>：命令面板、悬浮窗选项、游戏调校入口。</item>
+/// </list>
+/// 新增功能先判断属于哪一块；放不进任何一块时，多半说明它该有自己的视图，而不是塞回窗口。
+/// </para>
+/// </summary>
 public partial class MainWindow : Window
 {
-    private readonly CancellationTokenSource _updateLifetime = new();
-    private UpdateCard? _updateCard;
-    private GuideCard? _guideCard;
-    private Window? _productDialog;
-    private UpdateInfo? _pendingUpdate;
-    internal CommunityPreferences CommunityPreferenceStore { get; set; } = new();
-    internal void ShowUpdateCard(UpdateInfo info)
-    {
-        if (_productDialog is not null) { _pendingUpdate = info; return; }
-        ShowProductDialog(new UpdateAvailableWindow(info));
-    }
-    internal void ShowCommunityPrompt(bool automatic = false)
-    {
-        if (_productDialog is not null || (automatic && CommunityPreferenceStore.IsSuppressed)) return;
-        ShowProductDialog(new CommunityWindow(CommunityPreferenceStore.Suppress, ProductLinks.Open));
-    }
-    private void ShowProductDialog(Window dialog)
-    {
-        _productDialog = dialog;
-        dialog.Owner = this;
-        DialogService.PrepareWindowForTest?.Invoke(dialog);
-        try { dialog.ShowDialog(); }
-        finally { _productDialog = null; }
-        if (_pendingUpdate is { } pending)
-        {
-            _pendingUpdate = null;
-            Dispatcher.BeginInvoke(new Action(() => { if (IsVisible) ShowUpdateCard(pending); }));
-        }
-    }
-    internal void ShowUpdateRecovery(UpdateAttempt attempt)
-    {
-        if (_updateCard is not null)
-        {
-            if (_updateCard.IsRunning) { _updateCard.Notification.SetExpanded(true); return; }
-            _updateCard.Cancel();
-            NotificationStack.Children.Remove(_updateCard);
-            _updateCard = null;
-        }
-        AttachUpdateCard(new UpdateCard(attempt));
-    }
-    private void AttachUpdateCard(UpdateCard updateCard)
-    {
-        _updateCard = updateCard;
-        var card = _updateCard;
-        card.Notification.Expanded += (_, _) => _guideCard?.Notification.SetExpanded(false);
-        card.Notification.CloseRequested += (_, _) =>
-        {
-            card.Cancel();
-            NotificationStack.Children.Remove(card);
-            _updateCard = null;
-            RefreshNotificationArea();
-        };
-        _guideCard?.Notification.SetExpanded(false);
-        NotificationStack.Children.Add(card);
-        RefreshNotificationArea();
-    }
-
-    private void RefreshNotificationArea() => NotificationArea.Visibility = NotificationStack.Children.Count == 0
-        ? Visibility.Collapsed : Visibility.Visible;
-
-    internal void ShowGuideCard()
-    {
-        if (_guideCard is null)
-        {
-            _guideCard = new GuideCard(NavigateTo) { Margin = new Thickness(0, 0, 0, 8) };
-            var card = _guideCard;
-            card.Notification.Expanded += (_, _) => _updateCard?.Notification.SetExpanded(false);
-            card.Notification.CloseRequested += (_, _) =>
-            {
-                NotificationStack.Children.Remove(card);
-                _guideCard = null;
-                RefreshNotificationArea();
-            };
-            NotificationStack.Children.Insert(0, card);
-        }
-        _guideCard.ShowTutorial();
-        RefreshNotificationArea();
-    }
-    private async Task CheckStartupUpdateAsync()
-    {
-        try
-        {
-            await Task.Delay(2500, _updateLifetime.Token);
-            while (Application.Current.Windows.OfType<SplashWindow>().Any(w => w.IsVisible))
-                await Task.Delay(200, _updateLifetime.Token);
-            UpdateAttempt? recovery = null;
-            try { recovery = await Task.Run(() => UpdateRecovery.ResolveStartup(UpdateService.DisplayVersion, Environment.ProcessPath!), _updateLifetime.Token); }
-            catch { /* Recovery metadata must never block app startup. */ }
-            if (recovery is not null && recovery.Status != "succeeded") { ShowUpdateRecovery(recovery); return; }
-            if (SettingsService.Current.CheckUpdatesOnStartup)
-            {
-                var info = await UpdateService.CheckAsync(_updateLifetime.Token);
-                if (_updateLifetime.IsCancellationRequested) return;
-                if (info is not null && UpdateService.IsNewer(info.ReleaseTag ?? info.Version, UpdateService.DisplayVersion))
-                {
-                    if (IsVisible && WindowState != WindowState.Minimized) ShowUpdateCard(info);
-                    return; // One automatic prompt per launch; the community reminder can wait.
-                }
-            }
-            if (!_updateLifetime.IsCancellationRequested && IsVisible && WindowState != WindowState.Minimized
-                && !App.SessionService.IsRunning)
-                ShowCommunityPrompt(automatic: true);
-        }
-        catch (OperationCanceledException) { }
-    }
-    // 页面按需创建、创建后缓存：启动只构建首页，显著降低冷启动时间与常驻内存。
-    private readonly IReadOnlyDictionary<string, Func<UserControl>> _pageFactories = NavigationRegistry.Factories;
-    private readonly Dictionary<string, UserControl> _pageCache = new();
-
-    // 全局热键 Ctrl+Alt+F
-    private const int WM_HOTKEY = 0x0312;
-    private const int HOTKEY_ID = 0x1F01;
-    // 方案热键槽 1–3（Ctrl+Alt+1/2/3），与参考实现的「三组方案快捷键」对齐。
-    private const int HOTKEY_ID_SCHEME1 = 0x1F11;
-    private const int HOTKEY_ID_SCHEME2 = 0x1F12;
-    private const int HOTKEY_ID_SCHEME3 = 0x1F13;
-    private const uint MOD_ALT = 0x1, MOD_CONTROL = 0x2;
-    private const uint VK_F = 0x46;
-    private const uint VK_1 = 0x31, VK_2 = 0x32, VK_3 = 0x33;
-
     // 使用非分层窗口和 WindowChrome，保留 DWM 原生窗口动画与圆角。
     private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private const int DWMWCP_ROUND = 2;
@@ -139,21 +33,8 @@ public partial class MainWindow : Window
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(nint hwnd, int attr, ref int value, int size);
 
-    [DllImport("user32.dll")]
-    private static extern bool RegisterHotKey(nint hwnd, int id, uint modifiers, uint vk);
-
-    [DllImport("user32.dll")]
-    private static extern bool UnregisterHotKey(nint hwnd, int id);
-
-    /// <summary>
-    /// 首页（控制台/经典概览）首批数据就绪信号：App 用它决定 splash 何时放行。
-    /// 首帧渲染 ≠ 数据就绪——控制台概览首启会跑后台检测、经典概览要等 WMI 硬件信息，
-    /// 首帧时页面仍是占位内容。页面对应工作完成后调用 <see cref="NotifyHomeDataReady"/>。
-    /// </summary>
-    public event EventHandler? HomeDataReady;
-    internal event EventHandler? StartupNavigationRequested;
-
-    internal void NotifyHomeDataReady() => HomeDataReady?.Invoke(this, EventArgs.Empty);
+    private HwndSource? _hwndSource;
+    private bool _savingSessionOnExit;
 
     public MainWindow()
     {
@@ -161,7 +42,6 @@ public partial class MainWindow : Window
         _navButtons = BuildNavButtons();
         InitializeCommandPalette();
         HookGameContextService();
-
 
         PageHost.Content = GetPage("home");
         // 托盘图标随应用启动常驻(与最小化设置无关); 设置只控制最小化行为
@@ -189,13 +69,7 @@ public partial class MainWindow : Window
             _updateLifetime.Cancel();
             _updateCard?.Cancel();
             TrayService.Dispose();
-            if (_hwndSource is not null)
-            {
-                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID);
-                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID_SCHEME1);
-                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID_SCHEME2);
-                UnregisterHotKey(_hwndSource.Handle, HOTKEY_ID_SCHEME3);
-            }
+            ReleaseHotkeys();
         };
         Loaded += (_, _) => { if (UserDataPaths.RootOverride is null) _ = CheckStartupUpdateAsync(); };
         // 全局滚轮穿透：滑块/下拉框不再吞掉滚轮，页面能一路滚到底（各页面都受益）。
@@ -213,12 +87,7 @@ public partial class MainWindow : Window
         if (UserDataPaths.RootOverride is null) ApplyHotkeyRegistration();
     }
 
-    [DllImport("user32.dll", EntryPoint = "GetDpiForWindow")]
-    private static extern uint NativeGetDpiForWindow(nint hwnd);
-
-    private HwndSource? _hwndSource;
-    private bool _savingSessionOnExit;
-
+    /// <summary>窗口消息入口：关窗按钮先走应用自己的「关闭去向」，热键消息转交热键宿主。</summary>
     private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
         if (msg == 0x0112 /* WM_SYSCOMMAND */ && ((long)wParam & 0xfff0) == 0xf060 /* SC_CLOSE */)
@@ -227,79 +96,12 @@ public partial class MainWindow : Window
             _ = Dispatcher.BeginInvoke(RequestUserClose);
             return nint.Zero;
         }
-        if (msg == WM_HOTKEY && wParam == HOTKEY_ID)
+        if (msg == WM_HOTKEY && HandleHotkeyMessage(wParam))
         {
-            RestoreFromTray();
-            handled = true;
-        }
-        else if (msg == WM_HOTKEY && wParam is HOTKEY_ID_SCHEME1 or HOTKEY_ID_SCHEME2 or HOTKEY_ID_SCHEME3)
-        {
-            // 方案热键：写屏在后台线程做（见 FilterSchemeApplier），这里只负责分发。
-            FilterSchemeApplier.ApplySlot(wParam switch
-            {
-                HOTKEY_ID_SCHEME1 => 1,
-                HOTKEY_ID_SCHEME2 => 2,
-                _ => 3,
-            });
             handled = true;
         }
         return nint.Zero;
     }
-
-    /// <summary>按设置注册/注销全局热键（设置页开关时调用）。</summary>
-    public void ApplyHotkeyRegistration()
-    {
-        if (_hwndSource is null)
-            return;
-        var handle = _hwndSource.Handle;
-        UnregisterHotKey(handle, HOTKEY_ID);
-        if (SettingsService.Current.HotkeyEnabled)
-            RegisterHotKey(handle, HOTKEY_ID, MOD_CONTROL | MOD_ALT, VK_F);
-
-        // 方案热键固定 Ctrl+Alt+1/2/3，指向方案库的第 1/2/3 条（与托盘菜单同一口径）。
-        // 注册失败通常是组合键被占用：不弹窗打断启动，托盘气泡在按下时也只会没反应——
-        // 所以开关旁的说明里写清「无效多半是被占用」。设置页切换开关时经 ApplySettings 走到这里。
-        var schemeHotkeys = SettingsService.Current.FilterSchemeHotkeysEnabled;
-        foreach (var (id, vk) in new[] { (HOTKEY_ID_SCHEME1, VK_1), (HOTKEY_ID_SCHEME2, VK_2), (HOTKEY_ID_SCHEME3, VK_3) })
-        {
-            UnregisterHotKey(handle, id);
-            if (schemeHotkeys) RegisterHotKey(handle, id, MOD_CONTROL | MOD_ALT, vk);
-        }
-    }
-
-    // ---------- 托盘常驻 ----------
-
-    private async void OnStateChanged(object? sender, EventArgs e)
-    {
-        UpdateRootClip();
-        UpdateCaptionState();
-        if (WindowState == WindowState.Minimized && SettingsService.Current.MinimizeToTray)
-        {
-            // 先让最小化动画落定再决定去向: 托盘图标挂载成功才隐藏窗口,
-            // 否则保持任务栏最小化(避免窗口隐藏后托盘也没有、失去入口)。
-            // ApplicationIdle 不等于 DWM 过渡完成，给系统最小化动画留出时间。
-            await Task.Delay(250);
-            if (!IsLoaded || WindowState != WindowState.Minimized)
-                return;
-            if (TrayService.EnsureCreated())
-            {
-                Hide();
-                TrayService.ShowMinimizedHint();
-            }
-        }
-    }
-
-    /// <summary>从托盘/热键恢复主窗口。</summary>
-    public void RestoreFromTray()
-    {
-        Show();
-        if (WindowState == WindowState.Minimized)
-            WindowState = _restoreState;
-        Activate();
-        Focus();
-    }
-
-    // ---------- 圆角裁剪 ----------
 
     /// <summary>
     /// 把窗口内容裁剪到自绘圆角内：标题栏/侧栏的不透明背景否则会溢出到
@@ -310,58 +112,6 @@ public partial class MainWindow : Window
         var radius = WindowState == WindowState.Maximized ? 0 : 8;
         ChromeGrid.Clip = new RectangleGeometry(
             new Rect(0, 0, ChromeGrid.ActualWidth, ChromeGrid.ActualHeight), radius, radius);
-    }
-
-    private UserControl GetPage(string key)
-    {
-        if (!_pageCache.TryGetValue(key, out var page))
-        {
-            page = _pageFactories[key]();
-            _pageCache[key] = page;
-        }
-        return page;
-    }
-
-    public void ShowOptimizePage()
-    {
-        NavigateTo("opt");
-        if (GetPage("opt") is OptimizeView opt)
-            opt.ReloadFromState();
-    }
-
-    /// <summary>审查类页面挑好优化项后，直接带进优化页的审阅流程（写入仍由用户在审阅窗确认）。</summary>
-    internal void ReviewOptimizationItems(IEnumerable<string> ids)
-    {
-        var selected = ids.Distinct(StringComparer.Ordinal).ToArray();
-        if (selected.Length == 0) return;
-        ShowOptimizePage();
-        if (GetPage("opt") is OptimizeView opt)
-            opt.SelectForReview(selected);
-    }
-
-    /// <summary>路由键 → 侧栏单选钮。与 <see cref="NavigationRegistry"/> 的键一一对应；没有侧栏项的页面（如 deltafix）不在这里。</summary>
-    private Dictionary<string, Views.Controls.NavButton> BuildNavButtons() => new(StringComparer.Ordinal)
-    {
-        ["home"] = NavHome, ["games"] = NavGames, ["quick"] = NavQuick, ["detect"] = NavDetect,
-        ["display"] = NavDisplay, ["filters"] = NavFilters, ["crosshair"] = NavCrosshair,
-        ["opt"] = NavOpt, ["tools"] = NavTools, ["backup"] = NavBackup, ["startup"] = NavStartup,
-        ["session"] = NavSession, ["settings"] = NavSettings,
-    };
-
-    private Dictionary<string, Views.Controls.NavButton>? _navButtons;
-
-    /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
-    private Views.Controls.NavButton[] AllNavButtons => (_navButtons ??= BuildNavButtons()).Values.ToArray();
-
-    /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
-    private Views.Controls.NavButton[] TopNavButtons
-        => new[] { "home", "filters", "crosshair", "tools", "session", "settings" }.Select(k => (_navButtons ??= BuildNavButtons())[k]).ToArray();
-
-    private void More_Click(object sender, RoutedEventArgs e)
-    {
-        MoreMenu.PlacementTarget = MoreButton;
-        MoreMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
-        MoreMenu.IsOpen = !MoreMenu.IsOpen;
     }
 
     internal void RefreshWallpaper()
@@ -376,165 +126,6 @@ public partial class MainWindow : Window
             if (WallpaperBackdrop.Source is not null) WallpaperBackdrop.Visibility = Visibility.Visible;
         }
         catch (Exception) { /* An unavailable personal backdrop does not block opening the application. */ }
-    }
-
-    internal Task<bool> RefreshDetectionAsync() => ((DetectView)GetPage("detect")).RunDetectionAsync();
-
-    /// <summary>0.2.0 M2：概览页切换游戏后，同步检测页（未创建则创建）状态到当前游戏。</summary>
-    internal void NotifyGameSwitched()
-    {
-        if (GetPage("detect") is DetectView detect)
-            detect.OnGameSwitched();
-    }
-
-    /// <summary>0.2.2 M2 收尾：接入游戏上下文服务（忙检数据源 + 自动补检测）。</summary>
-    private void HookGameContextService()
-    {
-        GameContextService.IsBusyProvider = () => _pageCache.TryGetValue("detect", out var page)
-            && page is DetectView d && d.DetectionInFlight;
-        GameContextService.GameSwitched += () =>
-        {
-            NotifyGameSwitched();
-            if (GameContextService.NeedsDetection)
-            {
-                GameContextService.ClearNeedsDetection();
-                _ = RefreshDetectionAsync();
-            }
-        };
-    }
-
-    internal void OpenDeltaSession()
-    {
-        NavigateTo("session");
-        ((SessionView)GetPage("session")).PrepareDeltaSession();
-    }
-    internal async Task OpenPreparationSettingsAsync()
-    {
-        NavigateTo("home");
-        await ((ConsoleView)GetPage("home")).ConfigurePreparationAsync();
-    }
-    internal void OpenRecordingOptions(string? targetPath = null)
-    {
-        NavigateTo("session");
-        var session = (SessionView)GetPage("session");
-        session.OpenAutomationOptions(targetPath);
-    }
-
-    internal void ReviewSelection(IEnumerable<string> ids)
-    {
-        ShowOptimizePage();
-        ((OptimizeView)GetPage("opt")).SelectForReview(ids);
-    }
-
-    /// <summary>
-    /// 控制台概览首次「基础建议」（P3-9）：先到检测页做一次只读体检建立信任与基线，
-    /// 成功后再带着建议项进优化页审阅。检测失败不标记引导已见——下次点击仍会先体检。
-    /// </summary>
-    internal async Task ReviewSelectionWithIntroAsync(IReadOnlyList<string> ids)
-    {
-        NavigateTo("detect");
-        if (GetPage("detect") is DetectView detect)
-        {
-            var ok = await detect.RunOnboardingDetectionAsync();
-            if (!ok)
-            {
-                DialogService.Warning(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectIncomplete"));
-                return;
-            }
-        }
-        StateStore.MarkOnboardingSeen();
-        ReviewSelection(ids.Count == 0 ? DeltaPreparation.PendingItems(AppState.Items, true) : ids);
-    }
-
-    public async Task RunOnboardingAsync()
-    {
-        // 第一步：先去检测页完成一次检测。
-        NavigateTo("detect");
-        if (GetPage("detect") is DetectView detect)
-        {
-            var ok = await detect.RunOnboardingDetectionAsync();
-            if (!ok)
-            {
-                DialogService.Warning(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectIncomplete"));
-                return;
-            }
-        }
-
-        // 第二步：检测完成后引导用户进入优化页。
-        ShowOptimizePage();
-        DialogService.Info(Str.T("Str.DetectAndOptimize"), Str.T("Str.DetectDoneHint"));
-    }
-
-    private void Nav_Checked(object sender, RoutedEventArgs e)
-    {
-        if (_navButtons is null)
-            return;
-        if (sender is RadioButton { Tag: string key } && _pageFactories.ContainsKey(key))
-        {
-            // 侧栏导航分布在多个容器中（WPF 单选钮按逻辑父容器分组，跨容器不互斥），
-            // 这里手动保证全组唯一选中：修复"点过设置后其他按钮无法熄灭它、再点设置无响应"。
-            foreach (var radio in AllNavButtons)
-            {
-                if (!ReferenceEquals(radio, sender) && radio.IsChecked == true)
-                    radio.IsChecked = false;
-            }
-
-            SwitchPage(GetPage(key));
-            if (key == "opt" && GetPage("opt") is OptimizeView opt)
-                opt.ReloadFromState();
-        }
-    }
-
-    /// <summary>导航分组折叠：组头勾选态控制子项面板显隐。</summary>
-    private void GroupHeader_Toggled(object sender, RoutedEventArgs e)
-    {
-        if (sender is not System.Windows.Controls.Primitives.ToggleButton { Tag: string key })
-            return;
-        var items = FindName("NavGroup" + key + "Items") as Panel;
-        if (items is null) return;
-        items.Visibility = ((System.Windows.Controls.Primitives.ToggleButton)sender).IsChecked == true
-            ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>侧栏"掉帧修复"动作项：进滤镜页并打开修复窗口。</summary>
-
-    private void SwitchPage(UserControl page)
-    {
-        if (ReferenceEquals(PageHost.Content, page))
-            return;
-
-        // Present cached content immediately; whole-page fades delayed every navigation
-        // and repeatedly rasterized CJK text at fractional translated positions.
-        PageHost.Content = page;
-        var key = _pageCache.FirstOrDefault(kv => ReferenceEquals(kv.Value, page)).Key;
-        if (!string.IsNullOrEmpty(key)) RememberRecentPage(key);
-        if (key == "home" && page is ConsoleView console) console.RefreshRecentPages();
-        // "掉帧修复"没有侧栏项（入口在首页快捷、滤镜页、调校窗与游戏库），
-        // 进入时清掉其他页签的残留选中，保证侧栏任一时刻最多一项高亮。
-        // 用缓存键判断而不是取页面实例：GetPage 首次会构造页面，切任何页都会顺带把掉帧页建出来。
-        var onDeltaFix = string.Equals(key, "deltafix", StringComparison.Ordinal);
-        if (onDeltaFix)
-        {
-            foreach (var radio in AllNavButtons)
-            {
-                if (radio.IsChecked == true)
-                    radio.IsChecked = false;
-            }
-        }
-        if (!ReferenceEquals(page, GetPage("home"))) StartupNavigationRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    /// <summary>首页"继续使用"：记录最近访问页面（首页本身除外），最多保留 6 个。</summary>
-    private void RememberRecentPage(string key)
-    {
-        if (key == "home") return;
-        var settings = SettingsService.Current;
-        var recent = settings.RecentPages ??= [];
-        recent.Remove(key);
-        recent.Insert(0, key);
-        if (recent.Count > 6) recent.RemoveRange(6, recent.Count - 6);
-        try { SettingsService.Save(settings); }
-        catch (Exception) { /* 最近访问记录失败不阻断导航。 */ }
     }
 
     private void CaptionButton_Click(object sender, RoutedEventArgs e)
@@ -556,8 +147,6 @@ public partial class MainWindow : Window
         }
     }
 
-    internal void OpenDeltaFixFromHome() => NavigateTo("deltafix");
-
     /// <summary>Ctrl +/-/0 整体缩放：范围 0.85–1.25，再小会把 13 号字压到不可读。</summary>
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
@@ -574,23 +163,4 @@ public partial class MainWindow : Window
         UiZoom.ScaleX = UiZoom.ScaleY = Math.Round(current, 2);
         e.Handled = true;
     }
-    public void NavigateTo(string key)
-    {
-        if (_navButtons is not null && _navButtons.TryGetValue(key, out var button))
-        {
-            button.IsChecked = true;      // 选中态驱动 Nav_Checked → SwitchPage
-            return;
-        }
-        // 没有侧栏项的页面（掉帧修复）：直接切页，侧栏保持无选中。
-        if (_pageFactories.ContainsKey(key))
-            SwitchPage(GetPage(key));
-    }
-    public void RefreshHomeContacts()
-    {
-        // Legacy contact fields remain readable; community feedback is now a global entry.
-    }
-
-    private void Guide_Click(object sender, RoutedEventArgs e) => ShowGuideCard();
-    private void Feedback_Click(object sender, RoutedEventArgs e) => ShowCommunityPrompt();
-
 }
