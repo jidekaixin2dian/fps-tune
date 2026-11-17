@@ -1,11 +1,11 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@ Available through a desktop interface and command-line tools.
 
 ## Versions and downloads
 
-Current version: **[v0.5.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0)**. The 1.x line is unmaintained.
+Current version: **[v0.6.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.5.0).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.5.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.5.0/FpsTune-Setup-0.5.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.6.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.0/FpsTune-Setup-0.6.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -26,7 +26,7 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.5.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.5.0/SHA256SUMS-v0.5.0.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.6.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.0/SHA256SUMS-v0.6.0.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 Portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
@@ -52,7 +52,6 @@ The branded installer lets you choose a destination, including during reinstalla
 ![Workspace · dark theme](assets/screenshots/01-overview.png)
 ![Optimization](assets/screenshots/03-optimize.png)
 ![Performance recording](assets/screenshots/04-session.png)
-![A/B experiment](assets/screenshots/05-ab-experiment.png)
 ![Settings](assets/screenshots/06-settings.png)
 ![Maintenance](assets/screenshots/07-maintenance.png)
 
@@ -85,14 +84,14 @@ Compact, card and strip HUDs (interface examples with demonstration values):
 - **Network and ports**: inspect adapters, DNS and gateways in Maintenance; test a chosen host with ICMP or TCP and view latency, unanswered probes and variation. Stop or export results, and filter TCP/UDP, IPv4/IPv6 endpoint snapshots by process, address or port. Ctrl+K also provides shortcuts.
 - **Memory cleanup**: one-click full cleanup trims eligible background working sets and clears all standby priorities. Run standby-only, selected-background or combined cleanup, with stages, counts, elapsed time, before/after readings and a stop action. Game, system and anti-cheat protections remain; low-memory automation stays off by default.
 - **Cache maintenance**: preview the current user's DirectX / NVIDIA shader caches and confirm cleanup. Busy or changed files are skipped. Deleted cache files cannot be restored; regeneration may cause temporary stutter.
-- **Performance sessions and A/B**: local CPU, RAM, GPU, VRAM and frame-time recording, per-game condition templates, searchable history and direct comparison of two recordings. Compare average FPS, 1% LOW and P99, then export a standalone HTML report. Frame-time capture ships with a bundled, officially signed PresentMon (2.5.1), so there is nothing to install; an already installed copy is recognized too. Capture uses system ETW and needs administrator rights. The session page's latency budget breaks the latest capture into input, frame generation and display, marking missing fields as not measurable. Recordings save on exit and have explicit capacity limits. Manual A/B CSV validation runs in the background, supports cancellation and preserves existing results on failure.
+- **Performance sessions**: local CPU, RAM, GPU, VRAM and frame-time recording, per-game condition templates, searchable history and direct comparison of two recordings. Compare average FPS, 1% LOW and P99, then export a standalone HTML report. Frame-time capture ships with a bundled, officially signed PresentMon (2.5.1), so there is nothing to install; an already installed copy is recognized too. Capture uses system ETW and needs administrator rights. The session page's latency budget breaks the latest capture into input, frame generation and display, marking missing fields as not measurable. Recordings save on exit and have explicit capacity limits.
 - **Before/after comparison**: click "Compare" on the Optimize page. It samples 60 seconds before, applies the items you confirm in the review window, cools down and samples 60 seconds after, then shows a verdict card with average frame gain and a 95% confidence interval, sorted into keep, roll back, or not enough evidence. "Roll back now" restores this comparison's own backup; a failed apply or failed after-sample restores automatically and says why.
 - **Gain archive**: the game library keeps every comparison per game and machine — count, best confirmed gain, most recent time and a gain trend — with export and import (import previews additions and duplicates and never overwrites existing data). Conclusions carried over from another machine or GPU are marked for reference only.
 - **Performance HUD and automatic recording**: open the HUD from the global title bar on any page. Choose compact, card or strip layout, 0–100% background transparency, position, pinning and click-through. The game preset uses a transparent 420×44 DIP strip with recovery access. The card layout draws the frame-time curve of the last 60 frames, marks frames above twice the median and counts stutters; "Capture this moment" writes the stuttering frames, current GPU load / VRAM / temperature / power, the top three background consumers and HAGS / MPO state to an evidence file. Closing the HUD stops sampling immediately. Recent FPS and 1% LOW appear during recording; missing samples remain marked unavailable. Opt-in game bindings start a recording on the next launch and save it on exit, without taking over manual sessions.
-- **Guidance and feedback**: step-by-step performance recording and A/B guides, separate QQ community and update prompts, and a persistent option to dismiss community reminders.
+- **Guidance and feedback**: step-by-step performance recording and comparison guides, separate QQ community and update prompts, and a persistent option to dismiss community reminders.
 - **Backups and recovery**: one inventory covers system settings, game driver profiles, ICC, vibrance, screen controls, resolution and the equalizer. Review interrupted operations and export recovery data for import on the same PC and Windows account.
 
-The application adjusts system or driver configuration without modifying game files or injecting into game processes. Results depend on hardware, drivers, games and scenes; compare on the same machine. Frame-time capture relies on system ETW: on preview builds of Windows, remote or virtual display sessions (streaming, remote desktop) and machines with anti-cheat kernel drivers it may read no frames — the UI then states that no valid data was produced and why, and never substitutes estimates.
+The application adjusts system or driver configuration without modifying game files or injecting into game processes. Results depend on hardware, drivers, games and scenes; compare on the same machine. Frame-time capture relies on system ETW: on preview builds of Windows, remote or virtual display sessions (streaming, remote desktop) and machines with anti-cheat kernel drivers it may read no frames. In that case the UI separates the three causes — missing administrator rights, graphics events blocked by the system or an anti-cheat driver (it reports how many events were dropped), and a target window that is not presenting — and gives the matching next step instead of substituting estimates.
 
 ## Quick start
 
@@ -132,16 +131,9 @@ Recovery targets the recorded setting, preserving backups and reporting conflict
 Import preserves records; it does not authorize applying another machine's or a previous Windows installation's backups.
 Disabling hibernation can be reversed by re-enabling it, but deleted hibernation contents and the original file type/size are outside recovery scope. Cache deletion is also irreversible.
 
-```powershell
-.\FpsTune.exe -Experiment -Baseline -Json
-.\FpsTune.exe -Experiment -Test -Group group-1 -Json
-.\FpsTune.exe -Experiment -Report -Json
-# Add -Simulate to every command for a rehearsal using separate simulated records.
-```
-
 Frame-time capture uses the bundled PresentMon; if you already installed another copy it is found and its signature and publisher are checked before capture. Running the app as administrator is required for the ETW session.
-A/B uses fixed hardware, game, graphics settings and route, with at least 3 valid samples and CV ≤ 0.05. A P99 regression above 3% prevents keeping the candidate; other thresholds appear in the recorded decision.
-This is a rule-based decision, not proof of statistical significance. Simulated records do not establish real FPS gains. Failed rollback is reported and its recovery records remain available.
+Comparison requires the same hardware, game, graphics settings and route, samples 60 seconds before and after, and estimates a 95% confidence interval from six 10-second segments. Verdicts are keep, roll back, or not enough evidence; a P99 regression above 3% argues against keeping the change. Other thresholds appear in the recorded decision.
+This is a rule-based decision, not proof of statistical significance. Failed rollback is reported and its recovery records remain available.
 
 ## Updates and privacy
 

@@ -47,15 +47,17 @@ description: Windows 系统设置调校与 FPS 对照测量。使用 FPS 帧律�
 ## 对照测量
 
 ```powershell
-& "<root>\FpsTune.exe" -Experiment -Baseline -Json
-& "<root>\FpsTune.exe" -Experiment -Test -Group group-1 -Json
-& "<root>\FpsTune.exe" -Experiment -Report -Json
+# 采样一次（需管理员）：帧率、1% Low、帧时间 p99、显卡与整机后台汇总
+& "<root>\FpsTune.exe" -Capture -ProcessName game -Duration 60 -Out capture.json -Json
+& "<root>\FpsTune.exe" -Capture -Game "C:\Games\Game.exe" -Duration 60 -Json
 ```
 
-固定设备、驱动、游戏、画质、分辨率、地图和路线；真实采样需要已安装且签名/发布者通过检查的官方 PresentMon。
-基线和候选至少 3 次有效样本、CV ≤ 0.05。P99 恶化超过 3% 时拒绝保留，其他收益阈值以判定记录为准。规则判定不等于统计显著性或未来场景收益。
-需重启项目不加入即时 A/B。发生异常时检查该操作回执，报告回滚失败，不启动另一轮覆盖现场。
-演练时每条命令都加 `-Simulate`；模拟状态与历史独立，不当作真实 FPS 收益。
+前后对照在界面里做：「优化 → 对照一下」改前采 60 秒 → 审阅窗确认应用 → 冷却 → 改后采 60 秒 → 结论卡给平均帧增益与 95% 置信区间（值得保留 / 建议回滚 / 证据不足），结论自动记入「收益档案」。命令行只负责单次采样，没有 `-Experiment`：A/B 实验室在 0.6.0 退休，能力并入这条路径。
+
+固定设备、驱动、游戏、画质、分辨率、地图和路线；采样需要内置采样器可用，或已安装且签名/发布者通过检查的官方 PresentMon。
+结论按 6 段 10 秒样本估计。P99 恶化超过 3% 时建议回滚，其他收益阈值以判定记录为准。规则判定不等于统计显著性或未来场景收益。
+需重启项目不要放进同一次对照。发生异常时检查该操作回执，报告回滚失败，不要启动另一轮覆盖现场。
+采样读不到帧时先看 `reasonCode`：`no-permission`（需要管理员）、`etw-events-lost`（图形事件被系统或反作弊拦下，换本机直连显示器的会话或退出受保护游戏再试）、`no-process`（目标没开或同名多实例）。
 
 ## 恢复
 
