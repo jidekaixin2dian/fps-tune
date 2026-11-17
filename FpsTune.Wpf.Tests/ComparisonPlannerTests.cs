@@ -38,7 +38,7 @@ public sealed class ComparisonPlannerTests : IDisposable
 
     /// <summary>
     /// 写一份逐帧 CSV：均值 ms。每 600 帧加逐段偏移——段均值各不相同，
-    /// 否则恒定帧时间会切出五元组完全相同的段（被 AbAnalysis 重复段闸判为证据不足）。
+    /// 否则恒定帧时间会切出五元组完全相同的段（被 SampleStatistics 重复段闸判为证据不足）。
     /// </summary>
     private string WriteFrameCsv(string name, int frameCount = 3600, double ms = 1000.0 / 60)
     {

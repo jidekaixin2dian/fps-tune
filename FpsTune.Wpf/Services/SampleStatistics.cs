@@ -7,7 +7,7 @@ namespace FpsTune.Wpf.Services;
 /// 一轮独立录制（一次 PresentMon 采样 / 一份 CSV）的汇总——A/B 统计的唯一实验单位。
 /// 单帧永远不作为独立样本：一帧只是本轮内部的观测，帧间强自相关，会虚假收窄区间。
 /// </summary>
-public sealed record AbRound(double AvgFps, double P1Low, double P99Ms, int Stutters, int Frames)
+public sealed record SegmentSample(double AvgFps, double P1Low, double P99Ms, int Stutters, int Frames)
 {
     /// <summary>核心指标是否可用于统计（缺失值 / 非有限值 / 非正数按无效轮剔除并计数）。</summary>
     public bool IsValid =>
@@ -16,12 +16,12 @@ public sealed record AbRound(double AvgFps, double P1Low, double P99Ms, int Stut
         double.IsFinite(P99Ms) && P99Ms > 0 && Stutters >= 0;
 
     /// <summary>完全相同的五元组视为同一份记录的重复粘贴，而不是独立复测。</summary>
-    public bool IdenticalTo(AbRound other) =>
+    public bool IdenticalTo(SegmentSample other) =>
         AvgFps == other.AvgFps && P1Low == other.P1Low && P99Ms == other.P99Ms
         && Stutters == other.Stutters && Frames == other.Frames;
 
     /// <summary>从 ExperimentRunner 的采样 JsonObject 映射；形状不完整返回 null（调用方计为缺失轮）。</summary>
-    public static AbRound? FromJson(JsonObject? sample)
+    public static SegmentSample? FromJson(JsonObject? sample)
     {
         if (sample is null) return null;
         try
@@ -33,7 +33,7 @@ public sealed record AbRound(double AvgFps, double P1Low, double P99Ms, int Stut
             var p99 = sample["p99Ms"]?.GetValue<double>();
             if (frames is null || stutters is null || avg is null || p1 is null || p99 is null)
                 return null;
-            return new AbRound(avg.Value, p1.Value, p99.Value, stutters.Value, frames.Value);
+            return new SegmentSample(avg.Value, p1.Value, p99.Value, stutters.Value, frames.Value);
         }
         catch (FormatException)
         {
@@ -51,16 +51,16 @@ public sealed record AbRound(double AvgFps, double P1Low, double P99Ms, int Stut
 /// 条件一致性（模式 / 单轮时长 / 游戏 / 场景）由比较双方逐项核对；
 /// ExperimentRunner 里这些条件本就由 ExperimentContext 闸门强校验，这里负责独立分析路径与报告呈现。
 /// </summary>
-public sealed record AbGroupInput(
+public sealed record StatisticsInput(
     string Label,
-    IReadOnlyList<AbRound> Rounds,
+    IReadOnlyList<SegmentSample> Rounds,
     string Mode,
     int DurationSec,
     string Game,
     string Scene);
 
 /// <summary>A/B 分析的可调阈值。全部与既有安全规则同源，改这里不会造成两套口径。</summary>
-public static class AbThresholds
+public static class StatisticsThresholds
 {
     /// <summary>每组最少有效轮次（与 Summarize 的 stable 闸一致）。</summary>
     public const int MinRounds = 3;
@@ -75,7 +75,7 @@ public static class AbThresholds
 }
 
 /// <summary>机器可读的判定结论与不足原因代码（用户文案由表现层映射，本层不携带文案）。</summary>
-public static class AbAnalysisCodes
+public static class VerdictCodes
 {
     public const string VerdictConfirmed = "confirmed";
     public const string VerdictUncertain = "uncertain";
@@ -107,7 +107,7 @@ public static class AbAnalysisCodes
 /// 一组对比的统计结论。所有数值字段在证据不足时也尽量填充（能算多少算多少），
 /// 但 <see cref="Sufficient"/> 为 false 时一切结论只能当描述性数字看，不能当证据用。
 /// </summary>
-public sealed record AbAnalysisResult(
+public sealed record StatisticsResult(
     string Verdict,
     bool Sufficient,
     IReadOnlyList<string> InsufficientReasons,
@@ -171,7 +171,7 @@ public sealed record AbAnalysisResult(
                 ["cvBaseline"] = Num(CvBase, "0.####"),
                 ["cvTest"] = Num(CvTest, "0.####"),
             },
-            ["method"] = AbAnalysisCodes.Method,
+            ["method"] = VerdictCodes.Method,
         };
     }
 }
@@ -190,34 +190,34 @@ public sealed record AbAnalysisResult(
 /// - 有用阈值 = 平均收益 ≥ 2% 才值得保留（negligible）；
 /// - 安全回退 = P99 帧时间恶化 > 3% 无条件还原（tradeoff）。
 /// </summary>
-public static class AbAnalysis
+public static class SampleStatistics
 {
-    public static AbAnalysisResult Compare(AbGroupInput baseline, AbGroupInput test)
+    public static StatisticsResult Compare(StatisticsInput baseline, StatisticsInput test)
     {
         var reasons = new List<string>();
 
         var baseRounds = SplitValid(baseline.Rounds, out var droppedBase);
         var testRounds = SplitValid(test.Rounds, out var droppedTest);
-        if (baseRounds.Count == 0) reasons.Add(AbAnalysisCodes.WhyNoValidBase);
-        if (testRounds.Count == 0) reasons.Add(AbAnalysisCodes.WhyNoValidTest);
+        if (baseRounds.Count == 0) reasons.Add(VerdictCodes.WhyNoValidBase);
+        if (testRounds.Count == 0) reasons.Add(VerdictCodes.WhyNoValidTest);
 
         var dupBase = CountDuplicates(baseRounds);
         var dupTest = CountDuplicates(testRounds);
-        if (dupBase > 0) reasons.Add(AbAnalysisCodes.WhyDuplicatesBase);
-        if (dupTest > 0) reasons.Add(AbAnalysisCodes.WhyDuplicatesTest);
+        if (dupBase > 0) reasons.Add(VerdictCodes.WhyDuplicatesBase);
+        if (dupTest > 0) reasons.Add(VerdictCodes.WhyDuplicatesTest);
 
         var outBase = CountOutliers(baseRounds);
         var outTest = CountOutliers(testRounds);
-        if (outBase > 0) reasons.Add(AbAnalysisCodes.WhyOutliersBase);
-        if (outTest > 0) reasons.Add(AbAnalysisCodes.WhyOutliersTest);
+        if (outBase > 0) reasons.Add(VerdictCodes.WhyOutliersBase);
+        if (outTest > 0) reasons.Add(VerdictCodes.WhyOutliersTest);
 
         var cvBase = CoefficientOfVariation(baseRounds);
         var cvTest = CoefficientOfVariation(testRounds);
-        if (cvBase is { } cb && cb > AbThresholds.MaxCv) reasons.Add(AbAnalysisCodes.WhyCvBase);
-        if (cvTest is { } ct && ct > AbThresholds.MaxCv) reasons.Add(AbAnalysisCodes.WhyCvTest);
+        if (cvBase is { } cb && cb > StatisticsThresholds.MaxCv) reasons.Add(VerdictCodes.WhyCvBase);
+        if (cvTest is { } ct && ct > StatisticsThresholds.MaxCv) reasons.Add(VerdictCodes.WhyCvTest);
 
-        if (baseRounds.Count < AbThresholds.MinRounds) reasons.Add(AbAnalysisCodes.WhyRoundsBase);
-        if (testRounds.Count < AbThresholds.MinRounds) reasons.Add(AbAnalysisCodes.WhyRoundsTest);
+        if (baseRounds.Count < StatisticsThresholds.MinRounds) reasons.Add(VerdictCodes.WhyRoundsBase);
+        if (testRounds.Count < StatisticsThresholds.MinRounds) reasons.Add(VerdictCodes.WhyRoundsTest);
 
         CheckConditions(baseline, test, reasons);
 
@@ -242,7 +242,7 @@ public static class AbAnalysis
         var (lowerPct, upperPct, df) = WelchCiPct(baseRounds, testRounds);
 
         var verdict = Classify(sufficient, avgDiffPct, p99DiffPct, lowerPct, upperPct);
-        return new AbAnalysisResult(
+        return new StatisticsResult(
             verdict, sufficient, reasons,
             baseRounds.Count, testRounds.Count,
             droppedBase, droppedTest,
@@ -254,7 +254,7 @@ public static class AbAnalysis
             RoundOrNull(p1DiffPct), RoundOrNull(p99DiffPct),
             RoundOrNull(g), RoundOrNull(df),
             RoundOrNull(cvBase), RoundOrNull(cvTest),
-            AbThresholds.Confidence);
+            StatisticsThresholds.Confidence);
     }
 
     // ------------------------------------------------------------------
@@ -264,47 +264,47 @@ public static class AbAnalysis
     private static string Classify(bool sufficient, double? avgDiffPct, double? p99DiffPct, double? lowerPct, double? upperPct)
     {
         if (!sufficient)
-            return AbAnalysisCodes.VerdictInsufficient;
+            return VerdictCodes.VerdictInsufficient;
         // 以下判定都要求区间存在；区间算不出来（组内零方差等）按证据不足兜底，
         // 这类输入同时会被重复/波动闸门拦下，正常数据不会走到。
         if (avgDiffPct is not { } avg || lowerPct is not { } lo || upperPct is not { } hi)
-            return AbAnalysisCodes.VerdictInsufficient;
+            return VerdictCodes.VerdictInsufficient;
 
         // 平均升、尾部坏：明确展示取舍，交由安全规则还原。
-        if (avg >= AbThresholds.MinUsefulGainPct && p99DiffPct is { } p99 && p99 > AbThresholds.MaxP99WorsenPct)
-            return AbAnalysisCodes.VerdictTradeoff;
+        if (avg >= StatisticsThresholds.MinUsefulGainPct && p99DiffPct is { } p99 && p99 > StatisticsThresholds.MaxP99WorsenPct)
+            return VerdictCodes.VerdictTradeoff;
         // 平均明确变差。
-        if (avg <= -AbThresholds.MinUsefulGainPct)
-            return AbAnalysisCodes.VerdictHarmful;
+        if (avg <= -StatisticsThresholds.MinUsefulGainPct)
+            return VerdictCodes.VerdictHarmful;
         // 区间整体低于有用收益线：包括「确认无提升」与「有提升但小到不值得保留」。
-        if (hi < AbThresholds.MinUsefulGainPct)
-            return AbAnalysisCodes.VerdictNegligible;
+        if (hi < StatisticsThresholds.MinUsefulGainPct)
+            return VerdictCodes.VerdictNegligible;
         // 区间跨 0：点估计可能达标，但噪声足以淹没真实差异。
         if (lo <= 0)
-            return AbAnalysisCodes.VerdictUncertain;
+            return VerdictCodes.VerdictUncertain;
         // 区间整体在 0 以上：统计确认存在提升；是否保留仍由有用收益线与安全线把关。
-        return AbAnalysisCodes.VerdictConfirmed;
+        return VerdictCodes.VerdictConfirmed;
     }
 
-    private static void CheckConditions(AbGroupInput baseline, AbGroupInput test, List<string> reasons)
+    private static void CheckConditions(StatisticsInput baseline, StatisticsInput test, List<string> reasons)
     {
         if (!string.Equals(baseline.Mode, test.Mode, StringComparison.OrdinalIgnoreCase))
-            reasons.Add(AbAnalysisCodes.WhyConditionMode);
+            reasons.Add(VerdictCodes.WhyConditionMode);
         if (baseline.DurationSec != test.DurationSec)
-            reasons.Add(AbAnalysisCodes.WhyConditionDuration);
+            reasons.Add(VerdictCodes.WhyConditionDuration);
         if (!string.Equals(baseline.Game, test.Game, StringComparison.OrdinalIgnoreCase))
-            reasons.Add(AbAnalysisCodes.WhyConditionGame);
+            reasons.Add(VerdictCodes.WhyConditionGame);
         if (!string.Equals(baseline.Scene, test.Scene, StringComparison.Ordinal))
-            reasons.Add(AbAnalysisCodes.WhyConditionScene);
+            reasons.Add(VerdictCodes.WhyConditionScene);
     }
 
     // ------------------------------------------------------------------
     // 轮次体检
     // ------------------------------------------------------------------
 
-    private static List<AbRound> SplitValid(IReadOnlyList<AbRound> rounds, out int dropped)
+    private static List<SegmentSample> SplitValid(IReadOnlyList<SegmentSample> rounds, out int dropped)
     {
-        var valid = new List<AbRound>(rounds.Count);
+        var valid = new List<SegmentSample>(rounds.Count);
         dropped = 0;
         foreach (var round in rounds)
         {
@@ -314,10 +314,10 @@ public static class AbAnalysis
         return valid;
     }
 
-    private static int CountDuplicates(List<AbRound> rounds)
+    private static int CountDuplicates(List<SegmentSample> rounds)
     {
         if (rounds.Count < 2) return 0;
-        var distinct = new List<AbRound> { rounds[0] };
+        var distinct = new List<SegmentSample> { rounds[0] };
         var duplicates = 0;
         for (var i = 1; i < rounds.Count; i++)
         {
@@ -334,9 +334,9 @@ public static class AbAnalysis
     /// 中等偏大的轮间波动让 Welch 区间自然变宽来反映，而不是直接否掉一轮测量。
     /// 小样本（n=3）不用 MAD 修正 z 分数：两个轮次恰好很近时它会大量误报正常波动。
     /// </summary>
-    private static int CountOutliers(List<AbRound> rounds)
+    private static int CountOutliers(List<SegmentSample> rounds)
     {
-        if (rounds.Count < AbThresholds.MinRounds) return 0;
+        if (rounds.Count < StatisticsThresholds.MinRounds) return 0;
         var values = rounds.Select(r => r.AvgFps).OrderBy(v => v).ToList();
         var range = values[^1] - values[0];
         if (range <= 0)
@@ -371,7 +371,7 @@ public static class AbAnalysis
     // 统计计算
     // ------------------------------------------------------------------
 
-    private static double? DiffPct(List<AbRound> baseline, List<AbRound> test, Func<AbRound, double> pick)
+    private static double? DiffPct(List<SegmentSample> baseline, List<SegmentSample> test, Func<SegmentSample, double> pick)
     {
         if (baseline.Count == 0 || test.Count == 0) return null;
         var b = baseline.Average(pick);
@@ -380,7 +380,7 @@ public static class AbAnalysis
     }
 
     /// <summary>组内轮间 CV（总体标准差口径，与 Summarize 一致）。</summary>
-    private static double? CoefficientOfVariation(List<AbRound> rounds)
+    private static double? CoefficientOfVariation(List<SegmentSample> rounds)
     {
         if (rounds.Count == 0) return null;
         var mean = rounds.Average(r => r.AvgFps);
@@ -394,7 +394,7 @@ public static class AbAnalysis
     /// 平均 FPS 差的 Welch 双侧区间，折算成基线均值的百分比。
     /// 组内样本方差为 0 或自由度退化时不给区间（返回 null），不假装有精度。
     /// </summary>
-    private static (double? LowerPct, double? UpperPct, double? Df) WelchCiPct(List<AbRound> baseline, List<AbRound> test)
+    private static (double? LowerPct, double? UpperPct, double? Df) WelchCiPct(List<SegmentSample> baseline, List<SegmentSample> test)
     {
         if (baseline.Count < 2 || test.Count < 2)
             return (null, null, null);
@@ -412,7 +412,7 @@ public static class AbAnalysis
             / ((v1 / n1) * (v1 / n1) / (n1 - 1) + (v2 / n2) * (v2 / n2) / (n2 - 1));
         if (!double.IsFinite(df) || df <= 0)
             return (null, null, null);
-        var t = StudentT.Quantile(1 - (1 - AbThresholds.Confidence) / 2, df);
+        var t = StudentT.Quantile(1 - (1 - StatisticsThresholds.Confidence) / 2, df);
         var diff = m2 - m1;
         if (m1 <= 0)
             return (null, null, Math.Round(df, 2));
@@ -422,7 +422,7 @@ public static class AbAnalysis
     }
 
     /// <summary>Hedges g（带小样本校正的标准化均值差），n&lt;2 或合并标准差为 0 时为 null。</summary>
-    private static double? HedgesG(List<AbRound> baseline, List<AbRound> test)
+    private static double? HedgesG(List<SegmentSample> baseline, List<SegmentSample> test)
     {
         if (baseline.Count < 2 || test.Count < 2) return null;
         var m1 = baseline.Average(r => r.AvgFps);

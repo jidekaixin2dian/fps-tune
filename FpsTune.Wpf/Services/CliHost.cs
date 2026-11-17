@@ -16,7 +16,7 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 public static class CliHost
 {
-    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "Experiment", "DpcLatency", "Capture", "InstallCheck", "InstallRepair", "FilterRestore", "Version", "License", "Help", "?" };
+    private static readonly string[] Verbs = { "Detect", "Apply", "Restore", "ListRestore", "DpcLatency", "Capture", "InstallCheck", "InstallRepair", "FilterRestore", "Version", "License", "Help", "?" };
 
     private sealed class CliOptions
     {
@@ -29,14 +29,7 @@ public static class CliHost
         public string? GamePath { get; set; }
         public bool BackupFileSpecified { get; set; }
         public string? BackupFile { get; set; }
-        // -Experiment 动词
-        public bool ExpBaseline { get; set; }
-        public bool ExpTest { get; set; }
-        public bool ExpReport { get; set; }
-        public bool Simulate { get; set; }
-        public string? Group { get; set; }
         public int? Duration { get; set; }
-        public string? CsvPath { get; set; }
         // -Capture 动词
         public bool ProcessNameSpecified { get; set; }
         public string? ProcessName { get; set; }
@@ -77,8 +70,7 @@ public static class CliHost
                 "Apply" => RunApply(options, output),
                 "Restore" => RunRestore(options, output),
                 "ListRestore" => RunListRestore(options, output),
-                "Experiment" => RunExperiment(options, output),
-                "DpcLatency" => RunDpcLatency(options, output),
+                   "DpcLatency" => RunDpcLatency(options, output),
                 "Capture" => RunCapture(options, output),
                 "InstallCheck" => RunInstallCheck(options, output),
                 "InstallRepair" => RunInstallRepair(options, output),
@@ -361,63 +353,6 @@ public static class CliHost
         return null;
     }
 
-    /// <summary>
-    /// -Experiment：A/B 实验编排（ExperimentRunner，进程内）。
-    /// 取代已删除的 tuning-experiment.ps1；-Simulate 为 dry-run，不改任何系统设置。
-    /// </summary>
-    private static int RunExperiment(CliOptions options, TextWriter output)
-    {
-        var actions = new List<string>();
-        if (options.ExpBaseline) actions.Add("baseline");
-        if (options.ExpTest) actions.Add("test");
-        if (options.ExpReport) actions.Add("report");
-        if (actions.Count != 1)
-        {
-            output.WriteLine("-Experiment 需要且只能选择一个动作：-Baseline | -Test -Group <group-1|group-2|group-3> | -Report。");
-            return 1;
-        }
-
-        string step;
-        if (options.ExpTest)
-        {
-            var group = (options.Group ?? "").Trim();
-            if (group.Length == 0)
-            {
-                output.WriteLine("-Test 需要用 -Group 指定候选组: group-1 / group-2 / group-3");
-                return 1;
-            }
-            step = group;
-        }
-        else
-        {
-            step = actions[0];
-        }
-
-        var runnerOptions = new ExperimentRunner.Options(
-            Simulate: options.Simulate,
-            DurationSec: options.Duration ?? 90,
-            CsvPath: options.CsvPath);
-        // CLI 由 App.OnStartup 在 UI 线程同步执行：RunAsync 的 await 链没有 ConfigureAwait，
-        // 直接 GetResult() 会死锁在 DispatcherSynchronizationContext（真实挂起点：Task.Run 解析、
-        // PresentMon 等待、应用组）。整条链挪到线程池再阻塞等待。
-        var (exitCode, json) = Task.Run(() => ExperimentRunner.RunAsync(step, runnerOptions, CancellationToken.None))
-            .GetAwaiter().GetResult();
-
-        if (options.Json)
-        {
-            output.WriteLine(json);
-            return exitCode;
-        }
-
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        if (root.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
-            output.WriteLine(message.GetString());
-        if (root.GetProperty("ok").GetBoolean() && actions[0] == "report")
-            output.WriteLine("CSV: " + root.GetProperty("csvExport").GetString());
-        return exitCode;
-    }
-
     /// <summary>管理员子进程入口：GUI 通过 runas 调用，结果写临时 JSON，不弹控制台。</summary>
     private static int RunDpcLatency(CliOptions options, TextWriter output)
     {
@@ -455,7 +390,7 @@ public static class CliHost
             processName = options.ProcessName!;
         }
         var request = new CaptureRequest(processName, GamePath: gamePath, DurationSec: options.Duration ?? 60);
-        // CLI 由 App.OnStartup 在 UI 线程同步执行：与 -Experiment 相同，把异步链放到线程池再同步等。
+        // CLI 由 App.OnStartup 在 UI 线程同步执行：把异步链放到线程池再同步等，避免卡在 DispatcherSynchronizationContext。
         var run = Task.Run(() => CaptureOrchestrator.CaptureAsync(request, CancellationToken.None))
             .GetAwaiter().GetResult();
         // 采样成功时补一份延迟预算（0.5.0 M5）：输入/帧生成/显示三段，随 -Out JSON 一起输出。
@@ -564,8 +499,7 @@ public static class CliHost
               FpsTune.exe -Apply -Items <id1,id2,...> | -Preset <预设名> [-Game <游戏exe路径>] [-Json]
               FpsTune.exe -Restore [-Items <id1,id2,...>] [-BackupFile <备份文件路径>] [-Json]
               FpsTune.exe -ListRestore [-Json]
-              FpsTune.exe -Experiment -Baseline | -Test -Group <group-1|group-2|group-3> | -Report [-Simulate] [-Duration <秒>] [-CsvPath <csv>] [-Json]
-              FpsTune.exe -DpcLatency [-Duration <秒>] [-Out <json>] [-Json]
+             FpsTune.exe -DpcLatency [-Duration <秒>] [-Out <json>] [-Json]
               FpsTune.exe -Capture -Game <游戏exe路径> | -ProcessName <进程名> [-Duration <秒>] [-Out <json>] [-Json]
               FpsTune.exe -InstallCheck [-Json]
               FpsTune.exe -InstallRepair [-Json]
@@ -574,10 +508,8 @@ public static class CliHost
 
             说明:
               -Json 输出机器可读 JSON（重定向/管道场景），默认输出人类可读摘要。
-              -Experiment 的 A/B 实验编排（基线/候选组/报告）在本进程内完成；
-              -Simulate 为 dry-run，使用模拟采样数据，不修改任何系统设置。
-              预设: {presets}、full（全部 {OptimizationCatalog.ItemOrder.Count} 项）。
-              -BackupFile 只还原指定的那一份备份（A/B 实验用于锚定本步骤自己的快照）；
+             预设: {presets}、full（全部 {OptimizationCatalog.ItemOrder.Count} 项）。
+              -BackupFile 只还原指定的那一份备份；
               指定文件不合法或已被还原时会明确报错，绝不回退到其他备份。
               需要管理员的项在非管理员会话下会失败并明确报错；全部改动自动备份。
               PowerShell 交互式运行时输出可能在进程退出后才显示，重定向或 Start-Process -Wait 更可靠。
@@ -667,27 +599,7 @@ public static class CliHost
                     else
                         options.BackupFile = args[++i];
                     break;
-                case "baseline":
-                    options.ExpBaseline = true;
-                    break;
-                case "test":
-                    options.ExpTest = true;
-                    break;
-                case "report":
-                    options.ExpReport = true;
-                    break;
-                case "simulate":
-                    options.Simulate = true;
-                    break;
-                case "group" when inline is not null:
-                    options.Group = inline;
-                    break;
-                case "group":
-                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
-                        error = "-Group 缺少值";
-                    else
-                        options.Group = args[++i];
-                    break;
+
                 case "duration" when inline is not null:
                     error = ParseDuration(inline, options);
                     break;
@@ -697,15 +609,7 @@ public static class CliHost
                     else
                         error = ParseDuration(args[++i], options);
                     break;
-                case "csvpath" when inline is not null:
-                    options.CsvPath = inline;
-                    break;
-                case "csvpath":
-                    if (i + 1 >= args.Length || IsFlag(args[i + 1]))
-                        error = "-CsvPath 缺少值";
-                    else
-                        options.CsvPath = args[++i];
-                    break;
+
                 case "processname" when inline is not null:
                     options.ProcessNameSpecified = true;
                     if (string.IsNullOrWhiteSpace(inline))

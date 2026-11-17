@@ -32,13 +32,13 @@ public sealed class ComparisonCardUiTests
         }, GainVerdictTests_Analysis(decision), 6, 6),
         Run("before.csv"), Run("after.csv"), "backup.json", ["sysmain"], false, null);
 
-    private static AbAnalysisResult GainVerdictTests_Analysis(GainDecision decision) => decision switch
+    private static StatisticsResult GainVerdictTests_Analysis(GainDecision decision) => decision switch
     {
-        GainDecision.Keep => new AbAnalysisResult(AbAnalysisCodes.VerdictConfirmed, true, [], 6, 6, 0, 0, 0, 0, 0, 0,
+        GainDecision.Keep => new StatisticsResult(VerdictCodes.VerdictConfirmed, true, [], 6, 6, 0, 0, 0, 0, 0, 0,
             100, 106, 6, 5.8, 2.1, 9.4, 3.1, -4.2, 1.4, 10, 0.02, 0.02, 0.95),
-        GainDecision.Rollback => new AbAnalysisResult(AbAnalysisCodes.VerdictNegligible, true, [], 6, 6, 0, 0, 0, 0, 0, 0,
+        GainDecision.Rollback => new StatisticsResult(VerdictCodes.VerdictNegligible, true, [], 6, 6, 0, 0, 0, 0, 0, 0,
             100, 100.3, 0.3, 0.3, -0.2, 0.8, 0.1, 0.4, 0.05, 10, 0.01, 0.01, 0.95),
-        _ => new AbAnalysisResult(AbAnalysisCodes.VerdictUncertain, true, [], 6, 6, 0, 0, 0, 0, 0, 0,
+        _ => new StatisticsResult(VerdictCodes.VerdictUncertain, true, [], 6, 6, 0, 0, 0, 0, 0, 0,
             100, 101, 1, 1, -1.5, 3.6, 0.2, 0.3, 0.1, 10, 0.02, 0.03, 0.95),
     };
 

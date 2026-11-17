@@ -82,8 +82,6 @@ public sealed class GamePreparationTests
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunAsync(new()));
             using var recorder = new PerformanceSessionService();
             Assert.Throws<InvalidOperationException>(() => recorder.Start("must not start"));
-            var experiment = await ExperimentRunner.RunAsync("baseline", new(), CancellationToken.None);
-            Assert.Equal(1, experiment.ExitCode); Assert.Contains(Str.T("Str.PrepareBusy"), experiment.Json);
         }
         finally { hold.Set(); await running; }
         Assert.False(GamePreparationService.IsRunning); Assert.Equal(1, memory.Purges);

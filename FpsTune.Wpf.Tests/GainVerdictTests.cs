@@ -5,19 +5,19 @@ namespace FpsTune.Wpf.Tests;
 
 /// <summary>
 /// GainVerdict：等量切段与三档判定边界（样本不足 / 效应过小 / 区间跨 0）。
-/// 统计口径全部来自 AbAnalysis（Welch 95% 区间），本层只做切段与映射。
+/// 统计口径全部来自 SampleStatistics（Welch 95% 区间），本层只做切段与映射。
 /// </summary>
 public sealed class GainVerdictTests
 {
     /// <summary>构造 n 个稳定段：均值 mean，正弦扰动保证各段五元组互异（避开重复段闸）。</summary>
-    private static List<AbRound> MakeRounds(double mean, double jitter = 0.4, int n = GainVerdict.SegmentCount)
+    private static List<SegmentSample> MakeRounds(double mean, double jitter = 0.4, int n = GainVerdict.SegmentCount)
     {
-        var rounds = new List<AbRound>(n);
+        var rounds = new List<SegmentSample>(n);
         for (var i = 0; i < n; i++)
         {
             var avg = mean + jitter * Math.Sin(i * 1.9);
             var p99 = 1000.0 / avg * 1.6; // 1% Low 约为均值的 62%
-            rounds.Add(new AbRound(Math.Round(avg, 2), Math.Round(1000.0 / p99, 2), Math.Round(p99, 2), 8 + i % 3, 600));
+            rounds.Add(new SegmentSample(Math.Round(avg, 2), Math.Round(1000.0 / p99, 2), Math.Round(p99, 2), 8 + i % 3, 600));
         }
         return rounds;
     }
@@ -71,7 +71,7 @@ public sealed class GainVerdictTests
         var verdict = GainVerdict.Evaluate(MakeRounds(100), MakeRounds(105.5));
 
         Assert.Equal(GainDecision.Keep, verdict.Decision);
-        Assert.Equal(AbAnalysisCodes.VerdictConfirmed, verdict.Analysis.Verdict);
+        Assert.Equal(VerdictCodes.VerdictConfirmed, verdict.Analysis.Verdict);
         Assert.True(verdict.Analysis.Sufficient);
         Assert.InRange(verdict.Analysis.AvgDiffPct!.Value, 4.5, 6.5);
         Assert.NotNull(verdict.Analysis.AvgDiffLowerPct);
@@ -84,7 +84,7 @@ public sealed class GainVerdictTests
         var verdict = GainVerdict.Evaluate(MakeRounds(100), MakeRounds(100.2));
 
         Assert.Equal(GainDecision.Rollback, verdict.Decision);
-        Assert.Equal(AbAnalysisCodes.VerdictNegligible, verdict.Analysis.Verdict);
+        Assert.Equal(VerdictCodes.VerdictNegligible, verdict.Analysis.Verdict);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed class GainVerdictTests
         var verdict = GainVerdict.Evaluate(MakeRounds(100), MakeRounds(101, jitter: 4));
 
         Assert.Equal(GainDecision.Insufficient, verdict.Decision);
-        Assert.Equal(AbAnalysisCodes.VerdictUncertain, verdict.Analysis.Verdict);
+        Assert.Equal(VerdictCodes.VerdictUncertain, verdict.Analysis.Verdict);
         Assert.True(verdict.Analysis.AvgDiffLowerPct <= 0);
     }
 
@@ -104,7 +104,7 @@ public sealed class GainVerdictTests
         var verdict = GainVerdict.Evaluate(MakeRounds(100), MakeRounds(94));
 
         Assert.Equal(GainDecision.Rollback, verdict.Decision);
-        Assert.Equal(AbAnalysisCodes.VerdictHarmful, verdict.Analysis.Verdict);
+        Assert.Equal(VerdictCodes.VerdictHarmful, verdict.Analysis.Verdict);
         Assert.True(verdict.Analysis.AvgDiffPct < 0);
     }
 
@@ -112,29 +112,29 @@ public sealed class GainVerdictTests
     public void Evaluate_tradeoff_rolls_back()
     {
         // 平均升、p99 帧时间明显恶化 → tradeoff（安全回退线）。
-        var worseTail = new List<AbRound>();
+        var worseTail = new List<SegmentSample>();
         for (var i = 0; i < 6; i++)
         {
             var avg = 105.0 + 0.5 * Math.Sin(i * 2.3);
             var p99 = 1000.0 / 100 * 1.6 * 1.10; // p99 帧时间恶化 ~10%
-            worseTail.Add(new AbRound(Math.Round(avg, 2), Math.Round(1000.0 / p99, 2), Math.Round(p99, 2), 8 + i % 3, 600));
+            worseTail.Add(new SegmentSample(Math.Round(avg, 2), Math.Round(1000.0 / p99, 2), Math.Round(p99, 2), 8 + i % 3, 600));
         }
         var verdict = GainVerdict.Evaluate(MakeRounds(100), worseTail);
 
         Assert.Equal(GainDecision.Rollback, verdict.Decision);
-        Assert.Equal(AbAnalysisCodes.VerdictTradeoff, verdict.Analysis.Verdict);
+        Assert.Equal(VerdictCodes.VerdictTradeoff, verdict.Analysis.Verdict);
     }
 
     [Fact]
     public void Evaluate_too_few_segments_is_insufficient()
     {
-        // 样本不足：只有 2 个有效段（低于 AbThresholds.MinRounds）。
+        // 样本不足：只有 2 个有效段（低于 StatisticsThresholds.MinRounds）。
         var verdict = GainVerdict.Evaluate(MakeRounds(100, n: 2), MakeRounds(105, n: 2));
 
         Assert.Equal(GainDecision.Insufficient, verdict.Decision);
-        Assert.Equal(AbAnalysisCodes.VerdictInsufficient, verdict.Analysis.Verdict);
-        Assert.Contains(AbAnalysisCodes.WhyRoundsBase, verdict.Analysis.InsufficientReasons);
-        Assert.Contains(AbAnalysisCodes.WhyRoundsTest, verdict.Analysis.InsufficientReasons);
+        Assert.Equal(VerdictCodes.VerdictInsufficient, verdict.Analysis.Verdict);
+        Assert.Contains(VerdictCodes.WhyRoundsBase, verdict.Analysis.InsufficientReasons);
+        Assert.Contains(VerdictCodes.WhyRoundsTest, verdict.Analysis.InsufficientReasons);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public sealed class GainVerdictTests
         var verdict = GainVerdict.Evaluate(dup, MakeRounds(105));
 
         Assert.Equal(GainDecision.Insufficient, verdict.Decision);
-        Assert.Contains(AbAnalysisCodes.WhyDuplicatesBase, verdict.Analysis.InsufficientReasons);
+        Assert.Contains(VerdictCodes.WhyDuplicatesBase, verdict.Analysis.InsufficientReasons);
     }
 
     [Fact]

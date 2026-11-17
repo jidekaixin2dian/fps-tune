@@ -17,7 +17,7 @@ internal sealed class MemoryCleanupService(IMemoryCleanupApi? api = null, Func<b
 {
     private readonly IMemoryCleanupApi _api = api ?? new WindowsMemoryCleanupApi();
     internal bool IsAdministrator => (isAdministrator ?? AdminHelper.IsAdministrator)();
-    internal bool IsBusy => (isBusy ?? (() => App.SessionService.IsRunning || ExperimentRunner.IsRunning))();
+    internal bool IsBusy => (isBusy ?? (() => App.SessionService.IsRunning))();
     internal sealed record Result(MemorySnapshot Before, MemorySnapshot? After, string? ReadError);
     internal MemorySnapshot Read() => _api.Read();
 

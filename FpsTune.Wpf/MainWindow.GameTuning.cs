@@ -8,7 +8,7 @@ public partial class MainWindow
 {
     internal void OpenGameTuning(string path)
     {
-        if (GameTuning.Identify(path) is null || GameContextService.IsBusy || ExperimentRunner.IsRunning || App.SessionService.IsRunning || App.SessionService.IsStopping) return;
+        if (GameTuning.Identify(path) is null || GameContextService.IsBusy || App.SessionService.IsRunning || App.SessionService.IsStopping) return;
         var dialog = new GameTuningWindow(path) { Owner = this };
         DialogService.PrepareWindowForTest?.Invoke(dialog);
         if (dialog.ShowDialog() != true || !string.Equals(path, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) return;

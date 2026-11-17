@@ -19,7 +19,7 @@ public sealed class WorkspaceCommands
             ("opt", "Str.NavOpt", "Str.CommandAliasOptimize"), ("display", "Str.NavDisplay", "Str.CommandAliasDisplay"),
             ("filters", "Str.NavFilters", "Str.CommandAliasFilters"),
             ("crosshair", "Str.CrosshairTitle", "crosshair overlay reticle"),
-            ("session", "Str.NavSession", "Str.CommandAliasSession"), ("ab", "Str.NavAb", "Str.CommandAliasExperiment"),
+            ("session", "Str.NavSession", "Str.CommandAliasSession"),
             ("backup", "Str.NavBackup", "Str.CommandAliasBackup"), ("tools", "Str.NavTools", "Str.CommandAliasTools"),
             ("settings", "Str.NavSettings", "Str.CommandAliasSettings") })
             Add("page:" + route, title, "Str.CommandPage", route, null, Str.T(alias));

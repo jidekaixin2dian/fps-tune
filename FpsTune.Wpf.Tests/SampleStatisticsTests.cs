@@ -5,7 +5,7 @@ using Xunit;
 namespace FpsTune.Wpf.Tests;
 
 /// <summary>
-/// A/B 可信性分析（AbAnalysis）：
+/// 统计与判定（SampleStatistics）：
 /// - 计算正确性用手工推导的已知值与教科书 t 分布表锚定；
 /// - 七类数据场景（无差异 / 小提升被噪声淹没 / 稳定提升 / 平均升尾部坏 /
 ///   样本不足 / 缺失值与异常值 / 重复与伪配对 / 条件不一致）逐一覆盖；
@@ -13,12 +13,12 @@ namespace FpsTune.Wpf.Tests;
 ///   不用少量成功案例证明方法普遍可靠。
 /// 只跑纯逻辑，不触碰系统与 ExperimentRunner 状态。
 /// </summary>
-public class AbAnalysisTests
+public class SampleStatisticsTests
 {
-    private static AbRound R(double avg, double p1 = 60, double p99 = 20, int stutters = 0, int frames = 5400)
+    private static SegmentSample R(double avg, double p1 = 60, double p99 = 20, int stutters = 0, int frames = 5400)
         => new(avg, p1, p99, stutters, frames);
 
-    private static AbGroupInput Group(double[] avgFps, string mode = "auto", int duration = 90,
+    private static StatisticsInput Group(double[] avgFps, string mode = "auto", int duration = 90,
         string game = "GameA", string scene = "map1", double[]? p99 = null)
         => new("test",
             avgFps.Select((a, i) => R(a, p99: p99 is null ? 20.0 : p99[i])).ToList(),
@@ -59,7 +59,7 @@ public class AbAnalysisTests
         // Hedges g = (5/2)×(1−3/15) = 2.0。
         var baseline = Group([100, 102, 98], scene: "m");
         var test = Group([105, 107, 103], scene: "m");
-        var result = AbAnalysis.Compare(baseline, test);
+        var result = SampleStatistics.Compare(baseline, test);
 
         Assert.True(result.Sufficient);
         Assert.Equal(5.0, result.AvgDiff!.Value, 6);
@@ -68,20 +68,20 @@ public class AbAnalysisTests
         Assert.Equal(0.47, result.AvgDiffLowerPct!.Value, 3);
         Assert.Equal(9.53, result.AvgDiffUpperPct!.Value, 3);
         Assert.Equal(2.0, result.HedgesG!.Value, 6);
-        Assert.Equal(AbAnalysisCodes.VerdictConfirmed, result.Verdict);
+        Assert.Equal(VerdictCodes.VerdictConfirmed, result.Verdict);
     }
 
     [Fact]
     public void Analysis_json_carves_out_expected_fields()
     {
-        var result = AbAnalysis.Compare(Group([100, 102, 98]), Group([105, 107, 103]));
+        var result = SampleStatistics.Compare(Group([100, 102, 98]), Group([105, 107, 103]));
         var json = result.ToJson();
 
-        Assert.Equal(AbAnalysisCodes.VerdictConfirmed, json["verdict"]!.GetValue<string>());
+        Assert.Equal(VerdictCodes.VerdictConfirmed, json["verdict"]!.GetValue<string>());
         Assert.True(json["sufficient"]!.GetValue<bool>());
         Assert.Equal(3, json["rounds"]!["baseline"]!.GetValue<int>());
         Assert.Equal(5.0, json["avgFps"]!["diffPct"]!.GetValue<double>(), 3);
-        Assert.Equal(AbAnalysisCodes.Method, json["method"]!.GetValue<string>());
+        Assert.Equal(VerdictCodes.Method, json["method"]!.GetValue<string>());
         Assert.Equal(2.0, json["effectSize"]!["hedgesG"]!.GetValue<double>(), 6);
     }
 
@@ -92,34 +92,34 @@ public class AbAnalysisTests
     [Fact]
     public void No_real_difference_with_tight_data_is_reported_as_negligible_not_confirmed()
     {
-        var result = AbAnalysis.Compare(
+        var result = SampleStatistics.Compare(
             Group([100.0, 100.4, 99.8, 100.2]),
             Group([99.9, 100.1, 100.0, 100.2]));
 
         Assert.True(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictNegligible, result.Verdict);
-        Assert.True(result.AvgDiffUpperPct < AbThresholds.MinUsefulGainPct);
+        Assert.Equal(VerdictCodes.VerdictNegligible, result.Verdict);
+        Assert.True(result.AvgDiffUpperPct < StatisticsThresholds.MinUsefulGainPct);
     }
 
     [Fact]
     public void Small_gain_buried_in_noise_is_uncertain_even_when_point_estimate_passes_threshold()
     {
         // 点估计 +3% 达到 2% 有用线，但 95% 区间 [-1.53, +7.53] 包含 0。
-        var result = AbAnalysis.Compare(Group([100, 102, 98]), Group([103, 105, 101]));
+        var result = SampleStatistics.Compare(Group([100, 102, 98]), Group([103, 105, 101]));
 
         Assert.True(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictUncertain, result.Verdict);
-        Assert.True(result.AvgDiffPct >= AbThresholds.MinUsefulGainPct);
+        Assert.Equal(VerdictCodes.VerdictUncertain, result.Verdict);
+        Assert.True(result.AvgDiffPct >= StatisticsThresholds.MinUsefulGainPct);
         Assert.True(result.AvgDiffLowerPct <= 0);
     }
 
     [Fact]
     public void Stable_gain_is_confirmed()
     {
-        var result = AbAnalysis.Compare(Group([100, 102, 98]), Group([107, 109, 105]));
+        var result = SampleStatistics.Compare(Group([100, 102, 98]), Group([107, 109, 105]));
 
         Assert.True(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictConfirmed, result.Verdict);
+        Assert.Equal(VerdictCodes.VerdictConfirmed, result.Verdict);
         Assert.True(result.AvgDiffLowerPct > 0);
     }
 
@@ -129,20 +129,20 @@ public class AbAnalysisTests
         // 平均 +7% 达标，但 P99 帧时间 +6% 超过 3% 安全线。
         var baseline = Group([100, 102, 98], p99: [20.0, 20.2, 19.8]);
         var test = Group([107, 109, 105], p99: [21.2, 21.4, 21.0]);
-        var result = AbAnalysis.Compare(baseline, test);
+        var result = SampleStatistics.Compare(baseline, test);
 
         Assert.True(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictTradeoff, result.Verdict);
-        Assert.True(result.P99DiffPct > AbThresholds.MaxP99WorsenPct);
+        Assert.Equal(VerdictCodes.VerdictTradeoff, result.Verdict);
+        Assert.True(result.P99DiffPct > StatisticsThresholds.MaxP99WorsenPct);
     }
 
     [Fact]
     public void Average_regression_is_reported_as_harmful()
     {
-        var result = AbAnalysis.Compare(Group([100, 102, 98]), Group([92, 94, 90]));
+        var result = SampleStatistics.Compare(Group([100, 102, 98]), Group([92, 94, 90]));
 
         Assert.True(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictHarmful, result.Verdict);
+        Assert.Equal(VerdictCodes.VerdictHarmful, result.Verdict);
     }
 
     [Theory]
@@ -150,44 +150,44 @@ public class AbAnalysisTests
     [InlineData(new double[] { 100 }, new double[] { 106, 108, 110 })]  // 基线只有 1 轮
     public void Too_few_rounds_is_insufficient_evidence(double[] baseline, double[] test)
     {
-        var result = AbAnalysis.Compare(Group(baseline), Group(test));
+        var result = SampleStatistics.Compare(Group(baseline), Group(test));
 
         Assert.False(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictInsufficient, result.Verdict);
-        Assert.Contains(AbAnalysisCodes.WhyRoundsBase, result.InsufficientReasons);
+        Assert.Equal(VerdictCodes.VerdictInsufficient, result.Verdict);
+        Assert.Contains(VerdictCodes.WhyRoundsBase, result.InsufficientReasons);
     }
 
     [Fact]
     public void Missing_round_is_dropped_and_counted_not_hidden()
     {
         // 一轮 NaN（缺失值）被剔除并计数；其余三轮数据足够紧，结论仍可确认。
-        var baseline = new AbGroupInput("baseline",
+        var baseline = new StatisticsInput("baseline",
             [R(100), R(100.5), R(99.5), R(double.NaN)], "auto", 90, "GameA", "map1");
         var test = Group([104, 104.5, 103.5]);
-        var result = AbAnalysis.Compare(baseline, test);
+        var result = SampleStatistics.Compare(baseline, test);
 
         Assert.Equal(1, result.DroppedBase);
         Assert.Equal(3, result.RoundsBase);
-        Assert.Equal(AbAnalysisCodes.VerdictConfirmed, result.Verdict);
+        Assert.Equal(VerdictCodes.VerdictConfirmed, result.Verdict);
     }
 
     [Fact]
     public void Only_invalid_rounds_leaves_no_evidence()
     {
-        var baseline = new AbGroupInput("baseline", [R(double.NaN), R(0)], "auto", 90, "GameA", "map1");
-        var result = AbAnalysis.Compare(baseline, Group([106, 107, 108]));
+        var baseline = new StatisticsInput("baseline", [R(double.NaN), R(0)], "auto", 90, "GameA", "map1");
+        var result = SampleStatistics.Compare(baseline, Group([106, 107, 108]));
 
         Assert.False(result.Sufficient);
-        Assert.Contains(AbAnalysisCodes.WhyNoValidBase, result.InsufficientReasons);
+        Assert.Contains(VerdictCodes.WhyNoValidBase, result.InsufficientReasons);
     }
 
     [Fact]
     public void Outlier_round_is_flagged_as_confounding_evidence()
     {
-        var result = AbAnalysis.Compare(Group([100, 101, 130, 100, 99]), Group([106, 107, 108]));
+        var result = SampleStatistics.Compare(Group([100, 101, 130, 100, 99]), Group([106, 107, 108]));
 
         Assert.False(result.Sufficient);
-        Assert.Contains(AbAnalysisCodes.WhyOutliersBase, result.InsufficientReasons);
+        Assert.Contains(VerdictCodes.WhyOutliersBase, result.InsufficientReasons);
         Assert.Equal(1, result.OutliersBase);
     }
 
@@ -195,11 +195,11 @@ public class AbAnalysisTests
     public void Duplicated_rounds_are_detected_as_pseudo_repetition()
     {
         // 三轮完全一致：真实帧采样几乎不可能，多半是同一份记录被复制。
-        var baseline = new AbGroupInput("baseline", [R(100), R(100), R(100)], "auto", 90, "GameA", "map1");
-        var result = AbAnalysis.Compare(baseline, Group([106, 107, 108]));
+        var baseline = new StatisticsInput("baseline", [R(100), R(100), R(100)], "auto", 90, "GameA", "map1");
+        var result = SampleStatistics.Compare(baseline, Group([106, 107, 108]));
 
         Assert.False(result.Sufficient);
-        Assert.Contains(AbAnalysisCodes.WhyDuplicatesBase, result.InsufficientReasons);
+        Assert.Contains(VerdictCodes.WhyDuplicatesBase, result.InsufficientReasons);
         Assert.Equal(2, result.DuplicatesBase);
     }
 
@@ -209,9 +209,9 @@ public class AbAnalysisTests
         // 伪配对防线：顺序区块设计里 n 相等不代表配对。
         // 方法标识固定为独立两样本口径；同样的数据若真按配对算区间会人为收窄，
         // 这里断言区间宽度与独立两样本的手算值一致（而非更窄）。
-        var result = AbAnalysis.Compare(Group([100, 102, 98]), Group([103, 105, 101]));
+        var result = SampleStatistics.Compare(Group([100, 102, 98]), Group([103, 105, 101]));
 
-        Assert.Equal(AbAnalysisCodes.Method, result.ToJson()["method"]!.GetValue<string>());
+        Assert.Equal(VerdictCodes.Method, result.ToJson()["method"]!.GetValue<string>());
         Assert.Equal(4.0, result.Df!.Value, 6); // Welch df=4，而非配对 df=n-1=2
     }
 
@@ -230,32 +230,32 @@ public class AbAnalysisTests
             "game" => Group([107, 109, 105], game: "GameB"),
             _ => Group([107, 109, 105], scene: "map2"),
         };
-        var result = AbAnalysis.Compare(baseline, test);
+        var result = SampleStatistics.Compare(baseline, test);
 
         Assert.False(result.Sufficient);
-        Assert.Equal(AbAnalysisCodes.VerdictInsufficient, result.Verdict);
+        Assert.Equal(VerdictCodes.VerdictInsufficient, result.Verdict);
         Assert.Contains("condition-mismatch:" + field, result.InsufficientReasons);
     }
 
     [Fact]
     public void Excessive_within_group_variance_blocks_conclusions()
     {
-        var result = AbAnalysis.Compare(Group([100, 110, 95]), Group([106, 107, 108]));
+        var result = SampleStatistics.Compare(Group([100, 110, 95]), Group([106, 107, 108]));
 
         Assert.False(result.Sufficient);
-        Assert.Contains(AbAnalysisCodes.WhyCvBase, result.InsufficientReasons);
-        Assert.True(result.CvBase > AbThresholds.MaxCv);
+        Assert.Contains(VerdictCodes.WhyCvBase, result.InsufficientReasons);
+        Assert.True(result.CvBase > StatisticsThresholds.MaxCv);
     }
 
     [Fact]
     public void Missing_condition_fields_in_round_json_are_counted_as_dropped()
     {
         var sample = new JsonObject { ["avgFps"] = 100.0 }; // 缺 samples/stutters/p1Low/p99Ms
-        Assert.Null(AbRound.FromJson(sample));
-        Assert.Null(AbRound.FromJson(null));
+        Assert.Null(SegmentSample.FromJson(sample));
+        Assert.Null(SegmentSample.FromJson(null));
 
         var ok = new JsonObject { ["samples"] = 5400, ["avgFps"] = 100.0, ["p1Low"] = 60.0, ["p99Ms"] = 20.0, ["stutters"] = 2 };
-        var round = AbRound.FromJson(ok);
+        var round = SegmentSample.FromJson(ok);
         Assert.NotNull(round);
         Assert.True(round!.IsValid);
     }
@@ -290,12 +290,12 @@ public class AbAnalysisTests
         {
             var baseline = Group([.. Normal(rand, 3, 100.0, sd)]);
             var test = Group([.. Normal(rand, 3, testMean, sd)]);
-            var result = AbAnalysis.Compare(baseline, test);
-            if (result.Verdict == AbAnalysisCodes.VerdictConfirmed) confirmed++;
+            var result = SampleStatistics.Compare(baseline, test);
+            if (result.Verdict == VerdictCodes.VerdictConfirmed) confirmed++;
             if (result.AvgDiffLowerPct is { } lo && result.AvgDiffUpperPct is { } hi
                 && lo <= (testMean - 100.0) / 100.0 * 100.0 && (testMean - 100.0) / 100.0 * 100.0 <= hi)
                 covered++;
-            if (result.Verdict == AbAnalysisCodes.VerdictUncertain) uncertain++;
+            if (result.Verdict == VerdictCodes.VerdictUncertain) uncertain++;
         }
         return (confirmed, covered, uncertain);
     }
@@ -333,22 +333,4 @@ public class AbAnalysisTests
     // 展示层文案映射（测试环境无 WPF Application，按 Str.cs 约定不断言具体文案；
     // 键是否配齐由 I18nGuardTests 的资源字典守卫兜底，这里只测映射不抛错、无遗漏分支）
     // ------------------------------------------------------------------
-
-    [Fact]
-    public void Every_verdict_maps_to_a_label_without_falling_through()
-    {
-        foreach (var verdict in new[]
-        {
-            AbAnalysisCodes.VerdictConfirmed, AbAnalysisCodes.VerdictUncertain,
-            AbAnalysisCodes.VerdictNegligible, AbAnalysisCodes.VerdictTradeoff,
-            AbAnalysisCodes.VerdictHarmful, AbAnalysisCodes.VerdictInsufficient,
-        })
-        {
-            var label = AbEvidenceText.VerdictLabel(verdict);
-            Assert.False(string.IsNullOrWhiteSpace(label));
-        }
-
-        // 未知代码按数据不可信兜底，不抛异常。
-        Assert.False(string.IsNullOrWhiteSpace(AbEvidenceText.VerdictLabel("something-new")));
-    }
 }

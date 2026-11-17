@@ -100,7 +100,7 @@ public partial class MaintenanceView
     internal async Task ApplyInputQueueAsync()
     {
         if (_inputQueueBusy) return;
-        if (GamePreparationService.IsRunning || ExperimentRunner.IsRunning || App.SessionService.IsRunning)
+        if (GamePreparationService.IsRunning || App.SessionService.IsRunning)
         {
             InputQueueStatus.Text = Str.T("Str.TuningBusy");
             return;

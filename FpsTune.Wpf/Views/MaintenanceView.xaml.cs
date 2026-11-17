@@ -134,7 +134,7 @@ public partial class MaintenanceView : UserControl
     private async void Clean_Click(object sender, RoutedEventArgs e)
     {
         if (_busy || _preview is null) return;
-        if (App.SessionService.IsRunning || ExperimentRunner.IsRunning) { Summary.Text = Str.T("Str.CacheBusy"); return; }
+        if (App.SessionService.IsRunning) { Summary.Text = Str.T("Str.CacheBusy"); return; }
         if (!DialogService.Confirm(Str.T("Str.ShaderCache"),
             Str.T("Str.CacheConfirm", _preview.Entries.Count, Size(_preview.Bytes)), confirmText: Str.T("Str.CacheClean"))) return;
         _busy = true; ScanButton.IsEnabled = CleanButton.IsEnabled = false;

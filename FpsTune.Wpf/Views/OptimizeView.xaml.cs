@@ -168,7 +168,7 @@ public partial class OptimizeView : UserControl
     private bool _suppressPresetAutoCheck;
 
     private List<OptimizationItem>? _sourceItems;
-    private IReadOnlyList<VerdictStore.VerdictEntry> _verdicts = [];
+    private IReadOnlyList<GainArchiveEntry> _archive = [];
 
     public void ReloadFromState()
     {
@@ -178,13 +178,13 @@ public partial class OptimizeView : UserControl
 
     private void ReloadItemsFromState()
     {
-        _verdicts = VerdictStore.Load();
+        _archive = GainArchiveService.Load().Entries;
         var currentGame = System.IO.Path.GetFileNameWithoutExtension(AppState.GamePath ?? "");
         // 页面切换不重建列表，也不清空用户尚未应用的自定义选择。
         if (ReferenceEquals(_sourceItems, AppState.Items))
         {
             foreach (var vm in Items)
-                vm.VerdictBadge = VerdictStore.BadgeFor(vm.Id, _verdicts, currentGame, AppState.GamePath);
+                vm.VerdictBadge = GainBadges.For(vm.Id, _archive, currentGame);
             return;
         }
         var selected = Items.Where(i => i.IsChecked).Select(i => i.Id).ToHashSet();
@@ -198,7 +198,7 @@ public partial class OptimizeView : UserControl
             var vm = new OptimizationItemViewModel(item)
             {
                 IsChecked = selected.Contains(item.Id),
-                VerdictBadge = VerdictStore.BadgeFor(item.Id, _verdicts, currentGame, AppState.GamePath),
+                VerdictBadge = GainBadges.For(item.Id, _archive, currentGame),
             };
             vm.PropertyChanged += SelectionChanged;
             Items.Add(vm);

@@ -135,6 +135,8 @@ public partial class App : Application
         {
             splash.SetPhase(48, Str.T("Str.SplashPhaseRestore"));
             LegacyMigrations.LogIfPresent();
+        // 判定存储已并入收益档案：旧 verdicts.json 只导一次，失败下次启动再试。
+        LegacyVerdictImport.RunOnce();
             // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话
             try
             {

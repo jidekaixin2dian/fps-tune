@@ -20,7 +20,6 @@ public static class DiagnosticReportExporter
 {
     // 测试可注入；生产代码保持默认目录。
     internal static string? BaseDirOverride { get; set; }
-    internal static Func<ExperimentWizardState>? ExperimentWizardLoaderOverride { get; set; }
     internal static Func<string, FileAttributes>? FileMetadataProbeOverride { get; set; }
 
     private static string BaseDir => BaseDirOverride ?? UserDataPaths.Root;
@@ -76,11 +75,8 @@ public static class DiagnosticReportExporter
                 AddReportJson(zip);
                 AddSanitizedSettings(zip);
                 AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "last-detect.json"), "last-detect.json", inputStatuses);
-                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "state.json"), "experiment/state.json", inputStatuses);
-                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "history.jsonl"), "experiment/history.jsonl", inputStatuses);
-                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", "wizard.json"), "experiment/wizard.json", inputStatuses);
-                foreach (var file in new[] { "state-v2.json", "history-v2.jsonl", "state-simulated-v2.json", "history-simulated-v2.jsonl", "in-flight-v2.json" })
-                    AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "experiment", file), "experiment/" + file, inputStatuses);
+                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "gain-archive.json"), "gain-archive.json", inputStatuses);
+                AddPrivacyMinimizedStatus(Path.Combine(BaseDir, "verdicts.json"), "verdicts.json（旧判定存储，已停止写入）", inputStatuses);
                 AddText(zip, "diagnostic-input-status.json", JsonSerializer.Serialize(new
                 {
                     status = "complete",
@@ -173,14 +169,18 @@ public static class DiagnosticReportExporter
                     };
                 }),
                 sessions = TryGet(() => SessionsSnapshot()),
-                experiment = TryGet(() => new
+                // 判定存储已并入收益档案（A/B 实验退休）：诊断包里只投影档案摘要，不再有 wizard 状态。
+                gainArchive = TryGet(() =>
                 {
-                    // LastRawOutput can contain arbitrary script output (up to
-                    // 256 KiB), so report.json uses an explicit diagnostic
-                    // projection instead of serializing the whole state.
-                    wizard = ProjectWizardForDiagnostic(
-                        ExperimentWizardLoaderOverride?.Invoke() ?? ExperimentWizardStore.Load()),
-                    historyRuns = ExperimentHistory.Load().Count
+                    var archive = GainArchiveService.Load();
+                    return new
+                    {
+                        count = archive.Entries.Count,
+                        kept = archive.Entries.Count(e => e.Verdict == "keep"),
+                        recent = archive.Entries.OrderByDescending(e => e.At).Take(5)
+                            .Select(e => new { e.GameId, e.Items, e.Verdict, e.AvgDiffPct, e.At })
+                            .ToList()
+                    };
                 }),
                 autoProfile = TryGet(() => new
                 {
@@ -226,45 +226,6 @@ public static class DiagnosticReportExporter
             }));
         }
     }
-
-    private static object ProjectWizardForDiagnostic(ExperimentWizardState wizard)
-        => new
-        {
-            wizard.SchemaVersion,
-            wizard.BaselineDone,
-            wizard.BaselineStable,
-            wizard.BaselineAvgFps,
-            wizard.BaselineP1Low,
-            wizard.BaselineCv,
-            wizard.BaselineSessionId,
-            wizard.BaselineAt,
-            Groups = (wizard.Groups ?? [])
-                .Where(g => g is not null)
-                .Select(g => new
-                {
-                    g.GroupId,
-                    g.Keep,
-                    g.Reverted,
-                    g.Reason,
-                    g.AvgFps,
-                    g.P1Low,
-                    g.SessionId,
-                    g.Simulated,
-                    g.CompletedAt
-                })
-                .ToList(),
-            wizard.ReportGenerated,
-            wizard.ReportAt,
-            wizard.RunningStep,
-            wizard.RunningSince,
-            wizard.LastError,
-            wizard.LastErrorAt,
-            wizard.LastErrorStep,
-            CompletedSteps = wizard.CompletedSteps.ToArray(),
-            wizard.NextStep,
-            wizard.CurrentStep,
-            rawOutputOmitted = true
-        };
 
     /// <summary>会话摘要（最近 5 条）与失败原因。</summary>
     private static object SessionsSnapshot()
@@ -399,21 +360,19 @@ public static class DiagnosticReportExporter
         }
 
         sb.AppendLine();
-        sb.AppendLine("## A/B 实验");
+        sb.AppendLine("## 收益档案");
         sb.AppendLine();
         try
         {
-            var wizard = ExperimentWizardStore.Load();
-            sb.AppendLine($"- 基线：{(wizard.BaselineDone ? $"平均 {wizard.BaselineAvgFps} FPS / 1% low {wizard.BaselineP1Low} / CV {wizard.BaselineCv}{(wizard.BaselineStable ? "（稳定）" : "（不稳定）")}" : "未完成")}");
-            foreach (var g in wizard.Groups)
-                sb.AppendLine($"- {WizardSteps.DisplayName(g.GroupId)}：{(g.Keep == true ? "保留" : g.Reverted ? "已还原" : "未还原")}（平均 {g.AvgFps} FPS）—— {g.Reason}");
-            if (wizard.LastError is not null)
-                sb.AppendLine($"- 最近错误：{wizard.LastError}（{wizard.LastErrorAt:yyyy-MM-dd HH:mm:ss}）");
-            sb.AppendLine($"- 报告：{(wizard.ReportGenerated ? $"已生成（{wizard.ReportAt:yyyy-MM-dd HH:mm}）" : "未生成")}");
+            var archive = GainArchiveService.Load();
+            var kept = archive.Entries.Count(e => e.Verdict == "keep");
+            sb.AppendLine($"- 对照记录：{archive.Entries.Count} 条（保留判定 {kept} 条）");
+            foreach (var e in archive.Entries.OrderByDescending(e => e.At).Take(5))
+                sb.AppendLine($"- {e.GameId}：{string.Join(", ", e.Items)} → {e.Verdict}（平均差 {e.AvgDiffPct:0.0}%，{e.At:yyyy-MM-dd HH:mm}）");
         }
         catch (Exception ex)
         {
-            sb.AppendLine($"（实验状态读取失败：{PrivacyScrub.Sanitize(ex.Message)}）");
+            sb.AppendLine($"（收益档案读取失败：{PrivacyScrub.Sanitize(ex.Message)}）");
         }
 
         sb.AppendLine();

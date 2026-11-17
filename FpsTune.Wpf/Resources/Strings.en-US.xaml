@@ -52,7 +52,6 @@
     <s:String x:Key="Str.SensEquivalentFormat">For {0}: sensitivity {1}</s:String>
     <s:String x:Key="Str.SensInvalid">Enter a DPI and a sensitivity greater than 0.</s:String>
     <s:String x:Key="Str.CommandAliasFilters">filter ICC color per-app game filter</s:String>    <s:String x:Key="Str.NavSession">Sessions</s:String>
-    <s:String x:Key="Str.NavAb">A/B Test</s:String>
     <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>
     <s:String x:Key="Str.NavStartup">Background &amp; startup</s:String>
     <s:String x:Key="Str.NavSettings">Settings</s:String>
@@ -167,21 +166,8 @@
     <s:String x:Key="Str.VersionLabel">Version: v</s:String>
 
     <!-- Full UI text (converted 2026-09-25) -->
-    <s:String x:Key="Str.AbIntro">先记录优化前的基线，再按向导测试候选方案，比较同一游戏场景下的表现。</s:String>
-    <s:String x:Key="Str.OpenExperimentDir">Open experiment folder</s:String>
-    <s:String x:Key="Str.CancelCurrentStep">Cancel current step</s:String>
-    <s:String x:Key="Str.AbWizardTitle">Experiment wizard · WIZARD (keep every step in the same in-game scene)</s:String>
-    <s:String x:Key="Str.LinkSession">Link performance session:</s:String>
-    <s:String x:Key="Str.AbReady">Ready. Click a step above to start sampling.</s:String>
-    <s:String x:Key="Str.AvgFps">Average FPS</s:String>
-    <s:String x:Key="Str.Stutter">Stutter</s:String>
-    <s:String x:Key="Str.CvJitter">Jitter (CV)</s:String>
     <s:String x:Key="Str.Verdict">Verdict</s:String>
-    <s:String x:Key="Str.HistoryTrend">History trend</s:String>
     <s:String x:Key="Str.Refresh">Refresh</s:String>
-    <s:String x:Key="Str.NoHistoryData">No history yet. Once you finish a baseline capture or a candidate group test, the average and 1% low comparison curves appear here.</s:String>
-    <s:String x:Key="Str.RawOutput">Raw output</s:String>
-    <s:String x:Key="Str.WaitingForSample">Waiting for sampling...</s:String>
     <s:String x:Key="Str.AppName">FPS Tune</s:String>
     <s:String x:Key="Str.Prompt">Notice</s:String>
     <s:String x:Key="Str.BackupIntro">Every system change keeps its original value here, ready to be restored item by item at any time.</s:String>
@@ -393,7 +379,6 @@
     <s:String x:Key="Str.DrsNote2">游戏支持 NVIDIA Reflex 时，低延迟优先在游戏内调整。</s:String>
 
     <!-- Full UI text (converted 2026-09-25) -->
-    <s:String x:Key="Str.Keep">Keep</s:String>
     <s:String x:Key="Str.FailedSp">Failed </s:String>
     <s:String x:Key="Str.SucceededSp">Succeeded </s:String>
     <s:String x:Key="Str.ExecFailedSp">Failed </s:String>
@@ -407,19 +392,13 @@
     <s:String x:Key="Str.None">None</s:String>
     <s:String x:Key="Str.Other">Other</s:String>
     <s:String x:Key="Str.Start">Start</s:String>
-    <s:String x:Key="Str.Run">Run</s:String>
     <s:String x:Key="Str.Running">Running</s:String>
     <s:String x:Key="Str.SideEffect">Side effect</s:String>
     <s:String x:Key="Str.Description">Description</s:String>
     <s:String x:Key="Str.Requirement">Requirement</s:String>
-    <s:String x:Key="Str.Baseline">Baseline</s:String>
     <s:String x:Key="Str.Comparison">Comparison</s:String>
-    <s:String x:Key="Str.SummaryLabel">Summary: </s:String>
     <s:String x:Key="Str.WeChatIdLabel">WeChat ID: </s:String>
     <s:String x:Key="Str.WeChatIdCopied">WeChat ID copied.</s:String>
-    <s:String x:Key="Str.StartSampling">Start sampling</s:String>
-    <s:String x:Key="Str.Resample">Sample again</s:String>
-    <s:String x:Key="Str.GenerateReport">Generate report</s:String>
     <s:String x:Key="Str.ExportProfile">Export profile</s:String>
     <s:String x:Key="Str.ImportProfile">Import profile</s:String>
     <s:String x:Key="Str.ExportSessionJson">Export session JSON</s:String>
@@ -454,10 +433,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.Unavailable">Unavailable</s:String>
     <s:String x:Key="Str.StatusPending">Pending</s:String>
     <s:String x:Key="Str.StatusNotDetected">Not detected</s:String>
-    <s:String x:Key="Str.StatusToRun">To run</s:String>
-    <s:String x:Key="Str.Locked">Locked</s:String>
-    <s:String x:Key="Str.NotRestored">Not restored</s:String>
-    <s:String x:Key="Str.Restored">Restored</s:String>
     <s:String x:Key="Str.BindingDisabled">Binding disabled</s:String>
     <s:String x:Key="Str.BindingEnabled">Binding enabled</s:String>
     <s:String x:Key="Str.AutoApplyOff">Auto-apply is off</s:String>
@@ -507,9 +482,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.LatestPreset">Latest preset</s:String>
     <s:String x:Key="Str.Supersample2x">Supersampling 2x</s:String>
     <s:String x:Key="Str.Supersample4x">Supersampling 4x (high-end desktop Nvidia card detected)</s:String>
-    <s:String x:Key="Str.AppNameAb">FPS Tune · A/B experiment</s:String>
     <s:String x:Key="Str.AppNameDone">FPS Tune · finished</s:String>
-    <s:String x:Key="Str.AbReportTitle">FPS Tune · A/B experiment report</s:String>
     <s:String x:Key="Str.ConfirmClearActivity">Clear the whole auto-profile activity log?</s:String>
     <s:String x:Key="Str.ConfirmRestoreAll">Restore every backed-up item?</s:String>
     <s:String x:Key="Str.ConfirmCancelSession">Cancel the current session? Collected data will be discarded.</s:String>
@@ -533,15 +506,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MustPickGameExe">Pick the game's own executable, not a launcher or installer.</s:String>
     <s:String x:Key="Str.PickGameExeHint">Pick the game executable (not a launcher; it usually ends with -Win64-Shipping or lives in a Binaries folder)</s:String>
     <s:String x:Key="Str.CannotDeriveProcessName">Could not derive a process name from the candidate path; nothing added.</s:String>
-    <s:String x:Key="Str.AbReadySimulate">Ready. Start with the baseline capture in step 1; -Simulate lets you rehearse the whole flow safely without a game.</s:String>
-    <s:String x:Key="Str.AbBaselineHint">Takes three samples and computes the mean and stability (CV). Re-running overwrites the current baseline.</s:String>
-    <s:String x:Key="Str.AbCandidateHint">Apply a candidate group → sample → automatically decide keep / revert.</s:String>
-    <s:String x:Key="Str.AbReportHint">Summarises the baseline and every candidate group verdict into report-latest.md in the experiment folder; linked session summaries are included.</s:String>
-    <s:String x:Key="Str.AbAllTested">All candidate groups have been tested. Generate the report, or re-run any step to overwrite the results.</s:String>
-    <s:String x:Key="Str.AbBaselineDone">Baseline complete.</s:String>
-    <s:String x:Key="Str.AbTestDone">Testing complete.</s:String>
     <s:String x:Key="Str.ReportGenerated">Report generated</s:String>
-    <s:String x:Key="Str.ReportGeneratedDetail">Report generated: report-latest.md in the experiment folder (with linked session summaries).</s:String>
     <s:String x:Key="Str.RecordMatchHint">Run the game before starting a recording. Record a similar duration on the same map, quality and frame cap. FPS is included when PresentMon and the game process are available; otherwise load is still recorded and the missing FPS reason is shown.</s:String>
     <s:String x:Key="Str.BasicsOk">Basic settings are in good shape · record one match's load to keep a before/after comparison.</s:String>
     <s:String x:Key="Str.ItemDetailHint">Click an item to see its current state and side effects. Confirm and apply at the bottom; the result shows here too.</s:String>
@@ -702,11 +667,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.BadgeCustomCount">{0} set</s:String>
 
     <!-- A/B page PresentMon pre-check (P2-12) -->
-    <s:String x:Key="Str.PmChecking">Checking PresentMon…</s:String>
-    <s:String x:Key="Str.PmReady">PresentMon ready: {0} (auto sampling available)</s:String>
-    <s:String x:Key="Str.PmMissing">PresentMon not found — A/B auto sampling unavailable. Official install command:</s:String>
-    <s:String x:Key="Str.PmCopyCmd">Copy command</s:String>
-    <s:String x:Key="Str.PmCopied">Copied</s:String>
 
     <!-- 2026-09-28 audit fixes: export/delete/open-folder failure messages -->
     <s:String x:Key="Str.ExportLogFailed">Failed to export log: </s:String>
@@ -752,57 +712,12 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SessionSaving">Finishing capture and saving the session. Please wait…</s:String>
     <s:String x:Key="Str.SessionSaveFailed">Could not save the session</s:String>
     <s:String x:Key="Str.SessionSaveFailedHint">Check the local disk. Existing recovery snapshots have been preserved.</s:String>
-    <s:String x:Key="Str.CsvInputInvalid">Could not parse the capture CSV. Select a PresentMon CSV with at least 30 valid frames.</s:String>
-    <s:String x:Key="Str.CsvInputTooLarge">The capture CSV exceeds 256 MiB. Use a shorter capture or a smaller CSV.</s:String>
-    <s:String x:Key="Str.CsvInputLineTooLong">A CSV line exceeds 16384 characters. Check the file format and delimiters.</s:String>
-    <s:String x:Key="Str.CsvInputTooManyFrames">The capture CSV exceeds two million valid frames. Select a shorter capture.</s:String>
-    <s:String x:Key="Str.CsvInputReadFailed">Could not read the capture CSV. Check file permissions and whether another application has locked it.</s:String>
     <s:String x:Key="Str.BottleneckTitle">Bottleneck</s:String>
     <s:String x:Key="Str.BottleneckGpu">GPU 侧负载较高：平均 {0}%、95 位 {1}%。优先检查画质、分辨率与驱动 3D 设置。</s:String>
     <s:String x:Key="Str.BottleneckCpu">CPU 侧负载较高：GPU 平均 {0}%，CPU 95 位 {1}%。优先检查后台占用与 CPU 相关设置。</s:String>
     <s:String x:Key="Str.BottleneckBalanced">两侧负载较均衡：GPU 平均 {0}%，CPU 95 位 {1}%。可继续比较具体场景的帧率与帧时间。</s:String>
-    <s:String x:Key="Str.CustomItemsRequired">Custom A/B requires at least one optimization item (Options.Items).</s:String>
-    <s:String x:Key="Str.CustomUnknownItems">Unknown optimization items: {0}</s:String>
-    <s:String x:Key="Str.CustomRebootItems">These items require a restart and cannot join an in-session A/B (a restart invalidates the baseline): {0}</s:String>
-    <s:String x:Key="Str.CustomGroupName">Custom A/B ({0} item(s))</s:String>
     <s:String x:Key="Str.VerdictBadge">Measured {0:+0.0;-0.0;0}% FPS</s:String>
-    <s:String x:Key="Str.CustomRunTitle">Custom A/B</s:String>
-    <s:String x:Key="Str.CustomRunHint">Runs the items currently checked on the Optimize/Overview page as one A/B group: baseline sampling → apply → sample again; the verdict lands in "Local verdicts" below. Requires a stable baseline first; checking exactly one item gives a single-item deep test.</s:String>
-    <s:String x:Key="Str.CustomRunButton">Run custom A/B</s:String>
-    <s:String x:Key="Str.CustomRunEmpty">No optimization items are checked on the Optimize/Overview page yet.</s:String>
-    <s:String x:Key="Str.CustomRunSelection">{0} item(s) checked: {1}</s:String>
-    <s:String x:Key="Str.CustomRunRebootHint">Note: these items need a restart to apply; the engine will reject this run: {0}</s:String>
-    <s:String x:Key="Str.CustomRunning">Custom A/B in progress: baseline → apply → sampling (play as usual)…</s:String>
-    <s:String x:Key="Str.CustomDone">Custom A/B finished; the verdict was recorded under "Local verdicts".</s:String>
-    <s:String x:Key="Str.CustomFailed">Custom A/B did not complete: </s:String>
-    <s:String x:Key="Str.CustomCancelled">Custom A/B cancelled.</s:String>
-    <s:String x:Key="Str.VerdictListTitle">Local verdicts</s:String>
-    <s:String x:Key="Str.VerdictEmpty">No verdicts yet — capture a baseline above, then run one custom A/B.</s:String>
-    <s:String x:Key="Str.VerdictDelta">{0:+0.0;-0.0;0}%</s:String>
-    <s:String x:Key="Str.VerdictMeta">baseline {0} → {1} FPS · {2} · {3}s ×3 · {4}</s:String>
-    <s:String x:Key="Str.ExportReport">Export report</s:String>
-    <s:String x:Key="Str.ReportSaved">Saved:
-{0}</s:String>
-    <s:String x:Key="Str.ReportExportFailed">Export failed: {0}</s:String>
-    <s:String x:Key="Str.ReportKeep">Kept</s:String>
-    <s:String x:Key="Str.ReportRevert">Reverted</s:String>
-    <s:String x:Key="Str.ReportTitle">FPS Tune measurement report</s:String>
-    <s:String x:Key="Str.VerdictReportGenerated">Generated {0} (from local measurements only; no predictions or extrapolations)</s:String>
-    <s:String x:Key="Str.ReportConditions">Test conditions</s:String>
-    <s:String x:Key="Str.ReportCondGame">Game</s:String>
-    <s:String x:Key="Str.ReportCondSample">Sampling</s:String>
-    <s:String x:Key="Str.ReportCondTool">Toolchain</s:String>
-    <s:String x:Key="Str.ReportConclusionSection">Verdicts</s:String>
-    <s:String x:Key="Str.ReportColSet">Set</s:String>
-    <s:String x:Key="Str.ReportColDelta">ΔAvg FPS</s:String>
     <s:String x:Key="Str.ReportColP1Low">1% low</s:String>
-    <s:String x:Key="Str.ReportColVerdict">Action</s:String>
-    <s:String x:Key="Str.ReportColDate">Date</s:String>
-    <s:String x:Key="Str.ReportColRounds">Rounds</s:String>
-    <s:String x:Key="Str.ReportColCi">95% CI</s:String>
-    <s:String x:Key="Str.ReportColEvidence">Statistical verdict</s:String>
-    <s:String x:Key="Str.ReportDisclaimer">Reading guide: ΔAvg FPS is the relative change between the applied-phase sample mean and the baseline mean, captured on real gameplay. Run-to-run noise may exceed the true effect of a single item; verdicts are for this machine only.</s:String>
-    <s:String x:Key="Str.ReportSourceNote">Raw samples and experiment state are kept in %LOCALAPPDATA%\FpsTune\experiment on this machine and can be reproduced.</s:String>
     <s:String x:Key="Str.GameSwitcherLabel">Game</s:String>
     <s:String x:Key="Str.GameSwitcherAdd">＋ Add a game…</s:String>
     <s:String x:Key="Str.PickGameExeTitle">Pick the game executable</s:String>
@@ -876,14 +791,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.PowerRestoreSetting">Restore power setting</s:String>
     <s:String x:Key="Str.BackupPendingWrite">The previous write has not been confirmed. Review this setting first.</s:String>
     <s:String x:Key="Str.BackupTargetChanged">This setting has changed since the operation. The backup has been retained for review.</s:String>
-    <s:String x:Key="Str.ExperimentContextMismatch">Sampling conditions changed. Collect a new baseline.</s:String>
-    <s:String x:Key="Str.ExperimentApplyFailed">Apply incomplete: {0}. Recovery: {1}</s:String>
-    <s:String x:Key="Str.ExperimentRecoveryFailed">Experiment recovery incomplete: {0}. Check Restore.</s:String>
-    <s:String x:Key="Str.ExperimentNotStable">Samples are insufficient or unstable; benefit is unconfirmed.</s:String>
-    <s:String x:Key="Str.ExperimentP99Rejected">P99 frame time increased by more than 3%; discard this group.</s:String>
     <s:String x:Key="Str.VerdictLegacyBadge">Historical result · retest needed</s:String>
-    <s:String x:Key="Str.ExperimentInterrupted">The previous experiment is unfinished. Restore its backup first.</s:String>
-    <s:String x:Key="Str.ExperimentOtherInstance">Another FpsTune instance is working on an A/B experiment. Try again shortly.</s:String>
     <s:String x:Key="Str.GpuIdentityUnavailable">No supported NVIDIA display device found.</s:String>
     <s:String x:Key="Str.GpuIdentityChanged">The device or driver changed. Refresh the device list.</s:String>
     <s:String x:Key="Str.GpuIdentityAlready">当前设备已使用所选名称。</s:String>
@@ -1204,7 +1112,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CommandAliasOptimize">优化 调校 方案 optimize tune preset profile</s:String>
     <s:String x:Key="Str.CommandAliasDisplay">显示 画质 模型 振动 颜色 显卡 display graphics DLSS ICC NVIDIA GPU</s:String>
     <s:String x:Key="Str.CommandAliasSession">性能 会话 定时 记录 帧率 session performance FPS timer benchmark</s:String>
-    <s:String x:Key="Str.CommandAliasExperiment">实验 对照 比较 AB A/B compare experiment</s:String>
     <s:String x:Key="Str.CommandAliasBackup">备份 还原 日志 恢复 backup restore recovery log</s:String>
     <s:String x:Key="Str.CommandAliasTools">维护 排查 清理 快照 maintenance tools cleanup snapshot</s:String>
     <s:String x:Key="Str.CommandAliasSettings">设置 外观 语言 更新 主题 settings appearance language theme update</s:String>
@@ -1262,9 +1169,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SessionGuideTitle">第一次使用：记录一段游戏表现</s:String>
     <s:String x:Key="Str.SessionGuideSteps" xml:space="preserve">1. 先在“检测”页定位游戏，填写分辨率、画质和测试场景。&#x0a;2. 点击“开始记录”，切回游戏完成同一段场景；到时自动保存，也可手动停止。&#x0a;3. 在历史记录中选择两次会话，比较占用、帧率与帧时间，并导出结果。</s:String>
     <s:String x:Key="Str.SessionChartGuide">曲线从左到右展示最近采样：CPU、内存、GPU 看占用率；显存看已用容量。曲线升高表示占用增加，帧率结果请查看保存后的会话。</s:String>
-    <s:String x:Key="Str.AbGuideTitle">第一次使用：比较优化前后的表现</s:String>
-    <s:String x:Key="Str.AbGuideSteps" xml:space="preserve">1. 选择同一个游戏、分辨率、画质与固定场景，先完成基线采样。&#x0a;2. 按下方向导应用方案，再在相同场景完成对照采样。&#x0a;3. 查看两次结果，多测几轮后决定保留设置或还原。</s:String>
-    <s:String x:Key="Str.FpsMetricsGuide">平均 FPS 看整体速度；1% Low 看较慢时刻，越高越顺畅；P99 是较慢帧的耗时（毫秒），越低越好。历史曲线的横轴是实验记录，纵轴是 FPS。</s:String>
     <s:String x:Key="Str.DisclaimerTitle">免责声明</s:String>
     <s:String x:Key="Str.DisclaimerBody">Performance analysis is based on local sampling and statistics and may be affected by the game scenario, background load, driver and hardware differences. Usage analysis is for troubleshooting direction; a single difference and correlation do not guarantee optimization gains. Test conditions are entered by the user; retest under the same conditions. Before adjusting the system or drivers, confirm the target and impact, and keep a backup of the original values. The GPU name change only affects the Windows device name, not the hardware identity or the GPU capabilities. Standby cache already counts as available memory; clearing it does not mean the same amount of usable memory or game performance gains. The software is provided under the terms of its license.</s:String>
     <s:String x:Key="Str.FrameLimitTitle">游戏帧率控制（NVIDIA）</s:String>
@@ -1452,7 +1356,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.VibranceNewBaselineHint">The previous backup does not match the current digital vibrance state. Apply keeps that backup and uses the current value as a new restore point.</s:String>
     <s:String x:Key="Str.VibranceNewBaselineSaved">Previous backup retained. Restore now returns to the value before this apply.</s:String>
     <s:String x:Key="Str.ColorNewBaselineHint">The display curve differs from the previous backup. Apply keeps that backup and uses the current curve as a new restore point.</s:String>
-    <s:String x:Key="Str.ColorNewBaselineSaved">Previous backup retained. Restore now returns to the picture before this apply.</s:String>
     <s:String x:Key="Str.IccNewBaselineHint">The previous ICC backup differs from the current associations. Manual apply keeps that backup and captures the current associations as a new restore point.</s:String>
     <s:String x:Key="Str.EqEntryAmbiguous">Duplicate or incomplete FPS Tune equalizer entries found. Keep one complete entry in the Equalizer APO configuration and retry.</s:String>
     <s:String x:Key="Str.UpdateInstallHint">Update now downloads and verifies the installer, preserves settings, installs and restarts the app.</s:String>
@@ -2421,104 +2324,8 @@ DNS：{3} · 解析地址：{4}</s:String>
          Keys mirror Strings.zh-CN.xaml one to one; keep both files in sync. -->
 
     <!-- A/B experiment: wizard state, verdicts, report -->
-    <s:String x:Key="Str.AbLastError">Last run had a problem: {0}</s:String>
-    <s:String x:Key="Str.AbRetryStep">Retry: {0}.</s:String>
-    <s:String x:Key="Str.AbRetryAnyStep">You can retry that step.</s:String>
-    <s:String x:Key="Str.AbBaselineDoneContinue">Baseline done ({0:0.#} FPS average). Test a candidate group next, or generate the report.</s:String>
-    <s:String x:Key="Str.AbStepBaseline">1 · Baseline sampling</s:String>
-    <s:String x:Key="Str.AbStepDone">Done ({0:0.#} FPS average, CV {1:0.###}{2})</s:String>
-    <s:String x:Key="Str.AbUnstableSuffix">, unstable</s:String>
-    <s:String x:Key="Str.AbBaselineDetail">1% low {0:0.#} · {1:yy-MM-dd HH:mm}. Candidate groups unlock once the baseline is stable.</s:String>
-    <s:String x:Key="Str.AbStepDoneVerdict">Done: {0}</s:String>
-    <s:String x:Key="Str.AbStepRunningHint">The script is running; keep the game scene fixed. You can cancel, then check the result before retrying.</s:String>
-    <s:String x:Key="Str.AbGroupDetail">{0} ({1:0.#} FPS average · 1% low {2:0.#} · {3:yy-MM-dd HH:mm}{4})</s:String>
-    <s:String x:Key="Str.AbSimulated">simulated</s:String>
-    <s:String x:Key="Str.AbStepReport">5 · Generate report</s:String>
-    <s:String x:Key="Str.AbReportAt">Generated ({0:yy-MM-dd HH:mm})</s:String>
-    <s:String x:Key="Str.AbReportRunningHint">Combining the script metrics with session summaries; you can cancel and retry if the result is unknown.</s:String>
-    <s:String x:Key="Str.AbNoSession">(no session)</s:String>
-    <s:String x:Key="Str.AbSessionOption">{0} · {1:MM-dd HH:mm} · {2} samples</s:String>
-    <s:String x:Key="Str.AbSaveFailed">Saving the wizard state failed: {0}. This result was not recorded reliably; fix the permission or disk problem and try again.</s:String>
-    <s:String x:Key="Str.AbCancelling">Cancelling the current step… the script will stop and this run will not produce a verdict.</s:String>
-    <s:String x:Key="Str.AbCannotStart">Cannot start: {0}</s:String>
-    <s:String x:Key="Str.AbSaveBlockedStart">The wizard state cannot be saved, so the step did not start. Fix the permission or disk problem and try again.</s:String>
-    <s:String x:Key="Str.AbRunningStatus">Running: {0}… step buttons are disabled while it runs; keep the game scene fixed.</s:String>
-    <s:String x:Key="Str.AbRunningRaw">Running: {0}</s:String>
-    <s:String x:Key="Str.AbStepCancelledRaw">Step cancelled. The script did not finish, so the result is unknown; if the candidate group was applied, check or revert the settings before retrying.</s:String>
-    <s:String x:Key="Str.AbStepCancelledDetail">The step was cancelled; the script stopped and the result is unknown. Check the candidate settings and try again.</s:String>
-    <s:String x:Key="Str.AbStepCancelledShort">The step was cancelled; the result is unknown and you can retry.</s:String>
-    <s:String x:Key="Str.AbStepExecFailedNonZero">The step failed (the script returned a non-zero exit code)</s:String>
-    <s:String x:Key="Str.AbStepExecFailedReason">The step failed: {0}</s:String>
-    <s:String x:Key="Str.AbExecFailedStatus">The step failed; see the raw output. You can retry it.</s:String>
-    <s:String x:Key="Str.AbOutputNotJson">The script output is not valid JSON (it may contain other output).</s:String>
-    <s:String x:Key="Str.AbOutputParseFailed">Parsing the output failed; see the raw output.</s:String>
-    <s:String x:Key="Str.AbOutputNotObject">The script output is not a JSON object.</s:String>
-    <s:String x:Key="Str.AbEngineFailedNoReason">The script reported a failure without a reason</s:String>
-    <s:String x:Key="Str.AbStepIncomplete">The step did not finish: {0}</s:String>
-    <s:String x:Key="Str.AbBaselineMetricsMissing">The baseline result has no usable metrics, so it was not saved as complete.</s:String>
-    <s:String x:Key="Str.AbBaselineInvalid">The baseline result is invalid; see the raw output.</s:String>
-    <s:String x:Key="Str.AbGroupMetricsMissing">The candidate group result has no usable metrics, so it was not saved as complete.</s:String>
-    <s:String x:Key="Str.AbGroupInvalid">The candidate group result is invalid; see the raw output.</s:String>
-    <s:String x:Key="Str.AbReportMetricsMissing">The report is missing the baseline or candidate group metrics, so it was not marked as generated.</s:String>
-    <s:String x:Key="Str.AbReportIncomplete">The report result is incomplete; see the raw output.</s:String>
-    <s:String x:Key="Str.AbReportWriteFailedShort">Writing the report file failed.</s:String>
-    <s:String x:Key="Str.AbReportWriteFailedStatus">Writing the report failed; see the raw output. You can retry.</s:String>
-    <s:String x:Key="Str.AbModeMismatch">The script returned mode ({0}), which does not match the requested step ({1}).</s:String>
-    <s:String x:Key="Str.AbModeMismatchStatus">The result does not match the step; see the raw output.</s:String>
-    <s:String x:Key="Str.AbReportTimeLine">- Generated: {0}</s:String>
-    <s:String x:Key="Str.AbReportScopeLine">- Basis: a statistical comparison of real or simulated samples only; heuristic data is not causal evidence and no fixed FPS gain is promised.</s:String>
-    <s:String x:Key="Str.AbReportBaselineSection">## Baseline</s:String>
-    <s:String x:Key="Str.AbReportBaselineLine">Average {0} FPS · 1% low {1} · P99 {2} ms · stutters {3} · CV {4}</s:String>
-    <s:String x:Key="Str.AbReportNoBaseline">(no baseline data)</s:String>
-    <s:String x:Key="Str.AbReportSessionLine">Linked session: {0} ({1}, {2} samples)</s:String>
-    <s:String x:Key="Str.AbReportGroupsSection">## Candidate group results</s:String>
-    <s:String x:Key="Str.AbReportGroupLine">- **{0} ({1})**: {2}</s:String>
-    <s:String x:Key="Str.AbReportGroupMetrics">average {0} FPS, 1% low {1}. {2}</s:String>
-    <s:String x:Key="Str.AbReportSessionLineShort">Linked session: {0} ({1})</s:String>
-    <s:String x:Key="Str.AbReportNoGroups">(no candidate group tested yet)</s:String>
-    <s:String x:Key="Str.AbReportRawSection">## Raw script output (JSON)</s:String>
-    <s:String x:Key="Str.AbReportSavedNote">(the raw JSON output stays with the script; the file was saved as report-latest.md)</s:String>
-    <s:String x:Key="Str.AbReportWriteFailed">Writing the report file failed: {0}</s:String>
-    <s:String x:Key="Str.AbSamplesCount">{0} samples</s:String>
-    <s:String x:Key="Str.AbSummaryCpu">CPU average {0}% / p95 {1}%</s:String>
-    <s:String x:Key="Str.AbSummaryMem">Memory average {0}%</s:String>
-    <s:String x:Key="Str.AbSummaryGpu">GPU average {0}%</s:String>
-    <s:String x:Key="Str.AbSummaryVram">VRAM average {0:0} MiB</s:String>
-    <s:String x:Key="Str.AbSummaryNote">(heuristic, not causal)</s:String>
-    <s:String x:Key="Str.AbTooltipVerdict">Verdict: {0}</s:String>
-    <s:String x:Key="Str.AbTooltipBody">{0} ({1}){2}&#x0a;Average {3} FPS · 1% low {4} FPS{5}{6}</s:String>
-    <s:String x:Key="Str.VerdictRestoreIncomplete">Restore incomplete</s:String>
 
     <!-- A/B statistical evidence (AbAnalysis): evidence lines and insufficiency reasons -->
-    <s:String x:Key="Str.AbSideBaseline">baseline</s:String>
-    <s:String x:Key="Str.AbSideTest">candidate group</s:String>
-    <s:String x:Key="Str.AbWhySeparator">; </s:String>
-    <s:String x:Key="Str.AbWhyNoRounds">{0} has no usable recording rounds</s:String>
-    <s:String x:Key="Str.AbWhyRounds">{0} has too few valid rounds ({1}, at least {2} required)</s:String>
-    <s:String x:Key="Str.AbWhyDuplicates">{0} has {1} fully duplicated rounds — looks like pasted copies, not independent measurements</s:String>
-    <s:String x:Key="Str.AbWhyCv">{0} varies too much between rounds (CV {1}, limit {2})</s:String>
-    <s:String x:Key="Str.AbWhyCvUnknown">unknown</s:String>
-    <s:String x:Key="Str.AbWhyOutliers">{0} has {1} suspected outlier round(s); rule out background interference and re-measure</s:String>
-    <s:String x:Key="Str.AbWhyCondMode">sampler mode differs between the two phases</s:String>
-    <s:String x:Key="Str.AbWhyCondDuration">round duration differs between the two phases</s:String>
-    <s:String x:Key="Str.AbWhyCondGame">target game differs between the two phases</s:String>
-    <s:String x:Key="Str.AbWhyCondScene">scene settings differ between the two phases</s:String>
-    <s:String x:Key="Str.AbEvidenceConfirmed">Statistically confirmed: average {0:+0.0;-0.0;0}% (95% CI {1:+0.0;-0.0;0} to {2:+0.0;-0.0;0}%, {3} rounds)</s:String>
-    <s:String x:Key="Str.AbEvidenceUncertain">Insufficient evidence: average {0:+0.0;-0.0;0}%, 95% CI ({1:+0.0;-0.0;0} to {2:+0.0;-0.0;0}%) includes 0 — noise may mask the true effect; re-run this group with the scene unchanged</s:String>
-    <s:String x:Key="Str.AbEvidenceNegligible">Benefit not meaningful: average {0:+0.0;-0.0;0}% (95% CI {1:+0.0;-0.0;0} to {2:+0.0;-0.0;0}%), below the {3:0.#}% useful-gain line</s:String>
-    <s:String x:Key="Str.AbEvidenceTradeoff">Trade-off: average {0:+0.0;-0.0;0}% but P99 frame time {1:+0.0;-0.0;0}%, beyond the {2:0.#}% safety line; reverted by the safety rule</s:String>
-    <s:String x:Key="Str.AbEvidenceHarmful">Harmful: average {0:+0.0;-0.0;0}%, reverted by the safety rule</s:String>
-    <s:String x:Key="Str.AbEvidenceInsufficient">Insufficient evidence: {0}</s:String>
-    <s:String x:Key="Str.AbVerdictConfirmed">Confirmed</s:String>
-    <s:String x:Key="Str.AbVerdictUncertain">Inconclusive, re-measure</s:String>
-    <s:String x:Key="Str.AbVerdictNegligible">Not meaningful</s:String>
-    <s:String x:Key="Str.AbVerdictTradeoff">Avg up, tail worse</s:String>
-    <s:String x:Key="Str.AbVerdictHarmful">Harmful</s:String>
-    <s:String x:Key="Str.AbVerdictInsufficient">Data unreliable</s:String>
-    <s:String x:Key="Str.AbReportEvidence">Statistics: {0}</s:String>
-    <s:String x:Key="Str.AbReportStatsSection">## Statistical method and limits</s:String>
-    <s:String x:Key="Str.AbReportStatsMethod">- Unit: independent recording rounds (one frame-time summary each); frames are never treated as independent samples. Mean difference uses a Welch t 95% CI; effect size uses Hedges g.</s:String>
-    <s:String x:Key="Str.AbReportStatsLimits">- With fewer than 5 rounds per side the CI is wide; a CI covering 0 or mismatched conditions means no conclusion. Keeping a setting also requires the useful-gain line ({0:0.#}%) and the P99 safety line ({1:0.#}%).</s:String>
 
     <!-- Shared list separators -->
     <s:String x:Key="Str.ListSeparator">, </s:String>

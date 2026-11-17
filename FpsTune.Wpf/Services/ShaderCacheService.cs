@@ -83,7 +83,7 @@ internal sealed class ShaderCacheService
     {
         if (preview.Owner != _owner || preview.Truncated) throw new InvalidOperationException("Scan again before cleaning.");
         using var gate = SystemMutationGate.Acquire();
-        if (App.SessionService.IsRunning || ExperimentRunner.IsRunning) throw new InvalidOperationException(Str.T("Str.CacheBusy"));
+        if (App.SessionService.IsRunning) throw new InvalidOperationException(Str.T("Str.CacheBusy"));
         var skipped = new List<string>();
         var deleted = 0; long bytes = 0;
         foreach (var entry in preview.Entries)

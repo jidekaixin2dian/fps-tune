@@ -32,7 +32,7 @@ internal sealed class AutoRecordingService : IDisposable
         _session = session;
         _options = options ?? (() => (SettingsService.Current.AutoRecordEnabled, SettingsService.Current.AutoRecordGames));
         _probe = probe ?? ObserveProcess;
-        _busy = busy ?? (() => ExperimentRunner.IsRunning || GamePreparationService.IsRunning);
+        _busy = busy ?? (() => GamePreparationService.IsRunning);
         _timer.Tick += async (_, _) => await PollAsync();
     }
     internal static string[] NormalizePaths(IEnumerable<string>? paths) => (paths ?? []).Select(SafePath).OfType<string>()

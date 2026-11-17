@@ -171,14 +171,14 @@ public partial class GameLibraryView : UserControl
     }
     private bool CanEdit()
     {
-        if (!_loading && !GameContextService.IsBusy && !ExperimentRunner.IsRunning && !App.SessionService.IsRunning) return true;
+        if (!_loading && !GameContextService.IsBusy && !App.SessionService.IsRunning) return true;
         StatusText.Text = Str.T("Str.LibraryBusy"); return false;
     }
     private bool SelectTarget()
     {
         if (GameList.SelectedItem is not GameRow row || _loading) return false;
         if (!row.Profile.ExePath.Equals(AppState.GamePath, StringComparison.OrdinalIgnoreCase) && !CanEdit()) return false;
-        if (ExperimentRunner.IsRunning || GamePreparationService.IsRunning) { StatusText.Text = Str.T("Str.LibraryBusy"); return false; }
+        if (GamePreparationService.IsRunning) { StatusText.Text = Str.T("Str.LibraryBusy"); return false; }
         if (!File.Exists(row.Profile.ExePath)) { StatusText.Text = Str.T("Str.LibraryInaccessible"); return false; }
         if (!GameContextService.SwitchTo(row.Profile.ExePath)) { StatusText.Text = Str.T("Str.LibraryBusy"); return false; }
         return true;

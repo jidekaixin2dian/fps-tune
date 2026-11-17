@@ -69,7 +69,7 @@ public partial class UpdateCard : UserControl
     private async Task RunInstallAsync(bool rollback)
     {
         if (_running) return;
-        if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
+        if (App.SessionService.IsRunning)
         {
             StatusText.Text = Str.T("Str.UpdateSessionBusy");
             return;

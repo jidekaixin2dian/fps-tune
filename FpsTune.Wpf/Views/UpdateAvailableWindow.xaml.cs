@@ -64,7 +64,7 @@ public partial class UpdateAvailableWindow : Window
     internal async Task InstallAsync()
     {
         if (IsRunning) return;
-        if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
+        if (App.SessionService.IsRunning)
         { StatusText.Text = Str.T("Str.UpdateSessionBusy"); return; }
         using var cancellation = new CancellationTokenSource();
         _download = cancellation;

@@ -127,7 +127,7 @@ internal static class UpdateInstaller
     }
     private static void EnsureIdle()
     {
-        if (App.SessionService.IsRunning || ExperimentRunner.IsRunning)
+        if (App.SessionService.IsRunning)
             throw new InvalidOperationException(Str.T("Str.UpdateSessionBusy"));
     }
 }

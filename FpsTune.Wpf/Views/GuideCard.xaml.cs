@@ -9,7 +9,7 @@ public partial class GuideCard : UserControl
 {
     private readonly Action<string> _navigate;
     private int _step;
-    private static readonly string[] Targets = ["home", "detect", "opt", "session", "ab", "backup"];
+    private static readonly string[] Targets = ["home", "detect", "opt", "session", "backup"];
     private static readonly string[] Titles = ["Str.GuideStep1", "Str.GuideStep2", "Str.GuideStep3", "Str.GuideStep4", "Str.GuideStep5", "Str.GuideStep6"];
     private static readonly string[] Bodies = ["Str.GuideBody1", "Str.GuideBody2", "Str.GuideBody3", "Str.GuideBody4", "Str.GuideBody5", "Str.GuideBody6"];
 

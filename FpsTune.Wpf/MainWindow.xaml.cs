@@ -112,7 +112,7 @@ public partial class MainWindow : Window
                 }
             }
             if (!_updateLifetime.IsCancellationRequested && IsVisible && WindowState != WindowState.Minimized
-                && !App.SessionService.IsRunning && !ExperimentRunner.IsRunning)
+                && !App.SessionService.IsRunning)
                 ShowCommunityPrompt(automatic: true);
         }
         catch (OperationCanceledException) { }
@@ -173,7 +173,8 @@ public partial class MainWindow : Window
             ["deltafix"] = () => new DeltaFixView(),
             ["quick"] = () => new QuickOptimizeView(),
             ["session"] = () => new SessionView(),
-            ["ab"] = () => new AbExperimentView(),
+
+
             ["backup"] = () => new BackupLogView(),
             ["tools"] = () => new MaintenanceView(),
             ["startup"] = () => new StartupAuditView(),
@@ -596,7 +597,8 @@ public partial class MainWindow : Window
             case "filters": NavFilters.IsChecked = true; break;
             case "crosshair": NavCrosshair.IsChecked = true; break;
             case "session": NavSession.IsChecked = true; break;
-            // A/B 实验室已从侧栏收起（主路径是「优化 → 对照一下」），仍保留路由，供优化页的高级入口跳转。
+
+
             case "ab": SwitchPage(GetPage("ab")); break;
             case "backup": NavBackup.IsChecked = true; break;
             case "startup": NavStartup.IsChecked = true; break;

@@ -125,7 +125,7 @@ public partial class GameTuningWindow : Window
     private bool CanAct()
     {
         if (!string.Equals(_gamePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) { StatusText.Text = Str.T("Str.PlanGameChanged"); return false; }
-        if (_busy || GameContextService.IsBusy || ExperimentRunner.IsRunning || App.SessionService.IsRunning || App.SessionService.IsStopping)
+        if (_busy || GameContextService.IsBusy || App.SessionService.IsRunning || App.SessionService.IsStopping)
         { StatusText.Text = Str.T("Str.TuningBusy"); return false; }
         return true;
     }

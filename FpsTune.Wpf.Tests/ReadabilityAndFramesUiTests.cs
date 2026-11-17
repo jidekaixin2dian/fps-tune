@@ -260,7 +260,7 @@ public sealed class ReadabilityAndFramesUiTests
                     ThemeManager.SetMode(theme);
                     Assert.NotEqual(((SolidColorBrush)app.FindResource("AccentBrush")).Color,
                         ((SolidColorBrush)app.FindResource("ChartSecondaryBrush")).Color);
-                    foreach (var route in new[] { "home", "detect", "opt", "display", "filters", "crosshair", "session", "ab", "backup", "tools", "settings" })
+                    foreach (var route in new[] { "home", "detect", "opt", "display", "filters", "crosshair", "session", "backup", "tools", "settings" })
                     {
                         window.NavigateTo(route); window.UpdateLayout();
                         var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
@@ -282,7 +282,7 @@ public sealed class ReadabilityAndFramesUiTests
                                 Assert.Equal(((FontFamily)app.FindResource("FontBody")).Source, ((TextBlock)page.FindName(name)).FontFamily.Source);
                         if (page is DisplayQualityView)
                             DlssFeedbackTests.PumpUntil(() => ((Grid)page.FindName("FrameControls")).IsEnabled);
-                        if (page is SessionView or AbExperimentView)
+                        if (page is SessionView)
                         {
                             var guide = (Expander)page.FindName("GettingStarted");
                             Assert.True(guide.IsExpanded); guide.IsExpanded = false; Assert.False(guide.IsExpanded); guide.IsExpanded = true;
@@ -299,103 +299,6 @@ public sealed class ReadabilityAndFramesUiTests
                     }
                 }
                 File.WriteAllText(Path.Combine(Output(), "readability-audit.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
-            }
-            finally { window.Close(); }
-        });
-    }
-
-    [Fact]
-    public void Ab_step_card_shows_statistical_evidence_for_completed_simulated_group()
-    {
-        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
-        RunUi((app, root) =>
-        {
-            // RootOverride 已把 UserDataPaths.Root 隔离到临时目录，不碰用户真实实验数据。
-            // 按视图 ApplyStepResult 的真实链路造状态：runner 产 evidence → WizardGroupResult 持久化。
-            Assert.Equal(0, ExperimentRunner.RunAsync("baseline",
-                new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult().ExitCode);
-            var run = ExperimentRunner.RunAsync("group-1",
-                new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult();
-            Assert.Equal(0, run.ExitCode);
-            var json = JsonNode.Parse(run.Json)!;
-            var summary = json["groupSummary"]!;
-            var evidence = json["evidence"]!.GetValue<string>();
-            ExperimentWizardStore.Save(ExperimentWizard.WithGroupResult(
-                ExperimentWizard.WithBaseline(new ExperimentWizardState(), 100, 60, 0.01, true, null),
-                new WizardGroupResult("group-1", json["keep"]!.GetValue<bool>(), json["reverted"]!.GetValue<bool>(),
-                    json["reason"]!.GetValue<string>(), summary["avgFps"]!.GetValue<double>(),
-                    summary["p1Low"]!.GetValue<double>(), null, true, DateTime.Now, evidence),
-                null));
-
-            var window = new MainWindow { Width = 1180, Height = 800 };
-            window.NavigateTo("ab"); app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
-            try
-            {
-                var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
-                DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
-                window.UpdateLayout();
-
-                Assert.True(Descendants(page).OfType<TextBlock>().Any(t => t.Text.Contains(evidence, StringComparison.Ordinal)),
-                    "候选组步骤卡没有显示统计证据行：" + evidence);
-                Capture(window, "ab-evidence-dark", []);
-                ThemeManager.SetMode("light");
-                window.UpdateLayout();
-                Capture(window, "ab-evidence-light", []);
-            }
-            finally { window.Close(); }
-        });
-    }
-
-    [Fact]
-    public void Ab_report_export_includes_evidence_lines_and_stats_section()
-    {
-        if (!IsChild()) { DlssFeedbackTests.RunIsolated(testType: typeof(ReadabilityAndFramesUiTests)); return; }
-        RunUi((app, root) =>
-        {
-            SettingsService.Current.NotifyOnComplete = false;
-            var expDir = Path.Combine(root, "experiment");
-            Directory.CreateDirectory(expDir);
-
-            // 模拟链路产出带 analysis/evidence 的 state；复制为真实名 state-v2.json，
-            // 正好同时走通「打开页面从旧 state 迁移向导」与「报告步骤读取真实 state」两条路径。
-            Assert.Equal(0, ExperimentRunner.RunAsync("baseline",
-                new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult().ExitCode);
-            foreach (var group in new[] { "group-1", "group-2", "group-3" })
-                Assert.Equal(0, ExperimentRunner.RunAsync(group,
-                    new ExperimentRunner.Options(Simulate: true), CancellationToken.None).GetAwaiter().GetResult().ExitCode);
-            File.Copy(Path.Combine(expDir, "state-simulated-v2.json"), Path.Combine(expDir, "state-v2.json"), overwrite: true);
-
-            var window = new MainWindow { Width = 1180, Height = 800 };
-            window.NavigateTo("ab"); app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
-            try
-            {
-                var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
-                DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
-                window.UpdateLayout();
-
-                // 迁移自 state 的三个候选组必须带证据行（迁移丢字段的回归在这里一并拦住）。
-                var stateEvidence = JsonNode.Parse(File.ReadAllText(Path.Combine(expDir, "state-v2.json")))!
-                    ["groups"]![0]!["evidence"]!.GetValue<string>();
-                Assert.False(string.IsNullOrWhiteSpace(stateEvidence));
-                Assert.True(Descendants(page).OfType<TextBlock>().Any(t => t.Text.Contains(stateEvidence, StringComparison.Ordinal)),
-                    "迁移后的候选组步骤卡丢失统计证据行：" + stateEvidence);
-
-                var reportButton = Descendants(page).OfType<Button>()
-                    .Single(b => ReferenceEquals(b.Content, Str.T("Str.GenerateReport")));
-                Assert.True(reportButton.IsEnabled, "三个候选组完成后报告步骤应可运行");
-                reportButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-
-                var reportPath = Path.Combine(expDir, "report-latest.md");
-                DlssFeedbackTests.PumpUntil(() => File.Exists(reportPath));
-                var markdown = File.ReadAllText(reportPath);
-                Assert.Contains(Str.T("Str.AbReportStatsSection"), markdown);
-                Assert.Contains(Str.T("Str.AbReportStatsMethod"), markdown);
-                Assert.Contains(stateEvidence, markdown);
-
-                var csvPath = Path.Combine(expDir, "experiment-summary.csv");
-                Assert.True(File.Exists(csvPath));
-                Assert.StartsWith("group,keep,avgFps,p1Low,p99Ms,stutters,rounds,avgDiffPct,ciLowerPct,ciUpperPct,verdict,reason",
-                    File.ReadLines(csvPath).First());
             }
             finally { window.Close(); }
         });

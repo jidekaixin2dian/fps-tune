@@ -14,12 +14,6 @@ public partial class OptimizeView
 
     /// <summary>对照一下（0.5.0 M2）：改前采样 → 审阅确认应用 → 冷却 → 改后采样 → 结论卡。
     /// 写入仍走既有审阅窗确认，本入口不绕过审阅。</summary>
-    /// <summary>A/B 分组实验（高级）：主路径是「对照一下」，这条留给需要三组候选批量比较的用户。</summary>
-    private void AdvancedExperiment_Click(object sender, RoutedEventArgs e)
-    {
-        if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("ab");
-    }
-
     private void CompareButton_Click(object sender, RoutedEventArgs e)
     {
         if (_operationBusy) return;

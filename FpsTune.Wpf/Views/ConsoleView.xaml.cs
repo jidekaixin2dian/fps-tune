@@ -329,7 +329,6 @@ public partial class ConsoleView : UserControl
         "display" => Str.T("Str.NavDisplayPage"),
         "filters" => Str.T("Str.NavFilters"),
         "session" => Str.T("Str.NavSession"),
-        "ab" => Str.T("Str.NavAb"),
         "backup" => Str.T("Str.NavBackup"),
         "startup" => Str.T("Str.NavStartup"),
         "tools" => Str.T("Str.NavTools"),

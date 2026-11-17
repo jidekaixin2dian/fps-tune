@@ -86,7 +86,8 @@ public partial class MainWindow
             finally { _savingSessionOnExit = false; }
             return;
         }
-        if (_pageCache.TryGetValue("ab", out var page) && page is AbExperimentView ab) ab.CancelPendingRun();
+
+
     }
     private void RestoreForExitFeedback()
     {

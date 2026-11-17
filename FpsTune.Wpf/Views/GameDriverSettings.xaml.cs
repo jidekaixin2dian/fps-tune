@@ -40,7 +40,7 @@ public partial class GameDriverSettings : UserControl
     private bool CanAct()
     {
         if (_closed || !string.Equals(_gamePath, AppState.GamePath, StringComparison.OrdinalIgnoreCase)) { DriverStatus.Text = Str.T("Str.PlanGameChanged"); return false; }
-        if (_busy || GameContextService.IsBusy || GamePreparationService.IsRunning || ExperimentRunner.IsRunning || App.SessionService.IsRunning || App.SessionService.IsStopping)
+        if (_busy || GameContextService.IsBusy || GamePreparationService.IsRunning || App.SessionService.IsRunning || App.SessionService.IsStopping)
         { DriverStatus.Text = Str.T("Str.TuningBusy"); return false; }
         return true;
     }
