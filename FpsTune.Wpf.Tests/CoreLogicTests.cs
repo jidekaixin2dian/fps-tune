@@ -354,47 +354,54 @@ public class CoreLogicTests
         Assert.Equal(90, runs[0].AvgFps);
     }
 
-    // ---------- LegacyMigrations（历史自毁缺陷的守卫）----------
-    // v1.0.2~v1.1.5 曾把迁移的 from/to 写成同一个目录并递归删除，
-    // 每次启动都会清空 %LOCALAPPDATA%\FpsTune（备份/设置/实验数据）。
-    // 这两条测试保证同类问题永不回归。
+    // ---------- LegacyMigrations（旧品牌目录：只检测，不搬数据）----------
+    // 历史缺陷：v1.0.2~v1.1.5 曾把迁移的 from/to 写成同一个目录并递归删除，
+    // 每次启动都会清空 %LOCALAPPDATA%\FpsTune。现在的实现只做只读探测，
+    // 这条测试同时守住"探测绝不移动/删除任何文件"。
 
     [Fact]
-    public void LegacyMigration_refuses_same_source_and_target()
+    public void LegacyRoot_detection_is_read_only_and_never_moves_data()
     {
-        var root = Path.Combine(Path.GetTempPath(), "fpstune-test-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(root);
-        File.WriteAllText(Path.Combine(root, "settings.json"), "keep-me");
+        var baseDir = Path.Combine(Path.GetTempPath(), "fpstune-test-" + Guid.NewGuid().ToString("N"));
+        var legacy = Path.Combine(baseDir, LegacyMigrations.LegacyRootName);
+        Directory.CreateDirectory(Path.Combine(legacy, "backup"));
+        File.WriteAllText(Path.Combine(legacy, "settings.json"), "keep-me");
+        File.WriteAllText(Path.Combine(legacy, "backup", "b.json"), "{}");
+        var original = LegacyMigrations.LocalAppData;
+        try
+        {
+            LegacyMigrations.LocalAppData = () => baseDir;
 
-        LegacyMigrations.TryMoveDir(root, root);
+            Assert.Equal(legacy, LegacyMigrations.DetectLegacyRoot());
+            LegacyMigrations.LogIfPresent();
 
-        Assert.True(File.Exists(Path.Combine(root, "settings.json")), "同路径迁移不得删除数据");
-        Directory.Delete(root, recursive: true);
+            Assert.True(File.Exists(Path.Combine(legacy, "settings.json")), "检测不得删除旧目录里的数据");
+            Assert.True(File.Exists(Path.Combine(legacy, "backup", "b.json")));
+            Assert.False(File.Exists(Path.Combine(baseDir, "FpsTune", "settings.json")), "检测不得搬动数据");
+        }
+        finally
+        {
+            LegacyMigrations.LocalAppData = original;
+            if (Directory.Exists(baseDir)) Directory.Delete(baseDir, recursive: true);
+        }
     }
 
     [Fact]
-    public void LegacyMigration_moves_legacy_dir_and_keeps_source_on_conflict()
+    public void LegacyRoot_detection_returns_null_when_absent()
     {
         var baseDir = Path.Combine(Path.GetTempPath(), "fpstune-test-" + Guid.NewGuid().ToString("N"));
-        var from = Path.Combine(baseDir, "old");
-        var to = Path.Combine(baseDir, "new");
-        Directory.CreateDirectory(Path.Combine(from, "backup"));
-        File.WriteAllText(Path.Combine(from, "backup", "b.json"), "{}");
-        File.WriteAllText(Path.Combine(from, "orphan.txt"), "moved");
-        Directory.CreateDirectory(to);
-        File.WriteAllText(Path.Combine(to, "conflict.txt"), "newer");
-        // 来源侧同名文件制造真实冲突：目标已有同名内容时不得覆盖、来源不得删除。
-        File.WriteAllText(Path.Combine(from, "conflict.txt"), "older");
-
-        LegacyMigrations.TryMoveDir(from, to);
-
-        Assert.True(File.Exists(Path.Combine(to, "orphan.txt")));
-        Assert.True(File.Exists(Path.Combine(to, "backup", "b.json")));
-        Assert.True(File.ReadAllText(Path.Combine(to, "conflict.txt")) == "newer", "同名冲突不得覆盖");
-        // 来源目录因存在未搬运的冲突文件而保留，绝不能被递归删除。
-        Assert.True(Directory.Exists(from));
-        Assert.True(File.Exists(Path.Combine(from, "conflict.txt")));
-        Directory.Delete(baseDir, recursive: true);
+        Directory.CreateDirectory(baseDir);
+        var original = LegacyMigrations.LocalAppData;
+        try
+        {
+            LegacyMigrations.LocalAppData = () => baseDir;
+            Assert.Null(LegacyMigrations.DetectLegacyRoot());
+        }
+        finally
+        {
+            LegacyMigrations.LocalAppData = original;
+            Directory.Delete(baseDir, recursive: true);
+        }
     }
 
     // ---------- RestoreAll 定向还原过滤（A/B 实验语义） ----------

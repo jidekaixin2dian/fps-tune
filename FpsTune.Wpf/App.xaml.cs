@@ -134,7 +134,7 @@ public partial class App : Application
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
         {
             splash.SetPhase(48, Str.T("Str.SplashPhaseRestore"));
-            LegacyMigrations.EnsureRun();
+            LegacyMigrations.LogIfPresent();
             // 上次异常退出遗留的运行中会话快照：样本足够则转正为一条历史会话
             try
             {

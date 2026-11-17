@@ -76,18 +76,21 @@ public class StringResourceTests
     }
 
     [Fact]
-    public void Key_sets_match_between_locales()
+    public void En_keys_are_subset_of_zh_keys()
     {
         var zh = ReadKeys("zh-CN");
         var en = ReadKeys("en-US");
 
-        var onlyZh = zh.Except(en).ToList();
+        // 语言策略（2026-11-17 起）：产品界面集中维护中文，英文入口隐藏但设施保留。
+        // 因此只要求「英文不得有中文没有的键」（否则英文侧出现孤儿键，说明有人只加了半边），
+        // 允许「中文有、英文没有」——新文案只写中文，英文按需再补。
         var onlyEn = en.Except(zh).ToList();
-
-        Assert.True(onlyZh.Count == 0 && onlyEn.Count == 0,
-            "中英资源键集合不一致（缺一侧就会在对应语言下显示 !key!）。\n" +
-            $"仅 zh-CN 有: {string.Join(", ", onlyZh)}\n" +
+        Assert.True(onlyEn.Count == 0,
+            "英文词典出现了中文没有的键（新增文案必须先有中文）。\n" +
             $"仅 en-US 有: {string.Join(", ", onlyEn)}");
+
+        // 中文是默认语言，缺键会直接显示 !key!，所以中文侧不允许缺引用——由 Referenced_keys_exist_in_dictionaries 守住。
+        Assert.True(zh.Count >= en.Count, $"中文字典规模不应少于英文（zh={zh.Count}, en={en.Count}）");
     }
 
     [Fact]

@@ -34,8 +34,6 @@ public sealed class AppSettings
     // 最小化自 0.4.0 起回归常规语义（任务栏），是否随最小化进托盘改为显式 opt-in。
     public bool MinimizeToTray { get; set; }
 
-    // 一次性迁移标记（版本号）：旧默认"最小化进托盘"翻转回任务栏；此后用户手动开启不再迁移。
-    public string TrayMinimizeMigration { get; set; } = "";
     public string CloseAction { get; set; } = CloseBehavior.Ask;
     public bool HotkeyEnabled { get; set; } = true;
     public bool NotifyOnComplete { get; set; } = true;
@@ -216,9 +214,6 @@ public static class SettingsService
             Current.Corners = (Current.Corners ?? new()).Normalize();
             Current.CloseAction = CloseBehavior.Normalize(Current.CloseAction);
             Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(Current.WallpaperOpacity);
-            if ((Current.QQLink.Contains("wpa.qq.com") || Current.QQLink.Contains("tencent://")) && !string.IsNullOrWhiteSpace(Current.QQ))
-                Current.QQLink = "https://user.qzone.qq.com/" + Uri.EscapeDataString(Current.QQ);
-            if (!readOnly) MigrateTrayMinimizeDefault(Current);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -258,21 +253,6 @@ public static class SettingsService
             }
         }
         throw last!;
-    }
-
-    public const string TrayMinimizeMigrationVersion = "0.4.0";
-
-    /// <summary>
-    /// 0.4.0 一次性迁移：旧默认"最小化进托盘"回归任务栏最小化。
-    /// 标记存迁移版本号（空 = 未迁移）；完成后用户在设置里手动开启不会被再次翻转。
-    /// </summary>
-    private static void MigrateTrayMinimizeDefault(AppSettings settings)
-    {
-        if (settings.TrayMinimizeMigration == TrayMinimizeMigrationVersion) return;
-        settings.TrayMinimizeMigration = TrayMinimizeMigrationVersion;
-        settings.MinimizeToTray = false;
-        try { Save(settings); }
-        catch { /* 写回失败时下次启动重试；本次会话已按任务栏最小化运行 */ }
     }
 
     /// <summary>true = 这次启动发现配置文件内容损坏（已留档 .corrupt 并按默认值运行，允许回写）。</summary>

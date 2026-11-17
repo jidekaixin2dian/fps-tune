@@ -1,70 +1,49 @@
-﻿namespace FpsTune.Wpf.Services;
+namespace FpsTune.Wpf.Services;
 
 using System.IO;
 
 /// <summary>
-/// 项目更名（DeltaForce Tune -> FPS 帧律）后的一次性数据迁移：
-/// 把 %LOCALAPPDATA% 下旧品牌目录中的备份 / 脚本搬进新目录，
-/// 避免用户升级后丢失既有还原点。
+/// 旧品牌（DeltaForce Tune → FPS 帧律）数据目录的<b>检测</b>，不再自动搬数据。
+///
+/// 为什么从"搬家"降级成"检测"：
+/// - 1.x 是冻结的 .NET 8 产品线，更新器明确跳过 Major==1（见 <c>UpdateService</c>），
+///   所以 1.x → 0.x 不存在自动升级路径，会自动跑到这里的用户几乎为零；
+/// - 老实现曾把 from/to 写成同一个目录并递归删除（v1.0.2~v1.1.5 清空数据目录的缺陷），
+///   这类"启动时动用户数据"的设计本身风险高于收益。
+/// 现在只做只读探测：命中就把路径写进 error.log，由用户自行决定要不要手工搬。
 /// </summary>
 public static class LegacyMigrations
 {
-    private static bool _done;
+    /// <summary>旧品牌的数据目录名（%LOCALAPPDATA% 下）。</summary>
+    internal const string LegacyRootName = "DeltaForceTune";
 
-    public static void EnsureRun()
-    {
-        if (UserDataPaths.RootOverride is not null) return;
-        if (_done)
-            return;
-        _done = true;
+    /// <summary>测试注入：LocalApplicationData 的来源（默认 Environment.SpecialFolder）。</summary>
+    internal static Func<string> LocalAppData { get; set; }
+        = () => Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        var root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-        // v1.0.2 ~ v1.1.5 的严重缺陷：from/to 被写成同一个 FpsTune 路径，
-        // 迁移末尾的 Delete(from) 等于每次启动清空整个数据目录
-        // （备份记录、设置、实验数据全部丢失，跨会话还原失效）。
-        // 现在只迁移真正的旧品牌目录，且永不删除来源目录本身。
-        TryMoveDir(Path.Combine(root, "DeltaForceTune"), Path.Combine(root, "FpsTune"));
-    }
-
-    internal static void TryMoveDir(string from, string to)
+    /// <summary>旧品牌数据目录存在时返回其完整路径，否则返回 null。只读，不创建也不移动任何文件。</summary>
+    public static string? DetectLegacyRoot()
     {
         try
         {
-            if (!Directory.Exists(from))
-                return;
-            // 同源同目标等于自毁，直接拒绝（历史缺陷的防线）。
-            if (string.Equals(Path.GetFullPath(from), Path.GetFullPath(to), StringComparison.OrdinalIgnoreCase))
-                return;
-
-            // 目标目录不存在时 Directory.Move/File.Move 会逐项抛错并被结尾 catch 吞掉，
-            // 结果是"迁移静默失败、备份还原点全留在旧目录"；先建目标目录。
-            Directory.CreateDirectory(to);
-
-            foreach (var sub in Directory.GetDirectories(from))
-            {
-                var name = Path.GetFileName(sub);
-                var target = Path.Combine(to, name);
-                if (Directory.Exists(target))
-                    continue; // 新目录已有同名内容则不覆盖
-                Directory.Move(sub, target);
-            }
-            foreach (var file in Directory.GetFiles(from))
-            {
-                var name = Path.GetFileName(file);
-                var target = Path.Combine(to, name);
-                if (File.Exists(target))
-                    continue;
-                File.Move(file, target);
-            }
-            // 只有搬空了才移除空壳；有残留（同名冲突未搬运）时保留来源，
-            // 宁可留下旧目录也绝不递归删除里面还有数据的地方。
-            if (Directory.GetFileSystemEntries(from).Length == 0)
-                Directory.Delete(from, recursive: false);
+            var path = Path.Combine(LocalAppData(), LegacyRootName);
+            return Directory.Exists(path) ? path : null;
         }
         catch
         {
-            // 迁移失败不影响主流程，仅放弃本次搬运。
+            return null;   // 探测失败不影响主流程
         }
     }
+
+    /// <summary>启动时调用：命中旧目录只记一条日志（同一进程只记一次）。</summary>
+    public static void LogIfPresent()
+    {
+        if (_logged) return;
+        _logged = true;
+        if (DetectLegacyRoot() is { } legacy)
+            ErrorLog.Write("legacy-data-root", new InvalidOperationException(
+                "检测到旧品牌数据目录（未自动迁移，用户可手工搬运）：" + legacy));
+    }
+
+    private static bool _logged;
 }

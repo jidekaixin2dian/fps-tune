@@ -2,6 +2,12 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:s="clr-namespace:System;assembly=System.Runtime">
 
+    <!--
+        语言策略（2026-11-17）：产品界面集中维护中文（设置页语言入口已隐藏），英文资源保留待需求恢复。
+        因此新文案只写中文；英文缺失时英文侧会显示 !key!（不会静默空白），由 StringResourceTests 的
+        En_keys_are_subset_of_zh_keys 守住「英文不得有中文没有的键」。
+    -->
+
     <!-- 主导航 -->
     <s:String x:Key="Str.NavHome">首页</s:String>
     <s:String x:Key="Str.NavDetect">检测</s:String>
