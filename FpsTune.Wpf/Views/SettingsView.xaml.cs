@@ -83,10 +83,15 @@ public partial class SettingsView : UserControl
         try
         {
             await Task.Run(() => WallpaperService.Import(picker.FileName));
-            SettingsService.Current.WallpaperEnabled = true;
-            SettingsService.Save(SettingsService.Current);
-            _suppressUiEvents = true; WallpaperEnabledCheck.IsChecked = true; _suppressUiEvents = false;
-            (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+            var result = SettingBinder.PersistBool(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v, true);
+            if (!result.Ok)
+            {
+                WallpaperStatus.Text = result.Detail!;
+                DialogService.Warning(Str.T("Str.WallpaperImportFailed"), result.Detail!);
+                return;
+            }
+            SetCheckedWithoutEvents(WallpaperEnabledCheck, true);
+            RefreshWallpaperOnMainWindow();
             RefreshWallpaperPreview();
             WallpaperStatus.Text = Str.T("Str.WallpaperSaved");
         }
@@ -99,10 +104,10 @@ public partial class SettingsView : UserControl
         try
         {
             WallpaperService.Remove();
-            SettingsService.Current.WallpaperEnabled = false;
-            SettingsService.Save(SettingsService.Current);
-            _suppressUiEvents = true; WallpaperEnabledCheck.IsChecked = false; _suppressUiEvents = false;
-            (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
+            var result = SettingBinder.PersistBool(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v, false);
+            if (!result.Ok) { WallpaperStatus.Text = result.Detail!; return; }
+            SetCheckedWithoutEvents(WallpaperEnabledCheck, false);
+            RefreshWallpaperOnMainWindow();
             RefreshWallpaperPreview();
             WallpaperStatus.Text = "";
         }
@@ -111,24 +116,26 @@ public partial class SettingsView : UserControl
     private void WallpaperEnabled_Changed(object sender, RoutedEventArgs e)
     {
         if (_suppressUiEvents || !_wallpaperReady) return;
-        SettingsService.Current.WallpaperEnabled = WallpaperEnabledCheck.IsChecked == true;
-        SaveWallpaperPreferences();
+        var result = SettingBinder.PersistBool(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v,
+            WallpaperEnabledCheck.IsChecked == true);
+        if (!result.Ok)
+        {
+            SetCheckedWithoutEvents(WallpaperEnabledCheck, SettingsService.Current.WallpaperEnabled);
+            WallpaperStatus.Text = result.Detail!;
+            return;
+        }
+        RefreshWallpaperOnMainWindow();
     }
     private void WallpaperOpacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_suppressUiEvents || !_wallpaperReady) return;
-        SettingsService.Current.WallpaperOpacity = WallpaperService.NormalizeOpacity(e.NewValue);
-        SaveWallpaperPreferences();
+        var result = SettingBinder.PersistValue(s => s.WallpaperOpacity, (s, v) => s.WallpaperOpacity = v,
+            WallpaperService.NormalizeOpacity(e.NewValue));
+        if (!result.Ok) { WallpaperStatus.Text = result.Detail!; return; }
+        RefreshWallpaperOnMainWindow();
     }
-    private void SaveWallpaperPreferences()
-    {
-        try
-        {
-            SettingsService.Save(SettingsService.Current);
-            (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
-        }
-        catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
-    }
+    private static void RefreshWallpaperOnMainWindow()
+        => (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
 
     private void RefreshWallpaperPreview()
     {
@@ -173,7 +180,7 @@ public partial class SettingsView : UserControl
         RefreshGamePathHint();
 
         TrayCheck.IsChecked = s.MinimizeToTray;
-        CloseActionBox.SelectedIndex = CloseBehavior.Normalize(s.CloseAction) switch { CloseBehavior.Tray => 1, CloseBehavior.Exit => 2, _ => 0 };
+        CloseActionBox.SelectedIndex = CloseActionIndex(s.CloseAction);
         StartupUpdateCheck.IsChecked = s.CheckUpdatesOnStartup;
         HotkeyCheck.IsChecked = s.HotkeyEnabled;
         NotifyCheck.IsChecked = s.NotifyOnComplete;
@@ -218,30 +225,62 @@ public partial class SettingsView : UserControl
         if (settings.ThemeMode == mode)
             return;
         var previous = settings.ThemeMode;
-        try
+        var result = SettingBinder.PersistValue(s => s.ThemeMode, (s, v) => s.ThemeMode = v, mode);
+        if (!result.Ok)
         {
-            settings.ThemeMode = mode;
-            SettingsService.Save(settings);
-        }
-        catch (Exception ex)
-        {
-            settings.ThemeMode = previous;
-            WarnToggleFailed(Str.T("Str.SettingsAppearance"), ex);
-            _suppressUiEvents = true;
-            try
-            {
-                (previous == "light" ? ThemeLightRadio : previous == "system" ? ThemeSystemRadio : ThemeDarkRadio).IsChecked = true;
-            }
-            finally { _suppressUiEvents = false; }
+            SelectThemeRadio(previous);
+            WarnSaveFailed(Str.T("Str.SettingsAppearance"), result.Detail!);
             return;
         }
         // 深浅切换走圆形揭示：从鼠标位置扩散，旧界面被"挖开"露出新主题。
         ThemeReveal.SwitchTheme(mode);
     }
 
-    /// <summary>开关保存失败：弹窗说明，并把勾选态翻回去（界面显示的必须和真实保存的一致）。</summary>
-    private void WarnToggleFailed(string title, Exception ex)
-        => DialogService.Warning(title, Str.T("Str.SettingsSaveFailed", PrivacyScrub.Sanitize(ex.Message)));
+    private void SelectThemeRadio(string mode)
+    {
+        _suppressUiEvents = true;
+        try
+        {
+            (mode == "light" ? ThemeLightRadio : mode == "system" ? ThemeSystemRadio : ThemeDarkRadio).IsChecked = true;
+        }
+        finally { _suppressUiEvents = false; }
+    }
+
+    // ---------- 设置保存的四处公共收尾 ----------
+    // 下面 11 个 *Changed 处理器都只是「改内存 → 保存 → 失败回滚」，差别只有字段名、回滚的控件和
+    // 成功后的副作用。公共部分集中在这几个 helper 上；具体字段仍然逐个写清楚，不靠反射省事。
+
+    /// <summary>设置保存失败的统一提示（<paramref name="detail"/> 已脱敏）。</summary>
+    private static void WarnSaveFailed(string title, string detail)
+        => DialogService.Warning(title, Str.T("Str.SettingsSaveFailed", detail));
+
+    /// <summary>勾选框设置：写内存 → 保存；失败把内存与勾选态一起翻回去并提示，成功后才跑副作用。</summary>
+    private void SaveToggle(
+        CheckBox box,
+        Func<AppSettings, bool> read,
+        Action<AppSettings, bool> write,
+        string titleKey,
+        Action? afterSaved = null)
+    {
+        if (_suppressUiEvents || box.IsChecked is null)
+            return;
+        var result = SettingBinder.PersistBool(read, write, box.IsChecked == true);
+        if (!result.Ok)
+        {
+            SetCheckedWithoutEvents(box, read(SettingsService.Current));
+            WarnSaveFailed(Str.T(titleKey), result.Detail!);
+            return;
+        }
+        afterSaved?.Invoke();
+    }
+
+    /// <summary>改写勾选态但不触发保存（回滚与加载共用）。</summary>
+    private void SetCheckedWithoutEvents(CheckBox box, bool value)
+    {
+        _suppressUiEvents = true;
+        try { box.IsChecked = value; }
+        finally { _suppressUiEvents = false; }
+    }
 
     // ---------- 游戏路径 ----------
 
@@ -324,165 +363,68 @@ public partial class SettingsView : UserControl
     {
         if (_suppressUiEvents || AutostartCheck.IsChecked is null)
             return;
-        try
-        {
-            BackupService.SetAutostart(AutostartCheck.IsChecked == true, Environment.ProcessPath);
-        }
-        catch (Exception ex)
-        {
-            DialogService.Warning(Str.T("Str.StartupShort"), Str.T("Str.SettingsSaveFailed", PrivacyScrub.Sanitize(ex.Message)));
-        }
+        var wanted = AutostartCheck.IsChecked == true;
+        // 自启不落 settings.json，写的是 HKCU Run 值：失败只把勾选态翻回去，
+        // 不再二次写注册表（SetAutostart 自带互斥闸与 pending 记录，外面补一刀只会更难收拾）。
+        var result = SettingBinder.Attempt(() => BackupService.SetAutostart(wanted, Environment.ProcessPath));
+        if (result.Ok)
+            return;
+        SetCheckedWithoutEvents(AutostartCheck, !wanted);
+        WarnSaveFailed(Str.T("Str.StartupShort"), result.Detail!);
     }
 
     // ---------- 托盘与通知 ----------
 
     private void TraySetting_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents)
-            return;
-        var s = SettingsService.Current;
-        var previous = s.MinimizeToTray;
-        try
-        {
-            s.MinimizeToTray = TrayCheck.IsChecked == true;
-            SettingsService.Save(s);
-        }
-        catch (Exception ex)
-        {
-            s.MinimizeToTray = previous;
-            RollbackToggle(TrayCheck);
-            WarnToggleFailed(Str.T("Str.TrayShort"), ex);
-            return;
-        }
-        TrayService.ApplySettings();
-    }
+        => SaveToggle(TrayCheck, s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v,
+            "Str.TrayShort", TrayService.ApplySettings);
 
     private void CloseAction_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressUiEvents || CloseActionBox.SelectedIndex < 0) return;
-        var settings = SettingsService.Current; var previous = settings.CloseAction;
-        var action = CloseActionBox.SelectedIndex switch { 1 => CloseBehavior.Tray, 2 => CloseBehavior.Exit, _ => CloseBehavior.Ask };
-        try { settings.CloseAction = action; SettingsService.Save(settings); }
-        catch (Exception ex)
-        {
-            settings.CloseAction = previous;
-            _suppressUiEvents = true;
-            CloseActionBox.SelectedIndex = previous switch { CloseBehavior.Tray => 1, CloseBehavior.Exit => 2, _ => 0 };
-            _suppressUiEvents = false;
-            DialogService.Warning(Str.T("Str.CloseSettingTitle"), Str.T("Str.CloseRememberFailed") + "\n" + PrivacyScrub.Sanitize(ex.Message));
-        }
+        var previous = SettingsService.Current.CloseAction;
+        var result = SettingBinder.PersistValue(s => s.CloseAction, (s, v) => s.CloseAction = v,
+            CloseActionFromIndex(CloseActionBox.SelectedIndex));
+        if (result.Ok) return;
+        _suppressUiEvents = true;
+        try { CloseActionBox.SelectedIndex = CloseActionIndex(previous); }
+        finally { _suppressUiEvents = false; }
+        DialogService.Warning(Str.T("Str.CloseSettingTitle"), Str.T("Str.CloseRememberFailed") + "\n" + result.Detail);
     }
 
+    private static string CloseActionFromIndex(int index)
+        => index switch { 1 => CloseBehavior.Tray, 2 => CloseBehavior.Exit, _ => CloseBehavior.Ask };
+
+    private static int CloseActionIndex(string? action)
+        => CloseBehavior.Normalize(action) switch { CloseBehavior.Tray => 1, CloseBehavior.Exit => 2, _ => 0 };
+
     private void HotkeySetting_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents)
-            return;
-        var s = SettingsService.Current;
-        var previous = s.HotkeyEnabled;
-        try
-        {
-            s.HotkeyEnabled = HotkeyCheck.IsChecked == true;
-            SettingsService.Save(s);
-        }
-        catch (Exception ex)
-        {
-            s.HotkeyEnabled = previous;
-            RollbackToggle(HotkeyCheck);
-            WarnToggleFailed(Str.T("Str.HotkeyShort"), ex);
-            return;
-        }
-        (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
-    }
+        => SaveToggle(HotkeyCheck, s => s.HotkeyEnabled, (s, v) => s.HotkeyEnabled = v,
+            "Str.HotkeyShort", ReregisterHotkeys);
 
     /// <summary>方案热键（Ctrl+Alt+1/2/3）开关：保存后让主窗口重新注册全部热键。</summary>
     private void SchemeHotkey_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents) return;
-        var s = SettingsService.Current;
-        var previous = s.FilterSchemeHotkeysEnabled;
-        try
-        {
-            s.FilterSchemeHotkeysEnabled = SchemeHotkeyCheck.IsChecked == true;
-            SettingsService.Save(s);
-        }
-        catch (Exception ex)
-        {
-            s.FilterSchemeHotkeysEnabled = previous;
-            RollbackToggle(SchemeHotkeyCheck);
-            WarnToggleFailed(Str.T("Str.FilterSchemeHotkeyTitle"), ex);
-            return;
-        }
-        (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
-    }
+        => SaveToggle(SchemeHotkeyCheck, s => s.FilterSchemeHotkeysEnabled, (s, v) => s.FilterSchemeHotkeysEnabled = v,
+            "Str.FilterSchemeHotkeyTitle", ReregisterHotkeys);
+
+    private static void ReregisterHotkeys() => (Application.Current.MainWindow as MainWindow)?.ApplyHotkeyRegistration();
 
     private void StartupUpdate_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents) return;
-        var settings = SettingsService.Current;
-        var previous = settings.CheckUpdatesOnStartup;
-        try
-        {
-            settings.CheckUpdatesOnStartup = StartupUpdateCheck.IsChecked == true;
-            SettingsService.Save(settings);
-        }
-        catch (Exception ex)
-        {
-            settings.CheckUpdatesOnStartup = previous;
-            RollbackToggle(StartupUpdateCheck);
-            WarnToggleFailed(Str.T("Str.CheckUpdatesOnStartup"), ex);
-        }
-    }
+        => SaveToggle(StartupUpdateCheck, s => s.CheckUpdatesOnStartup, (s, v) => s.CheckUpdatesOnStartup = v,
+            "Str.CheckUpdatesOnStartup");
 
     private void NotifySetting_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents)
-            return;
-        var s = SettingsService.Current;
-        var previous = s.NotifyOnComplete;
-        try
-        {
-            s.NotifyOnComplete = NotifyCheck.IsChecked == true;
-            SettingsService.Save(s);
-        }
-        catch (Exception ex)
-        {
-            s.NotifyOnComplete = previous;
-            RollbackToggle(NotifyCheck);
-            WarnToggleFailed(Str.T("Str.NotifyShort"), ex);
-        }
-    }
+        => SaveToggle(NotifyCheck, s => s.NotifyOnComplete, (s, v) => s.NotifyOnComplete = v, "Str.NotifyShort");
 
     private void LowSpecSetting_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressUiEvents)
-            return;
-        var s = SettingsService.Current;
-        var previous = s.LowSpecMode;
-        try
+        => SaveToggle(LowSpecCheck, s => s.LowSpecMode, (s, v) => s.LowSpecMode = v, "Str.LowSpecShort", () =>
         {
-            s.LowSpecMode = LowSpecCheck.IsChecked == true;
-            SettingsService.Save(s);
-        }
-        catch (Exception ex)
-        {
-            s.LowSpecMode = previous;
-            RollbackToggle(LowSpecCheck);
-            WarnToggleFailed(Str.T("Str.LowSpecShort"), ex);
-            return;
-        }
-        UiPerformance.LowSpec = s.LowSpecMode;
-        App.LiveMetrics.SetInterval(TimeSpan.FromSeconds(s.LowSpecMode ? 3 : 1));
-        // 重算卡片阴影等资源
-        ThemeManager.SetMode(s.ThemeMode);
-    }
-
-    /// <summary>开关保存失败时把勾选态翻回去；_suppressUiEvents 防止回滚触发再保存。</summary>
-    private void RollbackToggle(System.Windows.Controls.Primitives.ToggleButton toggle)
-    {
-        _suppressUiEvents = true;
-        try { toggle.IsChecked = !toggle.IsChecked; }
-        finally { _suppressUiEvents = false; }
-    }
+            var lowSpec = SettingsService.Current.LowSpecMode;
+            UiPerformance.LowSpec = lowSpec;
+            App.LiveMetrics.SetInterval(TimeSpan.FromSeconds(lowSpec ? 3 : 1));
+            // 重算卡片阴影等资源
+            ThemeManager.SetMode(SettingsService.Current.ThemeMode);
+        });
 
     // ---------- 按游戏自动应用 ----------
 
@@ -675,45 +617,30 @@ public partial class SettingsView : UserControl
     {
         if (_suppressUiEvents || AutoProfileCheck.IsChecked is null)
             return;
-
-        var settings = SettingsService.Current;
-        var oldValue = settings.AutoProfileEnabled;
-        settings.AutoProfileEnabled = AutoProfileCheck.IsChecked == true;
-        try
+        var result = SettingBinder.PersistBool(s => s.AutoProfileEnabled, (s, v) => s.AutoProfileEnabled = v,
+            AutoProfileCheck.IsChecked == true);
+        if (!result.Ok)
         {
-            SettingsService.Save(settings);
-            SetAutoProfileStatus(settings.AutoProfileEnabled ? Str.T("Str.AutoApplyOn") : Str.T("Str.AutoApplyOff"));
+            SetCheckedWithoutEvents(AutoProfileCheck, SettingsService.Current.AutoProfileEnabled);
+            SetAutoProfileStatus(Str.T("Str.SettingsAutoApplySaveFailed", result.Detail!), warning: true);
+            return;
         }
-        catch (Exception ex)
-        {
-            settings.AutoProfileEnabled = oldValue;
-            _suppressUiEvents = true;
-            AutoProfileCheck.IsChecked = oldValue;
-            _suppressUiEvents = false;
-            SetAutoProfileStatus(Str.T("Str.SettingsAutoApplySaveFailed", PrivacyScrub.Sanitize(ex.Message)), warning: true);
-        }
+        SetAutoProfileStatus(SettingsService.Current.AutoProfileEnabled ? Str.T("Str.AutoApplyOn") : Str.T("Str.AutoApplyOff"));
     }
 
     private void TimerBoostSetting_Changed(object sender, RoutedEventArgs e)
     {
         if (_suppressUiEvents || TimerBoostCheck.IsChecked is null) return;
-        var settings = SettingsService.Current;
-        var oldValue = settings.GameTimerBoostEnabled;
-        settings.GameTimerBoostEnabled = TimerBoostCheck.IsChecked == true;
-        try
+        var result = SettingBinder.PersistBool(s => s.GameTimerBoostEnabled, (s, v) => s.GameTimerBoostEnabled = v,
+            TimerBoostCheck.IsChecked == true);
+        if (!result.Ok)
         {
-            SettingsService.Save(settings);
-            App.GameTimer?.ApplySettings();
-            UpdateTimerBoostStatus();
+            SetCheckedWithoutEvents(TimerBoostCheck, SettingsService.Current.GameTimerBoostEnabled);
+            TimerBoostStatus.Text = Str.T("Str.TimerSaveFailed", result.Detail!);
+            return;
         }
-        catch (Exception ex)
-        {
-            settings.GameTimerBoostEnabled = oldValue;
-            _suppressUiEvents = true;
-            TimerBoostCheck.IsChecked = oldValue;
-            _suppressUiEvents = false;
-            TimerBoostStatus.Text = Str.T("Str.TimerSaveFailed", PrivacyScrub.Sanitize(ex.Message));
-        }
+        App.GameTimer?.ApplySettings();
+        UpdateTimerBoostStatus();
     }
 
     private void AutoSessionSetting_Changed(object sender, RoutedEventArgs e)
@@ -723,28 +650,38 @@ public partial class SettingsView : UserControl
         var oldPrep = settings.AutoPreparationEnabled;
         var oldRefresh = settings.AutoRefreshBoostEnabled;
         var oldAffinity = settings.AutoAffinityIsolateEnabled;
-        settings.AutoPreparationEnabled = AutoPreparationCheck.IsChecked == true;
-        settings.AutoRefreshBoostEnabled = AutoRefreshCheck.IsChecked == true;
-        settings.AutoAffinityIsolateEnabled = AutoAffinityCheck.IsChecked == true;
-        try
+        var wantedPrep = AutoPreparationCheck.IsChecked == true;
+        var wantedRefresh = AutoRefreshCheck.IsChecked == true;
+        var wantedAffinity = AutoAffinityCheck.IsChecked == true;
+        var result = SettingBinder.Persist(
+            () =>
+            {
+                settings.AutoPreparationEnabled = wantedPrep;
+                settings.AutoRefreshBoostEnabled = wantedRefresh;
+                settings.AutoAffinityIsolateEnabled = wantedAffinity;
+            },
+            () =>
+            {
+                settings.AutoPreparationEnabled = oldPrep;
+                settings.AutoRefreshBoostEnabled = oldRefresh;
+                settings.AutoAffinityIsolateEnabled = oldAffinity;
+            });
+        if (!result.Ok)
         {
-            SettingsService.Save(settings);
-            App.SessionAutomation?.ApplySettings();
-            SetAutoSessionStatus(string.Empty);
-        }
-        catch (Exception ex)
-        {
-            settings.AutoPreparationEnabled = oldPrep;
-            settings.AutoRefreshBoostEnabled = oldRefresh;
-            settings.AutoAffinityIsolateEnabled = oldAffinity;
+            // 三个勾选框会被一起弹回，必须说一声：否则用户以为设置已经生效
             _suppressUiEvents = true;
-            AutoPreparationCheck.IsChecked = oldPrep;
-            AutoRefreshCheck.IsChecked = oldRefresh;
-            AutoAffinityCheck.IsChecked = oldAffinity;
-            _suppressUiEvents = false;
-            // 保存失败必须说一声：前面三个勾选框会被静默弹回，否则用户以为设置已经生效
-            SetAutoSessionStatus(Str.T("Str.AutoSessionSaveFailed", PrivacyScrub.Sanitize(ex.Message)), warning: true);
+            try
+            {
+                AutoPreparationCheck.IsChecked = oldPrep;
+                AutoRefreshCheck.IsChecked = oldRefresh;
+                AutoAffinityCheck.IsChecked = oldAffinity;
+            }
+            finally { _suppressUiEvents = false; }
+            SetAutoSessionStatus(Str.T("Str.AutoSessionSaveFailed", result.Detail!), warning: true);
+            return;
         }
+        App.SessionAutomation?.ApplySettings();
+        SetAutoSessionStatus(string.Empty);
     }
 
     internal void UpdateTimerBoostStatus()
@@ -774,19 +711,12 @@ public partial class SettingsView : UserControl
     {
         var settings = SettingsService.Current;
         var oldBindings = settings.AutoProfileBindings;
-        try
-        {
-            settings.AutoProfileBindings = _autoBindings.Select(x => x.Clone()).ToList();
-            SettingsService.Save(settings);
-            error = null;
-            return true;
-        }
-        catch (Exception ex)
-        {
-            settings.AutoProfileBindings = oldBindings;
-            error = PrivacyScrub.Sanitize(ex.Message);
-            return false;
-        }
+        var next = _autoBindings.Select(x => x.Clone()).ToList();
+        var result = SettingBinder.Persist(
+            () => settings.AutoProfileBindings = next,
+            () => settings.AutoProfileBindings = oldBindings);
+        error = result.Detail;
+        return result.Ok;
     }
 
     private void SetAutoProfileStatus(string text, bool warning = false)
