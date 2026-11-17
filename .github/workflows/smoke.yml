@@ -26,18 +26,17 @@ jobs:
       - name: Core detect (read-only)
         run: ./tools/invoke-cli-check.ps1 -Executable 'FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe' -CliArguments @('-Detect', '-Json')
 
-      - name: A/B simulated full chain
+      # 0.6.0 起 A/B 实验退休（能力并入 GUI「优化 → 对照一下」，判定记录并入收益档案），
+      # 这条 smoke 改为验证仍可离线驱动的只读链路：版本、许可全文、备份列表。
+      - name: CLI read-only chain
         shell: powershell
         run: |
           $exe = 'FpsTune.Wpf\bin\Release\net10.0-windows\FpsTune.exe'
-          # The hosted runner is disposable; simulation uses its own application records.
           $steps = @(
-            @('-Experiment', '-Baseline', '-Simulate', '-Json'),
-            @('-Experiment', '-Test', '-Group', 'group-1', '-Simulate', '-Json'),
-            @('-Experiment', '-Test', '-Group', 'group-2', '-Simulate', '-Json'),
-            @('-Experiment', '-Test', '-Group', 'group-3', '-Simulate', '-Json'),
-            @('-Experiment', '-Report', '-Simulate', '-Json')
+            @('-Version'),
+            @('-License'),
+            @('-ListRestore', '-Json')
           )
           foreach ($arguments in $steps) {
-            ./tools/invoke-cli-check.ps1 -Executable $exe -CliArguments $arguments -RequireSuccessJson
+            ./tools/invoke-cli-check.ps1 -Executable $exe -CliArguments $arguments
           }
