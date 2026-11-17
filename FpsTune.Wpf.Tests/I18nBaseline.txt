@@ -53,6 +53,7 @@ Services/UpdateMirrors.cs	1
 Views/QuickOptimizeView.xaml.cs	7
 Views/MaintenanceView.MemoryApps.cs	1
 Services/BundledToolExtract.cs	2
-Services/CaptureOrchestrator.cs	19
-Services/ComparisonPlanner.cs	21
+Services/CaptureGuidance.cs	12
+Services/CaptureOrchestrator.cs	12
+Services/ComparisonPlanner.cs	18
 Services/GainArchiveService.cs	3

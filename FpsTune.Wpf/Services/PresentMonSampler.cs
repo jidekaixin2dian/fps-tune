@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace FpsTune.Wpf.Services;
 
@@ -14,8 +16,11 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 internal static class PresentMonSampler
 {
-    /// <summary>采样结果：成败 + 失败原因（权限不足时给出明确指引，其余按采样失败描述）。</summary>
-    internal sealed record CaptureOutcome(bool Sampled, string? FailureReason = null)
+    /// <summary>
+    /// 采样结果：成败 + 失败原因（<see cref="CaptureGuidance"/> 里的 ReasonCode，null = 普通无输出）
+    /// + 本次 PresentMon 报告的丢事件条数（「事件在产生但一帧都没拿到」的唯一客观线索）。
+    /// </summary>
+    internal sealed record CaptureOutcome(bool Sampled, string? FailureReason = null, long LostEvents = 0)
     {
         public static implicit operator bool(CaptureOutcome outcome) => outcome.Sampled;
     }
@@ -27,6 +32,9 @@ internal static class PresentMonSampler
         "requires elevated privilege",
         "administrative privilege",
     ];
+
+    /// <summary>PresentMon 丢事件的告警形如 <c>warning: 56414 ETW events were lost.</c>。</summary>
+    private static readonly Regex LostEventsPattern = new(@"(\d+)\s+ETW events were lost", RegexOptions.IgnoreCase);
 
     /// <summary>采样窗口之外的固定预算：进程启动、ETW 会话收尾、CSV 落盘。</summary>
     private const int NonSamplingBudgetSeconds = 45;
@@ -62,6 +70,7 @@ internal static class PresentMonSampler
         var attempts = BuildAttempts(family, pid, processName, seconds, csvOut);
 
         var permissionDenied = false;
+        long lostEvents = 0;
         foreach (var args in attempts)
         {
             ct.ThrowIfCancellationRequested();
@@ -74,6 +83,7 @@ internal static class PresentMonSampler
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeout.CancelAfter(remaining);
             var (code, output, errors) = await RunProcessAsync(presentMon, args, timeout.Token).ConfigureAwait(false);
+            lostEvents = Math.Max(lostEvents, MaxLostEvents(errors.Concat(output)));
             if (code != 0)
             {
                 if (errors.Concat(output).Any(line =>
@@ -98,9 +108,31 @@ internal static class PresentMonSampler
                 return new CaptureOutcome(true);
             }
         }
-        return permissionDenied
-            ? new CaptureOutcome(false, "permission")
+        if (permissionDenied)
+            return new CaptureOutcome(false, CaptureGuidance.NoPermission);
+        // 退出码 0、会话跑完、却一直在丢事件：事件确实在产生，只是进不到采样器。
+        // 这是「被系统或反作弊拦下」的客观证据，不能和「目标进程没在渲染」混成同一句话。
+        return lostEvents > 0
+            ? new CaptureOutcome(false, CaptureGuidance.EventsLost, lostEvents)
             : new CaptureOutcome(false);
+    }
+
+    /// <summary>从 PresentMon 输出里取最大的一处「丢了多少条 ETW 事件」；没有这类告警则 0。</summary>
+    internal static long MaxLostEvents(IEnumerable<string> lines)
+    {
+        long max = 0;
+        foreach (var line in lines)
+        {
+            if (line.Length == 0)
+                continue;
+            foreach (Match match in LostEventsPattern.Matches(line))
+            {
+                if (long.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count)
+                    && count > max)
+                    max = count;
+            }
+        }
+        return max;
     }
 
     /// <summary>按参数族与目标生成尝试顺序：先 stdout（由本进程落盘），再落文件。</summary>

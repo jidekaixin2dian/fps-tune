@@ -178,7 +178,8 @@ public partial class ComparisonCard : UserControl
         var danger = (Brush)FindResource("DangerBrush");
         var dot = reasonCode switch
         {
-            "no-permission" or "no-process" or "no-sampler" => StageBeforeDot,
+            // 改前采样就没成功：权限、目标缺失、采样器缺失，以及「事件被拦」都归到第一段。
+            "no-permission" or "no-process" or "no-sampler" or "etw-events-lost" => StageBeforeDot,
             "apply-failed" or "no-backup" => StageApplyDot,
             _ => StageVerdictDot,
         };

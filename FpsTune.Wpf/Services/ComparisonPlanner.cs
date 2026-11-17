@@ -305,13 +305,9 @@ public static class ComparisonPlanner
             errors.Count == 0 ? null : string.Join("; ", errors), receipt.BackupFile, changed);
     }
 
-    private static string ClassifyCaptureReason(string? reasonCode, string fallback) => reasonCode switch
-    {
-        "no-permission" => "采样被系统拒绝：PresentMon 的 ETW 会话需要管理员权限。请以管理员身份运行后重试。",
-        "no-process" => "没有找到目标游戏进程。请把游戏开到要测量的画面后重试。",
-        "no-sampler" => "没有找到可用的帧率采样器。",
-        _ => fallback,
-    };
+    /// <summary>采样失败原因的统一措辞（见 <see cref="CaptureGuidance"/>）：对照这一侧不再自备一套文案。</summary>
+    private static string ClassifyCaptureReason(string? reasonCode, string fallback)
+        => CaptureGuidance.Describe(reasonCode, fallback);
 
     private static string RollbackNote(ComparisonRollbackResult? rollback) => rollback switch
     {

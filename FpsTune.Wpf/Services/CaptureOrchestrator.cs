@@ -74,7 +74,7 @@ public static class CaptureOrchestrator
 
     // 测试注入点：采样器路径 / 采样执行 / 目标进程 / 显卡遥测 / 后台采样（沿用项目既有注入习惯）。
     internal static Func<string?>? PresentMonOverride;
-    internal static Func<string, int?, string, int, string, CancellationToken, Task<bool>>? SamplerOverride;
+    internal static Func<string, int?, string, int, string, CancellationToken, Task<PresentMonSampler.CaptureOutcome>>? SamplerOverride;
     internal static Func<string, string?, int?, Process?>? FindProcessOverride;
     internal static Func<string?>? FindFailureOverride;
     internal static Func<GpuTelemetrySnapshot>? GpuReadOverride;
@@ -92,7 +92,7 @@ public static class CaptureOrchestrator
         var jsonPath = Path.Combine(directory, "run.json");
 
         if (!await RunGate.WaitAsync(0, ct).ConfigureAwait(false))
-            return CaptureRun.Fail(request, directory, id, "已有一次采样正在进行，请等它结束后再试。", "busy");
+            return CaptureRun.Fail(request, directory, id, CaptureGuidance.Describe(CaptureGuidance.Busy), CaptureGuidance.Busy);
         try
         {
             using var trace = OperationDiagnostics.Begin("capture",
@@ -113,7 +113,7 @@ public static class CaptureOrchestrator
             catch (Exception ex)
             {
                 trace.Fail(ex);
-                return CaptureRun.Fail(request, directory, id, ex.Message, "unexpected");
+                return CaptureRun.Fail(request, directory, id, ex.Message, CaptureGuidance.Unexpected);
             }
         }
         finally { RunGate.Release(); }
@@ -131,8 +131,8 @@ public static class CaptureOrchestrator
         {
             trace.Item("presentmon", "failed", "内置与已装采样器都不可用");
             return CaptureRun.Fail(request, directory, id,
-                "没有找到可用的帧率采样器（内置采样器不可用，也没有已安装的 PresentMon）。",
-                "no-sampler");
+                CaptureGuidance.Describe(CaptureGuidance.NoSampler),
+                CaptureGuidance.NoSampler);
         }
         trace.Item("presentmon", "succeeded", null);
 
@@ -140,7 +140,7 @@ public static class CaptureOrchestrator
         if (target is null)
         {
             trace.Item("process", "failed", "no-target");
-            return CaptureRun.Fail(request, directory, id, findFailure, "no-process");
+            return CaptureRun.Fail(request, directory, id, findFailure, CaptureGuidance.NoProcess);
         }
         using (target)
         {
@@ -154,34 +154,28 @@ public static class CaptureOrchestrator
             var background = StartBackground(request, ct);
             try
             {
-                string? samplerFailure = null;
-                bool sampled;
+                PresentMonSampler.CaptureOutcome outcome;
                 if (SamplerOverride is { } sampler)
                 {
-                    sampled = await sampler(presentMon, target.Id, request.ProcessName, seconds, csvPath, ct)
+                    outcome = await sampler(presentMon, target.Id, request.ProcessName, seconds, csvPath, ct)
                         .ConfigureAwait(false);
                 }
                 else
                 {
-                    var outcome = await PresentMonSampler
+                    outcome = await PresentMonSampler
                         .CaptureAsync(presentMon, target.Id, request.ProcessName, seconds, csvPath, ct)
                         .ConfigureAwait(false);
-                    sampled = outcome.Sampled;
-                    samplerFailure = outcome.FailureReason;
                 }
                 sw.Stop();
-                if (!sampled)
+                if (!outcome.Sampled)
                 {
-                    if (samplerFailure == "permission")
-                    {
-                        trace.Item("frames", "failed", "permission");
-                        return CaptureRun.Fail(request, directory, id,
-                            "采样被系统拒绝：PresentMon 的 ETW 会话需要管理员权限。请以管理员身份运行后重试。",
-                            "no-permission");
-                    }
-                    trace.Item("frames", "failed", "PresentMon 未产出有效数据");
-                    return CaptureRun.Fail(request, directory, id,
-                        "采样没有产生有效数据（目标进程可能已退出，或采样器版本不受支持）。", "sample-failed");
+                    // 原因由采样器判定（见 CaptureGuidance）：权限被拒、事件被拦、纯粹没数据是三种不同的处境。
+                    var reason = outcome.FailureReason ?? CaptureGuidance.SampleFailed;
+                    var error = reason == CaptureGuidance.EventsLost
+                        ? CaptureGuidance.EventsLostText(outcome.LostEvents)
+                        : CaptureGuidance.Describe(reason);
+                    trace.Item("frames", "failed", reason);
+                    return CaptureRun.Fail(request, directory, id, error, reason);
                 }
                 trace.Item("frames", "succeeded", $"{sw.Elapsed.TotalSeconds:0}s");
 
@@ -195,12 +189,12 @@ public static class CaptureOrchestrator
                     var (error, reason) = parsed.Error switch
                     {
                         FrameParseError.UnknownColumns =>
-                            ("采样器输出的列无法识别（采样器版本可能不兼容），原始数据已保留。", "incompatible-sampler"),
+                            (CaptureGuidance.Describe(CaptureGuidance.IncompatibleSampler), CaptureGuidance.IncompatibleSampler),
                         FrameParseError.TooFewFrames or FrameParseError.TooFewLines =>
-                            ($"有效帧样本不足（{parsed.FrameCount} 帧），采样窗口内目标可能没有在渲染。", "parse-failed"),
+                            ($"有效帧样本不足（{parsed.FrameCount} 帧），采样窗口内目标可能没有在渲染。", CaptureGuidance.ParseFailed),
                         FrameParseError.TooManyFrames =>
-                            ("采样数据超出解析容量。", "parse-failed"),
-                        _ => ("采样数据解析失败。", "parse-failed"),
+                            ("采样数据超出解析容量。", CaptureGuidance.ParseFailed),
+                        _ => (CaptureGuidance.Describe(CaptureGuidance.ParseFailed), CaptureGuidance.ParseFailed),
                     };
                     trace.Item("parse", "failed", reason);
                     return CaptureRun.Fail(request, directory, id, error, reason);

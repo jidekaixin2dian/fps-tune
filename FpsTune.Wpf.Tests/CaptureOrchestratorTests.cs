@@ -61,7 +61,7 @@ public sealed class CaptureOrchestratorTests : IDisposable
         CaptureOrchestrator.SamplerOverride = (_, _, _, _, csv, _) =>
         {
             WriteFrameCsv(csv, frames, header);
-            return Task.FromResult(true);
+            return Task.FromResult(new PresentMonSampler.CaptureOutcome(true));
         };
 
     [Fact]
@@ -138,13 +138,51 @@ public sealed class CaptureOrchestratorTests : IDisposable
     {
         UseDefaultInjection();
         CaptureOrchestrator.PresentMonOverride = () => Path.Combine(_root, "pm.exe");
-        CaptureOrchestrator.SamplerOverride = (_, _, _, _, _, _) => Task.FromResult(false);
+        CaptureOrchestrator.SamplerOverride = (_, _, _, _, _, _) =>
+            Task.FromResult(new PresentMonSampler.CaptureOutcome(false));
 
         var run = await CaptureOrchestrator.CaptureAsync(
             new CaptureRequest("test-target", DurationSec: 1), CancellationToken.None);
 
         Assert.Equal("sample-failed", run.ReasonCode);
         Assert.NotNull(run.Error);
+    }
+
+    /// <summary>
+    /// 真机形态：采样会话建立成功、PresentMon 退出码 0、丢 13 万条 ETW 事件、0 行 CSV。
+    /// 这种情况必须与「目标进程没在渲染」分开说，否则用户拿到的建议是错的（换机器而不是换会话）。
+    /// </summary>
+    [Fact]
+    public async Task Capture_with_lost_etw_events_is_reported_as_blocked()
+    {
+        UseDefaultInjection();
+        CaptureOrchestrator.SamplerOverride = (_, _, _, _, _, _) =>
+            Task.FromResult(new PresentMonSampler.CaptureOutcome(false, CaptureGuidance.EventsLost, 139655));
+
+        var run = await CaptureOrchestrator.CaptureAsync(
+            new CaptureRequest("test-target", DurationSec: 1), CancellationToken.None);
+
+        Assert.Equal("etw-events-lost", run.ReasonCode);
+        Assert.NotNull(run.Error);
+        Assert.Contains("139,655", run.Error!);
+        Assert.Contains("一帧都没拿到", run.Error!);
+        Assert.Contains("反作弊", run.Error!);
+        Assert.NotEqual(CaptureGuidance.Describe(CaptureGuidance.SampleFailed), run.Error);
+    }
+
+    [Fact]
+    public async Task Capture_permission_denied_keeps_its_own_reason()
+    {
+        UseDefaultInjection();
+        CaptureOrchestrator.PresentMonOverride = () => Path.Combine(_root, "pm.exe");
+        CaptureOrchestrator.SamplerOverride = (_, _, _, _, _, _) =>
+            Task.FromResult(new PresentMonSampler.CaptureOutcome(false, CaptureGuidance.NoPermission));
+
+        var run = await CaptureOrchestrator.CaptureAsync(
+            new CaptureRequest("test-target", DurationSec: 1), CancellationToken.None);
+
+        Assert.Equal("no-permission", run.ReasonCode);
+        Assert.Contains("管理员", run.Error!);
     }
 
     [Fact]
@@ -188,7 +226,7 @@ public sealed class CaptureOrchestratorTests : IDisposable
             WriteFrameCsv(csv);
             inGate.SetResult();
             await release.Task;
-            return true;
+            return new PresentMonSampler.CaptureOutcome(true);
         };
 
         var first = CaptureOrchestrator.CaptureAsync(
