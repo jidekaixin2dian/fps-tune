@@ -360,11 +360,11 @@ public partial class MainWindow : Window
     private Views.Controls.NavButton[] AllNavButtons => new[]
     {
         NavHome, NavGames, NavQuick, NavDetect, NavDisplay, NavFilters, NavCrosshair,
-        NavOpt, NavTools, NavBackup, NavStartup, NavSession, NavAb, NavSettings
+        NavOpt, NavTools, NavBackup, NavStartup, NavSession, NavSettings
     };
 
     /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
-    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavCrosshair, NavTools, NavSession, NavAb, NavSettings };
+    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavCrosshair, NavTools, NavSession, NavSettings };
 
     private void More_Click(object sender, RoutedEventArgs e)
     {
@@ -506,7 +506,6 @@ public partial class MainWindow : Window
     }
 
     /// <summary>侧栏"掉帧修复"动作项：进滤镜页并打开修复窗口。</summary>
-    private void NavDeltaFix_Click(object sender, RoutedEventArgs e) => OpenDeltaFixFromHome();
 
     private void SwitchPage(UserControl page)
     {
@@ -519,11 +518,10 @@ public partial class MainWindow : Window
         var key = _pageCache.FirstOrDefault(kv => ReferenceEquals(kv.Value, page)).Key;
         if (!string.IsNullOrEmpty(key)) RememberRecentPage(key);
         if (key == "home" && page is ConsoleView console) console.RefreshRecentPages();
-        // "掉帧修复"是经动作项进入的页面，没有 NavButton 勾选态；激活态挂在动作项上，
+        // "掉帧修复"没有侧栏项（入口在首页快捷、滤镜页、调校窗与游戏库），
         // 进入时清掉其他页签的残留选中，保证侧栏任一时刻最多一项高亮。
         // 用缓存键判断而不是取页面实例：GetPage 首次会构造页面，切任何页都会顺带把掉帧页建出来。
         var onDeltaFix = string.Equals(key, "deltafix", StringComparison.Ordinal);
-        NavDeltaFix.IsActive = onDeltaFix;
         if (onDeltaFix)
         {
             foreach (var radio in AllNavButtons)
@@ -598,12 +596,13 @@ public partial class MainWindow : Window
             case "filters": NavFilters.IsChecked = true; break;
             case "crosshair": NavCrosshair.IsChecked = true; break;
             case "session": NavSession.IsChecked = true; break;
-            case "ab": NavAb.IsChecked = true; break;
+            // A/B 实验室已从侧栏收起（主路径是「优化 → 对照一下」），仍保留路由，供优化页的高级入口跳转。
+            case "ab": SwitchPage(GetPage("ab")); break;
             case "backup": NavBackup.IsChecked = true; break;
             case "startup": NavStartup.IsChecked = true; break;
             case "tools": NavTools.IsChecked = true; break;
             case "settings": NavSettings.IsChecked = true; break;
-            // 掉帧修复是从按钮进入的页面，激活态由 SwitchPage 挂在 NavDeltaFix 上。
+            // 掉帧修复没有侧栏项：入口在首页快捷、滤镜页、调校窗与游戏库（按游戏显示）。
             case "deltafix": SwitchPage(GetPage("deltafix")); break;
         }
     }

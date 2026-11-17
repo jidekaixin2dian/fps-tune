@@ -249,8 +249,8 @@ public sealed class ReadabilityAndFramesUiTests
             window.NavigateTo("opt"); app.MainWindow = window; DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show();
             try
             {
-                var nav = (RadioButton)window.FindName("NavAb"); nav.ApplyTemplate();
-                var label = Descendants(nav).OfType<TextBlock>().Single(t => t.Text == Str.T("Str.NavAb"));
+                var nav = (RadioButton)window.FindName("NavSession"); nav.ApplyTemplate();
+                var label = Descendants(nav).OfType<TextBlock>().Single(t => t.Text == Str.T("Str.NavSession"));
                 var weight = label.FontWeight; var size = label.FontSize;
                 nav.IsChecked = true; window.UpdateLayout();
                 Assert.Equal(weight, label.FontWeight); Assert.Equal(size, label.FontSize);
@@ -267,7 +267,7 @@ public sealed class ReadabilityAndFramesUiTests
                         DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
                         var titleKey = route switch { "detect" => "Str.NavDetect", "opt" => "Str.OptimizeTitle", "display" => "Str.DisplayTitle",
                             "filters" => "Str.NavFilters", "crosshair" => "Str.CrosshairTitle",
-                            "session" => "Str.NavSession", "ab" => "Str.NavAb", "backup" => "Str.NavBackup", "tools" => "Str.NavTools", "settings" => "Str.NavSettings", _ => null };
+                            "session" => "Str.NavSession", "backup" => "Str.NavBackup", "tools" => "Str.NavTools", "settings" => "Str.NavSettings", _ => null };
                         if (titleKey is not null)
                         {
                             // 字号从 PageTitleStyle 现取：以前写死 22，样式改成 24 后这条断言就一直假失败。
@@ -334,6 +334,7 @@ public sealed class ReadabilityAndFramesUiTests
                 var page = (FrameworkElement)((ContentControl)window.FindName("PageHost")).Content;
                 DlssFeedbackTests.PumpUntil(() => page.IsLoaded);
                 window.UpdateLayout();
+
                 Assert.True(Descendants(page).OfType<TextBlock>().Any(t => t.Text.Contains(evidence, StringComparison.Ordinal)),
                     "候选组步骤卡没有显示统计证据行：" + evidence);
                 Capture(window, "ab-evidence-dark", []);

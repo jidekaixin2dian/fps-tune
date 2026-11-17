@@ -33,6 +33,7 @@ Services/ExperimentWizard.cs	17
 Services/GpuCounterMath.cs	1
 Services/IccFilterService.cs	18
 Services/IccProfileGenerator.cs	7
+Services/LegacyMigrations.cs	1
 Services/MetricsSampler.cs	11
 Services/NvapiNative.cs	2
 Services/NvidiaDrs.cs	16

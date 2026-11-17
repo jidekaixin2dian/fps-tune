@@ -49,7 +49,8 @@
                             <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click" Margin="0,0,8,8"/>
                             <Button x:Name="RecordButton" Content="{DynamicResource Str.NavSession}" Style="{StaticResource SecondaryButtonStyle}" Click="Route_Click" Tag="session" Margin="0,0,8,8"/>
                             <Button x:Name="DisplayButton" Content="{DynamicResource Str.NavDisplay}" Style="{StaticResource SecondaryButtonStyle}" Click="Route_Click" Tag="display" Margin="0,0,8,8"/>
-                            <Button x:Name="AutoRecordButton" Content="{DynamicResource Str.AutoRecordTitle}" Style="{StaticResource GhostButtonStyle}" Click="AutoRecord_Click" Margin="0,0,0,8"/>
+                            <Button x:Name="AutoRecordButton" Content="{DynamicResource Str.AutoRecordTitle}" Style="{StaticResource GhostButtonStyle}" Click="AutoRecord_Click" Margin="0,0,8,8"/>
+                            <Button x:Name="DeltaFixButton" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource GhostButtonStyle}" Click="Route_Click" Tag="deltafix" Margin="0,0,0,8" Visibility="Collapsed"/>
                         </WrapPanel>
                     </StackPanel></Border>
                     <Border x:Name="GainArchiveCard" Style="{StaticResource CardStyle}" Margin="0,16,0,0"><StackPanel>

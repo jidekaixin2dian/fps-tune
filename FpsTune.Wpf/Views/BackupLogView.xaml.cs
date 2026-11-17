@@ -116,7 +116,7 @@ public partial class BackupLogView : UserControl
             var result = await action();
             LogBox.Text = result.Success
                 ? result.Output
-                : $"exit={result.ExitCode}\n\n输出:\n{result.Output}";
+                : $"exit={result.ExitCode}\n\nSTDOUT:\n{result.Output}";
             StatusText.Text = result.Success ? Str.T("Str.OperationDone") : Str.T("Str.OperationFailed");
         }
         catch (Exception ex)

@@ -82,6 +82,9 @@ public partial class GameLibraryView : UserControl
         if (row is null) { GameNameText.Text = GamePathText.Text = ProcessText.Text = PlanText.Text = RecordingText.Text = NameBox.Text = ""; return; }
         TuningButton.Visibility = GameTuning.Identify(row.Profile.ExePath) is not null ? Visibility.Visible : Visibility.Collapsed;
         TuningButton.IsEnabled = row.Accessible;
+        // 掉帧修复只对三角洲主程序显示（1.x 时代的专题页，现在从游戏详情进入）
+        DeltaFixButton.Visibility = DeltaPreparation.IsGameExecutable(row.Profile.ExePath) ? Visibility.Visible : Visibility.Collapsed;
+        DeltaFixButton.IsEnabled = row.Accessible;
         GameNameText.Text = row.Name; GamePathText.Text = row.Profile.ExePath; ProcessText.Text = row.ProcessLabel; NameBox.Text = row.Name;
         SelectGameButton.IsEnabled = DetectGameButton.IsEnabled = PlanButton.IsEnabled = RecordButton.IsEnabled = DisplayButton.IsEnabled = row.Accessible;
         try { PlanText.Text = PreparationPlanStore.Describe(PreparationPlanStore.Resolve(row.Profile.ExePath)); }

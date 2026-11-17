@@ -217,6 +217,9 @@
     </StackPanel>
     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
      <Button x:Name="RestoreButton" Content="{DynamicResource Str.RestoreAll}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Margin="12,0" Click="RestoreButton_Click"/>
+     <Button x:Name="AdvancedExperimentButton" Content="{DynamicResource Str.NavAb}"
+             Style="{StaticResource GhostButtonStyle}" MinWidth="110" Height="40" Margin="0,0,12,0" Click="AdvancedExperiment_Click"
+             ToolTip="{DynamicResource Str.AbIntro}"/>
      <Button x:Name="CompareButton" Content="{DynamicResource Str.ComparisonStart}"
              Style="{StaticResource SecondaryButtonStyle}" MinWidth="110" Height="40" Margin="0,0,12,0" Click="CompareButton_Click"
              ToolTip="{DynamicResource Str.ComparisonIntro}"/>
