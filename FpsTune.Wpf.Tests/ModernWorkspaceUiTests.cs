@@ -148,7 +148,7 @@ public sealed class ModernWorkspaceUiTests
                 page.Items.First(i => i.Id == ids[1]).IsChecked = false;
                 AppState.GamePath = @"C:\WorkspaceTest\second.exe";
                 Assert.Equal(ids, applied); Assert.Equal(@"C:\WorkspaceTest\first.exe", appliedGame);
-                completion.SetResult(new RunResult(0, "{\"results\":[],\"summary\":\"test completed\"}", ""));
+                completion.SetResult(new RunResult(0, "{\"results\":[],\"summary\":\"test completed\"}"));
                 DlssFeedbackTests.PumpUntil(() => apply.IsEnabled);
                 Assert.True(((FrameworkElement)page.FindName("PresetControlsCard")).IsEnabled);
                 // A backend failure must restore controls without dropping retry choices.
@@ -200,7 +200,7 @@ public sealed class ModernWorkspaceUiTests
                     return ok;
                 };
                 page.ApplyItemsOverride = (_, _) => Task.FromResult(new RunResult(scenario == "partial" ? 1 : 0,
-                    JsonSerializer.Serialize(new { results = new[] { new { id = "gpu-pref", ok = true, message = "receipt-" + scenario } } }), ""));
+                    JsonSerializer.Serialize(new { results = new[] { new { id = "gpu-pref", ok = true, message = "receipt-" + scenario } } })));
                 DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
                 var accept = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
                 accept.Tick += (_, _) =>
@@ -273,7 +273,7 @@ public sealed class ModernWorkspaceUiTests
                     summary = "1 成功、1 失败、0 跳过",
                     backupFile = Path.Combine(root, "backup", "v2-backup-test.json"),
                     reboot = Array.Empty<string>()
-                }), ""));
+                })));
                 page.SelectForReview(["game-mode", "gpu-pref"]);
                 var consent = (CheckBox)page.FindName("ConsentCheck"); consent.IsChecked = true;
                 var apply = (Button)page.FindName("ApplyButton");
@@ -325,7 +325,7 @@ public sealed class ModernWorkspaceUiTests
             try
             {
                 page.RefreshDetectionOverride = () => Task.FromResult(true);
-                page.ApplyItemsOverride = (_, _) => { applied++; return Task.FromResult(new RunResult(0, "{}", "")); };
+                page.ApplyItemsOverride = (_, _) => { applied++; return Task.FromResult(new RunResult(0, "{}")); };
                 page.SelectForReview(admin.Select(d => d.Id));
                 ((CheckBox)page.FindName("ConsentCheck")).IsChecked = true;
                 var apply = (Button)page.FindName("ApplyButton");

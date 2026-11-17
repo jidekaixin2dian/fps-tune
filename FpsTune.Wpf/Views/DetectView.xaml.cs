@@ -259,7 +259,7 @@ public partial class DetectView : UserControl
             sw.Stop();
             if (!result.Success)
             {
-                OutputBox.Text = result.Error + Environment.NewLine + result.Output;
+                OutputBox.Text = result.Output;
                 RefreshLastDetectText();   // 失败不记录，恢复显示上一次的成功结果
                 return false;
             }

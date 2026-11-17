@@ -17,7 +17,6 @@
     <s:String x:Key="Str.FilterModeScreen">当前屏幕</s:String>
     <s:String x:Key="Str.FilterModePerApp">独立程序滤镜</s:String>
     <s:String x:Key="Str.FilterPickerTitle">选择滤镜</s:String>
-    <s:String x:Key="Str.FilterPickerHint">点选滤镜在左侧截图里预览，点右上“应用整套”应用到屏幕。</s:String>
     <s:String x:Key="Str.FilterEditorSection">创建自定义滤镜</s:String>
     <s:String x:Key="Str.FilterApplyAll">应用整套</s:String>
     <s:String x:Key="Str.FilterRestoreAll">还原原始</s:String>
@@ -26,14 +25,7 @@
     <s:String x:Key="Str.FilterPerAppPreviewHint">当前选中应用</s:String>
     <s:String x:Key="Str.ColorPreviewRecent">Windows 截图里最新的一张</s:String>
     <s:String x:Key="Str.ColorPreviewRecentEmpty">截图文件夹里还没有 PNG / JPG 图片。先按 Win + PrtSc 截一张，或点“载入截图”。</s:String>
-    <s:String x:Key="Str.FilterRuleListTitle">应用方案</s:String>
-    <s:String x:Key="Str.FilterRuleNew">新建方案</s:String>
-    <s:String x:Key="Str.FilterRuleEmpty">还没有独立方案。选择滤镜和应用后保存，前台进入该程序时自动套用。</s:String>
-    <s:String x:Key="Str.FilterRuleActive">正在生效</s:String>
-    <s:String x:Key="Str.FilterRuleEditing">正在编辑：{0}</s:String>
-    <s:String x:Key="Str.FilterRuleSaveChanges">保存修改</s:String>
     <s:String x:Key="Str.FilterRuleVibranceOnly">仅数字振动</s:String>
-    <s:String x:Key="Str.FilterRuleTitleShort">标题含 {0}</s:String>
     <s:String x:Key="Str.FilterRuleRemoveTitle">删除应用方案</s:String>
     <s:String x:Key="Str.FilterRuleRemoveConfirm">删除「{0}」的独立游戏方案？</s:String>
     <s:String x:Key="Str.QuickOptResolutionLabel">分辨率（可选）</s:String>
@@ -53,7 +45,6 @@
     <s:String x:Key="Str.SensEdpiFormat">eDPI {0}</s:String>
     <s:String x:Key="Str.SensEquivalentFormat">换算到 {0}：灵敏度 {1}</s:String>
     <s:String x:Key="Str.SensInvalid">请输入大于 0 的 DPI 与灵敏度。</s:String>
-    <s:String x:Key="Str.FilterRuleGenerated">这一档是内置生成式滤镜，无法绑定到具体程序；要给程序绑定请选 .icc 预设。</s:String>
     <s:String x:Key="Str.CommandAliasFilters">滤镜 ICC 滤镜中心 独立程序 filter color</s:String>    <s:String x:Key="Str.NavSession">性能会话</s:String>
     <s:String x:Key="Str.NavAb">A/B 实验</s:String>
     <s:String x:Key="Str.NavBackup">备份 / 日志</s:String>
@@ -65,7 +56,6 @@
     <s:String x:Key="Str.Maximize">最大化</s:String>
     <s:String x:Key="Str.Close">关闭</s:String>
     <s:String x:Key="Str.NormalUser">普通用户</s:String>
-    <s:String x:Key="Str.AdminUser">管理员</s:String>
 
     <!-- 设置 -->
     <s:String x:Key="Str.SettingsAppearance">外观与显示</s:String>
@@ -87,12 +77,9 @@
     <s:String x:Key="Str.PresetSafe">保守</s:String>
     <s:String x:Key="Str.PresetFull">全部项目</s:String>
     <s:String x:Key="Str.PresetCustom">自定义</s:String>
-    <s:String x:Key="Str.ApplySelected">应用所选 →</s:String>
     <s:String x:Key="Str.RestoreAll">还原全部</s:String>
     <s:String x:Key="Str.OneClick">一键优化</s:String>
     <s:String x:Key="Str.OneClickTip">应用当前推荐的系统设置，保留原值备份；显卡同步与限帧单独选择。</s:String>
-    <s:String x:Key="Str.NotConfirmed">未确认</s:String>
-    <s:String x:Key="Str.PleaseConsent">请先勾选同意说明，再执行应用。</s:String>
 
     <!-- 显示与画质 -->
     <s:String x:Key="Str.DisplayTitle">显示与画质</s:String>
@@ -124,7 +111,6 @@
     <!-- 通用按钮 -->
     <s:String x:Key="Str.Ok">确定</s:String>
     <s:String x:Key="Str.Cancel">取消</s:String>
-    <s:String x:Key="Str.Detect">检测</s:String>
     <s:String x:Key="Str.LocateGame">定位游戏</s:String>
 
     <!-- 检测页 / 优化页（2026-09-25 转换） -->
@@ -143,7 +129,6 @@
     <s:String x:Key="Str.LiveMonitor">实时监控</s:String>
     <s:String x:Key="Str.CurrentGame">当前游戏</s:String>
     <s:String x:Key="Str.VramDedicated">显存占用（专用）</s:String>
-    <s:String x:Key="Str.VramUsage">显存占用</s:String>
     <s:String x:Key="Str.DetectDetails">检测详情</s:String>
     <s:String x:Key="Str.SampleEverySecond">按当前采样间隔更新</s:String>
     <s:String x:Key="Str.GamePath">游戏路径</s:String>
@@ -162,11 +147,9 @@
     <s:String x:Key="Str.PendingZero">待应用 0 项</s:String>
     <s:String x:Key="Str.ConsentText">我已了解所选项目的作用与副作用，同意执行</s:String>
     <s:String x:Key="Str.SearchItems">搜索名称或说明</s:String>
-    <s:String x:Key="Str.ProfileName">方案名称</s:String>
     <s:String x:Key="Str.NoMatchingItems">没有匹配的优化项，请调整搜索或分类。</s:String>
     <s:String x:Key="Str.Admin">管理员</s:String>
     <s:String x:Key="Str.OptimizeTitle">优化设置</s:String>
-    <s:String x:Key="Str.ProfileHint">输入名称后保存当前勾选；载入按名称应用；导出/导入用于分享</s:String>
     <s:String x:Key="Str.NeedsReboot">需重启</s:String>
     <s:String x:Key="Str.ItemDetailTitle">项目详情 / 执行记录</s:String>
     <s:String x:Key="Str.TipFull">包含服务和电源设置，请审阅副作用</s:String>
@@ -175,7 +158,6 @@
     <s:String x:Key="Str.SideEffectLabel">副作用：</s:String>
 
     <!-- 检测页 / 优化页（2026-09-25 转换） -->
-    <s:String x:Key="Str.NoteLabel">注意：</s:String>
     <s:String x:Key="Str.VersionLabel">版本：v</s:String>
 
     <!-- 界面全量文案（2026-09-25 转换） -->
@@ -209,14 +191,11 @@
     <s:String x:Key="Str.MatchPrep">开局准备</s:String>
     <s:String x:Key="Str.ConsoleIntro">定位游戏后，审阅基础设置并记录一局负载。</s:String>
     <s:String x:Key="Str.BasicAdvice">基础建议</s:String>
-    <s:String x:Key="Str.TipBasicAdvice">检查游戏模式、后台录制和游戏显卡偏好</s:String>
     <s:String x:Key="Str.FirstRunAdviceIntro">首次使用：先做一次体检，再审阅这 {0} 项建议。</s:String>
-    <s:String x:Key="Str.TipBasicAdviceFirst">首次使用先完成系统体检，再进入优化页选择方案</s:String>
     <s:String x:Key="Str.RecordMatch">记录一局</s:String>
     <s:String x:Key="Str.TipRecordMatch">记录 CPU、GPU、内存负载；游戏已运行且 PresentMon 可用时同时记录 FPS</s:String>
     <s:String x:Key="Str.BackupRestore">备份还原</s:String>
     <s:String x:Key="Str.ItemsOptimized">已达标项目</s:String>
-    <s:String x:Key="Str.ChoosePlan">选择方案</s:String>
     <s:String x:Key="Str.PlanBalanced">均衡</s:String>
     <s:String x:Key="Str.PlanSafe">保守</s:String>
     <s:String x:Key="Str.PlanCompetitive">竞技</s:String>
@@ -228,21 +207,7 @@
     <s:String x:Key="Str.QuickOptPlanPreviewExtras">另外会执行：{0}</s:String>
     <s:String x:Key="Str.QuickOptPlanExtraPower">电源计划 → 最高性能优先</s:String>
     <s:String x:Key="Str.QuickOptPlanPreviewNone">没有选附加项（电源计划 / 分辨率 / DLSS / 滤镜）。</s:String>
-    <s:String x:Key="Str.TipSearchItems">按中文名称搜索优化项</s:String>
     <s:String x:Key="Str.SearchItemsShort">搜索优化项</s:String>
-    <s:String x:Key="Str.Redetect">重新检测</s:String>
-    <s:String x:Key="Str.AdminRequired">需管理员</s:String>
-    <s:String x:Key="Str.TipSelectItem">选择此项，审阅后再应用</s:String>
-    <s:String x:Key="Str.PreparingItems">正在准备优化项…</s:String>
-    <s:String x:Key="Str.ToggleHint">选择项目后，点击“审阅并应用”。</s:String>
-    <s:String x:Key="Str.ReviewAndApply">审阅并应用 →</s:String>
-    <s:String x:Key="Str.HomeTitle">系统层帧率优化控制台</s:String>
-    <s:String x:Key="Str.StartDetect">开始检测 →</s:String>
-    <s:String x:Key="Str.HomeDetectDesc">查看硬件信息、游戏路径与优化项状态</s:String>
-    <s:String x:Key="Str.HomeOptDesc">预设与逐项开关、系统层优化、一键还原</s:String>
-    <s:String x:Key="Str.HomeSessionDesc">本地采样 CPU / 内存 / GPU / 显存，生成摘要、洞察与对比</s:String>
-    <s:String x:Key="Str.HomeAbDesc">基线采样、候选组对比、保留或还原决策</s:String>
-    <s:String x:Key="Str.HomeBackupDesc">备份文件、还原全部、日志和 JSON 输出</s:String>
     <s:String x:Key="Str.SessionIntro">记录游戏时的 CPU、内存、GPU 与显存变化，保存后比较帧率和流畅度。</s:String>
     <s:String x:Key="Str.SamplingControl">采样控制</s:String>
     <s:String x:Key="Str.StartSession">开始记录</s:String>
@@ -270,13 +235,6 @@
     <s:String x:Key="Str.ThemeLightDesc">明亮纸面 · 清晰阅读</s:String>
     <s:String x:Key="Str.ThemeSystemShort">跟随系统</s:String>
     <s:String x:Key="Str.ThemeSystemDesc">随 Windows 外观自动变化</s:String>
-    <s:String x:Key="Str.LowSpecMode">低配模式（减少动画，实时采样改为每 3 秒一次）</s:String>
-    <s:String x:Key="Str.SectionStartup">启动</s:String>
-    <s:String x:Key="Str.AutoStart">登录 Windows 后自动运行 FPS 帧律（当前用户）</s:String>
-    <s:String x:Key="Str.SectionTray">托盘与通知</s:String>
-    <s:String x:Key="Str.MinimizeToTray">最小化到系统托盘（不占任务栏，托盘图标双击呼出）</s:String>
-    <s:String x:Key="Str.GlobalHotkey">全局热键 Ctrl + Alt + F 呼出主窗口</s:String>
-    <s:String x:Key="Str.NotifyOnComplete">优化 / 实验完成时弹出托盘通知</s:String>
     <s:String x:Key="Str.SectionGame">游戏</s:String>
     <s:String x:Key="Str.GamePathDesc">手动指定游戏 EXE，用于全屏优化 / GPU 偏好 / 进程优先级三类优化；留空则自动检测主流 FPS。</s:String>
     <s:String x:Key="Str.Browse">浏览...</s:String>
@@ -357,7 +315,6 @@
     <s:String x:Key="Str.FilterSchemeExport">导出</s:String>
     <s:String x:Key="Str.FilterSchemeImport">导入</s:String>
     <s:String x:Key="Str.FilterSchemeTransferDone">方案库已更新：共 {0} 条</s:String>
-    <s:String x:Key="Str.FilterSchemeTransferFailed">方案导入失败：{0}</s:String>
     <s:String x:Key="Str.DlssOverrideNote">覆盖预设（作用于当前定位的游戏；与游戏内超分设置冲突时以本覆盖为准）</s:String>
     <s:String x:Key="Str.PresetK">K 预设（推荐）</s:String>
     <s:String x:Key="Str.PresetKDesc">新一代模型 · 社区常用，稳定</s:String>
@@ -371,13 +328,11 @@
     <s:String x:Key="Str.PresetEDesc">旧一代 CNN 模型 · 复古画质</s:String>
     <s:String x:Key="Str.DlssNote">选择预设后点击「应用覆盖」。选择「跟随游戏内」可恢复帧律改动前的 DLSS 设置。</s:String>
     <s:String x:Key="Str.VibNote">饱和度 / 数字振动（NVIDIA）</s:String>
-    <s:String x:Key="Str.VibNote2">数字振动与所选色彩模式一起应用。</s:String>
     <s:String x:Key="Str.VibStateReadFailed">读取数字振动状态失败：{0}</s:String>
     <s:String x:Key="Str.VibStateCurrentRestorable">当前 {0}%（已记录原始档位，可还原；驱动默认约 {1}%）</s:String>
     <s:String x:Key="Str.VibStateCurrent">当前 {0}%（驱动默认约 {1}%）</s:String>
     <s:String x:Key="Str.IccStateReadFailed">读取 ICC 状态失败：{0}</s:String>
     <s:String x:Key="Str.VibRecommendedSet">试试 58%</s:String>
-    <s:String x:Key="Str.VibRecommendedNote">可先试试推荐档位，再点“应用色彩设置”。</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% 是轻微增强色彩的起点，可继续调整。</s:String>
     <s:String x:Key="Str.IccPresetLabel">预设在上方统一选择，或从文件载入。</s:String>
     <s:String x:Key="Str.IccVivid">FPS 鲜艳</s:String>
@@ -448,22 +403,16 @@
     <s:String x:Key="Str.Start">开始</s:String>
     <s:String x:Key="Str.Run">运行</s:String>
     <s:String x:Key="Str.Running">运行中</s:String>
-    <s:String x:Key="Str.CurrentlyActive">当前生效：</s:String>
     <s:String x:Key="Str.SideEffect">副作用</s:String>
     <s:String x:Key="Str.Description">说明</s:String>
     <s:String x:Key="Str.Requirement">要求</s:String>
     <s:String x:Key="Str.Baseline">基线</s:String>
     <s:String x:Key="Str.Comparison">对照</s:String>
-    <s:String x:Key="Str.CandidateVerdict">候选组结论</s:String>
     <s:String x:Key="Str.SummaryLabel">摘要：</s:String>
-    <s:String x:Key="Str.Email">邮箱</s:String>
-    <s:String x:Key="Str.WeChat">微信</s:String>
     <s:String x:Key="Str.WeChatIdLabel">微信号：</s:String>
     <s:String x:Key="Str.WeChatIdCopied">微信号已复制。</s:String>
-    <s:String x:Key="Str.ClickToSeeQr">请点击查看二维码</s:String>
     <s:String x:Key="Str.StartSampling">开始采样</s:String>
     <s:String x:Key="Str.Resample">重新采样</s:String>
-    <s:String x:Key="Str.Rerun">重新运行</s:String>
     <s:String x:Key="Str.GenerateReport">生成报告</s:String>
     <s:String x:Key="Str.ExportProfile">导出配置方案</s:String>
     <s:String x:Key="Str.ImportProfile">导入配置方案</s:String>
@@ -499,7 +448,6 @@
     <s:String x:Key="Str.Unavailable">不可用</s:String>
     <s:String x:Key="Str.StatusPending">待检查</s:String>
     <s:String x:Key="Str.StatusNotDetected">待检测</s:String>
-    <s:String x:Key="Str.StatusToSet">待设置</s:String>
     <s:String x:Key="Str.StatusToRun">待运行</s:String>
     <s:String x:Key="Str.Locked">未解锁</s:String>
     <s:String x:Key="Str.NotRestored">未还原</s:String>
@@ -512,7 +460,6 @@
     <s:String x:Key="Str.SpecifiedClickToSave">已指定（点击空白处保存修改）</s:String>
     <s:String x:Key="Str.SpecifiedMissing">已指定，但文件不存在</s:String>
     <s:String x:Key="Str.InvalidPathNotExe">路径无效或不是 .exe，未保存</s:String>
-    <s:String x:Key="Str.NoDetectResult">尚无检测结果</s:String>
     <s:String x:Key="Str.NoGameSelected">尚未选择游戏</s:String>
     <s:String x:Key="Str.GameLocateIncomplete">游戏定位未完成</s:String>
     <s:String x:Key="Str.NoInstalledGame">未检测到已安装游戏</s:String>
@@ -538,14 +485,11 @@
     <s:String x:Key="Str.Executing">正在执行...</s:String>
     <s:String x:Key="Str.Writing">正在写入…</s:String>
     <s:String x:Key="Str.CheckingUpdate">正在检查更新...</s:String>
-    <s:String x:Key="Str.DownloadingManifest">正在下载 SHA256 清单...</s:String>
     <s:String x:Key="Str.RunningOneClick">正在一键优化...</s:String>
     <s:String x:Key="Str.WritingEsports">正在写入竞技推荐…</s:String>
     <s:String x:Key="Str.WritingDrs">正在写入驱动设置…</s:String>
-    <s:String x:Key="Str.GeneratingRecord">正在生成记录表...</s:String>
     <s:String x:Key="Str.LoadingRestorables">正在读取可还原项...</s:String>
     <s:String x:Key="Str.LoadingMetrics">正在读取指标</s:String>
-    <s:String x:Key="Str.DetectingBackground">正在后台检测，仍可切换页面…</s:String>
     <s:String x:Key="Str.ScanningGamesBackground">正在后台扫描游戏与配置方案...</s:String>
     <s:String x:Key="Str.LocatingAndDetecting">正在定位并更新检测…</s:String>
     <s:String x:Key="Str.LiveLocalSampling">实时本地采样</s:String>
@@ -560,7 +504,6 @@
     <s:String x:Key="Str.AppNameAb">FPS 帧律 · A/B 实验</s:String>
     <s:String x:Key="Str.AppNameDone">FPS 帧律 · 执行完成</s:String>
     <s:String x:Key="Str.AbReportTitle">FPS 帧律 · A/B 实验报告</s:String>
-    <s:String x:Key="Str.VibranceGlobalNote">切换是系统全局的：整个桌面（含网页、视频、游戏）的观感都会变化。</s:String>
     <s:String x:Key="Str.ConfirmClearActivity">确定清除全部自动 Profile 活动记录？</s:String>
     <s:String x:Key="Str.ConfirmRestoreAll">确定要还原全部已备份的项目吗？</s:String>
     <s:String x:Key="Str.ConfirmCancelSession">确定取消当前会话？已采集的数据将被丢弃。</s:String>
@@ -571,7 +514,6 @@
     <s:String x:Key="Str.SelectProfileFirst">请先选择已保存的配置方案。</s:String>
     <s:String x:Key="Str.SelectScannedGameFirst">请先选择已扫描的游戏候选。</s:String>
     <s:String x:Key="Str.SelectAtLeastOneItem">请勾选至少一个优化项。</s:String>
-    <s:String x:Key="Str.FillSceneQuality">请填写场景/画质/设置。</s:String>
     <s:String x:Key="Str.NoItemsSelected">当前没有勾选任何优化项。</s:String>
     <s:String x:Key="Str.NoGamePathToCopy">当前没有可复制的游戏路径，请先运行检测。</s:String>
     <s:String x:Key="Str.NoRestorableBackups">当前没有可还原的备份。</s:String>
@@ -585,8 +527,6 @@
     <s:String x:Key="Str.MustPickGameExe">需要选择游戏本体的主程序 exe，不能选择启动器或安装程序。</s:String>
     <s:String x:Key="Str.PickGameExeHint">选择游戏主程序（不是启动器；主程序通常带 -Win64-Shipping 或位于 Binaries 目录）</s:String>
     <s:String x:Key="Str.CannotDeriveProcessName">无法从候选路径确定进程名，未添加。</s:String>
-    <s:String x:Key="Str.GamePathSaveFailed">游戏路径未能保存，请检查本地设置目录权限。</s:String>
-    <s:String x:Key="Str.LocateGameMainFirstThenReturn">尚未选择游戏主程序。请先到「检测」页定位游戏，再回到本页设置。</s:String>
     <s:String x:Key="Str.AbReadySimulate">就绪。从第 1 步基线采样开始；-Simulate 模式可在无游戏时安全验证流程。</s:String>
     <s:String x:Key="Str.AbBaselineHint">3 次采样求均值与稳定性（CV）。重复运行会覆盖当前基线。</s:String>
     <s:String x:Key="Str.AbCandidateHint">应用候选组 → 采样 → 自动判定 keep / revert。</s:String>
@@ -600,9 +540,7 @@
     <s:String x:Key="Str.BasicsOk">基础设置已达标 · 可记录一局负载，保留优化前后对照。</s:String>
     <s:String x:Key="Str.ItemDetailHint">点击项目查看当前状态与副作用。确认后在底部应用，执行结果也会显示在这里。</s:String>
     <s:String x:Key="Str.ToggleHint2">选择要应用的项目；手动调整后使用自定义方案。</s:String>
-    <s:String x:Key="Str.CustomSelection">自定义选择</s:String>
     <s:String x:Key="Str.DetectDoneHint">检测已完成。请选择左侧预设或勾选需要的优化项，确认后点击“应用”。</s:String>
-    <s:String x:Key="Str.DetectUpdatedHint">设备信息已更新。</s:String>
     <s:String x:Key="Str.DetectIncomplete">检测未完成。请检查检测页的报错信息后重试。</s:String>
     <s:String x:Key="Str.DetectIncompleteRetry">检测未完成，可重新检测或前往检测页查看原因。</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">暂无优化项，请先在检测页运行检测。</s:String>
@@ -620,7 +558,6 @@
     <s:String x:Key="Str.OperationFailed">操作失败</s:String>
     <s:String x:Key="Str.CancelFailed">取消失败</s:String>
     <s:String x:Key="Str.ProfileLoaded">方案已载入</s:String>
-    <s:String x:Key="Str.VerifyOkInstalling">校验通过，正在启动安装...</s:String>
     <s:String x:Key="Str.NotOverriddenInGame">当前未覆盖（跟随游戏内设置）。</s:String>
     <s:String x:Key="Str.NotOverriddenDriver">当前未覆盖（跟随驱动/游戏默认）。选择后点「应用 3D 设置」。</s:String>
     <s:String x:Key="Str.IccOriginalSaved">已记录你的原始色彩配置，可一键还原。</s:String>
@@ -644,20 +581,11 @@
     <s:String x:Key="Str.DrsDisabled">驱动设置功能已停用（FPS_ENABLE_DLSS=0）。</s:String>
     <s:String x:Key="Str.IccUnavailable">ICC 滤镜在当前环境不可用。</s:String>
     <s:String x:Key="Str.VibranceUnavailable">数字振动在当前环境不可用。</s:String>
-    <s:String x:Key="Str.ApplyFailedNeedAdmin">应用失败：写入 NVIDIA 配置需要管理员权限。</s:String>
-    <s:String x:Key="Str.ApplyFailedNeedAdminUnchanged">应用失败：写入 NVIDIA 配置需要管理员权限。系统设置未变。</s:String>
-    <s:String x:Key="Str.RestoreFailedNeedAdmin">还原失败：写入 NVIDIA 配置需要管理员权限。</s:String>
-    <s:String x:Key="Str.WriteDrsNeedAdmin">写入 NVIDIA 驱动配置需要管理员权限，当前程序不是以管理员身份运行的。</s:String>
-    <s:String x:Key="Str.SelectedNeedsAdmin">所选优化项中包含需要管理员权限的项目，而当前程序不是以管理员身份运行的。</s:String>
     <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
 
 {0}</s:String>
-    <s:String x:Key="Str.SwitchToSafeOnly">如果只想修改无需管理员的项目，可以切换到 safe-only 预设。</s:String>
-    <s:String x:Key="Str.RestoreDrsNeedAdmin">还原 NVIDIA 驱动配置需要管理员权限。</s:String>
     <s:String x:Key="Str.ConfirmRestartAdmin">要以管理员身份重启并继续吗？</s:String>
     <s:String x:Key="Str.ConfirmRestartAdminRetry">要以管理员身份重启并重试吗？</s:String>
-    <s:String x:Key="Str.ConfirmRestartAdminApply">要以管理员身份重启并继续应用吗？</s:String>
-    <s:String x:Key="Str.ConfirmUpdate">是否立即下载并静默安装？安装完成后软件会自动关闭并完成升级。</s:String>
     <s:String x:Key="Str.UpdateUnreachable">无法连接更新服务（GitHub 可能暂不可达），可稍后重试</s:String>
     <s:String x:Key="Str.CannotStartInstaller">无法启动安装程序</s:String>
     <s:String x:Key="Str.CannotOpenLink">无法打开链接。</s:String>
@@ -720,7 +648,6 @@
     <s:String x:Key="Str.ManualUnknownBody">未能识别显卡厂商。可打开显卡自带的控制面板查看可调项；画面取向可先用本页「ICC 滤镜」兜底。</s:String>
 
     <!-- 启动画面 -->
-    <s:String x:Key="Str.SplashLoading">正在加载…</s:String>
     <s:String x:Key="Str.SplashPhasePrepare">正在准备…</s:String>
     <s:String x:Key="Str.SplashPhaseRestore">正在恢复本地状态…</s:String>
     <s:String x:Key="Str.SplashPhaseBuild">正在构建界面…</s:String>
@@ -764,14 +691,10 @@
 
     <!-- 显示页二级页签 -->
     <s:String x:Key="Str.TabDlss">DLSS 预设</s:String>
-    <s:String x:Key="Str.TabVib">数字振动</s:String>
-    <s:String x:Key="Str.TabIcc">ICC 滤镜</s:String>
-        <s:String x:Key="Str.TabVibIcc">画面与色彩</s:String>
 <s:String x:Key="Str.TabDrs">驱动 3D</s:String>
     <s:String x:Key="Str.TabAdvice">建议与清单</s:String>
     <s:String x:Key="Str.BadgeDefault">默认</s:String>
     <s:String x:Key="Str.BadgeCustomCount">{0} 项</s:String>
-    <s:String x:Key="Str.NoGameLocated">未定位游戏</s:String>
 
     <!-- A/B 页 PresentMon 前置探测（P2-12） -->
     <s:String x:Key="Str.PmChecking">正在检查 PresentMon…</s:String>
@@ -791,7 +714,6 @@
     <s:String x:Key="Str.CompareHeaderSessionA">A</s:String>
     <s:String x:Key="Str.CompareHeaderSessionB">B</s:String>
     <s:String x:Key="Str.CompareHeaderDelta">差值 B−A</s:String>
-    <s:String x:Key="Str.MouseBufferEnlarged">鼠标缓冲区已扩容到 50</s:String>
     <s:String x:Key="Str.PcieAspmFail">关闭 PCIe 链路省电失败：{0}</s:String>
     <s:String x:Key="Str.PowerSkippedUnsupported">平台不支持，已跳过：{0}</s:String>
     <s:String x:Key="Str.PowerApplyFail">应用电源隐藏项失败：{0}</s:String>
@@ -998,17 +920,11 @@
     <s:String x:Key="Str.ThirdPartyNotices">第三方声明</s:String>
     <s:String x:Key="Str.Licenses">许可证</s:String>
     <s:String x:Key="Str.LicenseTitle">许可证与第三方声明</s:String>
-    <s:String x:Key="Str.Workspace">工作台</s:String>
     <s:String x:Key="Str.Guide">新手教程</s:String>
     <s:String x:Key="Str.Feedback">QQ 加群反馈</s:String>
     <s:String x:Key="Str.GuideIntro">选择游戏 → 检测 → 调整 → 实测</s:String>
     <s:String x:Key="Str.GoToStep">打开页面</s:String>
-    <s:String x:Key="Str.CommunityTitle">FPS 帧律开发者交流群</s:String>
-    <s:String x:Key="Str.CommunityIntro">交流使用经验、反馈问题、提出建议，也可以讨论开发者的其他开源项目。</s:String>
-    <s:String x:Key="Str.CopyGroup">复制 QQ 群号</s:String>
-    <s:String x:Key="Str.GroupCopied">已复制群号 659528489</s:String>
     <s:String x:Key="Str.FeedbackDetails">反馈时附上软件版本、显卡与驱动、操作步骤和遇到的问题。</s:String>
-    <s:String x:Key="Str.CommunitySafety">涉及安全漏洞或隐私信息，请勿在群内公开。</s:String>
     <s:String x:Key="Str.GuideStep1">选择游戏主程序</s:String>
     <s:String x:Key="Str.GuideBody1">在概览选中游戏的 EXE 主程序，例如游戏目录里的游戏客户端。</s:String>
     <s:String x:Key="Str.GuideStep2">检测当前设置</s:String>
@@ -1028,7 +944,6 @@
     <s:String x:Key="Str.CacheClean">清理缓存</s:String>
     <s:String x:Key="Str.CacheCleaned">已清理 {0} 个文件 · {1}；保留 {2} 个占用或已变化的文件。</s:String>
     <s:String x:Key="Str.CacheConfirm">清理本次扫描的 {0} 个文件（{1}）？缓存删除后无法还原，游戏会重新生成；占用或已变化的文件会保留。</s:String>
-    <s:String x:Key="Str.CacheIntro">查看缓存占用，按需清理。</s:String>
     <s:String x:Key="Str.CacheRebuild">清理适用于缓存故障排查。游戏会重新生成缓存，首次进入可能出现编译等待或卡顿。</s:String>
     <s:String x:Key="Str.CacheScan">扫描缓存</s:String>
     <s:String x:Key="Str.CacheScanning">正在扫描…</s:String>
@@ -1211,8 +1126,6 @@
     <s:String x:Key="Str.HotkeyShort">全局热键</s:String>
     <s:String x:Key="Str.NotifyShort">完成通知</s:String>
     <s:String x:Key="Str.HibernateReadUnavailable">无法读取休眠状态</s:String>
-    <s:String x:Key="Str.NvDrsReadbackFailed">驱动保存后重新读取的设置 {0} 与目标不一致。未确认成功，原值备份已保留，可重试或还原。</s:String>
-    <s:String x:Key="Str.NvDrsReadbackFailedMany">驱动保存后重新读取，{0} 项设置与目标不一致（{1}）。这些项按未应用处理，原值备份已保留，可重试或还原。</s:String>
     <s:String x:Key="Str.DlssPresetVerified">已保存并读回确认 DLSS 预设 {0}。重新启动游戏并开启 DLSS 后使用；可通过「还原本工具改动」恢复。</s:String>
     <s:String x:Key="Str.DlssApplyFailed">应用未成功确认：{0}。已生成的原值备份会保留，请检查状态后重试或还原。</s:String>
     <s:String x:Key="Str.DisplayTarget">目标显示器</s:String>
@@ -1305,7 +1218,6 @@
     <s:String x:Key="Str.ReviewBack">返回修改</s:String>
     <s:String x:Key="Str.ReviewConfirm">确认应用</s:String>
     <s:String x:Key="Str.ReviewItems">全部待应用项目</s:String>
-    <s:String x:Key="Str.ReviewElevation">本清单含需要管理员的项目。是否以管理员身份重启？重启后请再次审阅并应用。</s:String>
     <s:String x:Key="Str.OptFilterLabel">按操作要求筛选优化项</s:String>
     <s:String x:Key="Str.OptScopeAll">全部项目</s:String>
     <s:String x:Key="Str.OptScopePending">尚未达标</s:String>
@@ -1370,11 +1282,9 @@
     <s:String x:Key="Str.FrameRestored">已还原帧率设置。</s:String>
     <s:String x:Key="Str.FrameFailed">帧率操作失败：{0}</s:String>
     <s:String x:Key="Str.MemoryTitle">内存整理</s:String>
-    <s:String x:Key="Str.MemoryHint">实时查看内存，按需整理待机缓存；可组合整理所选后台应用。</s:String>
     <s:String x:Key="Str.MemoryAvailable">可用内存 {0} / {1}</s:String>
     <s:String x:Key="Str.MemoryStandby">低优先级待机缓存：{0}</s:String>
     <s:String x:Key="Str.MemoryStandbyUnknown">低优先级待机缓存：暂无法读取</s:String>
-    <s:String x:Key="Str.MemoryClean">整理内存</s:String>
     <s:String x:Key="Str.MemoryCleaning">正在整理内存…</s:String>
     <s:String x:Key="Str.MemoryCleaned">整理完成。可用内存：{0} → {1}</s:String>
     <s:String x:Key="Str.MemoryCleanedReadFailed">整理已完成，最新内存状态读取失败：{0}。请点击右上角“刷新”。</s:String>
@@ -1396,7 +1306,6 @@
     <s:String x:Key="Str.MemoryLowMode">低优先级待机缓存</s:String>
     <s:String x:Key="Str.MemoryAllMode">全部待机缓存（开局前）</s:String>
     <s:String x:Key="Str.MemoryStandbySummary">待机缓存 {0} · 其中低优先级 {1}</s:String>
-    <s:String x:Key="Str.MemoryCacheChange">整理完成。待机缓存：{0} → {1}；可用内存：{2} → {3}</s:String>
     <s:String x:Key="Str.GpuIdentitySeries">{0} 系列</s:String>
     <s:String x:Key="Str.PowerWifiPerformance">最高性能（接电）</s:String>
     <s:String x:Key="Str.PowerWifiLevel">省电等级 {0}（接电）</s:String>
@@ -1443,7 +1352,6 @@
     <s:String x:Key="Str.WallpaperImportFailed">壁纸导入失败</s:String>
     <s:String x:Key="Str.VibranceLegacyUnassigned">旧版备份未记录显示器。再次应用时，将以当前值建立新的还原点。</s:String>
     <s:String x:Key="Str.VibranceLegacyRecovery">旧版备份没有显示器信息，已保留原文件，无法自动还原。</s:String>
-    <s:String x:Key="Str.HomeSelectionCount">已选择 {0} 项 / 可选 {1} 项</s:String>
     <s:String x:Key="Str.ColorOutOfRange">画面参数超出支持范围。</s:String>
     <s:String x:Key="Str.ColorVivid">鲜明对比</s:String>
     <s:String x:Key="Str.ColorMuted">柔灰</s:String>
@@ -1485,20 +1393,9 @@
     <s:String x:Key="Str.ColorDarkBalanceReset">还原初始值</s:String>
     <s:String x:Key="Str.ColorDarkBalanceDark">暗</s:String>
     <s:String x:Key="Str.ColorDarkBalanceBright">亮</s:String>
-    <s:String x:Key="Str.ColorDarkBalanceHint">调整场景的明暗程度。暗部提亮后，房间、走廊、箱子阴影里的敌人更容易看清，对枪时不会因为看不清角落而吃亏。</s:String>
     <s:String x:Key="Str.ColorHighlight">高光</s:String>
     <s:String x:Key="Str.ColorCustom">自定义参数</s:String>
-    <s:String x:Key="Str.ColorShadowPreset">暗部增强</s:String>
-    <s:String x:Key="Str.ColorDehaze">去雾</s:String>
-    <s:String x:Key="Str.ColorNight">夜间暖色</s:String>
-    <s:String x:Key="Str.ColorWarm">暖色</s:String>
-    <s:String x:Key="Str.ColorCool">冷色清晰</s:String>
-    <s:String x:Key="Str.ColorSoft">柔和</s:String>
-    <s:String x:Key="Str.ColorGentleShadow">轻度暗部</s:String>
-    <s:String x:Key="Str.ColorGentleContrast">轻度对比</s:String>
-    <s:String x:Key="Str.ColorNeutral">中性</s:String>
     <s:String x:Key="Str.ColorApplyTitle">应用色彩设置</s:String>
-    <s:String x:Key="Str.ColorConfirm">将调整当前选定屏幕的显示效果，并保存原始曲线供还原。</s:String>
     <s:String x:Key="Str.ColorApply">应用</s:String>
     <s:String x:Key="Str.ColorApplied">画面参数已应用，屏幕曲线读回一致。</s:String>
     <s:String x:Key="Str.ColorRestored">已还原屏幕原始曲线。</s:String>
@@ -1517,7 +1414,6 @@
     <s:String x:Key="Str.EqSceneVolume">音量增强</s:String>
     <s:String x:Key="Str.EqSceneLight">轻度处理</s:String>
     <s:String x:Key="Str.EqHzGain"> Hz 增益</s:String>
-    <s:String x:Key="Str.EqFirstUse">首次使用：安装 Equalizer APO → 在设备配置器勾选耳机或音箱 → 按提示重启 → 回到这里选择设备并应用。</s:String>
     <s:String x:Key="Str.EqFound">已找到 Equalizer APO。首次使用请在“配置输出设备”中勾选对应设备，按提示重启后试听。</s:String>
     <s:String x:Key="Str.EqChooseOutput">请先选择当前使用的耳机或音箱。</s:String>
     <s:String x:Key="Str.EqSaved">方案已保存在帧律；点击应用后写入音频引擎。</s:String>
@@ -1527,10 +1423,8 @@
     <s:String x:Key="Str.EqNoBackup">没有帧律音频改动需要移除。</s:String>
     <s:String x:Key="Str.EqPermission">音频引擎配置目录不可写，请以管理员身份启动帧律后应用；已保存的方案会保留。</s:String>
     <s:String x:Key="Str.ColorPanelTitle">画面与色彩</s:String>
-    <s:String x:Key="Str.ColorPanelHint">选滤镜 → 微调参数 → 应用；下方截图随调整实时变化。</s:String>
     <s:String x:Key="Str.ColorPreset">画面预设</s:String>
     <s:String x:Key="Str.ColorReset">参数归零</s:String>
-    <s:String x:Key="Str.ColorRestore">还原屏幕原值</s:String>
     <s:String x:Key="Str.EqTitle">声音均衡器</s:String>
     <s:String x:Key="Str.EqIntro">选择耳机或音箱，按频段调节音色。音频处理由 Equalizer APO 完成。</s:String>
     <s:String x:Key="Str.EqInstall">安装音频引擎</s:String>
@@ -1550,16 +1444,6 @@
     <s:String x:Key="Str.IccAdvanced">ICC 配置文件（高级）</s:String>
     <s:String x:Key="Str.VibranceNewBaselineHint">旧备份与当前数字振动状态不一致。点击“应用”会保留旧备份，并以当前值作为新的还原点。</s:String>
     <s:String x:Key="Str.VibranceNewBaselineSaved">已保留旧备份，“还原原始”将恢复本次应用前的值。</s:String>
-    <s:String x:Key="Str.CornerTitle">圆角</s:String>
-    <s:String x:Key="Str.CornerClassic">经典圆角（上版本）</s:String>
-    <s:String x:Key="Str.CornerLarge">大圆角（当前版本）</s:String>
-    <s:String x:Key="Str.CornerAdjustHint">也可以分别调节下面的圆角大小，实时生效并自动保存；0 为直角。</s:String>
-    <s:String x:Key="Str.CornerCards">卡片</s:String>
-    <s:String x:Key="Str.CornerControls">按钮、输入框与页签</s:String>
-    <s:String x:Key="Str.CornerNav">主导航</s:String>
-    <s:String x:Key="Str.CornerChips">徽标</s:String>
-    <s:String x:Key="Str.CornerSaved">圆角设置已保存。</s:String>
-    <s:String x:Key="Str.CornerSaveFailed">圆角已生效，但未能保存：{0}</s:String>
     <s:String x:Key="Str.ColorNewBaselineHint">屏幕曲线与旧备份不同。点击“应用画面参数”会保留旧备份，并以当前曲线作为新的还原点。</s:String>
     <s:String x:Key="Str.ColorNewBaselineSaved">旧备份已保留，“还原屏幕原值”将恢复本次应用前的画面。</s:String>
     <s:String x:Key="Str.IccNewBaselineHint">ICC 旧备份与当前关联不一致。手动应用会保留旧备份，并以当前关联建立新的还原点。</s:String>
@@ -1571,7 +1455,6 @@
     <s:String x:Key="Str.UpdatePreparingInstall">正在保护设置与备份，准备退出并安装…</s:String>
     <s:String x:Key="Str.UpdateDownloadIncomplete">下载未完成，请重试。</s:String>
     <s:String x:Key="Str.ColorPreviewTitle">截图对比</s:String>
-    <s:String x:Key="Str.ColorPreviewSourceHint">选择按游戏匹配的示例截图、Windows 截图里最新的一张，或载入自己的截图</s:String>
     <s:String x:Key="Str.ColorPreviewLoad">载入截图…</s:String>
     <s:String x:Key="Str.ColorPreviewSample">等待载入游戏截图</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">原图</s:String>
@@ -1583,10 +1466,8 @@
     <s:String x:Key="Str.ColorSelectIcc">请选择 ICC 预设或载入配置文件。</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">数字振动已应用：{0}%。</s:String>
     <s:String x:Key="Str.ColorWorkspaceFailed">此步骤未完成：{0}</s:String>
-    <s:String x:Key="Str.ColorMode">ICC 叠加方式</s:String>
     <s:String x:Key="Str.ColorScreenMode">仅调整画面参数</s:String>
     <s:String x:Key="Str.ColorIccMode">ICC + 画面参数</s:String>
-    <s:String x:Key="Str.ColorRestoreAll">还原本屏色彩改动</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">将“{0}”和已调整的数字振动一起应用到选定显示器，并保存原值。</s:String>
     <s:String x:Key="Str.ColorLiveTuning">实时调色</s:String>
     <s:String x:Key="Str.ColorApplyBarTitle">按当前调色参数应用</s:String>
@@ -1609,7 +1490,6 @@
     <s:String x:Key="Str.MemoryProcessChanged">应用已重启或目标已变化，请刷新后重选。</s:String>
     <s:String x:Key="Str.MemoryProcessReadFailed">已整理，但无法读取整理后占用：{0}</s:String>
     <s:String x:Key="Str.MemoryUsed">内存使用率</s:String>
-    <s:String x:Key="Str.MemoryCombinedMode">所选后台应用 + 全部待机缓存</s:String>
     <s:String x:Key="Str.MemoryBackgroundTitle">选择后台应用</s:String>
     <s:String x:Key="Str.MemoryBackgroundHint">勾选需要整理的后台应用。会收缩常驻内存，应用继续使用时可能重新载入；游戏、系统关键进程不列入。</s:String>
     <s:String x:Key="Str.MemoryTrimSelected">整理所选应用</s:String>
@@ -1657,8 +1537,6 @@
     <s:String x:Key="Str.ColorPreviewDelta">三角洲行动 · 示例截图</s:String>
     <s:String x:Key="Str.ColorPreviewValorant">无畏契约 · 示例截图</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">自选截图</s:String>
-    <s:String x:Key="Str.ColorIccLayer">ICC 色彩配置</s:String>
-    <s:String x:Key="Str.ColorParametersLayer">2 · 微调画面</s:String>
     <s:String x:Key="Str.ColorIccFile">从文件载入的 ICC</s:String>
     <s:String x:Key="Str.ColorPreviewDrag">拖动图中分界手柄对比；选中后也可用 ← / → 微调。</s:String>
     <s:String x:Key="Str.ColorChooseFilter">1 · 选择滤镜</s:String>
@@ -1833,10 +1711,8 @@
     <s:String x:Key="Str.HudRecording">正在记录：{0}</s:String>
     <s:String x:Key="Str.HudWaitingFrames">等待新帧样本…</s:String>
     <s:String x:Key="Str.HudWindow">最近 {0} 秒 · {1} 帧</s:String>
-    <s:String x:Key="Str.HudMemory">内存 {0} · 显存 {1}</s:String>
     <s:String x:Key="Str.HudRecoveryUnavailable">快捷键与托盘入口均不可用，暂不启用点击穿透。</s:String>
     <s:String x:Key="Str.HudThroughFailed">Windows 未能切换点击穿透，请重开悬浮窗。</s:String>
-    <s:String x:Key="Str.HudHint">可拖动、置顶或穿透；录制时显示近期 FPS 与 1% LOW。“找回悬浮窗”会在当前屏幕右上角重新显示并恢复点击。独占全屏游戏可能覆盖此窗口。</s:String>
     <s:String x:Key="Str.HudRestoreFailed">未能找回悬浮窗，请关闭后重新打开。</s:String>
     <s:String x:Key="Str.HudEntry">悬浮窗</s:String>
     <s:String x:Key="Str.HudOptionsDismiss">收起</s:String>
@@ -2034,30 +1910,14 @@
     <s:String x:Key="Str.AutoSessionAffinityOff">后台让路已还原（{0} 个进程，原因：{1}）</s:String>
     <s:String x:Key="Str.AutoSessionAffinityNoApps">后台应用清单为空</s:String>
     <s:String x:Key="Str.TabFilters">游戏滤镜</s:String>
-    <s:String x:Key="Str.FilterApply">应用滤镜</s:String>
     <s:String x:Key="Str.FilterOpenFolder">打开滤镜文件夹</s:String>
-    <s:String x:Key="Str.FilterFit">适用：{0}</s:String>
-    <s:String x:Key="Str.FilterAvoid">不适合：{0}</s:String>
-    <s:String x:Key="Str.FilterPickFirst">先在上方选择一个滤镜。</s:String>
-    <s:String x:Key="Str.FilterApplied">已应用「{0}」：{1}</s:String>
-    <s:String x:Key="Str.FilterRestored">已还原原始 ICC。</s:String>
-    <s:String x:Key="Str.FilterNothingRestored">没有找到可还原的备份。</s:String>
     <s:String x:Key="Str.FilterPresetMissing">找不到预设文件：{0}</s:String>
-    <s:String x:Key="Str.FilterEditorTitle">编辑 ICC（自定义滤镜）</s:String>
     <s:String x:Key="Str.FilterEditorGamma">伽马</s:String>
     <s:String x:Key="Str.FilterEditorBrightness">亮度偏移</s:String>
     <s:String x:Key="Str.FilterEditorSaturation">饱和度</s:String>
     <s:String x:Key="Str.FilterEditorHighlight">高光</s:String>
-    <s:String x:Key="Str.FilterEditorHighlightHint">负值压高光（去曝光），正值提亮白点；端点保持，不改变纯黑纯白。</s:String>
     <s:String x:Key="Str.FilterVibranceSuggested">这条滤镜配套数字振动 {0}%，点「应用」才会写入。</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalance">暗部平衡</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceTag">12 档幂律</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceGamma">等效 γ</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceGammaValue">γ {0}</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceBright">提亮 · γ1.40</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceNeutral">原样 · 45</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceDark">压暗 · γ0.30</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 为原样；往右提亮、往左压暗，调整后自动对齐档位。</s:String>
     <s:String x:Key="Str.FilterCategoryAll">全部</s:String>
     <s:String x:Key="Str.FilterCategorySoft">柔和护眼</s:String>
     <s:String x:Key="Str.FilterCategoryDeexpose">压暗去曝</s:String>
@@ -2071,47 +1931,23 @@
     <s:String x:Key="Str.FilterEditorSaved">自定义滤镜已保存：{0}</s:String>
     <s:String x:Key="Str.FilterAppsTitle">独立程序滤镜</s:String>
     <s:String x:Key="Str.FilterAppsHint">为每个游戏/程序绑定一个滤镜：它的窗口在前台时自动套用，离开后自动还原原 ICC。</s:String>
-    <s:String x:Key="Str.FilterWatcherToggle">前台自动切换</s:String>
     <s:String x:Key="Str.FilterWatcherActive">当前前台：{0} · 已应用 {1}</s:String>
     <s:String x:Key="Str.FilterWatcherIdle">守护未启用或前台没有命中规则。</s:String>
     <s:String x:Key="Str.FilterWatcherApplied">独立程序滤镜：{0} → {1}</s:String>
     <s:String x:Key="Str.FilterWatcherRestored">独立程序滤镜已还原（{0}）</s:String>
     <s:String x:Key="Str.FilterWatcherRestoreFailed">独立程序滤镜还原失败（{0}）</s:String>
     <s:String x:Key="Str.FilterWatcherFailed">独立程序滤镜守护异常：{0}</s:String>
-    <s:String x:Key="Str.FilterRuleProcess">进程主程序名，如 cs2.exe</s:String>
-    <s:String x:Key="Str.FilterRuleAdd">保存方案</s:String>
-    <s:String x:Key="Str.FilterRuleRemove">删除规则</s:String>
     <s:String x:Key="Str.FilterRuleNeedProcess">先填进程主程序名，并选中一个滤镜。</s:String>
-    <s:String x:Key="Str.FilterAppsRuleHint">可填主程序名或游戏本体完整路径；路径规则优先。可附加窗口标题，区分启动器与游戏本体；最多 64 条。</s:String>
     <s:String x:Key="Str.FilterWatcherNoMatch">前台未命中方案，等待进入或离开确认。</s:String>
     <s:String x:Key="Str.FilterWatcherDebouncing">已识别前台程序，正在确认后切换。</s:String>
     <s:String x:Key="Str.FilterWatcherSuppressed">全屏自动切换已开启，独立游戏方案暂停。</s:String>
     <s:String x:Key="Str.FilterWatcherReasonRetarget">切换游戏方案或显示器</s:String>
     <s:String x:Key="Str.FilterRuleNeedPreset">请为方案选择 ICC、画面参数或数字振动。</s:String>
-    <s:String x:Key="Str.FilterRulePresetLabel">绑定滤镜</s:String>
-    <s:String x:Key="Str.FilterRuleNoIcc">不绑定 ICC（只调数字振动）</s:String>
-    <s:String x:Key="Str.FilterRuleVibrance">数字振动（留空沿用预设）</s:String>
-    <s:String x:Key="Str.FilterRuleScreen">同时应用预设的画面参数（gamma）</s:String>
-    <s:String x:Key="Str.FilterRuleTitle">窗口标题包含（可选）</s:String>
-    <s:String x:Key="Str.FilterRuleTargetLabel">游戏或程序</s:String>
-    <s:String x:Key="Str.FilterRuleTargetHint">填进程名（如 cs2.exe）或完整 exe 路径；完整路径优先，可按标题区分启动器与本体。</s:String>
-    <s:String x:Key="Str.FilterRuleEnabled">启用这条方案</s:String>
-    <s:String x:Key="Str.FilterRuleBrowse">选择 exe</s:String>
-    <s:String x:Key="Str.FilterRuleSaved">已保存方案：{0}</s:String>
-    <s:String x:Key="Str.FilterRuleSummary">{0} · {1}</s:String>
-    <s:String x:Key="Str.FilterRuleDetails">目标：{0} · 数字振动：{1} · 画面参数：{2}</s:String>
-    <s:String x:Key="Str.FilterRuleOn">开</s:String>
-    <s:String x:Key="Str.FilterRuleOff">关</s:String>
-    <s:String x:Key="Str.FilterRuleVibranceDefault">跟随滤镜</s:String>
-    <s:String x:Key="Str.FilterRuleVibranceNone">不调整</s:String>
     <s:String x:Key="Str.FilterRuleExport">导出方案</s:String>
     <s:String x:Key="Str.FilterRuleImport">导入方案</s:String>
     <s:String x:Key="Str.FilterRuleTransferDone">方案已保存：{0} 条</s:String>
     <s:String x:Key="Str.FilterRuleTransferFailed">方案导入失败：{0}</s:String>
     <s:String x:Key="Str.FilterRuleRemoveName">删除方案：{0}</s:String>
-    <s:String x:Key="Str.FilterRuleDiagnosticsTitle">运行状态</s:String>
-    <s:String x:Key="Str.FilterRuleDiagnosticsFormat">{0} · 前台 {1} · 屏幕 {2} · 画面参数 {3} · 数字振动 {4}</s:String>
-    <s:String x:Key="Str.FilterRuleNotActive">未应用</s:String>
     <!-- 独立程序滤镜页（按 参考实现的信息结构：扫描/添加/开关 · 运行状态 · 规则行 · 全自动收录） -->
     <s:String x:Key="Str.FilterAppsScan">自动扫描</s:String>
     <s:String x:Key="Str.FilterAppsRescan">重新扫描</s:String>
@@ -2214,8 +2050,6 @@
     <s:String x:Key="Str.CrosshairGapLabel">中心空隙</s:String>
     <s:String x:Key="Str.CrosshairThicknessLabel">粗细</s:String>
     <s:String x:Key="Str.CrosshairOpacityLabel">不透明度</s:String>
-    <s:String x:Key="Str.CrosshairAdaptiveToggle">AW 战术据枪：按住右键自动隐藏</s:String>
-    <s:String x:Key="Str.CrosshairAdaptiveHint">开镜（按住右键）时自动隐藏，松开恢复；切回本应用窗口时暂时隐藏。</s:String>
     <s:String x:Key="Str.CrosshairPreviewTitle">准星预览</s:String>
     <s:String x:Key="Str.CrosshairPreviewHint">这里显示当前颜色、样式和透明度的实际效果。游戏里看不到准星时先切回游戏窗口——本程序在前台会临时隐藏它。</s:String>
     <s:String x:Key="Str.DeltaFixTab">掉帧修复</s:String>
@@ -2284,7 +2118,6 @@
     <s:String x:Key="Str.FullscreenFailed">全屏方案应用失败：{0}</s:String>
     <s:String x:Key="Str.FullscreenStartupRestored">上次退出时全屏方案未还原，已自动还原</s:String>
     <s:String x:Key="Str.FullscreenStartupRestoreFailed">上次退出时全屏方案未还原，自动还原失败：{0}</s:String>
-    <s:String x:Key="Str.SavedName">Saved</s:String>
     <s:String x:Key="Str.AutoSessionHint">开局准备使用各游戏已保存的方案，未配置或需要管理员时跳过并记录；刷新率与后台让路在游戏全部退出后自动还原；后台让路按维护页“后台应用整理”里挑选的应用清单生效。</s:String>
     <s:String x:Key="Str.AutoSessionAuditFailed">游戏自动化状态更新失败：{0}</s:String>
     <s:String x:Key="Str.AutoSessionPrepDone">已为「{0}」自动执行开局准备（{1}/{2} 步成功）</s:String>
@@ -2455,10 +2288,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptDoneTitle">执行结果</s:String>
     <s:String x:Key="Str.QuickOptBackupHint">写入前已自动备份；到「系统优化 → 备份日志」可逐项还原。</s:String>
     <s:String x:Key="Str.QuickOptSummaryFmt">{0} 项成功、{1} 项失败、{2} 项跳过</s:String>
-    <s:String x:Key="Str.QuickOptFilterDoneFmt">滤镜「{0}」已应用</s:String>
-    <s:String x:Key="Str.QuickOptFilterFailFmt">滤镜「{0}」应用失败</s:String>
-    <s:String x:Key="Str.QuickOptPowerDone">电源计划已切到最高性能优先</s:String>
-    <s:String x:Key="Str.QuickOptPowerFail">电源计划切换失败</s:String>
     <s:String x:Key="Str.QuickOptNeedAdmin">所选方案包含需要管理员的优化项，请以管理员身份运行后重试。</s:String>
     <!-- 首页大卡与入口区 -->
     <s:String x:Key="Str.HomeQuickCardTitle">一键优化</s:String>
@@ -2577,22 +2406,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TuningCopyCommand">复制命令</s:String>
     <s:String x:Key="Str.TuningCommandCopied">命令已复制，在 CS2 控制台粘贴执行。</s:String>
     <s:String x:Key="Str.TuningPending">方案尚未应用，请审阅后应用。</s:String>
-    <s:String x:Key="Str.HomeOptimize">优化设置</s:String>
-    <s:String x:Key="Str.HomeEditPreparation">调整准备方案</s:String>
-    <s:String x:Key="Str.HomeDisplayHint">分辨率、刷新率与画面</s:String>
-    <s:String x:Key="Str.HomeRecordHint">记录表现，对比前后变化</s:String>
-    <s:String x:Key="Str.HomeHudHint">游戏时查看性能数据</s:String>
-    <s:String x:Key="Str.HomeMoreTools">更多工具</s:String>
-    <s:String x:Key="Str.HomeReadyPending">先检查优化设置，或按保存的方案准备开局。</s:String>
-    <s:String x:Key="Str.HomeReady">按保存的方案准备开局，也可以记录一局查看表现。</s:String>
-    <s:String x:Key="Str.OptSystemTab">系统设置</s:String>
     <s:String x:Key="Str.OptDriverTab">同步与限帧</s:String>
-    <s:String x:Key="Str.OptShowAdvanced">显示高级项目</s:String>
-    <s:String x:Key="Str.OptMoreFilters">更多筛选</s:String>
-    <s:String x:Key="Str.OptGameTools">游戏相关工具</s:String>
-    <s:String x:Key="Str.OptGameToolsHint">三角洲、无畏契约和 CS2 可查看保存的游戏配置、比较变化并带入性能记录。</s:String>
-    <s:String x:Key="Str.OptGameConfig">游戏配置与对比</s:String>
-    <s:String x:Key="Str.PrepareMoreOptions">保存范围与更多选项</s:String>
     <s:String x:Key="Str.DriverChooseAction">请选择同步方案，或勾选要调整的帧率、电源选项。</s:String>
     <s:String x:Key="Str.DriverKeepSyncHint">只调整勾选的项目；同步设置沿用当前值。</s:String>
     <s:String x:Key="Str.DriverMoreOptions">更多显卡设置</s:String>
@@ -2872,7 +2686,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <!-- ── 参考实现对齐：电源细项 ─────────────────────────────────────── -->
     <s:String x:Key="Str.PowerDetailsTitle">电源细项</s:String>
     <s:String x:Key="Str.PowerDetailsOpen">打开电源细项</s:String>
-    <s:String x:Key="Str.PowerDetailsHint">查看当前电源方案的设置，可分别调整接通电源和使用电池时的取值。</s:String>
     <s:String x:Key="Str.PowerDetailsSearch">搜索名称、说明或 GUID</s:String>
     <s:String x:Key="Str.PowerDetailsFilterAll">全部</s:String>
     <s:String x:Key="Str.PowerDetailsFilterChanged">与默认值不同</s:String>
@@ -2884,7 +2697,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsRetry">重新读取</s:String>
     <s:String x:Key="Str.PowerDetailsRescan">重新扫描</s:String>
     <s:String x:Key="Str.PowerDetailsReading">正在读取全部电源设置…</s:String>
-    <s:String x:Key="Str.PowerDetailsReadingHint">包括系统隐藏的设置，通常一两秒。</s:String>
     <s:String x:Key="Str.PowerDetailsNoMatch">没有符合条件的设置。</s:String>
     <s:String x:Key="Str.PowerDetailsNoneChanged">当前方案里没有和默认值不同的设置。</s:String>
     <s:String x:Key="Str.PowerDetailsNoneHidden">没有被隐藏的设置。</s:String>
@@ -2902,7 +2714,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsRevealDenied">有 {0} 项没能解锁，需要管理员权限。</s:String>
     <s:String x:Key="Str.PowerDetailsRange">可填 {0}–{1}，每次增减 {2}</s:String>
     <s:String x:Key="Str.PowerDetailsPossible">从 {0} 个选项里选一个</s:String>
-    <s:String x:Key="Str.PowerDetailsSystemDefault">默认：{0}</s:String>
     <s:String x:Key="Str.PowerDetailsNoDefault">系统没有提供默认值</s:String>
     <s:String x:Key="Str.PowerDetailsInvalidNumber">请输入整数。</s:String>
     <s:String x:Key="Str.PowerDetailsOutOfRange">超出范围，{0}</s:String>
@@ -2930,7 +2741,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsCopy">复制</s:String>
     <s:String x:Key="Str.PowerDetailsCopied">已复制。</s:String>
     <s:String x:Key="Str.PowerDetailsPlanLabel">当前方案「{0}」</s:String>
-    <s:String x:Key="Str.PowerDetailsNeedActive">面板改的是当前活动方案；切换方案后数值会跟着变。</s:String>
     <s:String x:Key="Str.PowerDetailsRevealNeedsAdmin">解锁隐藏项要写系统级注册表，需要以管理员身份运行。</s:String>
     <!-- ── 参考实现对齐：键鼠缓冲区 / 服务检查 / 键鼠反馈 ───────────────── -->
     <s:String x:Key="Str.InputQueueTitle">键鼠缓冲区深度</s:String>
@@ -3260,15 +3070,10 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.ComparisonIntro">先测当前表现，应用所选项目后再测一次，用同一把尺子告诉你值不值。</s:String>
     <s:String x:Key="Str.ComparisonStart">对照一下</s:String>
     <s:String x:Key="Str.ComparisonStageBefore">改前采样</s:String>
-    <s:String x:Key="Str.ComparisonStageBeforeStatus">正在采集改前表现（60 秒），期间保持游戏画面在前台。</s:String>
     <s:String x:Key="Str.ComparisonStageApply">应用改动</s:String>
-    <s:String x:Key="Str.ComparisonStageApplyStatus">等你在审阅窗确认后写入所选项目。</s:String>
     <s:String x:Key="Str.ComparisonStageCooldown">冷却</s:String>
-    <s:String x:Key="Str.ComparisonStageCooldownStatus">等改动生效、帧率回落稳态（10 秒）。</s:String>
     <s:String x:Key="Str.ComparisonStageAfter">改后采样</s:String>
-    <s:String x:Key="Str.ComparisonStageAfterStatus">正在采集改动后的表现（60 秒），保持同样的地图与画质。</s:String>
     <s:String x:Key="Str.ComparisonStageVerdict">出结论</s:String>
-    <s:String x:Key="Str.ComparisonStageVerdictStatus">正在对比两次采样，计算增益与置信区间。</s:String>
     <s:String x:Key="Str.ComparisonVerdictKeep">值得保留</s:String>
     <s:String x:Key="Str.ComparisonVerdictRollback">建议回滚</s:String>
     <s:String x:Key="Str.ComparisonVerdictInsufficient">证据不足</s:String>
@@ -3289,7 +3094,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.ComparisonCancelled">对照已取消。</s:String>
     <s:String x:Key="Str.ComparisonFailed">对照没有完成：{0}</s:String>
     <s:String x:Key="Str.ComparisonReviewCancelled">对照在审阅确认一步被取消，没有写入任何改动。</s:String>
-    <s:String x:Key="Str.ComparisonBusy">已有一次对照在进行。</s:String>
     <s:String x:Key="Str.GainArchiveTitle">收益档案</s:String>
     <s:String x:Key="Str.GainArchiveEmpty">这个游戏还没有对照记录；在「优化」页选好项目点「对照一下」，结论就会记到这里。</s:String>
     <s:String x:Key="Str.GainArchiveSummary">{0} 次对照 · 最佳确认收益 {1} · 最近一次 {2}</s:String>

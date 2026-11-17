@@ -4,7 +4,7 @@ using Xunit;
 
 namespace FpsTune.Wpf.Tests;
 
-public sealed class BulkCounterTests
+public sealed class GpuCounterMathTests
 {
     private static CounterSample Sample(long raw, long time)
         => new(raw, 0, 10_000_000, 10_000_000, time, time, PerformanceCounterType.Timer100Ns);

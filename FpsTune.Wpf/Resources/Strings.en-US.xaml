@@ -17,7 +17,6 @@
     <s:String x:Key="Str.FilterModeScreen">Current screen</s:String>
     <s:String x:Key="Str.FilterModePerApp">Per-app filters</s:String>
     <s:String x:Key="Str.FilterPickerTitle">Choose a filter</s:String>
-    <s:String x:Key="Str.FilterPickerHint">Picking a filter previews it on the left screenshot; Apply all writes it to the screen.</s:String>
     <s:String x:Key="Str.FilterEditorSection">Create a custom filter</s:String>
     <s:String x:Key="Str.FilterApplyAll">Apply all</s:String>
     <s:String x:Key="Str.FilterRestoreAll">Restore original</s:String>
@@ -26,14 +25,7 @@
     <s:String x:Key="Str.FilterPerAppPreviewHint">Selected app</s:String>
     <s:String x:Key="Str.ColorPreviewRecent">Newest Windows screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewRecentEmpty">No PNG or JPG in the Windows screenshots folders yet. Press Win + PrtSc, or use Load image.</s:String>
-    <s:String x:Key="Str.FilterRuleListTitle">App plans</s:String>
-    <s:String x:Key="Str.FilterRuleNew">New plan</s:String>
-    <s:String x:Key="Str.FilterRuleEmpty">No per-app plan yet. Choose a filter and app, then save; it applies when that app comes to the foreground.</s:String>
-    <s:String x:Key="Str.FilterRuleActive">Active</s:String>
-    <s:String x:Key="Str.FilterRuleEditing">Editing: {0}</s:String>
-    <s:String x:Key="Str.FilterRuleSaveChanges">Save changes</s:String>
     <s:String x:Key="Str.FilterRuleVibranceOnly">Vibrance only</s:String>
-    <s:String x:Key="Str.FilterRuleTitleShort">title contains {0}</s:String>
     <s:String x:Key="Str.FilterRuleRemoveTitle">Delete app plan</s:String>
     <s:String x:Key="Str.FilterRuleRemoveConfirm">Delete the per-app plan for {0}?</s:String>
     <s:String x:Key="Str.QuickOptResolutionLabel">Resolution (optional)</s:String>
@@ -53,7 +45,6 @@
     <s:String x:Key="Str.SensEdpiFormat">eDPI {0}</s:String>
     <s:String x:Key="Str.SensEquivalentFormat">For {0}: sensitivity {1}</s:String>
     <s:String x:Key="Str.SensInvalid">Enter a DPI and a sensitivity greater than 0.</s:String>
-    <s:String x:Key="Str.FilterRuleGenerated">This is a built-in generated filter and cannot be bound to an app; pick an .icc preset instead.</s:String>
     <s:String x:Key="Str.CommandAliasFilters">filter ICC color per-app game filter</s:String>    <s:String x:Key="Str.NavSession">Sessions</s:String>
     <s:String x:Key="Str.NavAb">A/B Test</s:String>
     <s:String x:Key="Str.NavBackup">Backup / Logs</s:String>
@@ -65,7 +56,6 @@
     <s:String x:Key="Str.Maximize">Maximize or restore</s:String>
     <s:String x:Key="Str.Close">Close</s:String>
     <s:String x:Key="Str.NormalUser">Standard user</s:String>
-    <s:String x:Key="Str.AdminUser">Administrator</s:String>
 
     <!-- Settings -->
     <s:String x:Key="Str.SettingsAppearance">Appearance</s:String>
@@ -87,12 +77,9 @@
     <s:String x:Key="Str.PresetSafe">保守</s:String>
     <s:String x:Key="Str.PresetFull">All items</s:String>
     <s:String x:Key="Str.PresetCustom">Custom</s:String>
-    <s:String x:Key="Str.ApplySelected">Apply selected →</s:String>
     <s:String x:Key="Str.RestoreAll">Restore all</s:String>
     <s:String x:Key="Str.OneClick">One-click optimize</s:String>
     <s:String x:Key="Str.OneClickTip">应用当前推荐的系统设置，保留原值备份；显卡同步与限帧单独选择。</s:String>
-    <s:String x:Key="Str.NotConfirmed">Not confirmed</s:String>
-    <s:String x:Key="Str.PleaseConsent">Please check the consent box first.</s:String>
 
     <!-- Display & quality -->
     <s:String x:Key="Str.DisplayTitle">Display &amp; Quality</s:String>
@@ -124,7 +111,6 @@
     <!-- Common -->
     <s:String x:Key="Str.Ok">OK</s:String>
     <s:String x:Key="Str.Cancel">Cancel</s:String>
-    <s:String x:Key="Str.Detect">Detect</s:String>
     <s:String x:Key="Str.LocateGame">Locate game</s:String>
 
     <!-- Detect / Optimize pages (converted 2026-09-25) -->
@@ -143,7 +129,6 @@
     <s:String x:Key="Str.LiveMonitor">Live monitoring</s:String>
     <s:String x:Key="Str.CurrentGame">Current game</s:String>
     <s:String x:Key="Str.VramDedicated">VRAM usage (dedicated)</s:String>
-    <s:String x:Key="Str.VramUsage">VRAM usage</s:String>
     <s:String x:Key="Str.DetectDetails">Detection details</s:String>
     <s:String x:Key="Str.SampleEverySecond">按当前采样间隔更新</s:String>
     <s:String x:Key="Str.GamePath">Game path</s:String>
@@ -162,11 +147,9 @@
     <s:String x:Key="Str.PendingZero">0 items pending</s:String>
     <s:String x:Key="Str.ConsentText">I understand what the selected items do and their side effects, and I agree to proceed</s:String>
     <s:String x:Key="Str.SearchItems">Search name or description</s:String>
-    <s:String x:Key="Str.ProfileName">Profile name</s:String>
     <s:String x:Key="Str.NoMatchingItems">No items match. Adjust the search or category.</s:String>
     <s:String x:Key="Str.Admin">Administrator</s:String>
     <s:String x:Key="Str.OptimizeTitle">优化设置</s:String>
-    <s:String x:Key="Str.ProfileHint">Type a name to save the current selection; load applies it by name; export/import is for sharing</s:String>
     <s:String x:Key="Str.NeedsReboot">Restart required</s:String>
     <s:String x:Key="Str.ItemDetailTitle">Item details / run log</s:String>
     <s:String x:Key="Str.TipFull">Includes service and power settings — review the side effects</s:String>
@@ -175,7 +158,6 @@
     <s:String x:Key="Str.SideEffectLabel">Side effect: </s:String>
 
     <!-- Detect / Optimize pages (converted 2026-09-25) -->
-    <s:String x:Key="Str.NoteLabel">Note: </s:String>
     <s:String x:Key="Str.VersionLabel">Version: v</s:String>
 
     <!-- Full UI text (converted 2026-09-25) -->
@@ -209,14 +191,11 @@
     <s:String x:Key="Str.MatchPrep">Match prep</s:String>
     <s:String x:Key="Str.ConsoleIntro">Locate the game, review the basic settings, then record one match's load.</s:String>
     <s:String x:Key="Str.BasicAdvice">Basic advice</s:String>
-    <s:String x:Key="Str.TipBasicAdvice">检查游戏模式、后台录制和游戏显卡偏好</s:String>
     <s:String x:Key="Str.FirstRunAdviceIntro">Start with a check-up, then review these {0} suggestions.</s:String>
-    <s:String x:Key="Str.TipBasicAdviceFirst">首次使用先完成系统体检，再进入优化页选择方案</s:String>
     <s:String x:Key="Str.RecordMatch">Record a match</s:String>
     <s:String x:Key="Str.TipRecordMatch">Records CPU, GPU and memory load, plus FPS when the game is running and PresentMon is available</s:String>
     <s:String x:Key="Str.BackupRestore">Backup / restore</s:String>
     <s:String x:Key="Str.ItemsOptimized">已达标项目</s:String>
-    <s:String x:Key="Str.ChoosePlan">Choose plan</s:String>
     <s:String x:Key="Str.PlanBalanced">Balanced</s:String>
     <s:String x:Key="Str.PlanSafe">Conservative</s:String>
     <s:String x:Key="Str.PlanCompetitive">Competitive</s:String>
@@ -228,21 +207,7 @@
     <s:String x:Key="Str.QuickOptPlanPreviewExtras">Also applies: {0}</s:String>
     <s:String x:Key="Str.QuickOptPlanExtraPower">Power plan → best performance</s:String>
     <s:String x:Key="Str.QuickOptPlanPreviewNone">No extras selected (power plan / resolution / DLSS / filters).</s:String>
-    <s:String x:Key="Str.TipSearchItems">Search optimization items by name</s:String>
     <s:String x:Key="Str.SearchItemsShort">Search items</s:String>
-    <s:String x:Key="Str.Redetect">Re-detect</s:String>
-    <s:String x:Key="Str.AdminRequired">Admin required</s:String>
-    <s:String x:Key="Str.TipSelectItem">Select this item, then review before applying</s:String>
-    <s:String x:Key="Str.PreparingItems">Preparing items…</s:String>
-    <s:String x:Key="Str.ToggleHint">选择项目后，点击“审阅并应用”。</s:String>
-    <s:String x:Key="Str.ReviewAndApply">Review and apply →</s:String>
-    <s:String x:Key="Str.HomeTitle">System-level frame rate console</s:String>
-    <s:String x:Key="Str.StartDetect">Start detection →</s:String>
-    <s:String x:Key="Str.HomeDetectDesc">查看硬件信息、游戏路径与优化项状态</s:String>
-    <s:String x:Key="Str.HomeOptDesc">Presets and per-item toggles, system-level tuning, one-click restore</s:String>
-    <s:String x:Key="Str.HomeSessionDesc">Samples CPU / memory / GPU / VRAM locally and builds summaries, insights and comparisons</s:String>
-    <s:String x:Key="Str.HomeAbDesc">Baseline capture, candidate group comparison, keep-or-restore decisions</s:String>
-    <s:String x:Key="Str.HomeBackupDesc">Backup files, restore all, logs and JSON output</s:String>
     <s:String x:Key="Str.SessionIntro">记录游戏时的 CPU、内存、GPU 与显存变化，保存后比较帧率和流畅度。</s:String>
     <s:String x:Key="Str.SamplingControl">Sampling control</s:String>
     <s:String x:Key="Str.StartSession">开始记录</s:String>
@@ -270,13 +235,6 @@
     <s:String x:Key="Str.ThemeLightDesc">Bright paper · easy reading</s:String>
     <s:String x:Key="Str.ThemeSystemShort">Follow system</s:String>
     <s:String x:Key="Str.ThemeSystemDesc">Follows the Windows appearance automatically</s:String>
-    <s:String x:Key="Str.LowSpecMode">Low-spec mode (fewer animations, live sampling every 3 s)</s:String>
-    <s:String x:Key="Str.SectionStartup">Startup</s:String>
-    <s:String x:Key="Str.AutoStart">Run FPS Tune automatically after signing in to Windows (current user)</s:String>
-    <s:String x:Key="Str.SectionTray">Tray and notifications</s:String>
-    <s:String x:Key="Str.MinimizeToTray">Minimize to the system tray (keeps it out of the taskbar; double-click the tray icon to bring it back)</s:String>
-    <s:String x:Key="Str.GlobalHotkey">Global hotkey Ctrl + Alt + F shows the main window</s:String>
-    <s:String x:Key="Str.NotifyOnComplete">Show a tray notification when optimization or an experiment finishes</s:String>
     <s:String x:Key="Str.SectionGame">Game</s:String>
     <s:String x:Key="Str.GamePathDesc">Point at a game EXE to drive the three per-game optimizations (fullscreen optimization, GPU preference, process priority). Leave it empty to auto-detect popular FPS titles.</s:String>
     <s:String x:Key="Str.Browse">Browse…</s:String>
@@ -357,7 +315,6 @@
     <s:String x:Key="Str.FilterSchemeExport">Export</s:String>
     <s:String x:Key="Str.FilterSchemeImport">Import</s:String>
     <s:String x:Key="Str.FilterSchemeTransferDone">Scheme library updated: {0} schemes</s:String>
-    <s:String x:Key="Str.FilterSchemeTransferFailed">Importing schemes failed: {0}</s:String>
     <s:String x:Key="Str.DlssOverrideNote">Override preset (applies to the currently located game; this override wins over an in-game upscaling choice)</s:String>
     <s:String x:Key="Str.PresetK">K preset (recommended)</s:String>
     <s:String x:Key="Str.PresetKDesc">New-generation model · widely used, stable</s:String>
@@ -371,13 +328,11 @@
     <s:String x:Key="Str.PresetEDesc">Previous-generation CNN model · retro image quality</s:String>
     <s:String x:Key="Str.DlssNote">Choose a preset and apply it. Follow in-game restores the DLSS settings saved before FpsTune changed them.</s:String>
     <s:String x:Key="Str.VibNote">Saturation / digital vibrance (NVIDIA)</s:String>
-    <s:String x:Key="Str.VibNote2">Digital vibrance is applied together with the selected color mode.</s:String>
     <s:String x:Key="Str.VibStateReadFailed">Could not read digital vibrance state: {0}</s:String>
     <s:String x:Key="Str.VibStateCurrentRestorable">Current {0}% (original level saved, restorable; driver default about {1}%)</s:String>
     <s:String x:Key="Str.VibStateCurrent">Current {0}% (driver default about {1}%)</s:String>
     <s:String x:Key="Str.IccStateReadFailed">Could not read ICC state: {0}</s:String>
     <s:String x:Key="Str.VibRecommendedSet">Try 58%</s:String>
-    <s:String x:Key="Str.VibRecommendedNote">Try the recommended level, then apply color settings.</s:String>
     <s:String x:Key="Str.TipVibRecommended">58% is a starting point for a subtle color boost. Adjust to taste.</s:String>
     <s:String x:Key="Str.IccPresetLabel">Select a preset above or load a profile file.</s:String>
     <s:String x:Key="Str.IccVivid">Vivid FPS</s:String>
@@ -448,22 +403,16 @@
     <s:String x:Key="Str.Start">Start</s:String>
     <s:String x:Key="Str.Run">Run</s:String>
     <s:String x:Key="Str.Running">Running</s:String>
-    <s:String x:Key="Str.CurrentlyActive">Currently active: </s:String>
     <s:String x:Key="Str.SideEffect">Side effect</s:String>
     <s:String x:Key="Str.Description">Description</s:String>
     <s:String x:Key="Str.Requirement">Requirement</s:String>
     <s:String x:Key="Str.Baseline">Baseline</s:String>
     <s:String x:Key="Str.Comparison">Comparison</s:String>
-    <s:String x:Key="Str.CandidateVerdict">Candidate group verdict</s:String>
     <s:String x:Key="Str.SummaryLabel">Summary: </s:String>
-    <s:String x:Key="Str.Email">Email</s:String>
-    <s:String x:Key="Str.WeChat">WeChat</s:String>
     <s:String x:Key="Str.WeChatIdLabel">WeChat ID: </s:String>
     <s:String x:Key="Str.WeChatIdCopied">WeChat ID copied.</s:String>
-    <s:String x:Key="Str.ClickToSeeQr">Click to see the QR code</s:String>
     <s:String x:Key="Str.StartSampling">Start sampling</s:String>
     <s:String x:Key="Str.Resample">Sample again</s:String>
-    <s:String x:Key="Str.Rerun">Run again</s:String>
     <s:String x:Key="Str.GenerateReport">Generate report</s:String>
     <s:String x:Key="Str.ExportProfile">Export profile</s:String>
     <s:String x:Key="Str.ImportProfile">Import profile</s:String>
@@ -499,7 +448,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.Unavailable">Unavailable</s:String>
     <s:String x:Key="Str.StatusPending">Pending</s:String>
     <s:String x:Key="Str.StatusNotDetected">Not detected</s:String>
-    <s:String x:Key="Str.StatusToSet">To be set</s:String>
     <s:String x:Key="Str.StatusToRun">To run</s:String>
     <s:String x:Key="Str.Locked">Locked</s:String>
     <s:String x:Key="Str.NotRestored">Not restored</s:String>
@@ -512,7 +460,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SpecifiedClickToSave">Specified (click elsewhere to save)</s:String>
     <s:String x:Key="Str.SpecifiedMissing">Specified, but the file does not exist</s:String>
     <s:String x:Key="Str.InvalidPathNotExe">Invalid path or not an .exe; nothing saved</s:String>
-    <s:String x:Key="Str.NoDetectResult">No detection result yet</s:String>
     <s:String x:Key="Str.NoGameSelected">No game selected</s:String>
     <s:String x:Key="Str.GameLocateIncomplete">Game location incomplete</s:String>
     <s:String x:Key="Str.NoInstalledGame">No installed game detected</s:String>
@@ -538,14 +485,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.Executing">Running…</s:String>
     <s:String x:Key="Str.Writing">Writing…</s:String>
     <s:String x:Key="Str.CheckingUpdate">Checking for updates…</s:String>
-    <s:String x:Key="Str.DownloadingManifest">Downloading SHA256 manifest…</s:String>
     <s:String x:Key="Str.RunningOneClick">Running one-click optimization…</s:String>
     <s:String x:Key="Str.WritingEsports">Writing the esports preset…</s:String>
     <s:String x:Key="Str.WritingDrs">Writing driver settings…</s:String>
-    <s:String x:Key="Str.GeneratingRecord">Generating the record…</s:String>
     <s:String x:Key="Str.LoadingRestorables">Loading restorable items…</s:String>
     <s:String x:Key="Str.LoadingMetrics">Loading metrics…</s:String>
-    <s:String x:Key="Str.DetectingBackground">Detecting in the background; you can still switch pages…</s:String>
     <s:String x:Key="Str.ScanningGamesBackground">Scanning games and profiles in the background…</s:String>
     <s:String x:Key="Str.LocatingAndDetecting">Locating the game and refreshing detection…</s:String>
     <s:String x:Key="Str.LiveLocalSampling">Live local sampling</s:String>
@@ -560,7 +504,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AppNameAb">FPS Tune · A/B experiment</s:String>
     <s:String x:Key="Str.AppNameDone">FPS Tune · finished</s:String>
     <s:String x:Key="Str.AbReportTitle">FPS Tune · A/B experiment report</s:String>
-    <s:String x:Key="Str.VibranceGlobalNote">The change is system-wide: the whole desktop (browser, video, games) looks different.</s:String>
     <s:String x:Key="Str.ConfirmClearActivity">Clear the whole auto-profile activity log?</s:String>
     <s:String x:Key="Str.ConfirmRestoreAll">Restore every backed-up item?</s:String>
     <s:String x:Key="Str.ConfirmCancelSession">Cancel the current session? Collected data will be discarded.</s:String>
@@ -571,7 +514,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.SelectProfileFirst">Pick a saved profile first.</s:String>
     <s:String x:Key="Str.SelectScannedGameFirst">Pick a scanned game candidate first.</s:String>
     <s:String x:Key="Str.SelectAtLeastOneItem">Select at least one optimization item.</s:String>
-    <s:String x:Key="Str.FillSceneQuality">Fill in scene, quality and settings.</s:String>
     <s:String x:Key="Str.NoItemsSelected">No optimization items are selected.</s:String>
     <s:String x:Key="Str.NoGamePathToCopy">There is no game path to copy yet. Run detection first.</s:String>
     <s:String x:Key="Str.NoRestorableBackups">There are no backups to restore.</s:String>
@@ -585,8 +527,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MustPickGameExe">Pick the game's own executable, not a launcher or installer.</s:String>
     <s:String x:Key="Str.PickGameExeHint">Pick the game executable (not a launcher; it usually ends with -Win64-Shipping or lives in a Binaries folder)</s:String>
     <s:String x:Key="Str.CannotDeriveProcessName">Could not derive a process name from the candidate path; nothing added.</s:String>
-    <s:String x:Key="Str.GamePathSaveFailed">The game path could not be saved. Check permissions on the local settings folder.</s:String>
-    <s:String x:Key="Str.LocateGameMainFirstThenReturn">The game executable has not been located yet. Locate it on the Detect page, then come back to set this up.</s:String>
     <s:String x:Key="Str.AbReadySimulate">Ready. Start with the baseline capture in step 1; -Simulate lets you rehearse the whole flow safely without a game.</s:String>
     <s:String x:Key="Str.AbBaselineHint">Takes three samples and computes the mean and stability (CV). Re-running overwrites the current baseline.</s:String>
     <s:String x:Key="Str.AbCandidateHint">Apply a candidate group → sample → automatically decide keep / revert.</s:String>
@@ -600,9 +540,7 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.BasicsOk">Basic settings are in good shape · record one match's load to keep a before/after comparison.</s:String>
     <s:String x:Key="Str.ItemDetailHint">Click an item to see its current state and side effects. Confirm and apply at the bottom; the result shows here too.</s:String>
     <s:String x:Key="Str.ToggleHint2">选择要应用的项目；手动调整后使用自定义方案。</s:String>
-    <s:String x:Key="Str.CustomSelection">Custom selection</s:String>
     <s:String x:Key="Str.DetectDoneHint">Detection is complete. Pick a preset on the left or tick the items you want, then confirm and click Apply.</s:String>
-    <s:String x:Key="Str.DetectUpdatedHint">检测已更新。请选择要调整的项目。</s:String>
     <s:String x:Key="Str.DetectIncomplete">Detection did not finish. Check the error on the Detect page and try again.</s:String>
     <s:String x:Key="Str.DetectIncompleteRetry">Detection did not finish. Run it again or open the Detect page to see why.</s:String>
     <s:String x:Key="Str.NoItemsRunDetect">No items yet. Run detection on the Detect page first.</s:String>
@@ -620,7 +558,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.OperationFailed">Failed</s:String>
     <s:String x:Key="Str.CancelFailed">Cancel failed</s:String>
     <s:String x:Key="Str.ProfileLoaded">Profile loaded</s:String>
-    <s:String x:Key="Str.VerifyOkInstalling">Verification passed; starting the installer…</s:String>
     <s:String x:Key="Str.NotOverriddenInGame">Not overridden (following the in-game setting).</s:String>
     <s:String x:Key="Str.NotOverriddenDriver">Not overridden (following the driver / game default). Pick a value, then click Apply 3D settings.</s:String>
     <s:String x:Key="Str.IccOriginalSaved">Your original colour configuration is recorded and can be restored in one click.</s:String>
@@ -643,20 +580,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.DrsDisabled">Driver settings are disabled (FPS_ENABLE_DLSS=0).</s:String>
     <s:String x:Key="Str.IccUnavailable">The ICC filter is unavailable in this environment.</s:String>
     <s:String x:Key="Str.VibranceUnavailable">Digital vibrance is unavailable in this environment.</s:String>
-    <s:String x:Key="Str.ApplyFailedNeedAdmin">Apply failed: writing the NVIDIA configuration needs administrator rights.</s:String>
-    <s:String x:Key="Str.ApplyFailedNeedAdminUnchanged">Apply failed: writing the NVIDIA configuration needs administrator rights. No system setting was changed.</s:String>
-    <s:String x:Key="Str.RestoreFailedNeedAdmin">Restore failed: writing the NVIDIA configuration needs administrator rights.</s:String>
-    <s:String x:Key="Str.WriteDrsNeedAdmin">Writing the NVIDIA driver configuration needs administrator rights, and this program is not running as administrator.</s:String>
-    <s:String x:Key="Str.SelectedNeedsAdmin">The selection includes items that need administrator rights, and this program is not running as administrator.</s:String>
     <s:String x:Key="Str.OneClickNeedsAdmin">推荐项目中包含需要管理员权限的设置。
 
 {0}</s:String>
-    <s:String x:Key="Str.SwitchToSafeOnly">If you only want items that need no administrator rights, switch to the safe-only preset.</s:String>
-    <s:String x:Key="Str.RestoreDrsNeedAdmin">Restoring the NVIDIA driver configuration needs administrator rights.</s:String>
     <s:String x:Key="Str.ConfirmRestartAdmin">Restart as administrator and continue?</s:String>
     <s:String x:Key="Str.ConfirmRestartAdminRetry">Restart as administrator and try again?</s:String>
-    <s:String x:Key="Str.ConfirmRestartAdminApply">Restart as administrator and continue applying?</s:String>
-    <s:String x:Key="Str.ConfirmUpdate">Download and install silently now? The app closes and finishes the upgrade automatically.</s:String>
     <s:String x:Key="Str.UpdateUnreachable">Could not reach the update service (GitHub may be temporarily unavailable). Try again later.</s:String>
     <s:String x:Key="Str.CannotStartInstaller">Could not start the installer</s:String>
     <s:String x:Key="Str.CannotOpenLink">Could not open the link.</s:String>
@@ -719,7 +647,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ManualUnknownBody">Could not identify the GPU vendor. Open your GPU's own control panel to see what's adjustable; for on-screen look, the "ICC filter" card on this page is a vendor-neutral fallback.</s:String>
 
     <!-- Splash screen -->
-    <s:String x:Key="Str.SplashLoading">Loading…</s:String>
     <s:String x:Key="Str.SplashPhasePrepare">Preparing…</s:String>
     <s:String x:Key="Str.SplashPhaseRestore">Restoring local state…</s:String>
     <s:String x:Key="Str.SplashPhaseBuild">Building interface…</s:String>
@@ -763,14 +690,10 @@ Restart as administrator and restore afterwards?</s:String>
 
     <!-- Display page sub-tabs -->
     <s:String x:Key="Str.TabDlss">DLSS presets</s:String>
-    <s:String x:Key="Str.TabVib">Digital vibrance</s:String>
-    <s:String x:Key="Str.TabIcc">ICC filter</s:String>
-        <s:String x:Key="Str.TabVibIcc">Vibrance &amp; ICC</s:String>
 <s:String x:Key="Str.TabDrs">Driver 3D</s:String>
     <s:String x:Key="Str.TabAdvice">Advice &amp; checklist</s:String>
     <s:String x:Key="Str.BadgeDefault">Default</s:String>
     <s:String x:Key="Str.BadgeCustomCount">{0} set</s:String>
-    <s:String x:Key="Str.NoGameLocated">No game located</s:String>
 
     <!-- A/B page PresentMon pre-check (P2-12) -->
     <s:String x:Key="Str.PmChecking">Checking PresentMon…</s:String>
@@ -790,7 +713,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CompareHeaderSessionA">A</s:String>
     <s:String x:Key="Str.CompareHeaderSessionB">B</s:String>
     <s:String x:Key="Str.CompareHeaderDelta">Δ B−A</s:String>
-    <s:String x:Key="Str.MouseBufferEnlarged">Mouse buffer enlarged to 50</s:String>
     <s:String x:Key="Str.PcieAspmFail">Failed to disable PCIe link power management: {0}</s:String>
     <s:String x:Key="Str.PowerSkippedUnsupported">Platform not supported, skipped: {0}</s:String>
     <s:String x:Key="Str.PowerApplyFail">Failed to apply hidden power settings: {0}</s:String>
@@ -997,17 +919,11 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ThirdPartyNotices">Third-party notices</s:String>
     <s:String x:Key="Str.Licenses">Licenses</s:String>
     <s:String x:Key="Str.LicenseTitle">Licenses and third-party notices</s:String>
-    <s:String x:Key="Str.Workspace">Workspace</s:String>
     <s:String x:Key="Str.Guide">Getting started</s:String>
     <s:String x:Key="Str.Feedback">QQ 加群反馈</s:String>
     <s:String x:Key="Str.GuideIntro">Choose a game → Detect → Adjust → Measure</s:String>
     <s:String x:Key="Str.GoToStep">Open page</s:String>
-    <s:String x:Key="Str.CommunityTitle">FPS Tune developer community</s:String>
-    <s:String x:Key="Str.CommunityIntro">Share usage experiences, report problems, suggest features and discuss other open-source projects.</s:String>
-    <s:String x:Key="Str.CopyGroup">Copy QQ group number</s:String>
-    <s:String x:Key="Str.GroupCopied">Copied group number 659528489</s:String>
     <s:String x:Key="Str.FeedbackDetails">Include the app version, GPU and driver, steps and the issue you encountered.</s:String>
-    <s:String x:Key="Str.CommunitySafety">Keep security vulnerability details and private information out of the group chat.</s:String>
     <s:String x:Key="Str.GuideStep1">Choose the game executable</s:String>
     <s:String x:Key="Str.GuideBody1">Select the game&apos;s main EXE on Overview, such as the game client in its installation folder.</s:String>
     <s:String x:Key="Str.GuideStep2">Detect current settings</s:String>
@@ -1027,7 +943,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CacheClean">Clean cache</s:String>
     <s:String x:Key="Str.CacheCleaned">Cleaned {0} files · {1}; kept {2} busy or changed files.</s:String>
     <s:String x:Key="Str.CacheConfirm">Delete the {0} scanned files ({1})? Deleted caches cannot be restored; games regenerate them. Busy or changed files will be kept.</s:String>
-    <s:String x:Key="Str.CacheIntro">Review cache usage and clean when needed.</s:String>
     <s:String x:Key="Str.CacheRebuild">Use cleanup to troubleshoot cache issues. Games regenerate caches; the first launch may involve compilation or stuttering.</s:String>
     <s:String x:Key="Str.CacheScan">Scan cache</s:String>
     <s:String x:Key="Str.CacheScanning">Scanning…</s:String>
@@ -1210,8 +1125,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.HotkeyShort">Global hotkey</s:String>
     <s:String x:Key="Str.NotifyShort">Completion notifications</s:String>
     <s:String x:Key="Str.HibernateReadUnavailable">Hibernation state unavailable</s:String>
-    <s:String x:Key="Str.NvDrsReadbackFailed">Setting {0} reloaded after saving does not match the target. Success is unconfirmed; the original backup is retained for retry or restore.</s:String>
-    <s:String x:Key="Str.NvDrsReadbackFailedMany">{0} settings reloaded after saving do not match the target ({1}). Those items count as not applied; the original backup is retained for retry or restore.</s:String>
     <s:String x:Key="Str.DlssPresetVerified">DLSS preset {0} saved and independently verified. Restart the game and enable DLSS to use it; Restore tool changes restores the original settings.</s:String>
     <s:String x:Key="Str.DlssApplyFailed">Application could not be confirmed: {0}. Any original backup created is retained. Check the state before retrying or restoring.</s:String>
     <s:String x:Key="Str.DisplayTarget">Target display</s:String>
@@ -1304,7 +1217,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ReviewBack">Back to selection</s:String>
     <s:String x:Key="Str.ReviewConfirm">Confirm and apply</s:String>
     <s:String x:Key="Str.ReviewItems">All pending changes</s:String>
-    <s:String x:Key="Str.ReviewElevation">This list includes items requiring administrator privileges. Restart as administrator? Review and apply again after restarting.</s:String>
     <s:String x:Key="Str.OptFilterLabel">Filter tuning items by requirements</s:String>
     <s:String x:Key="Str.OptScopeAll">All items</s:String>
     <s:String x:Key="Str.OptScopePending">Not yet at target</s:String>
@@ -1369,11 +1281,9 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FrameRestored">已还原帧率设置。</s:String>
     <s:String x:Key="Str.FrameFailed">帧率操作失败：{0}</s:String>
     <s:String x:Key="Str.MemoryTitle">开局前整理整机内存</s:String>
-    <s:String x:Key="Str.MemoryHint">Monitor live memory and clean standby cache, optionally together with selected background apps.</s:String>
     <s:String x:Key="Str.MemoryAvailable">可用内存 {0} / {1}</s:String>
     <s:String x:Key="Str.MemoryStandby">低优先级待机缓存：{0}</s:String>
     <s:String x:Key="Str.MemoryStandbyUnknown">低优先级待机缓存：暂无法读取</s:String>
-    <s:String x:Key="Str.MemoryClean">整理内存</s:String>
     <s:String x:Key="Str.MemoryCleaning">正在整理内存…</s:String>
     <s:String x:Key="Str.MemoryCleaned">整理完成。可用内存：{0} → {1}</s:String>
     <s:String x:Key="Str.MemoryCleanedReadFailed">整理已完成，最新内存状态读取失败：{0}。请点击右上角“刷新”。</s:String>
@@ -1395,7 +1305,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryLowMode">低优先级待机缓存</s:String>
     <s:String x:Key="Str.MemoryAllMode">全部待机缓存（开局前）</s:String>
     <s:String x:Key="Str.MemoryStandbySummary">待机缓存 {0} · 其中低优先级 {1}</s:String>
-    <s:String x:Key="Str.MemoryCacheChange">整理完成。待机缓存：{0} → {1}；可用内存：{2} → {3}</s:String>
     <s:String x:Key="Str.GpuIdentitySeries">{0} 系列</s:String>
     <s:String x:Key="Str.PowerWifiPerformance">最高性能（接电）</s:String>
     <s:String x:Key="Str.PowerWifiLevel">省电等级 {0}（接电）</s:String>
@@ -1442,7 +1351,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.WallpaperImportFailed">Wallpaper import failed</s:String>
     <s:String x:Key="Str.VibranceLegacyUnassigned">The legacy backup has no monitor identity. Applying again creates a new restore point from the current value.</s:String>
     <s:String x:Key="Str.VibranceLegacyRecovery">The legacy backup has no monitor identity. Its original file is preserved and cannot be restored automatically.</s:String>
-    <s:String x:Key="Str.HomeSelectionCount">Selected {0} / {1} available</s:String>
     <s:String x:Key="Str.ColorOutOfRange">Display parameters are outside the supported range.</s:String>
     <s:String x:Key="Str.ColorVivid">Vivid contrast</s:String>
     <s:String x:Key="Str.ColorMuted">Soft gray</s:String>
@@ -1483,30 +1391,12 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorDarkBalanceReset">Reset to default</s:String>
     <s:String x:Key="Str.ColorDarkBalanceDark">Dark</s:String>
     <s:String x:Key="Str.ColorDarkBalanceBright">Bright</s:String>
-    <s:String x:Key="Str.ColorDarkBalanceHint">Adjusts how dark the scene reads. Lifting the shadows makes enemies in rooms, corridors and container shadows easier to spot.</s:String>
     <s:String x:Key="Str.ColorDarkBalance">Shadow balance</s:String>
     <s:String x:Key="Str.ColorHighlight">Highlights</s:String>
     <s:String x:Key="Str.FilterVibranceSuggested">This profile pairs with digital vibrance {0}%; it only applies when you press Apply.</s:String>
     <s:String x:Key="Str.FilterEditorDarkBalance">Shadow balance</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceTag">12 steps · reference curve</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceGamma">Equivalent gamma</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceGammaValue">γ {0}</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceBright">Brighter · γ1.40</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceNeutral">Neutral · 45</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceDark">Darker · γ0.30</s:String>
-    <s:String x:Key="Str.FilterEditorDarkBalanceHint">45 keeps the original look; move right to brighten and left to darken. The value snaps to the nearest step.</s:String>
     <s:String x:Key="Str.ColorCustom">Custom parameters</s:String>
-    <s:String x:Key="Str.ColorShadowPreset">Shadow boost</s:String>
-    <s:String x:Key="Str.ColorDehaze">Dehaze</s:String>
-    <s:String x:Key="Str.ColorNight">Night warmth</s:String>
-    <s:String x:Key="Str.ColorWarm">Warm</s:String>
-    <s:String x:Key="Str.ColorCool">Cool clarity</s:String>
-    <s:String x:Key="Str.ColorSoft">Soft</s:String>
-    <s:String x:Key="Str.ColorGentleShadow">Gentle shadows</s:String>
-    <s:String x:Key="Str.ColorGentleContrast">Gentle contrast</s:String>
-    <s:String x:Key="Str.ColorNeutral">Neutral</s:String>
     <s:String x:Key="Str.ColorApplyTitle">Apply color settings</s:String>
-    <s:String x:Key="Str.ColorConfirm">Adjust the selected display and keep its original curve for restoration.</s:String>
     <s:String x:Key="Str.ColorApply">Apply</s:String>
     <s:String x:Key="Str.ColorApplied">Display parameters applied. Curve readback matches the request.</s:String>
     <s:String x:Key="Str.ColorRestored">The original display curve was restored.</s:String>
@@ -1525,7 +1415,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.EqSceneVolume">Volume boost</s:String>
     <s:String x:Key="Str.EqSceneLight">Light processing</s:String>
     <s:String x:Key="Str.EqHzGain"> Hz gain</s:String>
-    <s:String x:Key="Str.EqFirstUse">First use: Install Equalizer APO, select your headphones or speakers in its device selector, restart as instructed, then return here to choose and apply to that output.</s:String>
     <s:String x:Key="Str.EqFound">Equalizer APO found. On first use, select the output in Configure output device, restart as instructed, then listen.</s:String>
     <s:String x:Key="Str.EqChooseOutput">Select the headphones or speakers you are using first.</s:String>
     <s:String x:Key="Str.EqSaved">Preset saved in FPS Tune. Click Apply to write it to the audio engine.</s:String>
@@ -1535,10 +1424,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.EqNoBackup">There are no FPS Tune audio changes to remove.</s:String>
     <s:String x:Key="Str.EqPermission">The audio configuration directory is not writable. Run FPS Tune as administrator to apply. Your saved preset is retained.</s:String>
     <s:String x:Key="Str.ColorPanelTitle">Picture and color</s:String>
-    <s:String x:Key="Str.ColorPanelHint">Choose a filter, fine-tune, then apply. The screenshot updates as you adjust.</s:String>
     <s:String x:Key="Str.ColorPreset">Display preset</s:String>
     <s:String x:Key="Str.ColorReset">Reset parameters</s:String>
-    <s:String x:Key="Str.ColorRestore">Restore original display curve</s:String>
     <s:String x:Key="Str.EqTitle">Audio equalizer</s:String>
     <s:String x:Key="Str.EqIntro">Choose headphones or speakers and adjust the frequency bands. Equalizer APO processes the audio.</s:String>
     <s:String x:Key="Str.EqInstall">Install audio engine</s:String>
@@ -1558,16 +1445,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.IccAdvanced">ICC profiles (advanced)</s:String>
     <s:String x:Key="Str.VibranceNewBaselineHint">The previous backup does not match the current digital vibrance state. Apply keeps that backup and uses the current value as a new restore point.</s:String>
     <s:String x:Key="Str.VibranceNewBaselineSaved">Previous backup retained. Restore now returns to the value before this apply.</s:String>
-    <s:String x:Key="Str.CornerTitle">Corner radius</s:String>
-    <s:String x:Key="Str.CornerClassic">Classic (previous version)</s:String>
-    <s:String x:Key="Str.CornerLarge">Rounded (current version)</s:String>
-    <s:String x:Key="Str.CornerAdjustHint">Adjust each radius below. Changes apply immediately and save automatically; 0 gives square corners.</s:String>
-    <s:String x:Key="Str.CornerCards">Cards</s:String>
-    <s:String x:Key="Str.CornerControls">Buttons, inputs and tabs</s:String>
-    <s:String x:Key="Str.CornerNav">Main navigation</s:String>
-    <s:String x:Key="Str.CornerChips">Badges</s:String>
-    <s:String x:Key="Str.CornerSaved">Corner preferences saved.</s:String>
-    <s:String x:Key="Str.CornerSaveFailed">Corners applied but could not be saved: {0}</s:String>
     <s:String x:Key="Str.ColorNewBaselineHint">The display curve differs from the previous backup. Apply keeps that backup and uses the current curve as a new restore point.</s:String>
     <s:String x:Key="Str.ColorNewBaselineSaved">Previous backup retained. Restore now returns to the picture before this apply.</s:String>
     <s:String x:Key="Str.IccNewBaselineHint">The previous ICC backup differs from the current associations. Manual apply keeps that backup and captures the current associations as a new restore point.</s:String>
@@ -1579,7 +1456,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.UpdatePreparingInstall">Protecting settings and backups before installation…</s:String>
     <s:String x:Key="Str.UpdateDownloadIncomplete">Download incomplete. Please retry.</s:String>
     <s:String x:Key="Str.ColorPreviewTitle">Screenshot comparison</s:String>
-    <s:String x:Key="Str.ColorPreviewSourceHint">Choose a sample screenshot matched to the game, the newest Windows screenshot, or load your own</s:String>
     <s:String x:Key="Str.ColorPreviewLoad">Load screenshot…</s:String>
     <s:String x:Key="Str.ColorPreviewSample">Waiting for a game screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewBefore">Original</s:String>
@@ -1604,10 +1480,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorSelectIcc">Select an ICC preset or load a profile.</s:String>
     <s:String x:Key="Str.ColorVibranceApplied">Digital vibrance applied: {0}%.</s:String>
     <s:String x:Key="Str.ColorWorkspaceFailed">Step incomplete: {0}</s:String>
-    <s:String x:Key="Str.ColorMode">ICC layer mode</s:String>
     <s:String x:Key="Str.ColorScreenMode">Display parameters only</s:String>
     <s:String x:Key="Str.ColorIccMode">ICC + display parameters</s:String>
-    <s:String x:Key="Str.ColorRestoreAll">Restore screen color changes</s:String>
     <s:String x:Key="Str.ColorWorkspaceConfirm">Apply {0} and edited vibrance together to the selected monitor, saving originals.</s:String>
     <s:String x:Key="Str.ColorPreviewManagedEmpty">This view needs an ICC filter. Pick one in the filter list on the right.</s:String>
     <s:String x:Key="Str.ColorPreviewVibranceHint">saturation is approximate</s:String>
@@ -1617,7 +1491,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.MemoryProcessChanged">The application restarted or the target changed. Refresh and select again.</s:String>
     <s:String x:Key="Str.MemoryProcessReadFailed">Trim completed; cannot read the resulting working set: {0}</s:String>
     <s:String x:Key="Str.MemoryUsed">Memory usage</s:String>
-    <s:String x:Key="Str.MemoryCombinedMode">Selected background apps + all standby cache</s:String>
     <s:String x:Key="Str.MemoryBackgroundTitle">Custom background application cleanup</s:String>
     <s:String x:Key="Str.MemoryBackgroundHint">Select background apps to reduce their working sets. Active use may reload pages; games and critical system processes are excluded.</s:String>
     <s:String x:Key="Str.MemoryTrimSelected">Trim selected apps</s:String>
@@ -1640,8 +1513,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.ColorPreviewDelta">Delta Force · sample screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewValorant">VALORANT · sample screenshot</s:String>
     <s:String x:Key="Str.ColorPreviewCustom">Custom screenshot</s:String>
-    <s:String x:Key="Str.ColorIccLayer">ICC color profile</s:String>
-    <s:String x:Key="Str.ColorParametersLayer">2 · Fine-tune display</s:String>
     <s:String x:Key="Str.ColorIccFile">ICC loaded from file</s:String>
     <s:String x:Key="Str.ColorPreviewDrag">Drag the handle on the image to compare, or focus it and use the arrow keys.</s:String>
     <s:String x:Key="Str.ColorChooseFilter">1 · Choose a filter</s:String>
@@ -1841,10 +1712,8 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.HudRecording">正在记录：{0}</s:String>
     <s:String x:Key="Str.HudWaitingFrames">等待新帧样本…</s:String>
     <s:String x:Key="Str.HudWindow">最近 {0} 秒 · {1} 帧</s:String>
-    <s:String x:Key="Str.HudMemory">内存 {0} · 显存 {1}</s:String>
     <s:String x:Key="Str.HudRecoveryUnavailable">快捷键与托盘入口均不可用，暂不启用点击穿透。</s:String>
     <s:String x:Key="Str.HudThroughFailed">Windows 未能切换点击穿透，请重开悬浮窗。</s:String>
-    <s:String x:Key="Str.HudHint">可拖动、置顶或穿透；录制时显示近期 FPS 与 1% LOW。“找回悬浮窗”会在当前屏幕右上角重新显示并恢复点击。独占全屏游戏可能覆盖此窗口。</s:String>
     <s:String x:Key="Str.HudRestoreFailed">未能找回悬浮窗，请关闭后重新打开。</s:String>
     <s:String x:Key="Str.HudEntry">悬浮窗</s:String>
     <s:String x:Key="Str.HudOptionsDismiss">收起</s:String>
@@ -2042,21 +1911,12 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.AutoSessionAffinityOff">Background throttling restored ({0} processes, reason: {1})</s:String>
     <s:String x:Key="Str.AutoSessionAffinityNoApps">the background app list is empty</s:String>
     <s:String x:Key="Str.TabFilters">Game filters</s:String>
-    <s:String x:Key="Str.FilterApply">Apply filter</s:String>
     <s:String x:Key="Str.FilterOpenFolder">Open filters folder</s:String>
-    <s:String x:Key="Str.FilterFit">Good for: {0}</s:String>
-    <s:String x:Key="Str.FilterAvoid">Avoid: {0}</s:String>
-    <s:String x:Key="Str.FilterPickFirst">Pick a filter above first.</s:String>
-    <s:String x:Key="Str.FilterApplied">Applied "{0}": {1}</s:String>
-    <s:String x:Key="Str.FilterRestored">Original ICC restored.</s:String>
-    <s:String x:Key="Str.FilterNothingRestored">No restorable backup found.</s:String>
     <s:String x:Key="Str.FilterPresetMissing">Preset file missing: {0}</s:String>
-    <s:String x:Key="Str.FilterEditorTitle">Edit ICC (custom filters)</s:String>
     <s:String x:Key="Str.FilterEditorGamma">Gamma</s:String>
     <s:String x:Key="Str.FilterEditorBrightness">Brightness offset</s:String>
     <s:String x:Key="Str.FilterEditorSaturation">Saturation</s:String>
     <s:String x:Key="Str.FilterEditorHighlight">Highlights</s:String>
-    <s:String x:Key="Str.FilterEditorHighlightHint">Negative compresses highlights (de-exposure), positive lifts the white point; endpoints stay fixed.</s:String>
     <s:String x:Key="Str.FilterCategoryAll">All</s:String>
     <s:String x:Key="Str.FilterCategorySoft">Soft &amp; eye care</s:String>
     <s:String x:Key="Str.FilterCategoryDeexpose">Darken / de-exposure</s:String>
@@ -2070,47 +1930,23 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FilterEditorSaved">Custom filter saved: {0}</s:String>
     <s:String x:Key="Str.FilterAppsTitle">Per-app filters</s:String>
     <s:String x:Key="Str.FilterAppsHint">Bind a filter to each game/app: it applies while that window is in the foreground and restores the original ICC afterwards.</s:String>
-    <s:String x:Key="Str.FilterWatcherToggle">Follow foreground</s:String>
     <s:String x:Key="Str.FilterWatcherActive">Foreground: {0} · applied {1}</s:String>
     <s:String x:Key="Str.FilterWatcherIdle">Watcher off or no rule matched the foreground app.</s:String>
     <s:String x:Key="Str.FilterWatcherApplied">Per-app filter: {0} → {1}</s:String>
     <s:String x:Key="Str.FilterWatcherRestored">Per-app filter restored ({0})</s:String>
     <s:String x:Key="Str.FilterWatcherRestoreFailed">Per-app filter restore failed ({0})</s:String>
     <s:String x:Key="Str.FilterWatcherFailed">Per-app filter watcher error: {0}</s:String>
-    <s:String x:Key="Str.FilterRuleProcess">Main executable name, e.g. cs2.exe</s:String>
-    <s:String x:Key="Str.FilterRuleAdd">Save plan</s:String>
-    <s:String x:Key="Str.FilterRuleRemove">Remove rule</s:String>
     <s:String x:Key="Str.FilterRuleNeedProcess">Fill in a process name and pick a filter.</s:String>
-    <s:String x:Key="Str.FilterAppsRuleHint">Use an executable name or the full game path (path rules win). Add a window title to distinguish launchers; up to 64 rules.</s:String>
     <s:String x:Key="Str.FilterWatcherNoMatch">No foreground rule matched; waiting for confirmation.</s:String>
     <s:String x:Key="Str.FilterWatcherDebouncing">Foreground app recognized; confirming before switching.</s:String>
     <s:String x:Key="Str.FilterWatcherSuppressed">Fullscreen switching is enabled; per-app plans are paused.</s:String>
     <s:String x:Key="Str.FilterWatcherReasonRetarget">changed app plan or display</s:String>
     <s:String x:Key="Str.FilterRuleNeedPreset">Choose an ICC, picture adjustment, or vibrance value.</s:String>
-    <s:String x:Key="Str.FilterRulePresetLabel">Filter</s:String>
-    <s:String x:Key="Str.FilterRuleNoIcc">No ICC (vibrance only)</s:String>
-    <s:String x:Key="Str.FilterRuleVibrance">Vibrance (blank follows preset)</s:String>
-    <s:String x:Key="Str.FilterRuleScreen">Also apply the preset's picture settings (gamma)</s:String>
-    <s:String x:Key="Str.FilterRuleTitle">Window title contains (optional)</s:String>
-    <s:String x:Key="Str.FilterRuleTargetLabel">Game or app</s:String>
-    <s:String x:Key="Str.FilterRuleTargetHint">Enter a process name (cs2.exe) or a full exe path; full paths win, and the title can distinguish a launcher from the game.</s:String>
-    <s:String x:Key="Str.FilterRuleEnabled">Enable this plan</s:String>
-    <s:String x:Key="Str.FilterRuleBrowse">Choose exe</s:String>
-    <s:String x:Key="Str.FilterRuleSaved">Plan saved: {0}</s:String>
-    <s:String x:Key="Str.FilterRuleSummary">{0} · {1}</s:String>
-    <s:String x:Key="Str.FilterRuleDetails">Target: {0} · Vibrance: {1} · Picture settings: {2}</s:String>
-    <s:String x:Key="Str.FilterRuleOn">on</s:String>
-    <s:String x:Key="Str.FilterRuleOff">off</s:String>
-    <s:String x:Key="Str.FilterRuleVibranceDefault">Follow filter</s:String>
-    <s:String x:Key="Str.FilterRuleVibranceNone">No change</s:String>
     <s:String x:Key="Str.FilterRuleExport">Export plans</s:String>
     <s:String x:Key="Str.FilterRuleImport">Import plans</s:String>
     <s:String x:Key="Str.FilterRuleTransferDone">{0} plans saved.</s:String>
     <s:String x:Key="Str.FilterRuleTransferFailed">Import failed: {0}</s:String>
     <s:String x:Key="Str.FilterRuleRemoveName">Remove plan: {0}</s:String>
-    <s:String x:Key="Str.FilterRuleDiagnosticsTitle">Status</s:String>
-    <s:String x:Key="Str.FilterRuleDiagnosticsFormat">{0} · Foreground {1} · Display {2} · Picture {3} · Vibrance {4}</s:String>
-    <s:String x:Key="Str.FilterRuleNotActive">Not applied</s:String>
     <!-- Per-app filter page (reference layout: scan/add/switch · status · rule rows · auto collection) -->
     <s:String x:Key="Str.FilterAppsScan">Scan automatically</s:String>
     <s:String x:Key="Str.FilterAppsRescan">Scan again</s:String>
@@ -2213,8 +2049,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.CrosshairGapLabel">Center gap</s:String>
     <s:String x:Key="Str.CrosshairThicknessLabel">Thickness</s:String>
     <s:String x:Key="Str.CrosshairOpacityLabel">Opacity</s:String>
-    <s:String x:Key="Str.CrosshairAdaptiveToggle">AW tactical hold: auto-hide while right mouse held</s:String>
-    <s:String x:Key="Str.CrosshairAdaptiveHint">Hides while aiming (right mouse held) and returns when released; also hides while this app is in the foreground.</s:String>
     <s:String x:Key="Str.CrosshairPreviewTitle">Crosshair preview</s:String>
     <s:String x:Key="Str.CrosshairPreviewHint">Shows the current colour, shape and opacity. If you cannot see it in game, switch back to the game window first — it is hidden while this app is in the foreground.</s:String>
     <s:String x:Key="Str.DeltaFixTab">Frame fix</s:String>
@@ -2283,7 +2117,6 @@ Restart as administrator and restore afterwards?</s:String>
     <s:String x:Key="Str.FullscreenFailed">Fullscreen plan apply failed: {0}</s:String>
     <s:String x:Key="Str.FullscreenStartupRestored">The fullscreen plan was still applied at last exit; restored it now.</s:String>
     <s:String x:Key="Str.FullscreenStartupRestoreFailed">The fullscreen plan was still applied at last exit and could not be restored: {0}</s:String>
-    <s:String x:Key="Str.SavedName">Saved</s:String>
     <s:String x:Key="Str.AutoSessionHint">Preparation uses each game's saved plan; unconfigured plans or missing admin rights are skipped and logged. Refresh rates and background throttling restore automatically once every game exits; throttling applies to the apps picked in Maintenance &gt; Background apps.</s:String>
     <s:String x:Key="Str.AutoSessionAuditFailed">Game automation state update failed: {0}</s:String>
     <s:String x:Key="Str.AutoSessionPrepDone">Auto preparation finished for "{0}" ({1}/{2} steps ok)</s:String>
@@ -2453,10 +2286,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptDoneTitle">Results</s:String>
     <s:String x:Key="Str.QuickOptBackupHint">Backups are captured before any write; restore per item in System → Backup / Logs.</s:String>
     <s:String x:Key="Str.QuickOptSummaryFmt">{0} ok, {1} failed, {2} skipped</s:String>
-    <s:String x:Key="Str.QuickOptFilterDoneFmt">Filter "{0}" applied</s:String>
-    <s:String x:Key="Str.QuickOptFilterFailFmt">Filter "{0}" failed</s:String>
-    <s:String x:Key="Str.QuickOptPowerDone">Power plan switched to Best performance</s:String>
-    <s:String x:Key="Str.QuickOptPowerFail">Power plan switch failed</s:String>
     <s:String x:Key="Str.QuickOptNeedAdmin">The plan includes admin-required items; run as administrator and retry.</s:String>
     <s:String x:Key="Str.HomeQuickCardTitle">One-click Optimize</s:String>
     <s:String x:Key="Str.HomeQuickCardBody">Optimization items, power plan and filter in one run for your game; backed up before write and restorable.</s:String>
@@ -2573,22 +2402,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.TuningCopyCommand">复制命令</s:String>
     <s:String x:Key="Str.TuningCommandCopied">命令已复制，在 CS2 控制台粘贴执行。</s:String>
     <s:String x:Key="Str.TuningPending">方案尚未应用，请审阅后应用。</s:String>
-    <s:String x:Key="Str.HomeOptimize">优化设置</s:String>
-    <s:String x:Key="Str.HomeEditPreparation">调整准备方案</s:String>
-    <s:String x:Key="Str.HomeDisplayHint">分辨率、刷新率与画面</s:String>
-    <s:String x:Key="Str.HomeRecordHint">记录表现，对比前后变化</s:String>
-    <s:String x:Key="Str.HomeHudHint">游戏时查看性能数据</s:String>
-    <s:String x:Key="Str.HomeMoreTools">更多工具</s:String>
-    <s:String x:Key="Str.HomeReadyPending">先检查优化设置，或按保存的方案准备开局。</s:String>
-    <s:String x:Key="Str.HomeReady">按保存的方案准备开局，也可以记录一局查看表现。</s:String>
-    <s:String x:Key="Str.OptSystemTab">系统设置</s:String>
     <s:String x:Key="Str.OptDriverTab">同步与限帧</s:String>
-    <s:String x:Key="Str.OptShowAdvanced">显示高级项目</s:String>
-    <s:String x:Key="Str.OptMoreFilters">更多筛选</s:String>
-    <s:String x:Key="Str.OptGameTools">游戏相关工具</s:String>
-    <s:String x:Key="Str.OptGameToolsHint">三角洲、无畏契约和 CS2 可查看保存的游戏配置、比较变化并带入性能记录。</s:String>
-    <s:String x:Key="Str.OptGameConfig">游戏配置与对比</s:String>
-    <s:String x:Key="Str.PrepareMoreOptions">保存范围与更多选项</s:String>
     <s:String x:Key="Str.DriverChooseAction">请选择同步方案，或勾选要调整的帧率、电源选项。</s:String>
     <s:String x:Key="Str.DriverKeepSyncHint">只调整勾选的项目；同步设置沿用当前值。</s:String>
     <s:String x:Key="Str.DriverMoreOptions">更多显卡设置</s:String>
@@ -2868,7 +2682,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <!-- reference alignment: power details -->
     <s:String x:Key="Str.PowerDetailsTitle">Power settings</s:String>
     <s:String x:Key="Str.PowerDetailsOpen">Open power settings</s:String>
-    <s:String x:Key="Str.PowerDetailsHint">View the active power plan and edit its plugged-in and battery values separately.</s:String>
     <s:String x:Key="Str.PowerDetailsSearch">Search name, description or GUID</s:String>
     <s:String x:Key="Str.PowerDetailsFilterAll">All</s:String>
     <s:String x:Key="Str.PowerDetailsFilterChanged">Different from default</s:String>
@@ -2880,7 +2693,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsRetry">Read again</s:String>
     <s:String x:Key="Str.PowerDetailsRescan">Rescan</s:String>
     <s:String x:Key="Str.PowerDetailsReading">Reading every power setting…</s:String>
-    <s:String x:Key="Str.PowerDetailsReadingHint">Including the hidden ones; usually a second or two.</s:String>
     <s:String x:Key="Str.PowerDetailsNoMatch">No setting matches.</s:String>
     <s:String x:Key="Str.PowerDetailsNoneChanged">Nothing in the active plan differs from its default.</s:String>
     <s:String x:Key="Str.PowerDetailsNoneHidden">No settings are hidden.</s:String>
@@ -2898,7 +2710,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsRevealDenied">{0} could not be unlocked; administrator rights are required.</s:String>
     <s:String x:Key="Str.PowerDetailsRange">Accepts {0}–{1}, in steps of {2}</s:String>
     <s:String x:Key="Str.PowerDetailsPossible">Pick one of {0} options</s:String>
-    <s:String x:Key="Str.PowerDetailsSystemDefault">Default: {0}</s:String>
     <s:String x:Key="Str.PowerDetailsNoDefault">Windows reports no default</s:String>
     <s:String x:Key="Str.PowerDetailsInvalidNumber">Enter a whole number.</s:String>
     <s:String x:Key="Str.PowerDetailsOutOfRange">Out of range; {0}</s:String>
@@ -2927,7 +2738,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.PowerDetailsCopy">Copy</s:String>
     <s:String x:Key="Str.PowerDetailsCopied">Copied.</s:String>
     <s:String x:Key="Str.PowerDetailsPlanLabel">Active plan "{0}"</s:String>
-    <s:String x:Key="Str.PowerDetailsNeedActive">The panel edits the active plan; switching plans changes the values you see.</s:String>
     <s:String x:Key="Str.PowerDetailsRevealNeedsAdmin">Unlocking hidden settings writes to a system-wide registry key and needs administrator rights.</s:String>
     <!-- reference alignment: input queue / services / input feedback -->
     <s:String x:Key="Str.InputQueueTitle">Input buffer depth</s:String>
@@ -3257,15 +3067,10 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.ComparisonIntro">Measure first, apply the selected items, measure again — and see whether it was worth it.</s:String>
     <s:String x:Key="Str.ComparisonStart">Compare</s:String>
     <s:String x:Key="Str.ComparisonStageBefore">Before sample</s:String>
-    <s:String x:Key="Str.ComparisonStageBeforeStatus">Measuring your current performance (60 seconds). Keep the game in the foreground.</s:String>
     <s:String x:Key="Str.ComparisonStageApply">Apply</s:String>
-    <s:String x:Key="Str.ComparisonStageApplyStatus">Waiting for your confirmation in the review window, then writing the selected items.</s:String>
     <s:String x:Key="Str.ComparisonStageCooldown">Settle</s:String>
-    <s:String x:Key="Str.ComparisonStageCooldownStatus">Letting the changes take effect and the frame rate settle (10 seconds).</s:String>
     <s:String x:Key="Str.ComparisonStageAfter">After sample</s:String>
-    <s:String x:Key="Str.ComparisonStageAfterStatus">Measuring with the changes applied (60 seconds), same map and settings.</s:String>
     <s:String x:Key="Str.ComparisonStageVerdict">Verdict</s:String>
-    <s:String x:Key="Str.ComparisonStageVerdictStatus">Comparing both samples and computing the gain with a confidence interval.</s:String>
     <s:String x:Key="Str.ComparisonVerdictKeep">Worth keeping</s:String>
     <s:String x:Key="Str.ComparisonVerdictRollback">Suggest rollback</s:String>
     <s:String x:Key="Str.ComparisonVerdictInsufficient">Not enough evidence</s:String>
@@ -3286,7 +3091,6 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.ComparisonCancelled">Comparison cancelled.</s:String>
     <s:String x:Key="Str.ComparisonFailed">Comparison did not finish: {0}</s:String>
     <s:String x:Key="Str.ComparisonReviewCancelled">The comparison was cancelled at the review step; nothing was written.</s:String>
-    <s:String x:Key="Str.ComparisonBusy">A comparison is already running.</s:String>
     <s:String x:Key="Str.GainArchiveTitle">Gain archive</s:String>
     <s:String x:Key="Str.GainArchiveEmpty">No comparisons recorded for this game yet; pick items on the Optimize page and press Compare, and the result will show up here.</s:String>
     <s:String x:Key="Str.GainArchiveSummary">{0} comparisons · best confirmed gain {1} · latest {2}</s:String>

@@ -543,9 +543,7 @@ public partial class OptimizeView : UserControl
             var note = NewPara(4);
             note.Inlines.Add(R(Str.T("Str.UnstructuredResult"), "TextMutedBrush"));
             OutputDoc.Blocks.Add(note);
-            SetRawMonospace(string.Concat(
-                string.IsNullOrWhiteSpace(result.Output) ? "" : result.Output + "\n",
-                string.IsNullOrWhiteSpace(result.Error) ? "" : result.Error));
+            SetRawMonospace(string.IsNullOrWhiteSpace(result.Output) ? "" : result.Output);
             return;
         }
 

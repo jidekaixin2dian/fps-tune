@@ -324,7 +324,7 @@ public static partial class BackupService
                 consumed.Add(file);
         }
 
-        // 消费备份：重命名为 .restored（保留供审计），与 PowerShell 引擎保持一致。
+        // 消费备份：重命名为 .restored（保留文件供审计，不删除）；重名时加时间戳后缀。
         foreach (var file in consumed)
         {
             try

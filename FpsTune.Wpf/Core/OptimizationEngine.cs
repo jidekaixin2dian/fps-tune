@@ -8,15 +8,16 @@ using FpsTune.Wpf.Services;
 
 /// <summary>
 /// C# 核心引擎入口。
-/// Apply / Detect / Restore 均已走 C# 原生实现，不再依赖 PowerShell 作为核心路径。
-/// PowerShell 脚本仍随包保留，供兼容/兜底排查使用。
+/// Apply / Detect / Restore 全部走 C# 原生实现。
+/// 0.1.x 时代的 PowerShell 引擎（fps-tune.ps1）已于 2026-09 移除，不再随包发布；
+/// 现在包里唯一的脚本是服务更新器自替换用的 <c>UpdateWorker.ps1</c>。
 /// </summary>
 public static class OptimizationEngine
 {
     public static Task<RunResult> DetectAsync()
     {
         var gamePath = AppState.GamePath;
-        return Task.Run(() => new RunResult(0, DetectionService.BuildDetectJson(gamePath), ""));
+        return Task.Run(() => new RunResult(0, DetectionService.BuildDetectJson(gamePath)));
     }
 
     /// <summary>预设 -> 优化项 id 列表。未知预设明确报错。</summary>
@@ -52,7 +53,7 @@ public static class OptimizationEngine
         {
             var result = RecoveryCoordinator.RestoreAll();
             if (result.Restored.Count == 0 && result.Failures.Count == 0)
-                return new RunResult(0, "没有找到可还原的备份。", "");
+                return new RunResult(0, "没有找到可还原的备份。");
 
             var sb = new StringBuilder();
             sb.AppendLine("== 还原结果 ==");
@@ -66,7 +67,7 @@ public static class OptimizationEngine
             sb.Append($"汇总：{result.Restored.Count} 项已还原、{result.Failures.Count} 项失败、{result.ArchivedStale.Count} 份失效备份已归档。");
             if (result.Restored.Count > 0 && result.Failures.Count == 0)
                 sb.Append("恢复已完成；系统快照保留为 .restored，其他模块在验证后消费备份。");
-            return new RunResult(result.Failures.Count == 0 ? 0 : 1, sb.ToString(), "");
+            return new RunResult(result.Failures.Count == 0 ? 0 : 1, sb.ToString());
         });
 
     public static Task<RunResult> ListRestoreAsync()
@@ -75,7 +76,7 @@ public static class OptimizationEngine
         var scopes = RecoveryCoordinator.Inventory();
         var payload = new { backups = files, count = files.Count, scopes };
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-        return Task.FromResult(new RunResult(0, json, ""));
+        return Task.FromResult(new RunResult(0, json));
     }
 
     internal sealed record ApplyReceipt(string OperationId, string BackupFile, IReadOnlyList<OptimizationApplyResult> Results);
@@ -189,6 +190,6 @@ public static class OptimizationEngine
             };
 
             var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-            return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json, "");
+            return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json);
     }
 }

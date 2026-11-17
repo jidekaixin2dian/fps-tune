@@ -376,9 +376,9 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
                 .ConfigureAwait(false);
             if (!result.Success)
             {
-                var error = string.IsNullOrWhiteSpace(result.Error) ? "未提供错误信息" : result.Error.Trim();
+                var detail = string.IsNullOrWhiteSpace(result.Output) ? $"退出码 {result.ExitCode}" : result.Output.Trim();
                 Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
-                    $"方案「{profile.Name}」执行失败：{error}");
+                    $"方案「{profile.Name}」执行失败：{detail}");
                 return;
             }
 

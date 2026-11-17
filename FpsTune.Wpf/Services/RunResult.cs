@@ -1,13 +1,10 @@
 namespace FpsTune.Wpf.Services;
 
 /// <summary>
-/// 一次"跑外部命令/引擎动作"的结果：退出码 + stdout + stderr。
-///
-/// 历史：这个类型原先和 `PowerShellRunner` 放在同一个文件里。2026-09-25 删掉朋友测试模块时，
-/// `PowerShellRunner` 与 `ScriptLocator` 一并移除（它们只服务那一处），
-/// 但 `RunResult` 是**引擎与多个视图共用的通用返回类型**，所以单独留在这里。
+/// 一次引擎动作的结果：退出码 + 输出文本（人类可读摘要或 JSON）。
+/// 0 = 成功；非 0 表示失败或部分失败，具体原因在各引擎的错误文案里。
 /// </summary>
-public sealed record RunResult(int ExitCode, string Output, string Error)
+public sealed record RunResult(int ExitCode, string Output)
 {
     public bool Success => ExitCode == 0;
 }

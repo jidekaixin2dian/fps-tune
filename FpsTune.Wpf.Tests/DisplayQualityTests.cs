@@ -293,11 +293,19 @@ public class DisplayQualityTests : IDisposable
     }
 
     [Fact]
-    public void OneClick_gpu_1070ti_pack_writes_k_model_and_2x_transparency()
+    public void M3_quality_pack_writes_k_model_and_2x_transparency()
     {
         _api.AddProfile("三角洲行动", Exe);
 
-        FpsTune.Wpf.Core.OneClickOptimizer.ApplyGpu1070TiPack(Exe);
+        // 1070 Ti 档参考组合：DLSS K + 高质量纹理 + 最高性能优先 + 2x 透明度 + 预渲染 1 + AF16x + 关 VSync + 开着色器缓存
+        DisplayQualityService.ApplyDlssPreset(Exe, DlssPreset.PresetK);
+        DisplayQualityService.ApplyTextureQuality(Exe, TextureFilterQuality.HighQuality);
+        DisplayQualityService.ApplyPowerMode(Exe, PowerMode.PreferMax);
+        DisplayQualityService.ApplyTransparencyAa(Exe, TransparencyAa.Supersample2x);
+        DisplayQualityService.ApplyPreRenderLimit(Exe, 1);
+        DisplayQualityService.ApplyAnisoLevel(Exe, AnisoLevel.Level16);
+        DisplayQualityService.ApplyVSyncMode(Exe, VSyncMode.ForceOff);
+        DisplayQualityService.ApplyShaderDiskCache(Exe, true);
 
         var s = DisplayQualityService.GetDrsGameSettings(Exe);
         var dlss = DisplayQualityService.GetDlssState(Exe);
