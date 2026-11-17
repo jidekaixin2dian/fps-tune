@@ -118,7 +118,7 @@ public partial class MainWindow : Window
         catch (OperationCanceledException) { }
     }
     // 页面按需创建、创建后缓存：启动只构建首页，显著降低冷启动时间与常驻内存。
-    private readonly Dictionary<string, Func<UserControl>> _pageFactories;
+    private readonly IReadOnlyDictionary<string, Func<UserControl>> _pageFactories = NavigationRegistry.Factories;
     private readonly Dictionary<string, UserControl> _pageCache = new();
 
     // 全局热键 Ctrl+Alt+F
@@ -158,28 +158,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _navButtons = BuildNavButtons();
         InitializeCommandPalette();
         HookGameContextService();
 
-        _pageFactories = new Dictionary<string, Func<UserControl>>
-        {
-            ["home"] = () => new ConsoleView(),
-            ["games"] = () => new GameLibraryView(),
-            ["detect"] = () => new DetectView(),
-            ["opt"] = () => new OptimizeView(),
-            ["display"] = () => new DisplayQualityView(),
-            ["filters"] = () => new FilterView(),
-            ["crosshair"] = () => new CrosshairView(),
-            ["deltafix"] = () => new DeltaFixView(),
-            ["quick"] = () => new QuickOptimizeView(),
-            ["session"] = () => new SessionView(),
-
-
-            ["backup"] = () => new BackupLogView(),
-            ["tools"] = () => new MaintenanceView(),
-            ["startup"] = () => new StartupAuditView(),
-            ["settings"] = () => new SettingsView(),
-        };
 
         PageHost.Content = GetPage("home");
         // 托盘图标随应用启动常驻(与最小化设置无关); 设置只控制最小化行为
@@ -357,15 +339,23 @@ public partial class MainWindow : Window
             opt.SelectForReview(selected);
     }
 
-    /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
-    private Views.Controls.NavButton[] AllNavButtons => new[]
+    /// <summary>路由键 → 侧栏单选钮。与 <see cref="NavigationRegistry"/> 的键一一对应；没有侧栏项的页面（如 deltafix）不在这里。</summary>
+    private Dictionary<string, Views.Controls.NavButton> BuildNavButtons() => new(StringComparer.Ordinal)
     {
-        NavHome, NavGames, NavQuick, NavDetect, NavDisplay, NavFilters, NavCrosshair,
-        NavOpt, NavTools, NavBackup, NavStartup, NavSession, NavSettings
+        ["home"] = NavHome, ["games"] = NavGames, ["quick"] = NavQuick, ["detect"] = NavDetect,
+        ["display"] = NavDisplay, ["filters"] = NavFilters, ["crosshair"] = NavCrosshair,
+        ["opt"] = NavOpt, ["tools"] = NavTools, ["backup"] = NavBackup, ["startup"] = NavStartup,
+        ["session"] = NavSession, ["settings"] = NavSettings,
     };
 
+    private Dictionary<string, Views.Controls.NavButton>? _navButtons;
+
+    /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
+    private Views.Controls.NavButton[] AllNavButtons => (_navButtons ??= BuildNavButtons()).Values.ToArray();
+
     /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
-    private Views.Controls.NavButton[] TopNavButtons => new[] { NavHome, NavFilters, NavCrosshair, NavTools, NavSession, NavSettings };
+    private Views.Controls.NavButton[] TopNavButtons
+        => new[] { "home", "filters", "crosshair", "tools", "session", "settings" }.Select(k => (_navButtons ??= BuildNavButtons())[k]).ToArray();
 
     private void More_Click(object sender, RoutedEventArgs e)
     {
@@ -477,7 +467,7 @@ public partial class MainWindow : Window
 
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
-        if (_pageFactories is null)
+        if (_navButtons is null)
             return;
         if (sender is RadioButton { Tag: string key } && _pageFactories.ContainsKey(key))
         {
@@ -586,29 +576,15 @@ public partial class MainWindow : Window
     }
     public void NavigateTo(string key)
     {
-        switch (key)
+        if (_navButtons is not null && _navButtons.TryGetValue(key, out var button))
         {
-            case "home": NavHome.IsChecked = true; break;
-            case "games": NavGames.IsChecked = true; break;
-            case "quick": NavQuick.IsChecked = true; break;
-            case "detect": NavDetect.IsChecked = true; break;
-            case "opt": NavOpt.IsChecked = true; break;
-            case "display": NavDisplay.IsChecked = true; break;
-            case "filters": NavFilters.IsChecked = true; break;
-            case "crosshair": NavCrosshair.IsChecked = true; break;
-            case "session": NavSession.IsChecked = true; break;
-
-
-            case "ab": SwitchPage(GetPage("ab")); break;
-            case "backup": NavBackup.IsChecked = true; break;
-            case "startup": NavStartup.IsChecked = true; break;
-            case "tools": NavTools.IsChecked = true; break;
-            case "settings": NavSettings.IsChecked = true; break;
-            // 掉帧修复没有侧栏项：入口在首页快捷、滤镜页、调校窗与游戏库（按游戏显示）。
-            case "deltafix": SwitchPage(GetPage("deltafix")); break;
+            button.IsChecked = true;      // 选中态驱动 Nav_Checked → SwitchPage
+            return;
         }
+        // 没有侧栏项的页面（掉帧修复）：直接切页，侧栏保持无选中。
+        if (_pageFactories.ContainsKey(key))
+            SwitchPage(GetPage(key));
     }
-
     public void RefreshHomeContacts()
     {
         // Legacy contact fields remain readable; community feedback is now a global entry.
