@@ -589,10 +589,12 @@ public sealed class ReadabilityAndFramesUiTests
             StateStore.AddGame(original); StateStore.AddGame(second);
             AppState.DetectJson = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(new { gamePath = original }));
             StateStore.MarkOnboardingSeen();
+            SettingsService.Current.RecentPages = ["settings"];
             var window = new MainWindow { Width = 1180, Height = 720 }; app.MainWindow = window;
             DlssFeedbackTests.PrepareBackgroundWindow(window); window.Show(); window.UpdateLayout();
             var page = (ConsoleView)((ContentControl)window.FindName("PageHost")).Content;
             var combo = (ComboBox)page.FindName("GameSwitcher");
+            Assert.Single(((WrapPanel)page.FindName("RecentPagesPanel")).Children.OfType<Button>());
             var availableCount = OptimizationCatalog.Items.Count(d => d.Available);
             Assert.Equal("0/" + availableCount, ((TextBlock)page.FindName("TunedText")).Text);
             Assert.Equal(Str.T("Str.Unavailable"), new OptimizationItemViewModel(unavailableItem).StatusText);
@@ -622,6 +624,16 @@ public sealed class ReadabilityAndFramesUiTests
                     Assert.True(bottom.Y + primaryCta.ActualHeight <= page.ActualHeight);
                     Capture(window, $"home-audit-{mode}-{size.Width}-{theme}", report);
                 }
+                var optimizationCard = (Border)page.FindName("HomeOptimizationCard");
+                Assert.Equal(0, Grid.GetRow(optimizationCard));
+                page.Width = 760;
+                window.UpdateLayout();
+                Assert.Equal(1, Grid.GetRow(optimizationCard));
+                ReadabilityAndFramesUiTests.Render(page, "home-stacked-dark");
+                page.ClearValue(FrameworkElement.WidthProperty);
+                window.UpdateLayout();
+                Assert.Equal(0, Grid.GetRow(optimizationCard));
+
                 // 首页不再平铺优化项（用户 2026-11-01 反馈）：方案选择与逐项审阅全部在「优化」页。
                 ((Button)page.FindName("PrepareDeltaButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); window.UpdateLayout();
                 var optimization = Assert.IsType<OptimizeView>(((ContentControl)window.FindName("PageHost")).Content);

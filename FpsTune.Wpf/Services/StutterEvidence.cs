@@ -22,12 +22,9 @@ public sealed record StutterEvidenceSnapshot(
     double? GpuPowerW,
     IReadOnlyList<string> BackgroundTop,
     string? HagsState,
-    string? MpoState)
-{
-    /// <summary>取证 JSON 落盘位置（与 Capture 一致）。</summary>
-    public string ExpectedPath(string directory) => Path.Combine(directory,
-        "stutter-" + At.ToLocalTime().ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + ".json");
-}
+    string? MpoState);
+
+internal sealed record StutterEvidenceHistory(IReadOnlyList<StutterEvidenceSnapshot> Records, int Skipped, bool Unavailable);
 
 /// <summary>
 /// 卡顿现场取证（0.5.0 M4）：把卡顿点附近的帧时间、当时的显卡读数、后台占用 Top3 与
@@ -72,13 +69,68 @@ public static class StutterEvidence
                 ReadHags(), ReadMpo());
             var directory = EvidenceRootOverride ?? EvidenceRoot;
             Directory.CreateDirectory(directory);
-            var path = snapshot.ExpectedPath(directory);
+            var stamp = snapshot.At.ToLocalTime().ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+            var path = Path.Combine(directory, $"stutter-{stamp}-{Guid.NewGuid():N}.json");
             AtomicFile.WriteAllTextDurable(path, JsonSerializer.Serialize(snapshot, JsonOpts), new UTF8Encoding(false));
             return path;
         }
         catch (Exception ex)
         {
             ErrorLog.Write("stutter-evidence", ex);
+            return null;
+        }
+    }
+
+    internal const int HistoryLimit = 30;
+    private const int MaxSnapshotBytes = 64 * 1024;
+
+    internal static StutterEvidenceHistory ReadHistory(CancellationToken cancellation = default)
+    {
+        var directory = EvidenceRootOverride ?? EvidenceRoot;
+        try
+        {
+            var root = new DirectoryInfo(directory);
+            var attributes = File.GetAttributes(directory);
+            if ((attributes & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != FileAttributes.Directory)
+                return new([], 0, true);
+
+            var recent = new PriorityQueue<StutterEvidenceSnapshot, DateTimeOffset>();
+            var skipped = 0;
+            var options = new EnumerationOptions { AttributesToSkip = FileAttributes.ReparsePoint, IgnoreInaccessible = false };
+            foreach (var file in root.EnumerateFiles("stutter-*.json", options))
+            {
+                cancellation.ThrowIfCancellationRequested();
+                if (ReadSnapshot(file.FullName) is { } record)
+                {
+                    recent.Enqueue(record, record.At);
+                    if (recent.Count > HistoryLimit) recent.Dequeue();
+                }
+                else
+                    skipped++;
+            }
+            return new(recent.UnorderedItems.OrderByDescending(item => item.Priority)
+                .Select(item => item.Element).ToArray(), skipped, false);
+        }
+        catch (Exception ex) when (ex is DirectoryNotFoundException or FileNotFoundException) { return new([], 0, false); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return new([], 0, true);
+        }
+    }
+
+    private static StutterEvidenceSnapshot? ReadSnapshot(string path)
+    {
+        try
+        {
+            using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (input.Length is <= 0 or > MaxSnapshotBytes)
+                return null;
+            var snapshot = JsonSerializer.Deserialize<StutterEvidenceSnapshot>(input, JsonOpts);
+            return snapshot is { StutterFramesMs: not null, BackgroundTop: not null }
+                && snapshot.At != default ? snapshot : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
             return null;
         }
     }

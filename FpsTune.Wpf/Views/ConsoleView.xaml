@@ -3,104 +3,38 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:FpsTune.Wpf.Views.Controls"
              Background="{DynamicResource AppBackgroundBrush}"
              FontFamily="{StaticResource FontBody}">
-    <!-- 0.4.0：首页化（对齐参考实现首页）——一键优化大卡置顶 + 开局准备 / 指标 / 继续使用与常用入口；
-         优化项精细列表在「优化」页，首页不再平铺（用户 2026-11-01 反馈） -->
     <UserControl.Resources>
         <Style x:Key="MetricNumber" TargetType="TextBlock" BasedOn="{StaticResource StatValueStyle}">
-            <Setter Property="FontSize" Value="28"/>
-            <Setter Property="Margin" Value="0,6,0,8"/>
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="Margin" Value="0,3,0,6"/>
         </Style>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <!-- 内容至少和视口一样高，最后一块「继续使用 + 常用入口」吃掉剩余高度：全屏不再留一块空白。 -->
-        <Grid Margin="32,26,32,28" MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-            <StackPanel Grid.Row="0">
-
-            <!-- 卡 0：一键优化（单行紧凑版：标题 + 一行说明 + 方案 chips + 主按钮，不再占掉首页首屏三分之一） -->
-            <Border Style="{StaticResource CardStyle}" Padding="20,14" Margin="0,0,0,14">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{DynamicResource Str.HomeQuickCardTitle}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="{DynamicResource Str.HomeQuickCardBody}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,4,0,0"
-                                   TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,14,0">
-                        <Button Content="{DynamicResource Str.PlanBalanced}" Style="{StaticResource GhostButtonStyle}" Height="30" Padding="12,0" FontSize="13" Margin="0,0,8,0" Click="HomeQuickPreset_Click" Tag="balanced"/>
-                        <Button Content="{DynamicResource Str.PlanSafe}" Style="{StaticResource GhostButtonStyle}" Height="30" Padding="12,0" FontSize="13" Margin="0,0,8,0" Click="HomeQuickPreset_Click" Tag="safe-only"/>
-                        <Button Content="{DynamicResource Str.PlanFull}" Style="{StaticResource GhostButtonStyle}" Height="30" Padding="12,0" FontSize="13" Click="HomeQuickPreset_Click" Tag="full"/>
-                    </StackPanel>
-                    <Button Grid.Column="2" x:Name="HomeQuickCardButton" Content="{DynamicResource Str.HomeQuickCardCta}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="132" Height="36" VerticalAlignment="Center" Click="HomeQuickCard_Click"/>
-                </Grid>
-            </Border>
-
-            <!-- 卡 1：开局准备（游戏上下文 + 动作组） -->
-            <Border Style="{StaticResource CardStyle}" Padding="24,20" Margin="0,0,0,20">
-                <Grid>
-                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,18,0"/>
-                        <ComboBox Grid.Column="1" x:Name="GameSwitcher" Width="300" Height="38" FontSize="14" Padding="14,0,34,0" Background="{DynamicResource SurfaceBrush}" HorizontalContentAlignment="Stretch"
-                                  Style="{StaticResource SelectComboBoxStyle}" AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}"
-                                  SelectionChanged="GameSwitcher_SelectionChanged">
-                            <ComboBox.ItemTemplate><DataTemplate><controls:FileNameLabel Text="{Binding DisplayLabel}" ToolTip="{Binding ExePath}" VerticalAlignment="Center"/></DataTemplate></ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </Grid>
-                    <TextBlock Grid.Row="1" x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,8,0,0" TextWrapping="Wrap"/>
-                    <Grid Grid.Row="2" Margin="0,18,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <WrapPanel x:Name="PreparationActions">
-                            <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="112" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
-                            <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
-                            <Button x:Name="CancelPreparationButton" Content="{DynamicResource Str.PrepareStop}" Style="{StaticResource GhostButtonStyle}" Height="36" Visibility="Collapsed" Click="CancelPreparation_Click"/>
-                        </WrapPanel>
-                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
-                            <Button x:Name="GameLibraryButton" Content="{DynamicResource Str.NavGames}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="GameLibrary_Click"/>
-                            <Button x:Name="QuickFiltersButton" Content="{DynamicResource Str.TabFilters}" Style="{StaticResource GhostButtonStyle}" Height="36" Margin="0,0,6,0" Click="QuickFilters_Click"/>
-                            <Button x:Name="QuickDeltaFixButton" Content="{DynamicResource Str.DeltaFixTab}" Style="{StaticResource GhostButtonStyle}" Height="36" Click="QuickDeltaFix_Click"/>
-                            <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
-                        </WrapPanel>
-                    </Grid>
-                    <Border Grid.Row="3" Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,8" Margin="0,16,0,0">
-                        <TextBlock x:Name="PreparationPlanText" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap"/>
-                    </Border>
-                    <WrapPanel Grid.Row="4" Margin="-10,6,0,-4">
-                        <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource GhostButtonStyle}" Click="LocateDelta_Click"/>
-                        <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
-                        <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Click="DeltaRestore_Click"/>
-                        <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click"/>
-                        <Button x:Name="TuningButton" Content="{DynamicResource Str.TuningTitle}" Style="{StaticResource GhostButtonStyle}" Click="Tuning_Click" Visibility="Collapsed"/>
-                    </WrapPanel>
-                    <TextBlock Grid.Row="5" x:Name="PreparationStatus" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
-                </Grid>
-            </Border>
-
-            <!-- 卡 2：指标通栏（发丝分隔四格，与检测页硬件条同构） -->
-            <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,20">
+        <StackPanel Margin="28,24,28,24">
+            <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,16">
                 <UniformGrid Columns="4">
-                    <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <Border Padding="20,11,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                         <StackPanel>
                             <TextBlock Text="CPU" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="CpuText" Text="—" Style="{StaticResource MetricNumber}"/>
                             <ProgressBar x:Name="CpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource AccentBrush}"/>
                         </StackPanel>
                     </Border>
-                    <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <Border Padding="20,11,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                         <StackPanel>
                             <TextBlock Text="{DynamicResource Str.Memory}" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="MemoryText" Text="—" Style="{StaticResource MetricNumber}"/>
                             <ProgressBar x:Name="MemoryMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource PrimaryBrush}"/>
                         </StackPanel>
                     </Border>
-                    <Border Padding="20,12,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <Border Padding="20,11,20,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
                         <StackPanel>
                             <TextBlock Text="GPU" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="GpuText" Text="—" Style="{StaticResource MetricNumber}"/>
                             <ProgressBar x:Name="GpuMeter" Style="{StaticResource ThinMeterStyle}" Foreground="{DynamicResource OkBrush}"/>
                         </StackPanel>
                     </Border>
-                    <Border Padding="20,12,20,10">
+                    <Border Padding="20,11,20,10">
                         <StackPanel>
                             <TextBlock Text="{DynamicResource Str.ItemsOptimized}" Style="{StaticResource SectionLabelStyle}"/>
                             <TextBlock x:Name="TunedText" Text="—" Style="{StaticResource MetricNumber}" Foreground="{DynamicResource AccentBrush}"/>
@@ -110,24 +44,80 @@
                 </UniformGrid>
             </Border>
 
-            </StackPanel>
-            <!-- 卡 3：继续使用 + 常用入口（最近访问 + 六入口网格），随窗口长高 -->
-            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="24,20" VerticalAlignment="Stretch">
+            <Grid x:Name="HomeTasks" SizeChanged="HomeTasks_SizeChanged" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/><ColumnDefinition x:Name="HomeTaskGap" Width="16"/><ColumnDefinition x:Name="HomeToolColumn" Width="2*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+
+                <Border x:Name="HomePreparationCard" Style="{StaticResource CardStyle}" Padding="20,17">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="GameReadyTitle" Text="{DynamicResource Str.MatchPrep}" Style="{StaticResource CardTitleStyle}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+                            <ComboBox Grid.Column="1" x:Name="GameSwitcher" Width="226" Height="34" FontSize="14" Padding="12,0,32,0"
+                                      Style="{StaticResource SelectComboBoxStyle}" Background="{DynamicResource SurfaceBrush}" HorizontalContentAlignment="Stretch"
+                                      AutomationProperties.Name="{DynamicResource Str.GameSwitcherLabel}" SelectionChanged="GameSwitcher_SelectionChanged">
+                                <ComboBox.ItemTemplate><DataTemplate><controls:FileNameLabel Text="{Binding DisplayLabel}" ToolTip="{Binding ExePath}" VerticalAlignment="Center"/></DataTemplate></ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+                        <TextBlock x:Name="GameReadyText" Text="{DynamicResource Str.ConsoleIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                        <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="{DynamicResource RadiusChip}" Padding="10,7" Margin="0,12,0,12">
+                            <TextBlock x:Name="PreparationPlanText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                        </Border>
+                        <WrapPanel x:Name="PreparationActions">
+                            <Button x:Name="StartPreparationButton" Content="{DynamicResource Str.PrepareTitle}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="112" Height="36" Margin="0,0,8,0" Click="StartPreparation_Click"/>
+                            <Button x:Name="ConfigurePreparationButton" Content="{DynamicResource Str.PrepareSettings}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="ConfigurePreparation_Click"/>
+                            <Button x:Name="CancelPreparationButton" Content="{DynamicResource Str.PrepareStop}" Style="{StaticResource GhostButtonStyle}" Height="36" Visibility="Collapsed" Click="CancelPreparation_Click"/>
+                        </WrapPanel>
+                        <WrapPanel Margin="-8,6,0,-3">
+                            <Button x:Name="LocateDeltaButton" Content="{DynamicResource Str.LocateGame}" Style="{StaticResource GhostButtonStyle}" Click="LocateDelta_Click"/>
+                            <Button x:Name="PrepareDeltaButton" Content="{DynamicResource Str.BasicAdvice}" Style="{StaticResource GhostButtonStyle}" Click="PrepareDelta_Click" ToolTip="{DynamicResource Str.BasicAdviceGuideTip}"/>
+                            <Button x:Name="RecordMatchButton" Content="{DynamicResource Str.RecordMatch}" Style="{StaticResource GhostButtonStyle}" Height="34" Click="DeltaSession_Click" ToolTip="{DynamicResource Str.TipRecordMatch}"/>
+                            <Button x:Name="PreparationRestoreButton" Content="{DynamicResource Str.BackupRestore}" Style="{StaticResource GhostButtonStyle}" Click="DeltaRestore_Click"/>
+                            <Button x:Name="PreparationHistoryButton" Content="{DynamicResource Str.PreparationHistory}" Style="{StaticResource GhostButtonStyle}" Click="PreparationHistory_Click"/>
+                            <Button x:Name="TuningButton" Content="{DynamicResource Str.TuningTitle}" Style="{StaticResource GhostButtonStyle}" Click="Tuning_Click" Visibility="Collapsed"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="PreparationStatus" Style="{StaticResource MutedTextStyle}" Margin="0,9,0,0" TextWrapping="Wrap" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" x:Name="HomeOptimizationCard" Style="{StaticResource CardStyle}" Padding="20,17">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Str.HomeQuickCardTitle}" Style="{StaticResource CardTitleStyle}"/>
+                            <TextBlock Text="{DynamicResource Str.HomeQuickCardBody}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                            <WrapPanel Margin="0,14,0,8">
+                                <Button Content="{DynamicResource Str.PlanBalanced}" Style="{StaticResource SecondaryButtonStyle}" Height="32" Margin="0,0,6,6" Click="HomeQuickPreset_Click" Tag="balanced"/>
+                                <Button Content="{DynamicResource Str.PlanSafe}" Style="{StaticResource SecondaryButtonStyle}" Height="32" Margin="0,0,6,6" Click="HomeQuickPreset_Click" Tag="safe-only"/>
+                                <Button Content="{DynamicResource Str.PlanFull}" Style="{StaticResource SecondaryButtonStyle}" Height="32" Margin="0,0,0,6" Click="HomeQuickPreset_Click" Tag="full"/>
+                            </WrapPanel>
+                        </StackPanel>
+                        <Button Grid.Row="2" x:Name="HomeQuickCardButton" Content="{DynamicResource Str.HomeQuickCardCta}" Style="{StaticResource PrimaryButtonStyle}"
+                                MinWidth="132" Height="36" HorizontalAlignment="Left" Click="HomeQuickCard_Click"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource CardStyle}" Padding="20,16">
                 <StackPanel>
-                    <TextBlock Text="{DynamicResource Str.HomeRecent}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    <WrapPanel x:Name="RecentPagesPanel" Margin="0,10,0,0"/>
-                    <TextBlock x:Name="RecentEmptyText" Text="{DynamicResource Str.HomeRecentEmpty}" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" Margin="0,8,0,0"/>
-                    <TextBlock Text="{DynamicResource Str.HomeCommon}" Style="{StaticResource CardTitleStyle}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,0"/>
-                    <UniformGrid Columns="3" Margin="0,10,0,-6">
-                        <Button Content="{DynamicResource Str.HomeEntryPrep}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,10" HorizontalAlignment="Stretch" Click="StartPreparation_Click"/>
-                        <Button Content="{DynamicResource Str.HomeEntryGames}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,10" HorizontalAlignment="Stretch" Click="GameLibrary_Click"/>
-                        <Button Content="{DynamicResource Str.HomeEntryFilters}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,0,10" HorizontalAlignment="Stretch" Click="QuickFilters_Click"/>
-                        <Button Content="{DynamicResource Str.HomeEntryDeltaFix}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,0" HorizontalAlignment="Stretch" Click="QuickDeltaFix_Click"/>
-                        <Button Content="{DynamicResource Str.HomeEntrySession}" Style="{StaticResource SecondaryButtonStyle}" Height="44" Margin="0,0,10,0" HorizontalAlignment="Stretch" Click="HomeSession_Click"/>
-                        <Button Content="{DynamicResource Str.HomeEntryTools}" Style="{StaticResource SecondaryButtonStyle}" Height="44" HorizontalAlignment="Stretch" Click="HomeTools_Click"/>
+                    <TextBlock Text="{DynamicResource Str.HomeCommon}" Style="{StaticResource CardTitleStyle}"/>
+                    <UniformGrid Columns="3" Margin="0,10,0,0">
+                        <Button x:Name="GameLibraryButton" Content="{DynamicResource Str.HomeEntryGames}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,8" Click="GameLibrary_Click"/>
+                        <Button x:Name="QuickFiltersButton" Content="{DynamicResource Str.HomeEntryFilters}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,8" Click="QuickFilters_Click"/>
+                        <Button x:Name="QuickDeltaFixButton" Content="{DynamicResource Str.HomeEntryDeltaFix}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,0,8" Click="QuickDeltaFix_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntrySession}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="HomeSession_Click"/>
+                        <Button x:Name="HomeStutterHistoryButton" Content="{DynamicResource Str.StutterHistory}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Margin="0,0,8,0" Click="StutterHistory_Click"/>
+                        <Button Content="{DynamicResource Str.HomeEntryTools}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Click="HomeTools_Click"/>
                     </UniformGrid>
+                    <StackPanel x:Name="RecentPagesSection" Visibility="Collapsed" Margin="0,14,0,-5">
+                        <TextBlock Text="{DynamicResource Str.HomeRecent}" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6"/>
+                        <WrapPanel x:Name="RecentPagesPanel"/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
-        </Grid>
+        </StackPanel>
     </ScrollViewer>
 </UserControl>

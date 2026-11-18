@@ -107,6 +107,11 @@ public partial class SessionView : UserControl
         SessionNameBox.Focus();
     }
 
+    private void StutterHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is { } owner) StutterHistoryWindow.ShowFor(owner);
+    }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         Service.Sampled += Service_Sampled;

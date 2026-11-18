@@ -1,0 +1,72 @@
+<Window x:Class="FpsTune.Wpf.Views.StutterHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource Str.StutterHistory}" Style="{StaticResource WindowTypographyStyle}"
+        Width="860" Height="580" MinWidth="640" MinHeight="420" WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip" WindowStyle="None" ShowInTaskbar="False" Background="{DynamicResource AppBackdropBrush}">
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="24">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Background="Transparent" MouseLeftButtonDown="Header_Drag" Margin="0,0,0,18">
+                <TextBlock Text="{DynamicResource Str.StutterHistory}" Style="{StaticResource PageTitleStyle}"/>
+                <TextBlock x:Name="HistoryHint" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="230"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <ListBox x:Name="HistoryList" AutomationProperties.Name="{DynamicResource Str.StutterHistory}"
+                         BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource CardListItemStyle}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="History_Changed">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,5">
+                                <TextBlock Text="{Binding Game}" TextTrimming="CharacterEllipsis" FontWeight="{DynamicResource SmallEmphasisWeight}"/>
+                                <TextBlock Text="{Binding Time}" Style="{StaticResource MutedTextStyle}" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Grid.Column="2" x:Name="EmptyText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                           VerticalAlignment="Center" Margin="12" AutomationProperties.LiveSetting="Polite"/>
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Border x:Name="Details" Style="{StaticResource CardStyle}" Visibility="Collapsed" Margin="0,0,6,0" Padding="18">
+                        <StackPanel>
+                            <TextBlock x:Name="GameText" Style="{StaticResource CardTitleStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TimeText" Style="{StaticResource MutedTextStyle}" Margin="0,4,0,14"/>
+                            <UniformGrid Columns="3" Margin="0,0,0,14">
+                                <StackPanel Margin="0,0,8,0">
+                                    <TextBlock Text="{DynamicResource Str.StutterPeak}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="PeakText" Style="{StaticResource CardTitleStyle}" Margin="0,5,0,0"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,8,0">
+                                    <TextBlock Text="{DynamicResource Str.StutterMedian}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="MedianText" Style="{StaticResource CardTitleStyle}" Margin="0,5,0,0"/>
+                                </StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="{DynamicResource Str.StutterFps}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="FpsText" Style="{StaticResource CardTitleStyle}" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </UniformGrid>
+                            <TextBlock Text="{DynamicResource Str.StutterFrameValues}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="FrameText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,14"/>
+                            <TextBlock x:Name="GpuTitle" Text="GPU" Style="{StaticResource SectionLabelStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="GpuText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,5"/>
+                            <TextBlock x:Name="SwitchText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                            <TextBlock Text="{DynamicResource Str.StutterBackground}" Style="{StaticResource SectionLabelStyle}"/>
+                            <TextBlock x:Name="BackgroundText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </Grid>
+            <DockPanel Grid.Row="2" Margin="0,18,0,0">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button x:Name="RefreshButton" Content="{DynamicResource Str.Refresh}" Style="{StaticResource SecondaryButtonStyle}" Click="Refresh_Click" Margin="0,0,8,0"/>
+                    <Button x:Name="CloseButton" Content="{DynamicResource Str.Close}" Style="{StaticResource GhostButtonStyle}" IsCancel="True" Click="Close_Click"/>
+                </StackPanel>
+                <TextBlock x:Name="StatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,12,0"
+                           VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+            </DockPanel>
+        </Grid>
+    </Border>
+</Window>

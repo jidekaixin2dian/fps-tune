@@ -158,7 +158,6 @@ public sealed class StutterEvidenceTests : IDisposable
     public async Task Capture_repeated_writes_distinct_files()
     {
         var first = await StutterEvidence.CaptureAsync(Context());
-        await Task.Delay(1100); // 文件名按秒，跨过 1 秒再拍
         var second = await StutterEvidence.CaptureAsync(Context());
 
         Assert.NotNull(first);
@@ -169,6 +168,50 @@ public sealed class StutterEvidenceTests : IDisposable
     }
 
     [Fact]
+    public async Task History_reads_old_and_new_snapshots_without_touching_unreadable_files()
+    {
+        Assert.False(StutterEvidence.ReadHistory().Unavailable);
+        Assert.Empty(StutterEvidence.ReadHistory().Records);
+        var current = await StutterEvidence.CaptureAsync(Context());
+        Assert.NotNull(current);
+        var legacy = Path.Combine(StutterEvidence.EvidenceRoot, "stutter-20260101-010203.json");
+        var legacyJson = """
+            {"gameName":"Earlier game","at":"2026-01-01T01:02:03+08:00","stutterFramesMs":[],"medianMs":0,"fps":0,"p1Low":0,"backgroundTop":[]}
+            """;
+        File.WriteAllText(legacy, legacyJson);
+        var broken = Path.Combine(StutterEvidence.EvidenceRoot, "stutter-broken.json");
+        File.WriteAllText(broken, "{");
+        File.WriteAllText(Path.Combine(StutterEvidence.EvidenceRoot, "unmanaged.json"), legacyJson);
+
+        var history = StutterEvidence.ReadHistory();
+
+        Assert.False(history.Unavailable);
+        Assert.Equal(1, history.Skipped);
+        Assert.Equal(new[] { "UiTestGame", "Earlier game" }, history.Records.Select(record => record.GameName));
+        Assert.Equal(legacyJson, File.ReadAllText(legacy));
+        Assert.Equal("{", File.ReadAllText(broken));
+    }
+
+    [Fact]
+    public async Task History_uses_capture_time_across_older_files_and_keeps_the_limit()
+    {
+        var current = await StutterEvidence.CaptureAsync(Context());
+        Assert.NotNull(current);
+        File.SetLastWriteTimeUtc(current, new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        for (var i = 0; i < 130; i++)
+        {
+            var at = new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMinutes(i);
+            File.WriteAllText(Path.Combine(StutterEvidence.EvidenceRoot, $"stutter-{i}.json"),
+                $$"""{"gameName":"past-{{i}}","at":"{{at:O}}","stutterFramesMs":[],"backgroundTop":[]}""");
+        }
+
+        var records = StutterEvidence.ReadHistory().Records;
+        Assert.Equal(StutterEvidence.HistoryLimit, records.Count);
+        Assert.Equal("UiTestGame", records[0].GameName);
+        Assert.Equal("past-129", records[1].GameName);
+    }
+
+    [Fact]
     public async Task Capture_failure_returns_null_without_throwing()
     {
         StutterEvidence.EvidenceRootOverride = Path.Combine(_root, "blocked-file");
@@ -176,6 +219,7 @@ public sealed class StutterEvidenceTests : IDisposable
 
         var path = await StutterEvidence.CaptureAsync(Context());
 
+        Assert.True(StutterEvidence.ReadHistory().Unavailable);
         Assert.Null(path); // 目录被文件占位：写入失败如实返回 null，不抛
     }
 

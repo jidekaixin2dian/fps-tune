@@ -104,7 +104,6 @@ public partial class MainWindow
         PageHost.Content = page;
         var key = _pageCache.FirstOrDefault(kv => ReferenceEquals(kv.Value, page)).Key;
         if (!string.IsNullOrEmpty(key)) RememberRecentPage(key);
-        if (key == "home" && page is ConsoleView console) console.RefreshRecentPages();
         // "掉帧修复"没有侧栏项（入口在首页快捷、滤镜页、调校窗与游戏库），
         // 进入时清掉其他页签的残留选中，保证侧栏任一时刻最多一项高亮。
         // 用缓存键判断而不是取页面实例：GetPage 首次会构造页面，切任何页都会顺带把掉帧页建出来。

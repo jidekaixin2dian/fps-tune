@@ -2203,8 +2203,8 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.QuickOptNeedAdmin">所选方案包含需要管理员的优化项，请以管理员身份运行后重试。</s:String>
     <!-- 首页大卡与入口区 -->
     <s:String x:Key="Str.HomeQuickCardTitle">一键优化</s:String>
-    <s:String x:Key="Str.HomeQuickCardBody">按游戏和场景一次完成优化项、电源与滤镜，改动前自动备份、可还原。</s:String>
-    <s:String x:Key="Str.HomeQuickCardCta">开始一键优化</s:String>
+    <s:String x:Key="Str.HomeQuickCardBody">按游戏选择优化项、电源和滤镜，确认后一起应用。</s:String>
+    <s:String x:Key="Str.HomeQuickCardCta">选择优化方案</s:String>
     <s:String x:Key="Str.HomeRecent">继续使用</s:String>
     <s:String x:Key="Str.HomeCommon">常用入口</s:String>
     <s:String x:Key="Str.HomeEntryPrep">开局准备</s:String>
@@ -2935,4 +2935,21 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.BudgetAdviceGpuBound">GPU 忙占帧时间的比例很高，瓶颈在显卡；降画质或开 DLSS 才有提升空间。</s:String>
     <s:String x:Key="Str.BudgetAdviceDisplayQueue">显示等待抖动明显（p99 超过 p50 两倍）；检查游戏是否独占全屏、帧率上限与 VRR 状态。</s:String>
     <s:String x:Key="Str.GainCi">{0}（95% 置信区间 {1:+0.#;-0.#}% ~ {2:+0.#;-0.#}%）</s:String>
+    <s:String x:Key="Str.StutterHistory">卡顿记录</s:String>
+    <s:String x:Key="Str.StutterHistoryHint">查看悬浮窗「拍下现场」保存的最近 {0} 条记录。</s:String>
+    <s:String x:Key="Str.StutterHistoryEmpty">暂无记录。记录性能会话时，将悬浮窗切换为卡片样式，再点「拍下现场」。</s:String>
+    <s:String x:Key="Str.StutterHistoryUnavailable">无法读取卡顿记录，请检查数据目录后刷新。</s:String>
+    <s:String x:Key="Str.StutterHistorySkipped">有 {0} 个文件无法读取。</s:String>
+    <s:String x:Key="Str.StutterUnknownGame">未记录游戏</s:String>
+    <s:String x:Key="Str.StutterPeak">最慢卡顿帧</s:String>
+    <s:String x:Key="Str.StutterMedian">帧时间中位数</s:String>
+    <s:String x:Key="Str.StutterFps">现场帧率</s:String>
+    <s:String x:Key="Str.StutterFrameValues">卡顿帧</s:String>
+    <s:String x:Key="Str.StutterNoSpikes">这段时间线未标出卡顿帧。</s:String>
+    <s:String x:Key="Str.StutterNoFrames">拍下现场时没有可用的帧时间数据。</s:String>
+    <s:String x:Key="Str.StutterGpuDetail">利用率 {0} · 显存 {1} · 温度 {2} · 功耗 {3}</s:String>
+    <s:String x:Key="Str.StutterBackground">当时的后台占用</s:String>
+    <s:String x:Key="Str.StutterNoBackground">没有可用的后台占用读数。</s:String>
+    <s:String x:Key="Str.StutterSwitches">HAGS {0} · MPO {1}</s:String>
+    <s:String x:Key="Str.StutterStateDefault">未记录</s:String>
 </ResourceDictionary>

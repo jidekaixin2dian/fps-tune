@@ -141,10 +141,11 @@ public partial class ConsoleView : UserControl
         };
     }
 
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
         GameContextService.GameSwitched += OnGameContextSwitched;
         RefreshGameSwitcher();
+        RefreshRecentPages();
         _owner = Window.GetWindow(this);
         if (_owner is not null) _owner.IsVisibleChanged += OwnerVisibilityChanged;
         StartMonitor();
@@ -272,7 +273,22 @@ public partial class ConsoleView : UserControl
         UpdatePreparation();
     }
 
-    // ---------- 首页：一键优化大卡 + 继续使用 + 常用入口 ----------
+    private void HomeTasks_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var stacked = e.NewSize.Width < 830;
+        if (stacked == (Grid.GetRow(HomeOptimizationCard) == 1)) return;
+        HomeTaskGap.Width = stacked ? new GridLength(0) : new GridLength(16);
+        HomeToolColumn.Width = stacked ? new GridLength(0) : new GridLength(2, GridUnitType.Star);
+        Grid.SetRow(HomeOptimizationCard, stacked ? 1 : 0);
+        Grid.SetColumn(HomeOptimizationCard, stacked ? 0 : 2);
+        HomeOptimizationCard.Margin = stacked ? new Thickness(0, 12, 0, 0) : new Thickness(0);
+    }
+
+    private void StutterHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is { } owner) StutterHistoryWindow.ShowFor(owner);
+    }
+
 
     private void HomeQuickCard_Click(object sender, RoutedEventArgs e)
     {
@@ -296,13 +312,11 @@ public partial class ConsoleView : UserControl
         if (Window.GetWindow(this) is MainWindow main) main.NavigateTo("tools");
     }
 
-    /// <summary>“继续使用”最近访问 chips；由 MainWindow 在切回首页时调用刷新。</summary>
-    internal void RefreshRecentPages()
+    private void RefreshRecentPages()
     {
         if (RecentPagesPanel is null) return;
         RecentPagesPanel.Children.Clear();
-        var recent = SettingsService.Current.RecentPages;
-        RecentEmptyText.Visibility = recent.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        var recent = SettingsService.Current.RecentPages ?? [];
         foreach (var key in recent)
         {
             var title = PageTitle(key);
@@ -318,6 +332,7 @@ public partial class ConsoleView : UserControl
             chip.Click += (_, _) => { if (Window.GetWindow(this) is MainWindow main) main.NavigateTo(key); };
             RecentPagesPanel.Children.Add(chip);
         }
+        RecentPagesSection.Visibility = RecentPagesPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static string PageTitle(string key) => key switch

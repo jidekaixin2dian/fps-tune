@@ -24,7 +24,10 @@
                 <TextBlock Text="{DynamicResource Str.SessionIntro}"
                            Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"/>
             </StackPanel>
-                <Border Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="0,18,0,0">
+                <Button Grid.Column="1" x:Name="SessionStutterHistoryButton" Content="{DynamicResource Str.StutterHistory}"
+                    Style="{StaticResource SecondaryButtonStyle}" Margin="16,0,0,0" VerticalAlignment="Top"
+                    Click="StutterHistory_Click"/>
+            <Border Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="0,18,0,0">
                     <Expander x:Name="GettingStarted" Header="{DynamicResource Str.SessionGuideTitle}" IsExpanded="True" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14">
                         <StackPanel Margin="0,16,0,0">
                             <TextBlock Text="{DynamicResource Str.SessionGuideSteps}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13" TextWrapping="Wrap" LineHeight="23"/>
