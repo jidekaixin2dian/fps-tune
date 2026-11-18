@@ -209,7 +209,7 @@ public sealed class MultiDisplayColorTests : IDisposable
         {
             foreach (var id in new[] { "A", "B" }) { DigitalVibranceService.SetPercent(80, id); IccFilterService.Apply(IccFilterPreset.Warm, id); }
             Displays.RemoveAt(0);
-            var result = RecoveryCoordinator.RestoreAll();
+            var result = RecoveryCoordinator.RestoreAllModules();
             Assert.Equal(2, result.Failures.Count);
             Assert.Equal(2, result.Restored.Count);
             Assert.Equal(60, Levels["B"]);
@@ -219,7 +219,7 @@ public sealed class MultiDisplayColorTests : IDisposable
             Displays.Add(Screen("A", "DISPLAY3", 3, "0001", false));
             IccFilterService.Apply(IccFilterPreset.Warm, "B");
             File.WriteAllText(DisplayBackupFiles.PathFor(IccFilterService.BackupDirOverride!, "backup", "A"), "{corrupt");
-            result = RecoveryCoordinator.RestoreAll();
+            result = RecoveryCoordinator.RestoreAllModules();
             Assert.Single(result.Failures);
             Assert.Equal(["b.icm"], Profiles["B"]);
             Assert.Equal(30, Levels["A"]);

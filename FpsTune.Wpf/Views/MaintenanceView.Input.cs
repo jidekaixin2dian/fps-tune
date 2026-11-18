@@ -242,8 +242,9 @@ public partial class MaintenanceView
         settings.MousePollingRate = rate;
         try
         {
-            SettingsService.Save(settings);
-            PollingMeasureStatus.Text = Str.T("Str.InputQueueMeasureApplied", rate);
+            var disposition = SettingsService.Save(settings);
+            PollingMeasureStatus.Text = disposition == SettingsSaveDisposition.MemoryOnly
+                ? Str.T("Str.SettingsMemoryOnly") : Str.T("Str.InputQueueMeasureApplied", rate);
         }
         catch (Exception ex)
         {

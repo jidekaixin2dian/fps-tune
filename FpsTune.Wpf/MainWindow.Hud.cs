@@ -47,9 +47,7 @@ public partial class MainWindow
     }
     private void HudAppearanceSave_Click(object sender, RoutedEventArgs e)
     {
-        var settings = SettingsService.Current; var previous = settings.HudAppearance;
-        settings.HudAppearance = HudController.Appearance;
-        try { SettingsService.Save(settings); HudOptionsStatus.Text = Str.T("Str.HudAppearanceSaved"); }
-        catch (Exception ex) { settings.HudAppearance = previous; HudOptionsStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
+        var result = SettingBinder.PersistValue(s => s.HudAppearance, (s, v) => s.HudAppearance = v, HudController.Appearance);
+        HudOptionsStatus.Text = result.Message(Str.T("Str.HudAppearanceSaved"));
     }
 }

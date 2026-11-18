@@ -152,10 +152,11 @@ public static partial class NativeOptimizationEngine
     private static (bool Ok, bool Changed, bool Skipped, string Message) ApplyOne(
         OptimizationItemDefinition item, string? gamePath, BackupRecord? backup = null)
     {
+        if (SimpleRegistryTweak.For(item.Id) is { } tweak)
+            return RegistrySetIfDifferent(tweak.Hive, tweak.Path, tweak.Name, tweak.Value, RegistryValueKind.DWord, tweak.AppliedMessage);
+
         switch (item.Id)
         {
-            case "hags":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", 2, RegistryValueKind.DWord, "已开启 HAGS");
             case "game-mode":
                 var gameModeCurrent = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AutoGameModeEnabled");
                 var allowGameMode = RegistryHelper.ReadValue(RegistryHive.CurrentUser, @"Software\Microsoft\GameBar", "AllowAutoGameMode");
@@ -205,22 +206,8 @@ public static partial class NativeOptimizationEngine
                 return RegistrySetIfDifferent(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications", "GlobalUserDisabled", 1, RegistryValueKind.DWord, "已关闭桌面应用后台运行");
             case "telemetry-off":
                 return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Policies\Microsoft\Windows\Data Collection", "AllowTelemetry", 0, RegistryValueKind.DWord, "诊断遥测已设为最低");
-            case "prio-separation":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", 0x28, RegistryValueKind.DWord, "已提升前台进程调度权重");
-            case "wer-off":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Windows Error Reporting", "Disabled", 1, RegistryValueKind.DWord, "已关闭错误报告");
-            case "transparency-off":
-                return RegistrySetIfDifferent(RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", 0, RegistryValueKind.DWord, "已关闭透明特效");
-            case "mpo-off":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Dwm", "OverlayTestMode", 5, RegistryValueKind.DWord, "已禁用 MPO");
-            case "net-throttling-off":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", -1, RegistryValueKind.DWord, "已解除网络限流");
-            case "sys-responsiveness":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", 10, RegistryValueKind.DWord, "已降低后台响应保留");
             case "mmcss-games":
                 return ApplyMmcssGames();
-            case "paging-exec":
-                return RegistrySetIfDifferent(RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", 1, RegistryValueKind.DWord, "已开启内核常驻内存");
             case "mem-compress-off":
                 return (true, false, true, Str.T("Str.MemoryCompressionUnavailable"));
             case "fso-off":

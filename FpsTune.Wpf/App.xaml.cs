@@ -17,7 +17,7 @@ public partial class App : Application
     private FullscreenPresetWatcher? _fullscreenPreset;
 
     internal static MemoryAutoCleanupService? MemoryAutomation { get; private set; }
-    internal static AutoRecordingService? AutomaticRecording { get; private set; }
+    internal static AutoPerformanceSessionService? AutomaticRecording { get; private set; }
     internal static GameTimerResolutionService? GameTimer => Current is App app ? app._gameTimer : null;
     internal static GameSessionAutomationService? SessionAutomation => Current is App app ? app._sessionAutomation : null;
     internal static ForegroundFilterWatcher? FilterWatcher => Current is App app ? app._filterWatcher : null;
@@ -223,7 +223,7 @@ public partial class App : Application
             ApplyCrosshairSettings();
             MemoryAutomation = new MemoryAutoCleanupService();
             MemoryAutomation.Start();
-            AutomaticRecording = new AutoRecordingService(SessionService);
+            AutomaticRecording = new AutoPerformanceSessionService(SessionService);
             AutomaticRecording.ApplySettings();
 
         }));

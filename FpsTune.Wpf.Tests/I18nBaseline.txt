@@ -13,7 +13,8 @@ Core/CatalogGroups.cs	10
 Core/DetectionService.cs	80
 Core/GamePathService.cs	24
 Core/HardwareInfoService.cs	11
-Core/NativeOptimizationEngine.cs	76
+Core/NativeOptimizationEngine.cs	68
+Core/SimpleRegistryTweak.cs	8
 Core/NativeOptimizationEngine.Operations.cs	8
 Core/NativeSystem.cs	4
 Core/OneClickOptimizer.cs	16

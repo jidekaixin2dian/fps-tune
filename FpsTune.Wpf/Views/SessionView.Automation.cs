@@ -51,12 +51,13 @@ public partial class SessionView
         if (paths.Count > 32) { AutoRecordStatus.Text = Str.T("Str.AutoRecordTooMany"); return; }
         var settings = SettingsService.Current;
         var previousEnabled = settings.AutoRecordEnabled; var previousGames = settings.AutoRecordGames;
-        settings.AutoRecordEnabled = enabled; settings.AutoRecordGames = paths;
-        try { SettingsService.Save(settings); }
-        catch (Exception ex)
+        var result = SettingBinder.Persist(
+            () => { settings.AutoRecordEnabled = enabled; settings.AutoRecordGames = paths; },
+            () => { settings.AutoRecordEnabled = previousEnabled; settings.AutoRecordGames = previousGames; });
+        if (!result.Ok)
         {
-            settings.AutoRecordEnabled = previousEnabled; settings.AutoRecordGames = previousGames;
-            AutoRecordStatus.Text = PrivacyScrub.Sanitize(ex.Message); return;
+            AutoRecordStatus.Text = result.Message();
+            return;
         }
         _automation?.ApplySettings();
         UpdateAutoRecordStatus();
@@ -64,6 +65,7 @@ public partial class SessionView
     private void UpdateAutoRecordStatus()
     {
         if (!Dispatcher.CheckAccess()) { _ = Dispatcher.BeginInvoke(UpdateAutoRecordStatus); return; }
-        AutoRecordStatus.Text = _automation?.Status ?? Str.T(SettingsService.Current.AutoRecordEnabled ? "Str.AutoRecordWaiting" : "Str.AutoRecordOff");
+        var status = _automation?.Status ?? Str.T(SettingsService.Current.AutoRecordEnabled ? "Str.AutoRecordWaiting" : "Str.AutoRecordOff");
+        AutoRecordStatus.Text = SettingsService.SettingsFileUnreadable ? status + " · " + Str.T("Str.SettingsMemoryOnly") : status;
     }
 }

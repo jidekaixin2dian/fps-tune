@@ -7,7 +7,7 @@ namespace FpsTune.Wpf.Services;
 /// 游戏会话自动化（均为 opt-in，默认关闭）：
 /// ① 游戏启动边沿自动执行该游戏已保存的开局准备方案；
 /// ② 游戏启动时把显示器切到当前分辨率下的最高刷新率，全部游戏退出后还原。
-/// 进程探测复用 AutoRecordingService.ObserveProcess（完整路径身份校验，会话过滤）；
+/// 进程探测复用 AutoPerformanceSessionService.ObserveProcess（完整路径身份校验，会话过滤）；
 /// 只用边沿触发，不做持续监控写操作；变化写入 AutoProfile 活动中心。
 /// </summary>
 internal sealed class GameSessionAutomationService : IDisposable
@@ -82,7 +82,7 @@ internal sealed class GameSessionAutomationService : IDisposable
 
             var observations = new Dictionary<string, GameProcessObservation>(StringComparer.OrdinalIgnoreCase);
             foreach (var game in games)
-                observations[game.ExePath] = (Probe ?? AutoRecordingService.ObserveProcess)(game.ExePath);
+                observations[game.ExePath] = (Probe ?? AutoPerformanceSessionService.ObserveProcess)(game.ExePath);
 
             // 基线：配置变化或首次观察不触发边沿（应用启动时游戏已在运行不算"启动"）。
             var edges = new List<(StateStore.GameProfile Game, bool Started)>();
@@ -269,7 +269,7 @@ internal sealed class GameSessionAutomationService : IDisposable
     {
         var classes = EfficiencyClassesProvider?.Invoke() ?? CpuTopology.EfficiencyClasses();
         var (_, backgroundMask) = CpuTopology.SplitMasks(classes);
-        var paths = AutoRecordingService.NormalizePaths(SettingsService.Current.MemoryBackgroundApps);
+        var paths = AutoPerformanceSessionService.NormalizePaths(SettingsService.Current.MemoryBackgroundApps);
         if (paths.Length == 0)
         {
             if (_affinityEngaged) DisengageAffinity(Str.T("Str.AutoSessionAffinityNoApps"));

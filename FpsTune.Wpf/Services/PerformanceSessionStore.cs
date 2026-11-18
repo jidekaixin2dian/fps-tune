@@ -46,7 +46,7 @@ public static class PerformanceSessionStore
     /// 获取运行中会话的跨进程所有权。锁句柄必须保持到会话结束；进程崩溃时由
     /// OS 释放句柄，下一实例即可安全接管恢复。同一进程也只允许一个持有者。
     /// </summary>
-    internal static IDisposable? TryAcquireActiveSessionOwnership()
+    internal static ActiveSessionLease? TryAcquireActiveSessionOwnership()
     {
         lock (ActiveOwnershipSync)
         {
@@ -216,42 +216,17 @@ public static class PerformanceSessionStore
 
     public static void SaveActiveSnapshot(PerformanceSession partial)
     {
-        if (HasActiveSessionOwnership)
-            return;
-        SaveActiveSnapshotCore(partial, requireOwnership: false);
+        using var lease = TryAcquireActiveSessionOwnership();
+        lease?.SaveSnapshot(partial);
     }
 
-    internal static void SaveActiveSnapshotOwned(PerformanceSession partial)
+    private static bool WriteActiveSnapshot(PerformanceSession partial)
     {
-        SaveActiveSnapshotCore(partial, requireOwnership: true);
-    }
-
-    private static void SaveActiveSnapshotCore(PerformanceSession partial, bool requireOwnership)
-    {
-        try
-        {
-            if (!TryValidateSession(partial, allowActiveId: true, out _))
-                return;
-            IDisposable? temporary = null;
-            if (!HasActiveSessionOwnership)
-            {
-                if (requireOwnership || (temporary = TryAcquireActiveSessionOwnership()) is null)
-                    return;
-            }
-            try
-            {
-                Directory.CreateDirectory(SessionsDir);
-                AtomicFile.WriteAllText(ActiveSessionPath, JsonSerializer.Serialize(partial, JsonOpts), new UTF8Encoding(false));
-            }
-            finally
-            {
-                temporary?.Dispose();
-            }
-        }
-        catch
-        {
-            // 快照失败不中断采样
-        }
+        if (!TryValidateSession(partial, allowActiveId: true, out _))
+            return false;
+        Directory.CreateDirectory(SessionsDir);
+        AtomicFile.WriteAllText(ActiveSessionPath, JsonSerializer.Serialize(partial, JsonOpts), new UTF8Encoding(false));
+        return true;
     }
 
     public static PerformanceSession? LoadActiveSnapshot()
@@ -347,7 +322,7 @@ public static class PerformanceSessionStore
                 File.Move(ActiveSessionPath, target);
                 archivedPath = target;
                 // 墓碑只对原快照有意义：归档成功后一并清理（清理失败不影响归档结果）。
-                ClearActiveCancellationOwned();
+                ownership.ClearTombstone();
                 return !File.Exists(ActiveSessionPath);
             }
             catch (Exception ex)
@@ -359,107 +334,49 @@ public static class PerformanceSessionStore
     }
 
     public static bool ClearActiveSnapshot()
-        => !HasActiveSessionOwnership && ClearActiveSnapshotCore(requireOwnership: false);
-
-    internal static bool ClearActiveSnapshotOwned()
-        => ClearActiveSnapshotCore(requireOwnership: true);
-
-    private static bool ClearActiveSnapshotCore(bool requireOwnership)
     {
-        IDisposable? temporary = null;
-        try
-        {
-            if (!HasActiveSessionOwnership)
-            {
-                if (requireOwnership || (temporary = TryAcquireActiveSessionOwnership()) is null)
-                    return false;
-            }
-            if (!File.Exists(ActiveSessionPath))
-                return true;
-            if (DeleteFileOverride is { } delete)
-                delete(ActiveSessionPath);
-            else
-                File.Delete(ActiveSessionPath);
-            return !File.Exists(ActiveSessionPath);
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            temporary?.Dispose();
-        }
+        using var lease = TryAcquireActiveSessionOwnership();
+        return lease?.ClearSnapshot() == true;
+    }
+
+    private static bool DeleteSnapshot()
+    {
+        if (!File.Exists(ActiveSessionPath))
+            return true;
+        if (DeleteFileOverride is { } delete)
+            delete(ActiveSessionPath);
+        else
+            File.Delete(ActiveSessionPath);
+        return !File.Exists(ActiveSessionPath);
     }
 
     public static bool MarkActiveSnapshotCancelled()
-        => !HasActiveSessionOwnership && MarkActiveSnapshotCancelledCore(requireOwnership: false, marker: "cancelled");
-
-    internal static bool MarkActiveSnapshotCancelledOwned()
-        => MarkActiveSnapshotCancelledCore(requireOwnership: true, marker: "cancelled");
-
-    internal static bool MarkActiveSnapshotHandledOwned()
-        => MarkActiveSnapshotCancelledCore(requireOwnership: true, marker: "handled");
-
-    private static bool MarkActiveSnapshotCancelledCore(bool requireOwnership, string marker)
     {
-        IDisposable? temporary = null;
-        try
-        {
-            if (!HasActiveSessionOwnership)
-            {
-                if (requireOwnership || (temporary = TryAcquireActiveSessionOwnership()) is null)
-                    return false;
-            }
-            Directory.CreateDirectory(SessionsDir);
-            if (WriteActiveTombstoneOverride is { } write)
-                write(ActiveCancellationPath);
-            else
-                AtomicFile.WriteAllTextDurable(
-                    ActiveCancellationPath,
-                    marker + "\n",
-                    new UTF8Encoding(false));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            temporary?.Dispose();
-        }
+        using var lease = TryAcquireActiveSessionOwnership();
+        return lease?.MarkCancelled() == true;
+    }
+
+    private static bool WriteTombstone(string marker)
+    {
+        Directory.CreateDirectory(SessionsDir);
+        if (WriteActiveTombstoneOverride is { } write)
+            write(ActiveCancellationPath);
+        else
+            AtomicFile.WriteAllTextDurable(ActiveCancellationPath, marker + "\n", new UTF8Encoding(false));
+        return true;
     }
 
     public static bool ClearActiveCancellation()
-        => !HasActiveSessionOwnership && ClearActiveCancellationCore(requireOwnership: false);
-
-    internal static bool ClearActiveCancellationOwned()
-        => ClearActiveCancellationCore(requireOwnership: true);
-
-    private static bool ClearActiveCancellationCore(bool requireOwnership)
     {
-        IDisposable? temporary = null;
-        try
-        {
-            if (!HasActiveSessionOwnership)
-            {
-                if (requireOwnership || (temporary = TryAcquireActiveSessionOwnership()) is null)
-                    return false;
-            }
-            if (!File.Exists(ActiveCancellationPath))
-                return true;
+        using var lease = TryAcquireActiveSessionOwnership();
+        return lease?.ClearTombstone() == true;
+    }
+
+    private static bool DeleteTombstone()
+    {
+        if (File.Exists(ActiveCancellationPath))
             File.Delete(ActiveCancellationPath);
-            return !File.Exists(ActiveCancellationPath);
-        }
-        catch
-        {
-            return false;
-        }
-        finally
-        {
-            temporary?.Dispose();
-        }
+        return !File.Exists(ActiveCancellationPath);
     }
 
     internal static bool HasActiveSnapshot => File.Exists(ActiveSessionPath);
@@ -517,7 +434,7 @@ public static class PerformanceSessionStore
         }
     }
 
-    private static bool QuarantineUnknownActiveTombstoneOwned()
+    private static bool QuarantineUnknownActiveTombstone()
     {
         try
         {
@@ -536,14 +453,12 @@ public static class PerformanceSessionStore
     /// 新会话开始前清理上次取消但未能删除的快照；没有取消标记的 active
     /// 必须保留给启动恢复流程，不能被新会话覆盖。
     /// </summary>
-    internal static bool PrepareForNewSession()
+    private static bool PrepareForNewSession(ActiveSessionLease ownership)
     {
-        if (!HasActiveSessionOwnership)
-            return false;
         var tombstone = ReadActiveTombstone();
         if (tombstone == ActiveTombstoneKind.Unknown)
         {
-            if (!QuarantineUnknownActiveTombstoneOwned())
+            if (!ownership.QuarantineMarker())
                 return false;
             return !HasActiveSnapshot;
         }
@@ -553,7 +468,7 @@ public static class PerformanceSessionStore
             // even when an older cancellation/handled marker is beside it.
             if (IsFutureSchemaActiveSnapshot())
                 return false;
-            if (!ClearActiveSnapshotOwned() || !ClearActiveCancellationOwned())
+            if (!ownership.ClearSnapshot() || !ownership.ClearTombstone())
                 return false;
         }
         return !HasActiveSnapshot;
@@ -576,7 +491,7 @@ public static class PerformanceSessionStore
             {
                 // Unknown/garbled marker content is not authorization to drop
                 // recoverable data. Isolate only the marker for inspection.
-                QuarantineUnknownActiveTombstoneOwned();
+                ownership.QuarantineMarker();
                 return null;
             }
 
@@ -590,9 +505,9 @@ public static class PerformanceSessionStore
                     return null;
                 var cancelledSnapshot = LoadActiveSnapshot();
                 if (!HasActiveSnapshot)
-                    ClearActiveCancellationOwned();
-                else if (cancelledSnapshot is not null && ClearActiveSnapshotOwned())
-                    ClearActiveCancellationOwned();
+                    ownership.ClearTombstone();
+                else if (cancelledSnapshot is not null && ownership.ClearSnapshot())
+                    ownership.ClearTombstone();
                 return null;
             }
 
@@ -601,9 +516,9 @@ public static class PerformanceSessionStore
                 return null;
             if (snapshot.Samples.Count < Math.Max(0, minSamples))
             {
-                MarkActiveSnapshotCancelledOwned();
-                if (ClearActiveSnapshotOwned())
-                    ClearActiveCancellationOwned();
+                ownership.MarkCancelled();
+                if (ownership.ClearSnapshot())
+                    ownership.ClearTombstone();
                 return null;
             }
 
@@ -613,8 +528,8 @@ public static class PerformanceSessionStore
             {
                 // The historical copy was already promoted. Only retry clearing the
                 // source snapshot; a failed delete must not create another Id.
-                if (ClearActiveSnapshotOwned())
-                    ClearActiveCancellationOwned();
+                if (ownership.ClearSnapshot())
+                    ownership.ClearTombstone();
                 return existing;
             }
             if (existingError?.Contains("过新", StringComparison.Ordinal) == true)
@@ -639,8 +554,8 @@ public static class PerformanceSessionStore
             {
                 return null;
             }
-            if (ClearActiveSnapshotOwned())
-                ClearActiveCancellationOwned();
+            if (ownership.ClearSnapshot())
+                ownership.ClearTombstone();
             return recovered;
         }
     }
@@ -774,7 +689,7 @@ public static class PerformanceSessionStore
     private static bool IsPercent(double? value)
         => value is null || (double.IsFinite(value.Value) && value.Value is >= 0 and <= 100);
 
-    private sealed class ActiveSessionLease : IDisposable
+    internal sealed class ActiveSessionLease : IDisposable
     {
         private FileStream? _stream;
         private readonly string _lockPath;
@@ -783,6 +698,26 @@ public static class PerformanceSessionStore
         {
             _stream = stream;
             _lockPath = lockPath;
+        }
+
+        internal void SaveSnapshot(PerformanceSession session) => WithOwnership(() => WriteActiveSnapshot(session));
+
+        internal bool ClearSnapshot() => WithOwnership(DeleteSnapshot);
+        internal bool MarkCancelled() => WithOwnership(() => WriteTombstone("cancelled"));
+        internal bool MarkHandled() => WithOwnership(() => WriteTombstone("handled"));
+        internal bool ClearTombstone() => WithOwnership(DeleteTombstone);
+        internal bool QuarantineMarker() => WithOwnership(QuarantineUnknownActiveTombstone);
+        internal bool PrepareForNewSession() => WithOwnership(() => PerformanceSessionStore.PrepareForNewSession(this));
+
+        private bool WithOwnership(Func<bool> action)
+        {
+            lock (ActiveOwnershipSync)
+            {
+                if (_stream is null || !ReferenceEquals(_stream, ActiveOwner))
+                    return false;
+                try { return action(); }
+                catch { return false; }
+            }
         }
 
         public void Dispose()

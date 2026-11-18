@@ -19,7 +19,7 @@ public sealed class OperationReceiptTests : IDisposable
         var applied = NativeOptimizationEngine.ApplyAll(["game-mode"], null,
             id => BackupService.AppendCapture(file, id, null), r => BackupService.CompleteCapture(file, r));
         Assert.True(applied[0].Ok); Assert.True(applied[0].Changed); Assert.Equal(1, values["AllowAutoGameMode"]);
-        var restored = BackupService.RestoreAll(["game-mode"], file);
+        var restored = BackupService.RestoreSystemBackups(["game-mode"], file);
         Assert.Empty(restored.Failures); Assert.Equal(1, values["AutoGameModeEnabled"]); Assert.Equal(0, values["AllowAutoGameMode"]);
         RegistryHelper.SetOverride = (_, _, _, _, _) => { };
         Assert.False(NativeOptimizationEngine.ApplyAll(["game-mode"], null)[0].Ok);
@@ -43,15 +43,14 @@ public sealed class OperationReceiptTests : IDisposable
         RegistryHelper.SnapshotOverride = (_, _, name) => new(values.ContainsKey(name), values.GetValueOrDefault(name), RegistryValueKind.String);
         var writes = 0;
         RegistryHelper.SetOverride = (_, _, name, value, _) => { if (++writes == 2) throw new IOException("injected write failure"); values[name] = value; };
-        var run = await NativeOptimizationEngine.ApplyItemsAsync(new[] { "mouse-accel-off" }, null);
-        Assert.Equal(1, run.ExitCode);
-        var json = JsonNode.Parse(run.Output)!;
-        Assert.True(json["results"]![0]!["stateUncertain"]!.GetValue<bool>());
-        var file = json["backupFile"]!.GetValue<string>();
+        var run = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "mouse-accel-off" }, null);
+        Assert.Equal(1, run.FailedCount);
+        Assert.True(Assert.Single(run.Results).StateUncertain);
+        var file = run.BackupFile;
         Assert.StartsWith("v2-backup-", Path.GetFileName(file));
         Assert.Equal("0", values["MouseSpeed"]);
         RegistryHelper.SetOverride = (_, _, name, value, _) => values[name] = value;
-        var restored = BackupService.RestoreAll(new[] { "mouse-accel-off" }, file);
+        var restored = BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" }, file);
         Assert.Empty(restored.Failures);
         Assert.Equal("1", values["MouseSpeed"]);
         Assert.Equal("6", values["MouseThreshold1"]);
@@ -63,9 +62,9 @@ public sealed class OperationReceiptTests : IDisposable
         RegistryHelper.SnapshotOverride = (_, _, _) => throw new IOException("injected read failure");
         var writes = 0;
         RegistryHelper.SetOverride = (_, _, _, _, _) => writes++;
-        var run = await NativeOptimizationEngine.ApplyItemsAsync(new[] { "transparency-off" }, null);
-        Assert.Equal(1, run.ExitCode); Assert.Equal(0, writes);
-        Assert.False(JsonNode.Parse(run.Output)!["results"]![0]!["stateUncertain"]!.GetValue<bool>());
+        var run = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "transparency-off" }, null);
+        Assert.Equal(1, run.FailedCount); Assert.Equal(0, writes);
+        Assert.False(Assert.Single(run.Results).StateUncertain);
     }
 
     [Fact]
@@ -113,7 +112,7 @@ public sealed class OperationReceiptTests : IDisposable
             id => BackupService.AppendCapture(file, id, null), r => BackupService.CompleteCapture(file, r));
         Assert.True(applied[0].Ok); Assert.Equal(4, start);
         if (foreignChange) start = 3;
-        var restored = BackupService.RestoreAll(null, file);
+        var restored = BackupService.RestoreSystemBackups(null, file);
         if (foreignChange)
         {
             Assert.Single(restored.Failures); Assert.Equal(1, configWrites); Assert.Equal(3, start);
@@ -134,7 +133,7 @@ public sealed class OperationReceiptTests : IDisposable
         }));
         var restoredIds = new List<string>();
         BackupService.RestoreRecordOverride = record => restoredIds.Add(record.Id);
-        var result = BackupService.RestoreAll();
+        var result = BackupService.RestoreSystemBackups();
         Assert.Equal(new[] { "transparency-off" }, restoredIds);
         Assert.Single(result.Failures); Assert.True(File.Exists(file));
         Assert.False(BackupService.ReadRecords(file)[0].Restored);
@@ -164,7 +163,7 @@ public sealed class OperationReceiptTests : IDisposable
         var records = BackupService.ReadRecords(file);
         Assert.Equal(records[0].CreatedPlanGuid, records[1].TargetPlanGuid);
         Assert.NotEqual(original, active);
-        var restored = BackupService.RestoreAll(null, file);
+        var restored = BackupService.RestoreSystemBackups(null, file);
         Assert.Empty(restored.Failures);
         Assert.Equal(original, active); Assert.Equal(2, index);
         Assert.Contains(commands, args => args[0] == "-delete" && args[1] == records[0].CreatedPlanGuid);
@@ -177,11 +176,11 @@ public sealed class OperationReceiptTests : IDisposable
         var value = 1;
         RegistryHelper.SnapshotOverride = (_, _, _) => new(true, value, RegistryValueKind.DWord);
         RegistryHelper.SetOverride = (_, _, _, v, _) => value = Convert.ToInt32(v);
-        var run = await NativeOptimizationEngine.ApplyItemsAsync(new[] { "transparency-off" }, null);
-        Assert.Equal(0, run.ExitCode);
+        var run = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "transparency-off" }, null);
+        Assert.Equal(0, run.FailedCount);
         value = 2;
-        var file = JsonNode.Parse(run.Output)!["backupFile"]!.GetValue<string>();
-        var result = BackupService.RestoreAll(null, file);
+        var file = run.BackupFile;
+        var result = BackupService.RestoreSystemBackups(null, file);
         Assert.Single(result.Failures); Assert.Empty(result.Restored); Assert.Equal(2, value);
     }
 }

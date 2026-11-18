@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -337,7 +336,7 @@ public partial class OptimizeView : UserControl
         try
         {
             var result = await OneClickOptimizer.ApplyAsync();
-            await CompleteOperationAsync(result);
+            await CompleteOperationAsync(() => SetApplyResult(result));
         }
         catch (Exception ex)
         {
@@ -387,7 +386,7 @@ public partial class OptimizeView : UserControl
         try
         {
             var result = await NativeOptimizationEngine.RestoreAsync();
-            await CompleteOperationAsync(result);
+            await CompleteOperationAsync(() => { ResetDoc(); SetRawMonospace(result.Output); });
         }
         catch (Exception ex)
         {
@@ -495,60 +494,11 @@ public partial class OptimizeView : UserControl
         Line(Str.T("Str.Requirement"), req);
     }
 
-    /// <summary>一条优化项的执行结果（从引擎 JSON 里读出来的界面视图）。</summary>
-    private sealed record ApplyRow(string Id, string Name, bool Ok, bool Skipped, string Message);
-
-    /// <summary>
-    /// 解析引擎结果。退出码不再决定渲染方式：只要有结构化结果就逐项展示——
-    /// 部分项目失败是正常结果，不该让界面变成一次"整体失败"。
-    /// </summary>
-    private static bool TryReadApplyResult(RunResult result, out JsonNode? root, out List<ApplyRow> rows)
+    private void SetApplyResult(NativeOptimizationEngine.ApplyReceipt receipt)
     {
-        root = null;
-        rows = [];
-        if (string.IsNullOrWhiteSpace(result.Output))
-            return false;
-        try
-        {
-            root = System.Text.Json.Nodes.JsonNode.Parse(result.Output);
-            if (root?["results"] is not System.Text.Json.Nodes.JsonArray results)
-            {
-                root = null;
-                return false;
-            }
-            foreach (var item in results)
-                rows.Add(new ApplyRow(
-                    item?["id"]?.GetValue<string>() ?? "",
-                    item?["name"]?.GetValue<string>() ?? "",
-                    item?["ok"]?.GetValue<bool>() ?? false,
-                    item?["skipped"]?.GetValue<bool>() ?? false,
-                    item?["message"]?.GetValue<string>() ?? ""));
-            return true;
-        }
-        catch
-        {
-            root = null;
-            return false;
-        }
-    }
-
-    private void SetApplyResult(RunResult result)
-    {
-        if (!TryReadApplyResult(result, out var root, out var rows))
-        {
-            ResetDoc();
-            var failedHead = NewPara(6);
-            failedHead.Inlines.Add(R(Str.T("Str.ExecFailedSp"), "DangerBrush", bold: true, size: 14));
-            OutputDoc.Blocks.Add(failedHead);
-            var note = NewPara(4);
-            note.Inlines.Add(R(Str.T("Str.UnstructuredResult"), "TextMutedBrush"));
-            OutputDoc.Blocks.Add(note);
-            SetRawMonospace(string.IsNullOrWhiteSpace(result.Output) ? "" : result.Output);
-            return;
-        }
-
+        var rows = receipt.Results;
         var applied = rows.Count(r => r.Ok && !r.Skipped);
-        var failed = rows.Count(r => !r.Ok && !r.Skipped);
+        var failed = receipt.FailedCount;
         var skipped = rows.Count(r => r.Skipped);
 
         ResetDoc();
@@ -589,8 +539,8 @@ public partial class OptimizeView : UserControl
         }
 
         // 顶部已经给了成功/失败/跳过的数字时不重复一遍汇总；只有全成功时才需要这行。
-        var summary = root?["summary"]?.GetValue<string>();
-        if (!string.IsNullOrWhiteSpace(summary) && failed == 0)
+        var summary = Str.T("Str.OptApplyCounts", applied, failed, skipped);
+        if (failed == 0)
         {
             var sp = NewPara(4);
             sp.Inlines.Add(R(Str.T("Str.SummarySp"), "TextMutedBrush"));
@@ -613,7 +563,7 @@ public partial class OptimizeView : UserControl
             OutputDoc.Blocks.Add(next);
         }
 
-        var backup = root?["backupFile"]?.GetValue<string>();
+        var backup = receipt.BackupFile;
         if (!string.IsNullOrWhiteSpace(backup))
         {
             var bp = NewPara(4);
@@ -622,21 +572,19 @@ public partial class OptimizeView : UserControl
             OutputDoc.Blocks.Add(bp);
         }
 
-        if (root?["reboot"] is System.Text.Json.Nodes.JsonArray reboot && reboot.Count > 0)
+        var reboot = receipt.RebootIds;
+        if (reboot.Count > 0)
         {
-            var ids = reboot.Select(r2 => r2?.GetValue<string>() ?? "").Where(x => !string.IsNullOrWhiteSpace(x));
             var rp = NewPara(0);
             rp.Inlines.Add(R(Str.T("Str.NeedsRebootSp"), "WarningBrush", bold: true));
-            rp.Inlines.Add(R(string.Join(Str.T("Str.ListSeparator"), ids), "WarningBrush"));
+            rp.Inlines.Add(R(string.Join(Str.T("Str.ListSeparator"), reboot), "WarningBrush"));
             OutputDoc.Blocks.Add(rp);
         }
 
         // 最小化在托盘时也第一时间知道执行结果（部分失败同样要通知，否则只看到"改了"却不知道没全成）。
         TrayService.NotifyComplete(
             Str.T("Str.AppNameDone"),
-            failed > 0
-                ? Str.T("Str.OptApplyCounts", applied, failed, skipped)
-                : string.IsNullOrWhiteSpace(summary) ? Str.T("Str.OptimizeDone") : summary);
+            summary);
     }
 
     private void SetRawMonospace(string text)

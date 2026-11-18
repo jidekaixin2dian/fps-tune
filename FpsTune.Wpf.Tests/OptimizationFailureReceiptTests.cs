@@ -61,8 +61,8 @@ public sealed class OptimizationFailureReceiptTests : IDisposable
     public async Task Partial_failure_keeps_per_item_receipt_and_is_not_recorded_as_success()
     {
         FailOnKeyboardSpeed();
-        var run = await NativeOptimizationEngine.ApplyItemsAsync(["keyboard-repeat", "mouse-accel-off"], null);
-        Assert.Equal(1, run.ExitCode);
+        var run = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(["keyboard-repeat", "mouse-accel-off"], null);
+        Assert.Equal(1, run.FailedCount);
 
         var receipt = Assert.Single(OperationDiagnostics.Read(_root).Operations);
         Assert.Equal("optimize-apply", receipt.Operation);
@@ -86,7 +86,7 @@ public sealed class OptimizationFailureReceiptTests : IDisposable
     public async Task All_items_failing_is_recorded_as_failed_rather_than_partial()
     {
         FailOnKeyboardSpeed();
-        await NativeOptimizationEngine.ApplyItemsAsync(["keyboard-repeat"], null);
+        await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(["keyboard-repeat"], null);
         var receipt = Assert.Single(OperationDiagnostics.Read(_root).Operations);
         Assert.Equal("failed", receipt.Outcome);
         Assert.Equal("failed", Assert.Single(receipt.Items ?? []).Outcome);
@@ -98,7 +98,7 @@ public sealed class OptimizationFailureReceiptTests : IDisposable
         AdminHelper.IsAdministratorOverride = () => false;
         var name = OptimizationCatalog.Items.Single(item => item.Id == "dvr-off").DisplayName;
         var error = await Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => NativeOptimizationEngine.ApplyItemsAsync(["dvr-off"], null));
+            () => NativeOptimizationEngine.ApplyItemsWithReceiptAsync(["dvr-off"], null));
         // 报错走界面文案（列出是哪几项、要什么权限），不再是过去那句英文异常。
         Assert.Equal(Str.T("Str.OptApplyNeedsAdminItems", 1, name), error.Message);
         Assert.DoesNotContain("Administrator privileges are required", error.Message);
@@ -114,7 +114,7 @@ public sealed class OptimizationFailureReceiptTests : IDisposable
     public async Task Diagnostic_summary_lists_the_failed_item_not_just_a_status_word()
     {
         FailOnKeyboardSpeed();
-        await NativeOptimizationEngine.ApplyItemsAsync(["keyboard-repeat"], null);
+        await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(["keyboard-repeat"], null);
 
         var zipPath = DiagnosticReportExporter.ExportTo(Path.Combine(_root, "diagnostic.zip"));
         using var archive = ZipFile.OpenRead(zipPath);

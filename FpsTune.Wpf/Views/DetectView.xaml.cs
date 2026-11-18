@@ -255,33 +255,20 @@ public partial class DetectView : UserControl
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            var result = await NativeOptimizationEngine.DetectAsync();
+            var gamePath = AppState.GamePath;
+            var scan = await Task.Run(() => DetectionService.Scan(gamePath));
             sw.Stop();
-            if (!result.Success)
-            {
-                OutputBox.Text = result.Output;
-                RefreshLastDetectText();   // 失败不记录，恢复显示上一次的成功结果
-                return false;
-            }
-
-            var root = JsonNode.Parse(result.Output)?.AsObject();
-            if (root is null)
-            {
-                OutputBox.Text = Str.T("Str.CannotParseDetectJson");
-                RefreshLastDetectText();
-                return false;
-            }
-
+            var root = DetectionService.CreateSnapshot(scan);
             StateStore.SaveDetect(root);
             StateStore.SaveDetectMeta(DateTime.Now, sw.ElapsedMilliseconds);
             // 0.2.0 M2：同步写入当前游戏的逐游戏快照（未建档的游戏只写全局，不建档）。
-            var currentGameId = StateStore.FindGameByPath(AppState.GamePath)?.Id;
+            var currentGameId = StateStore.FindGameByPath(scan.GamePath)?.Id;
             if (currentGameId is not null)
             {
                 StateStore.SaveDetectForGame(currentGameId, root);
                 StateStore.SaveDetectMetaForGame(currentGameId, new StateStore.DetectMeta(DateTime.Now, sw.ElapsedMilliseconds));
             }
-            ApplyDetectData(root, showDetails: true);
+            ApplyDetectData(root, showDetails: true, scan.Items);
             RefreshLastDetectText();
             _hasSavedState = true;
             return true;
@@ -397,7 +384,7 @@ public partial class DetectView : UserControl
                 meta.ElapsedMs / 1000.0);
     }
 
-    private void ApplyDetectData(JsonObject root, bool showDetails)
+    private void ApplyDetectData(JsonObject root, bool showDetails, IReadOnlyList<OptimizationItem>? items = null)
     {
         AppState.DetectJson = root;
         var hardware = root["hardware"]?.AsObject();
@@ -423,7 +410,7 @@ public partial class DetectView : UserControl
         CheckList.ItemsSource = BuildCheckItems(checks);
 
         // 0.2.0 M2：解析逻辑抽到 DetectionData 共用（概览页切游戏灌快照走同一口径）。
-        AppState.Items = DetectionData.ParseItems(root);
+        AppState.Items = items?.ToList() ?? DetectionData.ParseItems(root);
         var viewModels = AppState.Items
             .Select(i => new OptimizationItemViewModel(i))
             .ToList();

@@ -99,7 +99,7 @@ public sealed class Evolution040Tests : IDisposable
         var capture = BackupService.Capture(new[] { "windowed-games-opt" }, null);
         await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "windowed-games-opt" }, null);
         Assert.Contains("SwapEffectUpgradeEnable=1", current);
-        var restored = BackupService.RestoreAll(new[] { "windowed-games-opt" }, capture);
+        var restored = BackupService.RestoreSystemBackups(new[] { "windowed-games-opt" }, capture);
         Assert.Empty(restored.Failures);
         Assert.Equal(original, current);
     }

@@ -44,13 +44,13 @@ public sealed class BackupRecoveryBundleTests : IDisposable
     public void Interrupted_review_keeps_original_and_unlocks_restore_only_after_confirmation()
     {
         var file = Pending(); var original = File.ReadAllBytes(file);
-        Assert.NotEmpty(BackupService.RestoreAll(null, file).Failures);
+        Assert.NotEmpty(BackupService.RestoreSystemBackups(null, file).Failures);
         var review = BackupService.ReviewInterrupted();
         Assert.Equal(1, review.Count); Assert.Equal(original, File.ReadAllBytes(file)); Assert.Equal(0, _restores);
         Assert.Equal(1, BackupService.ConfirmInterruptedReview(review));
         Assert.Equal(original, File.ReadAllBytes(Directory.GetFiles(Path.GetDirectoryName(file)!, Path.GetFileName(file), SearchOption.AllDirectories).Single(f => f != file)));
         BackupService.EnsureNoPendingWrites(["transparency-off"]);
-        Assert.Empty(BackupService.RestoreAll(null, file).Failures);
+        Assert.Empty(BackupService.RestoreSystemBackups(null, file).Failures);
         Assert.Equal(1, _value); Assert.Equal(1, _restores);
     }
     [Fact]
@@ -67,7 +67,7 @@ public sealed class BackupRecoveryBundleTests : IDisposable
         Assert.Equal(1, fresh.Count); BackupService.ConfirmInterruptedReview(fresh);
         Assert.False(File.Exists(journal));
         Assert.Equal(bytes, File.ReadAllBytes(Directory.GetFiles(Path.GetDirectoryName(file)!, ".restore-inflight.json", SearchOption.AllDirectories).Single()));
-        Assert.Empty(BackupService.RestoreAll(null, file).Failures);
+        Assert.Empty(BackupService.RestoreSystemBackups(null, file).Failures);
     }
     private void Put(string relative, object value)
     {
@@ -106,7 +106,7 @@ public sealed class BackupRecoveryBundleTests : IDisposable
         Assert.Equal(power, Assert.Single(PowerDetailsJournal.Load()));
         var imported = BackupService.ListBackups().Single();
         Assert.NotNull(JsonNode.Parse(File.ReadAllText(imported))!["ImportedOriginId"]);
-        Assert.Empty(BackupService.RestoreAll(null, imported).Failures); Assert.Equal(1, _value);
+        Assert.Empty(BackupService.RestoreSystemBackups(null, imported).Failures); Assert.Equal(1, _value);
         Assert.Single(Directory.GetFiles(Path.Combine(UserDataPaths.Root, "backup", "history")));
     }
     [Theory]

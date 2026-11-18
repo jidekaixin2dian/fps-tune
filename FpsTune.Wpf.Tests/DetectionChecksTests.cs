@@ -1,4 +1,5 @@
 using System.Text;
+using FpsTune.Wpf.Core;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -35,12 +36,23 @@ public class DetectionChecksTests
         var source = File.ReadAllText(
             Path.Combine(RepoRoot(), "FpsTune.Wpf", "Core", "DetectionService.cs"), Encoding.UTF8);
         var buildChecks = source[(source.IndexOf("BuildChecks", StringComparison.Ordinal))..];
-        var actual = Regex.Matches(buildChecks, @"name\s*=\s*""([^""]+)""")
+        var actual = Regex.Matches(buildChecks, @"new Check\(""([^""]+)""")
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
         Assert.Equal(ExpectedNames, actual);
+    }
+
+    [Fact]
+    public void Detection_snapshot_keeps_the_cli_check_field_names()
+    {
+        var scan = new DetectionService.ScanResult(new("cpu", "gpu", 8, "os", false, false),
+            null, [], [new("check", "ok", "message")]);
+
+        var check = DetectionService.CreateSnapshot(scan)["checks"]![0]!.AsObject();
+        Assert.Equal(new[] { "name", "status", "message" }, check.Select(property => property.Key));
+        Assert.Equal("check", check["name"]!.GetValue<string>());
     }
 
     [Fact]

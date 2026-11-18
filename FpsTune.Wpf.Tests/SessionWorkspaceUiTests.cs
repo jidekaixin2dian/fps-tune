@@ -131,7 +131,7 @@ public sealed class SessionWorkspaceUiTests
             SessionTemplateStore.Save(path, new SessionConditions(Width: 1440, Height: 1080, Quality: "高", Scene: "训练", TargetSeconds: 1));
             GameProcessObservation observation = new(null);
             using var session = HardwareOnly();
-            using var automation = new AutoRecordingService(session, () => (true, new[] { path }), _ => observation, () => false);
+            using var automation = new AutoPerformanceSessionService(session, () => (true, new[] { path }), _ => observation, () => false);
             void Poll() { var task = automation.PollAsync(); DlssFeedbackTests.PumpUntil(() => task.IsCompleted); task.GetAwaiter().GetResult(); }
             Poll(); observation = new(new(50, 10)); Poll();
             Assert.True(session.IsRunning); Assert.Equal(selection, AppState.GamePath);

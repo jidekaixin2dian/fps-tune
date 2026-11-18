@@ -46,7 +46,8 @@ public sealed record ComparisonResult(
     string? BackupFile,
     IReadOnlyList<string> AppliedIds,
     bool RolledBack,
-    string? RollbackError);
+    string? RollbackError,
+    ComparisonStage? FailedStage = null);
 
 /// <summary>
 /// 自动前后对照的状态机（0.5.0 M2）：改前采样 → 应用 → 冷却 → 改后采样 → 判定。
@@ -77,6 +78,7 @@ public static class ComparisonPlanner
 
         using var trace = OperationDiagnostics.Begin("comparison",
             $"{items.Length} 项 · {request.SampleSeconds}s × 2", null);
+        var stage = ComparisonStage.Before;
         try
         {
             // ---- 改前采样 ----
@@ -89,12 +91,13 @@ public static class ComparisonPlanner
                 trace.Settle("failed");
                 return new ComparisonResult(false,
                     ClassifyCaptureReason(before.ReasonCode, before.Error), before.ReasonCode,
-                    null, before, null, null, [], false, null);
+                    null, before, null, null, [], false, null, stage);
             }
             trace.Item("before", "succeeded", $"{before.Frames} 帧");
 
             // ---- 应用 ----
-            progress?.Report(ComparisonStage.Apply);
+            stage = ComparisonStage.Apply;
+            progress?.Report(stage);
             trace.Stage("apply");
             var applied = applyOverride is { } applyLocal
                 ? await applyLocal(items, request.GamePath, ct).ConfigureAwait(false)
@@ -105,8 +108,12 @@ public static class ComparisonPlanner
             {
                 trace.Item("apply", "failed", applied.Error);
                 trace.Settle("failed");
-                return new ComparisonResult(false, "应用所选项目没有成功：" + applied.Error, "apply-failed",
-                    null, before, null, applied.BackupFile, [], false, null);
+                var rollback = applied.ChangedIds.Count > 0
+                    ? RollbackInternal(applied.BackupFile, applied.ChangedIds, trace)
+                    : null;
+                return new ComparisonResult(false, "应用所选项目没有成功：" + applied.Error + RollbackNote(rollback),
+                    "apply-failed", null, before, null, applied.BackupFile, applied.ChangedIds,
+                    rollback?.Ok == true, rollback is { Ok: false } ? rollback.Error : null, stage);
             }
             if (string.IsNullOrEmpty(applied.BackupFile) || !File.Exists(applied.BackupFile))
             {
@@ -114,12 +121,13 @@ public static class ComparisonPlanner
                 trace.Settle("failed");
                 return new ComparisonResult(false,
                     "应用已完成，但没有取得本次对照自己的备份快照，已停止对照以保证可还原。", "no-backup",
-                    null, before, null, applied.BackupFile, [], false, null);
+                    null, before, null, applied.BackupFile, [], false, null, stage);
             }
             trace.Item("apply", "succeeded", $"{applied.ChangedIds.Count} 项改动");
 
             // ---- 冷却 ----
-            progress?.Report(ComparisonStage.Cooldown);
+            stage = ComparisonStage.Cooldown;
+            progress?.Report(stage);
             trace.Stage("cooldown");
             if (CooldownOverride is { } cooldownInject)
                 await cooldownInject(request.CooldownSeconds, ct).ConfigureAwait(false);
@@ -127,7 +135,8 @@ public static class ComparisonPlanner
                 await Task.Delay(TimeSpan.FromSeconds(request.CooldownSeconds), ct).ConfigureAwait(false);
 
             // ---- 改后采样 ----
-            progress?.Report(ComparisonStage.After);
+            stage = ComparisonStage.After;
+            progress?.Report(stage);
             trace.Stage("after");
             var after = await CaptureAsync(request, ct).ConfigureAwait(false);
             if (after.Error is not null)
@@ -140,12 +149,13 @@ public static class ComparisonPlanner
                 return new ComparisonResult(false,
                     ClassifyCaptureReason(after.ReasonCode, after.Error) + note, after.ReasonCode,
                     null, before, null, applied.BackupFile, applied.ChangedIds,
-                    rollback?.Ok == true, rollback is { Ok: false } ? rollback.Error : null);
+                    rollback?.Ok == true, rollback is { Ok: false } ? rollback.Error : null, stage);
             }
             trace.Item("after", "succeeded", $"{after.Frames} 帧");
 
             // ---- 判定 ----
-            progress?.Report(ComparisonStage.Verdict);
+            stage = ComparisonStage.Verdict;
+            progress?.Report(stage);
             trace.Stage("verdict");
             GainVerdictResult? verdict = null;
             string? verdictError = null;
@@ -186,7 +196,7 @@ public static class ComparisonPlanner
                 verdict is not null, verdictError,
                 verdict is null ? "verdict-failed" : null,
                 verdict, before, after, applied.BackupFile, applied.ChangedIds,
-                RolledBack: false, RollbackError: null);
+                RolledBack: false, RollbackError: null, FailedStage: verdict is null ? stage : null);
         }
         catch (OperationCanceledException)
         {
@@ -196,7 +206,7 @@ public static class ComparisonPlanner
         {
             trace.Fail(ex);
             return new ComparisonResult(false, "对照流程异常中止：" + ex.Message, "unexpected",
-                null, null, null, null, [], false, null);
+                null, null, null, null, [], false, null, stage);
         }
     }
 
@@ -263,19 +273,21 @@ public static class ComparisonPlanner
             trace.Item("rollback", "skipped", "no-changes");
             return new ComparisonRollbackResult(true, 0, null);
         }
-        var outcome = RestoreOverride is { } restoreInject
-            ? restoreInject(backupFile, changedIds)
-            : RestoreDefault(backupFile, changedIds);
+        var outcome = string.IsNullOrWhiteSpace(backupFile)
+            ? new ComparisonRollbackResult(false, 0, Str.T("Str.NoRestorableBackups"))
+            : RestoreOverride is { } restoreInject
+                ? restoreInject(backupFile, changedIds)
+                : RestoreDefault(backupFile, changedIds);
         trace.Item("rollback", outcome.Ok ? "succeeded" : "failed",
             outcome.Ok ? $"{outcome.RestoredCount} 项" : outcome.Error);
         return outcome;
     }
 
-    private static ComparisonRollbackResult RestoreDefault(string? backupFile, IReadOnlyList<string> changedIds)
+    private static ComparisonRollbackResult RestoreDefault(string backupFile, IReadOnlyList<string> changedIds)
     {
         return Task.Run(() =>
         {
-            var result = BackupService.RestoreAll(changedIds, backupFile);
+            var result = BackupService.RestoreOperationBackup(backupFile, changedIds);
             if (result.Failures.Count > 0)
                 return new ComparisonRollbackResult(false, result.Restored.Count, string.Join("；", result.Failures));
             return new ComparisonRollbackResult(true, result.Restored.Count, null);

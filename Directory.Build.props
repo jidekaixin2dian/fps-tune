@@ -52,7 +52,7 @@
     <!-- 0.6.0 = 用户可见节奏版本：侧栏去专题位（A/B 收进「对照一下」、掉帧修复收进游戏库）、
          采样读不到帧时按原因分层（权限 / 图形事件被系统或反作弊拦下 / 目标没渲染）、
          设置页保存失败时界面回滚到真实状态（0.5.0 已发布，不再覆盖同名产物） -->
-    <VersionPrefix>0.6.0</VersionPrefix>
+    <VersionPrefix>0.6.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FPS 帧律</Product>
     <Description>通用 FPS · Windows 系统层帧率优化工具</Description>

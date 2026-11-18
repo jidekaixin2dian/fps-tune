@@ -145,6 +145,29 @@ public sealed class ComparisonPlannerTests : IDisposable
     }
 
     [Fact]
+    public async Task Partial_apply_failure_rolls_back_only_its_changed_items()
+    {
+        ComparisonPlanner.CaptureOverride = (_, _) => Task.FromResult(SuccessfulRun(WriteFrameCsv("partial.csv")));
+        var backup = Path.Combine(_root, "partial-backup.json");
+        File.WriteAllText(backup, "{}");
+        ComparisonPlanner.ApplyOverride = (_, _, _) =>
+            Task.FromResult(new ComparisonApplyOutcome(false, "error", backup, ["sysmain"]));
+        ComparisonPlanner.RestoreOverride = (file, ids) =>
+        {
+            Assert.Equal(backup, file);
+            Assert.Equal(["sysmain"], ids);
+            return new(true, 1, null);
+        };
+
+        var result = await ComparisonPlanner.RunAsync(Request("sysmain", "timer-res"), CancellationToken.None);
+
+        Assert.False(result.Ok);
+        Assert.Equal(ComparisonStage.Apply, result.FailedStage);
+        Assert.True(result.RolledBack);
+        Assert.Equal(["sysmain"], result.AppliedIds);
+    }
+
+    [Fact]
     public async Task After_capture_failure_rolls_back_applied_items()
     {
         var beforeCsv = WriteFrameCsv("b3.csv");
@@ -163,6 +186,7 @@ public sealed class ComparisonPlannerTests : IDisposable
 
         Assert.False(result.Ok);
         Assert.Equal("no-process", result.ReasonCode);
+        Assert.Equal(ComparisonStage.After, result.FailedStage);
         Assert.Contains("还原", result.Error);
         Assert.True(result.RolledBack);
         Assert.Null(result.RollbackError);

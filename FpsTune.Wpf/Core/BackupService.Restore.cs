@@ -12,15 +12,22 @@ namespace FpsTune.Wpf.Core;
 
 public static partial class BackupService
 {
-    /// <summary>
-    /// 遍历全部备份文件逐项还原；失败的项会如实报告，不会静默吞掉。
-    /// 传入 <paramref name="ids"/> 时只还原指定项（A/B 实验语义）：
-    /// 文件中其余未选中的记录保持不动；已成功的记录会持久化标记，防止重复还原。
-    /// 传入 <paramref name="onlyBackupFile"/> 时只处理这一份备份文件——调用方（A/B 实验）
-    /// 必须锚定"本步骤自己创建的那份快照"，否则会把更早备份里的值当成本步骤的原值。
-    /// </summary>
-    public static RestoreAllResult RestoreAll(
+    /// <summary>还原系统备份；可按项目或备份文件筛选。省略筛选时遍历全部系统备份。</summary>
+    public static RestoreAllResult RestoreSystemBackups(
         IReadOnlyCollection<string>? ids = null, string? onlyBackupFile = null)
+        => ids is { Count: 0 } ? new RestoreAllResult() : RestoreBackups(ids, onlyBackupFile);
+
+    /// <summary>只还原一次操作自己的备份和确实改动的项目。</summary>
+    internal static RestoreAllResult RestoreOperationBackup(string backupFile, IReadOnlyCollection<string> changedIds)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(backupFile);
+        ArgumentNullException.ThrowIfNull(changedIds);
+        if (changedIds.Count == 0)
+            return new RestoreAllResult();
+        return RestoreBackups(changedIds, backupFile);
+    }
+
+    private static RestoreAllResult RestoreBackups(IReadOnlyCollection<string>? ids, string? onlyBackupFile)
     {
         Mutex? mutex = null;
         var acquired = false;
@@ -87,7 +94,7 @@ public static partial class BackupService
         IReadOnlyCollection<string>? ids = null, string? onlyBackupFile = null)
     {
         HashSet<string>? selection = null;
-        if (ids is not null && ids.Count > 0)
+        if (ids is not null)
             selection = new HashSet<string>(ids, StringComparer.Ordinal);
 
         Directory.CreateDirectory(BackupDir);
@@ -613,16 +620,10 @@ public static partial class BackupService
 
     private static (RegistryHive, string, string, RegistryValueKind)? GetRegistrySpec(string id)
     {
+        if (SimpleRegistryTweak.For(id) is { } tweak)
+            return (tweak.Hive, tweak.Path, tweak.Name, RegistryValueKind.DWord);
         return id switch
         {
-            "hags" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", RegistryValueKind.DWord),
-            "prio-separation" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", RegistryValueKind.DWord),
-            "wer-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Windows Error Reporting", "Disabled", RegistryValueKind.DWord),
-            "transparency-off" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", RegistryValueKind.DWord),
-            "mpo-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Dwm", "OverlayTestMode", RegistryValueKind.DWord),
-            "net-throttling-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", RegistryValueKind.DWord),
-            "sys-responsiveness" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", RegistryValueKind.DWord),
-            "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", RegistryValueKind.DWord),
             "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", RegistryValueKind.DWord),
             "windowed-games-opt" => (RegistryHive.CurrentUser, @"Software\Microsoft\DirectX\UserGpuPreferences", "DirectXUserGlobalSettings", RegistryValueKind.String),
             "filter-keys-off" => (RegistryHive.CurrentUser, @"Control Panel\Accessibility\Keyboard Response", "Flags", RegistryValueKind.String),

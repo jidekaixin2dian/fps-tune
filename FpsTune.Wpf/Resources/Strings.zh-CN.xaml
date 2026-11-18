@@ -708,6 +708,9 @@
     <s:String x:Key="Str.FpsDetail">平均 {0} FPS · 1% low {1} · p99 {2} ms · 卡顿 {3} 次 · {4} 帧</s:String>
     <s:String x:Key="Str.FpsReasonNoPresentMon">未找到 PresentMon（安装官方 PresentMon 后可记录帧率）</s:String>
     <s:String x:Key="Str.FpsReasonNoGameProcess">开始记录时未检测到游戏进程</s:String>
+    <s:String x:Key="Str.FpsReasonIncompatible">此版本 PresentMon 无法持续记录帧率。</s:String>
+    <s:String x:Key="Str.FpsReasonNoPermission">PresentMon 采集需要管理员权限。</s:String>
+    <s:String x:Key="Str.FpsReasonEventsLost">PresentMon 报告图形事件丢失，未取得有效帧率。</s:String>
     <s:String x:Key="Str.FpsReasonParseFailed">PresentMon 采样解析失败</s:String>
     <s:String x:Key="Str.FpsReasonLimit">FPS 采集达到容量上限，未生成不完整统计；硬件指标继续记录</s:String>
     <s:String x:Key="Str.SessionSaving">正在结束采集并保存会话，请稍候…</s:String>
@@ -2450,6 +2453,7 @@ DNS：{3} · 解析地址：{4}</s:String>
     <s:String x:Key="Str.CommunityQq">QQ 659528489</s:String>
 
     <!-- 启动读配置失败、准星保存、会话保留上限、游戏时自动化 -->
+    <s:String x:Key="Str.SettingsMemoryOnly">原有设置无法读取，改动仅在本次运行中生效。</s:String>
     <s:String x:Key="Str.SettingsLoadFailedTitle">设置读取失败</s:String>
     <s:String x:Key="Str.SettingsCorruptBody">配置文件读不出来（内容损坏：{0}）。这次启动按默认设置运行，原文件已留档为同目录的 settings.json.corrupt，想找回旧设置就不要删它。配置文件在 {1}。</s:String>
     <s:String x:Key="Str.SettingsLoadFailedBody">这次启动没能读取配置文件：{0}。为免覆盖原有设置，本轮不会把设置写回磁盘；文件仍在 {1}。</s:String>

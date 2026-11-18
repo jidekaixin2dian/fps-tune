@@ -1,9 +1,12 @@
 namespace FpsTune.Wpf.Services;
 
-/// <summary>一次设置保存的结果；<see cref="Detail"/> 是已脱敏的失败原因，成功时为 null。</summary>
-internal readonly record struct SettingSaveResult(bool Ok, string? Detail)
+public enum SettingsSaveDisposition { Saved, MemoryOnly, Failed }
+
+internal readonly record struct SettingSaveResult(SettingsSaveDisposition Disposition, string? Detail)
 {
-    internal static readonly SettingSaveResult Saved = new(true, null);
+    internal bool Ok => Disposition != SettingsSaveDisposition.Failed;
+    internal bool MemoryOnly => Disposition == SettingsSaveDisposition.MemoryOnly;
+    internal string Message(string saved = "") => MemoryOnly ? Str.T("Str.SettingsMemoryOnly") : Detail ?? saved;
 }
 
 /// <summary>
@@ -27,7 +30,7 @@ internal static class SettingBinder
         try
         {
             change();
-            return SettingSaveResult.Saved;
+            return new(SettingsSaveDisposition.Saved, null);
         }
         catch (Exception ex)
         {
@@ -36,27 +39,23 @@ internal static class SettingBinder
                 // 回滚本身失败也不能把原始失败盖掉：原始失败才是要说给用户听的那一个。
                 try { undo(); } catch (Exception) { /* 回滚失败只丢内存态，不阻断提示 */ }
             }
-            return new SettingSaveResult(false, PrivacyScrub.Sanitize(ex.Message));
+            return new SettingSaveResult(SettingsSaveDisposition.Failed, PrivacyScrub.Sanitize(ex.Message));
         }
     }
 
     /// <summary>改内存 → 保存到 settings.json；失败回滚内存。<paramref name="undo"/> 负责把字段写回旧值。</summary>
     internal static SettingSaveResult Persist(Action change, Action undo)
-        => Attempt(() =>
+    {
+        var disposition = SettingsSaveDisposition.Saved;
+        var result = Attempt(() =>
         {
             change();
-            SettingsService.Save(SettingsService.Current);
+            disposition = SettingsService.Save(SettingsService.Current);
         }, undo);
-
-    /// <summary>单字段布尔开关：读旧值 → 写新值 → 保存；失败把旧值写回。</summary>
-    internal static SettingSaveResult PersistBool(Func<AppSettings, bool> read, Action<AppSettings, bool> write, bool wanted)
-    {
-        var settings = SettingsService.Current;
-        var previous = read(settings);
-        return Persist(() => write(settings, wanted), () => write(settings, previous));
+        return result.Ok ? new(disposition, null) : result;
     }
 
-    /// <summary>单字段字符串/枚举开关（主题、关闭去向这类）：同上，回滚到旧值。</summary>
+    /// <summary>保存单字段；写入失败时回滚到旧值。</summary>
     internal static SettingSaveResult PersistValue<T>(Func<AppSettings, T> read, Action<AppSettings, T> write, T wanted)
     {
         var settings = SettingsService.Current;

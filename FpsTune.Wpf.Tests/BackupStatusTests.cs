@@ -108,7 +108,7 @@ public sealed class BackupStatusTests : IDisposable
             Assert.True(before.Valid);
             Assert.True(before.PendingCount > 0);
 
-            var result = BackupService.RestoreAll(new[] { "transparency-off" }, capture);
+            var result = BackupService.RestoreSystemBackups(new[] { "transparency-off" }, capture);
             Assert.Empty(result.Failures);
 
             Assert.False(File.Exists(capture), "全部记录消费后应改名为 .restored");

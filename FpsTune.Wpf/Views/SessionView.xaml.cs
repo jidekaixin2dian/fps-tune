@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Globalization;
 using System.Windows.Controls;
@@ -23,7 +23,7 @@ public partial class SessionView : UserControl
     private IReadOnlyDictionary<string, SessionSummary> _summaries = new Dictionary<string, SessionSummary>();
 
     private readonly PerformanceSessionService _service;
-    private readonly AutoRecordingService? _automation;
+    private readonly AutoPerformanceSessionService? _automation;
     public SessionView() : this(App.SessionService, App.AutomaticRecording) { }
 
     /// <summary>延迟预算卡（0.5.0 M5）：用最近一次定量采样的多列数据算输入/帧生成/显示三段。</summary>
@@ -80,7 +80,7 @@ public partial class SessionView : UserControl
             .FirstOrDefault();
         return latest is null ? null : FrameTimeColumns.Read(File.ReadLines(latest.FullName));
     }
-    internal SessionView(PerformanceSessionService service, AutoRecordingService? automation = null)
+    internal SessionView(PerformanceSessionService service, AutoPerformanceSessionService? automation = null)
     {
         _service = service; _automation = automation;
         InitializeComponent();

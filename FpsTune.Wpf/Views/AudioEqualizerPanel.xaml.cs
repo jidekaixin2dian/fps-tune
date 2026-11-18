@@ -175,8 +175,11 @@ public partial class AudioEqualizerPanel : UserControl
     }
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        try { SettingsService.Current.EqualizerDraft = ReadSettings(); SettingsService.Save(SettingsService.Current); EqStatus.Text = Str.T("Str.EqSaved"); }
-        catch (Exception ex) { EqStatus.Text = ex.Message; }
+        var previous = SettingsService.Current.EqualizerDraft;
+        var result = SettingBinder.Persist(
+            () => SettingsService.Current.EqualizerDraft = ReadSettings(),
+            () => SettingsService.Current.EqualizerDraft = previous);
+        EqStatus.Text = result.Message(Str.T("Str.EqSaved"));
     }
     private async void Apply_Click(object sender, RoutedEventArgs e)
     {

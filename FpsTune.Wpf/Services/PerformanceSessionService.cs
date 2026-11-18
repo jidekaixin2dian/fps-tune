@@ -23,7 +23,7 @@ public sealed class PerformanceSessionService : IDisposable
     private DateTime _startedAt;
     private int _sampleCount;
     private int _disposed;
-    private IDisposable? _activeOwner;
+    private PerformanceSessionStore.ActiveSessionLease? _activeOwner;
     private Task<PerformanceSession?>? _stopTask;
     private readonly Stopwatch _clock = new();
     private bool _liveFpsRequested;
@@ -97,7 +97,7 @@ public sealed class PerformanceSessionService : IDisposable
         {
             // A leftover active snapshot without a cancellation tombstone is
             // recoverable data and must never be overwritten by a new session.
-            if (!PerformanceSessionStore.PrepareForNewSession())
+            if (!owner.PrepareForNewSession())
             {
                 ReleaseActiveOwner();
                 return false;
@@ -187,7 +187,7 @@ public sealed class PerformanceSessionService : IDisposable
         try
         {
             // Keep the final hardware samples recoverable even if FPS draining or saving is interrupted.
-            if (save) PerformanceSessionStore.SaveActiveSnapshotOwned(session with { Id = "active-snapshot" });
+            if (save) _activeOwner?.SaveSnapshot(session with { Id = "active-snapshot" });
             if (recorder is not null)
             {
                 var fps = recorder.Stop(parse: save);
@@ -210,14 +210,14 @@ public sealed class PerformanceSessionService : IDisposable
                 {
                     // The historical save is complete, so persist a durable
                     // "handled" tombstone before attempting active cleanup.
-                    if (!PerformanceSessionStore.MarkActiveSnapshotHandledOwned())
+                    if (_activeOwner?.MarkHandled() != true)
                         throw new IOException("无法写入会话已处理标记；active 快照仍保留。");
-                    if (PerformanceSessionStore.ClearActiveSnapshotOwned())
-                        PerformanceSessionStore.ClearActiveCancellationOwned();
+                    if (_activeOwner?.ClearSnapshot() == true)
+                        _activeOwner?.ClearTombstone();
                 }
                 else
                 {
-                    PerformanceSessionStore.ClearActiveCancellationOwned();
+                    _activeOwner?.ClearTombstone();
                 }
             }
             catch (Exception ex)
@@ -227,7 +227,7 @@ public sealed class PerformanceSessionService : IDisposable
                 {
                     // Keep a complete fallback snapshot for the next launch when
                     // the final historical write fails (for example, disk full).
-                    PerformanceSessionStore.SaveActiveSnapshotOwned(session with { Id = "active-snapshot" });
+                    _activeOwner?.SaveSnapshot(session with { Id = "active-snapshot" });
                 }
             }
         }
@@ -236,18 +236,18 @@ public sealed class PerformanceSessionService : IDisposable
             // Write the tombstone before deleting. If deletion fails, the next
             // process will honor the cancellation and only retry cleanup.
             if (PerformanceSessionStore.HasActiveSnapshot &&
-                !PerformanceSessionStore.MarkActiveSnapshotCancelledOwned())
+                _activeOwner?.MarkCancelled() != true)
             {
                 failure ??= new IOException("无法写入取消标记；会话未取消，active 快照仍保留。");
             }
             else if (PerformanceSessionStore.HasActiveSnapshot &&
-                     PerformanceSessionStore.ClearActiveSnapshotOwned())
+                     _activeOwner?.ClearSnapshot() == true)
             {
-                PerformanceSessionStore.ClearActiveCancellationOwned();
+                _activeOwner?.ClearTombstone();
             }
             else if (!PerformanceSessionStore.HasActiveSnapshot)
             {
-                PerformanceSessionStore.ClearActiveCancellationOwned();
+                _activeOwner?.ClearTombstone();
             }
         }
 
@@ -338,7 +338,7 @@ public sealed class PerformanceSessionService : IDisposable
                 Id = "active-snapshot",
                 FpsNote = _fpsRecorder?.UnavailableReasonKey,
             };
-            PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
+            _activeOwner?.SaveSnapshot(snapshot);
         }
         Sampled?.Invoke(sample);
         if (IsRunning && !IsStopping && Conditions?.TargetSeconds is { } target && _clock.Elapsed.TotalSeconds >= target)
@@ -349,7 +349,7 @@ public sealed class PerformanceSessionService : IDisposable
     }
 
     // 默认名会直接过 IsValidSessionName（文件名字符集），不能用带冒号的 "HH:mm"
-    //（自动录制路径 AutoRecordingService 同款口径用 "HH-mm"）。
+    //（自动录制路径 AutoPerformanceSessionService 同款口径用 "HH-mm"）。
     public static string DefaultSessionName() => "会话 " + DateTime.Now.ToString("MM-dd HH-mm");
 
     public static bool IsValidSessionName(string? name)

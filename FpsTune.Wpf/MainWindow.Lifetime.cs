@@ -53,13 +53,14 @@ public partial class MainWindow
             }
             if (remember)
             {
-                var settings = SettingsService.Current; var previous = settings.CloseAction;
-                try { settings.CloseAction = action; SettingsService.Save(settings); }
-                catch (Exception ex)
+                var result = SettingBinder.PersistValue(s => s.CloseAction, (s, v) => s.CloseAction = v, action);
+                if (!result.Ok)
                 {
-                    settings.CloseAction = previous;
-                    DialogService.Warning(Str.T("Str.CloseChoiceTitle"), Str.T("Str.CloseRememberFailed") + "\n" + ex.Message); return;
+                    DialogService.Warning(Str.T("Str.CloseChoiceTitle"), Str.T("Str.CloseRememberFailed") + "\n" + result.Detail);
+                    return;
                 }
+                if (result.MemoryOnly)
+                    DialogService.Info(Str.T("Str.CloseChoiceTitle"), result.Message());
             }
             if (action == CloseBehavior.Exit) Close();
             else { Hide(); if (UserDataPaths.RootOverride is null) TrayService.ShowMinimizedHint(force: true); }

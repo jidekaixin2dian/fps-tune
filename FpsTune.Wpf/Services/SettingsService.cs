@@ -209,7 +209,7 @@ public static class SettingsService
             Current.Preparation ??= new();
             Current.MemoryAutoCleanup = (Current.MemoryAutoCleanup ?? new()).Normalize();
             Current.MemoryBackgroundApps ??= [];
-            Current.AutoRecordGames = AutoRecordingService.NormalizePaths(Current.AutoRecordGames).ToList();
+            Current.AutoRecordGames = AutoPerformanceSessionService.NormalizePaths(Current.AutoRecordGames).ToList();
             Current.HudAppearance = (Current.HudAppearance ?? new()).Normalize();
             Current.Corners = (Current.Corners ?? new()).Normalize();
             Current.CloseAction = CloseBehavior.Normalize(Current.CloseAction);
@@ -258,7 +258,7 @@ public static class SettingsService
     /// <summary>true = 这次启动发现配置文件内容损坏（已留档 .corrupt 并按默认值运行，允许回写）。</summary>
     public static bool SettingsFileCorrupt { get; private set; }
 
-    public static void Save(AppSettings settings)
+    public static SettingsSaveDisposition Save(AppSettings settings)
     {
         // 自动生成常用个人主页链接
         if (string.IsNullOrWhiteSpace(settings.QQLink) && !string.IsNullOrWhiteSpace(settings.QQ))
@@ -270,9 +270,10 @@ public static class SettingsService
         Current = settings;
         // 启动时原始文件读不出来：这一轮只在内存里生效，绝不把默认值覆盖回磁盘。
         // （会话中用户仍能改，界面按新值工作；下次启动读到原文件时设置会「回退」，比丢配置好。）
-        if (SettingsFileUnreadable) return;
+        if (SettingsFileUnreadable) return SettingsSaveDisposition.MemoryOnly;
         Directory.CreateDirectory(BaseDir);
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         AtomicFile.WriteAllText(SettingsFile, json, new UTF8Encoding(false));
+        return SettingsSaveDisposition.Saved;
     }
 }

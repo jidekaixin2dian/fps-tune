@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using FpsTune.Wpf.Services;
 using Microsoft.Win32;
@@ -13,35 +14,32 @@ public static class DetectionService
 {
     private const string UltimatePowerGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
 
-    public static string BuildDetectJson(string? gamePath = null)
-    {
-        var hw = HardwareInfoService.Get();
+    internal sealed record Check(string Name, string Status, string Message);
 
+    internal sealed record ScanResult(HardwareInfo Hardware, string? GamePath,
+        IReadOnlyList<OptimizationItem> Items, IReadOnlyList<Check> Checks);
+
+    internal static ScanResult Scan(string? gamePath = null)
+    {
+        var hardware = HardwareInfoService.Get();
         if (string.IsNullOrWhiteSpace(gamePath))
-            // 设置页手动指定的路径优先于自动检测
             gamePath = StateStore.LoadGamePath() ?? GamePathService.Find();
-        AppState.GamePath = gamePath;
 
         var items = OptimizationCatalog.Items.Select(def =>
         {
             var state = GetItemState(def, gamePath);
-            // 键名与顺序是 CLI -Json 的机器协议，不得增删或改名；
-            // 只有「值」随界面语言变化（CLI 恒为 zh-CN，见 OptimizationItemDefinition.Pick）。
-            return new
-            {
-                id = def.Id,
-                name = def.DisplayName,
-                desc = def.DisplayDescription,
-                sideEffect = def.DisplaySideEffect,
-                admin = def.Admin,
-                @default = def.Default,
-                reboot = def.Reboot,
-                optimized = state.Optimized,
-                current = state.Current,
-                group = def.Group
-            };
+            return new OptimizationItem(def.Id, def.DisplayName, def.DisplayDescription, def.DisplaySideEffect,
+                def.Admin, def.Reboot, state.Optimized, state.Current, def.Default, def.Group);
         }).ToList();
 
+        return new(hardware, gamePath, items, BuildChecks());
+    }
+
+    // CLI 与已落盘检测快照共用既有 JSON 字段。
+    internal static JsonObject CreateSnapshot(ScanResult scan)
+    {
+        var hw = scan.Hardware;
+        var gamePath = scan.GamePath;
         var payload = new
         {
             tool = "fps-tune",
@@ -57,10 +55,15 @@ public static class DetectionService
                 isLaptop = hw.IsLaptop,
                 isAdmin = hw.IsAdmin
             },
-            gamePath = gamePath ?? AppState.GamePath,
+            gamePath,
             gameName = string.IsNullOrWhiteSpace(gamePath) ? null : Path.GetFileName(gamePath),
-            items = items,
-            checks = BuildChecks(),
+            items = scan.Items.Select(i => new
+            {
+                id = i.Id, name = i.Name, desc = i.Description, sideEffect = i.SideEffect,
+                admin = i.RequiresAdmin, @default = i.IsDefault, reboot = i.RequiresReboot,
+                optimized = i.Optimized, current = i.Current, group = i.Group
+            }),
+            checks = scan.Checks.Select(c => new { name = c.Name, status = c.Status, message = c.Message }),
             presets = new
             {
                 full = OptimizationCatalog.ResolvePreset("full").ToArray(),
@@ -75,12 +78,12 @@ public static class DetectionService
             }
         };
 
-        return JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+        return (JsonObject)JsonSerializer.SerializeToNode(payload)!;
     }
 
-    private static IReadOnlyList<object> BuildChecks()
+    private static IReadOnlyList<Check> BuildChecks()
     {
-        var checks = new List<object>();
+        var checks = new List<Check>();
 
         // VC++ v14 运行库（x64 / x86 相互独立）
         var missing = new List<string>();
@@ -95,28 +98,28 @@ public static class DetectionService
         }
 
         checks.Add(missing.Count == 0
-            ? new { name = "VC++ v14 运行库", status = "ok", message = "x64 与 x86 均已安装。" }
-            : new { name = "VC++ v14 运行库", status = "attention", message = "缺失架构: " + string.Join(", ", missing) + "。请从微软官方下载对应架构的 vc_redist 覆盖安装。" });
+            ? new Check("VC++ v14 运行库", "ok", "x64 与 x86 均已安装。")
+            : new Check("VC++ v14 运行库", "attention", "缺失架构: " + string.Join(", ", missing) + "。请从微软官方下载对应架构的 vc_redist 覆盖安装。"));
 
         var memory = HardwareInfoService.GetMemoryCheck();
-        checks.Add(new { name = "内存频率", status = memory.Status, message = memory.Message });
+        checks.Add(new Check("内存频率", memory.Status, memory.Message));
 
         var pcie = HardwareInfoService.GetPcieLinkText();
         checks.Add(pcie.StartsWith("未知", StringComparison.Ordinal)
-            ? new { name = "PCIe 链路", status = "attention", message = "未识别到 PCIe 链路，可安装 GPU-Z 查看" }
-            : new { name = "PCIe 链路", status = "ok", message = pcie });
+            ? new Check("PCIe 链路", "attention", "未识别到 PCIe 链路，可安装 GPU-Z 查看")
+            : new Check("PCIe 链路", "ok", pcie));
 
         var refreshRate = GetDisplayRefreshRateCheck();
-        checks.Add(new { name = "显示器刷新率", status = refreshRate.Status, message = refreshRate.Message });
+        checks.Add(new Check("显示器刷新率", refreshRate.Status, refreshRate.Message));
 
         var colorProfile = GetColorProfileCheck();
-        checks.Add(new { name = "颜色配置", status = colorProfile.Status, message = colorProfile.Message });
+        checks.Add(new Check("颜色配置", colorProfile.Status, colorProfile.Message));
 
         var directStorage = GetDirectStorageCheck();
-        checks.Add(new { name = "DirectStorage", status = directStorage.Status, message = directStorage.Message });
+        checks.Add(new Check("DirectStorage", directStorage.Status, directStorage.Message));
 
         var audio = GetAudioExclusiveCheck();
-        checks.Add(new { name = "音频独占模式", status = audio.Status, message = audio.Message });
+        checks.Add(new Check("音频独占模式", audio.Status, audio.Message));
 
         // 服务检查：只报「运行状态 + 启动类型」两项事实，不判好坏——
         // SysMain / WSearch 被关可能是用户自己用优化项干的，报成异常会自相矛盾。
@@ -127,10 +130,10 @@ public static class DetectionService
     }
 
     /// <summary>一条服务体检项：逐个服务给出「运行状态 · 启动类型」，读不到就说不可用。</summary>
-    private static object ServiceCheck(string name, params string[] serviceNames)
+    private static Check ServiceCheck(string name, params string[] serviceNames)
     {
         var (status, message) = BuildServiceCheck(serviceNames);
-        return new { name, status, message };
+        return new(name, status, message);
     }
 
     /// <summary>组装服务检查行（internal：用例直接断言两列事实都在）。</summary>
@@ -376,13 +379,14 @@ public static class DetectionService
         return (optimized, optimized ? "0 / 0" : $"{hkcu ?? "未设置"} / {hklm ?? "未设置"}");
     }
 
-    private static (string Status, string Message) GetAudioExclusiveCheck()    {
-        IMMDeviceEnumerator? enumerator = null;
-        IMMDevice? device = null;
+    private static (string Status, string Message) GetAudioExclusiveCheck()
+    {
+        AudioEndpointProbe.IMMDeviceEnumerator? enumerator = null;
+        AudioEndpointProbe.IMMDevice? device = null;
         try
         {
-            enumerator = (IMMDeviceEnumerator)new MmDeviceEnumeratorComObject();
-            var hr = enumerator.GetDefaultAudioEndpoint((int)AudioDataFlow.Render, (int)AudioRole.Multimedia, out device);
+            enumerator = AudioEndpointProbe.CreateEnumerator();
+            var hr = enumerator.GetDefaultAudioEndpoint(AudioEndpointProbe.RenderFlow, (int)AudioEndpointProbe.Role.Multimedia, out device);
             if (hr < 0 || device is null)
                 return ("attention", "未找到默认播放端点；未打开音频流，独占模式可用性待核实。");
 
@@ -409,17 +413,10 @@ public static class DetectionService
     internal static (bool Optimized, string Current) GetItemState(OptimizationItemDefinition item, string? gamePath)
     {
         if (item.Id == "mem-compress-off") return (false, Str.T("Str.MemoryCompressionUnavailable"));
-        var target = item.Id switch
+        var target = SimpleRegistryTweak.For(item.Id) is { } tweak
+            ? (tweak.Hive, tweak.Path, tweak.Name, tweak.Value.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            : item.Id switch
         {
-            "hags" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode", "2"),
-            "prio-separation" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\PriorityControl", "Win32PrioritySeparation", "40"),
-            "wer-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Windows Error Reporting", "Disabled", "1"),
-            "transparency-off" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", "EnableTransparency", "0"),
-            "mpo-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows\Dwm", "OverlayTestMode", "5"),
-            "net-throttling-off" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "NetworkThrottlingIndex", "-1"),
-            "sys-responsiveness" => (RegistryHive.LocalMachine, @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile", "SystemResponsiveness", "10"),
-            "paging-exec" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", "1"),
-            "mem-compress-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "EnableCompression", "0"),
             "menu-delay-off" => (RegistryHive.CurrentUser, @"Control Panel\Desktop", "MenuShowDelay", "0"),
             "usb-power-save-off" => (RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Services\USB", "DisableSelectiveSuspend", "1"),
             "visual-fx-perf" => (RegistryHive.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Explorer\Visual Effects", "VisualFXSetting", "2"),
@@ -802,16 +799,6 @@ public static class DetectionService
         Level12_0 = 0xC000
     }
 
-    private enum AudioDataFlow : int
-    {
-        Render = 0
-    }
-
-    private enum AudioRole : int
-    {
-        Multimedia = 1
-    }
-
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct DevMode
     {
@@ -859,40 +846,4 @@ public static class DetectionService
         D3DFeatureLevel minimumFeatureLevel,
         ref Guid riid,
         out IntPtr ppDevice);
-
-    [ComImport]
-    [Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
-    private class MmDeviceEnumeratorComObject
-    {
-    }
-
-    [ComImport]
-    [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMMDeviceEnumerator
-    {
-        [PreserveSig]
-        int EnumAudioEndpoints(int dataFlow, uint stateMask, out IntPtr devices);
-
-        [PreserveSig]
-        int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice device);
-    }
-
-    [ComImport]
-    [Guid("D666063F-1587-4E43-81F1-B948E807363F")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMMDevice
-    {
-        [PreserveSig]
-        int Activate(ref Guid iid, uint clsContext, IntPtr activationParams, out IntPtr interfacePointer);
-
-        [PreserveSig]
-        int OpenPropertyStore(uint access, out IntPtr propertyStore);
-
-        [PreserveSig]
-        int GetId(out IntPtr id);
-
-        [PreserveSig]
-        int GetState(out uint state);
-    }
 }

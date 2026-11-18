@@ -26,7 +26,7 @@ public sealed class HudAutomationUiTests
             using var session = HardwareOnly(); var enabled = false; var probes = 0;
             var path = Path.Combine(root, "Game.exe"); var originalGame = AppState.GamePath;
             GameProcessObservation observation = new(new(10, 1)); var busy = false;
-            using var automation = new AutoRecordingService(session, () => (enabled, new[] { path }),
+            using var automation = new AutoPerformanceSessionService(session, () => (enabled, new[] { path }),
                 _ => { probes++; return observation; }, () => busy);
             void Poll() => Wait(automation.PollAsync());
             Poll(); Assert.Equal(0, probes); Assert.False(session.IsRunning);
@@ -51,8 +51,8 @@ public sealed class HudAutomationUiTests
             session.Stop(false); Assert.True(session.Start("Replacement manual")); manual = session.RunId;
             observation = new(null); Poll(); Assert.Equal(manual, session.RunId); Assert.True(session.IsRunning); session.Stop(false);
             using var self = Process.GetCurrentProcess(); var image = ProcessIdentity.TryGetImagePath(self)!;
-            Assert.NotNull(AutoRecordingService.ObserveProcess(image).Run);
-            Assert.Null(AutoRecordingService.ObserveProcess(Path.Combine(root, "different", Path.GetFileName(image))).Run);
+            Assert.NotNull(AutoPerformanceSessionService.ObserveProcess(image).Run);
+            Assert.Null(AutoPerformanceSessionService.ObserveProcess(Path.Combine(root, "different", Path.GetFileName(image))).Run);
         });
     }
 
@@ -68,7 +68,7 @@ public sealed class HudAutomationUiTests
                 () => new(DateTime.Now, 30, 50, 70, 2UL << 30, 8UL << 30)), () => recorder = new SessionFpsRecorder(
                 () => "fixture-presentmon.exe", _ => Process.GetCurrentProcess(), _ => new Process(), _ => Task.FromResult(rows), _ => { }));
             using var metrics = new MetricsSampler(TimeSpan.FromSeconds(1), 60, () => new(DateTime.Now, 42, 55, 64, 2UL << 30, 8UL << 30));
-            using var automation = new AutoRecordingService(session);
+            using var automation = new AutoPerformanceSessionService(session);
             var controller = new PerformanceHudService(session, metrics, DlssFeedbackTests.PrepareBackgroundWindow);
             var page = new SessionView(session, automation);
             controller.PreviewAppearance(new("card", 0, "top-right"));

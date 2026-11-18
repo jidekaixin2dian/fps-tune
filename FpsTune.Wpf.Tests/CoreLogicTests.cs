@@ -457,8 +457,8 @@ public class CoreLogicTests
         {
             var file = BackupService.Capture(new[] { "mouse-accel-off", "dvr-off" }, null);
 
-            var first = BackupService.RestoreAll(new[] { "mouse-accel-off" });
-            var second = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+            var first = BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" });
+            var second = BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" });
             var records = BackupService.ReadRecords(file);
 
             Assert.NotEmpty(first.Restored);
@@ -489,14 +489,14 @@ public class CoreLogicTests
         {
             var file = BackupService.Capture(new[] { "mouse-accel-off" }, null);
 
-            var first = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+            var first = BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" });
             Assert.Equal(1, restoreCalls);
             Assert.Single(first.Restored);
             Assert.Contains(first.Failures, x => x.Contains("状态无法确定", StringComparison.Ordinal));
             Assert.True(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
 
             BackupService.RestoreProgressWriteOverride = null;
-            var second = BackupService.RestoreAll(new[] { "mouse-accel-off" });
+            var second = BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" });
 
             Assert.Equal(1, restoreCalls);
             Assert.Empty(second.Restored);
@@ -531,7 +531,7 @@ public class CoreLogicTests
             File.SetLastWriteTimeUtc(fileB, now);
             File.SetLastWriteTimeUtc(fileA, now.AddMinutes(1));
 
-            var first = BackupService.RestoreAll();
+            var first = BackupService.RestoreSystemBackups();
 
             Assert.Single(first.Restored);
             Assert.Equal(new[] { "mouse-accel-off" }, calls);
@@ -542,7 +542,7 @@ public class CoreLogicTests
 
             // 即便进度写入故障已恢复，未决 A marker 也必须在任何 B 记录前阻断整个批次。
             BackupService.RestoreProgressWriteOverride = null;
-            var second = BackupService.RestoreAll();
+            var second = BackupService.RestoreSystemBackups();
 
             Assert.Equal(new[] { "mouse-accel-off" }, calls);
             Assert.Empty(second.Restored);
@@ -581,13 +581,13 @@ public class CoreLogicTests
         {
             var file = BackupService.Capture(new[] { "menu-delay-off" }, null);
 
-            var first = BackupService.RestoreAll();
+            var first = BackupService.RestoreSystemBackups();
             Assert.Equal(1, restoreCalls);
             Assert.Single(first.Restored);
             Assert.True(File.Exists(Path.Combine(dir, ".restore-inflight.json")));
 
             BackupService.RestoreProgressWriteOverride = null;
-            var second = BackupService.RestoreAll();
+            var second = BackupService.RestoreSystemBackups();
 
             Assert.Equal(1, restoreCalls);
             Assert.Empty(second.Restored);
@@ -636,10 +636,10 @@ public class CoreLogicTests
         try
         {
             BackupService.Capture(new[] { "mouse-accel-off" }, null);
-            var first = Task.Run(() => BackupService.RestoreAll(new[] { "mouse-accel-off" }));
+            var first = Task.Run(() => BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" }));
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
-            var second = Task.Run(() => BackupService.RestoreAll(new[] { "mouse-accel-off" }));
+            var second = Task.Run(() => BackupService.RestoreSystemBackups(new[] { "mouse-accel-off" }));
             await Task.Delay(150);
             Assert.Equal(1, Volatile.Read(ref calls));
             Assert.Equal(1, Volatile.Read(ref maxActive));
@@ -680,7 +680,7 @@ public class CoreLogicTests
         Assert.True(acquired.Wait(TimeSpan.FromSeconds(2)));
         try
         {
-            var result = BackupService.RestoreAll();
+            var result = BackupService.RestoreSystemBackups();
 
             Assert.Empty(result.Restored);
             Assert.Contains(result.Failures, x => x.Contains("超时", StringComparison.Ordinal));
@@ -709,9 +709,12 @@ public class CoreLogicTests
     [Fact]
     public void Cli_restore_rejects_empty_items_instead_of_restoring_everything()
     {
-        var result = RunCli("-Restore", "-Items=");
-        Assert.Equal(1, result.ExitCode);
-        Assert.Contains("-Items 不能为空", result.Output);
+        foreach (var args in new[] { new[] { "-Restore", "-Items=" }, ["-Restore", "-Items", ",,"], ["-Restore", "-Items", ""] })
+        {
+            var result = RunCli(args);
+            Assert.Equal(1, result.ExitCode);
+            Assert.Contains("-Items 不能为空", result.Output);
+        }
     }
 
     [Fact]

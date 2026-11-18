@@ -205,15 +205,15 @@ public sealed class GameAutomationTests : IDisposable
         TrayService.NotifyOverride = (t, m) => notifications.Add((t, m));
         var withFps = new PerformanceSession("s1", "对局", DateTime.Now.AddMinutes(-20), DateTime.Now, 1, 1,
             [], Fps: new SessionFpsStats(1000, 142.4, 98.1, 12.3, 3));
-        var summary = AutoRecordingService.BuildSummary(withFps);
+        var summary = AutoPerformanceSessionService.BuildSummary(withFps);
         Assert.NotNull(summary);
         TrayService.NotifyComplete(summary!.Value.Title, summary.Value.Message);
         Assert.Single(notifications);
 
         var withoutFps = withFps with { Fps = null };
-        Assert.Null(AutoRecordingService.BuildSummary(withoutFps));
+        Assert.Null(AutoPerformanceSessionService.BuildSummary(withoutFps));
         var emptyFps = withFps with { Fps = new SessionFpsStats(0, 0, 0, 0, 0) };
-        Assert.Null(AutoRecordingService.BuildSummary(emptyFps));
+        Assert.Null(AutoPerformanceSessionService.BuildSummary(emptyFps));
         Assert.Single(notifications); // 无数据不通知
     }
 

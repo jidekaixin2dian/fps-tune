@@ -69,7 +69,7 @@ public partial class MainWindow
         Dispatcher.BeginInvoke(() =>
         {
             if (page is OptimizeView optimize) optimize.RevealItem(command.Target);
-            else if (page is SettingsView settings && settings.FindName("SettingsNav" + command.Target) is RadioButton button) button.IsChecked = true;
+            else if (page is SettingsView settings) settings.SelectSection(command.Target);
             else if (page is DisplayQualityView) SelectTaggedTab(page, command.Target);
             else if (page is MaintenanceView maintenance && command.Target is "network" or "ports") maintenance.OpenNetworkTool(command.Target);
             else if (page is FilterView filter && command.Target == "delta-fix") filter.OpenDeltaFix();

@@ -12,17 +12,12 @@ public sealed class WorkspaceCommands
     public static IReadOnlyList<WorkspaceCommand> Build()
     {
         var entries = new List<WorkspaceCommand>();
-        foreach (var (route, title, alias) in new[] {
-            ("home", "Str.NavHome", "Str.CommandAliasHome"), ("detect", "Str.NavDetect", "Str.CommandAliasDetect"),
-            ("games", "Str.NavGames", "Str.LibrarySearch"),
-            ("quick", "Str.NavQuickOpt", "Str.QuickOptTitle"),
-            ("opt", "Str.NavOpt", "Str.CommandAliasOptimize"), ("display", "Str.NavDisplay", "Str.CommandAliasDisplay"),
-            ("filters", "Str.NavFilters", "Str.CommandAliasFilters"),
-            ("crosshair", "Str.CrosshairTitle", "crosshair overlay reticle"),
-            ("session", "Str.NavSession", "Str.CommandAliasSession"),
-            ("backup", "Str.NavBackup", "Str.CommandAliasBackup"), ("tools", "Str.NavTools", "Str.CommandAliasTools"),
-            ("settings", "Str.NavSettings", "Str.CommandAliasSettings") })
-            Add("page:" + route, title, "Str.CommandPage", route, null, Str.T(alias));
+        foreach (var page in NavigationRegistry.Pages)
+        {
+            if (page.TitleKey is { } title)
+                Add("page:" + page.Key, title, "Str.CommandPage", page.Key, null,
+                    page.SearchAlias.StartsWith("Str.", StringComparison.Ordinal) ? Str.T(page.SearchAlias) : page.SearchAlias);
+        }
         foreach (var (target, title, aliases) in new[] {
             ("dlss", "Str.CommandDlss", "DLSS NVIDIA RTX K J M preset"),
             ("drs", "Str.CommandDrs", "NVIDIA DRS 3D VSync texture shader cache"),
@@ -33,8 +28,8 @@ public sealed class WorkspaceCommands
             ("delta-fix", "Str.DeltaFixTab", "Str.FilterAppsHint") })
             Add("filters:" + target, title, "Str.NavFilters", "filters", target, aliases);
         foreach (var (target, title, alias) in new[] {
-            ("0", "Str.SettingsAppearance", "Str.CommandAliasAppearance"), ("1", "Str.SettingsStartup", "Str.CommandAliasStartup"), ("2", "Str.SettingsGame", "Str.CommandAliasGames"),
-            ("3", "Str.SettingsData", "Str.CommandAliasData"), ("4", "Str.Wallpaper", "Str.CommandAliasWallpaper"), ("5", "Str.SectionAbout", "Str.CommandAliasUpdate") })
+            ("appearance", "Str.SettingsAppearance", "Str.CommandAliasAppearance"), ("startup", "Str.SettingsStartup", "Str.CommandAliasStartup"), ("game", "Str.SettingsGame", "Str.CommandAliasGames"),
+            ("data", "Str.SettingsData", "Str.CommandAliasData"), ("wallpaper", "Str.Wallpaper", "Str.CommandAliasWallpaper"), ("about", "Str.SectionAbout", "Str.CommandAliasUpdate") })
             Add("settings:" + target, title, "Str.NavSettings", "settings", target,
                 Str.T(alias));
         foreach (var item in OptimizationCatalog.Items)

@@ -51,7 +51,7 @@ public sealed class ModernWorkspaceUiTests
                 Assert.Equal(expected, page.Items.Where(i => i.IsChecked).Select(i => i.Id).ToArray());
                 Assert.Equal(Visibility.Collapsed, ((Grid)window.FindName("CommandOverlay")).Visibility);
                 ((RoutedCommand)binding.Command).Execute(null, window); query.Text = "update";
-                Assert.Equal("settings:5", ((WorkspaceCommand)results.SelectedItem).Id);
+                Assert.Equal("settings:about", ((WorkspaceCommand)results.SelectedItem).Id);
                 PressKey(palette, window, Key.Enter);
                 DlssFeedbackTests.PumpUntil(() => ((ContentControl)window.FindName("PageHost")).Content is SettingsView view
                     && ((RadioButton)view.FindName("SettingsNav5")).IsChecked == true);
@@ -114,7 +114,7 @@ public sealed class ModernWorkspaceUiTests
                 Assert.Equal(1, page.CaptureReviewPlan().HiddenCount);
                 Assert.Contains(Str.T("Str.OptHiddenSelection", 1), ((TextBlock)page.FindName("SelectionSummary")).Text);
                 var calls = 0;
-                var completion = new TaskCompletionSource<RunResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var completion = new TaskCompletionSource<NativeOptimizationEngine.ApplyReceipt>(TaskCreationOptions.RunContinuationsAsynchronously);
                 IReadOnlyList<string>? applied = null; string? appliedGame = null;
                 page.ApplyItemsOverride = (selected, game) => { calls++; applied = selected; appliedGame = game; return completion.Task; };
                 var consent = (CheckBox)page.FindName("ConsentCheck");
@@ -148,11 +148,11 @@ public sealed class ModernWorkspaceUiTests
                 page.Items.First(i => i.Id == ids[1]).IsChecked = false;
                 AppState.GamePath = @"C:\WorkspaceTest\second.exe";
                 Assert.Equal(ids, applied); Assert.Equal(@"C:\WorkspaceTest\first.exe", appliedGame);
-                completion.SetResult(new RunResult(0, "{\"results\":[],\"summary\":\"test completed\"}"));
+                completion.SetResult(new NativeOptimizationEngine.ApplyReceipt("test", "", []));
                 DlssFeedbackTests.PumpUntil(() => apply.IsEnabled);
                 Assert.True(((FrameworkElement)page.FindName("PresetControlsCard")).IsEnabled);
                 // A backend failure must restore controls without dropping retry choices.
-                page.ApplyItemsOverride = (_, _) => { calls++; return Task.FromException<RunResult>(new IOException("controlled backend failure")); };
+                page.ApplyItemsOverride = (_, _) => { calls++; return Task.FromException<NativeOptimizationEngine.ApplyReceipt>(new IOException("controlled backend failure")); };
                 consent.IsChecked = true;
                 apply.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 DlssFeedbackTests.PumpUntil(() => apply.IsEnabled);
@@ -199,8 +199,8 @@ public sealed class ModernWorkspaceUiTests
                         { Optimized = i.Id == "gpu-pref" || scenario == "success", Current = "read back: " + i.Id }).ToList();
                     return ok;
                 };
-                page.ApplyItemsOverride = (_, _) => Task.FromResult(new RunResult(scenario == "partial" ? 1 : 0,
-                    JsonSerializer.Serialize(new { results = new[] { new { id = "gpu-pref", ok = true, message = "receipt-" + scenario } } })));
+                page.ApplyItemsOverride = (_, _) => Task.FromResult(new NativeOptimizationEngine.ApplyReceipt(
+                    "test", "", [new("gpu-pref", "GPU", true, true, false, "receipt-" + scenario)]));
                 DialogService.PrepareWindowForTest = DlssFeedbackTests.PrepareBackgroundWindow;
                 var accept = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(20) };
                 accept.Tick += (_, _) =>
@@ -263,17 +263,10 @@ public sealed class ModernWorkspaceUiTests
             try
             {
                 page.RefreshDetectionOverride = () => Task.FromResult(true);
-                page.ApplyItemsOverride = (_, _) => Task.FromResult(new RunResult(1, JsonSerializer.Serialize(new
-                {
-                    results = new object[]
-                    {
-                        new { id = "game-mode", name = gameName, ok = true, skipped = false, message = "已开启游戏模式" },
-                        new { id = "gpu-pref", name = gpuName, ok = false, skipped = false, message = Str.T("Str.OptFailNeedAdmin") }
-                    },
-                    summary = "1 成功、1 失败、0 跳过",
-                    backupFile = Path.Combine(root, "backup", "v2-backup-test.json"),
-                    reboot = Array.Empty<string>()
-                })));
+                page.ApplyItemsOverride = (_, _) => Task.FromResult(new NativeOptimizationEngine.ApplyReceipt(
+                    "test", Path.Combine(root, "backup", "v2-backup-test.json"),
+                    [new("game-mode", gameName, true, true, false, "已开启游戏模式"),
+                     new("gpu-pref", gpuName, false, false, false, Str.T("Str.OptFailNeedAdmin"))]));
                 page.SelectForReview(["game-mode", "gpu-pref"]);
                 var consent = (CheckBox)page.FindName("ConsentCheck"); consent.IsChecked = true;
                 var apply = (Button)page.FindName("ApplyButton");
@@ -325,7 +318,7 @@ public sealed class ModernWorkspaceUiTests
             try
             {
                 page.RefreshDetectionOverride = () => Task.FromResult(true);
-                page.ApplyItemsOverride = (_, _) => { applied++; return Task.FromResult(new RunResult(0, "{}")); };
+                page.ApplyItemsOverride = (_, _) => { applied++; return Task.FromResult(new NativeOptimizationEngine.ApplyReceipt("test", "", [])); };
                 page.SelectForReview(admin.Select(d => d.Id));
                 ((CheckBox)page.FindName("ConsentCheck")).IsChecked = true;
                 var apply = (Button)page.FindName("ApplyButton");

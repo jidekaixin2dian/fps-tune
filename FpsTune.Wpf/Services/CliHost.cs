@@ -138,36 +138,25 @@ public static class CliHost
 
     private static int RunDetect(CliOptions options, TextWriter output)
     {
-        // BuildDetectJson 内部会做 -Game > 已保存路径 > 自动扫描 的回退。
-        var json = DetectionService.BuildDetectJson(options.GamePath);
+        var scan = DetectionService.Scan(options.GamePath);
         if (options.Json)
         {
-            output.WriteLine(json);
+            output.WriteLine(DetectionService.CreateSnapshot(scan).ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
             return 0;
         }
 
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        var items = root.GetProperty("items");
         var sb = new StringBuilder();
         sb.AppendLine($"FpsTune {UpdateService.CurrentVersion} 状态检测");
-        sb.AppendLine($"管理员权限: {(root.GetProperty("admin").GetBoolean() ? "是" : "否")}");
-        if (root.TryGetProperty("gamePath", out var gamePath) &&
-            gamePath.ValueKind == JsonValueKind.String &&
-            !string.IsNullOrEmpty(gamePath.GetString()))
-            sb.AppendLine("游戏路径: " + gamePath.GetString());
+        sb.AppendLine($"管理员权限: {(scan.Hardware.IsAdmin ? "是" : "否")}");
+        if (!string.IsNullOrEmpty(scan.GamePath))
+            sb.AppendLine("游戏路径: " + scan.GamePath);
         sb.AppendLine();
 
-        var optimized = 0;
-        foreach (var item in items.EnumerateArray())
-        {
-            var isOptimized = item.GetProperty("optimized").GetBoolean();
-            if (isOptimized)
-                optimized++;
-            sb.AppendLine($"{(isOptimized ? "[已优化]" : "[未优化]")} {item.GetProperty("id").GetString()}  {item.GetProperty("current").GetString()}");
-        }
+        foreach (var item in scan.Items)
+            sb.AppendLine($"{(item.Optimized ? "[已优化]" : "[未优化]")} {item.Id}  {item.Current}");
+
         sb.AppendLine();
-        sb.Append($"共 {items.GetArrayLength()} 项，已优化 {optimized} 项。");
+        sb.Append($"共 {scan.Items.Count} 项，已优化 {scan.Items.Count(i => i.Optimized)} 项。");
         output.WriteLine(sb.ToString());
         return 0;
     }
@@ -222,44 +211,45 @@ public static class CliHost
         if (!options.Json && !AdminHelper.IsAdministrator() && ids.Any(NeedsAdmin))
             output.WriteLine("提示: 当前非管理员会话，需要管理员的优化项会失败并如实报错。");
 
-        var result = presetName is not null
-            ? NativeOptimizationEngine.ApplyPresetAsync(presetName, gamePath).GetAwaiter().GetResult()
-            : NativeOptimizationEngine.ApplyItemsAsync(ids, gamePath).GetAwaiter().GetResult();
-
-        using var doc = JsonDocument.Parse(result.Output);
-        var results = doc.RootElement.GetProperty("results");
-        var failed = 0;
-        foreach (var r in results.EnumerateArray())
-        {
-            if (!r.GetProperty("ok").GetBoolean() && !r.GetProperty("skipped").GetBoolean())
-                failed++;
-        }
+        var receipt = NativeOptimizationEngine.ApplyItemsWithReceiptAsync(ids, gamePath).GetAwaiter().GetResult();
+        var results = receipt.Results;
+        var summary = $"{results.Count(r => r.Ok)} 成功、{receipt.FailedCount} 失败、{results.Count(r => r.Skipped)} 跳过";
+        var reboot = receipt.RebootIds;
 
         if (options.Json)
         {
-            output.WriteLine(result.Output);
+            var payload = new
+            {
+                operationId = receipt.OperationId,
+                tool = "fps-tune",
+                version = UpdateService.CurrentVersion,
+                mode = "apply",
+                results = results.Select(r => new
+                {
+                    id = r.Id, name = r.Name, ok = r.Ok, changed = r.Changed,
+                    skipped = r.Skipped, message = r.Message, stateUncertain = r.StateUncertain
+                }),
+                summary,
+                backupFile = receipt.BackupFile,
+                reboot
+            };
+            output.WriteLine(JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }));
         }
         else
         {
-            foreach (var r in results.EnumerateArray())
+            foreach (var r in results)
             {
-                var mark = r.GetProperty("ok").GetBoolean()
-                    ? (r.GetProperty("skipped").GetBoolean() ? "[跳过]" : "[成功]")
-                    : "[失败]";
-                output.WriteLine($"{mark} {r.GetProperty("id").GetString()} — {r.GetProperty("message").GetString()}");
+                var mark = r.Ok ? (r.Skipped ? "[跳过]" : "[成功]") : "[失败]";
+                output.WriteLine($"{mark} {r.Id} — {r.Message}");
             }
             output.WriteLine();
-            output.WriteLine("汇总: " + doc.RootElement.GetProperty("summary").GetString());
-            if (doc.RootElement.TryGetProperty("backupFile", out var backupFile) &&
-                backupFile.ValueKind == JsonValueKind.String &&
-                !string.IsNullOrEmpty(backupFile.GetString()))
-                output.WriteLine("备份文件: " + backupFile.GetString());
-            if (doc.RootElement.TryGetProperty("reboot", out var reboot) &&
-                reboot.ValueKind == JsonValueKind.Array &&
-                reboot.GetArrayLength() > 0)
-                output.WriteLine("需重启生效: " + string.Join("、", reboot.EnumerateArray().Select(x => x.GetString())));
+            output.WriteLine("汇总: " + summary);
+            if (!string.IsNullOrEmpty(receipt.BackupFile))
+                output.WriteLine("备份文件: " + receipt.BackupFile);
+            if (reboot.Count > 0)
+                output.WriteLine("需重启生效: " + string.Join("、", reboot));
         }
-        return failed == 0 ? 0 : 1;
+        return receipt.FailedCount == 0 ? 0 : 1;
     }
 
     private static int RunRestore(CliOptions options, TextWriter output)
@@ -276,7 +266,7 @@ public static class CliHost
             ids = options.Items;
         }
 
-        var result = BackupService.RestoreAll(ids, options.BackupFile);
+        var result = BackupService.RestoreSystemBackups(ids, options.BackupFile);
         if (options.Json)
         {
             var payload = new
@@ -555,6 +545,8 @@ public static class CliHost
                     }
                     if (!consumed)
                         error = "-Items 缺少值";
+                    else if (options.Items.Count == 0)
+                        error = "-Items 不能为空";
                     break;
                 }
                 case "preset" when inline is not null:

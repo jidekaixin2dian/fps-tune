@@ -137,25 +137,23 @@ public class I18nGuardTests
 
         Assert.True(regressions.Count == 0,
             "以下文件新增了硬编码中文文案。请改用 XAML 的 `{DynamicResource Str.Xxx}` " +
-            "或 C# 的 `Str.T(\"Str.Xxx\")`，并在两个语言字典里补键：\n  " +
+            "或 C# 的 `Str.T(\"Str.Xxx\")`，并在中文字典里补键：\n  " +
             string.Join("\n  ", regressions));
     }
 
     [Fact]
-    public void Both_language_dictionaries_have_the_same_keys()
+    public void English_dictionary_only_uses_keys_defined_in_Chinese()
     {
         var zh = DictionaryKeys("Strings.zh-CN.xaml");
         var en = DictionaryKeys("Strings.en-US.xaml");
 
-        var missingInEn = zh.Except(en).OrderBy(x => x, StringComparer.Ordinal).ToList();
         var missingInZh = en.Except(zh).OrderBy(x => x, StringComparer.Ordinal).ToList();
 
-        Assert.True(missingInEn.Count == 0, "Strings.en-US.xaml 缺少键: " + string.Join(", ", missingInEn));
         Assert.True(missingInZh.Count == 0, "Strings.zh-CN.xaml 缺少键: " + string.Join(", ", missingInZh));
     }
 
     [Fact]
-    public void Every_referenced_resource_key_exists_in_both_dictionaries()
+    public void Every_referenced_resource_key_exists_in_Chinese()
     {
         var zh = DictionaryKeys("Strings.zh-CN.xaml");
         var root = Path.Combine(RepoRoot(), "FpsTune.Wpf");

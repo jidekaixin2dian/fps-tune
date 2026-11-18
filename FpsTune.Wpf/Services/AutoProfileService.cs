@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using FpsTune.Wpf.Core;
 
 namespace FpsTune.Wpf.Services;
@@ -372,21 +371,22 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
             }
 
             cancellationToken.ThrowIfCancellationRequested();
-            var result = await NativeOptimizationEngine.ApplyItemsAsync(ids, binding.ExePath)
+            var receipt = await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(ids, binding.ExePath)
                 .ConfigureAwait(false);
-            if (!result.Success)
+            var failed = receipt.Results.Where(r => !r.Ok && !r.Skipped).ToArray();
+            if (failed.Length > 0)
             {
-                var detail = string.IsNullOrWhiteSpace(result.Output) ? $"退出码 {result.ExitCode}" : result.Output.Trim();
+                var detail = string.Join("、", failed.Select(r => $"{r.Id} — {r.Message}"));
                 Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
                     $"方案「{profile.Name}」执行失败：{detail}");
                 return;
             }
 
-            var incomplete = ReadIncompleteItems(result.Output);
-            if (incomplete.Count > 0)
+            var skipped = receipt.Results.Where(r => r.Skipped).Select(r => r.Id).ToArray();
+            if (skipped.Length > 0)
             {
                 Notify(AutoProfileActivityStore.KindSkipped, "自动应用未完成",
-                    $"方案「{profile.Name}」有 {incomplete.Count} 项未完成：{string.Join("、", incomplete)}");
+                    $"方案「{profile.Name}」有 {skipped.Length} 项未完成：{string.Join("、", skipped)}");
                 return;
             }
 
@@ -400,36 +400,6 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
         {
             Notify(AutoProfileActivityStore.KindFailed, "自动应用失败",
                 $"方案「{binding.ProfileName}」执行异常：{SafeError(ex)}");
-        }
-    }
-
-    private static IReadOnlyList<string> ReadIncompleteItems(string output)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(output);
-            if (!doc.RootElement.TryGetProperty("results", out var results)
-                || results.ValueKind != JsonValueKind.Array)
-                return new[] { "结果无法解析" };
-
-            var bad = new List<string>();
-            foreach (var item in results.EnumerateArray())
-            {
-                var ok = item.TryGetProperty("ok", out var okValue) && okValue.GetBoolean();
-                var skipped = item.TryGetProperty("skipped", out var skippedValue) && skippedValue.GetBoolean();
-                if (!ok || skipped)
-                {
-                    var id = item.TryGetProperty("id", out var idValue)
-                        ? idValue.GetString()
-                        : null;
-                    bad.Add(string.IsNullOrWhiteSpace(id) ? "未知项目" : id);
-                }
-            }
-            return bad;
-        }
-        catch
-        {
-            return new[] { "结果无法解析" };
         }
     }
 
@@ -484,7 +454,7 @@ public sealed class AutoProfileService : IDisposable, IAsyncDisposable
             if (Volatile.Read(ref _activeApplications) > 0)
             {
                 Trace.WriteLine(
-                    "AutoProfileService 正在退出：底层 ApplyItemsAsync 不支持取消，等待其完成且不再发送通知/审计。");
+                    "AutoProfileService 正在退出：底层 ApplyItemsWithReceiptAsync 不支持取消，等待其完成且不再发送通知/审计。");
             }
         }
 

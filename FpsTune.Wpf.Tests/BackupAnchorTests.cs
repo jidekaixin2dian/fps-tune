@@ -25,7 +25,9 @@ public sealed class BackupAnchorTests
             var older = BackupService.Capture(new[] { "transparency-off" }, null);
             var newer = BackupService.Capture(new[] { "transparency-off" }, null);
 
-            var result = BackupService.RestoreAll(new[] { "transparency-off" }, newer);
+            Assert.Empty(BackupService.RestoreOperationBackup(newer, []).Restored);
+            Assert.Empty(restored);
+            var result = BackupService.RestoreOperationBackup(newer, ["transparency-off"]);
 
             Assert.Empty(result.Failures);
             Assert.Single(result.Restored);
@@ -34,7 +36,7 @@ public sealed class BackupAnchorTests
             Assert.True(File.Exists(older), "更早的备份绝不能被本步骤动到");
 
             // 二次锚定同一份快照：文件已被消费，必须明确报错，而不是转去动更早的备份。
-            var again = BackupService.RestoreAll(new[] { "transparency-off" }, newer);
+            var again = BackupService.RestoreSystemBackups(new[] { "transparency-off" }, newer);
             Assert.Empty(again.Restored);
             Assert.Single(restored);
             Assert.Contains(again.Failures, x => x.Contains("不存在", StringComparison.Ordinal));
@@ -59,7 +61,7 @@ public sealed class BackupAnchorTests
             File.WriteAllText(empty, "[]");
             File.WriteAllText(corrupt, "{ this is not a backup list");
 
-            var result = BackupService.RestoreAll();
+            var result = BackupService.RestoreSystemBackups();
 
             Assert.Empty(result.Failures);
             Assert.Equal(2, result.ArchivedStale.Count);
@@ -68,7 +70,7 @@ public sealed class BackupAnchorTests
             Assert.False(File.Exists(empty));
 
             // 归档后下次还原不再见到它们：不报失败也不重复归档
-            var next = BackupService.RestoreAll();
+            var next = BackupService.RestoreSystemBackups();
             Assert.Empty(next.Failures);
             Assert.Empty(next.ArchivedStale);
         }
@@ -91,11 +93,11 @@ public sealed class BackupAnchorTests
         BackupService.RestoreRecordOverride = _ => calls++;
         try
         {
-            var outsideResult = BackupService.RestoreAll(null, foreign);
+            var outsideResult = BackupService.RestoreSystemBackups(null, foreign);
             Assert.Empty(outsideResult.Restored);
             Assert.Contains(outsideResult.Failures, x => x.Contains("不合法", StringComparison.Ordinal));
 
-            var relativeResult = BackupService.RestoreAll(null, "csharp-backup-20260101-000000-000-00000000.json");
+            var relativeResult = BackupService.RestoreSystemBackups(null, "csharp-backup-20260101-000000-000-00000000.json");
             Assert.Empty(relativeResult.Restored);
             Assert.Contains(relativeResult.Failures, x => x.Contains("不合法", StringComparison.Ordinal));
 

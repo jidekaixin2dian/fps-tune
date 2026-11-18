@@ -29,7 +29,7 @@ public sealed class RecoveryCoordinatorTests
             Assert.Contains(inventory, scope => scope.Module == "nvidia" && scope.Target == "game.exe");
             Assert.Contains(inventory, scope => scope.Module == "vibrance");
             Assert.True(RecoveryCoordinator.NeedsAdmin());
-            var result = RecoveryCoordinator.RestoreAll();
+            var result = RecoveryCoordinator.RestoreAllModules();
             Assert.Equal(10, api.Current);
             Assert.Equal(2, result.Failures.Count);
             Assert.Contains(result.Restored, item => item.Id == "Digital Vibrance");

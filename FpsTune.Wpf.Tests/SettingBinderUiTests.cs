@@ -39,7 +39,7 @@ public sealed class SettingBinderUiTests
             SettingsService.Current.MinimizeToTray = false;
             SettingsService.Save(SettingsService.Current);
 
-            var saved = SettingBinder.PersistBool(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, true);
+            var saved = SettingBinder.PersistValue(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, true);
             Assert.True(saved.Ok, saved.Detail);
             Assert.True(SettingsService.Current.MinimizeToTray);
             using (var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "settings.json"))))
@@ -48,7 +48,7 @@ public sealed class SettingBinderUiTests
             var file = Path.Combine(root, "settings.json");
             using (File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                var failed = SettingBinder.PersistBool(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, false);
+                var failed = SettingBinder.PersistValue(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, false);
                 Assert.False(failed.Ok);
                 Assert.False(string.IsNullOrWhiteSpace(failed.Detail));
                 // 内存必须回到旧值：否则界面与磁盘就是两个故事。
@@ -68,7 +68,19 @@ public sealed class SettingBinderUiTests
             }
 
             // 解除占用后同一个调用必须能成功，证明失败不是被吞掉的状态。
-            Assert.True(SettingBinder.PersistBool(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, false).Ok);
+            Assert.True(SettingBinder.PersistValue(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, false).Ok);
+            Assert.False(SettingsService.Current.MinimizeToTray);
+
+            var before = File.ReadAllBytes(file);
+            using (File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                SettingsService.Load();
+                var memory = SettingBinder.PersistValue(s => s.MinimizeToTray, (s, v) => s.MinimizeToTray = v, true);
+                Assert.Equal(SettingsSaveDisposition.MemoryOnly, memory.Disposition);
+                Assert.True(SettingsService.Current.MinimizeToTray);
+            }
+            Assert.Equal(before, File.ReadAllBytes(file));
+            SettingsService.Load();
             Assert.False(SettingsService.Current.MinimizeToTray);
         }
         finally

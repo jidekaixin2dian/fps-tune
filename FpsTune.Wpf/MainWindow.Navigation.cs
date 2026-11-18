@@ -10,7 +10,7 @@ namespace FpsTune.Wpf;
 /// 主窗口的导航宿主：页面按需创建并缓存、侧栏选中态、路由键到页面的映射、以及各页面的入口方法。
 /// <para>
 /// 边界：页面清单只有一处（<see cref="NavigationRegistry"/>，路由键 → 页面构造）；
-/// 侧栏按钮只有一处（<see cref="BuildNavButtons"/>，路由键 → 单选钮）。
+/// 侧栏按钮由 XAML 的路由键建立索引。
 /// 新增一个页面 = 注册表加一条 + XAML 加一个 <c>NavButton</c>，不再改 switch。
 /// 这里不碰窗口装饰、热键、通知卡与托盘——那些分别是外壳、<c>MainWindow.Hotkeys</c>、
 /// <c>MainWindow.Notifications</c> 与 <c>MainWindow.Lifetime</c> 的事。
@@ -45,21 +45,22 @@ public partial class MainWindow
         return page;
     }
 
-    /// <summary>路由键 → 侧栏单选钮。与 <see cref="NavigationRegistry"/> 的键一一对应；没有侧栏项的页面（如 deltafix）不在这里。</summary>
-    private Dictionary<string, Views.Controls.NavButton> BuildNavButtons() => new(StringComparer.Ordinal)
+    private Dictionary<string, Views.Controls.NavButton> BuildNavButtons()
+        => SidebarButtons(NavigationStack).ToDictionary(button => (string)button.Tag, StringComparer.Ordinal);
+
+    private static IEnumerable<Views.Controls.NavButton> SidebarButtons(Panel panel)
     {
-        ["home"] = NavHome, ["games"] = NavGames, ["quick"] = NavQuick, ["detect"] = NavDetect,
-        ["display"] = NavDisplay, ["filters"] = NavFilters, ["crosshair"] = NavCrosshair,
-        ["opt"] = NavOpt, ["tools"] = NavTools, ["backup"] = NavBackup, ["startup"] = NavStartup,
-        ["session"] = NavSession, ["settings"] = NavSettings,
-    };
+        foreach (var child in panel.Children)
+        {
+            if (child is Views.Controls.NavButton button)
+                yield return button;
+            else if (child is Panel group)
+                foreach (var nested in SidebarButtons(group))
+                    yield return nested;
+        }
+    }
 
-    /// <summary>侧栏全部导航单选钮（含分组子项）；互斥与双模式样式切换共用。</summary>
-    private Views.Controls.NavButton[] AllNavButtons => (_navButtons ??= BuildNavButtons()).Values.ToArray();
-
-    /// <summary>侧栏顶级项（不缩进）；分组子项用 SubItem 样式。</summary>
-    private Views.Controls.NavButton[] TopNavButtons
-        => new[] { "home", "filters", "crosshair", "tools", "session", "settings" }.Select(k => (_navButtons ??= BuildNavButtons())[k]).ToArray();
+    private IEnumerable<Views.Controls.NavButton> AllNavButtons => (_navButtons ??= BuildNavButtons()).Values;
 
     public void NavigateTo(string key)
     {

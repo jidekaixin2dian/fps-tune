@@ -293,7 +293,7 @@ public sealed class SessionTests : IDisposable
         using var second = new PerformanceSessionService();
 
         Assert.True(first.Start("实例 A"));
-        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath, System.Text.Json.JsonSerializer.Serialize(MakeSession("active-snapshot", 8)));
 
         Assert.False(second.Start("实例 B"));
         Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
@@ -315,7 +315,7 @@ public sealed class SessionTests : IDisposable
         using (var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership())
         {
             Assert.NotNull(owner);
-            PerformanceSessionStore.SaveActiveSnapshotOwned(snapshot);
+            owner.SaveSnapshot(snapshot);
             Assert.Null(PerformanceSessionStore.RecoverInterruptedSession());
         }
 
@@ -361,7 +361,7 @@ public sealed class SessionTests : IDisposable
     {
         using var service = new PerformanceSessionService();
         Assert.True(service.Start("取消标记失败"));
-        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath, System.Text.Json.JsonSerializer.Serialize(MakeSession("active-snapshot", 8)));
         PerformanceSessionStore.WriteActiveTombstoneOverride = _ => throw new IOException("simulated marker write failure");
         try
         {
@@ -424,7 +424,7 @@ public sealed class SessionTests : IDisposable
         using (var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership())
         {
             Assert.NotNull(owner);
-            Assert.False(PerformanceSessionStore.PrepareForNewSession());
+            Assert.False(owner.PrepareForNewSession());
             Assert.True(File.Exists(PerformanceSessionStore.ActiveSessionPath));
             Assert.True(File.Exists(PerformanceSessionStore.ActiveCancellationPath));
         }
@@ -438,7 +438,7 @@ public sealed class SessionTests : IDisposable
     {
         using var service = new PerformanceSessionService();
         Assert.True(service.Start("保存后清理失败"));
-        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath, System.Text.Json.JsonSerializer.Serialize(MakeSession("active-snapshot", 8)));
         PerformanceSessionStore.DeleteFileOverride = _ => throw new IOException("simulated delete failure");
         PerformanceSession? saved;
         try
@@ -467,7 +467,7 @@ public sealed class SessionTests : IDisposable
     {
         var service = new PerformanceSessionService();
         Assert.True(service.Start("退出时取消标记失败"));
-        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath, System.Text.Json.JsonSerializer.Serialize(MakeSession("active-snapshot", 8)));
         PerformanceSessionStore.WriteActiveTombstoneOverride = _ => throw new IOException("simulated marker write failure");
 
         try
@@ -495,7 +495,7 @@ public sealed class SessionTests : IDisposable
     {
         using var service = new PerformanceSessionService();
         Assert.True(service.Start("可取消会话"));
-        PerformanceSessionStore.SaveActiveSnapshotOwned(MakeSession("active-snapshot", 8));
+        File.WriteAllText(PerformanceSessionStore.ActiveSessionPath, System.Text.Json.JsonSerializer.Serialize(MakeSession("active-snapshot", 8)));
         PerformanceSessionStore.DeleteFileOverride = _ => throw new IOException("simulated delete failure");
         try
         {
@@ -740,7 +740,7 @@ public sealed class SessionTests : IDisposable
 
         using var owner = PerformanceSessionStore.TryAcquireActiveSessionOwnership();
         Assert.NotNull(owner);
-        Assert.True(PerformanceSessionStore.PrepareForNewSession());
+        Assert.True(owner.PrepareForNewSession());
     }
 
     [Fact]

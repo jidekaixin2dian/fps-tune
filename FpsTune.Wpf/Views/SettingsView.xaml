@@ -91,13 +91,13 @@
         <StackPanel Margin="0,0,0,20"><TextBlock Text="{DynamicResource Str.NavSettings}" Style="{StaticResource PageTitleStyle}"/>
             <TextBlock Text="{DynamicResource Str.SettingsIntro}" Style="{StaticResource MutedTextStyle}" Margin="0,6,0,0"/></StackPanel>
         <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="232"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-            <StackPanel Margin="0,0,24,0"><RadioButton x:Name="SettingsNav0" Content="{DynamicResource Str.SettingsAppearance}" GroupName="settingsSection" Tag="0" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}" IsChecked="True"/>
-<RadioButton x:Name="SettingsNav4" Content="{DynamicResource Str.Wallpaper}" GroupName="settingsSection" Tag="4" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
-<RadioButton x:Name="SettingsNav1" Content="{DynamicResource Str.SettingsStartup}" GroupName="settingsSection" Tag="1" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
-<RadioButton x:Name="SettingsNav2" Content="{DynamicResource Str.SettingsGame}" GroupName="settingsSection" Tag="2" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
-<RadioButton x:Name="SettingsNav3" Content="{DynamicResource Str.SettingsData}" GroupName="settingsSection" Tag="3" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
-<RadioButton x:Name="SettingsNav5" Content="{DynamicResource Str.SectionAbout}" GroupName="settingsSection" Tag="5" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/></StackPanel>
-            <Grid Grid.Column="1" MaxWidth="960" HorizontalAlignment="Stretch"><ScrollViewer x:Name="Section0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Visible"><StackPanel Margin="0,0,14,0">
+            <StackPanel x:Name="SettingsSectionButtons" Margin="0,0,24,0"><RadioButton x:Name="SettingsNav0" Content="{DynamicResource Str.SettingsAppearance}" GroupName="settingsSection" Tag="appearance" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}" IsChecked="True"/>
+<RadioButton x:Name="SettingsNav4" Content="{DynamicResource Str.Wallpaper}" GroupName="settingsSection" Tag="wallpaper" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav1" Content="{DynamicResource Str.SettingsStartup}" GroupName="settingsSection" Tag="startup" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav2" Content="{DynamicResource Str.SettingsGame}" GroupName="settingsSection" Tag="game" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav3" Content="{DynamicResource Str.SettingsData}" GroupName="settingsSection" Tag="data" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/>
+<RadioButton x:Name="SettingsNav5" Content="{DynamicResource Str.SectionAbout}" GroupName="settingsSection" Tag="about" Checked="Section_Checked" Style="{StaticResource SectionNavigationStyle}"/></StackPanel>
+            <Grid x:Name="SettingsSections" Grid.Column="1" MaxWidth="960" HorizontalAlignment="Stretch"><ScrollViewer x:Name="Section0" Tag="appearance" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Visible"><StackPanel Margin="0,0,14,0">
 <Border Style="{StaticResource CardStyle}"><StackPanel>                    <TextBlock Text="{DynamicResource Str.ThemeLabel}" Style="{StaticResource MutedTextStyle}" FontSize="13"/>
 
                     <UniformGrid Columns="3" Margin="0,12,0,20">
@@ -134,7 +134,7 @@
 
 
 </StackPanel></Border>
-</StackPanel></ScrollViewer><ScrollViewer x:Name="Section1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0"><Border Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsStartup}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+</StackPanel></ScrollViewer><ScrollViewer x:Name="Section1" Tag="startup" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0"><Border Style="{StaticResource CardStyle}"><StackPanel><TextBlock Text="{DynamicResource Str.SettingsStartup}" Style="{StaticResource CardTitleStyle}"/><Grid Style="{StaticResource SettingsRow}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.StartupShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.StartupHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="AutostartCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.StartupShort}" />
@@ -164,7 +164,7 @@
         <StackPanel Margin="0,0,24,0"><TextBlock Text="{DynamicResource Str.LowSpecShort}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14"/>
             <TextBlock Text="{DynamicResource Str.LowSpecHint}" Style="{StaticResource MutedTextStyle}" FontSize="13" TextWrapping="Wrap" Margin="0,5,0,0"/></StackPanel>
         <CheckBox x:Name="LowSpecCheck" Grid.Column="1" Style="{StaticResource SettingsToggleStyle}" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Str.LowSpecShort}" />
-    </Grid></StackPanel></Border></StackPanel></ScrollViewer><ScrollViewer x:Name="Section2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
+    </Grid></StackPanel></Border></StackPanel></ScrollViewer><ScrollViewer x:Name="Section2" Tag="game" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 游戏 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
@@ -427,7 +427,7 @@
             </Border>
 
 
-            </StackPanel></ScrollViewer><ScrollViewer x:Name="Section3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
+            </StackPanel></ScrollViewer><ScrollViewer x:Name="Section3" Tag="data" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,12,0">
             <!-- 高级 -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
@@ -466,7 +466,7 @@
             </Border>
 
 </StackPanel></ScrollViewer>
-<ScrollViewer x:Name="Section4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">                <Border x:Name="WallpaperCard" Style="{StaticResource CardStyle}" Margin="0"><StackPanel>
+<ScrollViewer x:Name="Section4" Tag="wallpaper" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">                <Border x:Name="WallpaperCard" Style="{StaticResource CardStyle}" Margin="0"><StackPanel>
                     <TextBlock Text="{DynamicResource Str.Wallpaper}" Style="{StaticResource CardTitleStyle}"/>
                     <TextBlock Text="{DynamicResource Str.WallpaperIntro}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
                     <Grid Margin="0,18,0,0">
@@ -512,7 +512,7 @@
                     <TextBlock x:Name="WallpaperStatus" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
                 </StackPanel></Border>
             </StackPanel></ScrollViewer>
-<ScrollViewer x:Name="Section5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">            <!-- 关于 -->
+<ScrollViewer x:Name="Section5" Tag="about" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed"><StackPanel Margin="0,0,14,0">            <!-- 关于 -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
                     <TextBlock Text="{DynamicResource Str.SectionAbout}" Style="{StaticResource CardTitleStyle}"/>

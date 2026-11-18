@@ -44,15 +44,18 @@ internal static class PreparationPlanStore
         && (!o.ApplyOptimizations || o.OptimizationPreset is "balanced" or "safe-only")
         && (!o.ApplyFrameLimit || o.FrameLimitFps is >= 20 and <= 1000);
 
-    internal static void Save(string? path, GamePreparationOptions options)
+    internal static SettingsSaveDisposition Save(string? path, GamePreparationOptions options)
     {
         if (!Valid(options)) throw new ArgumentException(Str.T("Str.PrepareChoose"));
         if (path is null)
         {
             var previous = SettingsService.Current.Preparation;
-            try { SettingsService.Current.Preparation = options; SettingsService.Save(SettingsService.Current); }
+            try
+            {
+                SettingsService.Current.Preparation = options;
+                return SettingsService.Save(SettingsService.Current);
+            }
             catch { SettingsService.Current.Preparation = previous; throw; }
-            return;
         }
         var file = FileFor(path);
         try
@@ -67,6 +70,7 @@ internal static class PreparationPlanStore
         }
         var saved = new SavedPlan(1, SessionConditionRules.CaptureGame(path, null).GameKey!, options);
         AtomicFile.WriteAllTextDurable(file, JsonSerializer.Serialize(saved), new UTF8Encoding(false));
+        return SettingsSaveDisposition.Saved;
     }
     internal static void UseDefault(string path)
     {

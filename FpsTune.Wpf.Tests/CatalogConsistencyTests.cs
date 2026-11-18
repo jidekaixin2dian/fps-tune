@@ -71,7 +71,7 @@ public class CatalogConsistencyTests
     }
 
     [Fact]
-    public void Every_catalog_item_has_a_native_engine_case()
+    public void Every_catalog_item_has_a_native_handler()
     {
         var (ids, _) = LoadCatalog();
         var engineSrc = File.ReadAllText(
@@ -79,7 +79,7 @@ public class CatalogConsistencyTests
         var cases = Regex.Matches(engineSrc, @"case\s+""([a-z0-9-]+)""")
             .Select(m => m.Groups[1].Value)
             .ToHashSet();
-        var missing = ids.Where(id => !cases.Contains(id)).ToList();
+        var missing = ids.Where(id => !cases.Contains(id) && SimpleRegistryTweak.For(id) is null).ToList();
         Assert.True(missing.Count == 0,
             "以下优化项在 NativeOptimizationEngine 缺少 case 分支: " + string.Join(", ", missing));
     }

@@ -108,7 +108,11 @@ public sealed class ComparisonCardUiTests
                 // 失败态（权限被拒）不显示结论区，状态文字给下一步。
                 card.ShowFailure(new ComparisonResult(false,
                     "采样被系统拒绝：PresentMon 的 ETW 会话需要管理员权限。请以管理员身份运行后重试。",
-                    "no-permission", null, null, null, null, [], false, null));
+                    "no-permission", null, null, null, null, [], false, null, ComparisonStage.After));
+                var afterDot = (Border)card.FindName("StageAfterDot");
+                var beforeDot = (Border)card.FindName("StageBeforeDot");
+                Assert.Same(card.FindResource("DangerBrush"), afterDot.Background);
+                Assert.Same(card.FindResource("BorderBrush"), beforeDot.Background);
                 var resultPanel = FindDescendant<Border>(card, b => b.Name == "ResultPanel");
                 Assert.Equal(Visibility.Collapsed, resultPanel!.Visibility);
                 foreach (var theme in new[] { "light", "dark" })

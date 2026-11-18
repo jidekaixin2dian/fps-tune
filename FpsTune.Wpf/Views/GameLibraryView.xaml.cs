@@ -37,7 +37,7 @@ public partial class GameLibraryView : UserControl
             var rows = await Task.Run(() => GameLibraryService.Read().Select(p =>
             {
                 var accessible = File.Exists(p.ExePath);
-                var observation = accessible ? AutoRecordingService.ObserveProcess(p.ExePath) : new GameProcessObservation(null, false);
+                var observation = accessible ? AutoPerformanceSessionService.ObserveProcess(p.ExePath) : new GameProcessObservation(null, false);
                 var label = Str.T(!accessible ? "Str.LibraryInaccessible" : !observation.Reliable ? "Str.LibraryProcessUnknown"
                     : observation.Run is null ? "Str.LibraryNotRunning" : "Str.LibraryRunning");
                 return new GameRow(p, accessible, label, p.ExePath.Equals(currentPath, StringComparison.OrdinalIgnoreCase));

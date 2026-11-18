@@ -240,5 +240,5 @@ public static class GpuIdentityService
         }
     }
 
-    public static Task<BackupService.RestoreAllResult> RestoreAsync() => Task.Run(() => BackupService.RestoreAll(new[] { BackupId }));
+    public static Task<BackupService.RestoreAllResult> RestoreAsync() => Task.Run(() => BackupService.RestoreSystemBackups(new[] { BackupId }));
 }

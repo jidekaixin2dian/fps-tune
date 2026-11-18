@@ -66,7 +66,7 @@ internal static class PresentMonSampler
         var budget = TimeSpan.FromSeconds(seconds + NonSamplingBudgetSeconds);
         var clock = Stopwatch.StartNew();
 
-        var family = await DetectFamilyAsync(presentMon, ct).ConfigureAwait(false);
+        var family = await Task.Run(() => DetectFamily(presentMon), ct).ConfigureAwait(false);
         var attempts = BuildAttempts(family, pid, processName, seconds, csvOut);
 
         var permissionDenied = false;
@@ -86,8 +86,7 @@ internal static class PresentMonSampler
             lostEvents = Math.Max(lostEvents, MaxLostEvents(errors.Concat(output)));
             if (code != 0)
             {
-                if (errors.Concat(output).Any(line =>
-                        PermissionMarkers.Any(marker => line.Contains(marker, StringComparison.OrdinalIgnoreCase))))
+                if (errors.Concat(output).Any(HasPermissionError))
                     permissionDenied = true;
                 continue;
             }
@@ -147,40 +146,48 @@ internal static class PresentMonSampler
         }
 
         // v2：独立 session 名，避免与 NVIDIA FrameView 服务已启动的默认 "PresentMon" 会话冲突。
-        var head = new[] { "--session_name", "FpsTune", "--timed", seconds.ToString(), "--terminate_after_timed", "--no_console_stats" };
         return pid is { } processId
             ?
             [
-                [.. head, "--process_id", processId.ToString(), "--output_stdout"],
-                [.. head, "--process_name", processName, "--output_stdout"],
-                [.. head, "--process_id", processId.ToString(), "--output_file", csvOut],
+                BuildV2Arguments("FpsTune", processId, processName, seconds),
+                BuildV2Arguments("FpsTune", null, processName, seconds),
+                BuildV2Arguments("FpsTune", processId, processName, seconds, csvOut),
             ]
             :
             [
-                [.. head, "--process_name", processName, "--output_stdout"],
-                [.. head, "--process_name", processName, "--output_file", csvOut],
+                BuildV2Arguments("FpsTune", null, processName, seconds),
+                BuildV2Arguments("FpsTune", null, processName, seconds, csvOut),
             ];
     }
 
-    private static async Task<ArgsFamily> DetectFamilyAsync(string exe, CancellationToken ct)
+    internal static string[] BuildV2Arguments(string session, int? pid, string processName,
+        int? seconds = null, string? csvOut = null)
     {
-        if (FamilyCache.TryGetValue(exe, out var cached))
-            return cached;
+        var args = new List<string> { "--session_name", session };
+        if (seconds is { } duration)
+            args.AddRange(["--timed", duration.ToString(CultureInfo.InvariantCulture), "--terminate_after_timed"]);
+        args.Add("--no_console_stats");
+        if (pid is { } processId)
+            args.AddRange(["--process_id", processId.ToString(CultureInfo.InvariantCulture)]);
+        else
+            args.AddRange(["--process_name", processName]);
+        if (csvOut is null)
+            args.Add("--output_stdout");
+        else
+            args.AddRange(["--output_file", csvOut]);
+        return args.ToArray();
+    }
 
-        string? help = null;
-        try
-        {
-            help = HelpProbeOverride is { } probe
-                ? probe(exe)
-                : await Task.Run(() => RunHelp(exe), ct).ConfigureAwait(false);
-        }
-        catch
-        {
-            // 探测失败按 v2 处理（内置采样器就是 v2），不影响正式采样
-        }
-        var family = FamilyFromHelp(help);
-        FamilyCache[exe] = family;
-        return family;
+    internal static bool HasPermissionError(string line)
+        => PermissionMarkers.Any(marker => line.Contains(marker, StringComparison.OrdinalIgnoreCase));
+
+    internal static ArgsFamily DetectFamily(string exe)
+    {
+        if (HelpProbeOverride is { } probe)
+            return FamilyFromHelp(probe(exe));
+        if (string.Equals(exe, BundledToolExtract.PresentMonPath, StringComparison.OrdinalIgnoreCase))
+            return ArgsFamily.V2;
+        return FamilyCache.GetOrAdd(exe, path => FamilyFromHelp(RunHelp(path)));
     }
 
     private static string? RunHelp(string exe)
@@ -201,12 +208,13 @@ internal static class PresentMonSampler
             if (proc is null)
                 return null;
             var read = proc.StandardOutput.ReadToEndAsync();
+            var errors = proc.StandardError.ReadToEndAsync();
             if (!proc.WaitForExit(5000))
             {
                 try { proc.Kill(entireProcessTree: true); } catch { }
                 return null;
             }
-            return read.GetAwaiter().GetResult();
+            return read.GetAwaiter().GetResult() + "\n" + errors.GetAwaiter().GetResult();
         }
         catch
         {

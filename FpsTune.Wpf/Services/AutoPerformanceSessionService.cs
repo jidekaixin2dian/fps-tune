@@ -9,7 +9,7 @@ internal sealed record GameProcessRun(int Pid, long Started);
 internal sealed record GameProcessObservation(GameProcessRun? Run, bool Reliable = true);
 
 /// <summary>Opt-in launch/exit recording. Never stops a session it did not start.</summary>
-internal sealed class AutoRecordingService : IDisposable
+internal sealed class AutoPerformanceSessionService : IDisposable
 {
     private readonly PerformanceSessionService _session;
     private readonly Func<(bool Enabled, IReadOnlyList<string> Paths)> _options;
@@ -25,7 +25,7 @@ internal sealed class AutoRecordingService : IDisposable
     internal string Status { get; private set; } = Str.T("Str.AutoRecordOff");
     internal bool IsObserving => _timer.IsEnabled;
 
-    internal AutoRecordingService(PerformanceSessionService session,
+    internal AutoPerformanceSessionService(PerformanceSessionService session,
         Func<(bool Enabled, IReadOnlyList<string> Paths)>? options = null,
         Func<string, GameProcessObservation>? probe = null, Func<bool>? busy = null)
     {

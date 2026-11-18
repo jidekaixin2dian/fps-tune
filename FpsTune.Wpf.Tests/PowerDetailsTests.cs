@@ -442,7 +442,7 @@ public sealed class PowerDetailsTests : IDisposable
             Assert.True(PowerSettingWriter.Apply(Scheme, entry, 20, null).Ok);
 
             Assert.Contains(RecoveryCoordinator.Inventory(), scope => scope.Module == "power-details");
-            var result = RecoveryCoordinator.RestoreAll();
+            var result = RecoveryCoordinator.RestoreAllModules();
 
             Assert.Empty(result.Failures);
             Assert.Contains(result.Restored, item => item.File == Str.T("Str.PowerDetailsTitle"));

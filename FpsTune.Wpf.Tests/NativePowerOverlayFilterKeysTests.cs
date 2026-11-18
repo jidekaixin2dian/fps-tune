@@ -96,7 +96,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
         var capture = BackupService.Capture(new[] { "power-overlay-perf" }, null);
         await NativeOptimizationEngine.ApplyItemsWithReceiptAsync(new[] { "power-overlay-perf" }, null);
         Assert.Equal(NativePowerOverlay.BestPerformance, _overlay);
-        var restored = BackupService.RestoreAll(new[] { "power-overlay-perf" }, capture);
+        var restored = BackupService.RestoreSystemBackups(new[] { "power-overlay-perf" }, capture);
         Assert.Empty(restored.Failures);
         Assert.Equal(Guid.Empty, _overlay);
     }
@@ -133,7 +133,7 @@ public sealed class NativePowerOverlayFilterKeysTests : IDisposable
         Assert.Equal("registry", record.Kind);
         Assert.Equal(@"Control Panel\Accessibility\Keyboard Response", record.Path);
         Assert.Equal(original, record.OldValue?.ToString()); // JSON 反序列化为数值类型
-        var restored = BackupService.RestoreAll(new[] { "filter-keys-off" }, capture);
+        var restored = BackupService.RestoreSystemBackups(new[] { "filter-keys-off" }, capture);
         Assert.Empty(restored.Failures);
         Assert.Equal(original, current);
     }

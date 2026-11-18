@@ -12,25 +12,21 @@ namespace FpsTune.Wpf.Services;
 /// </summary>
 internal static class AudioEndpointProbe
 {
-    private const int RenderFlow = 0;   // EDataFlow.eRender
-    private const int ConsoleRole = 0;  // ERole.eConsole
+    internal const int RenderFlow = 0;
+    internal enum Role { Console, Multimedia }
     private const int SOk = 0;
 
-    /// <summary>枚举器类 ID（BCDE0395-E52F-467C-8E3D-C4579291692E）。</summary>
-    private static readonly Guid EnumeratorClassId = new("BCDE0395-E52F-467C-8E3D-C4579291692E");
+    internal static IMMDeviceEnumerator CreateEnumerator() => (IMMDeviceEnumerator)new MmDeviceEnumeratorComObject();
 
     /// <summary>当前默认渲染端点；读不到（无设备 / 调用失败 / 非 Windows 环境）时返回 null。</summary>
     public static AudioOutput? Probe()
     {
-        object? instance = null;
+        IMMDeviceEnumerator? enumerator = null;
         IMMDevice? device = null;
         try
         {
-            var type = Type.GetTypeFromCLSID(EnumeratorClassId);
-            if (type is null) return null;
-            instance = Activator.CreateInstance(type);
-            if (instance is not IMMDeviceEnumerator enumerator) return null;
-            if (enumerator.GetDefaultAudioEndpoint(RenderFlow, ConsoleRole, out device) != SOk || device is null) return null;
+            enumerator = CreateEnumerator();
+            if (enumerator.GetDefaultAudioEndpoint(RenderFlow, (int)Role.Console, out device) != SOk || device is null) return null;
             if (device.GetId(out var raw) != SOk || raw == IntPtr.Zero) return null;
             string? id;
             try { id = Marshal.PtrToStringUni(raw); }
@@ -45,7 +41,7 @@ internal static class AudioEndpointProbe
         finally
         {
             if (device is not null && Marshal.IsComObject(device)) Marshal.ReleaseComObject(device);
-            if (instance is not null && Marshal.IsComObject(instance)) Marshal.ReleaseComObject(instance);
+            if (enumerator is not null && Marshal.IsComObject(enumerator)) Marshal.ReleaseComObject(enumerator);
         }
     }
 
@@ -68,21 +64,24 @@ internal static class AudioEndpointProbe
             ? inner.ToString("D") : null;
     }
 
+    [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
+    private class MmDeviceEnumeratorComObject { }
+
     // 只为占住 vtable 槽位：GetDefaultAudioEndpoint 在 EnumAudioEndpoints 之后。
     [ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMMDeviceEnumerator
+    internal interface IMMDeviceEnumerator
     {
-        [PreserveSig] int EnumAudioEndpoints(int dataFlow, int stateMask, out IntPtr devices);
+        [PreserveSig] int EnumAudioEndpoints(int dataFlow, uint stateMask, out IntPtr devices);
         [PreserveSig] int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice? device);
     }
 
     // 同上：GetId 在 Activate / OpenPropertyStore 之后。
     [ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMMDevice
+    internal interface IMMDevice
     {
-        [PreserveSig] int Activate(ref Guid interfaceId, int classContext, IntPtr activationParams, out IntPtr instance);
-        [PreserveSig] int OpenPropertyStore(int access, out IntPtr properties);
+        [PreserveSig] int Activate(ref Guid interfaceId, uint classContext, IntPtr activationParams, out IntPtr instance);
+        [PreserveSig] int OpenPropertyStore(uint access, out IntPtr properties);
         [PreserveSig] int GetId(out IntPtr id);
-        [PreserveSig] int GetState(out int state);
+        [PreserveSig] int GetState(out uint state);
     }
 }

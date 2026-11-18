@@ -13,44 +13,14 @@ using FpsTune.Wpf.Services;
 /// </summary>
 public static partial class NativeOptimizationEngine
 {
-    public static Task<RunResult> DetectAsync()
-    {
-        var gamePath = AppState.GamePath;
-        return Task.Run(() => new RunResult(0, DetectionService.BuildDetectJson(gamePath)));
-    }
-
-    /// <summary>预设 -> 优化项 id 列表。未知预设明确报错。</summary>
+    /// <summary>预设对应的优化项 ID。未知预设明确报错。</summary>
     internal static IReadOnlyList<string> GetPresetIds(string preset)
         => OptimizationCatalog.ResolvePreset(preset);
-
-    public static Task<RunResult> ApplyPresetAsync(string preset)
-        => ApplyPresetAsync(preset, AppState.GamePath);
-
-    /// <summary>
-    /// 使用调用方明确提供的游戏路径应用预设；不会改写 AppState，避免并发操作串错目标。
-    /// </summary>
-    public static Task<RunResult> ApplyPresetAsync(string preset, string? gamePath)
-    {
-        var itemIds = GetPresetIds(preset).ToArray();
-        return Task.Run(() => ApplyNative(itemIds, gamePath));
-    }
-
-    public static Task<RunResult> ApplyItemsAsync(IEnumerable<string> ids)
-        => ApplyItemsAsync(ids, AppState.GamePath);
-
-    /// <summary>
-    /// 使用调用方明确提供的游戏路径应用项目；不会改写 AppState，避免自动应用时备份/修改目标漂移。
-    /// </summary>
-    public static Task<RunResult> ApplyItemsAsync(IEnumerable<string> ids, string? gamePath)
-    {
-        var itemIds = ids.Distinct().ToArray();
-        return Task.Run(() => ApplyNative(itemIds, gamePath));
-    }
 
     public static Task<RunResult> RestoreAsync()
         => Task.Run(() =>
         {
-            var result = RecoveryCoordinator.RestoreAll();
+            var result = RecoveryCoordinator.RestoreAllModules();
             if (result.Restored.Count == 0 && result.Failures.Count == 0)
                 return new RunResult(0, "没有找到可还原的备份。");
 
@@ -78,7 +48,13 @@ public static partial class NativeOptimizationEngine
         return Task.FromResult(new RunResult(0, json));
     }
 
-    internal sealed record ApplyReceipt(string OperationId, string BackupFile, IReadOnlyList<OptimizationApplyResult> Results);
+    internal sealed record ApplyReceipt(string OperationId, string BackupFile, IReadOnlyList<OptimizationApplyResult> Results)
+    {
+        internal int FailedCount => Results.Count(r => !r.Ok && !r.Skipped);
+        internal IReadOnlyList<string> RebootIds => Results.Where(r => r.Ok && r.Changed)
+            .Where(r => OptimizationCatalog.Items.Any(item => item.Id == r.Id && item.Reboot))
+            .Select(r => r.Id).ToArray();
+    }
 
     internal static Task<ApplyReceipt> ApplyItemsWithReceiptAsync(IEnumerable<string> ids, string? gamePath, Action<string>? beforeWrite = null)
         => Task.Run(() => ExecuteNative(ids.Distinct().ToArray(), gamePath, beforeWrite));
@@ -153,42 +129,5 @@ public static partial class NativeOptimizationEngine
         return string.IsNullOrWhiteSpace(game)
             ? Str.T("Str.OptApplyTargetNoGame", ids.Count)
             : Str.T("Str.OptApplyTargetGame", ids.Count, game);
-    }
-
-    private static RunResult ApplyNative(IReadOnlyList<string> ids, string? gamePath)
-    {
-        var receipt = ExecuteNative(ids, gamePath);
-        var backupFile = receipt.BackupFile;
-        var results = receipt.Results;
-        var rebootIds = results
-            .Where(r => r.Ok && r.Changed)
-            .Select(r => OptimizationCatalog.Items.FirstOrDefault(x => x.Id == r.Id))
-            .Where(def => def?.Reboot == true)
-            .Select(def => def!.Id)
-            .ToArray();
-
-        var payload = new
-        {
-            operationId = receipt.OperationId,
-            tool = "fps-tune",
-            version = UpdateService.CurrentVersion,
-            mode = "apply",
-            results = results.Select(r => new
-            {
-                id = r.Id,
-                name = r.Name,
-                ok = r.Ok,
-                changed = r.Changed,
-                skipped = r.Skipped,
-                message = r.Message,
-                stateUncertain = r.StateUncertain
-            }),
-            summary = $"{results.Count(r => r.Ok)} 成功、{results.Count(r => !r.Ok && !r.Skipped)} 失败、{results.Count(r => r.Skipped)} 跳过",
-            backupFile = backupFile,
-            reboot = rebootIds
-        };
-
-        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-        return new RunResult(results.Any(r => !r.Ok && !r.Skipped) ? 1 : 0, json);
     }
 }

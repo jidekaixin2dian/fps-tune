@@ -9,7 +9,7 @@ public partial class OptimizeView
 {
     private bool _operationBusy;
     private string _scopeFilter = "all";
-    internal Func<IReadOnlyList<string>, string?, Task<RunResult>>? ApplyItemsOverride { get; set; }
+    internal Func<IReadOnlyList<string>, string?, Task<NativeOptimizationEngine.ApplyReceipt>>? ApplyItemsOverride { get; set; }
     internal Func<Task<bool>>? RefreshDetectionOverride { get; set; }
 
     /// <summary>对照一下（0.5.0 M2）：改前采样 → 审阅确认应用 → 冷却 → 改后采样 → 结论卡。
@@ -134,7 +134,7 @@ public partial class OptimizeView
     internal OptimizationApplyPlan CaptureReviewPlan()
         => OptimizationApplyPlan.Capture(Items, item => ItemsView.Contains(item), AppState.GamePath);
 
-    private async Task CompleteOperationAsync(RunResult result)
+    private async Task CompleteOperationAsync(Action renderResult)
     {
         string? refreshError = null;
         try
@@ -149,7 +149,7 @@ public partial class OptimizeView
 
         ConsentCheck.IsChecked = false;
         // Rebuilding rows may change the detail panel. Keep the operation receipt last.
-        SetApplyResult(result);
+        renderResult();
         if (refreshError is not null)
         {
             var notice = NewPara(4);
@@ -189,8 +189,8 @@ public partial class OptimizeView
             if (review.ShowDialog() != true) return;
             SetPlain(Str.T("Str.Applying"), "AccentBrush");
             var result = await (ApplyItemsOverride?.Invoke(plan.Ids, plan.GamePath)
-                ?? NativeOptimizationEngine.ApplyItemsAsync(plan.Ids, plan.GamePath));
-            await CompleteOperationAsync(result);
+                ?? NativeOptimizationEngine.ApplyItemsWithReceiptAsync(plan.Ids, plan.GamePath));
+            await CompleteOperationAsync(() => SetApplyResult(result));
         }
         catch (Exception ex) { SetRawMonospace(ex.ToString()); }
         finally { SetOperationBusy(false); }

@@ -27,7 +27,7 @@ public sealed class SessionFpsRecorder
     private Process? _proc;
     private Task<string[]>? _readTask;
     private Task? _captureTask;
-    private Task? _errorTask;
+    private Task<string?>? _errorTask;
     private FileStream? _outputFile;
     private int _limitReached;
     private string? _unavailableReasonKey;
@@ -139,8 +139,13 @@ public sealed class SessionFpsRecorder
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
-            foreach (var a in new[] { "--session_name", "FpsTune-Session", "--process_id", gameId.ToString(), "--no_console_stats", "--output_stdout" })
-                psi.ArgumentList.Add(a);
+            if (_verifyExecutable && PresentMonSampler.DetectFamily(pm) == PresentMonSampler.ArgsFamily.V1)
+            {
+                _unavailableReasonKey = "Str.FpsReasonIncompatible";
+                return false;
+            }
+            foreach (var arg in PresentMonSampler.BuildV2Arguments("FpsTune-Session", gameId, ""))
+                psi.ArgumentList.Add(arg);
             using var verified = _verifyExecutable ? TrustedCaptureTool.OpenVerified(pm) : null;
             _proc = _start(psi);
             if (_proc is null)
@@ -219,7 +224,7 @@ public sealed class SessionFpsRecorder
             if (readTask is not null)
                 parsed = FrameTimeStats.Parse(readTask.Wait(TimeSpan.FromSeconds(10)) ? readTask.Result : []);
             else if (capture is not null && file is not null
-                && Task.WhenAll(capture, errors ?? Task.CompletedTask).Wait(TimeSpan.FromSeconds(10)))
+                && Task.WhenAll(capture, (Task?)errors ?? Task.CompletedTask).Wait(TimeSpan.FromSeconds(10)))
             {
                 file.Position = 0;
                 using var reader = new StreamReader(file, leaveOpen: true);
@@ -246,7 +251,12 @@ public sealed class SessionFpsRecorder
         }
         if (parsed.Frame is null)
         {
-            _unavailableReasonKey = "Str.FpsReasonParseFailed";
+            _unavailableReasonKey = (errors is { IsCompletedSuccessfully: true } ? errors.Result : null) switch
+            {
+                CaptureGuidance.NoPermission => "Str.FpsReasonNoPermission",
+                CaptureGuidance.EventsLost => "Str.FpsReasonEventsLost",
+                _ => "Str.FpsReasonParseFailed",
+            };
             _parseError ??= parsed.Error switch
             {
                 FrameParseError.TooFewFrames => $"frames={parsed.FrameCount}",
@@ -323,10 +333,33 @@ public sealed class SessionFpsRecorder
         while (reader.ReadLine() is { } line) yield return line;
     }
 
-    private static async Task DrainErrorsAsync(Process process)
+    private static async Task<string?> DrainErrorsAsync(Process process)
     {
         var buffer = new char[4096];
-        while (await process.StandardError.ReadAsync(buffer).ConfigureAwait(false) > 0) { }
+        var line = new System.Text.StringBuilder();
+        var permissionDenied = false;
+        long lostEvents = 0;
+        void ClassifyLine()
+        {
+            if (line.Length == 0) return;
+            var message = line.ToString();
+            permissionDenied |= PresentMonSampler.HasPermissionError(message);
+            lostEvents = Math.Max(lostEvents, PresentMonSampler.MaxLostEvents([message]));
+            line.Clear();
+        }
+        int length;
+        while ((length = await process.StandardError.ReadAsync(buffer).ConfigureAwait(false)) > 0)
+        {
+            for (var i = 0; i < length; i++)
+            {
+                if (buffer[i] == '\n')
+                    ClassifyLine();
+                else if (line.Length < buffer.Length)
+                    line.Append(buffer[i]);
+            }
+        }
+        ClassifyLine();
+        return permissionDenied ? CaptureGuidance.NoPermission : lostEvents > 0 ? CaptureGuidance.EventsLost : null;
     }
 
     private static void CleanupOutput(FileStream? file, Task? capture)

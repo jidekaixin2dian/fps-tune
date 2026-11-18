@@ -31,7 +31,7 @@ public static class RecoveryCoordinator
 
     public static bool NeedsAdmin() => Inventory().Any(s => s.NeedsAdmin);
 
-    internal static BackupService.RestoreAllResult RestoreAll()
+    internal static BackupService.RestoreAllResult RestoreAllModules()
     {
         using var gate = SystemMutationGate.Acquire();
         // Restore the current plan's details before a system backup can switch to another plan.
@@ -39,7 +39,7 @@ public static class RecoveryCoordinator
         string? powerError = null;
         try { power = PowerSettingWriter.Restore(); }
         catch (Exception ex) { powerError = PrivacyScrub.Sanitize(ex.Message); }
-        var result = BackupService.RestoreAll();
+        var result = BackupService.RestoreSystemBackups();
         var powerTitle = Str.T("Str.PowerDetailsTitle");
         if (powerError is not null) result.Failures.Add(powerTitle + " · " + powerError);
         if (power is not null)

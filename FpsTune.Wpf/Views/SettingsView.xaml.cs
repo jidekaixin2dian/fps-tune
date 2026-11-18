@@ -58,12 +58,19 @@ public partial class SettingsView : UserControl
         RefreshAdminStatus();
     }
 
+    internal void SelectSection(string sectionKey)
+    {
+        var button = SettingsSectionButtons.Children.OfType<RadioButton>()
+            .FirstOrDefault(candidate => Equals(candidate.Tag, sectionKey));
+        if (button is not null)
+            button.IsChecked = true;
+    }
+
     private void Section_Checked(object sender, RoutedEventArgs e)
     {
-        if (Section0 is null || sender is not RadioButton { Tag: string tag }) return;
-        var sections = new[] { Section0, Section1, Section2, Section3, Section4, Section5 };
-        for (var i = 0; i < sections.Length; i++)
-            sections[i].Visibility = tag == i.ToString() ? Visibility.Visible : Visibility.Collapsed;
+        if (SettingsSections is null || sender is not RadioButton { Tag: string tag }) return;
+        foreach (var section in SettingsSections.Children.OfType<ScrollViewer>())
+            section.Visibility = Equals(section.Tag, tag) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void Lang_Checked(object sender, RoutedEventArgs e)
@@ -83,7 +90,7 @@ public partial class SettingsView : UserControl
         try
         {
             await Task.Run(() => WallpaperService.Import(picker.FileName));
-            var result = SettingBinder.PersistBool(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v, true);
+            var result = SettingBinder.PersistValue(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v, true);
             if (!result.Ok)
             {
                 WallpaperStatus.Text = result.Detail!;
@@ -93,7 +100,7 @@ public partial class SettingsView : UserControl
             SetCheckedWithoutEvents(WallpaperEnabledCheck, true);
             RefreshWallpaperOnMainWindow();
             RefreshWallpaperPreview();
-            WallpaperStatus.Text = Str.T("Str.WallpaperSaved");
+            WallpaperStatus.Text = result.Message(Str.T("Str.WallpaperSaved"));
         }
         catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); DialogService.Warning(Str.T("Str.WallpaperImportFailed"), WallpaperStatus.Text); }
         finally { _wallpaperBusy = false; }
@@ -104,19 +111,19 @@ public partial class SettingsView : UserControl
         try
         {
             WallpaperService.Remove();
-            var result = SettingBinder.PersistBool(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v, false);
+            var result = SettingBinder.PersistValue(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v, false);
             if (!result.Ok) { WallpaperStatus.Text = result.Detail!; return; }
             SetCheckedWithoutEvents(WallpaperEnabledCheck, false);
             RefreshWallpaperOnMainWindow();
             RefreshWallpaperPreview();
-            WallpaperStatus.Text = "";
+            WallpaperStatus.Text = result.Message();
         }
         catch (Exception ex) { WallpaperStatus.Text = PrivacyScrub.Sanitize(ex.Message); }
     }
     private void WallpaperEnabled_Changed(object sender, RoutedEventArgs e)
     {
         if (_suppressUiEvents || !_wallpaperReady) return;
-        var result = SettingBinder.PersistBool(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v,
+        var result = SettingBinder.PersistValue(s => s.WallpaperEnabled, (s, v) => s.WallpaperEnabled = v,
             WallpaperEnabledCheck.IsChecked == true);
         if (!result.Ok)
         {
@@ -125,6 +132,7 @@ public partial class SettingsView : UserControl
             return;
         }
         RefreshWallpaperOnMainWindow();
+        WallpaperStatus.Text = result.Message();
     }
     private void WallpaperOpacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
@@ -133,6 +141,7 @@ public partial class SettingsView : UserControl
             WallpaperService.NormalizeOpacity(e.NewValue));
         if (!result.Ok) { WallpaperStatus.Text = result.Detail!; return; }
         RefreshWallpaperOnMainWindow();
+        WallpaperStatus.Text = result.Message();
     }
     private static void RefreshWallpaperOnMainWindow()
         => (Application.Current.MainWindow as MainWindow)?.RefreshWallpaper();
@@ -234,6 +243,7 @@ public partial class SettingsView : UserControl
         }
         // 深浅切换走圆形揭示：从鼠标位置扩散，旧界面被"挖开"露出新主题。
         ThemeReveal.SwitchTheme(mode);
+        ShowMemoryOnly(result, Str.T("Str.SettingsAppearance"));
     }
 
     private void SelectThemeRadio(string mode)
@@ -254,6 +264,11 @@ public partial class SettingsView : UserControl
     private static void WarnSaveFailed(string title, string detail)
         => DialogService.Warning(title, Str.T("Str.SettingsSaveFailed", detail));
 
+    private static void ShowMemoryOnly(SettingSaveResult result, string title)
+    {
+        if (result.MemoryOnly) DialogService.Warning(title, result.Message());
+    }
+
     /// <summary>勾选框设置：写内存 → 保存；失败把内存与勾选态一起翻回去并提示，成功后才跑副作用。</summary>
     private void SaveToggle(
         CheckBox box,
@@ -264,7 +279,7 @@ public partial class SettingsView : UserControl
     {
         if (_suppressUiEvents || box.IsChecked is null)
             return;
-        var result = SettingBinder.PersistBool(read, write, box.IsChecked == true);
+        var result = SettingBinder.PersistValue(read, write, box.IsChecked == true);
         if (!result.Ok)
         {
             SetCheckedWithoutEvents(box, read(SettingsService.Current));
@@ -272,6 +287,7 @@ public partial class SettingsView : UserControl
             return;
         }
         afterSaved?.Invoke();
+        ShowMemoryOnly(result, Str.T(titleKey));
     }
 
     /// <summary>改写勾选态但不触发保存（回滚与加载共用）。</summary>
@@ -385,7 +401,11 @@ public partial class SettingsView : UserControl
         var previous = SettingsService.Current.CloseAction;
         var result = SettingBinder.PersistValue(s => s.CloseAction, (s, v) => s.CloseAction = v,
             CloseActionFromIndex(CloseActionBox.SelectedIndex));
-        if (result.Ok) return;
+        if (result.Ok)
+        {
+            ShowMemoryOnly(result, Str.T("Str.CloseSettingTitle"));
+            return;
+        }
         _suppressUiEvents = true;
         try { CloseActionBox.SelectedIndex = CloseActionIndex(previous); }
         finally { _suppressUiEvents = false; }
@@ -617,7 +637,7 @@ public partial class SettingsView : UserControl
     {
         if (_suppressUiEvents || AutoProfileCheck.IsChecked is null)
             return;
-        var result = SettingBinder.PersistBool(s => s.AutoProfileEnabled, (s, v) => s.AutoProfileEnabled = v,
+        var result = SettingBinder.PersistValue(s => s.AutoProfileEnabled, (s, v) => s.AutoProfileEnabled = v,
             AutoProfileCheck.IsChecked == true);
         if (!result.Ok)
         {
@@ -625,13 +645,13 @@ public partial class SettingsView : UserControl
             SetAutoProfileStatus(Str.T("Str.SettingsAutoApplySaveFailed", result.Detail!), warning: true);
             return;
         }
-        SetAutoProfileStatus(SettingsService.Current.AutoProfileEnabled ? Str.T("Str.AutoApplyOn") : Str.T("Str.AutoApplyOff"));
+        SetAutoProfileStatus(result.Message(SettingsService.Current.AutoProfileEnabled ? Str.T("Str.AutoApplyOn") : Str.T("Str.AutoApplyOff")), result.MemoryOnly);
     }
 
     private void TimerBoostSetting_Changed(object sender, RoutedEventArgs e)
     {
         if (_suppressUiEvents || TimerBoostCheck.IsChecked is null) return;
-        var result = SettingBinder.PersistBool(s => s.GameTimerBoostEnabled, (s, v) => s.GameTimerBoostEnabled = v,
+        var result = SettingBinder.PersistValue(s => s.GameTimerBoostEnabled, (s, v) => s.GameTimerBoostEnabled = v,
             TimerBoostCheck.IsChecked == true);
         if (!result.Ok)
         {
@@ -641,6 +661,7 @@ public partial class SettingsView : UserControl
         }
         App.GameTimer?.ApplySettings();
         UpdateTimerBoostStatus();
+        if (result.MemoryOnly) TimerBoostStatus.Text = result.Message();
     }
 
     private void AutoSessionSetting_Changed(object sender, RoutedEventArgs e)
@@ -681,7 +702,7 @@ public partial class SettingsView : UserControl
             return;
         }
         App.SessionAutomation?.ApplySettings();
-        SetAutoSessionStatus(string.Empty);
+        SetAutoSessionStatus(result.Message(), result.MemoryOnly);
     }
 
     internal void UpdateTimerBoostStatus()
@@ -716,6 +737,7 @@ public partial class SettingsView : UserControl
             () => settings.AutoProfileBindings = next,
             () => settings.AutoProfileBindings = oldBindings);
         error = result.Detail;
+        ShowMemoryOnly(result, Str.T("Str.SettingsGame"));
         return result.Ok;
     }
 

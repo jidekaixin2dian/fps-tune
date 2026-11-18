@@ -44,7 +44,7 @@ public sealed class ProcessorPowerTests : IDisposable
             result => BackupService.CompleteCapture(file, result));
         Assert.True(results[0].Ok, results[0].Message); Assert.Equal(option.Target, value);
         if (externalChange) value = external;
-        var restored = BackupService.RestoreAll(null, file);
+        var restored = BackupService.RestoreSystemBackups(null, file);
         if (externalChange) { Assert.Single(restored.Failures); Assert.Single(writes); Assert.Equal(external, value); }
         else { Assert.Empty(restored.Failures); Assert.Equal(original, value); Assert.Equal(2, writes.Count); }
         Assert.False(OptimizationCatalog.Items.Single(i => i.Id == id).Default);

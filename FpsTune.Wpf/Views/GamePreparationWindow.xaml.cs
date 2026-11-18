@@ -155,7 +155,9 @@ public partial class GamePreparationWindow : Window
         { StatusText.Text = Str.T("Str.PrepareSelectDisplay"); return; }
         try
         {
-            PreparationPlanStore.Save(GameScope.IsChecked == true ? _gamePath : null, selected);
+            var saved = PreparationPlanStore.Save(GameScope.IsChecked == true ? _gamePath : null, selected);
+            if (saved == SettingsSaveDisposition.MemoryOnly)
+                DialogService.Info(Str.T("Str.PrepareTitle"), Str.T("Str.SettingsMemoryOnly"));
             SavedOptions = selected; RunNow = run; DialogResult = true;
         }
         catch (Exception ex)
