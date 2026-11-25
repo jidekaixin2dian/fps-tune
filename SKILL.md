@@ -11,7 +11,7 @@ description: Windows 系统设置调校与 FPS 对照测量。使用 FPS 帧律�
 ## 前置条件
 
 - Windows 10/11 x64，满足 .NET 10 运行条件。安装包自带运行时；便携包需要 .NET 10 Windows Desktop Runtime。
-- 从 [官方 Releases](https://github.com/jidekaixin2dian/fps-tune/releases/latest) 取得程序并核对校验值。当前源码候选为 0.2.4-beta，公开版为 0.2.3-beta；使用前读取 `-Version`。
+- 从 [官方 v0.6.1 Release](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1) 取得程序并核对校验值。使用前读取 `-Version`。
 - `<root>` 是程序目录，本地构建通常位于 `FpsTune.Wpf\bin\Release\net10.0-windows`。
 - 带参数进入无头模式，结果输出到 stdout，退出码 0/1。CLI Apply / Restore 执行即生效。
 - 项目清单、副作用、权限和预设以引擎 `-Detect -Json` 及 `catalog/catalog.json` 为准，不根据旧文章猜测。

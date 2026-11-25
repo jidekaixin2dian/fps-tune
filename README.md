@@ -1,11 +1,11 @@
 # FPS 帧律 · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)
+[简体中文](README.md) · [English](README.en.md) · [官方下载](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1)
 
 面向 Windows 玩家的系统设置调校与性能测量工具：检测 → 审阅 → 应用 → 实测 → 还原。
 提供桌面界面和命令行两种使用方式。
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@
 
 ## 版本与下载
 
-当前版本为 **[v0.6.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)**。
+当前版本为 **[v0.6.1](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1)**。
 1.x 版本线已停止维护。
 
-从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
+从本仓库 [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1) 下载，适用于 Windows 10/11 x64；具体系统版本需满足 .NET 10 的运行条件。
 
-**优先下载 [EXE 安装版：FpsTune-Setup-0.6.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.0/FpsTune-Setup-0.6.0.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
+**优先下载 [EXE 安装版：FpsTune-Setup-0.6.1.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.1/FpsTune-Setup-0.6.1.exe)**，已包含 .NET 运行时，按向导安装即可。便携 ZIP 适合已有对应运行时、需要免安装使用的用户。
 
 | 文件 | 用途 |
 |---|---|
@@ -26,7 +26,7 @@
 | `FpsTune-Portable-<版本>.zip` | 便携包，需要 [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<版本>.txt` | 使用 `Get-FileHash -Algorithm SHA256 <文件>` 校验下载文件 |
 
-本版校验清单：[SHA256SUMS-v0.6.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.0/SHA256SUMS-v0.6.0.txt)。
+本版校验清单：[SHA256SUMS-v0.6.1.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.1/SHA256SUMS-v0.6.1.txt)。
 
 当前程序未做代码签名，Windows 可能提示未知发布者。运行前核对来源及校验值；校验值用于检查内容一致性，不能替代发布者签名。
 便携包和安装包均包含完整 LICENSE 与第三方声明；软件「设置 → 关于 → 开源许可」和 CLI `-License` 也可查看全文。
@@ -67,7 +67,7 @@
 
 ## 当前功能
 
-- **工作台与紧凑控制台**：深浅主题和主题切换过渡，单层微对比边框、同心圆角与底色按钮；暗色强调字重自动减一档，文件名截断保留扩展名，指标使用等宽数字。展开与收起平滑反转，保存操作短回弹；可使用本地图片作为背景。低配模式或 Windows 关闭动画时直接切换。
+- **工作台与紧凑控制台**：首页顶部显示实时资源占用和优化达标数，下面是开局准备、一键优化和常用入口。支持深浅主题和主题切换过渡，单层微对比边框、同心圆角与底色按钮；暗色强调字重自动减一档，文件名截断保留扩展名，指标使用等宽数字。展开与收起平滑反转，保存操作短回弹；可使用本地图片作为背景。低配模式或 Windows 关闭动画时直接切换。
 - **检测与系统调校**：39 个可选项目，逐项展示当前状态、权限、重启要求和副作用。均衡预选 16 项，保守方案含 4 项；也可自定义选择。应用、一键优化或还原后自动重新检测，同步项目状态与首页建议。
 - **开局准备**：为当前游戏保存专属方案，或使用通用默认；组合内存整理、SDR 画面滤镜、数字振动和目标显示器，开局前一键执行。可选完整整理（受保护后台工作集 + 全部待机缓存），显示阶段与结果，可停止后续步骤；旧方案保持原范围。
 - **游戏限帧**：按游戏设置 NVIDIA 前台、后台帧率上限，并可单独还原。
@@ -87,7 +87,7 @@
 - **性能会话**：本机记录 CPU、内存、GPU、显存和帧时间，按游戏保存录制条件模板，搜索和筛选历史，双选两次记录直接比较平均 FPS、1% LOW 与 P99，并导出独立 HTML 报告。帧时间采样内置官方签名版 PresentMon（2.5.1），装好即可测，机器上已安装的版本也会被识别；采样走系统 ETW，需要管理员权限。性能会话页的「延迟预算」按最近一次采样给出输入、帧生成、显示三段数值，缺字段如实标「不可测」并给下一步。退出时自动保存录制；长时间记录有容量边界，达到上限明确提示。
 - **前后对照**：在“优化”页点「对照一下」，改前自动采 60 秒 → 在审阅窗确认要应用的项 → 冷却 → 改后采 60 秒，结论卡给出平均帧增益与 95% 置信区间，按「值得保留 / 建议回滚 / 证据不足」三档判定；不值时「立即回滚」按本次对照自己的备份还原，应用失败或改后采样失败会自动还原并说明原因。
 - **收益档案**：在“游戏库 → 收益档案”查看每个游戏或每台机器的对照次数、最佳确认收益、最近时间与增益趋势，可导出与导入（导入先预演新增与重复条数，不覆盖已有数据）；换机器或换显卡后旧结论如实标注“只作参考”。
-- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持精简/卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；“游戏精简”使用 420×44 DIP 无底色穿透条，保留找回。卡片布局显示最近 60 帧的帧时间折线，超过 2 倍中位数的帧标红并给卡顿计数；「拍下现场」把卡顿帧、当时显卡利用率 / 显存 / 温度 / 功耗、后台占用前 3 名与 HAGS / MPO 状态写成取证文件；关掉悬浮窗立即停止采集，不占开销。录制时显示近期 FPS 与 1% LOW，未采到时显示缺失状态。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
+- **性能悬浮窗与自动记录**：标题栏“悬浮窗”在任意页面打开，支持精简/卡片/长条、0–100% 底色透明度、位置保存、置顶和点击穿透；“游戏精简”使用 420×44 DIP 无底色穿透条，保留找回。卡片布局显示最近 60 帧的帧时间折线，超过 2 倍中位数的帧标红并给卡顿计数；「拍下现场」把卡顿帧、当时显卡利用率 / 显存 / 温度 / 功耗、后台占用前 3 名与 HAGS / MPO 状态写成取证文件，可从首页或性能会话的「卡顿记录」回看最近 30 条。关掉悬浮窗立即停止采集，不占开销。录制时显示近期 FPS 与 1% LOW，未采到时显示缺失状态。性能会话可勾选游戏，启用从下次启动到退出的自动录制与保存，默认关闭，不接管手动会话。
 - **引导与反馈**：性能记录与「对照一下」提供入门步骤；QQ 加群反馈与更新提醒独立显示，加群提示可选择不再提醒。
 - **备份与恢复**：统一列出系统、游戏驱动配置、ICC、数字振动、画面参数、分辨率及均衡器的备份；可核验中断操作，导出完整恢复资料，并在同机同 Windows 用户下导入。
 

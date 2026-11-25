@@ -1,11 +1,11 @@
 # FPS Tune · fps-tune
 
-[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)
+[简体中文](README.md) · [English](README.en.md) · [Official downloads](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1)
 
 Windows system tuning and performance measurement: detect → review → apply → measure → restore.
 Available through a desktop interface and command-line tools.
 
-[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)
+[![release](https://img.shields.io/github/v/release/jidekaixin2dian/fps-tune?style=flat)](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1)
 ![platform](https://img.shields.io/badge/Windows-10%2F11%20x64-blue?style=flat)
 [![license](https://img.shields.io/github/license/jidekaixin2dian/fps-tune?style=flat)](LICENSE)
 [![build](https://img.shields.io/github/actions/workflow/status/jidekaixin2dian/fps-tune/build.yml?branch=main&label=build&style=flat)](https://github.com/jidekaixin2dian/fps-tune/actions/workflows/build.yml)
@@ -13,12 +13,12 @@ Available through a desktop interface and command-line tools.
 
 ## Versions and downloads
 
-Current version: **[v0.6.0](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0)**. The 1.x line is unmaintained.
+Current version: **[v0.6.1](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1)**. The 1.x line is unmaintained.
 
-Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.0).
+Download from this repository's [Releases](https://github.com/jidekaixin2dian/fps-tune/releases/tag/v0.6.1).
 The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 requirements.
 
-**Download the [EXE installer, FpsTune-Setup-0.6.0.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.0/FpsTune-Setup-0.6.0.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
+**Download the [EXE installer, FpsTune-Setup-0.6.1.exe](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.1/FpsTune-Setup-0.6.1.exe), first.** It includes the .NET runtime and guides you through installation. The portable ZIP is for users who already have the required runtime and want to run without installation.
 
 | File | Purpose |
 |---|---|
@@ -26,7 +26,7 @@ The application targets Windows 10/11 x64; your OS version must satisfy .NET 10 
 | `FpsTune-Portable-<version>.zip` | Portable application requiring [.NET 10 Windows Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) |
 | `SHA256SUMS-v<version>.txt` | Compare with `Get-FileHash -Algorithm SHA256 <file>` |
 
-Checksum manifest for this release: [SHA256SUMS-v0.6.0.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.0/SHA256SUMS-v0.6.0.txt).
+Checksum manifest for this release: [SHA256SUMS-v0.6.1.txt](https://github.com/jidekaixin2dian/fps-tune/releases/download/v0.6.1/SHA256SUMS-v0.6.1.txt).
 
 The application is currently unsigned, so Windows may show an unknown publisher. Verify the source and checksum before running. A checksum verifies matching content; it does not replace a publisher signature.
 Portable and installer packages include complete LICENSE and third-party notices. Full texts are also available under Settings → About → Open-source licenses and CLI `-License`.
@@ -87,7 +87,7 @@ Compact, card and strip HUDs (interface examples with demonstration values):
 - **Performance sessions**: local CPU, RAM, GPU, VRAM and frame-time recording, per-game condition templates, searchable history and direct comparison of two recordings. Compare average FPS, 1% LOW and P99, then export a standalone HTML report. Frame-time capture ships with a bundled, officially signed PresentMon (2.5.1), so there is nothing to install; an already installed copy is recognized too. Capture uses system ETW and needs administrator rights. The session page's latency budget breaks the latest capture into input, frame generation and display, marking missing fields as not measurable. Recordings save on exit and have explicit capacity limits.
 - **Before/after comparison**: click "Compare" on the Optimize page. It samples 60 seconds before, applies the items you confirm in the review window, cools down and samples 60 seconds after, then shows a verdict card with average frame gain and a 95% confidence interval, sorted into keep, roll back, or not enough evidence. "Roll back now" restores this comparison's own backup; a failed apply or failed after-sample restores automatically and says why.
 - **Gain archive**: the game library keeps every comparison per game and machine — count, best confirmed gain, most recent time and a gain trend — with export and import (import previews additions and duplicates and never overwrites existing data). Conclusions carried over from another machine or GPU are marked for reference only.
-- **Performance HUD and automatic recording**: open the HUD from the global title bar on any page. Choose compact, card or strip layout, 0–100% background transparency, position, pinning and click-through. The game preset uses a transparent 420×44 DIP strip with recovery access. The card layout draws the frame-time curve of the last 60 frames, marks frames above twice the median and counts stutters; "Capture this moment" writes the stuttering frames, current GPU load / VRAM / temperature / power, the top three background consumers and HAGS / MPO state to an evidence file. Closing the HUD stops sampling immediately. Recent FPS and 1% LOW appear during recording; missing samples remain marked unavailable. Opt-in game bindings start a recording on the next launch and save it on exit, without taking over manual sessions.
+- **Performance HUD and automatic recording**: open the HUD from the global title bar on any page. Choose compact, card or strip layout, 0–100% background transparency, position, pinning and click-through. The game preset uses a transparent 420×44 DIP strip with recovery access. The card layout draws the frame-time curve of the last 60 frames, marks frames above twice the median and counts stutters; "Capture this moment" writes the stuttering frames, current GPU load / VRAM / temperature / power, the top three background consumers and HAGS / MPO state to an evidence file. Open Stutter History from Home or Performance Sessions to review the latest 30 captures. Closing the HUD stops sampling immediately. Recent FPS and 1% LOW appear during recording; missing samples remain marked unavailable. Opt-in game bindings start a recording on the next launch and save it on exit, without taking over manual sessions.
 - **Guidance and feedback**: step-by-step performance recording and comparison guides, separate QQ community and update prompts, and a persistent option to dismiss community reminders.
 - **Backups and recovery**: one inventory covers system settings, game driver profiles, ICC, vibrance, screen controls, resolution and the equalizer. Review interrupted operations and export recovery data for import on the same PC and Windows account.
 
